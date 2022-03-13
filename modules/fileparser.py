@@ -359,7 +359,10 @@ def extract_locals(locallist, varlist, all_outputs):
     # Remove array layer of locals dict structure and copy over to final_locals dict first
     for file, localvarlist in locallist.items():
         final_locals[file] = localvarlist[0]
-        modname = file.split(';')[1]
+        if ';' in file :
+            modname = file.split(';')[1]
+        else :
+            modname = 'main'
         if module_locals.get(modname) :
             module_locals[modname] = {**module_locals[modname], **localvarlist[0]}
         else :
