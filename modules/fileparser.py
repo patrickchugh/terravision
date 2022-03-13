@@ -105,7 +105,7 @@ def output_log(tfdata, variable_list):
             for item in valuelist:
                 if isinstance(item, dict):
                     for key in item:
-                        click.echo(f'    {fname}: {key}')
+                        click.echo(f'    {fname}: {key}.{next(iter(item[key]))}')
                 else:
                     click.echo(f'    {fname}: {item}')
     click.echo('\n  Variable List:')
@@ -146,7 +146,7 @@ def handle_module(modules_list, tf_file_paths, filename):
         # Convert Source URLs to module cache paths
         if not module_source.startswith('.') and not module_source.startswith('\\'):
             localfolder = module_source.replace('/', '_')
-            cache_path = os.path.join(temp_modules_dir, '|'+key+'|'+localfolder)
+            cache_path = os.path.join(temp_modules_dir, ';'+key+';'+localfolder)
             module_source_dict[key] = {'cache_path' : str(cache_path), 'source_file' : filename}
         else:
             module_source_dict[key] = {'cache_path': module_source, 'source_file': filename}
@@ -215,7 +215,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple) -> dict:
         tfdata['variable_map'] = inject_module_variables(tfdata['all_module'],  tfdata['variable_map'])
     if tfdata.get('all_locals'):
         # Evaluate Local Variables containing functions and TF variables and replace with evaluated values
-        tfdata['all_locals'] = eval_locals(tfdata['all_locals'], variable_list, tfdata.get('all_output'))
+        tfdata['all_locals'] = extract_locals(tfdata['all_locals'], variable_list, tfdata.get('all_output'))
     # Get metadata from resource attributes
     data = get_metadata(tfdata['all_resource'],  tfdata['variable_map'], tfdata['all_locals'], tfdata['all_output'], tfdata['all_module'],module_source_dict)
     tfdata['meta_data'] = data['meta_data']
@@ -352,24 +352,19 @@ def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename
     return value
 
 
-def eval_locals(locallist, varlist, all_outputs):
-    click.echo('\n  Resolving locals...')
+def extract_locals(locallist, varlist, all_outputs):
+    click.echo('\n  Parsing locals...')
     final_locals = dict()
+    module_locals = dict()
     # Remove array layer of locals dict structure and copy over to final_locals dict first
     for file, localvarlist in locallist.items():
         final_locals[file] = localvarlist[0]
-    for file, itemlist in locallist.items():
-        for item in itemlist:
-            for key, value in item.items():
-                value = str(value)
-                if not value:
-                    break
-                # Keep looking up / replacing variables and locals until there are none
-                # value = resolve_dynamic_values(value,locallist[file], varlist, all_outputs)
-                # When no more variables found, merge with existing contents of final dict
-                currentdict = final_locals[file]
-                final_locals[file] = {**currentdict, **{f'{key}': value}}
-    return final_locals
+        modname = file.split(';')[1]
+        if module_locals.get(modname) :
+            module_locals[modname] = {**module_locals[modname], **localvarlist[0]}
+        else :
+            module_locals[modname] = localvarlist[0]
+    return module_locals
 
 
 def handle_readme_source(resp) -> str:
@@ -451,7 +446,7 @@ def download_files(sourceURL: str, tempdir: str, module=''):
     if os.path.exists(module_cache_path):
         click.echo(f'  Skipping download of module {reponame}, found existing folder in module cache')
         if module:
-            temp_module_path = os.path.join(tempdir, '|'+module+'|'+reponame)
+            temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
             shutil.copytree(module_cache_path, temp_module_path)
             return os.path.join(temp_module_path, subfolder)
         else :
@@ -505,7 +500,7 @@ def replace_data_statements(statement: str):
     return statement
 
 
-def process_conditional_metadata(metadata: dict, all_locals, all_variables, all_outputs, filename):
+def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_outputs, filename):
 
     def determine_statement(eval_string: str):
         if 'for' in eval_string and 'in' in eval_string:
@@ -529,14 +524,14 @@ def process_conditional_metadata(metadata: dict, all_locals, all_variables, all_
             stringarray = eval_string.split('.')
             modulevar = cleanup('module' + '.' + stringarray[1] + '.' + stringarray[2]).strip()
             eval_string = eval_string.replace(modulevar, outvalue)
-        eval_string = resolve_dynamic_values(eval_string, all_locals, all_variables, all_outputs, filename)
+        eval_string = resolve_dynamic_values(eval_string, mod_locals, all_variables, all_outputs, filename)
         return eval_string
 
     for resource, attr_list in metadata.items():
         if 'count' in attr_list.keys() and not isinstance(attr_list['count'], int) and not resource.startswith('null_resource'):
             eval_string = str(attr_list['count'])
             eval_string = determine_statement(eval_string)
-            exp = handle_conditionals(eval_string, all_locals)
+            exp = handle_conditionals(eval_string, mod_locals)
             filepath = Path(filename)
             fname = filepath.parent.name + '/' + filepath.name
             #fname = filename.split('_')[-2] + filename.split('_')[-1]
@@ -568,9 +563,9 @@ def get_metadata(all_resources: dict, variable_list: dict, all_locals: dict, all
     meta_data = dict()
     click.echo(f'\n  Conditional Resource List:')
     for filename, resource_list in all_resources.items():
-        if '|' in filename:
+        if ';' in filename:
             # We have a module file being processed
-            modarr = filename.split('|')
+            modarr = filename.split(';')
             mod = modarr[1]
         else :
             mod = 'main'
@@ -595,14 +590,14 @@ def get_metadata(all_resources: dict, variable_list: dict, all_locals: dict, all
                             if 'var.' in str(listitem):
                                 attribute_value[index] = replace_variables(listitem, filename, variable_list[mod])
                             if 'local.' in str(listitem):
-                                attribute_value[index] = replace_locals(str(listitem), all_locals[filename])
+                                attribute_value[index] = replace_locals(str(listitem), all_locals[mod])
                     if isinstance(attribute_value, str):
                         if 'var.' in attribute_value:
                             attribute_values[attribute] = replace_variables(attribute_value, filename, variable_list[mod])
                         if 'local.' in attribute_value:
-                            attribute_values[attribute] = replace_locals(attribute_value, all_locals[filename])
+                            attribute_values[attribute] = replace_locals(attribute_value, all_locals[mod])
                 meta_data[f'{resource_type}.{resource_name}'] = attribute_values    
-        meta_data = process_conditional_metadata(meta_data, all_locals.get(filename), variable_list[mod], all_outputs, filename)
+        meta_data = process_conditional_metadata(meta_data, all_locals.get(mod), variable_list.get(mod), all_outputs, filename)
     
     # Handle CF Special meta data
     cf_data = [s for s in meta_data.keys() if 'aws_cloudfront' in s]
