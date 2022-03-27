@@ -515,7 +515,7 @@ def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
     return metadata
 
 
-def render_diagram(tfdata: dict, graphdict: dict, picshow: bool, detailed: bool, outfile, format, source):
+def render_diagram(tfdata: dict, graphdict: dict, picshow: bool, simplified: bool, outfile, format, source):
     global aws_group
     # Apply custom user modifiers/annotations
     if tfdata['annotations']:

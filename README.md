@@ -12,7 +12,10 @@ TerraVision converts Terraform code to Professional Cloud Architecture Diagrams.
 
 1. Download binary for your platform from here
 2. Copy binary to your path e.g. /usr/bin
-
+3. Run `terravision` and specify your Terraform source files in the format:
+```
+$ terravision --source ~/src/my-terraform-code
+```
 
 
 

@@ -13,16 +13,16 @@ from pathlib import Path
 # Process source files and return dictionaries with relevant data
 
 
-def make_graph(source: list, varfile: list) -> dict:
+def make_graph(source: list, varfile: list, annotate: str) -> dict:
     # Read relevant data from Terraforms
-    tfdata = fileparser.parse_tf_files(source, varfile)
+    tfdata = fileparser.parse_tf_files(source, varfile, annotate)
 
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     relationship_dict = helpers.make_graph_dict(
         tfdata['node_list'],
         tfdata['all_resource'],
-        tfdata['all_locals'],
-        tfdata['all_output'],
+        tfdata.get('all_locals'),
+        tfdata.get('all_output'),
         tfdata['hidden'],
     )
     return {'graphdict': relationship_dict, 'tfdata': tfdata}
@@ -82,13 +82,14 @@ def cli():
 @click.option('--outfile', default='architecture', help='Filename for output diagram (default architecture.dot.png)')
 @click.option('--format', default='png', help='File format (png/pdf/svg/json/bmp)')
 @click.option('--show', is_flag=True, default=False, help='Show diagram after generation')
-@click.option('--detailed', is_flag=True, default=False, help='Show Flow Logs, Roles, Policy and other resources')
+@click.option('--simplified', is_flag=True, default=False, help='Simplified high level services shown only')
+@click.option('--annotate', default='', help='Path to custom annotations file (YAML)')
 @click.option('--avl_classes', hidden=True)
-def draw(source, varfile, outfile, format, show, detailed, avl_classes):
+def draw(source, varfile, outfile, format, show, simplified, annotate, avl_classes):
     '''Draws Architecture Diagram'''
     preflight_check()
-    parsed_data = make_graph(source, varfile)
-    drawing.render_diagram(parsed_data['tfdata'], parsed_data['graphdict'], show, detailed, outfile, format, source)
+    parsed_data = make_graph(source, varfile, annotate)
+    drawing.render_diagram(parsed_data['tfdata'], parsed_data['graphdict'], show, simplified, outfile, format, source)
 
 
 # List Resources Command

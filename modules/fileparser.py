@@ -99,18 +99,20 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
 def output_log(tfdata, variable_list):
     for section in output_sections:
         click.echo(f'\n  {section.title()} list :')
-        for file, valuelist in tfdata['all_'+section].items():
-            filepath = Path(file)
-            fname = filepath.parent.name + '/' + filepath.name
-            for item in valuelist:
-                if isinstance(item, dict):
-                    for key in item:
-                        click.echo(f'    {fname}: {key}.{next(iter(item[key]))}')
-                else:
-                    click.echo(f'    {fname}: {item}')
-    click.echo('\n  Variable List:')
-    for var in variable_list:
-        click.echo(f'    var.{var} = {variable_list[var]}')
+        if tfdata.get('all_'+section) :
+            for file, valuelist in tfdata['all_'+section].items():
+                filepath = Path(file)
+                fname = filepath.parent.name + '/' + filepath.name
+                for item in valuelist:
+                    if isinstance(item, dict):
+                        for key in item:
+                            click.echo(f'    {fname}: {key}.{next(iter(item[key]))}')
+                    else:
+                        click.echo(f'    {fname}: {item}')
+    if variable_list:
+        click.echo('\n  Variable List:')
+        for var in variable_list:
+            click.echo(f'    var.{var} = {variable_list[var]}')
 
 
 def handle_module(modules_list, tf_file_paths, filename):
@@ -153,7 +155,8 @@ def handle_module(modules_list, tf_file_paths, filename):
     return {'tf_file_paths': tf_file_paths, 'module_source_dict' : module_source_dict}
 
 
-def parse_tf_files(source_list: list, varfile_list: tuple) -> dict:
+def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dict:
+    global annotations
     ''' Parse all .TF extension files in source folder and subdirectories and returns dict with modules, outputs, variables, locals and resources found '''
     filedict = dict()
     tfdata = dict()
@@ -163,6 +166,10 @@ def parse_tf_files(source_list: list, varfile_list: tuple) -> dict:
     for source in source_list:
         # Get List of Terraform Files to parse
         tf_file_paths = find_tf_files(source)
+        if annotate:
+            with open(annotate, 'r') as file:
+                    click.echo(f'  Will override with architecture annotation file : {file.name} \n')
+                    annotations = yaml.safe_load(file)
         click.echo(click.style('Reading Terraforms..', fg='white', bold=True))
         # Parse each TF file encountered in source locations
         for filename in tf_file_paths:
@@ -207,17 +214,17 @@ def parse_tf_files(source_list: list, varfile_list: tuple) -> dict:
     # Load in variables from user file into a master list
     if len(varfile_list) == 0 and tfdata.get('all_variable'):
         varfile_list = tfdata['all_variable'].keys()
-    vardata = get_variable_values(tfdata['all_variable'], varfile_list, tfdata['all_module'], module_source_dict)
+    vardata = get_variable_values(tfdata.get('all_variable'), varfile_list, tfdata.get('all_module'), module_source_dict)
     tfdata['variable_map'] =  vardata['var_mappings']
     tfdata['variable_list'] = vardata['var_data']
     # Inject parent module variables that are referenced downstream in sub modules
-    if len(tfdata['all_module']) > 0:
+    if tfdata.get('all_module'):
         tfdata['variable_map'] = inject_module_variables(tfdata['all_module'],  tfdata['variable_map'])
     if tfdata.get('all_locals'):
         # Evaluate Local Variables containing functions and TF variables and replace with evaluated values
         tfdata['all_locals'] = extract_locals(tfdata['all_locals'], variable_list, tfdata.get('all_output'))
     # Get metadata from resource attributes
-    data = get_metadata(tfdata['all_resource'],  tfdata['variable_map'], tfdata['all_locals'], tfdata['all_output'], tfdata['all_module'],module_source_dict)
+    data = get_metadata(tfdata['all_resource'],  tfdata.get('variable_map'), tfdata.get('all_locals'), tfdata.get('all_output'), tfdata.get('all_module'),module_source_dict)
     tfdata['meta_data'] = data['meta_data']
     tfdata['node_list'] = data['node_list']
     tfdata['hidden'] = data['hide']
@@ -600,7 +607,7 @@ def get_metadata(all_resources: dict, variable_list: dict, all_locals: dict, all
                         if 'local.' in attribute_value:
                             attribute_values[attribute] = replace_locals(attribute_value, all_locals[mod])
                 meta_data[f'{resource_type}.{resource_name}'] = attribute_values    
-        meta_data = process_conditional_metadata(meta_data, all_locals.get(mod), variable_list.get(mod), all_outputs, filename)
+        meta_data = process_conditional_metadata(meta_data, all_locals.get(mod) if all_locals else None, variable_list.get(mod) if variable_list else None, all_outputs, filename)
     
     # Handle CF Special meta data
     cf_data = [s for s in meta_data.keys() if 'aws_cloudfront' in s]
@@ -630,6 +637,8 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> s
 def get_variable_values(all_variables: dict, varfile_list: list, all_modules: dict, module_sources: dict) -> dict:
     ''' Returns a list of all variables merged from local .tfvar defaults, supplied varfiles and module values'''
     click.echo('Processing Variables..')
+    if not all_variables:
+        all_variables = dict()
     var_data = dict()
     var_mappings = dict()
     # Load default values from all existing files in source locations
@@ -658,26 +667,27 @@ def get_variable_values(all_variables: dict, varfile_list: list, all_modules: di
                                 var_mappings[mod] = {}
                                 var_mappings[mod]['source_dir'] = var_source_dir
                             var_mappings[mod][var_name] = var_value
-                            
-    # Insert module parameters as variable names
-    for file, modulelist in all_modules.items():
-        for module in modulelist:
-            for mod, params in module.items():
-                for variable in params:
-                    if 'var.' + variable in str(params[variable]):
-                        click.echo(f'  WARNING: Possible variable duplication issue with var.{variable}')
-                    else:
-                        var_data[variable] = params[variable]
-                        if not var_mappings.get(mod) :
-                            var_mappings[mod] ={}
-                        var_mappings[mod][variable] = params[variable]
-    # Over-write defaults with passed varfile specified values
-    for varfile in varfile_list:
-        # Open supplied varfile for reading
-        with click.open_file(varfile, 'r') as f:
-            variable_values = hcl2.load(f)
-        for uservar in variable_values:
-            var_data[uservar.lower()] = variable_values[uservar]
-            var_mappings['main'][uservar.lower()] = variable_values[uservar]
+    if all_modules:                       
+        # Insert module parameters as variable names
+        for file, modulelist in all_modules.items():
+            for module in modulelist:
+                for mod, params in module.items():
+                    for variable in params:
+                        if 'var.' + variable in str(params[variable]):
+                            click.echo(f'  WARNING: Possible variable duplication issue with var.{variable}')
+                        else:
+                            var_data[variable] = params[variable]
+                            if not var_mappings.get(mod) :
+                                var_mappings[mod] ={}
+                            var_mappings[mod][variable] = params[variable]
+    if varfile_list:
+        # Over-write defaults with passed varfile specified values
+        for varfile in varfile_list:
+            # Open supplied varfile for reading
+            with click.open_file(varfile, 'r') as f:
+                variable_values = hcl2.load(f)
+            for uservar in variable_values:
+                var_data[uservar.lower()] = variable_values[uservar]
+                var_mappings['main'][uservar.lower()] = variable_values[uservar]
 
     return {'var_data': var_data, 'var_mappings':var_mappings}
