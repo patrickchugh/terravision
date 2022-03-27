@@ -1,6 +1,16 @@
 # TerraVision
 TerraVision converts Terraform code to Professional Cloud Architecture Diagrams. Envisioned to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date. Supports AWS and soon Google and Azure cloud.
 
+Turn this... 
+
+![Terraform Code](./code.png "Turn Terraform code")
+
+into this...
+
+![Terravision auto generated diagram](./example_diagram.png "AWS Architecture Diagram")
+
+This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
+
 ## Dependencies
 * graphviz
 * git
@@ -11,34 +21,36 @@ TerraVision converts Terraform code to Professional Cloud Architecture Diagrams.
 2. Download terravision binary for your platform from here
 3. Copy binary to your `PATH` e.g. /usr/bin
 4. Run `terravision` and specify your Terraform source files in the format:
-```
+``` bash
 $ terravision --source ~/src/my-terraform-code
 ```
 
 For Terraform source code in a Git repo you can also use the form:
-```
+``` bash
 $ terravision --source https://github.com/your-repo/terraform-examples.git
 ```
 
 ## Annotating generated diagrams
-You may wish to add custom annotations such as a title, additional labels on arrows or other resources created outside your Terraform to your diagram. This can be accomplished by including an `architecture.yml` file along with your source code which will be automatically loaded. Alternatively, you can do so by specifying the path to the annotations file as parameter to terravision:
+No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as parameter to terravision. 
 
-```
+``` bash
 terravision --source https://github.com/your-repo/terraform-examples.git --annotate /Users/me/MyDocuments/annotations.yml
 ```
 
-The format of this file is a standard YAML configuration file that is similar to the example below. The node names follow the same conventions as Terraform resource names and support wildcards. You can add a custom parameter to any TF resource called `edge_labels` to add text to the connection line to a specific resource node1:
+The .yml file is a standard YAML configuration file that is similar to the example below with one or more headings called `title`, `connect`, `disconnect`, `add`, `remove` or `update`. The node names follow the same conventions as Terraform resource names https://registry.terraform.io/providers/hashicorp/aws/latest/docs and support wildcards. You can add a custom label to any TF resource by modifying the attributes of the resource and adding the `label` attribute (doesn't exist in Terraform). For lines/connections, you can modify the resource attributes by adding terravision specific `edge_labels` to add text to the connection line to a specific resource node. See the example below:
 
-```
+``` yaml
 format: 0.1
+# Main Diagram heading
 title: Serverless Wordpress Site
 # Draw new connection lines that are not apparent from the Terraforms
 connect:
   aws_rds_cluster.this:
-    - aws_ssm_parameter.db_master_user : SSM Connection
+    - aws_ssm_parameter.db_master_user : Retrieve credentials from SSM
 # Remove connections between nodes that are currently shown
 disconnect:
-  aws_cloudwatch*.*:
+  # Wildcards mean these disconnections apply to any cloudwatch type resource called logs
+  aws_cloudwatch*.logs:
     - aws_ecs_service.this
     - aws_ecs_cluster.this
 # Delete the following nodes
@@ -47,19 +59,24 @@ remove:
 # Add the following nodes
 add:
   aws_subnet.another_one :
+    # Specify Terraform attributes for a resource like this 
     cidr_block: "123.123.1.1"
-# Modify params/metadata of existing node
+# Modify attributes of existing node
 update:
   aws_ecs_service.this:
     # Add custom labels to the connection lines that already exist between ECS->RDS
     edge_labels:
       - aws_rds_cluster.this: Database Queries
+  # Wildcards save you listing multiple resources of the same type. This edge label is added to all CF->ACM connections.
   aws_cloudfront* :
     edge_labels:
       - aws_acm_certificate.this: SSL Cert
- # Make all resources starting with aws_ecs have the following label
-  aws_ecs* :
+ # Add a custom label to a resource. Overrides default label
+  aws_ecs_service.this :
    label: "My Custom Label"
 
 ```
 
+# Detailed help
+
+Type ``terravision --help`` for full command list or for help with a specific command
