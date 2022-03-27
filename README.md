@@ -4,18 +4,21 @@ TerraVision converts Terraform code to Professional Cloud Architecture Diagrams.
 ## Dependencies
 * graphviz
 * git
-* click
-* python-hcl
-* tqdm
+
 
 ## Quickstart
 
-1. Download binary for your platform from here
-2. Copy binary to your path e.g. /usr/bin
-3. Run `terravision` and specify your Terraform source files in the format:
+1. Install all dependencies as listed above
+2. Download terravision binary for your platform from here
+3. Copy binary to your `PATH` e.g. /usr/bin
+4. Run `terravision` and specify your Terraform source files in the format:
 ```
 $ terravision --source ~/src/my-terraform-code
 ```
 
+For Terraform source code in a Git repo you can also use the form:
+```
+$ terravision --source https://github.com/your-repo/terraform-examples.git
+```
 
 

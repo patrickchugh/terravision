@@ -553,6 +553,8 @@ def render_diagram(tfdata: dict, graphdict: dict, picshow: bool, simplified: boo
             vpc_exists = True
     # Create initial consolidated nodes for specific resource types
     SharedServicesCluster = GenericGroup()
+    iam_node = IAM()
+    SharedServicesCluster.add_node(iam_node._id,label='IAM Service')
     for node in tfdata['node_list']:
         draw_if_consolidated(node, tfdata, graphdict, SharedServicesCluster,  False, vpc_exists)
     # Now draw the rest of the nodes and connect them
