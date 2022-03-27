@@ -1,5 +1,5 @@
 # TerraVision
-TerraVision converts Terraform code to Professional Cloud Architecture Diagrams. Envisioned to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date. Supports AWS and soon Google and Azure cloud.
+TerraVision is a CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams. Envisioned to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date. Supports AWS and soon Google and Azure cloud.
 
 Turn this... 
 
@@ -7,7 +7,8 @@ Turn this...
 
 into this...
 
-![Terravision auto generated diagram](./example_diagram.png "AWS Architecture Diagram")
+<img src="./example_diagram.png" width="640" height="580">
+
 
 This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
 
@@ -32,6 +33,8 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
     - All source code stays in your local environment, diagrams are generated on your machines
 
+# Installation and Usage
+
 ## Dependencies
 * graphviz https://graphviz.org/download/
 * git https://git-scm.com/downloads
@@ -51,7 +54,7 @@ $ terravision --source https://github.com/your-repo/terraform-examples.git
 ```
 
 ## Annotating generated diagrams
-No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as parameter to terravision. 
+No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
 
 ``` bash
 terravision --source https://github.com/your-repo/terraform-examples.git --annotate /Users/me/MyDocuments/annotations.yml
