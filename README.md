@@ -11,10 +11,30 @@ into this...
 
 This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
 
-## Dependencies
-* graphviz
-* git
+# Benefits of Terravision
+1. Cost
+	- Save Visio/Drawing software licenses - Terravision is free and open source
+	- Doesn't require any cost incurring cloud resources to be spun up, it works instantly from your local machine
+2. Accelerate and Automate
+	- Wasting time with diagram tools aligning, connecting dots and laying out icons is not the best use of a highly paid architects time
+	- Use TF variable files as inputs to create multiple variant diagrams from the same TF code
+	- Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
+	- YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
+3. Consistency across organisation
+	- Do you have standard modules or code blocks for all applications? Terravision auto downloads external modules to ensure the most updated architecture shown for all downstream Terraform projects
+	- Consistent design of architecture diagrams using industry standard icons and style across teams (Standardised company logo, specific png artwork also possible)
+4. Accurate Visibility 
+	- Real time state of diagram shows current infrastructure that matches exactly what is deployed in production, not a diagram of how the app looked 6 months ago
+	- Helps in architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
+	- Custom Diagram code and output images can be put into source/version control for better maintainability and discoverability
+5. Security
+	- Don't need to give access to your AWS account or CLI to draw diagram
+	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
+    - All source code stays in your local environment, diagrams are generated on your machines
 
+## Dependencies
+* graphviz https://graphviz.org/download/
+* git https://git-scm.com/downloads
 
 ## Quickstart
 1. Install all dependencies as listed above
@@ -71,7 +91,7 @@ update:
   aws_cloudfront* :
     edge_labels:
       - aws_acm_certificate.this: SSL Cert
- # Add a custom label to a resource. Overrides default label
+ # Add a custom label to a resource node. Overrides default label
   aws_ecs_service.this :
    label: "My Custom Label"
 
