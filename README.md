@@ -35,7 +35,7 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 
 # Installation and Usage
 
-## Dependencies
+## Dependencies for all versions
 * graphviz https://graphviz.org/download/
 * git https://git-scm.com/downloads
 
@@ -52,6 +52,14 @@ For Terraform source code in a Git repo you can also use the form:
 ``` bash
 $ terravision --source https://github.com/your-repo/terraform-examples.git
 ```
+
+## Install from source code
+1. Clone the repo with ``git clone https://github.com/patrickchugh/terravision.git``
+2. Ensure you are have Python 3.7 or above installed and working. Install python depdendecies
+```
+pip3 install pytest pyinstaller click python-hcl2 gitPython graphviz requests tqdm pyyaml
+```
+3. Add the `terravision` folder to your `$PATH` variable
 
 ## Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
