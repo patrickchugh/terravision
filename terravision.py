@@ -13,7 +13,7 @@ from pathlib import Path
 # Process source files and return dictionaries with relevant data
 
 
-def make_graph(source: list, varfile: list, annotate: str) -> dict:
+def make_graph(source: list, varfile: list, annotate='') -> dict:
     # Read relevant data from Terraforms
     tfdata = fileparser.parse_tf_files(source, varfile, annotate)
 
