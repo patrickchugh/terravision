@@ -68,7 +68,7 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     yaml_detected = False
     # If source is a Git address, clone to temp dir
     if ('github' in source or 'bitbucket' in source) and source.startswith('http'):
-        source_location = download_files(source.strip(), temp_dir.name)
+        source_location = download_files(source, temp_dir.name)
     else:
         # Source is a local folder
         source_location = source.strip()
@@ -393,6 +393,7 @@ def handle_readme_source(resp) -> str:
 def download_files(sourceURL: str, tempdir: str, module=''):
     click.echo(click.style('Loading Sources..', fg='white', bold=True))
     subfolder = ''
+    gitaddress = ''
     reponame = sourceURL.replace('/', '_')
     module_cache_path = os.path.join(module_dir, reponame)
     # Identify source repo and construct final git clone URL
@@ -402,8 +403,8 @@ def download_files(sourceURL: str, tempdir: str, module=''):
             subfolder_array = sourceURL.split('//')
             subfolder = subfolder_array[2].split('?')[0]
             gitaddress = subfolder_array[0] + '//' + subfolder_array[1]
-        githubURL = gitaddress
-        sourceURL = gitaddress
+        githubURL = gitaddress if gitaddress else sourceURL
+        sourceURL = gitaddress if gitaddress else sourceURL
         r = requests.get(sourceURL)
     elif sourceURL.startswith('git::ssh://') or sourceURL.startswith('git@github.com') or 'git::' in sourceURL:
         if 'ssh://' in sourceURL:
