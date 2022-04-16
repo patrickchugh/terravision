@@ -29,9 +29,9 @@ annotations = dict()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-module_dir = str(Path(Path.home(), '.terravision', 'module_cache'))
-if not os.path.exists(module_dir):
-    os.makedirs(module_dir)
+MODULE_DIR = str(Path(Path.home(), '.terravision', 'module_cache'))
+if not os.path.exists(MODULE_DIR):
+    os.makedirs(MODULE_DIR)
 
 # List of dictionary sections to extract from TF file
 extract = [
@@ -183,8 +183,8 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dic
                 if not filename in filedict.keys():
                     click.echo(
                         f'   WARNING: Unknown Error reading TF file {filename}. Attempting character cleanup fix..')
-                    with tempfile.TemporaryDirectory(dir=source) as tempdir:
-                        f_tmp = clean_file(filename, str(tempdir))
+                    with tempfile.TemporaryDirectory(dir=temp_dir.name) as tempclean:
+                        f_tmp = clean_file(filename, str(tempclean))
                         filedict[filename] = hcl2.load(f_tmp)
                         if not filename in filedict.keys():
                             click.echo(f'   ERROR: Unknown Error reading TF file {filename}. Aborting!')
@@ -235,29 +235,6 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dic
     temp_dir.cleanup()
     os.chdir(cwd)
     return tfdata
-
-
-# def inject_module_variables_old(modules: dict, all_variables: dict):
-#     for file, module_list in modules.items():
-#         for module_items in module_list:
-#             for module, params in module_items.items():
-#                 module_source = params['source']
-#                 for key, value in params.items():
-#                     if 'var.' in str(value):
-#                         if isinstance(value, list):
-#                             for i in range(len(value)):
-#                                 value[i] = replace_variables(value[i], module_source, all_variables, False)
-#                         else:
-#                             value = replace_variables(value, module_source, all_variables, False)
-#                     # Add var value to master list of all variables so it can be used downstream
-#                     if key != 'source' and key != 'version' and key in all_variables.keys():
-#                         all_variables[key] = value
-#     # Add quotes for raw strings to aid postfix evaluation
-#     for variable in all_variables:
-#         value = all_variables[variable]
-#         if isinstance(value, str) and '(' not in value and '[' not in value and not value.startswith('"'):
-#             all_variables[variable] = f'"{value}"'
-#     return all_variables
 
 def inject_module_variables(modules: dict, all_variables: dict):
     for file, module_list in modules.items():
@@ -347,10 +324,14 @@ def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename
                 exit()
         for localitem in local_found_list:
             lookup = localitem.split('local.')[1]
-            if lookup in locallist.keys():
-                replacement_value = str(locallist.get(lookup))
-                value = value.replace(localitem, replacement_value)
-            else:
+            if locallist:
+                if lookup in locallist.keys():
+                    replacement_value = str(locallist.get(lookup))
+                    value = value.replace(localitem, replacement_value)
+                else:
+                    value = value.replace(localitem,  'None')
+                    click.echo(f'    WARNING: Cannot resolve {localitem}, assigning empty value')
+            else :
                 value = value.replace(localitem,  'None')
                 click.echo(f'    WARNING: Cannot resolve {localitem}, assigning empty value')
         if oldvalue == value:
@@ -389,13 +370,13 @@ def handle_readme_source(resp) -> str:
     githubURL = githubURL[0:startindex] + '.git'
     return githubURL
 
-
+# TODO: Break download_files down into a smaller function
 def download_files(sourceURL: str, tempdir: str, module=''):
     click.echo(click.style('Loading Sources..', fg='white', bold=True))
     subfolder = ''
     gitaddress = ''
     reponame = sourceURL.replace('/', '_')
-    module_cache_path = os.path.join(module_dir, reponame)
+    module_cache_path = os.path.join(MODULE_DIR, reponame)
     # Identify source repo and construct final git clone URL
     click.echo(f'  Downloading External Module: {sourceURL}')
     if sourceURL.startswith('github.com') or sourceURL.startswith('https://github.com/'):
@@ -405,7 +386,7 @@ def download_files(sourceURL: str, tempdir: str, module=''):
             gitaddress = subfolder_array[0] + '//' + subfolder_array[1]
         githubURL = gitaddress if gitaddress else sourceURL
         sourceURL = gitaddress if gitaddress else sourceURL
-        r = requests.get(sourceURL)
+        r = requests.get(url(sourceURL))
     elif sourceURL.startswith('git::ssh://') or sourceURL.startswith('git@github.com') or 'git::' in sourceURL:
         if 'ssh://' in sourceURL:
             split_array = sourceURL.split('git::ssh://')
@@ -438,7 +419,7 @@ def download_files(sourceURL: str, tempdir: str, module=''):
                 headers = {'Authorization': 'bearer ' + os.environ['TFE_TOKEN']}
         else:
             domain = 'https://registry.terraform.io/v1/modules/'
-        if sourceURL.endswith('//'):
+        if sourceURL.count('//') >= 1:
             # Clone only the Subfolder specified
             subfolder_array = sourceURL.split('//')
             subfolder = subfolder_array[1].split('?')[0]
@@ -454,24 +435,23 @@ def download_files(sourceURL: str, tempdir: str, module=''):
             githubURL = handle_readme_source(r)
         click.echo(click.style(f'    Cloning from Terraform registry source: {githubURL}', fg='green'))
     # Now do a git clone or skip if we already have seen this module before
-    if os.path.exists(module_cache_path):
+    if os.path.exists(os.path.join(MODULE_DIR, reponame)):
         click.echo(f'  Skipping download of module {reponame}, found existing folder in module cache')
-        if module:
-            temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
-            shutil.copytree(module_cache_path, temp_module_path)
-            return os.path.join(temp_module_path, subfolder)
-        else :
-            return os.path.join(module_cache_path, subfolder)
+        return os.path.join(module_cache_path, subfolder)
     else:
         os.makedirs(module_cache_path)
         try:
-            git.Repo.clone_from(githubURL, str(module_cache_path), progress=CloneProgress())
+            git.Repo.clone_from(url(githubURL), str(module_cache_path), progress=CloneProgress())
         except:
             click.echo(click.style(
                 f'\nERROR: Unable to call Git to clone repository! Ensure git is configured properly and the URL {githubURL} is reachable.', fg='red', bold=True))
             os.rmdir(module_cache_path)
             exit()
-    #return os.path.join(tempdir, subfolder)
+    if module:
+        temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
+        shutil.copytree(module_cache_path, temp_module_path)
+        return os.path.join(module_cache_path, subfolder)
+    return os.path.join(tempdir, subfolder)
 
 
 def clean_file(filename: str, tempdir: str):
@@ -481,7 +461,7 @@ def clean_file(filename: str, tempdir: str):
         for line in file:
             if line.strip().startswith('#'):
                 continue
-            if '", "' in line or ':' in line or '*' in line or '?' in line or '[' in line or '("' in line or '==' in line or '?' in line or ']' in line:
+            if '", "' in line or ':' in line or '*' in line or '?' in line or '[' in line or '("' in line or '==' in line or '?' in line or ']' in line or ':' in line:
                 # if '", "' in line or ':' in line or '*' in line or '?' in line or '[' in line or '("' in line or '==' in line or '?' in line or '${' in line or ']' in line:
                 if 'aws_' in line and not 'resource' in line:
                     array = line.split('=')
@@ -511,7 +491,7 @@ def replace_data_statements(statement: str):
     return statement
 
 
-def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_outputs, filename):
+def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_outputs, filename, mod):
 
     def determine_statement(eval_string: str):
         if 'for' in eval_string and 'in' in eval_string:
@@ -542,7 +522,7 @@ def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_
         if 'count' in attr_list.keys() and not isinstance(attr_list['count'], int) and not resource.startswith('null_resource'):
             eval_string = str(attr_list['count'])
             eval_string = determine_statement(eval_string)
-            exp = handle_conditionals(eval_string, mod_locals)
+            exp = handle_conditionals(eval_string, mod_locals, all_variables, filename)
             filepath = Path(filename)
             fname = filepath.parent.name + '/' + filepath.name
             #fname = filename.split('_')[-2] + filename.split('_')[-1]
@@ -554,12 +534,13 @@ def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_
                     eval_value = obj.evaluatePostfix(pf)
                     if eval_value == '' or eval_value == ' ':
                         eval_value = 0
-                    click.echo(f'    {fname} : {resource} count = {eval_value} ({exp})')
+                    fname2 = fname.replace(';','|')
+                    click.echo(f'    {fname2} : {resource} count = {eval_value} ({exp})')
                     attr_list['count'] = int(eval_value)
                 else:
-                    click.echo(f'    ERROR: {fname} : {resource} count = 0 (Error in evaluation of value)')
+                    click.echo(f'    ERROR: {fname} : {resource} count = 0 (Error in evaluation of value {exp})')
             else:
-                click.echo(f'    ERROR: {fname} : {resource} count = 0 (Error in resolving function))')
+                click.echo(f'    ERROR: {fname} : {resource} count = 0 (Error in calling function {exp}))')
         if 'for_each' in attr_list:
             attr_list['for_each'] = determine_statement(attr_list['for_each'])
     return metadata
@@ -608,7 +589,7 @@ def get_metadata(all_resources: dict, variable_list: dict, all_locals: dict, all
                         if 'local.' in attribute_value:
                             attribute_values[attribute] = replace_locals(attribute_value, all_locals[mod])
                 meta_data[f'{resource_type}.{resource_name}'] = attribute_values    
-        meta_data = process_conditional_metadata(meta_data, all_locals.get(mod) if all_locals else None, variable_list.get(mod) if variable_list else None, all_outputs, filename)
+        meta_data = process_conditional_metadata(meta_data, all_locals.get(mod) if all_locals else None, variable_list.get(mod) if variable_list else None, all_outputs, filename, mod)
     
     # Handle CF Special meta data
     cf_data = [s for s in meta_data.keys() if 'aws_cloudfront' in s]
@@ -689,6 +670,8 @@ def get_variable_values(all_variables: dict, varfile_list: list, all_modules: di
                 variable_values = hcl2.load(f)
             for uservar in variable_values:
                 var_data[uservar.lower()] = variable_values[uservar]
+                if not var_mappings.get('main') :
+                    var_mappings['main'] = {}
                 var_mappings['main'][uservar.lower()] = variable_values[uservar]
 
     return {'var_data': var_data, 'var_mappings':var_mappings}

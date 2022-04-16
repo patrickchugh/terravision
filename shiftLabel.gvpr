@@ -17,7 +17,6 @@ BEGIN{
         fudgeY=1.;  // aim for just inside periphery  - increase to shift up
       if (index(Gr._shift,",")>0){
         split(Gr._shift,fld,",");
-        print("// flds : ", fld[0],"  ",fld[1]);
         fudgeX=(double)fld[0];
         fudgeY=(double)fld[1];
       }
@@ -26,10 +25,8 @@ BEGIN{
       lpY=yOf(Gr.lp);
       lpMinX=lpX-((Gr.lwidth*72.)/2.);
       lpMaxY=lpY+((Gr.lheight*72.)/2.);
-      print("  // bb: ", Gr.bb, "  lpMinX: ", lpMinX, "  lpMaxY: ", lpMaxY);
+      //print("  // bb: ", Gr.bb, "  lpMinX: ", lpMinX, "  lpMaxY: ", lpMaxY);
       Gr._oldlp=Gr.lp;
-      // fudge factors set below  (maybe nonexistent table border?)
-            print("// fudge : ", fudgeX, "  ",fudgeY);
       newX=lpX-(lpMinX-bbMinX)-fudgeX;
       newY=lpY+(bbMaxY-lpMaxY)+fudgeY;
       Gr.lp=sprintf("%.1f,%.1f", newX, newY);

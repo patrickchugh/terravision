@@ -25,6 +25,10 @@ def check_for_domain(string: str) -> bool:
             return True
     return False
 
+def url(string: str) -> str:
+    if string.count('://') == 0:
+        return 'https://' + string
+    return string
 
 def check_for_tf_functions(string):
     for tf_function in dir(tf_function_handlers):
@@ -40,12 +44,7 @@ def find_nth(string, substring, n):
         return string.find(substring, find_nth(string, substring, n - 1) + 1)
 
 
-def find_between(text,
-                 begin,
-                 end,
-                 alternative='',
-                 replace=False,
-                 occurrence=1):
+def find_between(text,begin,end,alternative='',replace=False,occurrence=1):
     if not text:
         return
     # Handle Nested Functions with multiple brackets in parameters
@@ -81,8 +80,10 @@ def find_between(text,
         return middle
 
 
-def handle_conditionals(statement, all_locals):
+def handle_conditionals(statement, all_locals, all_variables, filename):
     statement = fix_lists(statement)
+    while 'var.' in statement:
+        statement = replace_variables(statement,filename,all_variables)
     while 'local.' in statement:
         statement = resolve_locals(statement, all_locals)
     while check_for_tf_functions(statement) != False:
@@ -95,32 +96,38 @@ def eval_tf_functions(eval_string):
     # function_name = check_for_tf_functions(eval_string)
     # Find out how many occurances of functions called within functions exist here so we know where to terminate brackets
     function_name = check_for_tf_functions(eval_string)
-    function_portion = eval_string[eval_string.find(function_name) +
-                                   len(function_name) + 1:-1]
-    occurances = function_portion.count('(')
-    func_param = str(
-        find_between(eval_string, f'{function_name}(', ')', '', False, 1))
-    if occurances >= 2 and func_param.count('(') > 2:
-        # We have nested functions
-        while occurances > 1:
-            function_name = check_for_tf_functions(function_portion)
-            function_portion = function_portion[function_portion.
-                                                find(function_name) +
-                                                len(function_name) + 1:-1]
-            occurances = function_portion.count('(')
-            func_param = str(
-                find_between(function_portion, f'{function_name}(', ')', '',
-                             False, occurances))
+    # Determine startpos of function parameter
+    startpos = eval_string.find(function_name+'(') + len(function_name)
+    rhs = eval_string[startpos+1:-1]
+    endpos = rhs.find(')')
+    middle = rhs[0:endpos]
+    if '(' in middle :
+        # We have nested fucnctions
+        # get right hand side of statement
+        ob = False
+        cb = False
+        for i in range(len(rhs)):
+            if rhs[i] == '(' :
+                ob = True
+            if rhs[i] == ')' :
+                cb = True
+                if ob == True :
+                    ob = False
+                    cb = False
+                else :
+                    middle = rhs[0:i]
+                    endpos = i
+                    break
+    func_param = fix_lists(middle)
     eval_result = None
     with suppress(Exception):
-        eval_result = str(
-            getattr(tf_function_handlers, function_name)(func_param))
+
+        eval_result = str(getattr(tf_function_handlers, function_name)(func_param))
     if not eval_result:
         click.echo(
             f'    WARNING: Unable to evaluate {function_name}({func_param})')
         eval_result = f'ERROR!_{function_name}(' + func_param + ')'
-    eval_string = eval_string.replace(f'{function_name}(' + func_param + ')',
-                                      str(eval_result))
+    eval_string = eval_string.replace(f'{function_name}(' + func_param + ')',str(eval_result))
     eval_string = fix_lists(eval_string)
     return eval_string
 
@@ -424,6 +431,7 @@ def replace_locals(vartext, all_locals):
 
 
 def fix_lists(eval_string: str):
+    eval_string = eval_string.replace('${[]}', '[]')
     if '${' in eval_string:
         eval_string = ''.join(eval_string.rsplit('}', 1))
         eval_string = eval_string.replace('${', '', 1)

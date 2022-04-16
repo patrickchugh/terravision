@@ -1,5 +1,5 @@
 digraph Untitled {
-	graph [bb="0,0,1208.5,1454",
+	graph [bb="0,0,963.5,791",
 		center=true,
 		concentrate=true,
 		fontcolor="#2D3436",
@@ -8,7 +8,7 @@ digraph Untitled {
 		label=Untitled,
 		labelloc=t,
 		lheight=0.76,
-		lp="604.25,1422.5",
+		lp="481.75,759.5",
 		lwidth=2.38,
 		nodesep=2,
 		overlap=false,
@@ -32,16 +32,16 @@ digraph Untitled {
 		width=1.4
 	];
 	edge [color="#7B8894"];
-	subgraph "cluster_AWSgroup.904" {
+	subgraph "cluster_AWSgroup.201" {
 		graph [_shift=1,
-			bb="101.5,8,1200.5,1383",
+			bb="101.5,8,955.5,720",
 			center=true,
 			fontname="Sans-Serif",
 			fontsize=14,
 			label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/aws.png"/></TD><TD>AWS Cloud</TD></TR></TABLE>>,
 			labeljust=l,
 			lheight=0.61,
-			lp="168.5,1357",
+			lp="168.5,694",
 			lwidth=1.64,
 			margin=100,
 			ordering=in,
@@ -50,56 +50,14 @@ digraph Untitled {
 			shape=box,
 			style=solid
 		];
-		subgraph "cluster_VPCgroup.113" {
-			graph [bb="330.5,108,665.5,541",
-				fontname="Sans-Serif",
-				fontsize=14,
-				label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/vpc.png"/></TD><TD>main VPC 10.0.0.0/16</TD></TR></TABLE>>,
-				labeljust=l,
-				lheight=0.61,
-				lp="429,515",
-				lwidth=2.51,
-				margin=50,
-				pencolor=darkgreen,
-				rank=same,
-				rankdir=LR,
-				shape=box,
-				style=solid
-			];
-			subgraph "cluster_SubnetGroup.49" {
-				graph [_shift=1,
-					bb="380.5,158,615.5,439",
-					color="#deebf7",
-					fontname="Sans-Serif",
-					fontsize=14,
-					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Mysubnet Subnet 10.0.2.0/24</TD></TR></TABLE>>,
-					labeljust=l,
-					lheight=0.50,
-					lp="498,417",
-					lwidth=3.04,
-					margin=50,
-					pencolor="",
-					rankdir=LR,
-					shape=box,
-					style=filled
-				];
-				"aws.compute.Lambda.492a09e31a274d74a1f4ab78b9aa6100"	[height=1.9028,
-					image="/Users/patrick/git/terravision/resource_images/aws/compute/lambda.png",
-					label="Test Lambda",
-					pos="497.5,276.5",
-					shape=none,
-					tf_resource_name="aws_lambda_function.test_lambda",
-					width=1.4028];
-			}
-		}
-		subgraph "cluster_GenericGroup.32" {
-			graph [bb="698.5,771,1100.5,1231",
+		subgraph "cluster_GenericGroup.585" {
+			graph [bb="453.5,108,855.5,568",
 				fontname="Sans-Serif",
 				fontsize=14,
 				label="Shared Services",
 				labeljust=l,
 				lheight=0.21,
-				lp="756.5,1219.5",
+				lp="511.5,556.5",
 				lwidth=1.39,
 				margin=150,
 				pencolor=black,
@@ -107,38 +65,40 @@ digraph Untitled {
 				shape=box,
 				style=dashed
 			];
-			"aws.security.IdentityAndAccessManagementIam.092ae91e26ef44e19b0c732c36689d3d"	[height=1.9028,
+			"aws.security.IdentityAndAccessManagementIam.d24758e89f334c5ea3be93ea84b2d6da"	[height=1.9028,
 				image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam.png",
 				label="IAM Service",
-				pos="899.5,989.5",
+				pos="654.5,326.5",
 				shape=none,
 				tf_resource_name=unknown,
 				width=1.4028];
 		}
-		"aws.security.IdentityAndAccessManagementIamRole.af5d8788d8ed48c98fa789b34b675481"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
-			label="Iam For Lambda Role",
-			pos="497.5,989.5",
+		subgraph "cluster_VPCgroup.451" {
+			graph [fontname="Sans-Serif",
+				fontsize=14,
+				label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/vpc.png"/></TD><TD>this VPC  0.0.0.0/0 </TD></TR></TABLE>>,
+				labeljust=l,
+				margin=50,
+				pencolor=darkgreen,
+				rank=same,
+				rankdir=LR,
+				shape=box,
+				style=solid
+			];
+		}
+		"aws.network.Endpoint.7735d08f9b414184b92f22236a527bf6"	[height=1.9028,
+			image="/Users/patrick/git/terravision/resource_images/aws/network/endpoint.png",
+			label="Vpc Endpoint",
+			pos="252.5,326.5",
 			shape=none,
-			tf_resource_name="aws_iam_role.iam_for_lambda",
-			width=1.4028];
-		"aws.security.IdentityAndAccessManagementIamRole.af5d8788d8ed48c98fa789b34b675481" -> "aws.compute.Lambda.492a09e31a274d74a1f4ab78b9aa6100"	[dir=forward,
-			fontcolor="#2D3436",
-			fontname="Sans-Serif",
-			fontsize=13,
-			pos="e,497.5,345.1 497.5,920.97 497.5,788.58 497.5,495.63 497.5,355.34"];
-		"aws.security.IdentityAndAccessManagementIamRole.b05a0087bb3149a6952f03ed5d1f18c4"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
-			label="Another Role Role",
-			pos="252.5,989.5",
-			shape=none,
-			tf_resource_name="aws_iam_role.another_role",
+			tf_resource_name="aws_vpc_endpoint.this",
 			width=1.4028];
 	}
-	"None.None.Node.9c442dedb1cb4449b76aa7e88d4d7bfe"	[_footernode=1,
+	"None.None.Node.be42c9e29b6c452aada156167c6a2669"	[_footernode=1,
 		fontsize=20,
 		height=0.013889,
-		label="Machine generated at 2022-04-01 17:26:51.724614 using Terravision (https://terra-vision.net)	Source: ('/Users/patrick/git/terraform-test/',)",
-		pos="0.5,989.5",
+		label="Machine generated at 2022-04-17 00:09:28.125937 using Terravision (https://terra-vision.net)	Source: ('/Users/patrick/git/terraform-ssp-eks-patterns/\
+examples/6-eks-fully-private-eks-cluster/',)",
+		pos="0.5,326.5",
 		width=0.013889];
 }
