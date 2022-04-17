@@ -98,7 +98,7 @@ def eval_tf_functions(eval_string):
     function_name = check_for_tf_functions(eval_string)
     # Determine startpos of function parameter
     startpos = eval_string.find(function_name+'(') + len(function_name)
-    rhs = eval_string[startpos+1:-1]
+    rhs = eval_string[startpos+1:len(eval_string)]
     endpos = rhs.find(')')
     middle = rhs[0:endpos]
     if '(' in middle :
@@ -118,7 +118,7 @@ def eval_tf_functions(eval_string):
                     middle = rhs[0:i]
                     endpos = i
                     break
-    func_param = fix_lists(middle)
+    func_param = middle
     eval_result = None
     with suppress(Exception):
 

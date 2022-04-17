@@ -260,7 +260,7 @@ def inject_module_variables(modules: dict, all_variables: dict):
 
     return all_variables
 
-def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename) -> str:
+def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename, mod) -> str:
     # Determine which module's variables we should use
     self_reference = False
     while 'var.' in value or 'local.' in value or 'module.' in value or 'data.' in value:
@@ -311,14 +311,14 @@ def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename
                     value = value.replace(varitem+',', str(varlist[lookup])+',')
                     value = value.replace(varitem+')', str(varlist[lookup])+')')
                     value = value.replace(varitem+']', str(varlist[lookup])+']')
-            elif lookup in varlist[lookup]:
+            elif varlist.get(lookup):
                 # Self referencing variable (duplicate across modules)
                 value = value.replace(varitem, str(varlist.get(lookup)))
                 self_reference = True
                 break
             else:
                 click.echo(click.style(
-                    f'\nERROR: No variable value supplied for {varitem} but it is referenced in locals.{key} ', fg='white', bold=True))
+                    f'\nERROR: No variable value supplied for {varitem} but it is referenced in {filename} ', fg='white', bold=True))
                 click.echo(
                     'Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n')
                 exit()
@@ -370,23 +370,101 @@ def handle_readme_source(resp) -> str:
     githubURL = githubURL[0:startindex] + '.git'
     return githubURL
 
-# TODO: Break download_files down into a smaller function
-def download_files(sourceURL: str, tempdir: str, module=''):
-    click.echo(click.style('Loading Sources..', fg='white', bold=True))
-    subfolder = ''
-    gitaddress = ''
-    reponame = sourceURL.replace('/', '_')
-    module_cache_path = os.path.join(MODULE_DIR, reponame)
-    # Identify source repo and construct final git clone URL
-    click.echo(f'  Downloading External Module: {sourceURL}')
+# # TODO: Break download_files down into a smaller function
+# def download_files(sourceURL: str, tempdir: str, module=''):
+#     click.echo(click.style('Loading Sources..', fg='white', bold=True))
+#     subfolder = ''
+#     gitaddress = ''
+#     reponame = sourceURL.replace('/', '_')
+#     module_cache_path = os.path.join(MODULE_DIR, reponame)
+#     # Identify source repo and construct final git clone URL
+#     click.echo(f'  Downloading External Module: {sourceURL}')
+#     if sourceURL.startswith('github.com') or sourceURL.startswith('https://github.com/'):
+#         if sourceURL.count('//') > 1:
+#             subfolder_array = sourceURL.split('//')
+#             subfolder = subfolder_array[2].split('?')[0]
+#             gitaddress = subfolder_array[0] + '//' + subfolder_array[1]
+#         githubURL = gitaddress if gitaddress else sourceURL
+#         sourceURL = gitaddress if gitaddress else sourceURL
+#         r = requests.get(url(sourceURL))
+#     elif sourceURL.startswith('git::ssh://') or sourceURL.startswith('git@github.com') or 'git::' in sourceURL:
+#         if 'ssh://' in sourceURL:
+#             split_array = sourceURL.split('git::ssh://')
+#         elif 'git::http' in sourceURL:
+#             split_array = sourceURL.split('git::')
+#         else:
+#             split_array = sourceURL.split('git::')
+#         gitaddress = split_array[-1]
+#         gitaddress = gitaddress.replace('git@github.com/', 'git@github.com:')
+#         if '//' in gitaddress and not gitaddress.startswith('https://'):
+#             subfolder_array = gitaddress.split('//')
+#             subfolder = subfolder_array[1].split('?')[0]
+#             gitaddress = subfolder_array[0]
+#         githubURL = gitaddress
+#     else:
+#         # URL is a Terraform Registry Module linked via git
+#         gitaddress = sourceURL
+#         headers = ''
+#         if check_for_domain(sourceURL):
+#             domain = urlparse('https://' + sourceURL).netloc
+#             registrypath = sourceURL.split(domain)
+#             gitaddress = registrypath[1]
+#             domain = 'https://' + domain + '/api/registry/v1/modules/'
+#             click.echo(f'    Assuming Terraform Enterprise API Server URL: {domain}')
+#             if not 'TFE_TOKEN' in os.environ:
+#                 click.echo(click.style(
+#                     '\nERROR: No TFE_TOKEN environment variable set. Unable to authorise with Terraform Enterprise Server', fg='red', bold=True))
+#                 exit()
+#             else:
+#                 headers = {'Authorization': 'bearer ' + os.environ['TFE_TOKEN']}
+#         else:
+#             domain = 'https://registry.terraform.io/v1/modules/'
+#         if sourceURL.count('//') >= 1:
+#             # Clone only the Subfolder specified
+#             subfolder_array = sourceURL.split('//')
+#             subfolder = subfolder_array[1].split('?')[0]
+#             gitaddress = subfolder_array[0]
+#         r = requests.get(domain + gitaddress, headers=headers)
+#         try:
+#             githubURL = r.json()['source']
+#         except:
+#             click.echo(click.style(
+#                 '\nERROR: Received invalid response from Terraform Enterprise server. Check authorisation token, server address and network settings', fg='red', bold=True))
+#             exit()
+#         if githubURL == '':
+#             githubURL = handle_readme_source(r)
+#         click.echo(click.style(f'    Cloning from Terraform registry source: {githubURL}', fg='green'))
+#     # Now do a git clone or skip if we already have seen this module before
+#     if os.path.exists(os.path.join(MODULE_DIR, reponame)):
+#         click.echo(f'  Skipping download of module {reponame}, found existing folder in module cache')
+#         return os.path.join(module_cache_path, subfolder)
+#     else:
+#         os.makedirs(module_cache_path)
+#         try:
+#             git.Repo.clone_from(url(githubURL), str(module_cache_path), progress=CloneProgress())
+#         except:
+#             click.echo(click.style(
+#                 f'\nERROR: Unable to call Git to clone repository! Ensure git is configured properly and the URL {githubURL} is reachable.', fg='red', bold=True))
+#             os.rmdir(module_cache_path)
+#             exit()
+#     if module:
+#         temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
+#         shutil.copytree(module_cache_path, temp_module_path)
+#         return os.path.join(module_cache_path, subfolder)
+#     return os.path.join(tempdir, subfolder)
+
+def get_clone_url(sourceURL: str) :
+    # Handle Case where full git url is given
     if sourceURL.startswith('github.com') or sourceURL.startswith('https://github.com/'):
+        # Handle subfolder of git repo
         if sourceURL.count('//') > 1:
             subfolder_array = sourceURL.split('//')
             subfolder = subfolder_array[2].split('?')[0]
             gitaddress = subfolder_array[0] + '//' + subfolder_array[1]
         githubURL = gitaddress if gitaddress else sourceURL
-        sourceURL = gitaddress if gitaddress else sourceURL
-        r = requests.get(url(sourceURL))
+        # sourceURL = gitaddress if gitaddress else sourceURL
+        #r = requests.get(sourceURL)
+    # Handle case where ssh git URL is given
     elif sourceURL.startswith('git::ssh://') or sourceURL.startswith('git@github.com') or 'git::' in sourceURL:
         if 'ssh://' in sourceURL:
             split_array = sourceURL.split('git::ssh://')
@@ -433,25 +511,37 @@ def download_files(sourceURL: str, tempdir: str, module=''):
             exit()
         if githubURL == '':
             githubURL = handle_readme_source(r)
-        click.echo(click.style(f'    Cloning from Terraform registry source: {githubURL}', fg='green'))
+    return githubURL
+
+
+def download_files(sourceURL: str, tempdir: str, module=''):
+    click.echo(click.style('Loading Sources..', fg='white', bold=True))
+    subfolder = ''
+    reponame = sourceURL.replace('/', '_')
+    module_cache_path = os.path.join(MODULE_DIR, reponame)
+    # Identify source repo and construct final git clone URL
+    click.echo(f'  Downloading External Module: {sourceURL}')
+    githubURL = get_clone_url(sourceURL)
+    click.echo(click.style(f'    Cloning from Terraform registry source: {githubURL}', fg='green'))
     # Now do a git clone or skip if we already have seen this module before
-    if os.path.exists(os.path.join(MODULE_DIR, reponame)):
+    if os.path.exists(module_cache_path):
         click.echo(f'  Skipping download of module {reponame}, found existing folder in module cache')
-        return os.path.join(module_cache_path, subfolder)
+        if module:
+            temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
+            shutil.copytree(module_cache_path, temp_module_path)
+            return os.path.join(temp_module_path, subfolder)
+        else :
+            return os.path.join(module_cache_path, subfolder)
     else:
         os.makedirs(module_cache_path)
         try:
-            git.Repo.clone_from(url(githubURL), str(module_cache_path), progress=CloneProgress())
+            clonepath = git.Repo.clone_from(githubURL, str(module_cache_path), progress=CloneProgress())
         except:
             click.echo(click.style(
                 f'\nERROR: Unable to call Git to clone repository! Ensure git is configured properly and the URL {githubURL} is reachable.', fg='red', bold=True))
             os.rmdir(module_cache_path)
             exit()
-    if module:
-        temp_module_path = os.path.join(tempdir, ';'+module+';'+reponame)
-        shutil.copytree(module_cache_path, temp_module_path)
-        return os.path.join(module_cache_path, subfolder)
-    return os.path.join(tempdir, subfolder)
+    return os.path.join(module_cache_path, subfolder)
 
 
 def clean_file(filename: str, tempdir: str):
@@ -515,7 +605,7 @@ def process_conditional_metadata(metadata: dict, mod_locals, all_variables, all_
             stringarray = eval_string.split('.')
             modulevar = cleanup('module' + '.' + stringarray[1] + '.' + stringarray[2]).strip()
             eval_string = eval_string.replace(modulevar, outvalue)
-        eval_string = resolve_dynamic_values(eval_string, mod_locals, all_variables, all_outputs, filename)
+        eval_string = resolve_dynamic_values(eval_string, mod_locals, all_variables, all_outputs, filename, mod)
         return eval_string
 
     for resource, attr_list in metadata.items():
@@ -655,13 +745,10 @@ def get_variable_values(all_variables: dict, varfile_list: list, all_modules: di
             for module in modulelist:
                 for mod, params in module.items():
                     for variable in params:
-                        if 'var.' + variable in str(params[variable]):
-                            click.echo(f'  WARNING: Possible variable duplication issue with var.{variable}')
-                        else:
-                            var_data[variable] = params[variable]
-                            if not var_mappings.get(mod) :
-                                var_mappings[mod] ={}
-                            var_mappings[mod][variable] = params[variable]
+                        var_data[variable] = params[variable]
+                        if not var_mappings.get(mod) :
+                            var_mappings[mod] ={}
+                        var_mappings[mod][variable] = params[variable]
     if varfile_list:
         # Over-write defaults with passed varfile specified values
         for varfile in varfile_list:
