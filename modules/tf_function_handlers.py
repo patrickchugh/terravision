@@ -84,6 +84,17 @@ class tf_function_handlers:
         p = literal_eval(param)
         #TODO: Find out which element needs to be returned instead of defaulting to zero
         return p[0]
+    
+    def coalescelist(param):
+        param = resolve_nested_functions(param)
+        if param == '[]' or param == '' or param == '""':
+            return ''
+        p = literal_eval(param)
+        #TODO: Find out which element needs to be returned instead of defaulting to zero
+        if p[0] :
+            return p[0] 
+        else:
+            return p[1]
 
     def flatten(param):
         param = resolve_nested_functions(param)

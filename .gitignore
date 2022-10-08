@@ -132,3 +132,5 @@ dmypy.json
 # terravision
 architecture.dot
 .vscode/
+architecture.dot.png
+architecture.gv.dot
