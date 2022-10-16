@@ -2,6 +2,7 @@ import sys
 import hashlib
 import re
 
+
 def compute_hash(bstring):
     # A arbitrary (but fixed) buffer
     # size (change accordingly)
@@ -11,14 +12,16 @@ def compute_hash(bstring):
     # Initializing the sha256() method
     sha256 = hashlib.sha256()
     sha256.update(bstring)
-    return str(int(sha256.hexdigest(),16))
+    return str(int(sha256.hexdigest(), 16))
+
 
 def find_nth(string, substring, n):
-    if (n == 1):
+    if n == 1:
         return string.find(substring)
     else:
         return string.find(substring, find_nth(string, substring, n - 1) + 1)
-        
+
+
 # Class to eval the postfix expression
 class Evaluate:
     # Constructor to initialize the class variables
@@ -37,7 +40,7 @@ class Evaluate:
         if len(self.array) > 0:
             return self.array[-1]
         else:
-            return ' '
+            return " "
 
     # Pop the element from the stack
     def pop(self):
@@ -61,50 +64,55 @@ class Evaluate:
 
             # If the scanned character is an operand
             # (number here) push it to the stack
-            if i.isdigit() or i == ' ':
+            if i.isdigit() or i == " ":
                 self.push(i)
             # If the scanned character is an operator,
             # pop two elements from stack and apply it.
-            elif i != ':':
-                val1 = ''
-                val2 = ''
+            elif i != ":":
+                val1 = ""
+                val2 = ""
                 # Trim leading spaces until we find first value for val1
-                while self.peek() == ' ':
+                while self.peek() == " ":
                     self.pop()
                 # Accumulate multi digit operand until we hit a space
-                while self.peek() != ' ':        
+                while self.peek() != " ":
                     val1 = str(self.pop()) + val1
                 # Now do the same for val2
-                while self.peek() == ' ':
+                while self.peek() == " ":
                     self.pop()
-                while self.peek() != ' ':
+                while self.peek() != " ":
                     val2 = str(self.pop()) + val2
                 estr = str(val2) + str(i) + str(val1)
-                estr = estr.replace('=', '==')
-                estr = estr.replace('!', '!=')
-                estr = estr.replace('&', ' and ')
-                estr = estr.replace('|', ' or ')
-                estr = estr.replace('G', ' >= ')
-                estr = estr.replace('L', ' <= ')
-                #print(estr)
+                estr = estr.replace("=", "==")
+                estr = estr.replace("!", "!=")
+                estr = estr.replace("&", " and ")
+                estr = estr.replace("|", " or ")
+                estr = estr.replace("G", " >= ")
+                estr = estr.replace("L", " <= ")
+                # print(estr)
                 self.push(eval(estr))
-                self.push(' ')
-            elif i == ':':
-                val1 = ''
-                val2 = ''
-                val3 = ''
-                if self.peek() == ' ':
+                self.push(" ")
+            elif i == ":":
+                val1 = ""
+                val2 = ""
+                val3 = ""
+                if self.peek() == " ":
                     self.pop()
-                while self.peek() != ' ':
+                while self.peek() != " ":
                     val1 = str(self.pop()) + val1
                 self.pop()
-                while self.peek() != ' ':
+                while self.peek() != " ":
                     val2 = str(self.pop()) + val2
-                while not isinstance(self.peek(), bool) and str(self.peek()) != '1' and str(self.peek()) != '0' and self.top != -1:
+                while (
+                    not isinstance(self.peek(), bool)
+                    and str(self.peek()) != "1"
+                    and str(self.peek()) != "0"
+                    and self.top != -1
+                ):
                     self.pop()
-                if self.top != -1 :
+                if self.top != -1:
                     val3 = int(self.pop())
-                else :
+                else:
                     val3 = False
                 if val3 == True:
                     self.push(val2)
@@ -123,16 +131,29 @@ class Conversion:
         self.array = []
         # Precedence setting
         self.output = []
-        self.precedence = {':': 0, '+': 1, '-': 1, '*': 2, '/': 2, '^': 3, '&': 4, '|':4, '!': 4, '>': 5, '<': 5, '=':6}
+        self.precedence = {
+            ":": 0,
+            "+": 1,
+            "-": 1,
+            "*": 2,
+            "/": 2,
+            "^": 3,
+            "&": 4,
+            "|": 4,
+            "!": 4,
+            ">": 5,
+            "<": 5,
+            "=": 6,
+        }
 
     # Evaluate Sub Expressions within main expression recursively
-    def evaluate_subexp(self,exp):
+    def evaluate_subexp(self, exp):
         obj = Conversion(len(exp))
         pf = obj.infixToPostfix(exp)
-        #print(pf)
+        # print(pf)
         obj = Evaluate(len(pf))
         returnval = obj.evaluatePostfix(pf)
-        #print(returnval)
+        # print(returnval)
         return returnval
 
     # check if the stack is empty
@@ -153,30 +174,30 @@ class Conversion:
 
     # Push the element to the stack
     def push(self, op):
-        if op != '' :
+        if op != "":
             self.top += 1
             self.array.append(op)
 
     # A utility function to check is the given character
     # is operand
     def isOperand(self, ch):
-        return ch.isdigit() or ch == 'T' or ch == 'F'
+        return ch.isdigit() or ch == "T" or ch == "F"
 
-    def hash_strings(self, exp) :
+    def hash_strings(self, exp):
         while exp.count('"') > 1:
             split_array = exp.split('"')
             string = split_array[1]
             if len(string) > 0:
-                exp = exp.replace('"'+string+'"', compute_hash(str.encode(string)))
-            else :
-                exp = exp.replace('""','0')
+                exp = exp.replace('"' + string + '"', compute_hash(str.encode(string)))
+            else:
+                exp = exp.replace('""', "0")
         while exp.count("'") > 1:
             split_array = exp.split("'")
             string = split_array[1]
             if len(string) > 0:
-                exp = exp.replace("'"+string+"'", compute_hash(str.encode(string)))
-            else :
-                exp = exp.replace("''",'0')
+                exp = exp.replace("'" + string + "'", compute_hash(str.encode(string)))
+            else:
+                exp = exp.replace("''", "0")
         return exp
 
     # Check if the precedence of operator is strictly
@@ -194,48 +215,48 @@ class Conversion:
     # to postfix expression
     def infixToPostfix(self, exp):
         # Shorten two char operators to one char and replace True/False with condition
-        if '${' in exp:
-            exp = ''.join(exp.rsplit('}', 1))
-            exp = exp.replace('${', '', 1)
-        exp = exp.replace('==', '=')
-        exp = exp.replace('"True"', 'T')
-        exp = exp.replace('"False"', 'F')
-        exp = exp.replace('False', 'F')
-        exp = exp.replace('True', 'T')
-        exp = exp.replace(' !False ', ' T ')
-        exp = exp.replace(' !True ', ' F ')
-        exp = exp.replace('&&', '&')
-        exp = exp.replace('||', '|')
-        exp = exp.replace('!=', '!')
-        exp = exp.replace('>=', 'G')
-        exp = exp.replace('<=', 'L')
-        exp = exp.replace(',','')
-        exp = exp.replace('[', '')
-        exp = exp.replace(']', '')
-        exp = exp.replace('!F', 'T')
-        exp = exp.replace('"None"',  '""')
+        if "${" in exp:
+            exp = "".join(exp.rsplit("}", 1))
+            exp = exp.replace("${", "", 1)
+        exp = exp.replace("==", "=")
+        exp = exp.replace('"True"', "T")
+        exp = exp.replace('"False"', "F")
+        exp = exp.replace("False", "F")
+        exp = exp.replace("True", "T")
+        exp = exp.replace(" !False ", " T ")
+        exp = exp.replace(" !True ", " F ")
+        exp = exp.replace("&&", "&")
+        exp = exp.replace("||", "|")
+        exp = exp.replace("!=", "!")
+        exp = exp.replace(">=", "G")
+        exp = exp.replace("<=", "L")
+        exp = exp.replace(",", "")
+        exp = exp.replace("[", "")
+        exp = exp.replace("]", "")
+        exp = exp.replace("!F", "T")
+        exp = exp.replace('"None"', '""')
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)
-        for np in none_parameters :
+        for np in none_parameters:
             exp = exp.replace(np, '""')
-        exp = exp.replace('None', '""')
+        exp = exp.replace("None", '""')
         exp = self.hash_strings(exp)
-        counter = -1    
-        tried=1
-        while exp.count('?') > 1:
-            if tried > 10 :
-                return 'ERROR!'
-            num_ifs = exp.count('?')
-            begin_index = find_nth(exp,'?',num_ifs)
-            end_index = find_nth(exp, ':', num_ifs)
-            spaces = begin_index-1
-            while exp[spaces] ==' ':
-                spaces = spaces -1
-                if spaces > 100 :
-                    return 'ERROR!'
+        counter = -1
+        tried = 1
+        while exp.count("?") > 1:
+            if tried > 10:
+                return "ERROR!"
+            num_ifs = exp.count("?")
+            begin_index = find_nth(exp, "?", num_ifs)
+            end_index = find_nth(exp, ":", num_ifs)
+            spaces = begin_index - 1
+            while exp[spaces] == " ":
+                spaces = spaces - 1
+                if spaces > 100:
+                    return "ERROR!"
             middle = exp[spaces:end_index]
             parsed_value = self.evaluate_subexp(middle)
             exp = exp.replace(middle, str(parsed_value))
-            tried=tried+1
+            tried = tried + 1
         # Iterate over the expression for conversion
         for i in exp:
             counter += 1
@@ -243,52 +264,52 @@ class Conversion:
             # add it to output
             if self.isOperand(i):
                 o = i
-                if i == 'T':
-                    o = '1'
-                    if exp[counter+1] != ' ':
-                        o = o + ' '
-                if i == 'F':
-                    o = '0'
-                    if exp[counter+1] != ' ':
-                        o = o + ' '
+                if i == "T":
+                    o = "1"
+                    if exp[counter + 1] != " ":
+                        o = o + " "
+                if i == "F":
+                    o = "0"
+                    if exp[counter + 1] != " ":
+                        o = o + " "
                 self.output.append(o)
 
             # If the character is an '(', push it to stack
-            elif i == '(':
+            elif i == "(":
                 self.push(i)
-            elif i == ' ':
+            elif i == " ":
                 pass
-            elif i == '?':
+            elif i == "?":
                 self.output.append(self.pop())
                 self.output.append(self.pop())
 
             # If the scanned character is an ')', pop and
             # output from the stack until and '(' is found
-            elif i == ')':
-                while((not self.isEmpty()) and
-                      self.peek() != '('):
+            elif i == ")":
+                while (not self.isEmpty()) and self.peek() != "(":
                     a = self.pop()
                     self.output.append(a)
-                if (not self.isEmpty() and self.peek() != '('):
+                if not self.isEmpty() and self.peek() != "(":
                     return -1
                 else:
                     self.pop()
 
             # An operator is encountered
             else:
-                while(not self.isEmpty() and self.notGreater(i)):
+                while not self.isEmpty() and self.notGreater(i):
                     self.output.append(self.pop())
-                self.output.append(' ')
+                self.output.append(" ")
                 self.push(i)
 
         # pop all the operator from the stack
         while not self.isEmpty():
             self.output.append(self.pop())
-        return ("".join(self.output))
+        return "".join(self.output)
+
 
 ######
-##### For Module Testing Only 
-##### 
+##### For Module Testing Only
+#####
 
 # exp = 'False && !False ? "Can not remove the app prefix from a role that is not SAML enabled" : 0'
 
@@ -302,7 +323,3 @@ class Conversion:
 # obj = Evaluate(len(pf))
 # eval_value = obj.evaluatePostfix(pf)
 # print(eval_value)
-
-
-
-
