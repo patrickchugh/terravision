@@ -787,12 +787,12 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> s
 def get_variable_values(tfdata) -> dict:
     """Returns a list of all variables merged from local .tfvar defaults, supplied varfiles and module values"""
     click.echo("Processing Variables..")
-    if not all_variables:
-        all_variables = dict()
+    if not tfdata.get("all_variable"):
+        tfdata["all_variable"] = dict()
     var_data = dict()
     var_mappings = dict()
     # Load default values from all existing files in source locations
-    for var_source_file, var_list in all_variables.items():
+    for var_source_file, var_list in tfdata["all_variable"].items():
         var_source_dir = str(Path(var_source_file).parent)
         for item in var_list:
             for k in item.keys():
@@ -845,5 +845,6 @@ def get_variable_values(tfdata) -> dict:
                 if not var_mappings.get("main"):
                     var_mappings["main"] = {}
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
-
-    return {"var_data": var_data, "var_mappings": var_mappings}
+    tfdata['var_data'] = var_data
+    tfdata['var_mappings'] = var_mappings
+    return tfdata
