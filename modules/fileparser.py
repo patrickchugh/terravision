@@ -74,23 +74,6 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     return paths
 
 
-def output_log(tfdata, variable_list):
-    for section in output_sections:
-        click.echo(f"\n  {section.title()} list :")
-        if tfdata.get("all_" + section):
-            for file, valuelist in tfdata["all_" + section].items():
-                filepath = Path(file)
-                fname = filepath.parent.name + "/" + filepath.name
-                for item in valuelist:
-                    if isinstance(item, dict):
-                        for key in item:
-                            click.echo(f"    {fname}: {key}.{next(iter(item[key]))}")
-                    else:
-                        click.echo(f"    {fname}: {item}")
-    if variable_list:
-        click.echo("\n  Variable List:")
-        for var in variable_list:
-            click.echo(f"    var.{var} = {variable_list[var]}")
 
 
 def handle_module(modules_list, tf_file_paths, filename):
@@ -211,9 +194,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dic
         varfile_list = tfdata["all_variable"].keys()
     tfdata["varfile_list"] = varfile_list
     tfdata["module_source_dict"] = module_source_dict
-    # vardata = get_variable_values(tfdata.get('all_variable'), varfile_list,cc, module_source_dict)
-    # tfdata['variable_map'] =  vardata['var_mappings']
-    # tfdata['variable_list'] = vardata['var_data']
+   
     return tfdata
 
 

@@ -1,16 +1,5 @@
-import ast
-import fileinput
-import os
 import re
-import shutil
-import tempfile
 import click
-import git
-import hcl2
-import requests
-import yaml
-
-from git import RemoteProgress
 from requests.api import head
 from tqdm import tqdm
 from contextlib import suppress
@@ -23,251 +12,40 @@ from modules.helpers import *
 from modules.postfix import Conversion, Evaluate
 from sys import exit
 
-# Create Tempdir and Module Cache Directories
-all_repos = list()
-annotations = dict()
-temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
-if not os.path.exists(MODULE_DIR):
-    os.makedirs(MODULE_DIR)
 
-# List of dictionary sections to extract from TF file
-extract = ["module", "output", "variable", "locals", "resource", "data"]
-
-# List of dictionary sections to output in log
-output_sections = ["locals", "module", "resource", "data"]
-
-
-class CloneProgress(RemoteProgress):
-    def __init__(self):
-        super().__init__()
-        self.pbar = tqdm(leave=False)
-
-    def update(self, op_code, cur_count, max_count=None, message=""):
-        self.pbar.total = max_count
-        self.pbar.n = cur_count
-        self.pbar.refresh()
-
-
-def find_tf_files(source: str, paths=list(), recursive=False) -> list:
-    global annotations
-    yaml_detected = False
-    # If source is a Git address, clone to temp dir
-    if ("github" in source or "bitbucket" in source) and source.startswith("http"):
-        source_location = download_files(source, temp_dir.name)
-    else:
-        # Source is a local folder
-        source_location = source.strip()
-    if recursive:
-        for root, _, files in os.walk(source_location):
-            for file in files:
-                if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
-                    paths.append(os.path.join(root, file))
-    else:
-        files = [f for f in os.listdir(source_location)]
-        click.echo(f"  Added Source Location: {source}")
-        for file in files:
-            if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
-                paths.append(os.path.join(source_location, file))
-            if (
-                file.lower().endswith("architecture.yml")
-                or file.lower().endswith("architecture.yaml")
-                and not yaml_detected
-            ):
-                full_filepath = Path(source_location).joinpath(file)
-                with open(full_filepath, "r") as file:
-                    click.echo(
-                        f"  Detected architecture annotation file : {file.name} \n"
-                    )
-                    yaml_detected = True
-                    annotations = yaml.safe_load(file)
-    if len(paths) == 0:
-        click.echo(
-            "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
-        )
-        exit()
-    return paths
+# # Inject parent module variables that are referenced downstream in sub modules
+# if tfdata.get("all_module"):
+#     tfdata["variable_map"] = inject_module_variables(
+#         tfdata["all_module"], tfdata["variable_map"]
+#     )
+# if tfdata.get("all_locals"):
+#     # Evaluate Local Variables containing functions and TF variables and replace with evaluated values
+#     tfdata["all_locals"] = extract_locals(
+#         tfdata["all_locals"], variable_list, tfdata.get("all_output")
+#     )
+# # Get metadata from resource attributes
+# data = get_metadata(
+#     tfdata["all_resource"],
+#     tfdata.get("variable_map"),
+#     tfdata.get("all_locals"),
+#     tfdata.get("all_output"),
+#     tfdata.get("all_module"),
+#     module_source_dict,
+# )
+# tfdata["meta_data"] = data["meta_data"]
+# tfdata["node_list"] = data["node_list"]
+# tfdata["hidden"] = data["hide"]
+# tfdata["annotations"] = annotations
+# # Dump out findings after file scans are complete
+# output_log(tfdata, variable_list)
+# # Check for annotations
+# temp_dir.cleanup()
+# os.chdir(cwd)5eszesz
+# return tfdata
 
 
-def output_log(tfdata, variable_list):
-    for section in output_sections:
-        click.echo(f"\n  {section.title()} list :")
-        if tfdata.get("all_" + section):
-            for file, valuelist in tfdata["all_" + section].items():
-                filepath = Path(file)
-                fname = filepath.parent.name + "/" + filepath.name
-                for item in valuelist:
-                    if isinstance(item, dict):
-                        for key in item:
-                            click.echo(f"    {fname}: {key}.{next(iter(item[key]))}")
-                    else:
-                        click.echo(f"    {fname}: {item}")
-    if variable_list:
-        click.echo("\n  Variable List:")
-        for var in variable_list:
-            click.echo(f"    var.{var} = {variable_list[var]}")
-
-
-def handle_module(modules_list, tf_file_paths, filename):
-    temp_modules_dir = temp_dir.name
-    module_source_dict = dict()
-    # For every module source location, download the files into a new temporary subdirectory
-    for i in modules_list:
-        for k in i.keys():
-            if isinstance(i[k]["source"], list):
-                sourceURL = i[k]["source"][0]
-            else:
-                sourceURL = i[k]["source"]
-            if not sourceURL in all_repos:
-                all_repos.append(sourceURL)
-                # Handle local modules on disk
-                if sourceURL.startswith(".") or sourceURL.startswith("\\"):
-                    if not str(temp_modules_dir) in filename:
-                        current_filepath = os.path.abspath(filename)
-                        tf_dir = os.path.dirname(current_filepath)
-                        os.chdir(tf_dir)
-                        os.chdir(sourceURL)
-                        modfolder = str(os.getcwd())
-                        tf_file_paths = find_tf_files(os.getcwd(), tf_file_paths)
-                        os.chdir(dname)
-                else:
-                    modfolder = download_files(sourceURL, temp_modules_dir, k)
-                    tf_file_paths = find_tf_files(modfolder, tf_file_paths)
-    # Create a mapping dict between modules and their source dirs for variable separation
-    for i in range(len(modules_list)):
-        module_stanza = modules_list[i]
-        key = next(iter(module_stanza))  # Get first key
-        module_source = module_stanza[key]["source"]
-        # Convert Source URLs to module cache paths
-        if not module_source.startswith(".") and not module_source.startswith("\\"):
-            localfolder = module_source.replace("/", "_")
-            cache_path = os.path.join(temp_modules_dir, ";" + key + ";" + localfolder)
-            module_source_dict[key] = {
-                "cache_path": str(cache_path),
-                "source_file": filename,
-            }
-        else:
-            module_source_dict[key] = {
-                "cache_path": module_source,
-                "source_file": filename,
-            }
-    return {"tf_file_paths": tf_file_paths, "module_source_dict": module_source_dict}
-
-
-def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dict:
-    global annotations
-    """ Parse all .TF extension files in source folder and subdirectories and returns dict with modules, outputs, variables, locals and resources found """
-    filedict = dict()
-    tfdata = dict()
-    variable_list = dict()
-    module_source_dict = dict()
-    cwd = os.getcwd()
-    for source in source_list:
-        # Get List of Terraform Files to parse
-        tf_file_paths = find_tf_files(source)
-        if annotate:
-            with open(annotate, "r") as file:
-                click.echo(
-                    f"  Will override with architecture annotation file : {file.name} \n"
-                )
-                annotations = yaml.safe_load(file)
-        click.echo(click.style("Reading Terraforms..", fg="white", bold=True))
-        # Parse each TF file encountered in source locations
-        for filename in tf_file_paths:
-            filepath = Path(filename)
-            fname = filepath.parent.name + "/" + filepath.name
-            click.echo(f"  Parsing {filename}")
-            with click.open_file(filename, "r") as f:
-                with suppress(Exception):
-                    filedict[filename] = hcl2.load(f)
-                # Handle HCL parsing errors due to unexpected characters
-                if not filename in filedict.keys():
-                    click.echo(
-                        f"   WARNING: Unknown Error reading TF file {filename}. Attempting character cleanup fix.."
-                    )
-                    with tempfile.TemporaryDirectory(dir=temp_dir.name) as tempclean:
-                        f_tmp = clean_file(filename, str(tempclean))
-                        filedict[filename] = hcl2.load(f_tmp)
-                        if not filename in filedict.keys():
-                            click.echo(
-                                f"   ERROR: Unknown Error reading TF file {filename}. Aborting!"
-                            )
-                            exit()
-                # Isolate variables, locals and other sections of interest into tfdata dict
-                for section in extract:
-                    if section in filedict[filename]:
-                        section_name = "all_" + section
-                        if not section_name in tfdata.keys():
-                            tfdata[section_name] = {}
-                        tfdata[section_name][filename] = filedict[filename][section]
-                        click.echo(
-                            click.style(
-                                f"    Found {len(filedict[filename][section])} {section} stanza(s)",
-                                fg="green",
-                            )
-                        )
-                        if section == "module":
-                            # Expand source locations to include any newly found sub-module locations
-                            module_data = handle_module(
-                                filedict[filename]["module"], tf_file_paths, filename
-                            )
-                            tf_file_paths = module_data["tf_file_paths"]
-                            # Get list of modules and their sources
-                            for mod in module_data["module_source_dict"]:
-                                module_source_dict[mod] = module_data[
-                                    "module_source_dict"
-                                ][mod]
-
-    # Auto load any tfvars
-    for file in tf_file_paths:
-        if "auto.tfvars" in file:
-            varfile_list = varfile_list + (file,)
-    # Load in variables from user file into a master list
-    if len(varfile_list) == 0 and tfdata.get("all_variable"):
-        varfile_list = tfdata["all_variable"].keys()
-    vardata = get_variable_values(
-        tfdata.get("all_variable"),
-        varfile_list,
-        tfdata.get("all_module"),
-        module_source_dict,
-    )
-    tfdata["variable_map"] = vardata["var_mappings"]
-    tfdata["variable_list"] = vardata["var_data"]
-    # Inject parent module variables that are referenced downstream in sub modules
-    if tfdata.get("all_module"):
-        tfdata["variable_map"] = inject_module_variables(
-            tfdata["all_module"], tfdata["variable_map"]
-        )
-    if tfdata.get("all_locals"):
-        # Evaluate Local Variables containing functions and TF variables and replace with evaluated values
-        tfdata["all_locals"] = extract_locals(
-            tfdata["all_locals"], variable_list, tfdata.get("all_output")
-        )
-    # Get metadata from resource attributes
-    data = get_metadata(
-        tfdata["all_resource"],
-        tfdata.get("variable_map"),
-        tfdata.get("all_locals"),
-        tfdata.get("all_output"),
-        tfdata.get("all_module"),
-        module_source_dict,
-    )
-    tfdata["meta_data"] = data["meta_data"]
-    tfdata["node_list"] = data["node_list"]
-    tfdata["hidden"] = data["hide"]
-    tfdata["annotations"] = annotations
-    # Dump out findings after file scans are complete
-    output_log(tfdata, variable_list)
-    # Check for annotations
-    temp_dir.cleanup()
-    os.chdir(cwd)
-    return tfdata
-
-
-def inject_module_variables(modules: dict, all_variables: dict):
-    for file, module_list in modules.items():
+def inject_module_variables(tfdata: dict):
+    for file, module_list in tfdata["all_module"].items():
         for module_items in module_list:
             for module, params in module_items.items():
                 module_source = params["source"]
@@ -278,36 +56,36 @@ def inject_module_variables(modules: dict, all_variables: dict):
                                 value[i] = replace_variables(
                                     value[i],
                                     module_source,
-                                    all_variables["main"],
+                                    tfdata["variable_map"]["main"],
                                     False,
                                 )
                         else:
                             value = replace_variables(
-                                value, module_source, all_variables["main"], False
+                                value,
+                                module_source,
+                                tfdata["variable_map"]["main"],
+                                False,
                             )
                     # Add var value to master list of all variables so it can be used downstream
                     if (
                         key != "source" and key != "version"
                     ):  # and key in all_variables.keys():
-                        all_variables[module][key] = value
+                        tfdata["variable_map"][module][key] = value
     # Add quotes for raw strings to aid postfix evaluation
-    for module in all_variables:
-        for variable in all_variables[module]:
-            value = all_variables[module][variable]
+    for module in tfdata["variable_map"]:
+        for variable in tfdata["variable_map"][module]:
+            value = tfdata["variable_map"][module][variable]
             if (
                 isinstance(value, str)
                 and "(" not in value
                 and "[" not in value
                 and not value.startswith('"')
             ):
-                all_variables[module][variable] = f'"{value}"'
+                tfdata["variable_map"][module][variable] = f'"{value}"'
+    return tfdata
 
-    return all_variables
 
-
-def resolve_dynamic_values(
-    value: str, locallist, varlist, all_outputs, filename, mod
-) -> str:
+def resolve_dynamic_values(value: str, locallist, varlist, all_outputs, filename):
     # Determine which module's variables we should use
     self_reference = False
     while (
@@ -411,12 +189,12 @@ def resolve_dynamic_values(
     return value
 
 
-def extract_locals(locallist, varlist, all_outputs):
+def extract_locals(tfdata):
     click.echo("\n  Parsing locals...")
     final_locals = dict()
     module_locals = dict()
     # Remove array layer of locals dict structure and copy over to final_locals dict first
-    for file, localvarlist in locallist.items():
+    for file, localvarlist in tfdata["all_locals"].items():
         final_locals[file] = localvarlist[0]
         if ";" in file:
             modname = file.split(";")[1]
@@ -426,189 +204,8 @@ def extract_locals(locallist, varlist, all_outputs):
             module_locals[modname] = {**module_locals[modname], **localvarlist[0]}
         else:
             module_locals[modname] = localvarlist[0]
-    return module_locals
-
-
-def handle_readme_source(resp) -> str:
-    readme = resp.json()["root"]["readme"]
-    githubURL = "ssh://git@" + find_between(readme, "(https://", ")")
-    found = re.findall("\.........\.net", githubURL)
-    for site in found:
-        githubURL = githubURL.replace(site, "-ssh" + site)
-    githubURL = githubURL.replace("/projects/", ":7999/")
-    githubURL = githubURL.replace("/repos/", "/")
-    startindex = githubURL.index("/browse?")
-    githubURL = githubURL[0:startindex] + ".git"
-    return githubURL
-
-
-def get_clone_url(sourceURL: str):
-    # Handle Case where full git url is given
-    if sourceURL.startswith("github.com") or sourceURL.startswith(
-        "https://github.com/"
-    ):
-        # Handle subfolder of git repo
-        if sourceURL.count("//") > 1:
-            subfolder_array = sourceURL.split("//")
-            subfolder = subfolder_array[2].split("?")[0]
-            gitaddress = subfolder_array[0] + "//" + subfolder_array[1]
-        githubURL = gitaddress if gitaddress else sourceURL
-        # sourceURL = gitaddress if gitaddress else sourceURL
-        # r = requests.get(sourceURL)
-    # Handle case where ssh git URL is given
-    elif (
-        sourceURL.startswith("git::ssh://")
-        or sourceURL.startswith("git@github.com")
-        or "git::" in sourceURL
-    ):
-        if "ssh://" in sourceURL:
-            split_array = sourceURL.split("git::ssh://")
-        elif "git::http" in sourceURL:
-            split_array = sourceURL.split("git::")
-        else:
-            split_array = sourceURL.split("git::")
-        gitaddress = split_array[-1]
-        gitaddress = gitaddress.replace("git@github.com/", "git@github.com:")
-        if "//" in gitaddress and not gitaddress.startswith("https://"):
-            subfolder_array = gitaddress.split("//")
-            subfolder = subfolder_array[1].split("?")[0]
-            gitaddress = subfolder_array[0]
-        githubURL = gitaddress
-    else:
-        # URL is a Terraform Registry Module linked via git
-        gitaddress = sourceURL
-        headers = ""
-        if check_for_domain(sourceURL):
-            domain = urlparse("https://" + sourceURL).netloc
-            registrypath = sourceURL.split(domain)
-            gitaddress = registrypath[1]
-            domain = "https://" + domain + "/api/registry/v1/modules/"
-            click.echo(f"    Assuming Terraform Enterprise API Server URL: {domain}")
-            if not "TFE_TOKEN" in os.environ:
-                click.echo(
-                    click.style(
-                        "\nERROR: No TFE_TOKEN environment variable set. Unable to authorise with Terraform Enterprise Server",
-                        fg="red",
-                        bold=True,
-                    )
-                )
-                exit()
-            else:
-                headers = {"Authorization": "bearer " + os.environ["TFE_TOKEN"]}
-        else:
-            domain = "https://registry.terraform.io/v1/modules/"
-        if sourceURL.count("//") >= 1:
-            # Clone only the Subfolder specified
-            subfolder_array = sourceURL.split("//")
-            subfolder = subfolder_array[1].split("?")[0]
-            gitaddress = subfolder_array[0]
-        r = requests.get(domain + gitaddress, headers=headers)
-        try:
-            githubURL = r.json()["source"]
-        except:
-            click.echo(
-                click.style(
-                    "\nERROR: Received invalid response from Terraform Enterprise server. Check authorisation token, server address and network settings",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            exit()
-        if githubURL == "":
-            githubURL = handle_readme_source(r)
-    return githubURL
-
-
-def download_files(sourceURL: str, tempdir: str, module=""):
-    click.echo(click.style("Loading Sources..", fg="white", bold=True))
-    subfolder = ""
-    reponame = sourceURL.replace("/", "_")
-    module_cache_path = os.path.join(MODULE_DIR, reponame)
-    # Identify source repo and construct final git clone URL
-    click.echo(f"  Downloading External Module: {sourceURL}")
-    githubURL = get_clone_url(sourceURL)
-    click.echo(
-        click.style(
-            f"    Cloning from Terraform registry source: {githubURL}", fg="green"
-        )
-    )
-    # Now do a git clone or skip if we already have seen this module before
-    if os.path.exists(module_cache_path):
-        click.echo(
-            f"  Skipping download of module {reponame}, found existing folder in module cache"
-        )
-        if module:
-            temp_module_path = os.path.join(tempdir, ";" + module + ";" + reponame)
-            shutil.copytree(module_cache_path, temp_module_path)
-            return os.path.join(temp_module_path, subfolder)
-        else:
-            return os.path.join(module_cache_path, subfolder)
-    else:
-        os.makedirs(module_cache_path)
-        try:
-            clonepath = git.Repo.clone_from(
-                githubURL, str(module_cache_path), progress=CloneProgress()
-            )
-        except:
-            click.echo(
-                click.style(
-                    f"\nERROR: Unable to call Git to clone repository! Ensure git is configured properly and the URL {githubURL} is reachable.",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            os.rmdir(module_cache_path)
-            exit()
-    return os.path.join(module_cache_path, subfolder)
-
-
-def clean_file(filename: str, tempdir: str):
-    filepath = str(Path(tempdir, "cleaning.tmp"))
-    f_tmp = click.open_file(filepath, "w")
-    with fileinput.FileInput(
-        filename,
-        inplace=False,
-    ) as file:
-        for line in file:
-            if line.strip().startswith("#"):
-                continue
-            if (
-                '", "' in line
-                or ":" in line
-                or "*" in line
-                or "?" in line
-                or "[" in line
-                or '("' in line
-                or "==" in line
-                or "?" in line
-                or "]" in line
-                or ":" in line
-            ):
-                # if '", "' in line or ':' in line or '*' in line or '?' in line or '[' in line or '("' in line or '==' in line or '?' in line or '${' in line or ']' in line:
-                if "aws_" in line and not "resource" in line:
-                    array = line.split("=")
-                    if len(array) > 1:
-                        badstring = array[1]
-                    else:
-                        badstring = line
-                    cleaned_string = re.sub("[^0-9a-zA-Z._]+", " ", badstring)
-                    line = array[0] + ' = "' + cleaned_string + '"'
-                else:
-                    line = f"# {line}" + "\r"
-            f_tmp.write(line)
-    f_tmp = click.open_file(filepath, "r")
-    return f_tmp
-
-
-def replace_data_statements(statement: str):
-    data_found_list = re.findall("data\.[A-Za-z0-9_\-\.]+", statement)
-    for d in data_found_list:
-        resource = d.split("data.")[1]
-        if '"' in statement:
-            statement = statement.replace(d, resource)
-        else:
-            statement = statement.replace(d, f'"{resource}"')
-    return statement
+    tfdata["all_locals"] = module_locals
+    return tfdata
 
 
 def process_conditional_metadata(
@@ -785,7 +382,7 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> s
 
 
 def get_variable_values(tfdata) -> dict:
-    """Returns a list of all variables merged from local .tfvar defaults, supplied varfiles and module values"""
+    """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""
     click.echo("Processing Variables..")
     if not tfdata.get("all_variable"):
         tfdata["all_variable"] = dict()
@@ -826,7 +423,7 @@ def get_variable_values(tfdata) -> dict:
                             var_mappings[mod][var_name] = var_value
     if tfdata["module_source_dict"]:
         # Insert module parameters as variable names
-        for file, modulelist in tfdata["module_source_dict"].items():
+        for file, modulelist in tfdata["all_module"].items():
             for module in modulelist:
                 for mod, params in module.items():
                     for variable in params:
@@ -845,6 +442,6 @@ def get_variable_values(tfdata) -> dict:
                 if not var_mappings.get("main"):
                     var_mappings["main"] = {}
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
-    tfdata['var_data'] = var_data
-    tfdata['var_mappings'] = var_mappings
+    tfdata["variable_list"] = var_data
+    tfdata["variable_map"] = var_mappings
     return tfdata
