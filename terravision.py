@@ -12,8 +12,13 @@ from pprint import pprint
 from pathlib import Path
 
 # Process source files and return dictionaries with relevant data
-def make_graph_dict(nodelist: list, all_resources: dict, all_locals: dict,
-                    all_outputs: dict, hidden: list):
+def make_graph_dict(
+    nodelist: list,
+    all_resources: dict,
+    all_locals: dict,
+    all_outputs: dict,
+    hidden: list,
+):
     # Find and replace all local variables with resource references in their values
     find_replace = dict()
     for local_list in helpers.dict_generator(all_locals):
@@ -21,35 +26,38 @@ def make_graph_dict(nodelist: list, all_resources: dict, all_locals: dict,
             for nodecheck in nodelist:
                 if type(local_item) == str:
                     if nodecheck in local_item:
-                        print(f'    local.{local_list[1]} = {nodecheck}')
-                        find_replace['local.' + local_list[1]] = nodecheck
+                        print(f"    local.{local_list[1]} = {nodecheck}")
+                        find_replace["local." + local_list[1]] = nodecheck
     # Start with a empty connections list for all nodes/resources we know about
     graphdict = dict.fromkeys(nodelist, [])
     num_resources = len(nodelist)
     click.echo(
         click.style(
-            f'\nComputing Relations between {num_resources - len(hidden)} out of {num_resources} resources...',
-            fg='white',
-            bold=True))
+            f"\nComputing Relations between {num_resources - len(hidden)} out of {num_resources} resources...",
+            fg="white",
+            bold=True,
+        )
+    )
     # Determine relationship between resources and append to graphdict when found
     for param_list in helpers.dict_generator(all_resources):
         for listitem in param_list:
             if isinstance(listitem, str):
                 lisitem_tocheck = listitem
                 # If resource refers to an output from another module, get the value from outputs dict
-                if 'module.' in listitem:
+                if "module." in listitem:
                     cleantext = helpers.fix_lists(listitem)
-                    splitlist = cleantext.split('.')
-                    outputname = helpers.find_between(cleantext, splitlist[1] + '.',
-                                              ' ')
+                    splitlist = cleantext.split(".")
+                    outputname = helpers.find_between(
+                        cleantext, splitlist[1] + ".", " "
+                    )
                     for file in all_outputs.keys():
                         for i in all_outputs[file]:
                             if outputname in i.keys():
-                                outvalue = i[outputname]['value']
+                                outvalue = i[outputname]["value"]
                                 lisitem_tocheck = outvalue
-                matching_result = helpers.check_relationship(lisitem_tocheck,
-                                                     param_list, nodelist,
-                                                     find_replace, hidden)
+                matching_result = helpers.check_relationship(
+                    lisitem_tocheck, param_list, nodelist, find_replace, hidden
+                )
                 if matching_result:
                     for i in range(0, len(matching_result), 2):
                         a_list = list(graphdict[matching_result[i]])
@@ -59,7 +67,8 @@ def make_graph_dict(nodelist: list, all_resources: dict, all_locals: dict,
             if isinstance(listitem, list):
                 for i in listitem:
                     matching_result = helpers.check_relationship(
-                        i, param_list, nodelist, find_replace, hidden)
+                        i, param_list, nodelist, find_replace, hidden
+                    )
                     if matching_result:
                         a_list = list(graphdict[matching_result[0]])
                         if not matching_result[1] in a_list:
@@ -71,33 +80,22 @@ def make_graph_dict(nodelist: list, all_resources: dict, all_locals: dict,
 def compile_tfdata(source: list, varfile: list, annotate=""):
     # Parse HCL files from Terraform
     tfdata = fileparser.parse_tf_files(source, varfile, annotate)
-
-    # Interpret Variables
+    # Load default variable values and user variable values
     tfdata = interpreter.get_variable_values(tfdata)
-    # Inject parent module variables that are referenced downstream in sub modules
-    tfdata = interpreter.inject_module_variables(tfdata)
-    # Evaluate Local Variables containing functions and TF variables and replace with evaluated values
+    # Create view of locals by module
     tfdata = interpreter.extract_locals(tfdata)
-    
-    # # Get metadata from resource attributes
-    tfdata["meta_data"]= interpreter.get_metadata(
-        tfdata["all_resource"],
-        tfdata.get("variable_map"),
-        tfdata.get("all_locals"),
-        tfdata.get("all_output"),
-        tfdata.get("all_module"),
-        module_source_dict,
-    )
-    # tfdata["meta_data"] = data["meta_data"]
-    # tfdata["node_list"] = data["node_list"]
-    # tfdata["hidden"] = data["hide"]
-    # tfdata["annotations"] = annotations
+    # Create metadata view from nested TF file resource attributes
+    tfdata = interpreter.get_metadata(tfdata)
+    # Replace metadata (resource attributes) variables and locals with actual values
+    tfdata = interpreter.handle_metadata_vars(tfdata)
+
+     # Inject parent module variables that are referenced downstream in sub modules
+    tfdata = interpreter.inject_module_variables(tfdata)
+     
     # Dump out findings after file scans are complete
-    helpers.output_log(tfdata, variable_list)
-    # # Check for annotations
-    # temp_dir.cleanup()
-    # os.chdir(cwd)5eszesz
-    # return tfdata
+    # helpers.output_log(tfdata, variable_list)
+    
+    
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     relationship_dict = make_graph_dict(
         tfdata["node_list"],
@@ -106,6 +104,8 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
         tfdata.get("all_output"),
         tfdata["hidden"],
     )
+    # temp_dir.cleanup()
+    # os.chdir(cwd)
     return {"graphdict": relationship_dict, "tfdata": tfdata}
 
 

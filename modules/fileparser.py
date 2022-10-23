@@ -74,8 +74,6 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     return paths
 
 
-
-
 def handle_module(modules_list, tf_file_paths, filename):
     temp_modules_dir = temp_dir.name
     module_source_dict = dict()
@@ -122,9 +120,9 @@ def handle_module(modules_list, tf_file_paths, filename):
     return {"tf_file_paths": tf_file_paths, "module_source_dict": module_source_dict}
 
 
-def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dict:
+def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
     global annotations
-    """ Parse all .TF extension files in source folder and subdirectories and returns dict with modules, outputs, variables, locals and resources found """
+    """ Parse all .TF extension files in source folder and returns dict with variables and resources found """
     filedict = dict()
     tfdata = dict()
     variable_list = dict()
@@ -135,9 +133,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dic
         tf_file_paths = find_tf_files(source)
         if annotate:
             with open(annotate, "r") as file:
-                click.echo(
-                    f"  Will override with architecture annotation file : {file.name} \n"
-                )
+                click.echo(f"  Will use architecture annotation file : {file.name} \n")
                 annotations = yaml.safe_load(file)
         click.echo(click.style("Reading Terraforms..", fg="white", bold=True))
         # Parse each TF file encountered in source locations
@@ -194,7 +190,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str) -> dic
         varfile_list = tfdata["all_variable"].keys()
     tfdata["varfile_list"] = varfile_list
     tfdata["module_source_dict"] = module_source_dict
-   
+    tfdata['tempdir'] = temp_dir
     return tfdata
 
 
