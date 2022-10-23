@@ -88,14 +88,13 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     tfdata = interpreter.get_metadata(tfdata)
     # Replace metadata (resource attributes) variables and locals with actual values
     tfdata = interpreter.handle_metadata_vars(tfdata)
-
-     # Inject parent module variables that are referenced downstream in sub modules
+    # Inject parent module variables that are referenced downstream in sub modules
     tfdata = interpreter.inject_module_variables(tfdata)
-     
+    # Handle conditionally created resources e.g. with count or foreach attribute
+    tfdata = interpreter.handle_conditional_resources(tfdata)
     # Dump out findings after file scans are complete
-    # helpers.output_log(tfdata, variable_list)
-    
-    
+    helpers.output_log(tfdata, tfdata["variable_map"])
+
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     relationship_dict = make_graph_dict(
         tfdata["node_list"],
