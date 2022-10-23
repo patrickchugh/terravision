@@ -419,4 +419,4 @@ def cleanup(text: str) -> str:
     ]:
         if ch in text:
             text = text.replace(ch, ' ')
-    return text
+    return text.strip()
