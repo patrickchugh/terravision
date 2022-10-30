@@ -5,6 +5,8 @@ import re
 import os
 from modules.tf_function_handlers import tf_function_handlers
 from sys import exit
+import modules.helpers as helpers
+
 
 reverse_arrow_list = [
     'aws_route53',
@@ -16,6 +18,72 @@ reverse_arrow_list = [
 ]
 
 implied_connections = {'certificate_arn': 'aws_acm_certificate'}
+
+
+# Process source files and return dictionaries with relevant data
+def make_graph_dict(
+    nodelist: list,
+    all_resources: dict,
+    all_locals: dict,
+    all_outputs: dict,
+    hidden: list,
+):
+    # Find and replace all local variables with resource references in their values
+    find_replace = dict()
+    for local_list in dict_generator(all_locals):
+        for local_item in local_list:
+            for nodecheck in nodelist:
+                if type(local_item) == str:
+                    if nodecheck in local_item:
+                        print(f"    local.{local_list[1]} = {nodecheck}")
+                        find_replace["local." + local_list[1]] = nodecheck
+    # Start with a empty connections list for all nodes/resources we know about
+    graphdict = dict.fromkeys(nodelist, [])
+    num_resources = len(nodelist)
+    click.echo(
+        click.style(
+            f"\nComputing Relations between {num_resources - len(hidden)} out of {num_resources} resources...",
+            fg="white",
+            bold=True,
+        )
+    )
+    # Determine relationship between resources and append to graphdict when found
+    for param_list in dict_generator(all_resources):
+        for listitem in param_list:
+            if isinstance(listitem, str):
+                lisitem_tocheck = listitem
+                # If resource refers to an output from another module, get the value from outputs dict
+                if "module." in listitem:
+                    cleantext = helpers.fix_lists(listitem)
+                    splitlist = cleantext.split(".")
+                    outputname = helpers.find_between(
+                        cleantext, splitlist[1] + ".", " "
+                    )
+                    for file in all_outputs.keys():
+                        for i in all_outputs[file]:
+                            if outputname in i.keys():
+                                outvalue = i[outputname]["value"]
+                                lisitem_tocheck = outvalue
+                matching_result = check_relationship(
+                    lisitem_tocheck, param_list, nodelist, find_replace, hidden
+                )
+                if matching_result:
+                    for i in range(0, len(matching_result), 2):
+                        a_list = list(graphdict[matching_result[i]])
+                        if not matching_result[i + 1] in a_list:
+                            a_list.append(matching_result[i + 1])
+                        graphdict[matching_result[i]] = a_list
+            if isinstance(listitem, list):
+                for i in listitem:
+                    matching_result = helpers.check_relationship(
+                        i, param_list, nodelist, find_replace, hidden
+                    )
+                    if matching_result:
+                        a_list = list(graphdict[matching_result[0]])
+                        if not matching_result[1] in a_list:
+                            a_list.append(matching_result[1])
+                        graphdict[matching_result[0]] = a_list
+    return graphdict
 
 # Generator function to crawl entire dict and load all dict and list values
 def dict_generator(indict, pre=None):

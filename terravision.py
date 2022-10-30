@@ -12,70 +12,6 @@ import modules.graphmaker as graphmaker
 from pprint import pprint
 from pathlib import Path
 
-# Process source files and return dictionaries with relevant data
-def make_graph_dict(
-    nodelist: list,
-    all_resources: dict,
-    all_locals: dict,
-    all_outputs: dict,
-    hidden: list,
-):
-    # Find and replace all local variables with resource references in their values
-    find_replace = dict()
-    for local_list in graphmaker.dict_generator(all_locals):
-        for local_item in local_list:
-            for nodecheck in nodelist:
-                if type(local_item) == str:
-                    if nodecheck in local_item:
-                        print(f"    local.{local_list[1]} = {nodecheck}")
-                        find_replace["local." + local_list[1]] = nodecheck
-    # Start with a empty connections list for all nodes/resources we know about
-    graphdict = dict.fromkeys(nodelist, [])
-    num_resources = len(nodelist)
-    click.echo(
-        click.style(
-            f"\nComputing Relations between {num_resources - len(hidden)} out of {num_resources} resources...",
-            fg="white",
-            bold=True,
-        )
-    )
-    # Determine relationship between resources and append to graphdict when found
-    for param_list in graphmaker.dict_generator(all_resources):
-        for listitem in param_list:
-            if isinstance(listitem, str):
-                lisitem_tocheck = listitem
-                # If resource refers to an output from another module, get the value from outputs dict
-                if "module." in listitem:
-                    cleantext = helpers.fix_lists(listitem)
-                    splitlist = cleantext.split(".")
-                    outputname = helpers.find_between(
-                        cleantext, splitlist[1] + ".", " "
-                    )
-                    for file in all_outputs.keys():
-                        for i in all_outputs[file]:
-                            if outputname in i.keys():
-                                outvalue = i[outputname]["value"]
-                                lisitem_tocheck = outvalue
-                matching_result = graphmaker.check_relationship(
-                    lisitem_tocheck, param_list, nodelist, find_replace, hidden
-                )
-                if matching_result:
-                    for i in range(0, len(matching_result), 2):
-                        a_list = list(graphdict[matching_result[i]])
-                        if not matching_result[i + 1] in a_list:
-                            a_list.append(matching_result[i + 1])
-                        graphdict[matching_result[i]] = a_list
-            if isinstance(listitem, list):
-                for i in listitem:
-                    matching_result = helpers.check_relationship(
-                        i, param_list, nodelist, find_replace, hidden
-                    )
-                    if matching_result:
-                        a_list = list(graphdict[matching_result[0]])
-                        if not matching_result[1] in a_list:
-                            a_list.append(matching_result[1])
-                        graphdict[matching_result[0]] = a_list
-    return graphdict
 
 
 def compile_tfdata(source: list, varfile: list, annotate=""):
@@ -96,7 +32,7 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    relationship_dict = make_graph_dict(
+    relationship_dict = graphmaker.make_graph_dict(
         tfdata["node_list"],
         tfdata["all_resource"],
         tfdata.get("all_locals"),
@@ -224,10 +160,10 @@ def draw(source, varfile, outfile, format, show, simplified, annotate, avl_class
     help="Filename for output list (default architecture.json)",
 )
 @click.option("--avl_classes", hidden=True)
-def listresources(source, varfile, show_services, outfile, avl_classes):
+def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
     """List Cloud Resources and Relations"""
     preflight_check()
-    parsed_data = make_graph(source, varfile)
+    parsed_data = compile_tfdata(source, varfile, annotate)
     click.echo(click.style("\nJSON Dictionary :", fg="white", bold=True))
     unique = unique_services(parsed_data["tfdata"]["node_list"])
     click.echo(
