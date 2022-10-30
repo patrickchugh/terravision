@@ -8,6 +8,7 @@ import modules.fileparser as fileparser
 import modules.interpreter as interpreter
 import modules.helpers as helpers
 import modules.drawing as drawing
+import modules.graphmaker as graphmaker
 from pprint import pprint
 from pathlib import Path
 
@@ -21,7 +22,7 @@ def make_graph_dict(
 ):
     # Find and replace all local variables with resource references in their values
     find_replace = dict()
-    for local_list in helpers.dict_generator(all_locals):
+    for local_list in graphmaker.dict_generator(all_locals):
         for local_item in local_list:
             for nodecheck in nodelist:
                 if type(local_item) == str:
@@ -39,7 +40,7 @@ def make_graph_dict(
         )
     )
     # Determine relationship between resources and append to graphdict when found
-    for param_list in helpers.dict_generator(all_resources):
+    for param_list in graphmaker.dict_generator(all_resources):
         for listitem in param_list:
             if isinstance(listitem, str):
                 lisitem_tocheck = listitem
@@ -55,7 +56,7 @@ def make_graph_dict(
                             if outputname in i.keys():
                                 outvalue = i[outputname]["value"]
                                 lisitem_tocheck = outvalue
-                matching_result = helpers.check_relationship(
+                matching_result = graphmaker.check_relationship(
                     lisitem_tocheck, param_list, nodelist, find_replace, hidden
                 )
                 if matching_result:
@@ -94,8 +95,6 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     helpers.output_log(tfdata)
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
-    
-
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     relationship_dict = make_graph_dict(
         tfdata["node_list"],
@@ -225,7 +224,7 @@ def draw(source, varfile, outfile, format, show, simplified, annotate, avl_class
     help="Filename for output list (default architecture.json)",
 )
 @click.option("--avl_classes", hidden=True)
-def list(source, varfile, show_services, outfile, avl_classes):
+def listresources(source, varfile, show_services, outfile, avl_classes):
     """List Cloud Resources and Relations"""
     preflight_check()
     parsed_data = make_graph(source, varfile)

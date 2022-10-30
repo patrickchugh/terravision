@@ -342,7 +342,7 @@ def handle_conditional_resources(tfdata):
             while check_for_tf_functions(eval_string) != False:
                 eval_string = helpers.fix_lists(eval_string)
                 eval_string = eval_tf_functions(eval_string)
-                exp = eval_string
+            exp = eval_string
             if not "ERROR!" in exp:
                 obj = Conversion(len(exp))
                 pf = obj.infixToPostfix(exp)
@@ -363,6 +363,11 @@ def handle_conditional_resources(tfdata):
                 click.echo(
                     f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
                 )
+    tfdata['hidden'] = [
+        key
+        for key, attr_list in tfdata['meta_data'].items()
+        if str(attr_list.get("count")) == "0"
+    ]
     return tfdata
 
 
@@ -414,14 +419,9 @@ def get_metadata(tfdata):  #  -> set
                         meta_data[cf_resource]["origin"] = handle_cloudfront_domains(
                             str(origin_source), origin_domain, meta_data
                         )
-    to_hide = [
-        key
-        for key, attr_list in meta_data.items()
-        if str(attr_list.get("count")) == "0"
-    ]
+    
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
-    tfdata["hidden"] = to_hide
     return tfdata
 
 

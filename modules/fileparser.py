@@ -189,6 +189,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
     tfdata["varfile_list"] = varfile_list
     tfdata["module_source_dict"] = module_source_dict
     tfdata['tempdir'] = temp_dir
+    tfdata['annotations'] = annotations
     return tfdata
 
 
