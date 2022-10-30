@@ -230,7 +230,7 @@ class Conversion:
         exp = exp.replace("!=", "!")
         exp = exp.replace(">=", "G")
         exp = exp.replace("<=", "L")
-        exp = exp.replace(",", "")
+        #exp = exp.replace(",", "")
         exp = exp.replace("[", "")
         exp = exp.replace("]", "")
         exp = exp.replace("!F", "T")

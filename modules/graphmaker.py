@@ -1,14 +1,25 @@
 from ast import literal_eval
 from contextlib import suppress
 import click
-import os
 import re
+import os
 from modules.tf_function_handlers import tf_function_handlers
 from sys import exit
-from pathlib import Path
+
+reverse_arrow_list = [
+    'aws_route53',
+    'aws_cloudfront',
+    'aws_vpc.',
+    'aws_subnet.',
+    'aws_iam_role.',
+    'aws_lb',
+]
+
+implied_connections = {'certificate_arn': 'aws_acm_certificate'}
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
+
 
 def check_for_domain(string: str) -> bool:
     exts = ['.com', '.net', '.org', '.io', '.biz']
@@ -72,6 +83,8 @@ def find_between(text,begin,end,alternative='',replace=False,occurrence=1):
         return middle
 
 
+
+
 def pretty_name(name: str, show_title=True) -> str:
     '''
         Beautification for AWS Labels
@@ -117,33 +130,84 @@ def pretty_name(name: str, show_title=True) -> str:
     return final_label
 
 
-def replace_variables(vartext, filename, all_variables, quotes=False):
-    # Replace Variables found within resource meta data
-    if isinstance(filename, list):
-        filename = filename[0]
-    vartext = str(vartext).strip()
-    replaced_vartext = vartext
-    var_found_list = re.findall("var\.[A-Za-z0-9_-]+", vartext)
-    if var_found_list:
-        for varstring in var_found_list:
-            varname = varstring.replace('var.', '').lower()
-            with suppress(Exception):
-                if str(all_variables[varname]) == "":
-                    replaced_vartext = replaced_vartext.replace(
-                        varstring, '""')
-                else:
-                    replacement_value = getvar(varname, all_variables)
-                    if replacement_value == 'NOTFOUND' :
-                        click.echo(click.style(
-                            f'\nERROR: No variable value supplied for var.{varname} in {os.path.basename(os.path.dirname(filename))}/{os.path.basename(filename)}', fg='red', bold=True))
-                        click.echo('Consider passing a valid Terraform .tfvars variable file with the --varfile parameter or setting a TF_VAR env variable\n')
-                        exit()
-                    replaced_vartext = replaced_vartext.replace('${' + varstring + '}', str(replacement_value))
-                    replaced_vartext = replaced_vartext.replace(varstring, str(replacement_value))
-        return replaced_vartext
+# Generator function to crawl entire dict and load all dict and list values
+def dict_generator(indict, pre=None):
+    pre = pre[:] if pre else []
+    if isinstance(indict, dict):
+        for key, value in indict.items():
+            if isinstance(value, dict):
+                for d in dict_generator(value, pre + [key]):
+                    yield d
+            elif isinstance(value, list) or isinstance(value, tuple):
+                for v in value:
+                    for d in dict_generator(v, pre + [key]):
+                        yield d
+            else:
+                yield pre + [key, value]
+    else:
+        yield pre + [indict]
 
 
-def output_log(tfdata):
+# Function to check whether a particular resource mentions another known resource (relationship)
+def check_relationship(listitem: str, plist: list, nodes: list,
+                       replacements: list, hidden: list) -> list:
+    connection_list = []
+    resource_name = listitem.strip('${}')
+    if resource_name in replacements.keys():
+        resource_associated_with = replacements[resource_name]
+        resource_name = plist[1] + '.' + plist[2]
+    else:
+        resource_associated_with = plist[1] + '.' + plist[2]
+    # Check if an existing node name appears in parameters of current resource being checked
+    matching = [s for s in nodes if s in resource_name]
+    # Check if there are any implied connections based on keywords in the param list
+    if not matching:
+        found_connection = [
+            s for s in implied_connections.keys() if s in resource_name
+        ]
+        if found_connection:
+            for n in nodes:
+                if n.startswith(implied_connections[found_connection[0]]):
+                    matching = [n]
+    if (matching):
+        reverse = False
+        for matched_resource in matching:
+            if matched_resource not in hidden and resource_associated_with not in hidden:
+                reverse_origin_match = [
+                    s for s in reverse_arrow_list if s in resource_name
+                ]
+                if len(reverse_origin_match) > 0:
+                    reverse = True
+                    reverse_dest_match = [
+                        s for s in reverse_arrow_list
+                        if s in resource_associated_with
+                    ]
+                    if len(reverse_dest_match) > 0:
+                        if reverse_arrow_list.index(
+                                reverse_dest_match[0]
+                        ) < reverse_arrow_list.index(reverse_origin_match[0]):
+                            reverse = False
+                if reverse:
+                    connection_list.append(matched_resource)
+                    connection_list.append(resource_associated_with)
+                    # Output relationship to console log in reverse order for VPC related nodes
+                    click.echo(
+                        f'   {matched_resource} --> {resource_associated_with}'
+                    )
+                elif not 'aws_acm' in resource_associated_with:  # Exception Ignore outgoing connections from ACM certificates and resources mentioned in depends on
+                    if listitem in plist:
+                        i = plist.index(listitem)
+                        if plist[3] == 'depends_on':
+                            continue
+                    connection_list.append(resource_associated_with)
+                    connection_list.append(matched_resource)
+                    click.echo(
+                        f'   {resource_associated_with} --> {matched_resource}'
+                    )
+    return connection_list
+
+
+def output_log(tfdata, variable_list):
     for section in output_sections:
         click.echo(f"\n  {section.title()} list :")
         if tfdata.get("all_" + section):
@@ -156,16 +220,10 @@ def output_log(tfdata):
                             click.echo(f"    {fname}: {key}.{next(iter(item[key]))}")
                     else:
                         click.echo(f"    {fname}: {item}")
-    if tfdata.get('variable_map'):
+    if variable_list:
         click.echo("\n  Variable List:")
-        for module, variable in tfdata['variable_map'].items():
-            if module == 'main' :
-                variable['source'] = 'main'
-            click.echo(f'\n    Module: {module}')
-            for key in variable :
-                if not key.startswith('source') :
-                    click.echo(f"      var.{key} = {variable[key]}")
-    return
+        for var in variable_list:
+            click.echo(f"    var.{var} = {variable_list[var]}")
 
 def getvar(variable_name, all_variables_dict):
     # See if variable exists as an environment variable
@@ -181,6 +239,8 @@ def getvar(variable_name, all_variables_dict):
             if var.lower() == variable_name.lower() :
                 return all_variables_dict[var]                    
         return 'NOTFOUND'
+
+
 
 def find_resource_references(searchdict: dict, target_resource: str) -> dict:
     final_dict = dict()
@@ -209,7 +269,36 @@ def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
             final_list.append(item)
     return final_list
 
+
+def replace_locals(vartext, all_locals):
+    replaced_vartext = str(vartext).strip()
+    var_found_list = re.findall("local\.[A-Za-z0-9_-]+", vartext)
+    if var_found_list:
+        for varstring in var_found_list:
+            varname = varstring.replace('local.', '')
+            with suppress(Exception):
+                if all_locals.get(varname) == "":
+                    replaced_vartext = replaced_vartext.replace(
+                        varstring, '""')
+                else:
+                    replacement_value = all_locals[varname]
+                    if isinstance(replacement_value, str):
+                        replacement_value = f'{replacement_value}'
+                    replaced_vartext = replaced_vartext.replace(
+                        varstring, str(replacement_value))
+        if replaced_vartext.startswith('{'):
+            # Handle cases where local reference found in object/list structure
+            return literal_eval(replaced_vartext)
+        else:
+            while '${' in replaced_vartext:
+                replaced_vartext = replaced_vartext.replace('${', '', 1)
+                replaced_vartext = ''.join(replaced_vartext.rsplit('}', 1))
+    return replaced_vartext
+
+
 # Cleanup lists with special characters
+
+
 def fix_lists(eval_string: str):
     eval_string = eval_string.replace('${[]}', '[]')
     if '${' in eval_string:
@@ -229,13 +318,6 @@ def fix_lists(eval_string: str):
     eval_string = eval_string.replace('[False]', 'False')
     return eval_string
 
-# Cleans out special characters
-def cleanup_curlies(text: str) -> str:
-    text = str(text)
-    for ch in ['$', '{', '}']:
-        if ch in text:
-            text = text.replace(ch, ' ')
-    return text.strip()
 
 # Cleans out special characters
 def cleanup(text: str) -> str:

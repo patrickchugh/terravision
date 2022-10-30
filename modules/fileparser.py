@@ -30,8 +30,6 @@ if not os.path.exists(MODULE_DIR):
 # List of dictionary sections to extract from TF file
 extract = ["module", "output", "variable", "locals", "resource", "data"]
 
-# List of dictionary sections to output in log
-output_sections = ["locals", "module", "resource", "data"]
 
 
 def find_tf_files(source: str, paths=list(), recursive=False) -> list:

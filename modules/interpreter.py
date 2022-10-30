@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from modules.helpers import *
 from modules.postfix import Conversion, Evaluate
 from sys import exit
+import modules.helpers as helpers
 import hcl2
 
 
@@ -30,7 +31,7 @@ def inject_module_variables(tfdata: dict):
                                     False,
                                 )
                         else:
-                            value = replace_variables(
+                            value = helpers.replace_variables(
                                 value,
                                 module_source,
                                 tfdata["variable_map"]["main"],
@@ -154,7 +155,7 @@ def find_replace_values(varstring, module, tfdata):
                 "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n"
             )
             exit()
-    # Handle Locals 
+    # Handle Locals
     for localitem in local_found_list:
         lookup = cleanup(localitem.split("local.")[1])
         if tfdata["all_locals"]:
@@ -168,9 +169,7 @@ def find_replace_values(varstring, module, tfdata):
                 )
         else:
             value = value.replace(localitem, "None")
-            click.echo(
-                f"    ERROR: Cannot find definition for local var {localitem}"
-            )
+            click.echo(f"    ERROR: Cannot find definition for local var {localitem}")
             exit()
     return value
 
@@ -231,39 +230,119 @@ def process_conditional_metadata(
 
         if "for_each" in attr_list:
             attr_list["for_each"] = determine_statement(attr_list["for_each"])
+
     return metadata
 
 
-def determine_statement(eval_string: str, tfdata: dict):
-    # Handle for loops
-    if "for" in eval_string and "in" in eval_string:
-        # we have a for loop so deal with that part first
-        # TODO: Implement for loop handling for real, for now just null it out
-        eval_string = find_between(
-            eval_string, "[for", ":", "[", True, eval_string.count("[")
-        )
-        eval_string = find_between(
-            eval_string, ":", "]", "", True, eval_string.count("]")
-        )
-    # Otherwise just replace vars with actual values
-    eval_string = resolve_dynamic_values(
-        eval_string, mod_locals, all_variables, all_outputs, filename
+def eval_tf_functions(eval_string):
+    # Check if there are any Terraform functions used to compute resources
+    function_name = check_for_tf_functions(eval_string)
+    # Determine startpos of function parameter
+    startpos = eval_string.find(function_name + "(") + len(function_name)
+    rhs = eval_string[startpos + 1 : len(eval_string)]
+    endpos = rhs.find(")")
+    middle = rhs[0:endpos]
+    if "(" in middle:
+        # We have nested fucnctions
+        # get right hand side of statement
+        ob = False
+        cb = False
+        for i in range(len(rhs)):
+            if rhs[i] == "(":
+                ob = True
+            if rhs[i] == ")":
+                cb = True
+                if ob == True:
+                    ob = False
+                    cb = False
+                else:
+                    middle = rhs[0:i]
+                    endpos = i
+                    break
+    func_param = middle
+    eval_result = None
+    # Call emulated Teraform function to get predicted result
+    with suppress(Exception):
+        eval_result = str(getattr(tf_function_handlers, function_name)(func_param))
+    if not eval_result:
+        click.echo(f"    WARNING: Unable to evaluate {function_name}({func_param})")
+        eval_result = f"ERROR!_{function_name}(" + func_param + ")"
+    eval_string = eval_string.replace(
+        f"{function_name}(" + func_param + ")", str(eval_result)
     )
+    eval_string = fix_lists(eval_string)
     return eval_string
 
-def handle_conditional_resources(tfdata) :
-    for resource, attr_list in tfdata['meta_data'].items():
-        if (
-            "count" in attr_list.keys()
-            and not isinstance(attr_list["count"], int)
-            and not resource.startswith("null_resource")
-        ):
-            eval_string = str(attr_list["count"])
-            eval_string = determine_statement(eval_string, tfdata)
-            exp = handle_conditionals(eval_string, mod_locals, all_variables, filename)
-            filepath = Path(filename)
-            fname = filepath.parent.name + "/" + filepath.name
-            # fname = filename.split('_')[-2] + filename.split('_')[-1]
+
+def find_conditional_statements(resource, attr_list: dict):
+    # Handle conditional counts and loops
+    if "for_each" in attr_list:
+        eval_string = attr_list["for_each"]
+        return helpers.cleanup_curlies(eval_string)
+    if (
+        "count" in attr_list.keys()
+        and not isinstance(attr_list["count"], int)
+        and not resource.startswith("null_resource")
+    ):
+        eval_string = str(attr_list["count"])
+        return helpers.cleanup_curlies(eval_string)
+    for attrib in attr_list:
+        if "for" in attrib and "in" in attrib:
+            eval_string = attr_list[attrib]
+            # we have a for loop so deal with that part first
+            # TODO: Implement for loop handling for real, for now just null it out
+            eval_string = find_between(
+                eval_string, "[for", ":", "[", True, eval_string.count("[")
+            )
+            eval_string = find_between(
+                eval_string, ":", "]", "", True, eval_string.count("]")
+            )
+            return helpers.cleanup_curlies(eval_string)
+    return False
+
+
+def handle_module_vars(eval_string, tfdata):
+    outvalue = ""
+    splitlist = eval_string.split(".")
+    outputname = find_between(eval_string, splitlist[1] + ".", " ")
+    for file in tfdata["all_outputs"].keys():
+        for i in tfdata["all_outputs"][file]:
+            if outputname in i.keys():
+                outvalue = i[outputname]["value"]
+                if "*.id" in outvalue:
+                    resource_name = fix_lists(outvalue.split(".*")[0])
+                    outvalue = tfdata["meta_data"][resource_name]["count"]
+                    outvalue = find_conditional_statements(outvalue)
+                    break
+    stringarray = eval_string.split(".")
+    modulevar = cleanup("module" + "." + stringarray[1] + "." + stringarray[2]).strip()
+    eval_string = eval_string.replace(modulevar, outvalue)
+    return eval_string
+
+
+def handle_splat_statements(eval_string, tfdata):
+    splitlist = eval_string.split(".")
+    resource_type = "aws_" + helpers.find_between(eval_string, "aws_", ".")
+    resource_name = helpers.find_between(eval_string, ".", "[")
+    resource = resource_type + "." + resource_name
+    return tfdata["meta_data"][resource]["count"]
+
+
+def handle_conditional_resources(tfdata):
+    click.echo(f"\n  Conditional Resource List:")
+    for resource, attr_list in tfdata["meta_data"].items():
+        mod = tfdata["meta_data"][resource]["module"]
+        eval_string = find_conditional_statements(resource, attr_list)
+        if eval_string:
+            if "module." in eval_string:
+                eval_string = handle_module_vars(eval_string, tfdata)
+            if "aws_" and "[*]." in eval_string:
+                eval_string = handle_splat_statements(eval_string, tfdata)
+            # We have a conditionally created resource
+            while check_for_tf_functions(eval_string) != False:
+                eval_string = helpers.fix_lists(eval_string)
+                eval_string = eval_tf_functions(eval_string)
+                exp = eval_string
             if not "ERROR!" in exp:
                 obj = Conversion(len(exp))
                 pf = obj.infixToPostfix(exp)
@@ -272,18 +351,17 @@ def handle_conditional_resources(tfdata) :
                     eval_value = obj.evaluatePostfix(pf)
                     if eval_value == "" or eval_value == " ":
                         eval_value = 0
-                    fname2 = fname.replace(";", "|")
                     click.echo(
-                        f"    {fname2} : {resource} count = {eval_value} ({exp})"
+                        f"    Module {mod} : {resource} count = {eval_value} ({exp})"
                     )
                     attr_list["count"] = int(eval_value)
                 else:
                     click.echo(
-                        f"    ERROR: {fname} : {resource} count = 0 (Error in evaluation of value {exp})"
+                        f"    ERROR: {mod} : {resource} count = 0 (Error in evaluation of value {exp})"
                     )
             else:
                 click.echo(
-                    f"    ERROR: {fname} : {resource} count = 0 (Error in calling function {exp}))"
+                    f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
                 )
     return tfdata
 
@@ -298,7 +376,6 @@ def get_metadata(tfdata):  #  -> set
     variable_list = tfdata.get("variable_map")
     all_locals = tfdata.get("all_locals")
     all_outputs = tfdata.get("all_output")
-    click.echo(f"\n  Conditional Resource List:")
     for filename, resource_list in tfdata["all_resource"].items():
         if ";" in filename:
             # We have a module file being processed
