@@ -65,12 +65,6 @@ def preflight_check():
             sys.exit()
 
 
-def unique_services(nodelist: list) -> list:
-    service_list = []
-    for item in nodelist:
-        service = str(item.split(".")[0]).strip()
-        service_list.append(service)
-    return sorted(set(service_list))
 
 
 # Default help banner
@@ -165,7 +159,7 @@ def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
     preflight_check()
     parsed_data = compile_tfdata(source, varfile, annotate)
     click.echo(click.style("\nJSON Dictionary :", fg="white", bold=True))
-    unique = unique_services(parsed_data["tfdata"]["node_list"])
+    unique = helpers.unique_services(parsed_data["tfdata"]["node_list"])
     click.echo(
         json.dumps(
             parsed_data["graphdict"] if not show_services else unique,
@@ -176,4 +170,4 @@ def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
 
 
 if __name__ == "__main__":
-    cli(default_map={"draw": {"avl_classes": dir()}, "list": {"avl_classes": dir()}})
+    cli(default_map={"draw": {"avl_classes": dir()}, "graphlist": {"avl_classes": dir()}})
