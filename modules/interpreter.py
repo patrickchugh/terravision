@@ -421,7 +421,7 @@ def get_metadata(tfdata):  #  -> set
     ]
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
-    tfdata["to_hide"] = to_hide
+    tfdata["hidden"] = to_hide
     return tfdata
 
 

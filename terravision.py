@@ -102,7 +102,7 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
         tfdata["all_resource"],
         tfdata.get("all_locals"),
         tfdata.get("all_output"),
-        tfdata["to_hide"],
+        tfdata["hidden"],
     )
     # temp_dir.cleanup()
     # os.chdir(cwd)
