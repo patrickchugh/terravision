@@ -13,7 +13,6 @@ from pprint import pprint
 from pathlib import Path
 
 
-
 def compile_tfdata(source: list, varfile: list, annotate=""):
     # Parse HCL files from Terraform
     tfdata = fileparser.parse_tf_files(source, varfile, annotate)
@@ -63,8 +62,6 @@ def preflight_check():
                 )
             )
             sys.exit()
-
-
 
 
 # Default help banner
@@ -170,4 +167,5 @@ def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
 
 
 if __name__ == "__main__":
-    cli(default_map={"draw": {"avl_classes": dir()}, "graphlist": {"avl_classes": dir()}})
+    cli(default_map={"draw": {"avl_classes": dir()},
+        "graphlist": {"avl_classes": dir()}})
