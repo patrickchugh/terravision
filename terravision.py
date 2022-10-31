@@ -71,7 +71,7 @@ def preflight_check():
 @click.group()
 def cli():
     """
-    Terravision 0.2 Alpha
+    Terravision 0.3 Alpha
 
     Copyright 2022 Patrick Chugh. All rights reserved.
 
