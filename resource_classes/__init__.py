@@ -347,6 +347,18 @@ class GenericGroup(Cluster):
         super().__init__(label, defaultdir, graph_attrs)
 
 
+class AvailabilityZone(Cluster):
+    def __init__(self, label='AZ',  **kwargs):
+        graph_attrs = {
+            "style": "dashed",
+            "margin": "150",
+            "pencolor": '#3399ff',
+            "center": "true",
+            "labeljust" : "r"
+        }
+        super().__init__(label, defaultdir, graph_attrs)
+
+
 class AWSgroup(Cluster):
     def __init__(self, label='AWS Cloud', **kwargs):
         aws_graph_attrs = {

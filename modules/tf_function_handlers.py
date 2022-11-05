@@ -58,6 +58,11 @@ class tf_function_handlers:
         else:
             return False
 
+    def regexall(param) :
+        param = resolve_nested_functions(param)
+        params = param.split(',')
+        print(params)
+
     def concat(param):
         param = resolve_nested_functions(param)
         params = param.split("],")

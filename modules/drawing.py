@@ -7,7 +7,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from modules.helpers import *
+import modules.helpers as helpers
 import datetime
 
 # pylint: disable=unused-wildcard-import
@@ -102,12 +102,13 @@ group_nodes = [
     'aws_appautoscaling_target',
     'aws_vpc',
     'aws_subnet',
-    'aws_security_group'
-    'aws_generic_group'  # terravision custom resource
+    'aws_security_group',
+    'aws_generic_group',
+    'aws_availability_zone'  # terravision custom resource
 ]
 
 
-# Variant icons for the same service - matches keyword in meta data to suffix
+# Variant icons for the same service - matches keyword in meta data to suffix after underscore
 node_variants = {
     'aws_ecs_service': {
         'FARGATE': '_fargate',
@@ -139,7 +140,7 @@ def connect_up(origin: Node, destination: Node, metadata: dict) :
     consolidated_dest_prefix = [k for k in consolidated_nodes if dest_resource.startswith(k)]
     consolidated_origin_prefix = [k for k in consolidated_nodes if origin_resource.startswith(k)]
     if consolidated_origin_prefix :
-        candidate_resources = list_of_dictkeys_containing(metadata,consolidated_origin_prefix[0])
+        candidate_resources = helpers.list_of_dictkeys_containing(metadata,consolidated_origin_prefix[0])
         for resource in candidate_resources:
             edge_labels_list = metadata[resource].get('edge_labels')
             if edge_labels_list:
@@ -156,10 +157,10 @@ def connect_up(origin: Node, destination: Node, metadata: dict) :
 
 def handle_special_resources(tfdata: dict, graphdict: dict, resource: str):
     # Check if the resource is part of a LB target group and connect to LB
-    referencers = find_resource_references(graphdict, resource)
-    lb_found = list_of_dictkeys_containing(referencers, 'aws_lb')
+    referencers = helpers.find_resource_references(graphdict, resource)
+    lb_found = helpers.list_of_dictkeys_containing(referencers, 'aws_lb')
     if lb_found:
-        lb_nodes = list_of_dictkeys_containing(tfdata['meta_data'], 'aws_lb.')
+        lb_nodes = helpers.list_of_dictkeys_containing(tfdata['meta_data'], 'aws_lb.')
         for nodename in lb_nodes:
             origin_node = tfdata['meta_data'][nodename]['node']
             dest_node = tfdata['meta_data'][resource]['node']
@@ -174,7 +175,7 @@ def handle_special_resources(tfdata: dict, graphdict: dict, resource: str):
 
     # Check if any NAT Gateways present and connect to IGW
     if resource.startswith('aws_nat_gateway.'):
-        igw_found = list_of_dictkeys_containing(graphdict, 'aws_internet_gateway')
+        igw_found = helpers.list_of_dictkeys_containing(graphdict, 'aws_internet_gateway')
         dest_node = tfdata['meta_data'][igw_found[0]].get('node')
         origin_node = tfdata['meta_data'][resource]['node']
         origin_node >> dest_node
@@ -196,9 +197,9 @@ def draw_vpc_subnets(tfdata, graphdict, resource, connections_list):
                 subnet_identifier = connected_label + ' Subnet ' + str(i+1)
             else:
                 subnet_identifier = connected_label
-            subnet_identifier = cleanup(subnet_identifier + ' ' + tfdata['meta_data'][connected_item]['cidr_block'])
+            subnet_identifier = helpers.cleanup(subnet_identifier + ' ' + tfdata['meta_data'][connected_item]['cidr_block'])
             if '[' in subnet_identifier and 'count.index' in subnet_identifier or 'each.value' in subnet_identifier:
-                array = find_between(subnet_identifier, '[', ']').split(',')
+                array = helpers.find_between(subnet_identifier, '[', ']').split(',')
                 subnet_identifier = connected_label + ' ' + array[i]
             for item in graphdict[connected_item]:
                 if item.startswith('aws_nat_gateway') and 'public' not in subnet_identifier:
@@ -208,7 +209,7 @@ def draw_vpc_subnets(tfdata, graphdict, resource, connections_list):
                     variant = check_variant(subnet_item, tfdata['meta_data'][subnet_item])
                     splitarray = subnet_item.split('.')
                     subnet_service_name = splitarray[0]
-                    subnet_label = pretty_name(subnet_item)
+                    subnet_label = helpers.pretty_name(subnet_item)
                     # Check we recognise this resource type in our drawing library
                     # Ignore LBs as they should only be drawn once as a consolidated node
                     if subnet_item in graphdict.keys() and subnet_service_name in avl_classes and not subnet_service_name.startswith('aws_lb'):
@@ -235,36 +236,37 @@ def draw_vpc_subnets(tfdata, graphdict, resource, connections_list):
         count = 1
 
     for i in range(count):
-        with VPCgroup(resource_label + ' VPC ' + cleanup(tfdata['meta_data'][resource]['cidr_block'])) as VPC_Group:
-            # First draw consolidated nodes that are part of a VPC
-            for node in graphdict:
-                draw_if_consolidated(node, tfdata, graphdict, VPC_Group, True, True)
-            # Now draw all items in VPC connection list
-            for connected_item in connections_list:
-                splitarray = connected_item.split('.')
-                connected_service_name = splitarray[0]
-                connected_label = pretty_name(connected_item)
-                # Draw all subnets and link nodes under those
-                if connected_service_name == 'aws_subnet':
-                    autoscaling = False
-                    try:
-                        # Check if any nodes in connection list are referenced by an autoscaling group
-                        scaler_links = next(v for k, v in graphdict.items() if 'aws_appautoscaling_target' in k)
-                        for check_service in scaler_links:
-                            if check_service in graphdict[connected_item]:
-                                autoscaling = True
-                    except:
+        with VPCgroup(resource_label + ' VPC ' + helpers.cleanup(tfdata['meta_data'][resource]['cidr_block'])) as VPC_Group:
+            with AvailabilityZone():
+                # First draw consolidated nodes that are part of a VPC
+                for node in graphdict:
+                    draw_if_consolidated(node, tfdata, graphdict, VPC_Group, True, True)
+                # Now draw all items in VPC connection list
+                for connected_item in connections_list:
+                    splitarray = connected_item.split('.')
+                    connected_service_name = splitarray[0]
+                    connected_label = helpers.pretty_name(connected_item)
+                    # Draw all subnets and link nodes under those
+                    if connected_service_name == 'aws_subnet':
                         autoscaling = False
-                    if autoscaling:
-                        with GenericAutoScalingGroup() as ASG:
+                        try:
+                            # Check if any nodes in connection list are referenced by an autoscaling group
+                            scaler_links = next(v for k, v in graphdict.items() if 'aws_appautoscaling_target' in k)
+                            for check_service in scaler_links:
+                                if check_service in graphdict[connected_item]:
+                                    autoscaling = True
+                        except:
+                            autoscaling = False
+                        if autoscaling:
+                            with GenericAutoScalingGroup() as ASG:
+                                draw_subnets()
+                        else:
                             draw_subnets()
-                    else:
-                        draw_subnets()
-                elif connected_service_name in avl_classes:
-                    # Check for node icon variants
-                    variant = check_variant(connected_item, tfdata['meta_data'][connected_item])
-                    node = getattr(sys.modules[__name__], connected_service_name + variant)(label=connected_label, tf_resource_name=connected_item)
-                    tfdata['meta_data'][connected_item]['node'] = node
+                    elif connected_service_name in avl_classes:
+                        # Check for node icon variants
+                        variant = check_variant(connected_item, tfdata['meta_data'][connected_item])
+                        node = getattr(sys.modules[__name__], connected_service_name + variant)(label=connected_label, tf_resource_name=connected_item)
+                        tfdata['meta_data'][connected_item]['node'] = node
     return VPC_Group
 
 
@@ -280,9 +282,9 @@ def draw_child_nodes(parentnode: Node, connections_list: list, tfdata: dict, gra
         variant = check_variant(connected_item, tfdata['meta_data'][connected_item])
         # Seperate service name and resource name
         connected_service_name = connected_item.split('.')[0]
-        connected_label = pretty_name(connected_item)
+        connected_label = helpers.pretty_name(connected_item)
         if tfdata['meta_data'][connected_item].get('label'):
-            connected_label = pretty_name(tfdata['meta_data'][connected_item]['label'])
+            connected_label = helpers.pretty_name(tfdata['meta_data'][connected_item]['label'])
         # Check if we have a service we can draw
         if connected_service_name in avl_classes:
             if 'node' in tfdata['meta_data'][connected_item]:
@@ -337,9 +339,9 @@ def draw_parent_children(group: Cluster,  tfdata: dict, graphdict: dict):
                 variant = ''
             splitarray = resource.split('.')
             resource_service_name = splitarray[0]
-            resource_label = pretty_name(resource)
+            resource_label = helpers.pretty_name(resource)
             if tfdata['meta_data'][resource].get('label'):
-                resource_label = pretty_name(tfdata['meta_data'][resource]['label'])
+                resource_label = helpers.pretty_name(tfdata['meta_data'][resource]['label'])
             if resource_service_name in avl_classes and resource_service_name not in group_nodes:
                 # Just draw one node if there are no connections
                 if len(connections_list) == 0:
@@ -384,10 +386,10 @@ def draw_if_consolidated(nodetype: str, tfdata: dict, graphdict: dict, sub_clust
                 ok_to_draw = True
             # Only draw resource if vpcflag is set to specified value
             if ok_to_draw:
-                label = pretty_name(check_resource_name, False)
+                label = helpers.pretty_name(check_resource_name, False)
                 if nodetype.startswith(check_consolidate):
                     if tfdata['meta_data'][nodetype].get('label'):
-                        label = pretty_name(tfdata['meta_data'][nodetype]['label'])
+                        label = helpers.pretty_name(tfdata['meta_data'][nodetype]['label'])
                 MyClass = getattr(importlib.import_module(consolidated_nodes[check_consolidate]['import_location']), check_consolidate)
                 node_icon = MyClass(label=label, tf_resource_name=check_resource_name)
                 # Add nodes to the Cluster Group passed to this function
@@ -490,7 +492,7 @@ def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
     if annotations.get('connect'):
         for node in annotations['connect']:
             if '*' in node:
-                found_matching = list_of_dictkeys_containing(metadata, node)
+                found_matching = helpers.list_of_dictkeys_containing(metadata, node)
                 for key in found_matching:
                     metadata[key]['edge_labels'] = annotations['connect'][node]
             else:
@@ -507,7 +509,7 @@ def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
             for param in annotations['update'][node]:
                 prefix = node.split('*')[0]
                 if '*' in node :
-                    found_matching = list_of_dictkeys_containing(metadata,prefix)
+                    found_matching = helpers.list_of_dictkeys_containing(metadata,prefix)
                     for key in found_matching:
                         metadata[key][param] = annotations['update'][node][param]
                 else :
