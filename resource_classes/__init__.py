@@ -388,6 +388,7 @@ class OnPrem(Cluster):
         aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
+
 class Node:
     """Node represents a node for a specific backend service."""
 

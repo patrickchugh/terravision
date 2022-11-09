@@ -38,9 +38,10 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
         tfdata.get("all_output"),
         tfdata["hidden"],
     )
+    tfdata['graphdict'] = relationship_dict
     # temp_dir.cleanup()
     # os.chdir(cwd)
-    return {"graphdict": relationship_dict, "tfdata": tfdata}
+    return tfdata
 
 
 def preflight_check():
@@ -116,10 +117,9 @@ def cli():
 def draw(source, varfile, outfile, format, show, simplified, annotate, avl_classes):
     """Draws Architecture Diagram"""
     preflight_check()
-    parsed_data = compile_tfdata(source, varfile, annotate)
+    tfdata = compile_tfdata(source, varfile, annotate)
     drawing.render_diagram(
-        parsed_data["tfdata"],
-        parsed_data["graphdict"],
+        tfdata,
         show,
         simplified,
         outfile,
@@ -154,12 +154,12 @@ def draw(source, varfile, outfile, format, show, simplified, annotate, avl_class
 def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
     """List Cloud Resources and Relations"""
     preflight_check()
-    parsed_data = compile_tfdata(source, varfile, annotate)
+    tfdata = compile_tfdata(source, varfile, annotate)
     click.echo(click.style("\nJSON Dictionary :", fg="white", bold=True))
-    unique = helpers.unique_services(parsed_data["tfdata"]["node_list"])
+    unique = helpers.unique_services(tfdata["node_list"])
     click.echo(
         json.dumps(
-            parsed_data["graphdict"] if not show_services else unique,
+            tfdata["graphdict"] if not show_services else unique,
             indent=4,
             sort_keys=True,
         )
