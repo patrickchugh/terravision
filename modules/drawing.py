@@ -135,15 +135,34 @@ AWS_AUTO_ANNOTATION = [
     {"aws_route53": {"create": "Users", "link": "forward"}},
 ]
 
-
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore
 NODE_VARIANTS = {"aws_ecs_service": {"FARGATE": "_fargate", "EC2": "_ec2"}}
 
-# Internal tracking dict for nodes and their connections (for future use)
-connected_nodes = dict()
+
+# Recursive function to draw out nodes along with any nodes connected to them
+def handle_nodes(resource: str, inGroup: Cluster, tfdata: dict, drawn_resources: list) :
+    resource_type = resource.split(".")[0]
+    if not resource_type in avl_classes:
+        return
+    # Draw the node if applicable and record node ID
+    newNode = getattr(sys.modules[__name__], resource_type)(label=resource, tf_resource_name=resource)
+    inGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+    drawn_resources.append(resource)
+    tfdata["meta_data"].update({resource: {"node": newNode}})
+    # Now draw and connect any nodes listed as a connection in graphdict
+    for node_connection in tfdata['graphdict'][resource]:
+        node_type = str(node_connection).split('.')[0]
+        if node_type not in GROUP_NODES and node_type in avl_classes :
+            connectedNode, drawn_resources, tfdata = handle_nodes(node_connection, inGroup, tfdata, drawn_resources)
+            #connectedNode = getattr(sys.modules[__name__], node_type)(label=node_connection, tf_resource_name=node_connection)
+            # tfdata["meta_data"].update({node_connection: {"node": newNode}})
+            # drawn_resources.append(node_connection)
+            newNode.connect(connectedNode, Edge(forward=True))
+    return newNode, drawn_resources, tfdata
+
 
 # Recursive function to draw out groups and subgroups along with their nodes
-def handle_group(resource, tfdata) :
+def handle_group(resource: str, tfdata: dict, drawn_resources: list) :
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes:
         return
@@ -152,12 +171,13 @@ def handle_group(resource, tfdata) :
     for node_connection in tfdata['graphdict'][resource]:
         node_type = str(node_connection).split('.')[0]
         if node_type in GROUP_NODES and node_type in avl_classes:
-            subGroup = handle_group(node_connection, tfdata)
+            subGroup, drawn_resources, tfdata = handle_group(node_connection, tfdata, drawn_resources)
             newGroup.subgraph(subGroup.dot)
+            drawn_resources.append(node_connection)
         elif node_type not in GROUP_NODES and node_type in avl_classes :
-            newNode = getattr(sys.modules[__name__], node_type)(label=node_connection, tf_resource_name=node_connection)
-            newGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
-    return newGroup
+            newNode, drawn_resources, tfdata = handle_nodes(node_connection, newGroup, tfdata, drawn_resources)
+            newGroup.add_node(newNode._id, label = node_connection)
+    return newGroup, drawn_resources, tfdata
 
 # Main control body for drawing
 def render_diagram(
@@ -193,8 +213,9 @@ def render_diagram(
     setcluster(cloudGroup)
 
     # Add all nodes to the list after specified node order
-    #AWS_DRAW_ORDER.append(tfdata['node_list'])
+    AWS_DRAW_ORDER.append(tfdata['graphdict'].keys())
     # Draw Nodes and Groups in order of static definitions
+    all_drawn_resources_list = list()
     for node_type_list in AWS_DRAW_ORDER:
         for node_type in node_type_list:
             if isinstance(node_type, dict) :
@@ -203,14 +224,14 @@ def render_diagram(
                 node_check = node_type
             for resource in tfdata["graphdict"]:
                 resource_type = resource.split(".")[0]
-                if resource_type in avl_classes and node_check.startswith(resource_type) and node_check in GROUP_NODES:
+                if resource_type in avl_classes and node_check.startswith(resource_type) and node_check in GROUP_NODES and resource not in all_drawn_resources_list:
                     # Create new subgroups and their nodes and add it to the master cluster
-                    node_groups = handle_group(resource, tfdata)
+                    node_groups, all_drawn_resources_list, tfdata = handle_group(resource, tfdata, all_drawn_resources_list)
                     cloudGroup.subgraph(node_groups.dot)
-                elif resource_type in avl_classes and not resource_type in GROUP_NODES:
+                elif resource_type in avl_classes and not resource_type in GROUP_NODES and resource not in all_drawn_resources_list:
                     # We have a higher level node outside known groups so add it to the master cluster
-                    newNode = getattr(sys.modules[__name__], resource_type)( tf_resource_name=resource)
-                    cloudGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+                    newNode, all_drawn_resources_list, tfdata = handle_nodes(resource, cloudGroup, tfdata, all_drawn_resources_list)
+                    cloudGroup.add_node(newNode._id, label=resource)
     # Add main outer cloud group to canvas
     myDiagram.subgraph(cloudGroup.dot)
     # Render completed DOT
