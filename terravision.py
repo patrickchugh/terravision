@@ -31,14 +31,8 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    relationship_dict = graphmaker.make_graph_dict(
-        tfdata["node_list"],
-        tfdata["all_resource"],
-        tfdata.get("all_locals"),
-        tfdata.get("all_output"),
-        tfdata["hidden"],
-    )
-    tfdata['graphdict'] = relationship_dict
+    tfdata = graphmaker.make_graph_dict(tfdata)
+   
     # temp_dir.cleanup()
     # os.chdir(cwd)
     return tfdata

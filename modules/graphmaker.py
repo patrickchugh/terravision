@@ -1,8 +1,7 @@
 from ast import literal_eval
 from contextlib import suppress
 import click
-import re
-import os
+import json
 from modules.tf_function_handlers import tf_function_handlers
 from sys import exit
 import modules.helpers as helpers
@@ -21,52 +20,23 @@ implied_connections = {'certificate_arn': 'aws_acm_certificate'}
 
 
 # Process source files and return dictionaries with relevant data
-def make_graph_dict(
-    nodelist: list,
-    all_resources: dict,
-    all_locals: dict,
-    all_outputs: dict,
-    hidden: list,
-):
-    # Find and replace all local variables with resource references in their values
-    find_replace = dict()
-    for local_list in dict_generator(all_locals):
-        for local_item in local_list:
-            for nodecheck in nodelist:
-                if type(local_item) == str:
-                    if nodecheck in local_item:
-                        print(f"    local.{local_list[1]} = {nodecheck}")
-                        find_replace["local." + local_list[1]] = nodecheck
+def make_graph_dict(tfdata: dict):
     # Start with a empty connections list for all nodes/resources we know about
-    graphdict = dict.fromkeys(nodelist, [])
-    num_resources = len(nodelist)
+    graphdict = dict.fromkeys( tfdata['node_list'], [])
+    num_resources = len( tfdata['node_list'])
     click.echo(
         click.style(
-            f"\nComputing Relations between {num_resources - len(hidden)} out of {num_resources} resources...",
+            f"\nComputing Relations between {num_resources - len(tfdata['hidden'])} out of {num_resources} resources...",
             fg="white",
             bold=True,
         )
     )
     # Determine relationship between resources and append to graphdict when found
-    for param_list in dict_generator(all_resources):
+    for param_list in dict_generator(tfdata['all_resource']):
         for listitem in param_list:
             if isinstance(listitem, str):
                 lisitem_tocheck = listitem
-                # If resource refers to an output from another module, get the value from outputs dict
-                if "module." in listitem:
-                    cleantext = helpers.fix_lists(listitem)
-                    splitlist = cleantext.split(".")
-                    outputname = helpers.find_between(
-                        cleantext, splitlist[1] + ".", " "
-                    )
-                    for file in all_outputs.keys():
-                        for i in all_outputs[file]:
-                            if outputname in i.keys():
-                                outvalue = i[outputname]["value"]
-                                lisitem_tocheck = outvalue
-                matching_result = check_relationship(
-                    lisitem_tocheck, param_list, nodelist, find_replace, hidden
-                )
+                matching_result = check_relationship(lisitem_tocheck, param_list, tfdata['node_list'], tfdata['hidden'])
                 if matching_result:
                     for i in range(0, len(matching_result), 2):
                         a_list = list(graphdict[matching_result[i]])
@@ -75,15 +45,59 @@ def make_graph_dict(
                         graphdict[matching_result[i]] = a_list
             if isinstance(listitem, list):
                 for i in listitem:
-                    matching_result = helpers.check_relationship(
-                        i, param_list, nodelist, find_replace, hidden
-                    )
+                    matching_result =    check_relationship(i, param_list, tfdata['node_list'], tfdata['hidden'])
                     if matching_result:
                         a_list = list(graphdict[matching_result[0]])
                         if not matching_result[1] in a_list:
                             a_list.append(matching_result[1])
                         graphdict[matching_result[0]] = a_list
-    return graphdict
+    # Hide nodes where count = 0
+    for hidden_resource in tfdata['hidden']:
+        del graphdict[hidden_resource]
+    for resource in graphdict:
+        for hidden_resource in  tfdata['hidden']:
+            if hidden_resource in graphdict[resource]:
+                graphdict[resource].remove(hidden_resource)
+    # Add in node annotations from user
+    if tfdata['annotations']:
+        click.echo('\n  User Defined Modifications :\n')
+        tfdata['graphdict'] = modify_nodes(graphdict, tfdata['annotations'])
+        tfdata['meta_data'] = modify_metadata(tfdata['annotations'], graphdict, tfdata['meta_data'])
+    # Dump graphdict
+    click.echo(click.style(f'\nFinal Graphviz dictionary:', fg='white', bold=True))
+    print(json.dumps( tfdata['graphdict'], indent=4, sort_keys=True))
+    return tfdata
+
+
+#TODO: Make this function DRY
+def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
+    if annotations.get('connect'):
+        for node in annotations['connect']:
+            if '*' in node:
+                found_matching = helpers.list_of_dictkeys_containing(metadata, node)
+                for key in found_matching:
+                    metadata[key]['edge_labels'] = annotations['connect'][node]
+            else:
+                metadata[node]['edge_labels'] = annotations['connect'][node]
+    if annotations.get('add'):
+        for node in annotations['add']:
+            metadata[node] = {}
+            for param in annotations['add'][node]:
+                if not metadata[node]:
+                    metadata[node] = {}
+                metadata[node][param] = annotations['add'][node][param]
+    if annotations.get('update'):
+        for node in annotations['update']:
+            for param in annotations['update'][node]:
+                prefix = node.split('*')[0]
+                if '*' in node :
+                    found_matching = helpers.list_of_dictkeys_containing(metadata,prefix)
+                    for key in found_matching:
+                        metadata[key][param] = annotations['update'][node][param]
+                else :
+                    metadata[node][param] = annotations['update'][node][param]
+    return metadata
+
 
 # Generator function to crawl entire dict and load all dict and list values
 def dict_generator(indict, pre=None):
@@ -103,16 +117,57 @@ def dict_generator(indict, pre=None):
         yield pre + [indict]
 
 
+#TODO: Make this function DRY
+def modify_nodes(graphdict: dict, annotate: dict) -> dict:
+    if annotate.get('add'):
+        for node in annotate['add']:
+            click.echo(f'+ {node}')
+            graphdict[node] = []
+    if annotate.get('connect'):
+        for startnode in annotate['connect']:
+            for node in annotate['connect'][startnode]:
+                if isinstance(node,dict) :
+                    connection = [k for k in node][0]
+                else :
+                    connection = node
+                estring = f'{startnode} --> {connection}'
+                click.echo(estring)
+                if '*' in startnode:
+                    prefix = startnode.split('*')[0]
+                    for node in graphdict:
+                        if node.startswith(prefix):
+                            graphdict[node].append(connection)
+                else:
+                    graphdict[startnode].append(connection)
+    if annotate.get('disconnect'):
+        for startnode in annotate['disconnect']:
+            for connection in annotate['disconnect'][startnode]:
+                estring = f'{startnode} -/-> {connection}'
+                click.echo(estring)
+                if '*' in startnode:
+                    prefix = startnode.split('*')[0]
+                    for node in graphdict:
+                        if node.startswith(prefix) and connection in graphdict[node]:
+                            graphdict[node].remove(connection)
+                else:
+                    graphdict[startnode].delete(connection)
+    if annotate.get('remove'):
+        for node in annotate['remove']:
+            if node in graphdict or '*' in node:
+                click.echo(f'- {node}')
+                prefix = node.split('*')[0]
+                if '*' in node and node.startswith(prefix):
+                    del graphdict[node]
+                else:
+                    del graphdict[node]
+    return graphdict
+
+
 # Function to check whether a particular resource mentions another known resource (relationship)
-def check_relationship(listitem: str, plist: list, nodes: list,
-                       replacements: list, hidden: list) -> list:
+def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict): # -> list
     connection_list = []
     resource_name = listitem.strip('${}')
-    if resource_name in replacements.keys():
-        resource_associated_with = replacements[resource_name]
-        resource_name = plist[1] + '.' + plist[2]
-    else:
-        resource_associated_with = plist[1] + '.' + plist[2]
+    resource_associated_with = plist[1] + '.' + plist[2]
     # Check if an existing node name appears in parameters of current resource being checked
     matching = [s for s in nodes if s in resource_name]
     # Check if there are any implied connections based on keywords in the param list
@@ -149,7 +204,7 @@ def check_relationship(listitem: str, plist: list, nodes: list,
                     click.echo(
                         f'   {matched_resource} --> {resource_associated_with}'
                     )
-                elif not 'aws_acm' in resource_associated_with:  # Exception Ignore outgoing connections from ACM certificates and resources mentioned in depends on
+                else :  # Exception Ignore outgoing connections from ACM certificates and resources mentioned in depends on
                     if listitem in plist:
                         i = plist.index(listitem)
                         if plist[3] == 'depends_on':

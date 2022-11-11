@@ -280,115 +280,8 @@ class Cluster:
 
     def subgraph(self, dot: Digraph) -> None:
         self.dot.subgraph(dot)
-
-
-class VPCgroup(Cluster):
-    def __init__(self, label,  **kwargs):
-        vpc_graph_attrs = {
-            "style": "solid",
-            "margin": "50",
-            "pencolor": "darkgreen",
-            "rank": "same"
-        }
-        vpc_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/vpc.png"/></TD><TD>{label}</TD></TR></TABLE>>'
-        super().__init__(vpc_label, defaultdir, vpc_graph_attrs)
-
-
-class SubnetGroup(Cluster):
-    def __init__(self, label,  **kwargs):
-        if 'public' in label:
-            image = 'public_subnet.png'
-            col = '#F2F7EE'
-        else:
-            image = 'private_subnet.png'
-            col = '#deebf7'
-        vpc_graph_attrs = {
-            "style": "filled",
-            "margin": "50",
-            "color": col,
-            "pencolor": "",
-            "_shift": "1"
-        }
-        subnet_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/network/{image}"/></TD><TD>{label}</TD></TR></TABLE>>'
-        super().__init__(subnet_label, defaultdir, vpc_graph_attrs)
-
-
-class SecurityGroup(Cluster):
-    def __init__(self, label,  **kwargs):
-        vpc_graph_attrs = {
-            "style": "solid",
-            "margin": "50",
-            "pencolor": "red"
-        }
-        super().__init__(label, defaultdir, vpc_graph_attrs)
-
-
-class GenericAutoScalingGroup(Cluster):
-    def __init__(self, label='AWS AutoScaling',  **kwargs):
-        graph_attrs = {
-            "style": "dashed",
-            "margin": "50",
-            "color": "#deebf7",
-            "pencolor": "pink",
-            "labeljust": "c",
-            "_shift": "0"
-        }
-        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>{label}</TD></TR></TABLE>>'
-        super().__init__(cluster_label, defaultdir, graph_attrs)
-
-
-class GenericGroup(Cluster):
-    def __init__(self, label='Shared Services',  **kwargs):
-        graph_attrs = {
-            "style": "dashed",
-            "margin": "150",
-            "pencolor": "black"
-        }
-        super().__init__(label, defaultdir, graph_attrs)
-
-
-class AvailabilityZone(Cluster):
-    def __init__(self, label='AZ',  **kwargs):
-        graph_attrs = {
-            "style": "dashed",
-            "margin": "150",
-            "pencolor": '#3399ff',
-            "center": "true",
-            "labeljust" : "r"
-        }
-        super().__init__(label, defaultdir, graph_attrs)
-
-
-class AWSgroup(Cluster):
-    def __init__(self, label='AWS Cloud', **kwargs):
-        aws_graph_attrs = {
-            "style": "solid",
-            "pencolor": "black",
-            "margin": "100",
-            "ordering": "in",
-            "center": "true",
-            "labeljust": "l",
-            "_shift" : "1"
-        }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws.png"/></TD><TD>{label}</TD></TR></TABLE>>'
-        super().__init__(aws_label, defaultdir, aws_graph_attrs)
-
-
-class OnPrem(Cluster):
-    def __init__(self, label='Corporate Datacenter', **kwargs):
-        aws_graph_attrs = {
-            "style": "solid",
-            "pencolor": "black",
-            "margin": "100",
-            "ordering": "in",
-            "center": "true",
-            "labeljust": "l",
-            "_shift" : "1"
-        }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
-        super().__init__(aws_label, defaultdir, aws_graph_attrs)
-
-
+ 
+ 
 class Node:
     """Node represents a node for a specific backend service."""
 
@@ -422,7 +315,7 @@ class Node:
         # fmt: on
         self._attrs.update(attrs)
 
-        # Node must be belong to a resource_classes.
+        # Node must belong to a resource_classes.
         self._diagram = getdiagram()
         if self._diagram is None:
             raise EnvironmentError("Global resource_classes context not set up")

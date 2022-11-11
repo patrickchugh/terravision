@@ -112,3 +112,8 @@ class OnPrem(Cluster):
         }
         aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
+
+aws_vpc = VPCgroup
+aws_subnet = SubnetGroup
+aws_appautoscaling_target = GenericAutoScalingGroup
+

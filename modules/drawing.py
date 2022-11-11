@@ -25,6 +25,7 @@ from resource_classes.aws.enduser import *
 from resource_classes.aws.engagement import *
 from resource_classes.aws.game import *
 from resource_classes.aws.general import *
+from resource_classes.aws.groups import *
 from resource_classes.aws.integration import *
 from resource_classes.aws.iot import *
 from resource_classes.aws.management import *
@@ -41,6 +42,7 @@ from resource_classes.aws.storage import *
 from resource_classes.generic.blank import Blank
 
 avl_classes = dir()
+cloudGroup = Cluster
 
 # Any resource names with certain prefixes are consolidated into one node
 CONSOLIDATED_NODES = [
@@ -121,18 +123,12 @@ CONSOLIDATED_NODES = [
 # List of Group type nodes and order to draw them in
 GROUP_NODES = [
     "aws_vpc",
-    "tv_aws_availability_zone",  # terravision custom resource
     "aws_appautoscaling_target",
     "aws_subnet",
-    "aws_security_group",
-    "aws_generic_group",
-    "tv_aws_onprem",
+    "aws_security_group"
 ]
 
-AWS_DRAW_ORDER = [
-    GROUP_NODES,
-    CONSOLIDATED_NODES,
-]
+AWS_DRAW_ORDER = [GROUP_NODES, CONSOLIDATED_NODES]
 
 AWS_AUTO_ANNOTATION = [
     {"aws_route53": {"create": "Users", "link": "forward"}},
@@ -143,11 +139,25 @@ AWS_AUTO_ANNOTATION = [
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore
 NODE_VARIANTS = {"aws_ecs_service": {"FARGATE": "_fargate", "EC2": "_ec2"}}
 
-# Master Cluster
-aws_group = Cluster
-
 # Internal tracking dict for nodes and their connections (for future use)
 connected_nodes = dict()
+
+# Recursive function to draw out groups and subgroups along with their nodes
+def handle_group(resource, tfdata) :
+    resource_type = resource.split(".")[0]
+    if not resource_type in avl_classes:
+        return
+    newGroup =  getattr(sys.modules[__name__], resource_type)(label=resource)
+    # Now add in any nodes contained within this group
+    for node_connection in tfdata['graphdict'][resource]:
+        node_type = str(node_connection).split('.')[0]
+        if node_type in GROUP_NODES and node_type in avl_classes:
+            subGroup = handle_group(node_connection, tfdata)
+            newGroup.subgraph(subGroup.dot)
+        elif node_type not in GROUP_NODES and node_type in avl_classes :
+            newNode = getattr(sys.modules[__name__], node_type)(label=node_connection, tf_resource_name=node_connection)
+            newGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+    return newGroup
 
 # Main control body for drawing
 def render_diagram(
@@ -158,7 +168,7 @@ def render_diagram(
     format,
     source,
 ):
-    global aws_group
+    global cloudGroup
     # Setup Canvas
     title = (
         "Untitled"
@@ -179,22 +189,30 @@ def render_diagram(
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
-    aws_group = AWSgroup()
-    setcluster(aws_group)
-    vpc_exists = False
+    cloudGroup = AWSgroup()
+    setcluster(cloudGroup)
+
+    # Add all nodes to the list after specified node order
+    #AWS_DRAW_ORDER.append(tfdata['node_list'])
     # Draw Nodes and Groups in order of static definitions
-    for nodeTypeList in AWS_DRAW_ORDER:
-        for nodeType in nodeTypeList:
-            for resource, connections_list in tfdata['graphdict'].items():
-                if resource.startswith("aws_vpc."):
-                    vpc_exists = True
-                if isinstance(nodeType,dict) :
-                    nodeType = str(list(nodeType.keys())[0])
-                if resource.startswith(nodeType) :
-                    getattr(sys.modules[__name__], "Node")(label = helpers.pretty_name(nodeType))
-        
-         
- 
+    for node_type_list in AWS_DRAW_ORDER:
+        for node_type in node_type_list:
+            if isinstance(node_type, dict) :
+                node_check = str(list(node_type.keys())[0])
+            else :
+                node_check = node_type
+            for resource in tfdata["graphdict"]:
+                resource_type = resource.split(".")[0]
+                if resource_type in avl_classes and node_check.startswith(resource_type) and node_check in GROUP_NODES:
+                    # Create new subgroups and their nodes and add it to the master cluster
+                    node_groups = handle_group(resource, tfdata)
+                    cloudGroup.subgraph(node_groups.dot)
+                elif resource_type in avl_classes and not resource_type in GROUP_NODES:
+                    # We have a higher level node outside known groups so add it to the master cluster
+                    newNode = getattr(sys.modules[__name__], resource_type)( tf_resource_name=resource)
+                    cloudGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+    # Add main outer cloud group to canvas
+    myDiagram.subgraph(cloudGroup.dot)
     # Render completed DOT
     path_to_predot = myDiagram.pre_render()
     # Post Processing
@@ -212,3 +230,42 @@ def render_diagram(
     click.echo(f"  Output file: {myDiagram.render()}")
     click.echo(f"  Completed!")
     setdiagram(None)
+
+
+
+
+
+
+                    # newGroup = getattr(sys.modules[__name__], resource_type)()
+                    # cloudGroup.subgraph(newGroup._cluster.dot)
+                    # for connectingNode in connections_list :
+                    #     connectionType = connectingNode.split(".")[0]
+                    #     if connectionType in avl_classes:
+                    #         newNode = getattr(sys.modules[__name__], connectingNode.split('.')[0])( tf_resource_name=connectingNode)
+                    #         newGroup.add_node(newNode)
+
+
+                    
+                    
+
+
+
+
+
+
+                #     if not tfdata['meta_data'][resource].get('node') :
+                #         newGroup = getattr(sys.modules[__name__], resource_type)()
+                #         cloudGroup.subgraph(newGroup._diagram.dot)
+                #         tfdata["meta_data"][resource]["node"] = newGroup
+                #         for connected_node in connections_list :
+                #             if connected_node in avl_classes:
+                #                 newNode = getattr(sys.modules[__name__], connected_node)( label=helpers.pretty_name(connected_node),tf_resource_name=resource)
+                #                 newGroup.add_node(newNode._id, label=helpers.pretty_name(connected_node))
+                #                 tfdata["meta_data"][connected_node]["node"] = newNode
+                # if resource_type in avl_classes and nodeCheck.startswith(resource_type) and nodeTypeList != GROUP_NODES:
+                #     newNode = getattr(sys.modules[__name__], resource_type)( tf_resource_name=resource)
+                #     cloudGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+
+
+
+

@@ -239,9 +239,7 @@ def draw_vpc_subnets(tfdata, graphdict, resource, connections_list):
                         and subnet_service_name in avl_classes
                         and not subnet_service_name.startswith("aws_lb")
                     ):
-                        node = getattr(
-                            sys.modules[__name__], subnet_service_name + variant
-                        )(subnet_label + variant, tf_resource_name=subnet_item)
+                        node = getattr(sys.modules[__name__], subnet_service_name + variant)(subnet_label + variant, tf_resource_name=subnet_item)
                         tfdata["meta_data"][subnet_item]["node"] = node
                         has_elements = True
                         # Handle Additional connections/nodes needed for special resource types
