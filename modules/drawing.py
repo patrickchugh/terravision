@@ -141,6 +141,7 @@ NODE_VARIANTS = {"aws_ecs_service": {"FARGATE": "_fargate", "EC2": "_ec2"}}
 
 # Recursive function to draw out nodes along with any nodes connected to them
 def handle_nodes(new_resource: str, inGroup: Cluster, tfdata: dict, drawn_resources: list):
+    # For consolidated nodes, get the standardised resource name which doesn't exist in Terraform
     consolidated_resource =  consolidated_node_check(new_resource)
     if consolidated_resource :
         resource = consolidated_resource
@@ -149,6 +150,7 @@ def handle_nodes(new_resource: str, inGroup: Cluster, tfdata: dict, drawn_resour
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes :
         return
+    # If we have already drawn this ndoe as part of a previous loopo of other connections just get node ID
     if resource in drawn_resources :
         newNode = tfdata['meta_data'] [resource]['node']
     else :
@@ -156,6 +158,7 @@ def handle_nodes(new_resource: str, inGroup: Cluster, tfdata: dict, drawn_resour
         newNode = getattr(sys.modules[__name__], resource_type)(
             label=resource, tf_resource_name=resource
         )
+        # Add node to the group/cluster passed to the function
         inGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
@@ -164,11 +167,7 @@ def handle_nodes(new_resource: str, inGroup: Cluster, tfdata: dict, drawn_resour
         connectedNode = None
         node_type = str(node_connection).split(".")[0]
         if node_type not in GROUP_NODES :
-            if consolidated_node_check(node_type) in avl_classes:
-                connectedNode, drawn_resources, tfdata = handle_consolidated_node(
-                    node_connection, inGroup, tfdata, drawn_resources
-                )
-            elif node_type in avl_classes :
+            if node_type in avl_classes:
                 connectedNode, drawn_resources, tfdata = handle_nodes(
                     node_connection, inGroup, tfdata, drawn_resources
                 )
@@ -176,31 +175,13 @@ def handle_nodes(new_resource: str, inGroup: Cluster, tfdata: dict, drawn_resour
                 newNode.connect(connectedNode, Edge(forward=True))
     return newNode, drawn_resources, tfdata
 
-# Takes a resource and returns a consolidated node if matched with the static definitions
+# Takes a resource and returns a standardised consolidated node if matched with the static definitions
 def consolidated_node_check(resource_type: str):
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
         if resource_type.startswith(prefix):
             return checknode[prefix]['resource_name']
     return False
-
-
-def handle_consolidated_node(resource: str, inGroup: Cluster, tfdata: dict, drawn_resources: list):
-    consolidated_resource = consolidated_node_check(resource)
-    if not consolidated_resource in avl_classes:
-        return
-    if not consolidated_resource in drawn_resources:
-        # Draw the node if applicable and record node ID
-        newNode = getattr(sys.modules[__name__], consolidated_resource)(
-            label=resource, tf_resource_name=resource
-        )
-        inGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
-        drawn_resources.append(resource)
-        tfdata["meta_data"].update({consolidated_resource: {"node": newNode}})
-    else :
-        newNode = tfdata["meta_data"][consolidated_resource]['node']
-    return newNode, drawn_resources, tfdata
-    
 
 
 # Recursive function to draw out groups and subgroups along with their nodes
@@ -271,15 +252,12 @@ def render_diagram(
                 node_check = str(list(node_type.keys())[0])
             else:
                 node_check = node_type
-           
             for resource in tfdata["graphdict"]:
-                if resource.startswith('aws_vpc.') :
-                    vpc_exists = True
                 resource_type = resource.split(".")[0]
                 if resource_type in avl_classes:
                     if (
-                        node_check.startswith(resource_type)
-                        and node_check in GROUP_NODES
+                        resource_type.startswith(node_check)
+                        and resource_type in GROUP_NODES
                         and resource not in all_drawn_resources_list
                     ):
                         # Create new subgroups and their nodes and add it to the master cluster
@@ -315,3 +293,25 @@ def render_diagram(
     click.echo(f"  Output file: {myDiagram.render()}")
     click.echo(f"  Completed!")
     setdiagram(None)
+
+
+
+
+
+# Handle consolidated nodes as part of the handle node function
+# def handle_consolidated_node(resource: str, inGroup: Cluster, tfdata: dict, drawn_resources: list):
+#     consolidated_resource = consolidated_node_check(resource)
+#     if not consolidated_resource in avl_classes:
+#         return
+#     if not consolidated_resource in drawn_resources:
+#         # Draw the node if applicable and record node ID
+#         newNode = getattr(sys.modules[__name__], consolidated_resource)(
+#             label=resource, tf_resource_name=resource
+#         )
+#         inGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+#         drawn_resources.append(resource)
+#         tfdata["meta_data"].update({consolidated_resource: {"node": newNode}})
+#     else :
+#         newNode = tfdata["meta_data"][consolidated_resource]['node']
+#     return newNode, drawn_resources, tfdata
+    
