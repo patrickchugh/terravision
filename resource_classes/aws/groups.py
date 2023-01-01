@@ -116,4 +116,5 @@ class OnPrem(Cluster):
 aws_vpc = VPCgroup
 aws_subnet = SubnetGroup
 aws_appautoscaling_target = GenericAutoScalingGroup
+tv_aws_onprem = OnPrem
 

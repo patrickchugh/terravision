@@ -5,18 +5,11 @@ import json
 from modules.tf_function_handlers import tf_function_handlers
 from sys import exit
 import modules.helpers as helpers
+import modules.annotations as annotations
+import modules.cloud_config as cloud_config
 
-
-reverse_arrow_list = [
-    'aws_route53',
-    'aws_cloudfront',
-    'aws_vpc.',
-    'aws_subnet.',
-    'aws_iam_role.',
-    'aws_lb',
-]
-
-implied_connections = {'certificate_arn': 'aws_acm_certificate'}
+REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
+IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 
 
 # Process source files and return dictionaries with relevant data
@@ -58,45 +51,13 @@ def make_graph_dict(tfdata: dict):
         for hidden_resource in  tfdata['hidden']:
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
-    # Add in node annotations from user
-    if tfdata['annotations']:
-        click.echo('\n  User Defined Modifications :\n')
-        tfdata['graphdict'] = modify_nodes(graphdict, tfdata['annotations'])
-        tfdata['meta_data'] = modify_metadata(tfdata['annotations'], graphdict, tfdata['meta_data'])
+    tfdata['graphdict'] = graphdict
+     # Handle automatic and user annotations 
+    tfdata = annotations.handle_annotations(tfdata)
     # Dump graphdict
     click.echo(click.style(f'\nFinal Graphviz dictionary:', fg='white', bold=True))
     print(json.dumps( tfdata['graphdict'], indent=4, sort_keys=True))
     return tfdata
-
-
-#TODO: Make this function DRY
-def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
-    if annotations.get('connect'):
-        for node in annotations['connect']:
-            if '*' in node:
-                found_matching = helpers.list_of_dictkeys_containing(metadata, node)
-                for key in found_matching:
-                    metadata[key]['edge_labels'] = annotations['connect'][node]
-            else:
-                metadata[node]['edge_labels'] = annotations['connect'][node]
-    if annotations.get('add'):
-        for node in annotations['add']:
-            metadata[node] = {}
-            for param in annotations['add'][node]:
-                if not metadata[node]:
-                    metadata[node] = {}
-                metadata[node][param] = annotations['add'][node][param]
-    if annotations.get('update'):
-        for node in annotations['update']:
-            for param in annotations['update'][node]:
-                prefix = node.split('*')[0]
-                if '*' in node :
-                    found_matching = helpers.list_of_dictkeys_containing(metadata,prefix)
-                    for key in found_matching:
-                        metadata[key][param] = annotations['update'][node][param]
-                else :
-                    metadata[node][param] = annotations['update'][node][param]
-    return metadata
 
 
 # Generator function to crawl entire dict and load all dict and list values
@@ -117,52 +78,6 @@ def dict_generator(indict, pre=None):
         yield pre + [indict]
 
 
-#TODO: Make this function DRY
-def modify_nodes(graphdict: dict, annotate: dict) -> dict:
-    if annotate.get('add'):
-        for node in annotate['add']:
-            click.echo(f'+ {node}')
-            graphdict[node] = []
-    if annotate.get('connect'):
-        for startnode in annotate['connect']:
-            for node in annotate['connect'][startnode]:
-                if isinstance(node,dict) :
-                    connection = [k for k in node][0]
-                else :
-                    connection = node
-                estring = f'{startnode} --> {connection}'
-                click.echo(estring)
-                if '*' in startnode:
-                    prefix = startnode.split('*')[0]
-                    for node in graphdict:
-                        if node.startswith(prefix):
-                            graphdict[node].append(connection)
-                else:
-                    graphdict[startnode].append(connection)
-    if annotate.get('disconnect'):
-        for startnode in annotate['disconnect']:
-            for connection in annotate['disconnect'][startnode]:
-                estring = f'{startnode} -/-> {connection}'
-                click.echo(estring)
-                if '*' in startnode:
-                    prefix = startnode.split('*')[0]
-                    for node in graphdict:
-                        if node.startswith(prefix) and connection in graphdict[node]:
-                            graphdict[node].remove(connection)
-                else:
-                    graphdict[startnode].delete(connection)
-    if annotate.get('remove'):
-        for node in annotate['remove']:
-            if node in graphdict or '*' in node:
-                click.echo(f'- {node}')
-                prefix = node.split('*')[0]
-                if '*' in node and node.startswith(prefix):
-                    del graphdict[node]
-                else:
-                    del graphdict[node]
-    return graphdict
-
-
 # Function to check whether a particular resource mentions another known resource (relationship)
 def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict): # -> list
     connection_list = []
@@ -173,29 +88,29 @@ def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict): #
     # Check if there are any implied connections based on keywords in the param list
     if not matching:
         found_connection = [
-            s for s in implied_connections.keys() if s in resource_name
+            s for s in IMPLIED_CONNECTIONS.keys() if s in resource_name
         ]
         if found_connection:
             for n in nodes:
-                if n.startswith(implied_connections[found_connection[0]]):
+                if n.startswith(IMPLIED_CONNECTIONS[found_connection[0]]):
                     matching = [n]
     if (matching):
         reverse = False
         for matched_resource in matching:
             if matched_resource not in hidden and resource_associated_with not in hidden:
                 reverse_origin_match = [
-                    s for s in reverse_arrow_list if s in resource_name
+                    s for s in REVERSE_ARROW_LIST if s in resource_name
                 ]
                 if len(reverse_origin_match) > 0:
                     reverse = True
                     reverse_dest_match = [
-                        s for s in reverse_arrow_list
+                        s for s in REVERSE_ARROW_LIST
                         if s in resource_associated_with
                     ]
                     if len(reverse_dest_match) > 0:
-                        if reverse_arrow_list.index(
+                        if REVERSE_ARROW_LIST.index(
                                 reverse_dest_match[0]
-                        ) < reverse_arrow_list.index(reverse_origin_match[0]):
+                        ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
                             reverse = False
                 if reverse:
                     connection_list.append(matched_resource)

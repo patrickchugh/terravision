@@ -9,6 +9,7 @@ import modules.interpreter as interpreter
 import modules.helpers as helpers
 import modules.drawing as drawing
 import modules.graphmaker as graphmaker
+
 from pprint import pprint
 from pathlib import Path
 
@@ -32,7 +33,6 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = graphmaker.make_graph_dict(tfdata)
-   
     # temp_dir.cleanup()
     # os.chdir(cwd)
     return tfdata

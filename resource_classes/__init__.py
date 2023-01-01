@@ -191,6 +191,10 @@ class Canvas:
                 return True
         return False
 
+    def add_node(self, nodeid: str, label: str, **attrs) -> None:
+        """Create a new node."""
+        self.dot.node(nodeid, label=label, **attrs)
+
     def node(self, nodeid: str, label: str, **attrs) -> None:
         """Create a new node."""
         self.dot.node(nodeid, label=label, **attrs)

@@ -107,3 +107,5 @@ class Users(_General):
 # Aliases
 
 OfficeBuilding = GenericOfficeBuilding
+tv_aws_users = Users
+tv_aws_internet = InternetAlt1
