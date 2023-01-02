@@ -13,16 +13,17 @@ def handle_annotations(tfdata: dict):
                 new_nodes = auto_node[node_prefix]['create']
                 for new_node in new_nodes:
                     if auto_node[node_prefix]['link'] == 'forward' :
-                       new_connections = list(graphdict[node])
-                       new_connections.append(new_node)
-                       graphdict[node] = new_connections
-                       graphdict[new_node] = dict()
+                        graphdict[node] = helpers.append_dictlist(graphdict[node], new_node)
+                        # new_connections = list(graphdict[node])
+                        # new_connections.append(new_node)
+                        # graphdict[node] = new_connections
+                        graphdict[new_node] = dict()
                     else :
                         if graphdict.get(new_node) :
                             new_connections = list(graphdict[new_node])
                             new_connections.append(node)
                             graphdict[new_node] = new_connections
-                        else :
+                        else:
                             graphdict[new_node] = [node]
     tfdata['graphdict'] = graphdict
     # Check if user has supplied annotations file

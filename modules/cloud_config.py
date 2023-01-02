@@ -68,7 +68,7 @@ AWS_CONSOLIDATED_NODES = [
     },
     {
         "aws_internet_gateway": {
-            "resource_name": "aws_internet_gateway.*",
+            "resource_name": "aws_internet_gateway.igw",
             "import_location": "resource_classes.aws.network",
             "vpc": True,
         },
@@ -98,14 +98,15 @@ AWS_OUTER_NODES = [
     "tv_aws_internet"    
 ]
 
-# Order to draw nodes - leave empthy string till last to denote everything else
-AWS_DRAW_ORDER = [AWS_OUTER_NODES, AWS_EDGE_NODES, AWS_GROUP_NODES, AWS_CONSOLIDATED_NODES, ""]
+# Order to draw nodes - leave empthy string list till last to denote everything else
+AWS_DRAW_ORDER = [AWS_OUTER_NODES, AWS_EDGE_NODES, AWS_GROUP_NODES, AWS_CONSOLIDATED_NODES, [""]]
 
 # List of prefixes where additional nodes should be created automatically
 AWS_AUTO_ANNOTATIONS = [
     {"aws_route53": {"create": ["tv_aws_users.users"], "link": "reverse"}},
-    {"aws_dx": {"create": ["tv_aws_onprem.corporate_datacenter", "tf_aws_cgw.customer_gateway"], "link": "forward"}},
+    {"aws_dx": {"create": ["tv_aws_onprem.corporate_datacenter", "tv_aws_cgw.customer_gateway"], "link": "forward"}},
     {"aws_internet_gateway": {"create": ["tv_aws_internet.internet"], "link": "forward"}},
+    {"aws_nat_gateway": {"create": ["tv_aws_internet.internet"], "link": "forward"}},
 ]
 
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore

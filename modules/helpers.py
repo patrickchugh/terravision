@@ -226,6 +226,10 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
             final_dict[item] = searchdict[item]
     return final_dict
 
+def append_dictlist(thelist: list, new_item: object) :
+    new_list = list(thelist)
+    new_list.append(new_item)
+    return new_list
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
