@@ -66,13 +66,7 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": True,
         }
     },
-    {
-        "aws_internet_gateway": {
-            "resource_name": "aws_internet_gateway.igw",
-            "import_location": "resource_classes.aws.network",
-            "vpc": True,
-        },
-    },
+   
 ]
 
 # List of Group type nodes and order to draw them in

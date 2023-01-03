@@ -54,9 +54,9 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "2",
+        "nodesep": "2.5",
         "fontname": "Sans-Serif",
-        "fontsize": "50",
+        "fontsize": "30",
         "fontcolor": "#2D3436",
         "labelloc" : "t",
         "concentrate": 'true',
@@ -208,10 +208,10 @@ class Canvas:
         self.dot.subgraph(dot)
 
     def pre_render(self) -> str:
-        return self.dot.render(format='dot', quiet=True, cleanup=True, directory=Path.cwd())
+        return self.dot.render(format='dot', quiet=True, cleanup=False, directory=Path.cwd())
     
     def render(self) -> str:
-        dotsource = Source.from_file(self.filename+'.dot', engine='neato', directory=Path.cwd())
+        dotsource = Source.from_file(self.filename+'.dot', engine='dot', directory=Path.cwd())
         filename = dotsource.render(format=self.outformat, view=self.show, quiet=True, engine='neato', directory=Path.cwd())
         return filename
 

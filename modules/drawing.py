@@ -114,11 +114,9 @@ def handle_nodes(
         newNode = tfdata["meta_data"][resource]["node"]
     else:
         # Draw the node if applicable and record node ID
-        newNode = getattr(sys.modules[__name__], resource_type)(
-            label=resource, tf_resource_name=resource
-        )
-        # Add node to the group/cluster passed to the function
-        inGroup.add_node(newNode._id, label=helpers.pretty_name(resource))
+        node_label = helpers.pretty_name(resource)
+        nodeClass = getattr(sys.modules[__name__], resource_type)
+        newNode = nodeClass(label=node_label, tf_resource_name=resource)
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
     # Now draw and connect any nodes listed as a connection in graphdict
@@ -181,7 +179,7 @@ def handle_group(
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes:
         return
-    newGroup = getattr(sys.modules[__name__], resource_type)(label=resource)
+    newGroup = getattr(sys.modules[__name__], resource_type)(label=helpers.pretty_name(resource))
     cloudGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
     # Now add in any nodes contained within this group
@@ -206,7 +204,7 @@ def handle_group(
                 drawn_resources,
                 outer_node,
             )
-            newGroup.add_node(newNode._id, label=node_connection)
+            newGroup.add_node(newNode._id, label=helpers.pretty_name(node_connection))
     return newGroup, drawn_resources
 
 
@@ -256,7 +254,6 @@ def draw_objects(
                         all_drawn_resources_list,
                         outer_node,
                     )
-                    targetGroup.add_node(newNode._id, label=resource)
     return all_drawn_resources_list
 
 

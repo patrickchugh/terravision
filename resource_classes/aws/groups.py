@@ -21,7 +21,7 @@ class VPCgroup(Cluster):
 
 class SubnetGroup(Cluster):
     def __init__(self, label,  **kwargs):
-        if 'public' in label:
+        if 'Public' in label:
             image = 'public_subnet.png'
             col = '#F2F7EE'
         else:
@@ -115,6 +115,6 @@ class OnPrem(Cluster):
 
 aws_vpc = VPCgroup
 aws_subnet = SubnetGroup
-aws_appautoscaling_target = GenericAutoScalingGroup
+#aws_appautoscaling_target = GenericAutoScalingGroup
 tv_aws_onprem = OnPrem
 

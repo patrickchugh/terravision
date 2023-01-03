@@ -128,6 +128,7 @@ def pretty_name(name: str, show_title=True) -> str:
         "elb",
         "nlb",
         "nat",
+        "vpc"
     ]:
         acronym = servicename[0:3]
         servicename = servicename.replace(acronym, acronym.upper())
@@ -139,7 +140,7 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = final_label.replace("_", " ")
     final_label = final_label.replace("-", " ")
     final_label = final_label.replace("This", "").strip()
-    return final_label
+    return str(final_label)[:15]
 
 
 def replace_variables(vartext, filename, all_variables, quotes=False):
