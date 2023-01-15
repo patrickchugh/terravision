@@ -44,7 +44,7 @@ def resolve_nested_functions(param):
         param = find_between(param, ":", "]", "", True)
     if "None" in param:
         param = param.replace("None", "")
-    return param
+    return param.strip()
 
 
 class tf_function_handlers:
@@ -122,15 +122,15 @@ class tf_function_handlers:
         param = resolve_nested_functions(param)
         if param == "[]" or param == "" or param == '""':
             return 0
-        if param.startswith("data.") or param.startswith("local."):
-            return 0
+        # if param.startswith("data.") or param.startswith("local."):
+        #     return 0
         if param == "True" or param == "False" or param == "None":
             return 0
         if param.isnumeric():
             return int(param)
-        if param.startswith('"'):
-            return 1
-        else:
+        if param.startswith('"[') or param.startswith('"{') or param.startswith("[") or param.startswith("{"):
+            if param.startswith('"') :
+                param = param.replace('"','')
             return len(literal_eval(param))
 
     def keys(param):

@@ -31,6 +31,8 @@ class ElasticBeanstalk(_Compute):
 class ElasticContainerService(_Compute):
     _icon = "elastic-container-service.png"
 
+class ElasticIP(_Compute):
+    _icon = "ec2-elastic-ip-address.png"
 
 class ElasticKubernetesService(_Compute):
     _icon = "elastic-kubernetes-service.png"
@@ -95,6 +97,7 @@ ECR = ElasticContainerRegistry
 ECS = ElasticContainerService
 EKS = ElasticKubernetesService
 SAR = ServerlessApplicationRepository
+EIP = ElasticIP
 
 # Terraform aliases
 aws_batch_compute_environment = Batch
@@ -109,3 +112,4 @@ aws_elastic_beanstalk_application = ElasticBeanstalk
 aws_instance = EC2
 aws_lambda_function = Lambda
 aws_lightsail_instance = Lightsail
+aws_eip = ElasticIP

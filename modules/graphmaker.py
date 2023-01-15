@@ -54,6 +54,22 @@ def make_graph_dict(tfdata: dict):
     tfdata['graphdict'] = graphdict
      # Handle automatic and user annotations 
     tfdata = annotations.handle_annotations(tfdata)
+
+    # Handle CF Special Origin relationships data
+    cf_data = [s for s in tfdata['meta_data'].keys() if "aws_cloudfront" in s]
+    if cf_data:
+        for cf_resource in cf_data:
+            if "origin" in tfdata['meta_data'][cf_resource]:
+                origin_source = tfdata['meta_data'][cf_resource]["origin"]
+                if isinstance(origin_source, str) and origin_source.startswith("{"):
+                    origin_source = helpers.literal_eval(origin_source)
+                origin_domain = helpers.cleanup(origin_source.get("domain_name")).strip()
+                if origin_domain:
+                    tfdata['meta_data'][cf_resource]["origin"] = handle_cloudfront_domains(
+                        str(origin_source), origin_domain, tfdata['meta_data']
+                    )
+    tfdata["meta_data"] = tfdata['meta_data']
+   
     # Dump graphdict
     click.echo(click.style(f'\nFinal Graphviz dictionary:', fg='white', bold=True))
     print(json.dumps( tfdata['graphdict'], indent=4, sort_keys=True))
@@ -77,6 +93,14 @@ def dict_generator(indict, pre=None):
     else:
         yield pre + [indict]
 
+
+def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> str:
+    for key, value in mdata.items():
+        for k, v in value.items():
+            if domain in str(v) and not domain.startswith("aws_"):
+                o = origin_string.replace(domain, key)
+                return origin_string.replace(domain, key)
+    return origin_string
 
 # Function to check whether a particular resource mentions another known resource (relationship)
 def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict): # -> list

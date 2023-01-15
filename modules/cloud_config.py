@@ -80,6 +80,7 @@ AWS_GROUP_NODES = [
 
 # Nodes to be drawn first inside the AWS Cloud but outside any subnets or VPCs
 AWS_EDGE_NODES = [
+    "aws_route53",
     "aws_cloudfront_distribution",
     "aws_internet_gateway"
     "aws_api_gateway",
@@ -97,10 +98,10 @@ AWS_DRAW_ORDER = [AWS_OUTER_NODES, AWS_EDGE_NODES, AWS_GROUP_NODES, AWS_CONSOLID
 
 # List of prefixes where additional nodes should be created automatically
 AWS_AUTO_ANNOTATIONS = [
-    {"aws_route53": {"create": ["tv_aws_users.users"], "link": "reverse"}},
-    {"aws_dx": {"create": ["tv_aws_onprem.corporate_datacenter", "tv_aws_cgw.customer_gateway"], "link": "forward"}},
-    {"aws_internet_gateway": {"create": ["tv_aws_internet.internet"], "link": "forward"}},
-    {"aws_nat_gateway": {"create": ["tv_aws_internet.internet"], "link": "forward"}},
+    {"aws_route53": {"link": ["tv_aws_users.users"], "arrow": "reverse"}},
+    {"aws_dx": {"link": ["tv_aws_onprem.corporate_datacenter", "tv_aws_cgw.customer_gateway"], "arrow": "forward"}},
+    {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
+    {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
 ]
 
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore

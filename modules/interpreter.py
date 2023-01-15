@@ -14,6 +14,10 @@ from sys import exit
 import modules.helpers as helpers
 import hcl2
 
+DATA_REPLACEMENTS = {
+    "data.aws_availability_zones" : "['AZ1', 'AZ2', 'AZ3']"
+}
+
 
 def inject_module_variables(tfdata: dict):
     for file, module_list in tfdata["all_module"].items():
@@ -21,6 +25,8 @@ def inject_module_variables(tfdata: dict):
             for module, params in module_items.items():
                 module_source = params["source"]
                 for key, value in params.items():
+                    if "module." in str(value) :
+                        pass
                     if "var." in str(value):
                         if isinstance(value, list):
                             for i in range(len(value)):
@@ -59,21 +65,20 @@ def inject_module_variables(tfdata: dict):
 def handle_metadata_vars(tfdata):
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
-            if isinstance(orig_value, str):
-                value = orig_value
-                while (
-                    "var." in value
-                    or "local." in value
-                    or "module." in value
-                    or "data." in value
-                ):
-                    value = find_replace_values(value, attr_list["module"], tfdata)
-                tfdata["meta_data"][resource][key] = value
+            value = str(orig_value)
+            while (
+                "var." in value
+                or "local." in value
+                or "module." in value
+                or "data." in value
+            ):
+                value = find_replace_values(value, attr_list["module"], tfdata)
+            tfdata["meta_data"][resource][key] = value
     return tfdata
 
 
 def find_replace_values(varstring, module, tfdata):
-    value = varstring
+    value = str(varstring)
     var_found_list = re.findall("\$\{var\.[A-Za-z0-9_\-]+\}", value) or re.findall(
         "var\.[A-Za-z0-9_\-]+", value
     )
@@ -90,7 +95,11 @@ def find_replace_values(varstring, module, tfdata):
         "\$\{module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value
     ) or re.findall("module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     for d in data_found_list:
-        value = value.replace(d, '"UNKNOWN"')
+        for search_string, keyvalue in DATA_REPLACEMENTS.items():
+            if search_string in d:
+                value = str(value.replace(d, str(keyvalue)))
+        if value == varstring :
+             value = str(value.replace(d, "UNKNOWN"))
     for module_var in modulevar_found_list:
         cleantext = fix_lists(module_var)
         splitlist = cleantext.split(".")
@@ -192,46 +201,46 @@ def extract_locals(tfdata):
     return tfdata
 
 
-def process_conditional_metadata(
-    metadata: dict, mod_locals, all_variables, all_outputs, filename, mod
-):
-    def determine_statement(eval_string: str):
-        if "for" in eval_string and "in" in eval_string:
-            # we have a for loop so deal with that part first
-            # TODO: Implement for loop handling for real, for now just null it out
-            eval_string = find_between(
-                eval_string, "[for", ":", "[", True, eval_string.count("[")
-            )
-            eval_string = find_between(
-                eval_string, ":", "]", "", True, eval_string.count("]")
-            )
-        if "module." in eval_string:
-            outvalue = ""
-            splitlist = eval_string.split(".")
-            outputname = find_between(eval_string, splitlist[1] + ".", " ")
-            for file in all_outputs.keys():
-                for i in all_outputs[file]:
-                    if outputname in i.keys():
-                        outvalue = i[outputname]["value"]
-                        if "*.id" in outvalue:
-                            resource_name = fix_lists(outvalue.split(".*")[0])
-                            outvalue = metadata[resource_name]["count"]
-                            outvalue = determine_statement(outvalue)
-                            break
-            stringarray = eval_string.split(".")
-            modulevar = cleanup(
-                "module" + "." + stringarray[1] + "." + stringarray[2]
-            ).strip()
-            eval_string = eval_string.replace(modulevar, outvalue)
-        eval_string = resolve_dynamic_values(
-            eval_string, mod_locals, all_variables, all_outputs, filename
-        )
-        return eval_string
+# def process_conditional_metadata(
+#     metadata: dict, mod_locals, all_variables, all_outputs, filename, mod
+# ):
+#     def determine_statement(eval_string: str):
+#         if "for" in eval_string and "in" in eval_string:
+#             # we have a for loop so deal with that part first
+#             # TODO: Implement for loop handling for real, for now just null it out
+#             eval_string = find_between(
+#                 eval_string, "[for", ":", "[", True, eval_string.count("[")
+#             )
+#             eval_string = find_between(
+#                 eval_string, ":", "]", "", True, eval_string.count("]")
+#             )
+#         if "module." in eval_string:
+#             outvalue = ""
+#             splitlist = eval_string.split(".")
+#             outputname = find_between(eval_string, splitlist[1] + ".", " ")
+#             for file in all_outputs.keys():
+#                 for i in all_outputs[file]:
+#                     if outputname in i.keys():
+#                         outvalue = i[outputname]["value"]
+#                         if "*.id" in outvalue:
+#                             resource_name = fix_lists(outvalue.split(".*")[0])
+#                             outvalue = metadata[resource_name]["count"]
+#                             outvalue = determine_statement(outvalue)
+#                             break
+#             stringarray = eval_string.split(".")
+#             modulevar = cleanup(
+#                 "module" + "." + stringarray[1] + "." + stringarray[2]
+#             ).strip()
+#             eval_string = eval_string.replace(modulevar, outvalue)
+#         eval_string = resolve_dynamic_values(
+#             eval_string, mod_locals, all_variables, all_outputs, filename
+#         )
+#         return eval_string
 
-        if "for_each" in attr_list:
-            attr_list["for_each"] = determine_statement(attr_list["for_each"])
+#         if "for_each" in attr_list:
+#             attr_list["for_each"] = determine_statement(attr_list["for_each"])
 
-    return metadata
+#     return metadata
 
 
 def eval_tf_functions(eval_string):
@@ -497,4 +506,8 @@ def get_variable_values(tfdata) -> dict:
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
     # tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings
+    return tfdata
+
+def handle_variants(tfdata: dict) :
+
     return tfdata

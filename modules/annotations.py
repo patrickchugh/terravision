@@ -1,5 +1,6 @@
 import modules.cloud_config as cloud_config
 import click
+import sys
 import modules.helpers as helpers
  
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
@@ -10,21 +11,26 @@ def handle_annotations(tfdata: dict):
         for auto_node in AUTO_ANNOTATIONS:
             node_prefix = str(list(auto_node.keys())[0])
             if node.startswith(node_prefix):
-                new_nodes = auto_node[node_prefix]['create']
+                new_nodes = auto_node[node_prefix]['link']
                 for new_node in new_nodes:
-                    if auto_node[node_prefix]['link'] == 'forward' :
-                        graphdict[node] = helpers.append_dictlist(graphdict[node], new_node)
-                        # new_connections = list(graphdict[node])
-                        # new_connections.append(new_node)
-                        # graphdict[node] = new_connections
-                        graphdict[new_node] = dict()
+                    if new_node.endswith('.*') :                      
+                        annotation_node = helpers.find_resource_containing(tfdata['node_list'], new_node.split('.')[0])
+                        if not annotation_node :
+                            click.echo(f'ERROR: Cannot find any resource with mask "{new_node}" for annotations!')
+                            sys.exit()
                     else :
-                        if graphdict.get(new_node) :
-                            new_connections = list(graphdict[new_node])
-                            new_connections.append(node)
-                            graphdict[new_node] = new_connections
+                        annotation_node = new_node
+                    if auto_node[node_prefix]['arrow'] == 'forward' :
+                        graphdict[node] = helpers.append_dictlist(graphdict[node], annotation_node)
+                        if not graphdict.get(annotation_node) :
+                            graphdict[annotation_node] = dict()
+                    else :
+                        if graphdict.get(annotation_node) :
+                            new_connections = list(graphdict[annotation_node])
+                            new_connections.append(annotation_node)
+                            graphdict[annotation_node] = list(new_connections)
                         else:
-                            graphdict[new_node] = [node]
+                            graphdict[annotation_node] = [node]
     tfdata['graphdict'] = graphdict
     # Check if user has supplied annotations file
     if tfdata.get('annotations') :

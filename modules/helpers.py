@@ -140,8 +140,8 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = final_label.replace("_", " ")
     final_label = final_label.replace("-", " ")
     final_label = final_label.replace("This", "").strip()
-    return str(final_label)[:15]
-
+    return str(final_label)[:20]
+ 
 
 def replace_variables(vartext, filename, all_variables, quotes=False):
     # Replace Variables found within resource meta data
@@ -226,6 +226,13 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
         if target_resource in searchdict[item]:
             final_dict[item] = searchdict[item]
     return final_dict
+
+def find_resource_containing (search_list: list, keyword: str) :
+    for actual_name in search_list:
+        if keyword in actual_name:
+            found = actual_name
+            return found
+    return False
 
 def append_dictlist(thelist: list, new_item: object) :
     new_list = list(thelist)

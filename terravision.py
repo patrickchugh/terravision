@@ -31,10 +31,10 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     helpers.output_log(tfdata)
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
+    # Handle services which have variations in type based on metadata
+    tfdata = interpreter.handle_variants(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = graphmaker.make_graph_dict(tfdata)
-    # temp_dir.cleanup()
-    # os.chdir(cwd)
     return tfdata
 
 
@@ -161,5 +161,9 @@ def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
 
 
 if __name__ == "__main__":
-    cli(default_map={"draw": {"avl_classes": dir()},
-        "graphlist": {"avl_classes": dir()}})
+    cli(
+        default_map={
+            "draw": {"avl_classes": dir()},
+            "graphlist": {"avl_classes": dir()},
+        }
+    )
