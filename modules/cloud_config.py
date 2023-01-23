@@ -46,8 +46,8 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_lb": {
-            "resource_name": "aws_lb.elb",
+        "aws_lb_": {
+            "resource_name": "aws_lb_target_group.elb",
             "import_location": "resource_classes.aws.network",
             "vpc": True,
         }
@@ -63,6 +63,20 @@ AWS_CONSOLIDATED_NODES = [
         "aws_rds": {
             "resource_name": "aws_rds_cluster.rds",
             "import_location": "resource_classes.aws.database",
+            "vpc": True,
+        }
+    },
+    {
+        "aws_internet_gateway": {
+            "resource_name": "aws_internet_gateway.igw",
+            "import_location": "resource_classes.aws.network",
+            "vpc": True,
+        }
+    },
+    {
+        "aws_eip": {
+            "resource_name": "aws_eip.eip",
+            "import_location": "resource_classes.aws.network",
             "vpc": True,
         }
     },
@@ -105,7 +119,7 @@ AWS_AUTO_ANNOTATIONS = [
 ]
 
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore
-AWS_NODE_VARIANTS = {"aws_ecs_service": {"FARGATE": "_fargate", "EC2": "_ec2"}}
+AWS_NODE_VARIANTS = {"aws_ecs": {"FARGATE": "aws_fargate_ecs", "EC2": "aws_ec2_ecs"}}
 
 # Automatically reverse arrow direction for these resources
 AWS_REVERSE_ARROW_LIST = [

@@ -118,58 +118,60 @@ def handle_nodes(
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
     # Now draw and connect any nodes listed as a connection in graphdict
-    for node_connection in tfdata["graphdict"][new_resource]:
-        connectedNode = None
-        c_resource = consolidated_node_check(node_connection) if consolidated_node_check(node_connection) else node_connection
-        node_type = str(c_resource).split(".")[0]
-        # Ensure any connections from outside nodes to inside cloud nodes appear correctly
-        if node_type in OUTER_NODES:
-            connectedGroup = diagramCanvas
-        else:
-            connectedGroup = cloudGroup
-        if node_type not in GROUP_NODES:
-            if node_type in avl_classes and node_connection != new_resource:
-                connectedNode, drawn_resources = handle_nodes(
-                    node_connection,
-                    connectedGroup,
-                    cloudGroup,
-                    diagramCanvas,
-                    tfdata,
-                    drawn_resources
-                )
-            if connectedNode:
-                # We have found a connection linked to newNode we just created
-                label = get_edge_labels(newNode, connectedNode, tfdata) 
-                # Log connections in tfdata and don't duplicate existing connections
-                # Use consolidated_node when appropriate
-                if not tfdata["connected_nodes"].get(newNode._id) and tfdata["meta_data"][resource]["node"]:
-                    originNode = tfdata["meta_data"][resource]["node"]
-                else:
-                    originNode = newNode
-                if not tfdata["connected_nodes"].get(
-                    originNode._id
-                ) or not connectedNode._id in tfdata["connected_nodes"].get(
-                    originNode._id
-                ):
-                    if originNode != connectedNode:
-                        originNode.connect(connectedNode, Edge(forward=True, label=label))
-                        if not tfdata["connected_nodes"].get(originNode._id):
-                            tfdata["connected_nodes"][originNode._id] = list()
-                        tfdata["connected_nodes"][originNode._id] = helpers.append_dictlist(tfdata["connected_nodes"][originNode._id],connectedNode._id ) 
-                        
+    if tfdata["graphdict"].get(new_resource) :
+        for node_connection in tfdata["graphdict"][new_resource]:
+            connectedNode = None
+            c_resource = consolidated_node_check(node_connection) if consolidated_node_check(node_connection) else node_connection
+            node_type = str(c_resource).split(".")[0]
+            # Ensure any connections from outside nodes to inside cloud nodes appear correctly
+            if node_type in OUTER_NODES:
+                connectedGroup = diagramCanvas
+            else:
+                connectedGroup = cloudGroup
+            if node_type not in GROUP_NODES:
+                if node_type in avl_classes and node_connection != new_resource:
+                    connectedNode, drawn_resources = handle_nodes(
+                        node_connection,
+                        connectedGroup,
+                        cloudGroup,
+                        diagramCanvas,
+                        tfdata,
+                        drawn_resources
+                    )
+                if connectedNode:
+                    # We have found a connection linked to newNode we just created
+                    label = get_edge_labels(newNode, connectedNode, tfdata) 
+                    # Log connections in tfdata and don't duplicate existing connections
+                    # Use consolidated_node when appropriate
+                    if not tfdata["connected_nodes"].get(newNode._id) and tfdata["meta_data"][resource]["node"]:
+                        originNode = tfdata["meta_data"][resource]["node"]
+                    else:
+                        originNode = newNode
+                    if not tfdata["connected_nodes"].get(
+                        originNode._id
+                    ) or not connectedNode._id in tfdata["connected_nodes"].get(
+                        originNode._id
+                    ):
+                        if originNode != connectedNode:
+                            originNode.connect(connectedNode, Edge(forward=True, label=label))
+                            if not tfdata["connected_nodes"].get(originNode._id):
+                                tfdata["connected_nodes"][originNode._id] = list()
+                            tfdata["connected_nodes"][originNode._id] = helpers.append_dictlist(tfdata["connected_nodes"][originNode._id],connectedNode._id ) 
+                            
     return newNode, drawn_resources
 
 # Takes a resource and returns a standardised consolidated node if matched with the static definitions
 def consolidated_node_check(resource_type: str):
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
-        if resource_type.startswith(prefix):
+        if resource_type.startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
 
 
 # Recursive function to draw out groups and subgroups along with their nodes
 def handle_group(
+    inGroup: Cluster,
     cloudGroup: Cluster,
     diagramCanvas: Canvas,
     resource: str,
@@ -180,33 +182,34 @@ def handle_group(
     if not resource_type in avl_classes:
         return
     newGroup = getattr(sys.modules[__name__], resource_type)(label=helpers.pretty_name(resource))
-    targetGroup = diagramCanvas if resource_type in OUTER_NODES else cloudGroup
+    targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
     # Now add in any nodes contained within this group
-    for node_connection in tfdata["graphdict"][resource]:
-        node_type = str(node_connection).split(".")[0]
-        if node_type in GROUP_NODES and node_type in avl_classes:
-            # We have a subgroup within a Cluster group
-            subGroup, drawn_resources = handle_group(
-                newGroup, diagramCanvas, node_connection, tfdata, drawn_resources
-            )
-            newGroup.subgraph(subGroup.dot)
-            drawn_resources.append(node_connection)
-        elif (
-            node_type not in GROUP_NODES
-            and node_type in avl_classes
-        ):
-            targetGroup = diagramCanvas if node_type in OUTER_NODES else cloudGroup
-            newNode, drawn_resources = handle_nodes(
-                node_connection,
-                targetGroup,
-                cloudGroup,
-                diagramCanvas,
-                tfdata,
-                drawn_resources
-            )
-            newGroup.add_node(newNode._id, label=helpers.pretty_name(node_connection))
+    if tfdata["graphdict"].get(resource) :
+        for node_connection in tfdata["graphdict"][resource]:
+            node_type = str(node_connection).split(".")[0]
+            if node_type in GROUP_NODES and node_type in avl_classes:
+                # We have a subgroup within a Cluster group
+                subGroup, drawn_resources = handle_group(
+                    newGroup, cloudGroup, diagramCanvas, node_connection, tfdata, drawn_resources
+                )
+                newGroup.subgraph(subGroup.dot)
+                drawn_resources.append(node_connection)
+            elif (
+                node_type not in GROUP_NODES
+                and node_type in avl_classes
+            ):
+                targetGroup = diagramCanvas if node_type in OUTER_NODES else cloudGroup
+                newNode, drawn_resources = handle_nodes(
+                    node_connection,
+                    targetGroup,
+                    cloudGroup,
+                    diagramCanvas,
+                    tfdata,
+                    drawn_resources
+                )
+                newGroup.add_node(newNode._id, label=helpers.pretty_name(node_connection))
     return newGroup, drawn_resources
 
 
@@ -235,6 +238,7 @@ def draw_objects(
                     # Create new subgroups and their nodes and add it to the supplied cluster
                     node_groups, all_drawn_resources_list = handle_group(
                         targetGroup,
+                        cloudGroup,
                         diagramCanvas,
                         resource,
                         tfdata,
@@ -293,7 +297,9 @@ def render_diagram(
     tfdata["connected_nodes"] = dict()
     # Draw Nodes and Groups in order of static definitions
     for node_type_list in DRAW_ORDER:
-        targetGroup = myDiagram if node_type_list == OUTER_NODES else cloudGroup
+        targetGroup = cloudGroup 
+        if node_type_list == OUTER_NODES :
+            targetGroup = myDiagram
         setcluster(targetGroup)
         all_drawn_resources_list = draw_objects(
             node_type_list,

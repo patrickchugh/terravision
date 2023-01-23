@@ -245,10 +245,13 @@ def list_of_parents(searchdict: dict, target: str):
         if isinstance(value, str):
             if target in value:
                 final_list.append(key)
-        elif isinstance(value, dict):
+        elif isinstance(value, dict) :
             for subkey in value:
                 if target in value[subkey]:
                     final_list.append(key)
+        elif isinstance(value, list) :
+            if target in value :
+                final_list.append(key)
     return final_list
 
 

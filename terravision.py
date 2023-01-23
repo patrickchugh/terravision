@@ -144,6 +144,7 @@ def draw(source, varfile, outfile, format, show, simplified, annotate, avl_class
     default="architecture",
     help="Filename for output list (default architecture.json)",
 )
+@click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option("--avl_classes", hidden=True)
 def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
     """List Cloud Resources and Relations"""

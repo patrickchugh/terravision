@@ -81,7 +81,7 @@ consolidated_nodes = {
         "import_location": "resource_classes.aws.network",
         "vpc": True,
     },
-    "aws_ecs": {
+    "aws_ecs_service.": {
         "resource_name": "aws_ecs_service.ecs",
         "import_location": "resource_classes.aws.compute",
         "vpc": True,
@@ -118,14 +118,6 @@ aws_group = Cluster
 # Internal tracking dict for nodes and their connections (for future use)
 connected_nodes = dict()
 
-
-def check_variant(resource: str, metadata: dict) -> str:
-    for variant_service in node_variants:
-        if resource.startswith(variant_service):
-            for keyword in node_variants[variant_service]:
-                if keyword in str(metadata):
-                    return node_variants[variant_service][keyword]
-    return ""
 
 
 def connect_up(origin: Node, destination: Node, metadata: dict):
