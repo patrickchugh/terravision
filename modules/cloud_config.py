@@ -73,13 +73,13 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": True,
         }
     },
-    {
-        "aws_eip": {
-            "resource_name": "aws_eip.eip",
-            "import_location": "resource_classes.aws.network",
-            "vpc": True,
-        }
-    },
+    # {
+    #     "aws_eip": {
+    #         "resource_name": "aws_eip.eip",
+    #         "import_location": "resource_classes.aws.network",
+    #         "vpc": True,
+    #     }
+    # },
    
 ]
 

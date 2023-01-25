@@ -56,17 +56,56 @@ def make_graph_dict(tfdata: dict):
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
     tfdata['graphdict'] = graphdict
+    tfdata['original_graphdict'] = graphdict
+    click.echo(click.style(f'\nUnprocessed Graph Dictionary:', fg='white', bold=True))
+    print(json.dumps( tfdata['original_graphdict'], indent=4, sort_keys=True))
     # Handle automatic and user annotations 
     tfdata = annotations.handle_annotations(tfdata)
+    # Handle consolidated nodes where nodes are grouped into one node
+    tfdata = handle_consolidated_nodes(tfdata)
     # Handle multiple resources created by count attribute
     tfdata = handle_multiple_resources(tfdata)
     # # Handle special node variants 
     #tfdata = handle_variants(tfdata)
     # Dump graphdict
-    click.echo(click.style(f'\nFinal Graphviz dictionary:', fg='white', bold=True))
+    click.echo(click.style(f'\nFinal Graphviz Input Dictionary', fg='white', bold=True))
     print(json.dumps( tfdata['graphdict'], indent=4, sort_keys=True))
     return tfdata
 
+def handle_consolidated_nodes(tfdata: dict) :
+    new_graphdict = dict(tfdata['graphdict'])
+    for resource in tfdata['graphdict'] :
+        consolidated_name = consolidated_node_check(resource)
+        if consolidated_name:
+            if not new_graphdict.get(consolidated_name):
+                new_graphdict[consolidated_name] = list()
+                tfdata['meta_data'][consolidated_name] = tfdata['meta_data'][resource]
+            new_graphdict[consolidated_name].extend(list(tfdata['graphdict'][resource]))
+            del new_graphdict[resource]
+            connected_resource = consolidated_name
+        else:
+            connected_resource = resource
+        for index, connection in enumerate(new_graphdict[connected_resource]):
+            if consolidated_node_check(connection) :
+                consolidated_connection = consolidated_node_check(connection) 
+                if consolidated_connection:  
+                    if not consolidated_connection in new_graphdict[connected_resource] and connected_resource not in consolidated_connection :
+                        new_graphdict[connected_resource][index]= consolidated_connection
+                    else :
+                        new_graphdict[connected_resource].insert(index,'null')
+                        new_graphdict[connected_resource].remove(connection)
+        if 'null' in  new_graphdict[connected_resource] :
+            new_graphdict[connected_resource].remove('null')
+    tfdata['graphdict'] = new_graphdict
+    return tfdata
+
+# Takes a resource and returns a standardised consolidated node if matched with the static definitions
+def consolidated_node_check(resource_type: str):
+    for checknode in CONSOLIDATED_NODES:
+        prefix = str(list(checknode.keys())[0])
+        if resource_type.startswith(prefix) and resource_type:
+            return checknode[prefix]["resource_name"]
+    return False
 
 def handle_variants(tfdata: dict) :
     for node, connections in tfdata['graphdict'].items() :
@@ -94,6 +133,8 @@ def check_variant(resource: str, metadata: dict) -> str:
 # Loop through every connected node that has a count >0 and add suffix -i where i is the source node prefix
 def add_number_suffix(i: int, target_resource:str, tfdata: dict) :
     new_list = list()
+    if consolidated_node_check(target_resource) :
+        target_resource = consolidated_node_check(target_resource)
     for resource in tfdata['graphdict'][target_resource]:
         if tfdata['meta_data'].get(resource) :
             parents_list = helpers.list_of_parents(tfdata['graphdict'], target_resource)
@@ -101,11 +142,14 @@ def add_number_suffix(i: int, target_resource:str, tfdata: dict) :
             for parent in parents_list:
                 if tfdata['meta_data'][parent].get('count') :
                     parent_has_count = True
-            if (tfdata['meta_data'][resource].get('count') or parent_has_count) :
+            if (parent_has_count) :
                 if '-' not in resource :
                     new_name = resource + '-' + str(i)
-                if new_name not in new_list:
-                    new_list.append(new_name)
+                if resource + '-' not in new_list and tfdata['meta_data'][resource].get('count') and not consolidated_node_check(resource):
+                    if new_name not in new_list :
+                        new_list.append(new_name)
+                else :
+                    new_list.append(resource)
             else:
                 new_list.append(resource)
         else :

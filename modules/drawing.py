@@ -93,15 +93,13 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
 
 # Recursive function to draw out nodes along with any nodes connected to them
 def handle_nodes(
-    new_resource: str,
+    resource: str,
     inGroup: Cluster,
     cloudGroup: Cluster,
     diagramCanvas: Canvas,
     tfdata: dict,
     drawn_resources: list
 ):
-    # For consolidated nodes, get the standardised resource name which doesn't exist in Terraform
-    resource = consolidated_node_check(new_resource) if consolidated_node_check(new_resource) else new_resource
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes:
         return
@@ -118,10 +116,10 @@ def handle_nodes(
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
     # Now draw and connect any nodes listed as a connection in graphdict
-    if tfdata["graphdict"].get(new_resource) :
-        for node_connection in tfdata["graphdict"][new_resource]:
+    if tfdata["graphdict"].get(resource) :
+        for node_connection in tfdata["graphdict"][resource]:
             connectedNode = None
-            c_resource = consolidated_node_check(node_connection) if consolidated_node_check(node_connection) else node_connection
+            c_resource = node_connection
             node_type = str(c_resource).split(".")[0]
             # Ensure any connections from outside nodes to inside cloud nodes appear correctly
             if node_type in OUTER_NODES:
@@ -129,20 +127,27 @@ def handle_nodes(
             else:
                 connectedGroup = cloudGroup
             if node_type not in GROUP_NODES:
-                if node_type in avl_classes and node_connection != new_resource:
-                    connectedNode, drawn_resources = handle_nodes(
-                        node_connection,
-                        connectedGroup,
-                        cloudGroup,
-                        diagramCanvas,
-                        tfdata,
-                        drawn_resources
-                    )
-                if connectedNode:
+                if node_type in avl_classes and resource != node_connection and node_connection in tfdata['graphdict'].keys():
+                    # Check for circular references before diving into a particular connected node
+                    circular_reference = resource in tfdata['graphdict'][node_connection]
+                    if not circular_reference :
+                        connectedNode, drawn_resources = handle_nodes(
+                            node_connection,
+                            connectedGroup,
+                            cloudGroup,
+                            diagramCanvas,
+                            tfdata,
+                            drawn_resources
+                        )
+                    elif node_connection not in drawn_resources:
+                        nodeClass = getattr(sys.modules[__name__], node_type)
+                        connectedNode = nodeClass(label=helpers.pretty_name(node_connection), tf_resource_name=node_connection)
+                        drawn_resources.append(node_connection)
+                        tfdata["meta_data"].update({node_connection: {"node": newNode}})
+                if connectedNode :
                     # We have found a connection linked to newNode we just created
                     label = get_edge_labels(newNode, connectedNode, tfdata) 
                     # Log connections in tfdata and don't duplicate existing connections
-                    # Use consolidated_node when appropriate
                     if not tfdata["connected_nodes"].get(newNode._id) and tfdata["meta_data"][resource]["node"]:
                         originNode = tfdata["meta_data"][resource]["node"]
                     else:
@@ -159,15 +164,6 @@ def handle_nodes(
                             tfdata["connected_nodes"][originNode._id] = helpers.append_dictlist(tfdata["connected_nodes"][originNode._id],connectedNode._id ) 
                             
     return newNode, drawn_resources
-
-# Takes a resource and returns a standardised consolidated node if matched with the static definitions
-def consolidated_node_check(resource_type: str):
-    for checknode in CONSOLIDATED_NODES:
-        prefix = str(list(checknode.keys())[0])
-        if resource_type.startswith(prefix) and resource_type:
-            return checknode[prefix]["resource_name"]
-    return False
-
 
 # Recursive function to draw out groups and subgroups along with their nodes
 def handle_group(
@@ -199,6 +195,7 @@ def handle_group(
             elif (
                 node_type not in GROUP_NODES
                 and node_type in avl_classes
+                and node_connection != resource
             ):
                 targetGroup = diagramCanvas if node_type in OUTER_NODES else cloudGroup
                 newNode, drawn_resources = handle_nodes(
