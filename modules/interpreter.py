@@ -375,7 +375,7 @@ def handle_conditional_resources(tfdata):
     tfdata['hidden'] = [
         key
         for key, attr_list in tfdata['meta_data'].items()
-        if str(attr_list.get("count")) == "0"
+        if str(attr_list.get("count")) == "0" or str(attr_list.get("count")).startswith('$')
     ]
     return tfdata
 
@@ -506,8 +506,4 @@ def get_variable_values(tfdata) -> dict:
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
     # tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings
-    return tfdata
-
-def handle_variants(tfdata: dict) :
-
     return tfdata

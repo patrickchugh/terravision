@@ -5,7 +5,7 @@ import modules.helpers as helpers
  
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 
-def handle_annotations(tfdata: dict):
+def add_annotations(tfdata: dict):
     graphdict = tfdata['graphdict']
     for node in list(graphdict):
         for auto_node in AUTO_ANNOTATIONS:
@@ -23,7 +23,7 @@ def handle_annotations(tfdata: dict):
                     if auto_node[node_prefix]['arrow'] == 'forward' :
                         graphdict[node] = helpers.append_dictlist(graphdict[node], annotation_node)
                         if not graphdict.get(annotation_node) :
-                            graphdict[annotation_node] = dict()
+                            graphdict[annotation_node] = list()
                     else :
                         if graphdict.get(annotation_node) :
                             new_connections = list(graphdict[annotation_node])

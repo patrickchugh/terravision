@@ -31,10 +31,10 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     helpers.output_log(tfdata)
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
-    # Handle services which have variations in type based on metadata
-    tfdata = interpreter.handle_variants(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    tfdata = graphmaker.make_graph_dict(tfdata)
+    tfdata = graphmaker.make_graph_dict(tfdata) 
+    with open('final.json') as json_file:
+        tfdata['graphdict'] = json.load(json_file)
     return tfdata
 
 

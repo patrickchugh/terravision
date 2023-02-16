@@ -9,7 +9,7 @@ class _Database(_AWS):
 
 # 
 class Aurora(_Database):
-    _icon = "aurora.png"
+    _icon = "aurora-instance.png"
 
 
 class DatabaseMigrationService(_Database):
@@ -81,6 +81,7 @@ QLDB = QuantumLedgerDatabaseQldb
 # Terraform resource mappings
 aws_rds_cluster = RDS
 aws_rds = RDS
+aws_rds_aurora = Aurora
 aws_db_instance = RDS
 aws_dms_replication_instance = DatabaseMigrationService
 aws_docdb_cluster = DocumentDB

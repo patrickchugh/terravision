@@ -6,6 +6,14 @@ import re
 from modules.tf_function_handlers import tf_function_handlers
 from sys import exit
 from pathlib import Path
+import modules.cloud_config as cloud_config
+
+REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
+IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
+GROUP_NODES = cloud_config.AWS_GROUP_NODES
+CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
+NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
+SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
@@ -17,6 +25,12 @@ def check_for_domain(string: str) -> bool:
         if dot in string:
             return True
     return False
+
+
+def sort_graphdict(graphdict: dict):
+    for key in graphdict:
+        graphdict[key].sort()
+    return graphdict
 
 
 def url(string: str) -> str:
@@ -94,6 +108,8 @@ def pretty_name(name: str, show_title=True) -> str:
         name = name.replace("aws_", "")
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
+    if servicename == "az":
+        return "Availability Zone"
     if servicename == "route_table_association":
         servicename = "Route Table"
     if servicename == "ecs_service_fargate":
@@ -128,7 +144,7 @@ def pretty_name(name: str, show_title=True) -> str:
         "elb",
         "nlb",
         "nat",
-        "vpc"
+        "vpc",
     ]:
         acronym = servicename[0:3]
         servicename = servicename.replace(acronym, acronym.upper())
@@ -141,7 +157,7 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = final_label.replace("-", " ")
     final_label = final_label.replace("This", "").strip()
     return str(final_label)[:20]
- 
+
 
 def replace_variables(vartext, filename, all_variables, quotes=False):
     # Replace Variables found within resource meta data
@@ -227,17 +243,20 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
             final_dict[item] = searchdict[item]
     return final_dict
 
-def find_resource_containing (search_list: list, keyword: str) :
+
+def find_resource_containing(search_list: list, keyword: str):
     for actual_name in search_list:
         if keyword in actual_name:
             found = actual_name
             return found
     return False
 
-def append_dictlist(thelist: list, new_item: object) :
+
+def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)
     return new_list
+
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
@@ -245,15 +264,25 @@ def list_of_parents(searchdict: dict, target: str):
         if isinstance(value, str):
             if target in value:
                 final_list.append(key)
-        elif isinstance(value, dict) :
+        elif isinstance(value, dict):
             for subkey in value:
                 if target in value[subkey]:
                     final_list.append(key)
-        elif isinstance(value, list) :
-            if target in value :
+        elif isinstance(value, list):
+            if target in value:
                 final_list.append(key)
+            for item in value:
+                if item.startswith(target) and key not in final_list :
+                    final_list.append(key)
     return final_list
 
+# Takes a resource and returns a standardised consolidated node if matched with the static definitions
+def consolidated_node_check(resource_type: str):
+    for checknode in CONSOLIDATED_NODES:
+        prefix = str(list(checknode.keys())[0])
+        if resource_type.startswith(prefix) and resource_type:
+            return checknode[prefix]["resource_name"]
+    return False
 
 def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
     final_list = list()

@@ -54,7 +54,7 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "2.5",
+        "nodesep": "3",
         "fontname": "Sans-Serif",
         "fontsize": "30",
         "fontcolor": "#2D3436",
@@ -63,7 +63,7 @@ class Canvas:
         "ranksep": "5",
         "center": "true",
         "pad" : "1",
-        "ranksep" :"8"
+        "ranksep" :"8",
 
     }
     _default_node_attrs = {
@@ -94,7 +94,7 @@ class Canvas:
         name: str = "",
         filename: str = "",
         direction: str = "TB",
-        curvestyle: str = "line",
+        curvestyle: str = "ortho",
         outformat: str = "png",
         show: bool = True,
         graph_attr: dict = {},

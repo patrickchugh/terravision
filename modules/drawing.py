@@ -140,10 +140,11 @@ def handle_nodes(
                             drawn_resources
                         )
                     elif node_connection not in drawn_resources:
+                        # Do not look at further connections recursively for circular references, just draw
                         nodeClass = getattr(sys.modules[__name__], node_type)
                         connectedNode = nodeClass(label=helpers.pretty_name(node_connection), tf_resource_name=node_connection)
                         drawn_resources.append(node_connection)
-                        tfdata["meta_data"].update({node_connection: {"node": newNode}})
+                        tfdata["meta_data"].update({node_connection: {"node": connectedNode}})
                 if connectedNode :
                     # We have found a connection linked to newNode we just created
                     label = get_edge_labels(newNode, connectedNode, tfdata) 

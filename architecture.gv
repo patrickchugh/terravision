@@ -1,116 +1,260 @@
 digraph "Serverless Wordpress Site" {
-	graph [center=true concentrate=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=30 label="Serverless Wordpress Site" labelloc=t nodesep=2.5 overlap=false pad=1 rankdir=TB ranksep=8 splines=line]
+	graph [center=true concentrate=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=30 label="Serverless Wordpress Site" labelloc=t nodesep=3 overlap=false pad=1 rankdir=TB ranksep=8 splines=ortho]
 	node [center=true fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=14 height=1.4 imagepos=c imagescale=true labelloc=b shape=box style=rounded width=1.4]
 	edge [color="#7B8894"]
-	"None.None.Node.2d7771a357fb4f64931c01b0bf97a94c" [label="Machine generated at 2023-01-25 16:21:43.849752 using Terravision (https://terra-vision.net)	Source: ('/Users/patrick/git/terraform-examples/aws/wordpress_fargate/',)" _footernode=1 fontsize=20 height=0 width=0]
-	"aws.general.Users.cdf788342aa54704aac2b14f5aabafee" [label="Users Tv Users" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/general/users.png" labelloc=b shape=none tf_resource_name="tv_aws_users.users"]
-	"aws.network.ElasticLoadBalancing.c0d95f10e94744bbbdbfdab17caead28" -> "aws.security.CertificateManager.5034890a7da44c6292934c9803ea5837" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.CloudFront.b7d468528c274d8c89d37e89d0250659" -> "aws.network.ElasticLoadBalancing.c0d95f10e94744bbbdbfdab17caead28" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.CloudFront.b7d468528c274d8c89d37e89d0250659" -> "aws.security.CertificateManager.5034890a7da44c6292934c9803ea5837" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.Route53.7cc14e80b867494ea5dc5966e36ea206" -> "aws.network.CloudFront.b7d468528c274d8c89d37e89d0250659" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.general.Users.cdf788342aa54704aac2b14f5aabafee" -> "aws.network.Route53.7cc14e80b867494ea5dc5966e36ea206" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.general.InternetAlt1.0728864bd74c492783a0b647819e2739" [label="Internet Tv Internet" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/general/internet-alt1.png" labelloc=b shape=none tf_resource_name="tv_aws_internet.internet"]
-	"aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" -> "aws.general.InternetAlt1.0728864bd74c492783a0b647819e2739" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.NATGateway.ab9d95502a344c4c99f1966a916926d8" -> "aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.NATGateway.66afb13e31cf4481a33fd27908d8badc" -> "aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.NATGateway.b4e22eaac3ae473c84d0596d6364d9db" -> "aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.VPCElasticNetworkInterface.5f6ab7f163e74916b6cc49e926f9eaad" -> "aws.storage.ElasticFileSystemEFS.e8ddc50723554ec4b03059868507b8f3" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" -> "aws.management.Cloudwatch.463a29ddb00e4acdba0c93454e0bd007" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" -> "aws.database.RDS.bc546985ec854862b3f85d70fc648d1d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 xlabel="  Database Queries  "]
-	"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" -> "aws.management.SystemsManagerParameterStore.a159feb8d07c4808a7a55a9c267b864c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" -> "aws.storage.ElasticFileSystemEFS.e8ddc50723554ec4b03059868507b8f3" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.VPCElasticNetworkInterface.806eff9b888a4cb991376e1e69890a61" -> "aws.storage.ElasticFileSystemEFS.e8ddc50723554ec4b03059868507b8f3" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.network.VPCElasticNetworkInterface.0c509f82cdca416aab617d2eb9100c6b" -> "aws.storage.ElasticFileSystemEFS.e8ddc50723554ec4b03059868507b8f3" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.security.IdentityAndAccessManagementIamRole.eabd742e7cb14c50ae559aecc72b1d00" -> "aws.security.IdentityAndAccessManagementIamPermissions.62418a125dab4e7e93fd3cf7c5650fe2" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.security.IdentityAndAccessManagementIamRole.eabd742e7cb14c50ae559aecc72b1d00" -> "aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.security.IdentityAndAccessManagementIamRole.22e16791846c4f1f89b0234549b67319" -> "aws.security.IdentityAndAccessManagementIamPermissions.f01446b919a54021945378267aa98f30" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	"aws.security.IdentityAndAccessManagementIamRole.22e16791846c4f1f89b0234549b67319" -> "aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-	subgraph "cluster_AWSgroup.564" {
-		graph [_shift=1 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/aws.png"/></TD><TD>AWS Cloud</TD></TR></TABLE>> labeljust=l margin=100 ordering=in pencolor=black rankdir=LR shape=box style=solid]
-		"aws.network.Route53.7cc14e80b867494ea5dc5966e36ea206" [label="Route 53 Route53 Rec" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-53.png" labelloc=b shape=none tf_resource_name="aws_route53_record.route_53"]
-		"aws.network.CloudFront.b7d468528c274d8c89d37e89d0250659" [label="Cloudfront Distri" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/cloudfront.png" labelloc=b shape=none tf_resource_name="aws_cloudfront_distribution.this"]
-		"aws.network.ElasticLoadBalancing.c0d95f10e94744bbbdbfdab17caead28" [label="Elb Lb Target Group" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/elastic-load-balancing.png" labelloc=b shape=none tf_resource_name="aws_lb_target_group.elb"]
-		"aws.security.CertificateManager.5034890a7da44c6292934c9803ea5837" [label="Acm ACM Certificate" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/certificate-manager.png" labelloc=b shape=none tf_resource_name="aws_acm_certificate.acm"]
-		subgraph "cluster_VPCgroup.258" {
+	"None.None.Node.55d4e55c6623408286d37f15f6055629" [label="Machine generated at 2023-02-16 12:28:43.298468 using Terravision (https://terra-vision.net)	Source: ('/Users/patrick/git/terraform-examples/aws/wordpress_fargate/',)" _footernode=1 fontsize=20 height=0 width=0]
+	"aws.general.Users.cd43086776a945b0bdeeb6355d8cae46" [label="Users Tv Users" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/general/users.png" labelloc=b shape=none tf_resource_name="tv_aws_users.users"]
+	"aws.network.CloudFront.58bfb03723e14174ba329557439eac93" -> "aws.security.CertificateManager.265b4f0fc750438c9cc237b3b784077d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" -> "aws.management.Cloudwatch.f86d2fee33894535876b2997327dd6fe" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" -> "aws.compute.ElasticContainerRegistry.e232cc7c54f74d7badd8c004fe12aeb8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.VPCElasticNetworkInterface.0a22777651184feab76eae3e1bb9b9db" -> "aws.storage.ElasticFileSystemEFS.a3bc1c1dc448437da055333842ad24c4" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" -> "aws.network.VPCElasticNetworkInterface.0a22777651184feab76eae3e1bb9b9db" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.database.Aurora.361085d729184250a5a438f7c60f1294" -> "aws.database.RDS.039823a5e8c348f28226c1883706d3b6" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" -> "aws.database.Aurora.361085d729184250a5a438f7c60f1294" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" -> "aws.management.SystemsManagerParameterStore.18ae9109939e40dd80c232f29dd2e2c9" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElbApplicationLoadBalancer.0ebf7e1170274da882c4865367a5dbf9" -> "aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" -> "aws.network.ElbApplicationLoadBalancer.0ebf7e1170274da882c4865367a5dbf9" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" -> "aws.compute.ElasticContainerRegistry.e232cc7c54f74d7badd8c004fe12aeb8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.VPCElasticNetworkInterface.8f1041cc9def49b6aebfec7c6b8895b3" -> "aws.storage.ElasticFileSystemEFS.a3bc1c1dc448437da055333842ad24c4" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" -> "aws.network.VPCElasticNetworkInterface.8f1041cc9def49b6aebfec7c6b8895b3" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.database.Aurora.8b5cdcbec66d4cf59220b3f4798004af" -> "aws.database.RDS.039823a5e8c348f28226c1883706d3b6" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" -> "aws.database.Aurora.8b5cdcbec66d4cf59220b3f4798004af" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" -> "aws.management.SystemsManagerParameterStore.18ae9109939e40dd80c232f29dd2e2c9" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElbApplicationLoadBalancer.ecc2604b60dc40099c1a186b515774dc" -> "aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" -> "aws.network.ElbApplicationLoadBalancer.ecc2604b60dc40099c1a186b515774dc" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" -> "aws.compute.ElasticContainerRegistry.e232cc7c54f74d7badd8c004fe12aeb8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.VPCElasticNetworkInterface.327a1631dd6244f9884d0185c89f65a8" -> "aws.storage.ElasticFileSystemEFS.a3bc1c1dc448437da055333842ad24c4" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" -> "aws.network.VPCElasticNetworkInterface.327a1631dd6244f9884d0185c89f65a8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.database.Aurora.0a032081ed2249228cf62ffe9b4ac82c" -> "aws.database.RDS.039823a5e8c348f28226c1883706d3b6" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" -> "aws.database.Aurora.0a032081ed2249228cf62ffe9b4ac82c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" -> "aws.management.SystemsManagerParameterStore.18ae9109939e40dd80c232f29dd2e2c9" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElbApplicationLoadBalancer.964dfe6fd5e04470b6826dfa28661b98" -> "aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" -> "aws.network.ElbApplicationLoadBalancer.964dfe6fd5e04470b6826dfa28661b98" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.CloudFront.58bfb03723e14174ba329557439eac93" -> "aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.Route53.17fa695bda8a42a4b2ec25e34944e263" -> "aws.network.CloudFront.58bfb03723e14174ba329557439eac93" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.general.Users.cd43086776a945b0bdeeb6355d8cae46" -> "aws.network.Route53.17fa695bda8a42a4b2ec25e34944e263" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.general.InternetAlt1.f816dbc4c5ed46b2b620cba461049e39" [label="Internet Tv Internet" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/general/internet-alt1.png" labelloc=b shape=none tf_resource_name="tv_aws_internet.internet"]
+	"aws.network.NATGateway.7f34761576c9480fbcebfac7119290fa" -> "aws.compute.ElasticIP.0c9aee8ea685415585aa38aec840259a" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" -> "aws.general.InternetAlt1.f816dbc4c5ed46b2b620cba461049e39" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.NATGateway.7f34761576c9480fbcebfac7119290fa" -> "aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.NATGateway.71ca7651d43e4148a7a0e95dc954a60b" -> "aws.compute.ElasticIP.0c9aee8ea685415585aa38aec840259a" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.NATGateway.71ca7651d43e4148a7a0e95dc954a60b" -> "aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.NATGateway.f3b261a1488e4ad4b0eec00b60466e2d" -> "aws.compute.ElasticIP.0c9aee8ea685415585aa38aec840259a" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.network.NATGateway.f3b261a1488e4ad4b0eec00b60466e2d" -> "aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.a195332385594587b14c9f810431584a" -> "aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.a195332385594587b14c9f810431584a" -> "aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.a195332385594587b14c9f810431584a" -> "aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.a195332385594587b14c9f810431584a" -> "aws.security.IdentityAndAccessManagementIamPermissions.8efb21d6eac84ec9a11fbffc3e0fb914" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.e3d6d772d607484e912f2ab226a3bc02" -> "aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.e3d6d772d607484e912f2ab226a3bc02" -> "aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.e3d6d772d607484e912f2ab226a3bc02" -> "aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"aws.security.IdentityAndAccessManagementIamRole.e3d6d772d607484e912f2ab226a3bc02" -> "aws.security.IdentityAndAccessManagementIamPermissions.8971561932c543f3ac5313ae87cd08a7" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	subgraph "cluster_AWSgroup.198" {
+		graph [_shift=1 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/aws.png"/></TD><TD>AWS Cloud</TD></TR></TABLE>> labeljust=l margin=100 ordering=in pencolor=black penwidth=2 rankdir=LR shape=box style=solid]
+		"aws.network.Route53.17fa695bda8a42a4b2ec25e34944e263" [label="Route 53 Route53 Rec" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-53.png" labelloc=b shape=none tf_resource_name="aws_route53_record.route_53"]
+		"aws.network.CloudFront.58bfb03723e14174ba329557439eac93" [label="Cloudfront Distri" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/cloudfront.png" labelloc=b shape=none tf_resource_name="aws_cloudfront_distribution.this"]
+		"aws.security.CertificateManager.265b4f0fc750438c9cc237b3b784077d" [label="Acm ACM Certificate" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/certificate-manager.png" labelloc=b shape=none tf_resource_name="aws_acm_certificate.acm"]
+		"aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" [label="Elb LB" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/elastic-load-balancing.png" labelloc=b shape=none tf_resource_name="aws_lb.elb"]
+		"aws.network.ElbApplicationLoadBalancer.0ebf7e1170274da882c4865367a5dbf9" [label="Elb 1 Lb Alb" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png" labelloc=b shape=none tf_resource_name="aws_lb_alb.elb-1"]
+		"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" [label="Ecs 1 ECS Fargate" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png" labelloc=b shape=none tf_resource_name="aws_ecs_fargate.ecs-1"]
+		"aws.management.Cloudwatch.f86d2fee33894535876b2997327dd6fe" [label="Cloudwatch Cloudwatc" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/management/cloudwatch.png" labelloc=b shape=none tf_resource_name="aws_cloudwatch_log_group.cloudwatch"]
+		"aws.compute.ElasticContainerRegistry.e232cc7c54f74d7badd8c004fe12aeb8" [label="Ecr Ecr Repository" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/ec2-container-registry.png" labelloc=b shape=none tf_resource_name="aws_ecr_repository.ecr"]
+		"aws.network.VPCElasticNetworkInterface.0a22777651184feab76eae3e1bb9b9db" [label="1 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-1"]
+		"aws.storage.ElasticFileSystemEFS.a3bc1c1dc448437da055333842ad24c4" [label="Efs EFS File System" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/storage/elastic-file-system-efs.png" labelloc=b shape=none tf_resource_name="aws_efs_file_system.efs"]
+		"aws.database.Aurora.361085d729184250a5a438f7c60f1294" [label="1 RDS Aurora" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png" labelloc=b shape=none tf_resource_name="aws_rds_aurora.this-1"]
+		"aws.database.RDS.039823a5e8c348f28226c1883706d3b6" [label="RDS Cluster" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/database/rds.png" labelloc=b shape=none tf_resource_name="aws_rds_cluster.this"]
+		"aws.management.SystemsManagerParameterStore.18ae9109939e40dd80c232f29dd2e2c9" [label="Ssmparam Ssm Paramet" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/management/systems-manager-parameter-store.png" labelloc=b shape=none tf_resource_name="aws_ssm_parameter.ssmparam"]
+		"aws.network.ElbApplicationLoadBalancer.ecc2604b60dc40099c1a186b515774dc" [label="Elb 2 Lb Alb" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png" labelloc=b shape=none tf_resource_name="aws_lb_alb.elb-2"]
+		"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" [label="Ecs 2 ECS Fargate" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png" labelloc=b shape=none tf_resource_name="aws_ecs_fargate.ecs-2"]
+		"aws.network.VPCElasticNetworkInterface.8f1041cc9def49b6aebfec7c6b8895b3" [label="2 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-2"]
+		"aws.database.Aurora.8b5cdcbec66d4cf59220b3f4798004af" [label="2 RDS Aurora" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png" labelloc=b shape=none tf_resource_name="aws_rds_aurora.this-2"]
+		"aws.network.ElbApplicationLoadBalancer.964dfe6fd5e04470b6826dfa28661b98" [label="Elb 3 Lb Alb" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png" labelloc=b shape=none tf_resource_name="aws_lb_alb.elb-3"]
+		"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" [label="Ecs 3 ECS Fargate" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png" labelloc=b shape=none tf_resource_name="aws_ecs_fargate.ecs-3"]
+		"aws.network.VPCElasticNetworkInterface.327a1631dd6244f9884d0185c89f65a8" [label="3 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-3"]
+		"aws.database.Aurora.0a032081ed2249228cf62ffe9b4ac82c" [label="3 RDS Aurora" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png" labelloc=b shape=none tf_resource_name="aws_rds_aurora.this-3"]
+		subgraph "cluster_VPCgroup.74" {
 			graph [fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/vpc.png"/></TD><TD>VPC</TD></TR></TABLE>> labeljust=l margin=50 pencolor=darkgreen rank=same rankdir=LR shape=box style=solid]
 		}
-		"aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" [label="Igw Internet Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/internet-gateway.png" labelloc=b shape=none tf_resource_name="aws_internet_gateway.igw"]
-		"aws.network.NATGateway.ab9d95502a344c4c99f1966a916926d8" [label="1 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-1"]
-		"aws.network.RouteTable.0852f3cd6a37441daf103fa7796f8a59" [label="Public 1 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-1"]
-		"aws.network.NATGateway.66afb13e31cf4481a33fd27908d8badc" [label="2 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-2"]
-		"aws.network.RouteTable.bea4124521a045cfa43e2a0ec7b28b67" [label="Public 2 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-2"]
-		"aws.network.NATGateway.b4e22eaac3ae473c84d0596d6364d9db" [label="3 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-3"]
-		"aws.network.RouteTable.0994d1a4c2b04618b87633472ea3d6c0" [label="Public 3 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-3"]
-		"aws.network.VPCElasticNetworkInterface.5f6ab7f163e74916b6cc49e926f9eaad" [label="1 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-1"]
-		"aws.storage.ElasticFileSystemEFS.e8ddc50723554ec4b03059868507b8f3" [label="EFS File System" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/storage/elastic-file-system-efs.png" labelloc=b shape=none tf_resource_name="aws_efs_file_system.this"]
-		"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [label="Ecs ECS Service" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/elastic-container-service.png" labelloc=b shape=none tf_resource_name="aws_ecs_service.ecs"]
-		"aws.management.Cloudwatch.463a29ddb00e4acdba0c93454e0bd007" [label="Cloudwatch Cloudwatc" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/management/cloudwatch.png" labelloc=b shape=none tf_resource_name="aws_cloudwatch_log_group.cloudwatch"]
-		"aws.database.RDS.bc546985ec854862b3f85d70fc648d1d" [label="Rds RDS Cluster" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/database/rds.png" labelloc=b shape=none tf_resource_name="aws_rds_cluster.rds"]
-		"aws.management.SystemsManagerParameterStore.a159feb8d07c4808a7a55a9c267b864c" [label="Ssmparam Ssm Paramet" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/management/systems-manager-parameter-store.png" labelloc=b shape=none tf_resource_name="aws_ssm_parameter.ssmparam"]
-		"aws.network.RouteTable.cd5bf19e1b594896924f8f285951d683" [label="Private 1 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-1"]
-		"aws.network.VPCElasticNetworkInterface.806eff9b888a4cb991376e1e69890a61" [label="2 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-2"]
-		"aws.network.RouteTable.ab25e3e8614f439ca23f9afb8280c58b" [label="Private 2 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-2"]
-		"aws.network.VPCElasticNetworkInterface.0c509f82cdca416aab617d2eb9100c6b" [label="3 EFS Mount Targe" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png" labelloc=b shape=none tf_resource_name="aws_efs_mount_target.this-3"]
-		"aws.network.RouteTable.ba9b936290034e68a6bdce28bf719538" [label="Private 3 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-3"]
-		subgraph "cluster_VPCgroup.258" {
+		"aws.network.RouteTable.31b57c504c1042d5be4d341f8eada643" [label="Private 1 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-1"]
+		"aws.network.NATGateway.7f34761576c9480fbcebfac7119290fa" [label="1 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-1"]
+		"aws.compute.ElasticIP.0c9aee8ea685415585aa38aec840259a" [label="Eip Eip" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/ec2-elastic-ip-address.png" labelloc=b shape=none tf_resource_name="aws_eip.eip"]
+		"aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" [label="Igw Internet Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/internet-gateway.png" labelloc=b shape=none tf_resource_name="aws_internet_gateway.igw"]
+		"aws.network.RouteTable.773ab7c22a654574b87580bef68c3486" [label="Public 1 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-1"]
+		"aws.network.RouteTable.2748651ddd504bd69e4d79924e619e46" [label="Private 2 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-2"]
+		"aws.network.NATGateway.71ca7651d43e4148a7a0e95dc954a60b" [label="2 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-2"]
+		"aws.network.RouteTable.0034e008af534c8396dfb711a441d10a" [label="Public 2 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-2"]
+		"aws.network.RouteTable.6dd2d3a16aa34b9d82d5f9c41ac470df" [label="Private 3 Route Tabl" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.private-3"]
+		"aws.network.NATGateway.f3b261a1488e4ad4b0eec00b60466e2d" [label="3 NAT Gateway" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png" labelloc=b shape=none tf_resource_name="aws_nat_gateway.this-3"]
+		"aws.network.RouteTable.f74734bdd17f4413ad8e7eb12795991c" [label="Public 3 Route Table" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png" labelloc=b shape=none tf_resource_name="aws_route_table_association.public-3"]
+		subgraph "cluster_VPCgroup.74" {
 			graph [fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/vpc.png"/></TD><TD>VPC</TD></TR></TABLE>> labeljust=l margin=50 pencolor=darkgreen rank=same rankdir=LR shape=box style=solid]
-			"aws.network.ElasticLoadBalancing.c0d95f10e94744bbbdbfdab17caead28" [label="Elb Lb Target Group"]
-			"aws.network.InternetGateway.f5c470ceb8a94c8785387dcfa6daed4d" [label="Igw Internet Gateway"]
-			subgraph "cluster_SubnetGroup.778" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+			subgraph "cluster_AvailabilityZone.435" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
 			}
-			subgraph "cluster_SubnetGroup.778" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.NATGateway.ab9d95502a344c4c99f1966a916926d8" [label="1 NAT Gateway"]
-				"aws.network.RouteTable.0852f3cd6a37441daf103fa7796f8a59" [label="Public 1 Route Table"]
+			subgraph "cluster_AvailabilityZone.435" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
+				subgraph "cluster_SubnetGroup.196" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.196" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.RouteTable.31b57c504c1042d5be4d341f8eada643" [label="Private 1 Route Tabl"]
+					subgraph "cluster_SecurityGroup.66" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.66" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.database.Aurora.361085d729184250a5a438f7c60f1294" [label="1 RDS Aurora"]
+					}
+					subgraph "cluster_SecurityGroup.794" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.794" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.VPCElasticNetworkInterface.0a22777651184feab76eae3e1bb9b9db" [label="1 EFS Mount Targe"]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.101" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>1 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.101" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>1 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+						"aws.compute.Fargate.23f8ca90c4c842f6a71ac05a0d88317d" [label="Ecs 1 ECS Fargate"]
+					}
+				}
+				subgraph "cluster_SubnetGroup.969" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.969" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.NATGateway.7f34761576c9480fbcebfac7119290fa" [label="1 NAT Gateway"]
+					"aws.network.RouteTable.773ab7c22a654574b87580bef68c3486" [label="Public 1 Route Table"]
+					subgraph "cluster_SecurityGroup.728" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.728" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 1 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.ElbApplicationLoadBalancer.0ebf7e1170274da882c4865367a5dbf9" [label="Elb 1 Lb Alb"]
+					}
+				}
 			}
-			subgraph "cluster_SubnetGroup.396" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+			subgraph "cluster_AvailabilityZone.770" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
 			}
-			subgraph "cluster_SubnetGroup.396" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.NATGateway.66afb13e31cf4481a33fd27908d8badc" [label="2 NAT Gateway"]
-				"aws.network.RouteTable.bea4124521a045cfa43e2a0ec7b28b67" [label="Public 2 Route Table"]
+			subgraph "cluster_AvailabilityZone.770" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
+				subgraph "cluster_SubnetGroup.728" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.728" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.RouteTable.2748651ddd504bd69e4d79924e619e46" [label="Private 2 Route Tabl"]
+					subgraph "cluster_SecurityGroup.773" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.773" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.database.Aurora.8b5cdcbec66d4cf59220b3f4798004af" [label="2 RDS Aurora"]
+					}
+					subgraph "cluster_SecurityGroup.922" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.922" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.VPCElasticNetworkInterface.8f1041cc9def49b6aebfec7c6b8895b3" [label="2 EFS Mount Targe"]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.7" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>2 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.7" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>2 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+						"aws.compute.Fargate.c87008d3684b4df79023c0a38cb7b78c" [label="Ecs 2 ECS Fargate"]
+					}
+				}
+				subgraph "cluster_SubnetGroup.706" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.706" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.NATGateway.71ca7651d43e4148a7a0e95dc954a60b" [label="2 NAT Gateway"]
+					"aws.network.RouteTable.0034e008af534c8396dfb711a441d10a" [label="Public 2 Route Table"]
+					subgraph "cluster_SecurityGroup.696" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.696" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 2 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.ElbApplicationLoadBalancer.ecc2604b60dc40099c1a186b515774dc" [label="Elb 2 Lb Alb"]
+					}
+				}
 			}
-			subgraph "cluster_SubnetGroup.355" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+			subgraph "cluster_AvailabilityZone.927" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
 			}
-			subgraph "cluster_SubnetGroup.355" {
-				graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.NATGateway.b4e22eaac3ae473c84d0596d6364d9db" [label="3 NAT Gateway"]
-				"aws.network.RouteTable.0994d1a4c2b04618b87633472ea3d6c0" [label="Public 3 Route Table"]
+			subgraph "cluster_AvailabilityZone.927" {
+				graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>> labeljust=c margin=100 pencolor="#3399ff" rankdir=LR shape=box style=dashed]
+				subgraph "cluster_SubnetGroup.446" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.446" {
+					graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.RouteTable.6dd2d3a16aa34b9d82d5f9c41ac470df" [label="Private 3 Route Tabl"]
+					subgraph "cluster_SecurityGroup.876" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.876" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.database.Aurora.0a032081ed2249228cf62ffe9b4ac82c" [label="3 RDS Aurora"]
+					}
+					subgraph "cluster_SecurityGroup.261" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.261" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Efs 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.VPCElasticNetworkInterface.327a1631dd6244f9884d0185c89f65a8" [label="3 EFS Mount Targe"]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.2" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>3 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+					}
+					subgraph "cluster_GenericAutoScalingGroup.2" {
+						graph [_shift=0 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>3 Appautoscaling</TD></TR></TABLE>> labeljust=c margin=50 pencolor=pink rankdir=LR shape=box style=dashed]
+						"aws.compute.Fargate.19bdb364bd9047f09a79693d32279a55" [label="Ecs 3 ECS Fargate"]
+					}
+				}
+				subgraph "cluster_SubnetGroup.283" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+				}
+				subgraph "cluster_SubnetGroup.283" {
+					graph [_shift=1 color="#F2F7EE" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
+					"aws.network.NATGateway.f3b261a1488e4ad4b0eec00b60466e2d" [label="3 NAT Gateway"]
+					"aws.network.RouteTable.f74734bdd17f4413ad8e7eb12795991c" [label="Public 3 Route Table"]
+					subgraph "cluster_SecurityGroup.303" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+					}
+					subgraph "cluster_SecurityGroup.303" {
+						graph [_shift=0 center=true fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Alb 3 Security Group</FONT></TD></TR></TABLE>> labeljust=c margin=50 pencolor=red rankdir=LR shape=box style=solid]
+						"aws.network.ElbApplicationLoadBalancer.964dfe6fd5e04470b6826dfa28661b98" [label="Elb 3 Lb Alb"]
+					}
+				}
 			}
-			subgraph "cluster_SubnetGroup.313" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-			}
-			subgraph "cluster_SubnetGroup.313" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 1 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.VPCElasticNetworkInterface.5f6ab7f163e74916b6cc49e926f9eaad" [label="1 EFS Mount Targe"]
-				"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [label="Ecs ECS Service"]
-				"aws.network.RouteTable.cd5bf19e1b594896924f8f285951d683" [label="Private 1 Route Tabl"]
-			}
-			subgraph "cluster_SubnetGroup.693" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-			}
-			subgraph "cluster_SubnetGroup.693" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 2 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.VPCElasticNetworkInterface.806eff9b888a4cb991376e1e69890a61" [label="2 EFS Mount Targe"]
-				"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [label="Ecs ECS Service"]
-				"aws.network.RouteTable.ab25e3e8614f439ca23f9afb8280c58b" [label="Private 2 Route Tabl"]
-			}
-			subgraph "cluster_SubnetGroup.142" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-			}
-			subgraph "cluster_SubnetGroup.142" {
-				graph [_shift=1 color="#deebf7" fontname="Sans-Serif" fontsize=14 label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 3 Subnet</TD></TR></TABLE>> labeljust=l margin=50 pencolor="" rankdir=LR shape=box style=filled]
-				"aws.network.VPCElasticNetworkInterface.0c509f82cdca416aab617d2eb9100c6b" [label="3 EFS Mount Targe"]
-				"aws.compute.ElasticContainerService.e19b5e71bb2e43c8988eab18e9bd7dd8" [label="Ecs ECS Service"]
-				"aws.network.RouteTable.ba9b936290034e68a6bdce28bf719538" [label="Private 3 Route Tabl"]
-			}
+			"aws.network.InternetGateway.bd2d687c799b4b4cafe7862c7d3b22cb" [label="Igw Internet Gateway"]
+			"aws.network.ElasticLoadBalancing.67123b4ab507495683e53f63594c2264" [label="Elb LB"]
 		}
-		"aws.security.IdentityAndAccessManagementIamRole.eabd742e7cb14c50ae559aecc72b1d00" [label="Task Execution Role " height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png" labelloc=b shape=none tf_resource_name="aws_iam_role.task_execution_role"]
-		"aws.security.IdentityAndAccessManagementIamPermissions.62418a125dab4e7e93fd3cf7c5650fe2" [label="Task Execution Polic" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png" labelloc=b shape=none tf_resource_name="aws_iam_role_policy_attachment.task_execution_policy_attach"]
-		"aws.security.IdentityAndAccessManagementIamRole.22e16791846c4f1f89b0234549b67319" [label="Task Role Role" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png" labelloc=b shape=none tf_resource_name="aws_iam_role.task_role"]
-		"aws.security.IdentityAndAccessManagementIamPermissions.f01446b919a54021945378267aa98f30" [label="Task Policy Attach I" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png" labelloc=b shape=none tf_resource_name="aws_iam_role_policy_attachment.task_policy_attach"]
+		subgraph "cluster_GenericGroup.480" {
+			graph [fontname="Sans-Serif" fontsize=14 label="Shared Services Grou" labeljust=l margin=150 pencolor=black rankdir=LR shape=box style=dashed]
+		}
+		"aws.compute.ElasticContainerService.5b0cf98b54ee4198a15a62f3bd7e218c" [label="Ecs ECS Service" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/compute/elastic-container-service.png" labelloc=b shape=none tf_resource_name="aws_ecs_service.ecs"]
+		subgraph "cluster_GenericGroup.480" {
+			graph [fontname="Sans-Serif" fontsize=14 label="Shared Services Grou" labeljust=l margin=150 pencolor=black rankdir=LR shape=box style=dashed]
+			"aws.security.CertificateManager.265b4f0fc750438c9cc237b3b784077d" [label="Acm ACM Certificate"]
+			"aws.management.Cloudwatch.f86d2fee33894535876b2997327dd6fe" [label="Cloudwatch Cloudwatc"]
+			"aws.compute.ElasticContainerRegistry.e232cc7c54f74d7badd8c004fe12aeb8" [label="Ecr Ecr Repository"]
+			"aws.compute.ElasticContainerService.5b0cf98b54ee4198a15a62f3bd7e218c" [label="Ecs ECS Service"]
+			"aws.storage.ElasticFileSystemEFS.a3bc1c1dc448437da055333842ad24c4" [label="Efs EFS File System"]
+			"aws.database.RDS.039823a5e8c348f28226c1883706d3b6" [label="RDS Cluster"]
+			"aws.management.SystemsManagerParameterStore.18ae9109939e40dd80c232f29dd2e2c9" [label="Ssmparam Ssm Paramet"]
+		}
+		"aws.security.IdentityAndAccessManagementIamRole.a195332385594587b14c9f810431584a" [label="Task Execution Role " height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png" labelloc=b shape=none tf_resource_name="aws_iam_role.task_execution_role"]
+		"aws.security.IdentityAndAccessManagementIamPermissions.8efb21d6eac84ec9a11fbffc3e0fb914" [label="Task Execution Polic" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png" labelloc=b shape=none tf_resource_name="aws_iam_role_policy_attachment.task_execution_policy_attach"]
+		"aws.security.IdentityAndAccessManagementIamRole.e3d6d772d607484e912f2ab226a3bc02" [label="Task Role Role" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png" labelloc=b shape=none tf_resource_name="aws_iam_role.task_role"]
+		"aws.security.IdentityAndAccessManagementIamPermissions.8971561932c543f3ac5313ae87cd08a7" [label="Task Policy Attach I" height=1.9 image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png" labelloc=b shape=none tf_resource_name="aws_iam_role_policy_attachment.task_policy_attach"]
 	}
 }

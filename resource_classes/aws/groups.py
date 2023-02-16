@@ -32,6 +32,8 @@ class SubnetGroup(Cluster):
             "margin": "50",
             "color": col,
             "pencolor": "",
+         
+
             "_shift": "1"
         }
         subnet_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/network/{image}"/></TD><TD>{label}</TD></TR></TABLE>>'
@@ -73,16 +75,30 @@ class GenericGroup(Cluster):
 
 
 class AvailabilityZone(Cluster):
-    def __init__(self, label='AZ',  **kwargs):
+    def __init__(self, label='Availability Zone',  **kwargs):
         graph_attrs = {
             "style": "dashed",
-            "margin": "150",
+            "margin": "100",
             "pencolor": '#3399ff',
             "center": "true",
-            "labeljust" : "r"
+            "labeljust" : "c",
+            "_shift": "0"
         }
-        super().__init__(label, defaultdir, graph_attrs)
+        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">{label}</FONT></TD></TR></TABLE>>'
+        super().__init__(cluster_label, defaultdir, graph_attrs)
 
+class SecurityGroup(Cluster):
+    def __init__(self, label='Security Group',  **kwargs):
+        graph_attrs = {
+            "style": "solid",
+            "margin": "50",
+            "pencolor": 'red',
+            "center": "true",
+            "labeljust" : "c",
+            "_shift": "0"
+        }
+        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">{label}</FONT></TD></TR></TABLE>>'
+        super().__init__(cluster_label, defaultdir, graph_attrs)
 
 class AWSgroup(Cluster):
     def __init__(self, label='AWS Cloud', **kwargs):
@@ -91,6 +107,7 @@ class AWSgroup(Cluster):
             "pencolor": "black",
             "margin": "100",
             "ordering": "in",
+            "penwidth" : "2",
             "center": "true",
             "labeljust": "l",
             "_shift" : "1"
@@ -114,7 +131,9 @@ class OnPrem(Cluster):
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 aws_vpc = VPCgroup
+aws_group = GenericGroup
+aws_security_group = SecurityGroup
 aws_subnet = SubnetGroup
-#aws_appautoscaling_target = GenericAutoScalingGroup
+aws_appautoscaling_target = GenericAutoScalingGroup
 tv_aws_onprem = OnPrem
-
+aws_az = AvailabilityZone

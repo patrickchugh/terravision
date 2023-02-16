@@ -1,4 +1,3 @@
-
 # Any resource names with certain prefixes are consolidated into one node
 AWS_CONSOLIDATED_NODES = [
     {
@@ -46,8 +45,8 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_lb_": {
-            "resource_name": "aws_lb_target_group.elb",
+        "aws_lb": {
+            "resource_name": "aws_lb.elb",
             "import_location": "resource_classes.aws.network",
             "vpc": True,
         }
@@ -60,32 +59,33 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_rds": {
-            "resource_name": "aws_rds_cluster.rds",
-            "import_location": "resource_classes.aws.database",
-            "vpc": True,
-        }
-    },
-    {
         "aws_internet_gateway": {
             "resource_name": "aws_internet_gateway.igw",
             "import_location": "resource_classes.aws.network",
             "vpc": True,
         }
+    }, 
+    {
+        "aws_eip": {
+            "resource_name": "aws_eip.eip",
+            "import_location": "resource_classes.aws.network",
+            "vpc": True,
+        }
     },
-    # {
-    #     "aws_eip": {
-    #         "resource_name": "aws_eip.eip",
-    #         "import_location": "resource_classes.aws.network",
-    #         "vpc": True,
-    #     }
-    # },
-   
+    {
+        "aws_efs_file_system": {
+            "resource_name": "aws_efs_file_system.efs",
+            "import_location": "resource_classes.aws.storage",
+            "vpc": False,
+        }
+    }
 ]
 
 # List of Group type nodes and order to draw them in
 AWS_GROUP_NODES = [
     "aws_vpc",
+    "aws_az",
+    "aws_group",
     "aws_appautoscaling_target",
     "aws_subnet",
     "aws_security_group",
@@ -107,7 +107,7 @@ AWS_OUTER_NODES = [
     "tv_aws_internet"    
 ]
 
-# Order to draw nodes - leave empthy string list till last to denote everything else
+# Order to draw nodes - leave empty string list till last to denote everything else
 AWS_DRAW_ORDER = [AWS_OUTER_NODES, AWS_EDGE_NODES, AWS_GROUP_NODES, AWS_CONSOLIDATED_NODES, [""]]
 
 # List of prefixes where additional nodes should be created automatically
@@ -116,10 +116,15 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_dx": {"link": ["tv_aws_onprem.corporate_datacenter", "tv_aws_cgw.customer_gateway"], "arrow": "forward"}},
     {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
+    {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
 ]
 
 # Variant icons for the same service - matches keyword in meta data to suffix after underscore
-AWS_NODE_VARIANTS = {"aws_ecs": {"FARGATE": "aws_fargate_ecs", "EC2": "aws_ec2_ecs"}}
+AWS_NODE_VARIANTS = {
+    "aws_ecs": {"FARGATE": "aws_ecs_fargate", "EC2": "aws_ecs_ec2"},
+    "aws_lb": {"application": "aws_lb_alb", "network": "aws_lb_nlb"},
+    "aws_rds": {"aurora": "aws_rds_aurora", "mysql": "aws_rds_mysql", "postgres": "aws_rds_postgres"},
+    }
 
 # Automatically reverse arrow direction for these resources
 AWS_REVERSE_ARROW_LIST = [
@@ -128,7 +133,20 @@ AWS_REVERSE_ARROW_LIST = [
     'aws_vpc.',
     'aws_subnet.',
     'aws_iam_role.',
-    'aws_lb',
+    'aws_lb'
 ]
 
-AWS_IMPLIED_CONNECTIONS = {'certificate_arn': 'aws_acm_certificate'}
+AWS_IMPLIED_CONNECTIONS = {
+    'certificate_arn': 'aws_acm_certificate',
+    'container_definitions' : 'aws_ecr_repository'
+    }
+
+# List of special resources and handler function name
+AWS_SPECIAL_RESOURCES = {
+    'aws_cloudfront_distribution' : 'aws_handle_cloudfront',
+    'aws_subnet' : 'aws_handle_subnet_azs',
+    'aws_appautoscaling_target' : 'aws_handle_autoscaling',
+    'aws_efs_file_system' : 'aws_handle_efs',
+    'aws_security_group' : 'aws_handle_sg',
+    'aws_' : 'aws_handle_sharedgroup'
+}
