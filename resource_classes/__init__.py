@@ -54,7 +54,7 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "3",
+        "nodesep": "3.5",
         "fontname": "Sans-Serif",
         "fontsize": "30",
         "fontcolor": "#2D3436",

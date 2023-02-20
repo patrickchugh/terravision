@@ -256,7 +256,15 @@ def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)
     return new_list
-
+    
+def check_variant(resource: str, metadata: dict) -> str:
+    for variant_service in NODE_VARIANTS:
+        if resource.startswith(variant_service):
+            for keyword in NODE_VARIANTS[variant_service]:
+                if keyword in str(metadata) and  NODE_VARIANTS[variant_service] != resource:
+                    return NODE_VARIANTS[variant_service][keyword]
+            return False
+    return False
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()

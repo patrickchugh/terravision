@@ -101,7 +101,7 @@ AWS_EDGE_NODES = [
     "aws_apigateway"
 ]
 
-# Nodes outside Cloud
+# Nodes outside Cloud boundary
 AWS_OUTER_NODES = [
     "tv_aws_users",
     "tv_aws_internet"    
@@ -117,12 +117,14 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
+    {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
+    {"aws_rds_": {"link": ["aws_rds_cluster.rds"], "arrow": "forward"}},
 ]
 
-# Variant icons for the same service - matches keyword in meta data to suffix after underscore
+# Variant icons for the same service - matches keyword in meta data and changes resource type
 AWS_NODE_VARIANTS = {
-    "aws_ecs": {"FARGATE": "aws_ecs_fargate", "EC2": "aws_ecs_ec2"},
-    "aws_lb": {"application": "aws_lb_alb", "network": "aws_lb_nlb"},
+    "aws_ecs_service": {"FARGATE": "aws_fargate", "EC2": "aws_ec2ecs"},
+    "aws_lb": {"application": "aws_alb", "network": "aws_nlb"},
     "aws_rds": {"aurora": "aws_rds_aurora", "mysql": "aws_rds_mysql", "postgres": "aws_rds_postgres"},
     }
 
@@ -138,7 +140,7 @@ AWS_REVERSE_ARROW_LIST = [
 
 AWS_IMPLIED_CONNECTIONS = {
     'certificate_arn': 'aws_acm_certificate',
-    'container_definitions' : 'aws_ecr_repository'
+    'container_definitions' : 'aws_ecr_repository',
     }
 
 # List of special resources and handler function name
@@ -148,5 +150,17 @@ AWS_SPECIAL_RESOURCES = {
     'aws_appautoscaling_target' : 'aws_handle_autoscaling',
     'aws_efs_file_system' : 'aws_handle_efs',
     'aws_security_group' : 'aws_handle_sg',
+    'aws_lb' : 'aws_handle_lb',
     'aws_' : 'aws_handle_sharedgroup'
 }
+
+AWS_SHARED_SERVICES = [
+        "aws_acm_certificate",
+        "aws_cloudwatch_log_group",
+        "aws_ecs_cluster",
+        "aws_ecr_repository",
+        "aws_efs_file_system",
+        "aws_rds_cluster",
+        "aws_ssm_parameter",
+        "aws_eip"
+]

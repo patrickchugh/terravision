@@ -14,7 +14,7 @@ def add_annotations(tfdata: dict):
                 new_nodes = auto_node[node_prefix]['link']
                 for new_node in new_nodes:
                     if new_node.endswith('.*') :                      
-                        annotation_node = helpers.find_resource_containing(tfdata['node_list'], new_node.split('.')[0])
+                        annotation_node = helpers.find_resource_containing(tfdata['graphdict'].keys(), new_node.split('.')[0])
                         if not annotation_node :
                             click.echo(f'ERROR: Cannot find any resource with mask "{new_node}" for annotations!')
                             sys.exit()
@@ -31,6 +31,8 @@ def add_annotations(tfdata: dict):
                             graphdict[annotation_node] = list(new_connections)
                         else:
                             graphdict[annotation_node] = [node]
+                    tfdata['meta_data'][annotation_node] = dict()
+
     tfdata['graphdict'] = graphdict
     # Check if user has supplied annotations file
     if tfdata.get('annotations') :

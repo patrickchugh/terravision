@@ -14,7 +14,7 @@ GROUP_NODES = cloud_config.AWS_GROUP_NODES
 CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
-
+SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
 def aws_handle_autoscaling(tfdata: dict):
     try:
@@ -131,7 +131,7 @@ def aws_handle_sg(tfdata:dict) :
         target_type =  target.split('.')[0] 
         # Look for any nodes with relationships to security groups and then reverse the relationship
         # effectively putting the node into a cluster representing the security group
-        if not target_type in GROUP_NODES and not helpers.consolidated_node_check(target) :
+        if not target_type in GROUP_NODES :
             for connection in tfdata['graphdict'][target] :
                 if connection.startswith('aws_security_group') :
                     newlist = list()
@@ -146,24 +146,34 @@ def aws_handle_sg(tfdata:dict) :
     return tfdata
 
 def aws_handle_sharedgroup(tfdata: dict) :
-    shared_services = [
-        "aws_acm_certificate",
-        "aws_cloudwatch_log",
-        "aws_ecs_service",
-        "aws_ecr_repository",
-        "aws_efs_file_system",
-        "aws_rds_cluster",
-        "aws_ssm_parameter"
-    ]
     graphcopy = dict(tfdata['graphdict'])
     for node in graphcopy :
-        substring_match = [s for s in shared_services if s in node]
+        substring_match = [s for s in SHARED_SERVICES if s in node]
         if substring_match :
             if not tfdata['graphdict'].get('aws_group.shared_services') :
                 tfdata['graphdict']['aws_group.shared_services'] = []
                 tfdata['meta_data']['aws_group.shared_services'] = {}
             tfdata['graphdict']['aws_group.shared_services'].append(node)
     for service in list(tfdata['graphdict']['aws_group.shared_services']) :
-        if helpers.consolidated_node_check(service) :
+        if helpers.consolidated_node_check(service) and 'cluster' not in service :
             tfdata['graphdict']['aws_group.shared_services'] = list(map(lambda x: x.replace(service, helpers.consolidated_node_check(service)), tfdata['graphdict']['aws_group.shared_services']))
+    return tfdata
+
+
+def aws_handle_lb(tfdata:dict):
+    lb_type = helpers.check_variant('aws_lb.elb', tfdata['meta_data']['aws_lb.elb']) 
+    renamed_node = lb_type + '.' + 'elb'
+    for connection in list(tfdata['graphdict']['aws_lb.elb']) :
+        if connection.startswith('aws_security_group') :
+            tfdata['graphdict'][connection] = ['aws_lb.elb']
+        else :
+            if not tfdata['graphdict'].get(renamed_node) :
+                tfdata['graphdict'][renamed_node] = list()
+            tfdata['graphdict'][renamed_node].append(connection)
+            tfdata['meta_data'][renamed_node] = dict(tfdata['meta_data']['aws_lb.elb'])
+            if tfdata['meta_data'][connection].get('count')  :
+                if tfdata['meta_data'][connection].get('count') > 1 :
+                    tfdata['meta_data'][renamed_node]['count'] = int(tfdata['meta_data'][connection]['count'])
+            tfdata['graphdict']['aws_lb.elb'].remove(connection)
+    tfdata['graphdict']['aws_lb.elb'].append(renamed_node)
     return tfdata
