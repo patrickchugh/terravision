@@ -1,5 +1,5 @@
 # TerraVision
-TerraVision is a CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams. Envisioned to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date. Supports AWS and soon Google and Azure cloud.
+TerraVision is a CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams. Running 100% Client Side and dynamically parses your conditionally created resources and variables to automate real time visualisation of your architecture. The CLI is envisione to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date. Supports AWS and soon Google and Azure cloud.
 
 Turn this... 
 
