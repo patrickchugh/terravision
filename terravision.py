@@ -33,8 +33,8 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = graphmaker.make_graph_dict(tfdata) 
-    with open('final.json') as json_file:
-        tfdata['graphdict'] = json.load(json_file)
+    # with open('final.json') as json_file:
+    #     tfdata['graphdict'] = json.load(json_file)
     return tfdata
 
 
