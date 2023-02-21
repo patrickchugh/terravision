@@ -7,7 +7,7 @@ Turn this...
 
 into this...
 
-<img src="./example_diagram.png" width="640" height="580">
+<img src="./architecture.dot.png" width="640" height="580">
 
 
 This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
