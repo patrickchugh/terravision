@@ -65,18 +65,20 @@ def handle_readme_source(resp) -> str:
 
 
 def get_clone_url(sourceURL: str):
+    gitaddress =''
+    subfolder =''
     # Handle Case where full git url is given
     if sourceURL.startswith("github.com") or sourceURL.startswith(
         "https://github.com/"
     ):
+        gitaddress =''
+        subfolder =''
         # Handle subfolder of git repo
         if sourceURL.count("//") > 1:
             subfolder_array = sourceURL.split("//")
             subfolder = subfolder_array[2].split("?")[0]
             gitaddress = subfolder_array[0] + "//" + subfolder_array[1]
         githubURL = gitaddress if gitaddress else sourceURL
-        # sourceURL = gitaddress if gitaddress else sourceURL
-        # r = requests.get(sourceURL)
     # Handle case where ssh git URL is given
     elif (
         sourceURL.startswith("git::ssh://")
@@ -138,7 +140,7 @@ def get_clone_url(sourceURL: str):
             exit()
         if githubURL == "":
             githubURL = handle_readme_source(r)
-    return githubURL
+    return githubURL, subfolder
 
 
 def clone_files(sourceURL: str, tempdir: str, module=""):
@@ -148,7 +150,7 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
     module_cache_path = os.path.join(MODULE_DIR, reponame)
     # Identify source repo and construct final git clone URL
     click.echo(f"  Downloading External Module: {sourceURL}")
-    githubURL = get_clone_url(sourceURL)
+    githubURL, subfolder = get_clone_url(sourceURL)
     click.echo(
         click.style(
             f"    Cloning from Terraform registry source: {githubURL}", fg="green"
