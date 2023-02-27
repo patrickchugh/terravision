@@ -14,9 +14,7 @@ from sys import exit
 import modules.helpers as helpers
 import hcl2
 
-DATA_REPLACEMENTS = {
-    "data.aws_availability_zones" : "['AZ1', 'AZ2', 'AZ3']"
-}
+DATA_REPLACEMENTS = {"data.aws_availability_zones": "['AZ1', 'AZ2', 'AZ3']"}
 
 
 def inject_module_variables(tfdata: dict):
@@ -25,7 +23,7 @@ def inject_module_variables(tfdata: dict):
             for module, params in module_items.items():
                 module_source = params["source"]
                 for key, value in params.items():
-                    if "module." in str(value) :
+                    if "module." in str(value):
                         pass
                     if "var." in str(value):
                         if isinstance(value, list):
@@ -98,8 +96,8 @@ def find_replace_values(varstring, module, tfdata):
         for search_string, keyvalue in DATA_REPLACEMENTS.items():
             if search_string in d:
                 value = str(value.replace(d, str(keyvalue)))
-        if value == varstring :
-             value = str(value.replace(d, "UNKNOWN"))
+        if value == varstring:
+            value = str(value.replace(d, "UNKNOWN"))
     for module_var in modulevar_found_list:
         cleantext = fix_lists(module_var)
         splitlist = cleantext.split(".")
@@ -199,48 +197,6 @@ def extract_locals(tfdata):
                 module_locals[modname] = local
     tfdata["all_locals"] = module_locals
     return tfdata
-
-
-# def process_conditional_metadata(
-#     metadata: dict, mod_locals, all_variables, all_outputs, filename, mod
-# ):
-#     def determine_statement(eval_string: str):
-#         if "for" in eval_string and "in" in eval_string:
-#             # we have a for loop so deal with that part first
-#             # TODO: Implement for loop handling for real, for now just null it out
-#             eval_string = find_between(
-#                 eval_string, "[for", ":", "[", True, eval_string.count("[")
-#             )
-#             eval_string = find_between(
-#                 eval_string, ":", "]", "", True, eval_string.count("]")
-#             )
-#         if "module." in eval_string:
-#             outvalue = ""
-#             splitlist = eval_string.split(".")
-#             outputname = find_between(eval_string, splitlist[1] + ".", " ")
-#             for file in all_outputs.keys():
-#                 for i in all_outputs[file]:
-#                     if outputname in i.keys():
-#                         outvalue = i[outputname]["value"]
-#                         if "*.id" in outvalue:
-#                             resource_name = fix_lists(outvalue.split(".*")[0])
-#                             outvalue = metadata[resource_name]["count"]
-#                             outvalue = determine_statement(outvalue)
-#                             break
-#             stringarray = eval_string.split(".")
-#             modulevar = cleanup(
-#                 "module" + "." + stringarray[1] + "." + stringarray[2]
-#             ).strip()
-#             eval_string = eval_string.replace(modulevar, outvalue)
-#         eval_string = resolve_dynamic_values(
-#             eval_string, mod_locals, all_variables, all_outputs, filename
-#         )
-#         return eval_string
-
-#         if "for_each" in attr_list:
-#             attr_list["for_each"] = determine_statement(attr_list["for_each"])
-
-#     return metadata
 
 
 def eval_tf_functions(eval_string):
@@ -372,10 +328,11 @@ def handle_conditional_resources(tfdata):
                 click.echo(
                     f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
                 )
-    tfdata['hidden'] = [
+    tfdata["hidden"] = [
         key
-        for key, attr_list in tfdata['meta_data'].items()
-        if str(attr_list.get("count")) == "0" or str(attr_list.get("count")).startswith('$')
+        for key, attr_list in tfdata["meta_data"].items()
+        if str(attr_list.get("count")) == "0"
+        or str(attr_list.get("count")).startswith("$")
     ]
     return tfdata
 
@@ -428,7 +385,7 @@ def get_metadata(tfdata):  #  -> set
                         meta_data[cf_resource]["origin"] = handle_cloudfront_domains(
                             str(origin_source), origin_domain, meta_data
                         )
-    
+
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
     return tfdata

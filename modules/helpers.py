@@ -241,6 +241,9 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
     for item in searchdict:
         if target_resource in searchdict[item]:
             final_dict[item] = searchdict[item]
+        for listitem in searchdict[item] :
+            if target_resource in listitem :
+                final_dict[item] = searchdict[item]
     return final_dict
 
 

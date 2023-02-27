@@ -52,7 +52,6 @@
         "aws_fargate.ecs-3"
     ],
     "aws_customer_gateway.this": [],
-    "aws_db_subnet_group.this": [],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
     "aws_efs_file_system.efs": [],
@@ -94,10 +93,8 @@
         "aws_acm_certificate.acm",
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_ecr_repository.ecr",
-        "aws_ecs_cluster.ecs",
         "aws_efs_file_system.efs",
         "aws_eip.eip",
-        "aws_rds_cluster.this",
         "aws_ssm_parameter.ssmparam"
     ],
     "aws_iam_policy.task_execution_policy": [],
@@ -142,18 +139,17 @@
         "aws_internet_gateway.igw"
     ],
     "aws_rds_aurora.this-1": [
-        "aws_rds_cluster.rds",
+        "aws_rds_cluster.this",
         "random_string.snapshot_suffix"
     ],
     "aws_rds_aurora.this-2": [
-        "aws_rds_cluster.rds",
+        "aws_rds_cluster.this",
         "random_string.snapshot_suffix"
     ],
     "aws_rds_aurora.this-3": [
-        "aws_rds_cluster.rds",
+        "aws_rds_cluster.this",
         "random_string.snapshot_suffix"
     ],
-    "aws_rds_cluster.rds": [],
     "aws_route.private_nat_gateway-1": [
         "aws_nat_gateway.this-1",
         "aws_route_table.private-1"
@@ -174,7 +170,6 @@
         "aws_cloudfront_distribution.this"
     ],
     "aws_route_table.private": [],
-    "aws_route_table.public": [],
     "aws_route_table.public-1": [],
     "aws_route_table.public-2": [],
     "aws_route_table.public-3": [],

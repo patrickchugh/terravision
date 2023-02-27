@@ -117,8 +117,7 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
-    {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
-    {"aws_rds_": {"link": ["aws_rds_cluster.rds"], "arrow": "forward"}},
+    {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}}
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type
@@ -151,16 +150,16 @@ AWS_SPECIAL_RESOURCES = {
     'aws_efs_file_system' : 'aws_handle_efs',
     'aws_security_group' : 'aws_handle_sg',
     'aws_lb' : 'aws_handle_lb',
+    'aws_db_subnet' : 'aws_handle_dbsubnet',
     'aws_' : 'aws_handle_sharedgroup'
 }
 
 AWS_SHARED_SERVICES = [
         "aws_acm_certificate",
         "aws_cloudwatch_log_group",
-        "aws_ecs_cluster",
         "aws_ecr_repository",
         "aws_efs_file_system",
-        "aws_rds_cluster",
         "aws_ssm_parameter",
-        "aws_eip"
+        "aws_eip",
+        "aws_kms_key"
 ]
