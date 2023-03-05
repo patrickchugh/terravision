@@ -243,7 +243,7 @@ def find_conditional_statements(resource, attr_list: dict):
     # Handle conditional counts and loops
     if "for_each" in attr_list:
         eval_string = attr_list["for_each"]
-        return helpers.cleanup_curlies(eval_string)
+        return "ERROR!" + helpers.cleanup_curlies(eval_string)
     if (
         "count" in attr_list.keys()
         and not isinstance(attr_list["count"], int)
@@ -252,7 +252,7 @@ def find_conditional_statements(resource, attr_list: dict):
         eval_string = str(attr_list["count"])
         return helpers.cleanup_curlies(eval_string)
     for attrib in attr_list:
-        if "for" in attrib and "in" in attrib:
+        if "for" in attrib and ("in" in attrib or ":" in attrib):
             eval_string = attr_list[attrib]
             # we have a for loop so deal with that part first
             # TODO: Implement for loop handling for real, for now just null it out
@@ -337,7 +337,7 @@ def handle_conditional_resources(tfdata):
     return tfdata
 
 
-def get_metadata(tfdata):  #  -> set
+def get_metadata(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
     Returns a set with a node_list of unique resources, resource attributes (metadata) and hidden (zero count) nodes

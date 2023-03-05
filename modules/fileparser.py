@@ -28,8 +28,7 @@ if not os.path.exists(MODULE_DIR):
     os.makedirs(MODULE_DIR)
 
 # List of dictionary sections to extract from TF file
-extract = ["module", "output", "variable", "locals", "resource", "data"]
-
+EXTRACT = ["module", "output", "variable", "locals", "resource", "data"]
 
 
 def find_tf_files(source: str, paths=list(), recursive=False) -> list:
@@ -156,7 +155,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
                             )
                             exit()
                 # Isolate variables, locals and other sections of interest into tfdata dict
-                for section in extract:
+                for section in EXTRACT:
                     if section in filedict[filename]:
                         section_name = "all_" + section
                         if not section_name in tfdata.keys():
@@ -188,8 +187,8 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
         varfile_list = tfdata["all_variable"].keys()
     tfdata["varfile_list"] = varfile_list
     tfdata["module_source_dict"] = module_source_dict
-    tfdata['tempdir'] = temp_dir
-    tfdata['annotations'] = annotations
+    tfdata["tempdir"] = temp_dir
+    tfdata["annotations"] = annotations
     return tfdata
 
 

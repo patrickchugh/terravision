@@ -78,7 +78,7 @@ class Evaluate:
                 while self.peek() != " ":
                     val1 = str(self.pop()) + val1
                 # Now do the same for val2
-                while self.peek() == " ":
+                while self.peek() == " " and not self.isEmpty():
                     self.pop()
                 while self.peek() != " ":
                     val2 = str(self.pop()) + val2
@@ -230,7 +230,7 @@ class Conversion:
         exp = exp.replace("!=", "!")
         exp = exp.replace(">=", "G")
         exp = exp.replace("<=", "L")
-        #exp = exp.replace(",", "")
+        # exp = exp.replace(",", "")
         exp = exp.replace("[", "")
         exp = exp.replace("]", "")
         exp = exp.replace("!F", "T")

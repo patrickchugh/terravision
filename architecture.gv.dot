@@ -1,15 +1,15 @@
-digraph "Serverless Wordpress Site" {
-	graph [bb="0,0,8387.5,4001",
+digraph Untitled {
+	graph [bb="0,0,9349.5,4001",
 		center=true,
 		concentrate=true,
 		fontcolor="#2D3436",
 		fontname="Sans-Serif",
 		fontsize=30,
-		label="Serverless Wordpress Site",
+		label=Untitled,
 		labelloc=t,
 		lheight=0.46,
-		lp="4193.8,3980.5",
-		lwidth=4.90,
+		lp="4674.8,3980.5",
+		lwidth=1.42,
 		nodesep=3.5,
 		overlap=false,
 		pad=1,
@@ -32,9 +32,9 @@ digraph "Serverless Wordpress Site" {
 		width=1.4
 	];
 	edge [color="#7B8894"];
-	subgraph "cluster_AWSgroup.278" {
+	subgraph "cluster_AWSgroup.191" {
 		graph [_shift=1,
-			bb="8,8,8186,3399",
+			bb="8,8,9148,3399",
 			center=true,
 			fontname="Sans-Serif",
 			fontsize=14,
@@ -51,14 +51,14 @@ digraph "Serverless Wordpress Site" {
 			shape=box,
 			style=solid
 		];
-		subgraph "cluster_VPCgroup.530" {
-			graph [bb="2492,771,7933,2162",
+		subgraph "cluster_VPCgroup.646" {
+			graph [bb="3454,771,8895,2162",
 				fontname="Sans-Serif",
 				fontsize=14,
 				label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/general/vpc.png"/></TD><TD>VPC</TD></TR></TABLE>>,
 				labeljust=l,
 				lheight=0.61,
-				lp="2538,2136",
+				lp="3500,2136",
 				lwidth=1.06,
 				margin=50,
 				pencolor=darkgreen,
@@ -67,7 +67,7 @@ digraph "Serverless Wordpress Site" {
 				shape=box,
 				style=solid
 			];
-			subgraph "cluster_AvailabilityZone.789" {
+			subgraph "cluster_AvailabilityZone.449" {
 				graph [_shift=0,
 					center=true,
 					fontname="Sans-Serif",
@@ -81,16 +81,16 @@ digraph "Serverless Wordpress Site" {
 					style=dashed
 				];
 			}
-			subgraph "cluster_AvailabilityZone.358" {
+			subgraph "cluster_AvailabilityZone.979" {
 				graph [_shift=0,
-					bb="2795,821,4609,2060",
+					bb="3757,821,5571,2060",
 					center=true,
 					fontname="Sans-Serif",
 					fontsize=14,
 					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>>,
 					labeljust=c,
 					lheight=0.51,
-					lp="3702,2037.5",
+					lp="4664,2037.5",
 					lwidth=3.07,
 					margin=100,
 					pencolor="#3399ff",
@@ -98,16 +98,16 @@ digraph "Serverless Wordpress Site" {
 					shape=box,
 					style=dashed
 				];
-				subgraph "cluster_SubnetGroup.957" {
+				subgraph "cluster_SubnetGroup.382" {
 					graph [_shift=1,
-						bb="3954,921,4509,1915",
+						bb="4916,921,5471,1915",
 						color="#deebf7",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 1 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="4032.5,1893",
+						lp="4994.5,1893",
 						lwidth=1.96,
 						margin=50,
 						pencolor="",
@@ -115,55 +115,55 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png",
+					"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/compute/fargate.png",
 						label="Ecs 1 Fargate",
-						pos="4408,1752.5",
+						pos="5370,1752.5",
 						shape=none,
 						tf_resource_name="aws_fargate.ecs-1",
 						width=1.4028];
-					"aws.network.VPCElasticNetworkInterface.a2594c05c8384df8822a5e6cbb8e2f05"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
+					"aws.network.VPCElasticNetworkInterface.1e8731badc77421cb4b56843a2de1bdb"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
 						label="1 EFS Mount Targe",
-						pos="4408,1039.5",
+						pos="5370,1039.5",
 						shape=none,
 						tf_resource_name="aws_efs_mount_target.this-1",
 						width=1.4028];
-					"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.network.VPCElasticNetworkInterface.a2594c05c8384df8822a5e6cbb8e2f05"	[dir=forward,
+					"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.network.VPCElasticNetworkInterface.1e8731badc77421cb4b56843a2de1bdb"	[dir=forward,
 						fontcolor="#2D3436",
 						fontname="Sans-Serif",
 						fontsize=13,
-						pos="e,4444.1,1108.1 4444.1,1683.8 4444.1,1683.8 4444.1,1118.1 4444.1,1118.1"];
-					"aws.database.Aurora.027eaf63bbd14cd0bd00a965ba9ed6e7"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png",
+						pos="e,5406.1,1108.1 5406.1,1683.8 5406.1,1683.8 5406.1,1118.1 5406.1,1118.1"];
+					"aws.database.Aurora.691ab62aa3f145288b72f8511f53f74e"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/database/aurora-instance.png",
 						label="1 RDS Aurora",
-						pos="4055,1039.5",
+						pos="5017,1039.5",
 						shape=none,
 						tf_resource_name="aws_rds_aurora.this-1",
 						width=1.4028];
-					"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.database.Aurora.027eaf63bbd14cd0bd00a965ba9ed6e7"	[dir=forward,
+					"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.database.Aurora.691ab62aa3f145288b72f8511f53f74e"	[dir=forward,
 						fontcolor="#2D3436",
 						fontname="Sans-Serif",
 						fontsize=13,
-						pos="e,4055,1108.2 4429.6,1684 4429.6,1528 4429.6,1160 4429.6,1160 4429.6,1160 4055,1160 4055,1160 4055,1160 4055,1118.2 4055,1118.2"];
-					"aws.network.RouteTable.edfd01994ba0428b95311006b60cd1ab"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+						pos="e,5017,1108.2 5391.6,1683.9 5391.6,1522.9 5391.6,1134 5391.6,1134 5391.6,1134 5017,1134 5017,1134 5017,1134 5017,1118.2 5017,1118.2"];
+					"aws.network.RouteTable.e68802df2aa14f83857ec22715e0092f"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Private 1 Route Tabl",
-						pos="4055,1752.5",
+						pos="5017,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.private-1",
 						width=1.4028];
 				}
-				subgraph "cluster_SubnetGroup.813" {
+				subgraph "cluster_SubnetGroup.481" {
 					graph [_shift=1,
-						bb="2895,1634,3803,1915",
+						bb="3857,1634,4765,1915",
 						color="#F2F7EE",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 1 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="2970.5,1893",
+						lp="3932.5,1893",
 						lwidth=1.88,
 						margin=50,
 						pencolor="",
@@ -171,39 +171,39 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.network.ElasticLoadBalancing.d85b6f2a74b14dff8be3f326219fd782"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/elastic-load-balancing.png",
+					"aws.network.ElasticLoadBalancing.68c711a662244291bd021865ff2b4f9f"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/elastic-load-balancing.png",
 						label="Elb LB",
-						pos="3702,1752.5",
+						pos="4311,1752.5",
 						shape=none,
 						tf_resource_name="aws_lb.elb",
 						width=1.4028];
-					"aws.network.NATGateway.c7b7d9716a2f47b5b556622971e7c47a"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png",
+					"aws.network.NATGateway.adef43d33c9b4a9e9a7afe7fda520b22"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/nat-gateway.png",
 						label="1 NAT Gateway",
-						pos="3349,1752.5",
+						pos="4664,1752.5",
 						shape=none,
 						tf_resource_name="aws_nat_gateway.this-1",
 						width=1.4028];
-					"aws.network.RouteTable.331e0459e3a5420da990878110a91214"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+					"aws.network.RouteTable.dfc9e720f2544b54afaebe6256b5f159"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Public 1 Route Table",
-						pos="2996,1752.5",
+						pos="3958,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.public-1",
 						width=1.4028];
 				}
 			}
-			subgraph "cluster_AvailabilityZone.760" {
+			subgraph "cluster_AvailabilityZone.53" {
 				graph [_shift=0,
-					bb="6422,821,7883,2060",
+					bb="7384,821,8845,2060",
 					center=true,
 					fontname="Sans-Serif",
 					fontsize=14,
 					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>>,
 					labeljust=c,
 					lheight=0.51,
-					lp="7152.5,2037.5",
+					lp="8114.5,2037.5",
 					lwidth=3.07,
 					margin=100,
 					pencolor="#3399ff",
@@ -211,16 +211,16 @@ digraph "Serverless Wordpress Site" {
 					shape=box,
 					style=dashed
 				];
-				subgraph "cluster_SubnetGroup.838" {
+				subgraph "cluster_SubnetGroup.237" {
 					graph [_shift=1,
-						bb="7228,921,7783,1915",
+						bb="8190,921,8745,1915",
 						color="#deebf7",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 2 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="7306.5,1893",
+						lp="8268.5,1893",
 						lwidth=1.96,
 						margin=50,
 						pencolor="",
@@ -228,55 +228,43 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png",
+					"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/compute/fargate.png",
 						label="Ecs 2 Fargate",
-						pos="7682,1752.5",
+						pos="8644,1752.5",
 						shape=none,
 						tf_resource_name="aws_fargate.ecs-2",
 						width=1.4028];
-					"aws.network.VPCElasticNetworkInterface.f7099dc184dc496fa14ded415590113f"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
+					"aws.network.VPCElasticNetworkInterface.5a0fc52805774ad1ad4190ce34c0e204"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
 						label="2 EFS Mount Targe",
-						pos="7682,1039.5",
+						pos="8467,1039.5",
 						shape=none,
 						tf_resource_name="aws_efs_mount_target.this-2",
 						width=1.4028];
-					"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1" -> "aws.network.VPCElasticNetworkInterface.f7099dc184dc496fa14ded415590113f"	[dir=forward,
+					"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e" -> "aws.network.VPCElasticNetworkInterface.5a0fc52805774ad1ad4190ce34c0e204"	[dir=forward,
 						fontcolor="#2D3436",
 						fontname="Sans-Serif",
 						fontsize=13,
-						pos="e,7718.1,1108.1 7718.1,1683.8 7718.1,1683.8 7718.1,1118.1 7718.1,1118.1"];
-					"aws.database.Aurora.740b0d17448d43768fc723565fc06c8c"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png",
-						label="2 RDS Aurora",
-						pos="7329,1039.5",
-						shape=none,
-						tf_resource_name="aws_rds_aurora.this-2",
-						width=1.4028];
-					"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1" -> "aws.database.Aurora.740b0d17448d43768fc723565fc06c8c"	[dir=forward,
-						fontcolor="#2D3436",
-						fontname="Sans-Serif",
-						fontsize=13,
-						pos="e,7329,1108.2 7703.6,1683.9 7703.6,1522.9 7703.6,1134 7703.6,1134 7703.6,1134 7329,1134 7329,1134 7329,1134 7329,1118.2 7329,1118.2"];
-					"aws.network.RouteTable.e1df316991c94b0baf824fe38e1b4d49"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+						pos="e,8517.8,1039 8680.1,1683.8 8680.1,1504.9 8680.1,1039 8680.1,1039 8680.1,1039 8527.8,1039 8527.8,1039"];
+					"aws.network.RouteTable.2c87c2fcab17449cbd3e10e726a4b9eb"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Private 2 Route Tabl",
-						pos="7329,1752.5",
+						pos="8291,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.private-2",
 						width=1.4028];
 				}
-				subgraph "cluster_SubnetGroup.720" {
+				subgraph "cluster_SubnetGroup.444" {
 					graph [_shift=1,
-						bb="6522,1634,7077,1915",
+						bb="7484,1634,8039,1915",
 						color="#F2F7EE",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 2 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="6597.5,1893",
+						lp="7559.5,1893",
 						lwidth=1.88,
 						margin=50,
 						pencolor="",
@@ -284,32 +272,32 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.network.NATGateway.69485899702943f2baa385c0483986fe"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png",
+					"aws.network.NATGateway.96d3e9ccfa264c0490ac49412fc6173e"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/nat-gateway.png",
 						label="2 NAT Gateway",
-						pos="6976,1752.5",
+						pos="7938,1752.5",
 						shape=none,
 						tf_resource_name="aws_nat_gateway.this-2",
 						width=1.4028];
-					"aws.network.RouteTable.d9008fe374434a89a12d888a91f46f7e"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+					"aws.network.RouteTable.fc09f4de5fd5441aa7b652649f21d49b"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Public 2 Route Table",
-						pos="6623,1752.5",
+						pos="7585,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.public-2",
 						width=1.4028];
 				}
 			}
-			subgraph "cluster_AvailabilityZone.507" {
+			subgraph "cluster_AvailabilityZone.672" {
 				graph [_shift=0,
-					bb="4659,821,6120,2060",
+					bb="5621,821,7082,2060",
 					center=true,
 					fontname="Sans-Serif",
 					fontsize=14,
 					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">Availability Zone</FONT></TD></TR></TABLE>>,
 					labeljust=c,
 					lheight=0.51,
-					lp="5389.5,2037.5",
+					lp="6351.5,2037.5",
 					lwidth=3.07,
 					margin=100,
 					pencolor="#3399ff",
@@ -317,16 +305,16 @@ digraph "Serverless Wordpress Site" {
 					shape=box,
 					style=dashed
 				];
-				subgraph "cluster_SubnetGroup.641" {
+				subgraph "cluster_SubnetGroup.692" {
 					graph [_shift=1,
-						bb="4759,921,5314,1915",
+						bb="5721,921,6276,1915",
 						color="#deebf7",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/private_subnet.png"/></TD><TD>Private 3 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="4837.5,1893",
+						lp="5799.5,1893",
 						lwidth=1.96,
 						margin=50,
 						pencolor="",
@@ -334,55 +322,43 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/compute/fargate.png",
+					"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/compute/fargate.png",
 						label="Ecs 3 Fargate",
-						pos="5213,1752.5",
+						pos="6175,1752.5",
 						shape=none,
 						tf_resource_name="aws_fargate.ecs-3",
 						width=1.4028];
-					"aws.network.VPCElasticNetworkInterface.77b6b8071f8b4f99af6aacf9b26be783"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
+					"aws.network.VPCElasticNetworkInterface.fafd257911d1442f9381f91c52143197"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/vpc-elastic-network-interface.png",
 						label="3 EFS Mount Targe",
-						pos="5213,1039.5",
+						pos="5998,1039.5",
 						shape=none,
 						tf_resource_name="aws_efs_mount_target.this-3",
 						width=1.4028];
-					"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00" -> "aws.network.VPCElasticNetworkInterface.77b6b8071f8b4f99af6aacf9b26be783"	[dir=forward,
+					"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d" -> "aws.network.VPCElasticNetworkInterface.fafd257911d1442f9381f91c52143197"	[dir=forward,
 						fontcolor="#2D3436",
 						fontname="Sans-Serif",
 						fontsize=13,
-						pos="e,5249.1,1108.1 5249.1,1683.8 5249.1,1683.8 5249.1,1118.1 5249.1,1118.1"];
-					"aws.database.Aurora.44884eb720f24e6a9c14ae886d919145"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png",
-						label="3 RDS Aurora",
-						pos="4860,1039.5",
-						shape=none,
-						tf_resource_name="aws_rds_aurora.this-3",
-						width=1.4028];
-					"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00" -> "aws.database.Aurora.44884eb720f24e6a9c14ae886d919145"	[dir=forward,
-						fontcolor="#2D3436",
-						fontname="Sans-Serif",
-						fontsize=13,
-						pos="e,4860,1108 5234.6,1683.9 5234.6,1533.1 5234.6,1186 5234.6,1186 5234.6,1186 4860,1186 4860,1186 4860,1186 4860,1118 4860,1118"];
-					"aws.network.RouteTable.080eca74dee543ec94f1daa2d0fa325f"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+						pos="e,6048.8,1016 6211.1,1683.9 6211.1,1501 6211.1,1016 6211.1,1016 6211.1,1016 6058.8,1016 6058.8,1016"];
+					"aws.network.RouteTable.ede0712cc78845998695ace275265493"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Private 3 Route Tabl",
-						pos="4860,1752.5",
+						pos="5822,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.private-3",
 						width=1.4028];
 				}
-				subgraph "cluster_SubnetGroup.856" {
+				subgraph "cluster_SubnetGroup.975" {
 					graph [_shift=1,
-						bb="5465,1634,6020,1915",
+						bb="6427,1634,6982,1915",
 						color="#F2F7EE",
 						fontname="Sans-Serif",
 						fontsize=14,
 						label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="./resource_images/aws/network/public_subnet.png"/></TD><TD>Public 3 Subnet</TD></TR></TABLE>>,
 						labeljust=l,
 						lheight=0.50,
-						lp="5540.5,1893",
+						lp="6502.5,1893",
 						lwidth=1.88,
 						margin=50,
 						pencolor="",
@@ -390,23 +366,23 @@ digraph "Serverless Wordpress Site" {
 						shape=box,
 						style=filled
 					];
-					"aws.network.NATGateway.661bde6f95bb42bc85cac325b9d772c2"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/nat-gateway.png",
+					"aws.network.NATGateway.70d5da31e41840a8a8bf0a22d3b94845"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/nat-gateway.png",
 						label="3 NAT Gateway",
-						pos="5919,1752.5",
+						pos="6881,1752.5",
 						shape=none,
 						tf_resource_name="aws_nat_gateway.this-3",
 						width=1.4028];
-					"aws.network.RouteTable.015c59102b274225a7e5bcecde7091b4"	[height=1.9028,
-						image="/Users/patrick/git/terravision/resource_images/aws/network/route-table.png",
+					"aws.network.RouteTable.8725f085e6754a6d8d3b842c306f554b"	[height=1.9028,
+						image="/Users/parchugh/git/terravision/resource_images/aws/network/route-table.png",
 						label="Public 3 Route Table",
-						pos="5566,1752.5",
+						pos="6528,1752.5",
 						shape=none,
 						tf_resource_name="aws_route_table_association.public-3",
 						width=1.4028];
 				}
 			}
-			subgraph "cluster_SecurityGroup.590" {
+			subgraph "cluster_SecurityGroup.61" {
 				graph [_shift=0,
 					center=true,
 					fontname="Sans-Serif",
@@ -420,16 +396,16 @@ digraph "Serverless Wordpress Site" {
 					style=solid
 				];
 			}
-			subgraph "cluster_SecurityGroup.253" {
+			subgraph "cluster_SecurityGroup.169" {
 				graph [_shift=0,
-					bb="2542,1634,2744,1898",
+					bb="3504,1634,3706,1898",
 					center=true,
 					fontname="Sans-Serif",
 					fontsize=14,
 					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Db Security Group</FONT></TD></TR></TABLE>>,
 					labeljust=c,
 					lheight=0.26,
-					lp="2643,1884.5",
+					lp="3605,1884.5",
 					lwidth=1.61,
 					margin=50,
 					pencolor=red,
@@ -437,15 +413,15 @@ digraph "Serverless Wordpress Site" {
 					shape=box,
 					style=solid
 				];
-				"aws.database.Aurora.8a85bae074b7473d843bade06ca516c4"	[height=1.9028,
-					image="/Users/patrick/git/terravision/resource_images/aws/database/aurora-instance.png",
+				"aws.database.Aurora.72abbc1d5784448ebdec2b28e6d3e018"	[height=1.9028,
+					image="/Users/parchugh/git/terravision/resource_images/aws/database/aurora-instance.png",
 					label="RDS Aurora",
-					pos="2643,1752.5",
+					pos="3605,1752.5",
 					shape=none,
 					tf_resource_name="aws_rds_aurora.this",
 					width=1.4028];
 			}
-			subgraph "cluster_SecurityGroup.387" {
+			subgraph "cluster_SecurityGroup.844" {
 				graph [_shift=0,
 					center=true,
 					fontname="Sans-Serif",
@@ -459,7 +435,21 @@ digraph "Serverless Wordpress Site" {
 					style=solid
 				];
 			}
-			subgraph "cluster_SecurityGroup.781" {
+			subgraph "cluster_SecurityGroup.762" {
+				graph [_shift=0,
+					center=true,
+					fontname="Sans-Serif",
+					fontsize=14,
+					label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT color="red">Security Group</FONT></TD></TR></TABLE>>,
+					labeljust=c,
+					margin=50,
+					pencolor=red,
+					rankdir=LR,
+					shape=box,
+					style=solid
+				];
+			}
+			subgraph "cluster_SecurityGroup.225" {
 				graph [_shift=0,
 					center=true,
 					fontname="Sans-Serif",
@@ -472,7 +462,7 @@ digraph "Serverless Wordpress Site" {
 					shape=box,
 					style=solid
 				];
-				subgraph "cluster_SecurityGroup.849" {
+				subgraph "cluster_SecurityGroup.235" {
 					graph [_shift=0,
 						center=true,
 						fontname="Sans-Serif",
@@ -486,7 +476,7 @@ digraph "Serverless Wordpress Site" {
 						style=solid
 					];
 				}
-				subgraph "cluster_SecurityGroup.758" {
+				subgraph "cluster_SecurityGroup.620" {
 					graph [_shift=0,
 						center=true,
 						fontname="Sans-Serif",
@@ -501,37 +491,37 @@ digraph "Serverless Wordpress Site" {
 					];
 				}
 			}
-			"aws.network.InternetGateway.f58af2ad0af240b1a5fa37bf443b5a1e"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/network/internet-gateway.png",
+			"aws.network.InternetGateway.d07076c8ded04e10978178ee8609934b"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/network/internet-gateway.png",
 				label="Igw Internet Gateway",
-				pos="6271,1039.5",
+				pos="7233,1039.5",
 				shape=none,
 				tf_resource_name="aws_internet_gateway.igw",
 				width=1.4028];
-			"aws.network.NATGateway.c7b7d9716a2f47b5b556622971e7c47a" -> "aws.network.InternetGateway.f58af2ad0af240b1a5fa37bf443b5a1e"	[dir=forward,
+			"aws.network.NATGateway.adef43d33c9b4a9e9a7afe7fda520b22" -> "aws.network.InternetGateway.d07076c8ded04e10978178ee8609934b"	[dir=forward,
 				fontcolor="#2D3436",
 				fontname="Sans-Serif",
 				fontsize=13,
-				pos="e,6271,1108.2 3365.8,1683.9 3365.8,1668.7 3365.8,1657 3365.8,1657 3365.8,1657 6271,1657 6271,1657 6271,1657 6271,1118.2 6271,1118.2"];
-			"aws.network.NATGateway.69485899702943f2baa385c0483986fe" -> "aws.network.InternetGateway.f58af2ad0af240b1a5fa37bf443b5a1e"	[dir=forward,
+				pos="e,7233,1108.2 4680.8,1684 4680.8,1528 4680.8,1160 4680.8,1160 4680.8,1160 7233,1160 7233,1160 7233,1160 7233,1118.2 7233,1118.2"];
+			"aws.network.NATGateway.96d3e9ccfa264c0490ac49412fc6173e" -> "aws.network.InternetGateway.d07076c8ded04e10978178ee8609934b"	[dir=forward,
 				fontcolor="#2D3436",
 				fontname="Sans-Serif",
 				fontsize=13,
-				pos="e,6321.8,1039 6992.8,1683.8 6992.8,1504.9 6992.8,1039 6992.8,1039 6992.8,1039 6331.8,1039 6331.8,1039"];
-			"aws.network.NATGateway.661bde6f95bb42bc85cac325b9d772c2" -> "aws.network.InternetGateway.f58af2ad0af240b1a5fa37bf443b5a1e"	[dir=forward,
+				pos="e,7283.8,1039 7954.8,1683.8 7954.8,1504.9 7954.8,1039 7954.8,1039 7954.8,1039 7293.8,1039 7293.8,1039"];
+			"aws.network.NATGateway.70d5da31e41840a8a8bf0a22d3b94845" -> "aws.network.InternetGateway.d07076c8ded04e10978178ee8609934b"	[dir=forward,
 				fontcolor="#2D3436",
 				fontname="Sans-Serif",
 				fontsize=13,
-				pos="e,6220.5,1039 5935.8,1683.8 5935.8,1504.9 5935.8,1039 5935.8,1039 5935.8,1039 6210.5,1039 6210.5,1039"];
+				pos="e,7182.5,1062 6897.8,1683.8 6897.8,1509.1 6897.8,1062 6897.8,1062 6897.8,1062 7172.5,1062 7172.5,1062"];
 		}
-		subgraph "cluster_GenericGroup.477" {
-			graph [bb="1081,108,3248,568",
+		subgraph "cluster_GenericGroup.515" {
+			graph [bb="1181,108,3348,568",
 				fontname="Sans-Serif",
 				fontsize=14,
 				label="Shared Services Grou",
 				labeljust=l,
 				lheight=0.21,
-				lp="1156,556.5",
+				lp="1256,556.5",
 				lwidth=1.86,
 				margin=150,
 				pencolor=black,
@@ -539,50 +529,50 @@ digraph "Serverless Wordpress Site" {
 				shape=box,
 				style=dashed
 			];
-			"aws.security.CertificateManager.5918691d30cd4f73ae5a9136c5752fde"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/security/certificate-manager.png",
+			"aws.security.CertificateManager.d45c05edf4284963a20b3d4fbacf45c5"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/security/certificate-manager.png",
 				label="Acm ACM Certificate",
-				pos="1282,326.5",
+				pos="1382,326.5",
 				shape=none,
 				tf_resource_name="aws_acm_certificate.acm",
 				width=1.4028];
-			"aws.management.Cloudwatch.e9d2ca86b3004afeaf9d28916e5ca710"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/management/cloudwatch.png",
+			"aws.management.Cloudwatch.b04bd6941b4c482e9959e9b3d8cc963d"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/management/cloudwatch.png",
 				label="Cloudwatch Cloudwatc",
-				pos="1635,326.5",
+				pos="1735,326.5",
 				shape=none,
 				tf_resource_name="aws_cloudwatch_log_group.cloudwatch",
 				width=1.4028];
-			"aws.compute.ElasticContainerRegistry.06b0034546994054b9145bd74e8f3535"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/compute/ec2-container-registry.png",
+			"aws.compute.ElasticContainerRegistry.502b1fa28b0448ecb892517b213d3e22"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/compute/ec2-container-registry.png",
 				label="Ecr Ecr Repository",
-				pos="2341,326.5",
+				pos="2441,326.5",
 				shape=none,
 				tf_resource_name="aws_ecr_repository.ecr",
 				width=1.4028];
-			"aws.storage.ElasticFileSystemEFS.2529fcb6df9b44749063c78bf5109f90"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/storage/elastic-file-system-efs.png",
+			"aws.storage.ElasticFileSystemEFS.14d18a1eef3d4ebc82b6973098eaac36"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/storage/elastic-file-system-efs.png",
 				label="Efs EFS File System",
-				pos="3047,326.5",
+				pos="3147,326.5",
 				shape=none,
 				tf_resource_name="aws_efs_file_system.efs",
 				width=1.4028];
-			"aws.management.SystemsManagerParameterStore.09c8930079bc43a38dd3aca691c81c71"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/management/systems-manager-parameter-store.png",
+			"aws.management.SystemsManagerParameterStore.8c465ef3684449e6b2c30ba305659f9a"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/management/systems-manager-parameter-store.png",
 				label="Ssmparam Ssm Paramet",
-				pos="2694,326.5",
+				pos="2794,326.5",
 				shape=none,
 				tf_resource_name="aws_ssm_parameter.ssmparam",
 				width=1.4028];
-			"aws.compute.ElasticIP.2bebf659d36d49f68d6b9327122b8afc"	[height=1.9028,
-				image="/Users/patrick/git/terravision/resource_images/aws/compute/ec2-elastic-ip-address.png",
+			"aws.compute.ElasticIP.0ff99c988c35415798a3c98293de8edf"	[height=1.9028,
+				image="/Users/parchugh/git/terravision/resource_images/aws/compute/ec2-elastic-ip-address.png",
 				label="Eip Eip",
-				pos="1988,326.5",
+				pos="2088,326.5",
 				shape=none,
 				tf_resource_name="aws_eip.eip",
 				width=1.4028];
 		}
-		subgraph "cluster_GenericAutoScalingGroup.530" {
+		subgraph "cluster_GenericAutoScalingGroup.264" {
 			graph [_shift=0,
 				color="#deebf7",
 				fontname="Sans-Serif",
@@ -596,7 +586,7 @@ digraph "Serverless Wordpress Site" {
 				style=dashed
 			];
 		}
-		subgraph "cluster_GenericAutoScalingGroup.429" {
+		subgraph "cluster_GenericAutoScalingGroup.870" {
 			graph [_shift=0,
 				color="#deebf7",
 				fontname="Sans-Serif",
@@ -610,7 +600,7 @@ digraph "Serverless Wordpress Site" {
 				style=dashed
 			];
 		}
-		subgraph "cluster_GenericAutoScalingGroup.941" {
+		subgraph "cluster_GenericAutoScalingGroup.206" {
 			graph [_shift=0,
 				color="#deebf7",
 				fontname="Sans-Serif",
@@ -624,283 +614,308 @@ digraph "Serverless Wordpress Site" {
 				style=dashed
 			];
 		}
-		"aws.network.CloudFront.2e990d0724524a8e994a9c9dfc05b655"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/network/cloudfront.png",
+		"aws.network.CloudFront.fe548ec175ba45cfbc9c1a69dd8ba9fb"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/network/cloudfront.png",
 			label="Cloudfront Distri",
-			pos="1754,2465.5",
+			pos="2058,2465.5",
 			shape=none,
 			tf_resource_name="aws_cloudfront_distribution.this",
 			width=1.4028];
-		"aws.network.CloudFront.2e990d0724524a8e994a9c9dfc05b655" -> "aws.security.CertificateManager.5918691d30cd4f73ae5a9136c5752fde"	[dir=forward,
+		"aws.network.CloudFront.fe548ec175ba45cfbc9c1a69dd8ba9fb" -> "aws.security.CertificateManager.d45c05edf4284963a20b3d4fbacf45c5"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1282,395.23 1703.5,2465 1581.7,2465 1282,2465 1282,2465 1282,2465 1282,405.23 1282,405.23"];
-		"aws.network.CloudFront.2e990d0724524a8e994a9c9dfc05b655" -> "aws.network.ElasticLoadBalancing.d85b6f2a74b14dff8be3f326219fd782"	[dir=forward,
+			pos="e,1382,395.23 2007.5,2465 1850.5,2465 1382,2465 1382,2465 1382,2465 1382,405.23 1382,405.23"];
+		"aws.network.CloudFront.fe548ec175ba45cfbc9c1a69dd8ba9fb" -> "aws.network.ElasticLoadBalancing.68c711a662244291bd021865ff2b4f9f"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,3685.2,1821 1804.7,2488 2109.4,2488 3685.2,2488 3685.2,2488 3685.2,2488 3685.2,1831 3685.2,1831"];
-		"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.management.Cloudwatch.e9d2ca86b3004afeaf9d28916e5ca710"	[dir=forward,
+			pos="e,4294.2,1821 2108.6,2488 2440.8,2488 4294.2,2488 4294.2,2488 4294.2,2488 4294.2,1831 4294.2,1831"];
+		"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.management.Cloudwatch.b04bd6941b4c482e9959e9b3d8cc963d"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1635,395.18 4371.9,1683.9 4371.9,1635.4 4371.9,1579 4371.9,1579 4371.9,1579 1635,1579 1635,1579 1635,1579 1635,405.18 1635,405.18"];
-		"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.compute.ElasticContainerRegistry.06b0034546994054b9145bd74e8f3535"	[dir=forward,
+			pos="e,1770.8,395.07 5333.9,1683.8 5333.9,1626.1 5333.9,1553 5333.9,1553 5333.9,1553 1770.8,1553 1770.8,1553 1770.8,1553 1770.8,405.07 \
+1770.8,405.07"];
+		"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.compute.ElasticContainerRegistry.502b1fa28b0448ecb892517b213d3e22"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2353.2,395.17 4400.8,1684 4400.8,1567.4 4400.8,1343 4400.8,1343 4400.8,1343 2353.2,1343 2353.2,1343 2353.2,1343 2353.2,405.17 \
-2353.2,405.17"];
-		"aws.compute.ElasticContainerService.0813d3da31804e3baf48ccea43e393f5"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/compute/elastic-container-service.png",
+			pos="e,2415.8,395.17 5362.8,1684 5362.8,1567.4 5362.8,1343 5362.8,1343 5362.8,1343 2415.8,1343 2415.8,1343 2415.8,1343 2415.8,405.17 \
+2415.8,405.17"];
+		"aws.compute.ElasticContainerService.cdc6be660bfd44969f40529be197c852"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/compute/elastic-container-service.png",
 			label="Ecs ECS Cluster",
-			pos="2136,1039.5",
+			pos="1883,1039.5",
 			shape=none,
 			tf_resource_name="aws_ecs_cluster.ecs",
 			width=1.4028];
-		"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.compute.ElasticContainerService.0813d3da31804e3baf48ccea43e393f5"	[dir=forward,
+		"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.compute.ElasticContainerService.cdc6be660bfd44969f40529be197c852"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2110.8,1108.3 4386.4,1683.6 4386.4,1586.8 4386.4,1422 4386.4,1422 4386.4,1422 2110.8,1422 2110.8,1422 2110.8,1422 2110.8,1118.3 \
-2110.8,1118.3"];
-		"aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691" -> "aws.management.SystemsManagerParameterStore.09c8930079bc43a38dd3aca691c81c71"	[dir=forward,
+			pos="e,1857.8,1108.2 5348.4,1683.9 5348.4,1617.3 5348.4,1526 5348.4,1526 5348.4,1526 1857.8,1526 1857.8,1526 1857.8,1526 1857.8,1118.2 \
+1857.8,1118.2"];
+		"aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4" -> "aws.management.SystemsManagerParameterStore.8c465ef3684449e6b2c30ba305659f9a"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2706.2,395.13 4415.2,1683.9 4415.2,1549.7 4415.2,1265 4415.2,1265 4415.2,1265 2706.2,1265 2706.2,1265 2706.2,1265 2706.2,405.13 \
-2706.2,405.13"];
-		"aws.network.VPCElasticNetworkInterface.a2594c05c8384df8822a5e6cbb8e2f05" -> "aws.storage.ElasticFileSystemEFS.2529fcb6df9b44749063c78bf5109f90"	[dir=forward,
+			pos="e,2768.8,395.13 5377.2,1683.9 5377.2,1549.7 5377.2,1265 5377.2,1265 5377.2,1265 2768.8,1265 2768.8,1265 2768.8,1265 2768.8,405.13 \
+2768.8,405.13"];
+		"aws.network.VPCElasticNetworkInterface.1e8731badc77421cb4b56843a2de1bdb" -> "aws.storage.ElasticFileSystemEFS.14d18a1eef3d4ebc82b6973098eaac36"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,3097.9,340 4408,970.84 4408,794.59 4408,340 4408,340 4408,340 3107.9,340 3107.9,340"];
-		"aws.network.ElbApplicationLoadBalancer.eab2879bc6d04e7e8f7a208275e5a1f8"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
+			pos="e,3197.6,367 5370,970.69 5370,799.29 5370,367 5370,367 5370,367 3207.6,367 3207.6,367"];
+		"aws.network.ElbApplicationLoadBalancer.cb0946dfefaa4f03851685c5bcb446ae"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
 			label="Elb 1 ALB",
-			pos="3878,2465.5",
+			pos="4664,2465.5",
 			shape=none,
 			tf_resource_name="aws_alb.elb-1",
 			width=1.4028];
-		"aws.network.ElbApplicationLoadBalancer.eab2879bc6d04e7e8f7a208275e5a1f8" -> "aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691"	[dir=forward,
+		"aws.network.ElbApplicationLoadBalancer.cb0946dfefaa4f03851685c5bcb446ae" -> "aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,4391.2,1821.1 3928.6,2465 4058.1,2465 4391.2,2465 4391.2,2465 4391.2,2465 4391.2,1831.1 4391.2,1831.1"];
-		"aws.network.ElasticLoadBalancing.d85b6f2a74b14dff8be3f326219fd782" -> "aws.network.ElbApplicationLoadBalancer.eab2879bc6d04e7e8f7a208275e5a1f8"	[dir=forward,
+			pos="e,5353.2,1821.1 4714.7,2465 4873.8,2465 5353.2,2465 5353.2,2465 5353.2,2465 5353.2,1831.1 5353.2,1831.1"];
+		"aws.network.ElasticLoadBalancing.68c711a662244291bd021865ff2b4f9f" -> "aws.network.ElbApplicationLoadBalancer.cb0946dfefaa4f03851685c5bcb446ae"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,3827.2,2442 3718.8,1821.1 3718.8,1995.5 3718.8,2442 3718.8,2442 3718.8,2442 3817.2,2442 3817.2,2442"];
-		"aws.network.ElbApplicationLoadBalancer.04b7e5b0dcff414ba8701a4dee9f6dbf"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
+			pos="e,4613.3,2442 4327.8,1821.1 4327.8,1995.5 4327.8,2442 4327.8,2442 4327.8,2442 4603.3,2442 4603.3,2442"];
+		"aws.network.ElbApplicationLoadBalancer.dbc89c3ae86648aa9e0503b0a8574aff"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
 			label="Elb 2 ALB",
-			pos="1783,1039.5",
+			pos="1275,1039.5",
 			shape=none,
 			tf_resource_name="aws_alb.elb-2",
 			width=1.4028];
-		"aws.network.ElasticLoadBalancing.d85b6f2a74b14dff8be3f326219fd782" -> "aws.network.ElbApplicationLoadBalancer.04b7e5b0dcff414ba8701a4dee9f6dbf"	[dir=forward,
+		"aws.network.ElasticLoadBalancing.68c711a662244291bd021865ff2b4f9f" -> "aws.network.ElbApplicationLoadBalancer.dbc89c3ae86648aa9e0503b0a8574aff"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1823.8,1108.2 3718.8,1683.8 3718.8,1626.1 3718.8,1553 3718.8,1553 3718.8,1553 1823.8,1553 1823.8,1553 1823.8,1553 1823.8,1118.2 \
-1823.8,1118.2"];
-		"aws.network.ElbApplicationLoadBalancer.9f23dbc88367436db715ff7935e1ada7"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
+			pos="e,1291.8,1108.3 4327.8,1683.9 4327.8,1645.4 4327.8,1605 4327.8,1605 4327.8,1605 1291.8,1605 1291.8,1605 1291.8,1605 1291.8,1118.3 \
+1291.8,1118.3"];
+		"aws.network.ElbApplicationLoadBalancer.abd947d31eeb4990b85dcc11ed18c407"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/network/elb-application-load-balancer.png",
 			label="Elb 3 ALB",
-			pos="921,1039.5",
+			pos="667,1039.5",
 			shape=none,
 			tf_resource_name="aws_alb.elb-3",
 			width=1.4028];
-		"aws.network.ElasticLoadBalancing.d85b6f2a74b14dff8be3f326219fd782" -> "aws.network.ElbApplicationLoadBalancer.9f23dbc88367436db715ff7935e1ada7"	[dir=forward,
+		"aws.network.ElasticLoadBalancing.68c711a662244291bd021865ff2b4f9f" -> "aws.network.ElbApplicationLoadBalancer.abd947d31eeb4990b85dcc11ed18c407"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,937.83,1108.2 3685.2,1683.9 3685.2,1656.4 3685.2,1631 3685.2,1631 3685.2,1631 937.83,1631 937.83,1631 937.83,1631 937.83,1118.2 \
-937.83,1118.2"];
-		"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1" -> "aws.compute.ElasticContainerRegistry.06b0034546994054b9145bd74e8f3535"	[dir=forward,
+			pos="e,683.83,1108.2 4294.2,1683.9 4294.2,1668.7 4294.2,1657 4294.2,1657 4294.2,1657 683.83,1657 683.83,1657 683.83,1657 683.83,1118.2 \
+683.83,1118.2"];
+		"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e" -> "aws.compute.ElasticContainerRegistry.502b1fa28b0448ecb892517b213d3e22"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2378.8,395.09 7674.8,1683.9 7674.8,1555.3 7674.8,1291 7674.8,1291 7674.8,1291 2378.8,1291 2378.8,1291 2378.8,1291 2378.8,405.09 \
-2378.8,405.09"];
-		"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1" -> "aws.compute.ElasticContainerService.0813d3da31804e3baf48ccea43e393f5"	[dir=forward,
+			pos="e,2466.2,395.09 8636.8,1683.9 8636.8,1555.3 8636.8,1291 8636.8,1291 8636.8,1291 2466.2,1291 2466.2,1291 2466.2,1291 2466.2,405.09 \
+2466.2,405.09"];
+		"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e" -> "aws.compute.ElasticContainerService.cdc6be660bfd44969f40529be197c852"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2161.2,1108.2 7660.4,1683.9 7660.4,1573.6 7660.4,1369 7660.4,1369 7660.4,1369 2161.2,1369 2161.2,1369 2161.2,1369 2161.2,1118.2 \
-2161.2,1118.2"];
-		"aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1" -> "aws.management.SystemsManagerParameterStore.09c8930079bc43a38dd3aca691c81c71"	[dir=forward,
+			pos="e,1908.2,1108.3 8622.4,1683.7 8622.4,1601.2 8622.4,1474 8622.4,1474 8622.4,1474 1908.2,1474 1908.2,1474 1908.2,1474 1908.2,1118.3 \
+1908.2,1118.3"];
+		"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e" -> "aws.management.SystemsManagerParameterStore.8c465ef3684449e6b2c30ba305659f9a"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2731.8,395.25 7689.2,1683.8 7689.2,1538.2 7689.2,1212 7689.2,1212 7689.2,1212 2731.8,1212 2731.8,1212 2731.8,1212 2731.8,405.25 \
-2731.8,405.25"];
-		"aws.network.VPCElasticNetworkInterface.f7099dc184dc496fa14ded415590113f" -> "aws.storage.ElasticFileSystemEFS.2529fcb6df9b44749063c78bf5109f90"	[dir=forward,
+			pos="e,2819.2,395.25 8651.2,1683.8 8651.2,1538.2 8651.2,1212 8651.2,1212 8651.2,1212 2819.2,1212 2819.2,1212 2819.2,1212 2819.2,405.25 \
+2819.2,405.25"];
+		"aws.database.Aurora.41e0179c751244f68a5f53d88b8b6b25"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/database/aurora-instance.png",
+			label="2 RDS Aurora",
+			pos="3352,1039.5",
+			shape=none,
+			tf_resource_name="aws_rds_aurora.this-2",
+			width=1.4028];
+		"aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e" -> "aws.database.Aurora.41e0179c751244f68a5f53d88b8b6b25"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,3097.9,285 7682,970.88 7682,784.89 7682,285 7682,285 7682,285 3107.9,285 3107.9,285"];
-		"aws.network.ElbApplicationLoadBalancer.04b7e5b0dcff414ba8701a4dee9f6dbf" -> "aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1"	[dir=forward,
+			pos="e,3352.5,1108 8665.6,1683.9 8665.6,1533.1 8665.6,1186 8665.6,1186 8665.6,1186 3352.5,1186 3352.5,1186 3352.5,1186 3352.5,1118 3352.5,\
+1118"];
+		"aws.network.VPCElasticNetworkInterface.5a0fc52805774ad1ad4190ce34c0e204" -> "aws.storage.ElasticFileSystemEFS.14d18a1eef3d4ebc82b6973098eaac36"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,7645.9,1683.9 1814.2,1108.2 1814.2,1242.3 1814.2,1526 1814.2,1526 1814.2,1526 7645.9,1526 7645.9,1526 7645.9,1526 7645.9,1673.9 \
-7645.9,1673.9"];
-		"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00" -> "aws.compute.ElasticContainerRegistry.06b0034546994054b9145bd74e8f3535"	[dir=forward,
+			pos="e,3197.5,312 8467,970.73 8467,789.38 8467,312 8467,312 8467,312 3207.5,312 3207.5,312"];
+		"aws.network.ElbApplicationLoadBalancer.dbc89c3ae86648aa9e0503b0a8574aff" -> "aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2366,395.36 5205.8,1684 5205.8,1561.3 5205.8,1317 5205.8,1317 5205.8,1317 2366,1317 2366,1317 2366,1317 2366,405.36 2366,405.36"];
-		"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00" -> "aws.compute.ElasticContainerService.0813d3da31804e3baf48ccea43e393f5"	[dir=forward,
+			pos="e,8607.9,1683.9 1258.2,1108.1 1258.2,1253.4 1258.2,1579 1258.2,1579 1258.2,1579 8607.9,1579 8607.9,1579 8607.9,1579 8607.9,1673.9 \
+8607.9,1673.9"];
+		"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d" -> "aws.compute.ElasticContainerRegistry.502b1fa28b0448ecb892517b213d3e22"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2136,1108.2 5191.4,1683.8 5191.4,1580.2 5191.4,1396 5191.4,1396 5191.4,1396 2136,1396 2136,1396 2136,1396 2136,1118.2 2136,1118.2"];
-		"aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00" -> "aws.management.SystemsManagerParameterStore.09c8930079bc43a38dd3aca691c81c71"	[dir=forward,
+			pos="e,2441,395.36 6182.2,1684 6182.2,1561.3 6182.2,1317 6182.2,1317 6182.2,1317 2441,1317 2441,1317 2441,1317 2441,405.36 2441,405.36"];
+		"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d" -> "aws.compute.ElasticContainerService.cdc6be660bfd44969f40529be197c852"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2719,395.01 5220.2,1683.9 5220.2,1543.8 5220.2,1238 5220.2,1238 5220.2,1238 2719,1238 2719,1238 2719,1238 2719,405.01 2719,405.01"];
-		"aws.network.VPCElasticNetworkInterface.77b6b8071f8b4f99af6aacf9b26be783" -> "aws.storage.ElasticFileSystemEFS.2529fcb6df9b44749063c78bf5109f90"	[dir=forward,
+			pos="e,1883,1108.4 6153.4,1683.8 6153.4,1609.1 6153.4,1500 6153.4,1500 6153.4,1500 1883,1500 1883,1500 1883,1500 1883,1118.4 1883,1118.4"];
+		"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d" -> "aws.management.SystemsManagerParameterStore.8c465ef3684449e6b2c30ba305659f9a"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,3097.6,312 5213,970.73 5213,789.38 5213,312 5213,312 5213,312 3107.6,312 3107.6,312"];
-		"aws.network.ElbApplicationLoadBalancer.9f23dbc88367436db715ff7935e1ada7" -> "aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00"	[dir=forward,
+			pos="e,2794,395.01 6196.6,1683.9 6196.6,1543.8 6196.6,1238 6196.6,1238 6196.6,1238 2794,1238 2794,1238 2794,1238 2794,405.01 2794,405.01"];
+		"aws.database.Aurora.f47d72a93d4a4c2c85706345cf8860bf"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/database/aurora-instance.png",
+			label="3 RDS Aurora",
+			pos="2236,1039.5",
+			shape=none,
+			tf_resource_name="aws_rds_aurora.this-3",
+			width=1.4028];
+		"aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d" -> "aws.database.Aurora.f47d72a93d4a4c2c85706345cf8860bf"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,5176.9,1683.9 904.17,1108.3 904.17,1259 904.17,1605 904.17,1605 904.17,1605 5176.9,1605 5176.9,1605 5176.9,1605 5176.9,1673.9 \
-5176.9,1673.9"];
-		"aws.network.Route53.37e3083655f743a284cd8b23af014c7c"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/network/route-53.png",
+			pos="e,2236,1108.2 6167.8,1683.9 6167.8,1573.6 6167.8,1369 6167.8,1369 6167.8,1369 2236,1369 2236,1369 2236,1369 2236,1118.2 2236,1118.2"];
+		"aws.network.VPCElasticNetworkInterface.fafd257911d1442f9381f91c52143197" -> "aws.storage.ElasticFileSystemEFS.14d18a1eef3d4ebc82b6973098eaac36"	[dir=forward,
+			fontcolor="#2D3436",
+			fontname="Sans-Serif",
+			fontsize=13,
+			pos="e,3197.7,340 5998,970.84 5998,794.59 5998,340 5998,340 5998,340 3207.7,340 3207.7,340"];
+		"aws.network.ElbApplicationLoadBalancer.abd947d31eeb4990b85dcc11ed18c407" -> "aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d"	[dir=forward,
+			fontcolor="#2D3436",
+			fontname="Sans-Serif",
+			fontsize=13,
+			pos="e,6138.9,1683.9 650.17,1108.2 650.17,1264.1 650.17,1631 650.17,1631 650.17,1631 6138.9,1631 6138.9,1631 6138.9,1631 6138.9,1673.9 \
+6138.9,1673.9"];
+		"aws.network.Route53.7de831fe81744cb68b3dfe5a5a9ce82f"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/network/route-53.png",
 			label="Route 53 Route53 Rec",
-			pos="1754,3178.5",
+			pos="2058,3178.5",
 			shape=none,
 			tf_resource_name="aws_route53_record.route_53",
 			width=1.4028];
-		"aws.network.Route53.37e3083655f743a284cd8b23af014c7c" -> "aws.network.CloudFront.2e990d0724524a8e994a9c9dfc05b655"	[dir=forward,
+		"aws.network.Route53.7de831fe81744cb68b3dfe5a5a9ce82f" -> "aws.network.CloudFront.fe548ec175ba45cfbc9c1a69dd8ba9fb"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1754,2534.1 1754,3109.8 1754,3109.8 1754,2544.1 1754,2544.1"];
-		"aws.network.NATGateway.c7b7d9716a2f47b5b556622971e7c47a" -> "aws.compute.ElasticIP.2bebf659d36d49f68d6b9327122b8afc"	[dir=forward,
+			pos="e,2058,2534.1 2058,3109.8 2058,3109.8 2058,2544.1 2058,2544.1"];
+		"aws.network.NATGateway.adef43d33c9b4a9e9a7afe7fda520b22" -> "aws.compute.ElasticIP.0ff99c988c35415798a3c98293de8edf"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1962.8,395.1 3332.2,1683.8 3332.2,1609.1 3332.2,1500 3332.2,1500 3332.2,1500 1962.8,1500 1962.8,1500 1962.8,1500 1962.8,405.1 \
-1962.8,405.1"];
-		"aws.network.NATGateway.69485899702943f2baa385c0483986fe" -> "aws.compute.ElasticIP.2bebf659d36d49f68d6b9327122b8afc"	[dir=forward,
+			pos="e,2116,395.39 4647.2,1683.8 4647.2,1594 4647.2,1448 4647.2,1448 4647.2,1448 2116,1448 2116,1448 2116,1448 2116,405.39 2116,405.39"];
+		"aws.network.NATGateway.96d3e9ccfa264c0490ac49412fc6173e" -> "aws.compute.ElasticIP.0ff99c988c35415798a3c98293de8edf"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2013.2,395.39 6959.2,1683.8 6959.2,1594 6959.2,1448 6959.2,1448 6959.2,1448 2013.2,1448 2013.2,1448 2013.2,1448 2013.2,405.39 \
-2013.2,405.39"];
-		"aws.network.NATGateway.661bde6f95bb42bc85cac325b9d772c2" -> "aws.compute.ElasticIP.2bebf659d36d49f68d6b9327122b8afc"	[dir=forward,
+			pos="e,2131,395.03 7921.2,1683.8 7921.2,1580.2 7921.2,1396 7921.2,1396 7921.2,1396 2131,1396 2131,1396 2131,1396 2131,405.03 2131,405.03"];
+		"aws.network.NATGateway.70d5da31e41840a8a8bf0a22d3b94845" -> "aws.compute.ElasticIP.0ff99c988c35415798a3c98293de8edf"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,1988,395.27 5902.2,1683.7 5902.2,1601.2 5902.2,1474 5902.2,1474 5902.2,1474 1988,1474 1988,1474 1988,1474 1988,405.27 1988,405.27"];
-		"aws.security.IdentityAndAccessManagementIamRole.a0c6b33b6d8144408eb420d82c5068f9"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
+			pos="e,2123.5,395.03 6864.2,1683.6 6864.2,1586.8 6864.2,1422 6864.2,1422 6864.2,1422 2123.5,1422 2123.5,1422 2123.5,1422 2123.5,405.03 \
+2123.5,405.03"];
+		"aws.security.IdentityAndAccessManagementIamRole.024580f3201746dda9d61149b762b6a1"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
 			label="Task Execution Role ",
-			pos="6447,2465.5",
+			pos="7409,2465.5",
 			shape=none,
 			tf_resource_name="aws_iam_role.task_execution_role",
 			width=1.4028];
-		"aws.security.IdentityAndAccessManagementIamRole.a0c6b33b6d8144408eb420d82c5068f9" -> "aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691"	[dir=forward,
+		"aws.security.IdentityAndAccessManagementIamRole.024580f3201746dda9d61149b762b6a1" -> "aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,4424.8,1821.2 6447,2397 6447,2259.9 6447,1965 6447,1965 6447,1965 4424.8,1965 4424.8,1965 4424.8,1965 4424.8,1831.2 4424.8,1831.2"];
-		"aws.security.IdentityAndAccessManagementIamRole.a0c6b33b6d8144408eb420d82c5068f9" -> "aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1"	[dir=forward,
+			pos="e,5386.8,1821.2 7409,2397 7409,2259.9 7409,1965 7409,1965 7409,1965 5386.8,1965 5386.8,1965 5386.8,1965 5386.8,1831.2 5386.8,1831.2"];
+		"aws.security.IdentityAndAccessManagementIamRole.024580f3201746dda9d61149b762b6a1" -> "aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,7698.8,1821.1 6497.6,2442 6731.8,2442 7698.8,2442 7698.8,2442 7698.8,2442 7698.8,1831.1 7698.8,1831.1"];
-		"aws.security.IdentityAndAccessManagementIamRole.a0c6b33b6d8144408eb420d82c5068f9" -> "aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00"	[dir=forward,
+			pos="e,8660.8,1821.1 7459.6,2442 7693.8,2442 8660.8,2442 8660.8,2442 8660.8,2442 8660.8,1831.1 8660.8,1831.1"];
+		"aws.security.IdentityAndAccessManagementIamRole.024580f3201746dda9d61149b762b6a1" -> "aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,5229.8,1821 6396.2,2488 6165.9,2488 5229.8,2488 5229.8,2488 5229.8,2488 5229.8,1831 5229.8,1831"];
-		"aws.security.IdentityAndAccessManagementIamPermissions.72206e4fdc2c4239932e731985dbeda2"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png",
+			pos="e,6191.8,1821 7358.2,2488 7127.9,2488 6191.8,2488 6191.8,2488 6191.8,2488 6191.8,1831 6191.8,1831"];
+		"aws.security.IdentityAndAccessManagementIamPermissions.dd66d55dd00543bc9ab5ce1d5d89c808"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png",
 			label="Task Execution Polic",
-			pos="8035,1752.5",
+			pos="8997,1752.5",
 			shape=none,
 			tf_resource_name="aws_iam_role_policy_attachment.task_execution_policy_attach",
 			width=1.4028];
-		"aws.security.IdentityAndAccessManagementIamRole.a0c6b33b6d8144408eb420d82c5068f9" -> "aws.security.IdentityAndAccessManagementIamPermissions.72206e4fdc2c4239932e731985dbeda2"	[dir=forward,
+		"aws.security.IdentityAndAccessManagementIamRole.024580f3201746dda9d61149b762b6a1" -> "aws.security.IdentityAndAccessManagementIamPermissions.dd66d55dd00543bc9ab5ce1d5d89c808"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,8035,1821 6497.6,2488 6768.5,2488 8035,2488 8035,2488 8035,2488 8035,1831 8035,1831"];
-		"aws.security.IdentityAndAccessManagementIamRole.141f51bdaae34805a367baf396dd6695"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
+			pos="e,8997,1821 7459.6,2488 7730.5,2488 8997,2488 8997,2488 8997,2488 8997,1831 8997,1831"];
+		"aws.security.IdentityAndAccessManagementIamRole.faa56eef632646b881a1273710c34a27"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/security/identity-and-access-management-iam-role.png",
 			label="Task Role Role",
-			pos="4810,2465.5",
+			pos="5772,2465.5",
 			shape=none,
 			tf_resource_name="aws_iam_role.task_role",
 			width=1.4028];
-		"aws.security.IdentityAndAccessManagementIamRole.141f51bdaae34805a367baf396dd6695" -> "aws.compute.Fargate.0e6066986cbb40a5bed75978e898a691"	[dir=forward,
+		"aws.security.IdentityAndAccessManagementIamRole.faa56eef632646b881a1273710c34a27" -> "aws.compute.Fargate.7eaa0dd5880a4b4f8bd3f234f986aab4"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,4458.7,1752 4792.8,2396.8 4792.8,2217.9 4792.8,1752 4792.8,1752 4792.8,1752 4468.7,1752 4468.7,1752"];
-		"aws.security.IdentityAndAccessManagementIamRole.141f51bdaae34805a367baf396dd6695" -> "aws.compute.Fargate.1aa6f685a5774a518d688d2b5ad5ccb1"	[dir=forward,
+			pos="e,5420.7,1752 5754.8,2396.8 5754.8,2217.9 5754.8,1752 5754.8,1752 5754.8,1752 5430.7,1752 5430.7,1752"];
+		"aws.security.IdentityAndAccessManagementIamRole.faa56eef632646b881a1273710c34a27" -> "aws.compute.Fargate.65ede4fe4d7346fabc076d85632fcd0e"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,7665.2,1821 4835,2396.8 4835,2334.7 4835,2253 4835,2253 4835,2253 7665.2,2253 7665.2,2253 7665.2,2253 7665.2,1831 7665.2,1831"];
-		"aws.security.IdentityAndAccessManagementIamRole.141f51bdaae34805a367baf396dd6695" -> "aws.compute.Fargate.5aa2a65669204b65adb38b6b4644ea00"	[dir=forward,
+			pos="e,8627.2,1821 5797,2396.8 5797,2334.7 5797,2253 5797,2253 5797,2253 8627.2,2253 8627.2,2253 8627.2,2253 8627.2,1831 8627.2,1831"];
+		"aws.security.IdentityAndAccessManagementIamRole.faa56eef632646b881a1273710c34a27" -> "aws.compute.Fargate.bb6d145ce632406c8d44e45f56f1633d"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,5196.2,1821.1 4860.9,2442 4965.7,2442 5196.2,2442 5196.2,2442 5196.2,2442 5196.2,1831.1 5196.2,1831.1"];
-		"aws.security.IdentityAndAccessManagementIamPermissions.2abc7f8ce3f74b8797747c82425ab169"	[height=1.9028,
-			image="/Users/patrick/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png",
+			pos="e,6158.2,1821.1 5822.9,2442 5927.7,2442 6158.2,2442 6158.2,2442 6158.2,2442 6158.2,1831.1 6158.2,1831.1"];
+		"aws.security.IdentityAndAccessManagementIamPermissions.45ea2816ab9444ed98af6079bcd9ae56"	[height=1.9028,
+			image="/Users/parchugh/git/terravision/resource_images/aws/security/identity-and-access-management-iam-permissions.png",
 			label="Task Policy Attach I",
-			pos="2290,1752.5",
+			pos="3252,1752.5",
 			shape=none,
 			tf_resource_name="aws_iam_role_policy_attachment.task_policy_attach",
 			width=1.4028];
-		"aws.security.IdentityAndAccessManagementIamRole.141f51bdaae34805a367baf396dd6695" -> "aws.security.IdentityAndAccessManagementIamPermissions.2abc7f8ce3f74b8797747c82425ab169"	[dir=forward,
+		"aws.security.IdentityAndAccessManagementIamRole.faa56eef632646b881a1273710c34a27" -> "aws.security.IdentityAndAccessManagementIamPermissions.45ea2816ab9444ed98af6079bcd9ae56"	[dir=forward,
 			fontcolor="#2D3436",
 			fontname="Sans-Serif",
 			fontsize=13,
-			pos="e,2290,1821.2 4776.2,2396.8 4776.2,2293.2 4776.2,2109 4776.2,2109 4776.2,2109 2290,2109 2290,2109 2290,2109 2290,1831.2 2290,1831.2"];
+			pos="e,3252,1821.2 5738.2,2396.8 5738.2,2293.2 5738.2,2109 5738.2,2109 5738.2,2109 3252,2109 3252,2109 3252,2109 3252,1831.2 3252,1831.2"];
 	}
-	"None.None.Node.1b4fef2d46d74efdad81e115c3f4eaae"	[_footernode=1,
+	"None.None.Node.b2bb6cc1d812406b8dd984204ffd52d4"	[_footernode=1,
 		fontsize=20,
 		height=0.013889,
-		label="Machine generated at 2023-02-26 16:06:24.866293 using Terravision (https://terra-vision.net)	Source: ('/Users/patrick/git/terraform-examples/\
-aws/wordpress_fargate/',)",
-		pos="1451,3891.5",
+		label="Machine generated at 2023-03-05 02:32:41.302538 using Terravision (https://terra-vision.net)	Source: ('https://github.com/futurice/\
+terraform-examples//aws/wordpress_fargate',)",
+		pos="1755,3891.5",
 		width=0.013889];
-	"aws.general.Users.eb02506e27264d0c831afbf7841017ed"	[height=1.9028,
-		image="/Users/patrick/git/terravision/resource_images/aws/general/users.png",
+	"aws.general.Users.2f5b74240d4c44c9944023857dcab41c"	[height=1.9028,
+		image="/Users/parchugh/git/terravision/resource_images/aws/general/users.png",
 		label="Users Tv Users",
-		pos="1754,3891.5",
+		pos="2058,3891.5",
 		shape=none,
 		tf_resource_name="tv_aws_users.users",
 		width=1.4028];
-	"aws.general.Users.eb02506e27264d0c831afbf7841017ed" -> "aws.network.Route53.37e3083655f743a284cd8b23af014c7c"	[dir=forward,
+	"aws.general.Users.2f5b74240d4c44c9944023857dcab41c" -> "aws.network.Route53.7de831fe81744cb68b3dfe5a5a9ce82f"	[dir=forward,
 		fontcolor="#2D3436",
 		fontname="Sans-Serif",
 		fontsize=13,
-		pos="e,1754,3247.1 1754,3822.8 1754,3822.8 1754,3257.1 1754,3257.1"];
-	"aws.general.InternetAlt1.b471d9beb85d42b0941a37b5c8268979"	[height=1.9028,
-		image="/Users/patrick/git/terravision/resource_images/aws/general/internet-alt1.png",
+		pos="e,2058,3247.1 2058,3822.8 2058,3822.8 2058,3257.1 2058,3257.1"];
+	"aws.general.InternetAlt1.6553e5919c764bfbb26ac011ee346ab6"	[height=1.9028,
+		image="/Users/parchugh/git/terravision/resource_images/aws/general/internet-alt1.png",
 		label="Internet Tv Internet",
-		pos="8337,326.5",
+		pos="9299,326.5",
 		shape=none,
 		tf_resource_name="tv_aws_internet.internet",
 		width=1.4028];
-	"aws.network.InternetGateway.f58af2ad0af240b1a5fa37bf443b5a1e" -> "aws.general.InternetAlt1.b471d9beb85d42b0941a37b5c8268979"	[dir=forward,
+	"aws.network.InternetGateway.d07076c8ded04e10978178ee8609934b" -> "aws.general.InternetAlt1.6553e5919c764bfbb26ac011ee346ab6"	[dir=forward,
 		fontcolor="#2D3436",
 		fontname="Sans-Serif",
 		fontsize=13,
-		pos="e,8286.4,367 6271,970.69 6271,799.29 6271,367 6271,367 6271,367 8276.4,367 8276.4,367"];
+		pos="e,9248.4,285 7233,970.88 7233,784.89 7233,285 7233,285 7233,285 9238.4,285 9238.4,285"];
 }

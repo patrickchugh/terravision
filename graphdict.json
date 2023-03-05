@@ -169,10 +169,10 @@
     "aws_route53_record.route_53": [
         "aws_cloudfront_distribution.this"
     ],
-    "aws_route_table.private": [],
+    "aws_route_table.private-1": [],
+    "aws_route_table.private-2": [],
+    "aws_route_table.private-3": [],
     "aws_route_table.public": [],
-    "aws_route_table.public-2": [],
-    "aws_route_table.public-3": [],
     "aws_route_table_association.private-1": [
         "aws_route_table.private-1"
     ],
@@ -183,13 +183,13 @@
         "aws_route_table.private-3"
     ],
     "aws_route_table_association.public-1": [
-        "aws_route_table.public-1"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-2": [
-        "aws_route_table.public-2"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-3": [
-        "aws_route_table.public-3"
+        "aws_route_table.public"
     ],
     "aws_security_group.alb": [
         "aws_lb.elb"
@@ -202,10 +202,14 @@
         "aws_efs_mount_target.this-2",
         "aws_efs_mount_target.this-3"
     ],
+    "aws_security_group.this": [
+        "aws_lb.elb"
+    ],
     "aws_security_group.wordpress": [
         "aws_security_group.alb",
         "aws_security_group.efs"
     ],
+    "aws_security_group_rule.this": [],
     "aws_ssm_parameter.ssmparam": [],
     "aws_subnet.private-1": [
         "aws_efs_mount_target.this-1",
@@ -216,13 +220,11 @@
     "aws_subnet.private-2": [
         "aws_efs_mount_target.this-2",
         "aws_fargate.ecs-2",
-        "aws_rds_aurora.this-2",
         "aws_route_table_association.private-2"
     ],
     "aws_subnet.private-3": [
         "aws_efs_mount_target.this-3",
         "aws_fargate.ecs-3",
-        "aws_rds_aurora.this-3",
         "aws_route_table_association.private-3"
     ],
     "aws_subnet.public-1": [
@@ -247,10 +249,14 @@
         "aws_az.az-3",
         "aws_internet_gateway.igw",
         "aws_lb.elb",
+        "aws_route_table.private-1",
+        "aws_route_table.private-2",
+        "aws_route_table.private-3",
         "aws_route_table.public",
         "aws_security_group.alb",
         "aws_security_group.db",
         "aws_security_group.efs",
+        "aws_security_group.this",
         "aws_security_group.wordpress"
     ],
     "random_string.snapshot_suffix": [],

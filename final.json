@@ -169,10 +169,10 @@
     "aws_route53_record.route_53": [
         "aws_cloudfront_distribution.this"
     ],
-    "aws_route_table.private": [],
-    "aws_route_table.public-1": [],
-    "aws_route_table.public-2": [],
-    "aws_route_table.public-3": [],
+    "aws_route_table.private-1": [],
+    "aws_route_table.private-2": [],
+    "aws_route_table.private-3": [],
+    "aws_route_table.public": [],
     "aws_route_table_association.private-1": [
         "aws_route_table.private-1"
     ],
@@ -183,13 +183,13 @@
         "aws_route_table.private-3"
     ],
     "aws_route_table_association.public-1": [
-        "aws_route_table.public-1"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-2": [
-        "aws_route_table.public-2"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-3": [
-        "aws_route_table.public-3"
+        "aws_route_table.public"
     ],
     "aws_security_group.alb": [
         "aws_lb.elb"

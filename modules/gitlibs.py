@@ -33,13 +33,6 @@ MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 if not os.path.exists(MODULE_DIR):
     os.makedirs(MODULE_DIR)
 
-# List of dictionary sections to extract from TF file
-extract = ["module", "output", "variable", "locals", "resource", "data"]
-
-# List of dictionary sections to output in log
-output_sections = ["locals", "module", "resource", "data"]
-
-
 class CloneProgress(RemoteProgress):
     def __init__(self):
         super().__init__()
@@ -65,14 +58,14 @@ def handle_readme_source(resp) -> str:
 
 
 def get_clone_url(sourceURL: str):
-    gitaddress =''
-    subfolder =''
+    gitaddress = ""
+    subfolder = ""
     # Handle Case where full git url is given
     if sourceURL.startswith("github.com") or sourceURL.startswith(
         "https://github.com/"
     ):
-        gitaddress =''
-        subfolder =''
+        gitaddress = ""
+        subfolder = ""
         # Handle subfolder of git repo
         if sourceURL.count("//") > 1:
             subfolder_array = sourceURL.split("//")
