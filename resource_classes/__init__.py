@@ -212,7 +212,7 @@ class Canvas:
     
     def render(self) -> str:
         dotsource = Source.from_file(self.filename+'.dot', engine='dot', directory=Path.cwd())
-        filename = dotsource.render(format=self.outformat, view=self.show, quiet=True, engine='neato', directory=Path.cwd())
+        filename = dotsource.render(format=self.outformat, view=self.show, quiet=False, engine='neato', directory=Path.cwd())
         return filename
 
 
