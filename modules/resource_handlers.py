@@ -16,6 +16,7 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
+
 def aws_handle_autoscaling(tfdata: dict):
     try:
         # Check if any nodes in connection list are referenced by an autoscaling group
@@ -119,80 +120,121 @@ def aws_handle_efs(tfdata: dict):
                 ):
                     # we have a mount target pointing to EFS file system so replace all references to efs_file_system directly
                     # to the mount target instead
-                    if not parent_mount_target in tfdata["graphdict"][node] :
+                    if not parent_mount_target in tfdata["graphdict"][node]:
                         tfdata["graphdict"][node].remove(connection)
                         tfdata["graphdict"][node].append(parent_mount_target)
     return tfdata
 
 
-def aws_handle_sg(tfdata:dict) :
+def aws_handle_sg(tfdata: dict):
     bound_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group")
-    for target in bound_nodes :
-        target_type =  target.split('.')[0] 
+    for target in bound_nodes:
+        target_type = target.split(".")[0]
         # Look for any nodes with relationships to security groups and then reverse the relationship
         # effectively putting the node into a cluster representing the security group
-        if not target_type in GROUP_NODES :
-            for connection in tfdata['graphdict'][target] :
-                if connection.startswith('aws_security_group') :
+        if not target_type in GROUP_NODES:
+            for connection in tfdata["graphdict"][target]:
+                if connection.startswith("aws_security_group"):
                     newlist = list()
                     newlist.append(target)
-                    tfdata['graphdict'][connection] = newlist
-                    newlist = list(tfdata['graphdict'][target])
+                    tfdata["graphdict"][connection] = newlist
+                    newlist = list(tfdata["graphdict"][target])
                     newlist.remove(connection)
-                    tfdata['graphdict'][target] = newlist
+                    tfdata["graphdict"][target] = newlist
         # Remove any security group relationships if they are associated with the VPC already
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
+        if target_type == "aws_vpc":
+            for connection in tfdata["graphdict"][target]:
+                if connection.startswith("aws_security_group"):
+                    tfdata["graphdict"][target].remove(connection)
+        # Replace any references to nodes within the security group with the security group
+        references = helpers.list_of_parents(tfdata["graphdict"], target)
+        replacement_sg = [k for k in references if k.startswith("aws_security_group")]
+        if replacement_sg:
+            replacement_sg = replacement_sg[0]
+        for node in references:
+            if (
+                target in tfdata["graphdict"][node]
+                and not node.startswith("aws_security_group")
+                and node.split(".")[0] in GROUP_NODES and not node.startswith('aws_vpc')
+            ):
+                tfdata["graphdict"][node].remove(target)
+                tfdata["graphdict"][node].append(replacement_sg)
+    # TODO: Merge any security groups which share the same identical connection
+    list_of_sgs = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_security_group"
+    )
+    pass
 
     return tfdata
 
-def aws_handle_sharedgroup(tfdata: dict) :
-    graphcopy = dict(tfdata['graphdict'])
-    for node in graphcopy :
+
+def aws_handle_sharedgroup(tfdata: dict):
+    graphcopy = dict(tfdata["graphdict"])
+    for node in graphcopy:
         substring_match = [s for s in SHARED_SERVICES if s in node]
-        if substring_match :
-            if not tfdata['graphdict'].get('aws_group.shared_services') :
-                tfdata['graphdict']['aws_group.shared_services'] = []
-                tfdata['meta_data']['aws_group.shared_services'] = {}
-            tfdata['graphdict']['aws_group.shared_services'].append(node)
-    for service in list(tfdata['graphdict']['aws_group.shared_services']) :
-        if helpers.consolidated_node_check(service) and 'cluster' not in service :
-            tfdata['graphdict']['aws_group.shared_services'] = list(map(lambda x: x.replace(service, helpers.consolidated_node_check(service)), tfdata['graphdict']['aws_group.shared_services']))
+        if substring_match:
+            if not tfdata["graphdict"].get("aws_group.shared_services"):
+                tfdata["graphdict"]["aws_group.shared_services"] = []
+                tfdata["meta_data"]["aws_group.shared_services"] = {}
+            tfdata["graphdict"]["aws_group.shared_services"].append(node)
+    for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
+        if helpers.consolidated_node_check(service) and "cluster" not in service:
+            tfdata["graphdict"]["aws_group.shared_services"] = list(
+                map(
+                    lambda x: x.replace(
+                        service, helpers.consolidated_node_check(service)
+                    ),
+                    tfdata["graphdict"]["aws_group.shared_services"],
+                )
+            )
     return tfdata
 
 
-def aws_handle_lb(tfdata:dict):
-    lb_type = helpers.check_variant('aws_lb.elb', tfdata['meta_data']['aws_lb.elb']) 
-    renamed_node = lb_type + '.' + 'elb'
-    for connection in list(tfdata['graphdict']['aws_lb.elb']) :
-        if connection.startswith('aws_security_group') :
-            tfdata['graphdict'][connection] = ['aws_lb.elb']
-        else :
-            if not tfdata['graphdict'].get(renamed_node) :
-                tfdata['graphdict'][renamed_node] = list()
-            tfdata['graphdict'][renamed_node].append(connection)
-            tfdata['meta_data'][renamed_node] = dict(tfdata['meta_data']['aws_lb.elb'])
-            if tfdata['meta_data'][connection].get('count')  :
-                if tfdata['meta_data'][connection].get('count') > 1 :
-                    tfdata['meta_data'][renamed_node]['count'] = int(tfdata['meta_data'][connection]['count'])
-            tfdata['graphdict']['aws_lb.elb'].remove(connection)
-    tfdata['graphdict']['aws_lb.elb'].append(renamed_node)
+def aws_handle_lb(tfdata: dict):
+    found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
+    for lb in found_lbs:
+        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
+        renamed_node = lb_type + "." + "elb"
+        for connection in list(tfdata["graphdict"][lb]):
+            if not connection.startswith("aws_security_group"):
+                if not tfdata["graphdict"].get(renamed_node):
+                    tfdata["graphdict"][renamed_node] = list()
+                tfdata["graphdict"][renamed_node].append(connection)
+                tfdata["meta_data"][renamed_node] = dict(
+                    tfdata["meta_data"]["aws_lb.elb"]
+                )
+                if tfdata["meta_data"][connection].get("count"):
+                    if tfdata["meta_data"][connection].get("count") > 1:
+                        tfdata["meta_data"][renamed_node]["count"] = int(
+                            tfdata["meta_data"][connection]["count"]
+                        )
+                tfdata["graphdict"][lb].remove(connection)
+    tfdata["graphdict"][lb].append(renamed_node)
     return tfdata
 
-def aws_handle_dbsubnet(tfdata:dict) :
-    db_subnet_list = helpers.find_resource_references(tfdata['graphdict'], 'aws_db_subnet_group')
+
+def aws_handle_dbsubnet(tfdata: dict):
+    db_subnet_list = helpers.find_resource_references(
+        tfdata["graphdict"], "aws_db_subnet_group"
+    )
     for subnet_reference in db_subnet_list:
-        if subnet_reference.startswith('aws_rds') :
-            tfdata['graphdict'][subnet_reference].append(subnet_reference)
-            for check_subnet in tfdata['graphdict'][subnet_reference] :
-                if check_subnet.startswith('aws_db_subnet') :
-                    tfdata['graphdict'][subnet_reference].remove(check_subnet)
+        if subnet_reference.startswith("aws_rds"):
+            tfdata["graphdict"][subnet_reference].append(subnet_reference)
+            for check_subnet in tfdata["graphdict"][subnet_reference]:
+                if check_subnet.startswith("aws_db_subnet"):
+                    tfdata["graphdict"][subnet_reference].remove(check_subnet)
         else:
-            for check_subnet in tfdata['graphdict'][subnet_reference] :
-                if check_subnet.startswith('aws_db_subnet') : 
-                    tfdata['graphdict'][subnet_reference].remove(check_subnet)
-                    find_rds = helpers.list_of_dictkeys_containing(tfdata['graphdict'], 'aws_rds_cluster')
-                    tfdata['graphdict'][subnet_reference].append(find_rds[0])
-    db_subnet_nodes = helpers.list_of_dictkeys_containing(tfdata['graphdict'],'aws_db_subnet_group')
-    for dbs in db_subnet_nodes :
-        del tfdata['graphdict'][dbs]
+            for check_subnet in tfdata["graphdict"][subnet_reference]:
+                if check_subnet.startswith("aws_db_subnet"):
+                    tfdata["graphdict"][subnet_reference].remove(check_subnet)
+                    find_rds = helpers.list_of_dictkeys_containing(
+                        tfdata["graphdict"], "aws_rds_cluster"
+                    )
+                    tfdata["graphdict"][subnet_reference].append(find_rds[0])
+    db_subnet_nodes = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_db_subnet_group"
+    )
+    for dbs in db_subnet_nodes:
+        del tfdata["graphdict"][dbs]
     return tfdata

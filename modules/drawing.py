@@ -336,12 +336,12 @@ def render_diagram(
     bundle_dir = Path(__file__).parent.parent
     path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
     path_to_postdot = Path.cwd() / f"{outfile}.dot"
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        os.system(
-            f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}"
-        )
-    else:
-        os.system(f"gvpr -c -q -f {path_to_script} {outfile}.gv.dot -o {outfile}.dot")
+    # if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    #     os.system(
+    #         f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}"
+    #     )
+    # else:
+    #     os.system(f"gvpr -c -q -f {path_to_script} {outfile}.gv.dot -o {outfile}.dot")
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
     click.echo(f"  Completed!")

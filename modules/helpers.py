@@ -205,9 +205,13 @@ def output_log(tfdata):
                 for item in valuelist:
                     if isinstance(item, dict):
                         for key in item:
-                            click.echo(f"    {fname}: {key}.{next(iter(item[key]))}")
+                            output_string = f"    {fname}: {key}.{next(iter(item[key]))}"
+                            output_string = output_string.replace(';','|')
+                            click.echo(output_string)
                     else:
-                        click.echo(f"    {fname}: {item}")
+                        output_string = f"    {fname}: {item}"
+                        output_string = output_string.replace(';','|')
+                        click.echo(output_string)
     if tfdata.get("variable_map"):
         click.echo("\n  Variable List:")
         for module, variable in tfdata["variable_map"].items():
@@ -269,6 +273,7 @@ def check_variant(resource: str, metadata: dict) -> str:
             return False
     return False
 
+
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
     for key, value in searchdict.items():
@@ -283,9 +288,23 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
             for item in value:
+                if not item :
+                    continue
                 if item.startswith(target) and key not in final_list :
                     final_list.append(key)
     return final_list
+
+def any_parent_has_count(tfdata: dict, target_resource: str) :
+    parents_list = list_of_parents(tfdata["graphdict"], target_resource)
+    any_parent_has_count = False
+    # Check if any of the parents of the connections have a count property
+    for parent in parents_list:
+        if (
+            tfdata["meta_data"].get(parent) and tfdata["meta_data"][parent].get("count") and tfdata["meta_data"][parent].get("count") >1
+        ) or "-" in parent:
+            any_parent_has_count = True
+    return any_parent_has_count
+
 
 # Takes a resource and returns a standardised consolidated node if matched with the static definitions
 def consolidated_node_check(resource_type: str):

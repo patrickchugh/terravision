@@ -119,13 +119,13 @@ def get_clone_url(sourceURL: str):
             subfolder_array = sourceURL.split("//")
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
-        r = requests.get(domain + gitaddress, headers=headers)
         try:
+            r = requests.get(domain + gitaddress, headers=headers)
             githubURL = r.json()["source"]
         except:
             click.echo(
                 click.style(
-                    "\nERROR: Received invalid response from Terraform Enterprise server. Check authorisation token, server address and network settings",
+                    "\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings",
                     fg="red",
                     bold=True,
                 )
