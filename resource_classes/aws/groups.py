@@ -1,11 +1,12 @@
 from resource_classes import Cluster
 import sys
+from pathlib import Path
 
 defaultdir = 'LR'
 try:
     base_path = sys._MEIPASS
 except:
-    base_path = '.'
+    base_path = Path.cwd()
 
 class VPCgroup(Cluster):
     def __init__(self, label,  **kwargs):

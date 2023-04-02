@@ -178,16 +178,17 @@ def aws_handle_sharedgroup(tfdata: dict):
                 tfdata["graphdict"]["aws_group.shared_services"] = []
                 tfdata["meta_data"]["aws_group.shared_services"] = {}
             tfdata["graphdict"]["aws_group.shared_services"].append(node)
-    for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
-        if helpers.consolidated_node_check(service) and "cluster" not in service:
-            tfdata["graphdict"]["aws_group.shared_services"] = list(
-                map(
-                    lambda x: x.replace(
-                        service, helpers.consolidated_node_check(service)
-                    ),
-                    tfdata["graphdict"]["aws_group.shared_services"],
+    if tfdata["graphdict"].get("aws_group.shared_services") :
+        for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
+            if helpers.consolidated_node_check(service) and "cluster" not in service:
+                tfdata["graphdict"]["aws_group.shared_services"] = list(
+                    map(
+                        lambda x: x.replace(
+                            service, helpers.consolidated_node_check(service)
+                        ),
+                        tfdata["graphdict"]["aws_group.shared_services"],
+                    )
                 )
-            )
     return tfdata
 
 
@@ -197,20 +198,26 @@ def aws_handle_lb(tfdata: dict):
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
         renamed_node = lb_type + "." + "elb"
         for connection in list(tfdata["graphdict"][lb]):
-            if not connection.startswith("aws_security_group"):
-                if not tfdata["graphdict"].get(renamed_node):
-                    tfdata["graphdict"][renamed_node] = list()
-                tfdata["graphdict"][renamed_node].append(connection)
-                tfdata["meta_data"][renamed_node] = dict(
-                    tfdata["meta_data"]["aws_lb.elb"]
-                )
-                if tfdata["meta_data"][connection].get("count"):
-                    if tfdata["meta_data"][connection].get("count") > 1:
-                        tfdata["meta_data"][renamed_node]["count"] = int(
-                            tfdata["meta_data"][connection]["count"]
-                        )
-                tfdata["graphdict"][lb].remove(connection)
+            if not tfdata["graphdict"].get(renamed_node):
+                tfdata["graphdict"][renamed_node] = list()
+            tfdata["graphdict"][renamed_node].append(connection)
+            tfdata["meta_data"][renamed_node] = dict(
+                tfdata["meta_data"]["aws_lb.elb"]
+            )
+            if tfdata["meta_data"][connection].get("count"):
+                if tfdata["meta_data"][connection].get("count") > 1:
+                    tfdata["meta_data"][renamed_node]["count"] = int(
+                        tfdata["meta_data"][connection]["count"]
+                    )
+            tfdata["graphdict"][lb].remove(connection)
+            parents = helpers.list_of_parents(tfdata['graphdict'],lb)
+            for p in parents :
+                p_type = p.split('.')[0] 
+                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES:
+                    tfdata["graphdict"][p].append(renamed_node)
+                    tfdata["graphdict"][p].remove(lb)
     tfdata["graphdict"][lb].append(renamed_node)
+    
     return tfdata
 
 

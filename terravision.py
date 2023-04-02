@@ -33,8 +33,6 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = graphmaker.make_graph_dict(tfdata)
-    f = open('testcase-wordpress.json')
-    tfdata['graphdict'] = json.load(f)
     return tfdata
 
 

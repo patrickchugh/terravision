@@ -237,10 +237,10 @@ def add_multiples_to_parents(
         if parent not in multi_resources:
             suffixed_name = resource + "-" + str(i + 1)
             if (
-                tfdata["meta_data"].get(parent)
+                tfdata["meta_data"].get(parent.split('-')[0])
                 and (
-                    not tfdata["meta_data"][parent].get("count")
-                    or tfdata["meta_data"][parent].get("count") == 1
+                    not tfdata["meta_data"][parent.split('-')[0]].get("count")
+                    or tfdata["meta_data"][parent.split('-')[0]].get("count") == 1
                 )
                 and not parent.startswith("aws_group.shared")
                 and not suffixed_name in tfdata["graphdict"][parent]
@@ -264,6 +264,7 @@ def add_multiples_to_parents(
                         if (
                             suffixed_name
                             not in tfdata["graphdict"][parent + "-" + str(i + 1)]
+                            and 'aws_security_group' not in suffixed_name.split('.')[0] 
                         ):
                             tfdata["graphdict"][parent + "-" + str(i + 1)].append(
                                 suffixed_name

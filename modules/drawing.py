@@ -314,9 +314,10 @@ def render_diagram(
         "fontsize": "20",
         "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
     }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
+    #getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
+    setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
     # Draw Nodes and Groups in order of static definitions
     for node_type_list in DRAW_ORDER:
@@ -344,5 +345,8 @@ def render_diagram(
         os.system(f"gvpr -c -q -f {path_to_script} {outfile}.gv.dot -o {outfile}.dot")
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
+    os.remove(path_to_predot)
+    os.remove(path_to_postdot)
+    os.remove(outfile+'.gv')
     click.echo(f"  Completed!")
     setdiagram(None)

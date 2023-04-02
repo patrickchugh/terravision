@@ -185,6 +185,9 @@ def extract_locals(tfdata):
     click.echo("\n  Parsing locals...")
     module_locals = dict()
     # Remove array layer of locals dict structure and copy over to final_locals dict first
+    if not tfdata.get("all_locals"):
+        tfdata["all_locals"] = {}
+        return tfdata
     for file, localvarlist in tfdata["all_locals"].items():
         if ";" in file:
             modname = file.split(";")[1]
@@ -344,16 +347,30 @@ def get_metadata(tfdata):  # -> set
     """
     node_list = []
     meta_data = dict()
-    variable_list = tfdata.get("variable_map")
-    all_locals = tfdata.get("all_locals")
-    all_outputs = tfdata.get("all_output")
+    if not tfdata.get("all_resource"):
+        click.echo(
+                click.style(
+                    f"\WARNING: Unable to find any resources ",
+                    fg="white",
+                    bold=True,
+                )
+            )
+        tfdata['all_resource'] = {}
+        tfdata['node_list'] = {}
     for filename, resource_list in tfdata["all_resource"].items():
         if ";" in filename:
             # We have a module file being processed
             modarr = filename.split(";")
             mod = modarr[1]
         else:
+            # Default module assumed to be main
             mod = "main"
+            # Search for mod name in all_module and switch module scope if found
+            for _, module_list in tfdata['all_module'].items() :
+                for module in module_list:
+                    for moddata in module :
+                        if module[moddata]['source'].strip('.') in filename :
+                            mod = moddata
         for item in resource_list:
             for k in item.keys():
                 resource_type = k

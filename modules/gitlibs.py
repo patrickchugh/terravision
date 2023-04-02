@@ -120,8 +120,13 @@ def get_clone_url(sourceURL: str):
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
         try:
-            r = requests.get(domain + gitaddress, headers=headers)
-            githubURL = r.json()["source"]
+            module_repo = gitaddress.replace('/','_')
+            module_cache_path = os.path.join(MODULE_DIR, module_repo)
+            if os.path.exists(module_cache_path):
+                githubURL = gitaddress
+            else :
+                r = requests.get(domain + gitaddress, headers=headers)
+                githubURL = r.json()["source"]
         except:
             click.echo(
                 click.style(

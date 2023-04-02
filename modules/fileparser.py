@@ -14,12 +14,13 @@ from pathlib import Path
 from posixpath import dirname, split
 from sys import exit
 from urllib.parse import urlparse
-from modules.helpers import *
-from modules.gitlibs import clone_files
+import  modules.helpers as helpers
+import  modules.gitlibs as gitlibs
 
 # Create Tempdir and Module Cache Directories
 all_repos = list()
 annotations = dict()
+start_dir = Path.cwd()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -36,7 +37,7 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     yaml_detected = False
     # If source is a Git address, clone to temp dir
     if ("github" in source or "bitbucket" in source) and source.startswith("http"):
-        source_location = clone_files(source, temp_dir.name)
+        source_location = gitlibs.clone_files(source, temp_dir.name)
     else:
         # Source is a local folder
         source_location = source.strip()
@@ -92,9 +93,9 @@ def handle_module(modules_list, tf_file_paths, filename):
                         os.chdir(sourceURL)
                         modfolder = str(os.getcwd())
                         tf_file_paths = find_tf_files(os.getcwd(), tf_file_paths)
-                        os.chdir(dname)
+                        os.chdir(start_dir)
                 else:
-                    modfolder = clone_files(sourceURL, temp_modules_dir, k)
+                    modfolder = gitlibs.clone_files(sourceURL, temp_modules_dir, k)
                     tf_file_paths = find_tf_files(modfolder, tf_file_paths)
     # Create a mapping dict between modules and their source dirs for variable separation
     for i in range(len(modules_list)):
@@ -104,7 +105,7 @@ def handle_module(modules_list, tf_file_paths, filename):
         # Convert Source URLs to module cache paths
         if not module_source.startswith(".") and not module_source.startswith("\\"):
             localfolder = module_source.replace("/", "_")
-            cache_path = os.path.join(temp_modules_dir, ";" + key + ";" + localfolder)
+            cache_path = str(os.path.join(temp_modules_dir, ";" + key + ";" + localfolder))
             module_source_dict[key] = {
                 "cache_path": str(cache_path),
                 "source_file": filename,
