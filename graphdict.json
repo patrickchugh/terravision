@@ -44,9 +44,15 @@
         "aws_acm_certificate.acm",
         "aws_lb.elb"
     ],
-    "aws_cloudwatch_log_group.cloudwatch": [
-        "aws_appautoscaling_policy.scale_down",
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_cloudwatch_metric_alarm.cpu_utilization_high": [
         "aws_appautoscaling_policy.scale_up",
+        "aws_fargate.ecs-1",
+        "aws_fargate.ecs-2",
+        "aws_fargate.ecs-3"
+    ],
+    "aws_cloudwatch_metric_alarm.cpu_utilization_low": [
+        "aws_appautoscaling_policy.scale_down",
         "aws_fargate.ecs-1",
         "aws_fargate.ecs-2",
         "aws_fargate.ecs-3"
@@ -139,15 +145,21 @@
         "aws_internet_gateway.igw"
     ],
     "aws_rds_aurora.this-1": [
-        "aws_rds_cluster.this",
+        "aws_rds_cluster.this-1",
+        "aws_rds_cluster.this-2",
+        "aws_rds_cluster.this-3",
         "random_string.snapshot_suffix"
     ],
     "aws_rds_aurora.this-2": [
-        "aws_rds_cluster.this",
+        "aws_rds_cluster.this-1",
+        "aws_rds_cluster.this-2",
+        "aws_rds_cluster.this-3",
         "random_string.snapshot_suffix"
     ],
     "aws_rds_aurora.this-3": [
-        "aws_rds_cluster.this",
+        "aws_rds_cluster.this-1",
+        "aws_rds_cluster.this-2",
+        "aws_rds_cluster.this-3",
         "random_string.snapshot_suffix"
     ],
     "aws_route.private_nat_gateway-1": [
@@ -169,10 +181,10 @@
     "aws_route53_record.route_53": [
         "aws_cloudfront_distribution.this"
     ],
-    "aws_route_table.private": [],
+    "aws_route_table.private-1": [],
+    "aws_route_table.private-2": [],
+    "aws_route_table.private-3": [],
     "aws_route_table.public": [],
-    "aws_route_table.public-2": [],
-    "aws_route_table.public-3": [],
     "aws_route_table_association.private-1": [
         "aws_route_table.private-1"
     ],
@@ -183,74 +195,101 @@
         "aws_route_table.private-3"
     ],
     "aws_route_table_association.public-1": [
-        "aws_route_table.public-1"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-2": [
-        "aws_route_table.public-2"
+        "aws_route_table.public"
     ],
     "aws_route_table_association.public-3": [
-        "aws_route_table.public-3"
+        "aws_route_table.public"
     ],
-    "aws_security_group.alb": [
-        "aws_lb.elb"
+    "aws_security_group.alb-1": [
+        "aws_alb.elb"
     ],
-    "aws_security_group.db": [
-        "aws_rds_aurora.this"
+    "aws_security_group.alb-2": [
+        "aws_alb.elb"
     ],
-    "aws_security_group.efs": [
-        "aws_efs_mount_target.this-1",
-        "aws_efs_mount_target.this-2",
-        "aws_efs_mount_target.this-3"
+    "aws_security_group.alb-3": [
+        "aws_alb.elb"
     ],
-    "aws_security_group.wordpress": [
-        "aws_security_group.alb",
-        "aws_security_group.efs"
+    "aws_security_group.db-1": [
+        "aws_rds_aurora.this-1"
     ],
+    "aws_security_group.db-2": [
+        "aws_rds_aurora.this-2"
+    ],
+    "aws_security_group.db-3": [
+        "aws_rds_aurora.this-3"
+    ],
+    "aws_security_group.efs-1": [
+        "aws_efs_mount_target.this"
+    ],
+    "aws_security_group.efs-2": [
+        "aws_efs_mount_target.this"
+    ],
+    "aws_security_group.efs-3": [
+        "aws_efs_mount_target.this"
+    ],
+    "aws_security_group.this-1": [
+        "aws_alb.elb-1"
+    ],
+    "aws_security_group.this-2": [
+        "aws_alb.elb-2"
+    ],
+    "aws_security_group.this-3": [
+        "aws_alb.elb-3"
+    ],
+    "aws_security_group.wordpress-1": [],
+    "aws_security_group.wordpress-2": [],
+    "aws_security_group.wordpress-3": [],
+    "aws_security_group_rule.this": [],
     "aws_ssm_parameter.ssmparam": [],
     "aws_subnet.private-1": [
-        "aws_efs_mount_target.this-1",
         "aws_fargate.ecs-1",
         "aws_rds_aurora.this-1",
-        "aws_route_table_association.private-1"
+        "aws_route_table_association.private-1",
+        "aws_security_group.efs-1"
     ],
     "aws_subnet.private-2": [
-        "aws_efs_mount_target.this-2",
         "aws_fargate.ecs-2",
         "aws_rds_aurora.this-2",
-        "aws_route_table_association.private-2"
+        "aws_route_table_association.private-2",
+        "aws_security_group.efs-2"
     ],
     "aws_subnet.private-3": [
-        "aws_efs_mount_target.this-3",
         "aws_fargate.ecs-3",
         "aws_rds_aurora.this-3",
-        "aws_route_table_association.private-3"
+        "aws_route_table_association.private-3",
+        "aws_security_group.efs-3"
     ],
     "aws_subnet.public-1": [
-        "aws_lb.elb",
         "aws_nat_gateway.this-1",
-        "aws_route_table_association.public-1"
+        "aws_route_table_association.public-1",
+        "aws_security_group.alb-1"
     ],
     "aws_subnet.public-2": [
-        "aws_lb.elb",
         "aws_nat_gateway.this-2",
-        "aws_route_table_association.public-2"
+        "aws_route_table_association.public-2",
+        "aws_security_group.alb-2"
     ],
     "aws_subnet.public-3": [
-        "aws_lb.elb",
         "aws_nat_gateway.this-3",
-        "aws_route_table_association.public-3"
+        "aws_route_table_association.public-3",
+        "aws_security_group.alb-3"
     ],
     "aws_vpc.this": [
-        "aws_az.az",
+        "aws_alb.elb-1",
+        "aws_alb.elb-2",
+        "aws_alb.elb-3",
         "aws_az.az-1",
         "aws_az.az-2",
         "aws_az.az-3",
         "aws_internet_gateway.igw",
-        "aws_lb.elb",
+        "aws_route_table.private-1",
+        "aws_route_table.private-2",
+        "aws_route_table.private-3",
         "aws_route_table.public",
-        "aws_security_group.alb",
         "aws_security_group.db",
-        "aws_security_group.efs",
         "aws_security_group.wordpress"
     ],
     "random_string.snapshot_suffix": [],

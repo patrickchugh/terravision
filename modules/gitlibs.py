@@ -33,13 +33,6 @@ MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 if not os.path.exists(MODULE_DIR):
     os.makedirs(MODULE_DIR)
 
-# List of dictionary sections to extract from TF file
-extract = ["module", "output", "variable", "locals", "resource", "data"]
-
-# List of dictionary sections to output in log
-output_sections = ["locals", "module", "resource", "data"]
-
-
 class CloneProgress(RemoteProgress):
     def __init__(self):
         super().__init__()
@@ -65,14 +58,14 @@ def handle_readme_source(resp) -> str:
 
 
 def get_clone_url(sourceURL: str):
-    gitaddress =''
-    subfolder =''
+    gitaddress = ""
+    subfolder = ""
     # Handle Case where full git url is given
     if sourceURL.startswith("github.com") or sourceURL.startswith(
         "https://github.com/"
     ):
-        gitaddress =''
-        subfolder =''
+        gitaddress = ""
+        subfolder = ""
         # Handle subfolder of git repo
         if sourceURL.count("//") > 1:
             subfolder_array = sourceURL.split("//")
@@ -126,13 +119,18 @@ def get_clone_url(sourceURL: str):
             subfolder_array = sourceURL.split("//")
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
-        r = requests.get(domain + gitaddress, headers=headers)
         try:
-            githubURL = r.json()["source"]
+            module_repo = gitaddress.replace('/','_')
+            module_cache_path = os.path.join(MODULE_DIR, module_repo)
+            if os.path.exists(module_cache_path):
+                githubURL = gitaddress
+            else :
+                r = requests.get(domain + gitaddress, headers=headers)
+                githubURL = r.json()["source"]
         except:
             click.echo(
                 click.style(
-                    "\nERROR: Received invalid response from Terraform Enterprise server. Check authorisation token, server address and network settings",
+                    "\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings",
                     fg="red",
                     bold=True,
                 )

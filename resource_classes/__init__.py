@@ -19,7 +19,7 @@ defaultdir = 'LR'
 try:
     base_path = sys._MEIPASS
 except:
-    base_path = '.'
+    base_path = Path.cwd()
 
 
 def getdiagram():
@@ -54,7 +54,7 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "3.5",
+        "nodesep": "4.5",
         "fontname": "Sans-Serif",
         "fontsize": "30",
         "fontcolor": "#2D3436",
@@ -62,7 +62,7 @@ class Canvas:
         "concentrate": 'true',
         "ranksep": "5",
         "center": "true",
-        "pad" : "1",
+        "pad" : "1.5",
         "ranksep" :"8",
 
     }
@@ -212,7 +212,7 @@ class Canvas:
     
     def render(self) -> str:
         dotsource = Source.from_file(self.filename+'.dot', engine='dot', directory=Path.cwd())
-        filename = dotsource.render(format=self.outformat, view=self.show, quiet=True, engine='neato', directory=Path.cwd())
+        filename = dotsource.render(format=self.outformat, view=self.show, quiet=True, engine='dot', directory=Path.cwd())
         return filename
 
 

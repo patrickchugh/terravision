@@ -185,6 +185,9 @@ def extract_locals(tfdata):
     click.echo("\n  Parsing locals...")
     module_locals = dict()
     # Remove array layer of locals dict structure and copy over to final_locals dict first
+    if not tfdata.get("all_locals"):
+        tfdata["all_locals"] = {}
+        return tfdata
     for file, localvarlist in tfdata["all_locals"].items():
         if ";" in file:
             modname = file.split(";")[1]
@@ -243,7 +246,7 @@ def find_conditional_statements(resource, attr_list: dict):
     # Handle conditional counts and loops
     if "for_each" in attr_list:
         eval_string = attr_list["for_each"]
-        return helpers.cleanup_curlies(eval_string)
+        return "ERROR!" + helpers.cleanup_curlies(eval_string)
     if (
         "count" in attr_list.keys()
         and not isinstance(attr_list["count"], int)
@@ -252,7 +255,7 @@ def find_conditional_statements(resource, attr_list: dict):
         eval_string = str(attr_list["count"])
         return helpers.cleanup_curlies(eval_string)
     for attrib in attr_list:
-        if "for" in attrib and "in" in attrib:
+        if "for" in attrib and ("in" in attrib or ":" in attrib):
             eval_string = attr_list[attrib]
             # we have a for loop so deal with that part first
             # TODO: Implement for loop handling for real, for now just null it out
@@ -337,23 +340,37 @@ def handle_conditional_resources(tfdata):
     return tfdata
 
 
-def get_metadata(tfdata):  #  -> set
+def get_metadata(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
     Returns a set with a node_list of unique resources, resource attributes (metadata) and hidden (zero count) nodes
     """
     node_list = []
     meta_data = dict()
-    variable_list = tfdata.get("variable_map")
-    all_locals = tfdata.get("all_locals")
-    all_outputs = tfdata.get("all_output")
+    if not tfdata.get("all_resource"):
+        click.echo(
+                click.style(
+                    f"\WARNING: Unable to find any resources ",
+                    fg="white",
+                    bold=True,
+                )
+            )
+        tfdata['all_resource'] = {}
+        tfdata['node_list'] = {}
     for filename, resource_list in tfdata["all_resource"].items():
         if ";" in filename:
             # We have a module file being processed
             modarr = filename.split(";")
             mod = modarr[1]
         else:
+            # Default module assumed to be main
             mod = "main"
+            # Search for mod name in all_module and switch module scope if found
+            for _, module_list in tfdata['all_module'].items() :
+                for module in module_list:
+                    for moddata in module :
+                        if module[moddata]['source'].strip('.') in filename :
+                            mod = moddata
         for item in resource_list:
             for k in item.keys():
                 resource_type = k

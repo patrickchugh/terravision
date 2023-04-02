@@ -9,7 +9,7 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_cloudwatch": {
+        "aws_cloudwatch_log": {
             "resource_name": "aws_cloudwatch_log_group.cloudwatch",
             "import_location": "resource_classes.aws.management",
             "vpc": False,

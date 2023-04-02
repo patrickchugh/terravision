@@ -32,7 +32,7 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     # Handle conditionally created resources e.g. with count or foreach attribute
     tfdata = interpreter.handle_conditional_resources(tfdata)
     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    tfdata = graphmaker.make_graph_dict(tfdata) 
+    tfdata = graphmaker.make_graph_dict(tfdata)
     return tfdata
 
 

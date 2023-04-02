@@ -50,7 +50,7 @@ OUTER_NODES = cloud_config.AWS_OUTER_NODES
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
-    # Check if there are any custom edge 
+    # Check if there are any custom edge
     label = ""
     origin_resource = origin._attrs["tf_resource_name"]
     dest_resource = destination._attrs["tf_resource_name"]
@@ -60,9 +60,7 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
         if dest_resource.startswith(list(k.keys())[0])
     ]
     consolidated_origin_prefix = [
-        k
-        for k in CONSOLIDATED_NODES
-        if origin_resource.startswith(list(k.keys())[0])
+        k for k in CONSOLIDATED_NODES if origin_resource.startswith(list(k.keys())[0])
     ]
     if consolidated_origin_prefix:
         candidate_resources = helpers.list_of_dictkeys_containing(
@@ -70,15 +68,11 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
             list(consolidated_origin_prefix[0].keys())[0],
         )
         for resource in candidate_resources:
-            edge_labels_list = tfdata["meta_data"][resource].get(
-                "edge_labels"
-            )
+            edge_labels_list = tfdata["meta_data"][resource].get("edge_labels")
             if edge_labels_list:
                 break
     else:
-        edge_labels_list = tfdata["meta_data"][origin_resource].get(
-            "edge_labels"
-        )
+        edge_labels_list = tfdata["meta_data"][origin_resource].get("edge_labels")
     if edge_labels_list:
         for labeldict in edge_labels_list:
             key = [k for k in labeldict][0]
@@ -98,7 +92,7 @@ def handle_nodes(
     cloudGroup: Cluster,
     diagramCanvas: Canvas,
     tfdata: dict,
-    drawn_resources: list
+    drawn_resources: list,
 ):
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes:
@@ -116,7 +110,7 @@ def handle_nodes(
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
     # Now draw and connect any nodes listed as a connection in graphdict
-    if tfdata["graphdict"].get(resource) :
+    if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             connectedNode = None
             c_resource = node_connection
@@ -127,29 +121,43 @@ def handle_nodes(
             else:
                 connectedGroup = cloudGroup
             if node_type not in GROUP_NODES:
-                if node_type in avl_classes and resource != node_connection and node_connection in tfdata['graphdict'].keys():
+                if (
+                    node_type in avl_classes
+                    and resource != node_connection
+                    and node_connection in tfdata["graphdict"].keys()
+                ):
                     # Check for circular references before diving into a particular connected node
-                    circular_reference = resource in tfdata['graphdict'][node_connection]
-                    if not circular_reference :
+                    circular_reference = (
+                        resource in tfdata["graphdict"][node_connection]
+                    )
+                    if not circular_reference:
                         connectedNode, drawn_resources = handle_nodes(
                             node_connection,
                             connectedGroup,
                             cloudGroup,
                             diagramCanvas,
                             tfdata,
-                            drawn_resources
+                            drawn_resources,
                         )
                     elif node_connection not in drawn_resources:
                         # Do not look at further connections recursively for circular references, just draw
                         nodeClass = getattr(sys.modules[__name__], node_type)
-                        connectedNode = nodeClass(label=helpers.pretty_name(node_connection), tf_resource_name=node_connection)
+                        connectedNode = nodeClass(
+                            label=helpers.pretty_name(node_connection),
+                            tf_resource_name=node_connection,
+                        )
                         drawn_resources.append(node_connection)
-                        tfdata["meta_data"].update({node_connection: {"node": connectedNode}})
-                if connectedNode :
+                        tfdata["meta_data"].update(
+                            {node_connection: {"node": connectedNode}}
+                        )
+                if connectedNode:
                     # We have found a connection linked to newNode we just created
-                    label = get_edge_labels(newNode, connectedNode, tfdata) 
+                    label = get_edge_labels(newNode, connectedNode, tfdata)
                     # Log connections in tfdata and don't duplicate existing connections
-                    if not tfdata["connected_nodes"].get(newNode._id) and tfdata["meta_data"][resource]["node"]:
+                    if (
+                        not tfdata["connected_nodes"].get(newNode._id)
+                        and tfdata["meta_data"][resource]["node"]
+                    ):
                         originNode = tfdata["meta_data"][resource]["node"]
                     else:
                         originNode = newNode
@@ -159,12 +167,20 @@ def handle_nodes(
                         originNode._id
                     ):
                         if originNode != connectedNode:
-                            originNode.connect(connectedNode, Edge(forward=True, label=label))
+                            originNode.connect(
+                                connectedNode, Edge(forward=True, label=label)
+                            )
                             if not tfdata["connected_nodes"].get(originNode._id):
                                 tfdata["connected_nodes"][originNode._id] = list()
-                            tfdata["connected_nodes"][originNode._id] = helpers.append_dictlist(tfdata["connected_nodes"][originNode._id],connectedNode._id ) 
-                            
+                            tfdata["connected_nodes"][
+                                originNode._id
+                            ] = helpers.append_dictlist(
+                                tfdata["connected_nodes"][originNode._id],
+                                connectedNode._id,
+                            )
+
     return newNode, drawn_resources
+
 
 # Recursive function to draw out groups and subgroups along with their nodes
 def handle_group(
@@ -173,23 +189,30 @@ def handle_group(
     diagramCanvas: Canvas,
     resource: str,
     tfdata: dict,
-    drawn_resources: list
+    drawn_resources: list,
 ):
     resource_type = resource.split(".")[0]
     if not resource_type in avl_classes:
         return
-    newGroup = getattr(sys.modules[__name__], resource_type)(label=helpers.pretty_name(resource))
+    newGroup = getattr(sys.modules[__name__], resource_type)(
+        label=helpers.pretty_name(resource)
+    )
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
     # Now add in any nodes contained within this group
-    if tfdata["graphdict"].get(resource) :
+    if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(node_connection).split(".")[0]
             if node_type in GROUP_NODES and node_type in avl_classes:
                 # We have a subgroup within a Cluster group
                 subGroup, drawn_resources = handle_group(
-                    newGroup, cloudGroup, diagramCanvas, node_connection, tfdata, drawn_resources
+                    newGroup,
+                    cloudGroup,
+                    diagramCanvas,
+                    node_connection,
+                    tfdata,
+                    drawn_resources,
                 )
                 newGroup.subgraph(subGroup.dot)
                 drawn_resources.append(node_connection)
@@ -205,9 +228,11 @@ def handle_group(
                     cloudGroup,
                     diagramCanvas,
                     tfdata,
-                    drawn_resources
+                    drawn_resources,
                 )
-                newGroup.add_node(newNode._id, label=helpers.pretty_name(node_connection))
+                newGroup.add_node(
+                    newNode._id, label=helpers.pretty_name(node_connection)
+                )
     return newGroup, drawn_resources
 
 
@@ -217,7 +242,7 @@ def draw_objects(
     all_drawn_resources_list: list,
     tfdata: dict,
     diagramCanvas: object,
-    cloudGroup: object
+    cloudGroup: object,
 ):
     for node_type in node_type_list:
         if isinstance(node_type, dict):
@@ -240,7 +265,7 @@ def draw_objects(
                         diagramCanvas,
                         resource,
                         tfdata,
-                        all_drawn_resources_list
+                        all_drawn_resources_list,
                     )
                     targetGroup.subgraph(node_groups.dot)
                 elif (
@@ -249,13 +274,13 @@ def draw_objects(
                     and resource not in all_drawn_resources_list
                 ):
                     # Create standalone nodes and add them to the supplied cluster
-                    _ , all_drawn_resources_list = handle_nodes(
+                    _, all_drawn_resources_list = handle_nodes(
                         resource,
                         targetGroup,
                         cloudGroup,
                         diagramCanvas,
                         tfdata,
-                        all_drawn_resources_list
+                        all_drawn_resources_list,
                     )
     return all_drawn_resources_list
 
@@ -289,22 +314,19 @@ def render_diagram(
         "fontsize": "20",
         "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
     }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
+    #getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
+    setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
     # Draw Nodes and Groups in order of static definitions
     for node_type_list in DRAW_ORDER:
-        targetGroup = cloudGroup 
-        if node_type_list == OUTER_NODES :
+        targetGroup = cloudGroup
+        if node_type_list == OUTER_NODES:
             targetGroup = myDiagram
         setcluster(targetGroup)
         all_drawn_resources_list = draw_objects(
-            node_type_list,
-            all_drawn_resources_list,
-            tfdata,
-            myDiagram,
-            cloudGroup
+            node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
         )
     # Add main outer cloud group to canvas
     myDiagram.subgraph(cloudGroup.dot)
@@ -323,5 +345,8 @@ def render_diagram(
         os.system(f"gvpr -c -q -f {path_to_script} {outfile}.gv.dot -o {outfile}.dot")
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
+    os.remove(path_to_predot)
+    os.remove(path_to_postdot)
+    os.remove(outfile+'.gv')
     click.echo(f"  Completed!")
     setdiagram(None)
