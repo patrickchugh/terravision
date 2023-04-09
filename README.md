@@ -62,7 +62,7 @@ terravision draw --source https://github.com/futurice/terraform-examples.git//aw
 
 ```
 
-## Annotating generated diagrams
+# Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
 
 ``` bash
