@@ -49,6 +49,15 @@ def aws_handle_autoscaling(tfdata: dict):
                         ][subnet]["count"]
     except:
         pass
+    # Now replace any references within subnets to asg targets with the name of asg
+    for asg in asg_resources:
+        for connection in tfdata["graphdict"][asg] :
+            asg_target_parents = helpers.list_of_parents(tfdata["graphdict"],connection)
+            subnets_to_change = [k for k in asg_target_parents if k.startswith("aws_subnet")]
+            for subnet in subnets_to_change :
+                tfdata["graphdict"][subnet].append(asg)
+                tfdata["graphdict"][subnet].remove(connection)
+            pass
     return tfdata
 
 
@@ -91,7 +100,8 @@ def aws_handle_subnet_azs(tfdata: dict):
     for subnet in subnet_resources:
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
         for parent in parents_list:
-            tfdata["graphdict"][parent].remove(subnet)
+            if subnet in tfdata["graphdict"][parent] :
+                tfdata["graphdict"][parent].remove(subnet)
             if not tfdata["graphdict"].get("aws_az.az"):
                 tfdata["graphdict"]["aws_az.az"] = [subnet]
                 if tfdata["meta_data"][subnet].get("count"):
@@ -131,7 +141,7 @@ def aws_handle_sg(tfdata: dict):
     for target in bound_nodes:
         target_type = target.split(".")[0]
         # Look for any nodes with relationships to security groups and then reverse the relationship
-        # effectively putting the node into a cluster representing the security group
+        # putting the parent node into a cluster named after the security group
         if not target_type in GROUP_NODES:
             for connection in tfdata["graphdict"][target]:
                 if connection.startswith("aws_security_group"):
@@ -144,7 +154,7 @@ def aws_handle_sg(tfdata: dict):
         # Remove any security group relationships if they are associated with the VPC already
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_vpc":
-            for connection in tfdata["graphdict"][target]:
+            for connection in list(tfdata["graphdict"][target]):
                 if connection.startswith("aws_security_group"):
                     tfdata["graphdict"][target].remove(connection)
         # Replace any references to nodes within the security group with the security group
@@ -213,7 +223,7 @@ def aws_handle_lb(tfdata: dict):
             parents = helpers.list_of_parents(tfdata['graphdict'],lb)
             for p in parents :
                 p_type = p.split('.')[0] 
-                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES:
+                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES and p_type != 'aws_vpc':
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
     tfdata["graphdict"][lb].append(renamed_node)

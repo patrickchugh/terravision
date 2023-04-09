@@ -9,7 +9,7 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_cloudwatch_log": {
+        "aws_cloudwatch": {
             "resource_name": "aws_cloudwatch_log_group.cloudwatch",
             "import_location": "resource_classes.aws.management",
             "vpc": False,
@@ -148,9 +148,9 @@ AWS_SPECIAL_RESOURCES = {
     'aws_subnet' : 'aws_handle_subnet_azs',
     'aws_appautoscaling_target' : 'aws_handle_autoscaling',
     'aws_efs_file_system' : 'aws_handle_efs',
-    'aws_security_group' : 'aws_handle_sg',
-    'aws_lb' : 'aws_handle_lb',
     'aws_db_subnet' : 'aws_handle_dbsubnet',
+    'aws_security_group' : 'aws_handle_sg', # place after db_subnet handler
+    'aws_lb' : 'aws_handle_lb',
     'aws_' : 'aws_handle_sharedgroup'
 }
 
