@@ -3,11 +3,11 @@ TerraVision is a CLI tool that converts Terraform code into Professional Cloud A
 
 Turn this... 
 
-![Terraform Code](./code.png "Turn Terraform code")
+![Terraform Code](./images/code.png "Turn Terraform code")
 
 into this...
 
-<img src="./architecture.png" width="640" height="580">
+<img src="./images/architecture.png" width="640" height="580">
 
 
 This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
@@ -42,16 +42,24 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 ## Quickstart
 1. Install all dependencies as listed above
 2. Clone the repo ``git clone https://github.com/patrickchugh/terravision.git``
-3. Add the terravision folder to your `PATH`  
-4. ``cd terravision & pip install -r requirements.txt``
-4. Run `terravision` and specify your Terraform source files in the format:
+3. Add the terravision folder to your `PATH` value e.g. ``export PATH=$PATH:/Users/yourname/git/terravision/`` so you can run it from anywhere.
+4. Install python requirements ``cd terravision & pip install -r requirements.txt``
+5. Ensure your terravision python script is executable with ``chmod +x terravision`` 
+6. Run `terravision` and specify your Terraform source files in the format:
 ``` bash
-$ ./terravision.py --source ~/src/my-terraform-code
+$ terravision draw --source ~/src/my-terraform-code
 ```
 
 For Terraform source code in a Git repo you can also use the form:
 ``` bash
-$ ./terravision.py --source https://github.com/your-repo/terraform-examples.git
+$ terravision draw --source https://github.com/your-repo/terraform-examples.git
+```
+
+# Example Terraforms to try
+Unrelated to my project, but here are a few third-party Terraform examples to try:
+``` bash
+terravision draw --source https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate --varfile examples/variables.tfvars --show
+
 ```
 
 ## Annotating generated diagrams
