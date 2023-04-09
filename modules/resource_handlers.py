@@ -154,7 +154,7 @@ def aws_handle_sg(tfdata: dict):
         # Remove any security group relationships if they are associated with the VPC already
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_vpc":
-            for connection in tfdata["graphdict"][target]:
+            for connection in list(tfdata["graphdict"][target]):
                 if connection.startswith("aws_security_group"):
                     tfdata["graphdict"][target].remove(connection)
         # Replace any references to nodes within the security group with the security group
@@ -223,7 +223,7 @@ def aws_handle_lb(tfdata: dict):
             parents = helpers.list_of_parents(tfdata['graphdict'],lb)
             for p in parents :
                 p_type = p.split('.')[0] 
-                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES:
+                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES and p_type != 'aws_vpc':
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
     tfdata["graphdict"][lb].append(renamed_node)

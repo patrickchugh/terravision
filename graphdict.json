@@ -243,53 +243,44 @@
     "aws_ssm_parameter.ssmparam": [],
     "aws_subnet.private-1": [
         "aws_appautoscaling_target.this-1",
-        "aws_route_table_association.private",
+        "aws_route_table_association.private-1",
         "aws_security_group.db-1",
         "aws_security_group.efs-1"
     ],
     "aws_subnet.private-2": [
         "aws_appautoscaling_target.this-2",
-        "aws_route_table_association.private",
+        "aws_route_table_association.private-2",
         "aws_security_group.db-2",
         "aws_security_group.efs-2"
     ],
     "aws_subnet.private-3": [
         "aws_appautoscaling_target.this-3",
-        "aws_route_table_association.private",
+        "aws_route_table_association.private-3",
         "aws_security_group.db-3",
         "aws_security_group.efs-3"
     ],
     "aws_subnet.public-1": [
         "aws_nat_gateway.this-1",
-        "aws_route_table_association.public",
+        "aws_route_table_association.public-1",
         "aws_security_group.alb-1"
     ],
     "aws_subnet.public-2": [
         "aws_nat_gateway.this-2",
-        "aws_route_table_association.public",
+        "aws_route_table_association.public-2",
         "aws_security_group.alb-2"
     ],
     "aws_subnet.public-3": [
         "aws_nat_gateway.this-3",
-        "aws_route_table_association.public",
+        "aws_route_table_association.public-3",
         "aws_security_group.alb-3"
     ],
     "aws_vpc.this": [
-        "aws_alb.elb-1",
-        "aws_alb.elb-2",
-        "aws_alb.elb-3",
         "aws_az.az-1",
         "aws_az.az-2",
         "aws_az.az-3",
         "aws_internet_gateway.igw",
-        "aws_route_table.private-1",
-        "aws_route_table.private-2",
-        "aws_route_table.private-3",
-        "aws_route_table.public",
-        "aws_security_group.db-1",
-        "aws_security_group.db-2",
-        "aws_security_group.db-3",
-        "aws_security_group.wordpress"
+        "aws_lb.elb",
+        "aws_route_table.public"
     ],
     "random_string.snapshot_suffix": [],
     "tv_aws_internet.internet": [],

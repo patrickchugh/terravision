@@ -260,29 +260,27 @@
         "aws_security_group.efs-3"
     ],
     "aws_subnet.public-1": [
-        "aws_security_group.alb-1",
         "aws_nat_gateway.this-1",
-        "aws_route_table_association.public-1"
+        "aws_route_table_association.public-1",
+        "aws_security_group.alb-1"
     ],
     "aws_subnet.public-2": [
-        "aws_security_group.alb-2",
         "aws_nat_gateway.this-2",
-        "aws_route_table_association.public-2"
+        "aws_route_table_association.public-2",
+        "aws_security_group.alb-2"
     ],
     "aws_subnet.public-3": [
-        "aws_security_group.alb-3",
         "aws_nat_gateway.this-3",
-        "aws_route_table_association.public-3"
+        "aws_route_table_association.public-3",
+        "aws_security_group.alb-3"
     ],
     "aws_vpc.this": [
-        "aws_lb.elb",
         "aws_az.az-1",
         "aws_az.az-2",
         "aws_az.az-3",
         "aws_internet_gateway.igw",
-      
-        "aws_route_table.public",
-        "aws_security_group.alb"
+        "aws_lb.elb",
+        "aws_route_table.public"
     ],
     "random_string.snapshot_suffix": [],
     "tv_aws_internet.internet": [],
