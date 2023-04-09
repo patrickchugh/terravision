@@ -142,12 +142,14 @@ def draw(source, varfile, outfile, format, show, simplified, annotate, avl_class
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option("--avl_classes", hidden=True)
-def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
-    """List Cloud Resources and Relations"""
+def graphdata(
+    source, varfile, show_services, annotate, avl_classes, outfile="graphdata.json"
+):
+    """List Cloud Resources and Relations as JSON"""
     preflight_check()
     tfdata = compile_tfdata(source, varfile, annotate)
-    click.echo(click.style("\nJSON Dictionary :", fg="white", bold=True))
-    unique = helpers.unique_services(tfdata["node_list"])
+    click.echo(click.style("\nOutput JSON Dictionary :", fg="white", bold=True))
+    unique = helpers.unique_services(tfdata["graphdict"])
     click.echo(
         json.dumps(
             tfdata["graphdict"] if not show_services else unique,
@@ -155,6 +157,15 @@ def graphlist(source, varfile, show_services, outfile, annotate, avl_classes):
             sort_keys=True,
         )
     )
+    click.echo(f"\nExporting graph object into file {outfile}")
+    with open(outfile, "w") as f:
+        json.dump(
+            tfdata["graphdict"] if not show_services else unique,
+            f,
+            indent=4,
+            sort_keys=True,
+        )
+    click.echo(f"\nCompleted!")
 
 
 if __name__ == "__main__":

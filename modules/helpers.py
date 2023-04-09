@@ -26,11 +26,17 @@ def check_for_domain(string: str) -> bool:
             return True
     return False
 
+def check_list_for_dash(connections: list) :
+    has_dash = True
+    for item in connections:
+        if not '-' in item :
+            has_dash = False
+    return has_dash
 
 def sort_graphdict(graphdict: dict):
     for key in graphdict:
         graphdict[key].sort()
-    return graphdict
+    return dict(sorted(graphdict.items()))
 
 
 def url(string: str) -> str:
