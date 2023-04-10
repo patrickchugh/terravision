@@ -174,7 +174,7 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
         except:
             click.echo(
                 click.style(
-                    f"\nERROR: Unable to call Git to clone repository! Ensure git is configured properly and the URL {githubURL} is reachable.",
+                    f"\nERROR: Unable to call Git to clone repository! Check git and SSH fingerprints and keys are correct and ensure the URL {githubURL} is reachable via CLI.",
                     fg="red",
                     bold=True,
                 )
