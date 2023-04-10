@@ -168,7 +168,7 @@ def find_replace_values(varstring, module, tfdata):
         if tfdata["all_locals"]:
             if lookup in tfdata["all_locals"][module].keys():
                 replacement_value = tfdata["all_locals"][module].get(lookup)
-                value = value.replace(localitem, replacement_value)
+                value = value.replace(localitem, str(replacement_value))
             else:
                 value = value.replace(localitem, "None")
                 click.echo(

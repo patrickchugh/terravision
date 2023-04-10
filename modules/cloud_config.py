@@ -117,7 +117,9 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
-    {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}}
+    {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
+    {"aws_lambda": {"link": ["aws_cloudwatch_log_group.cloudwatch"], "arrow": "forward"}}
+
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type

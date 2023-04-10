@@ -58,7 +58,11 @@ $ terravision draw --source https://github.com/your-repo/terraform-examples.git
 # Example Terraforms to try
 Unrelated to my project, but here are a few third-party Terraform examples to try:
 ``` bash
+
+terravision draw --source https://github.com/futurice/terraform-examples.git//aws/aws_static_site --varfile examples/variables.tfvars --show
+
 terravision draw --source https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate --varfile examples/variables.tfvars --show
+
 
 ```
 
