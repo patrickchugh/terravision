@@ -78,15 +78,16 @@ def aws_handle_cloudfront(tfdata: dict):
                 origin_source = tfdata["meta_data"][cf_resource]["origin"]
                 if isinstance(origin_source, str) and origin_source.startswith("{"):
                     origin_source = helpers.literal_eval(origin_source)
-                origin_domain = helpers.cleanup(
-                    origin_source.get("domain_name")
-                ).strip()
-                if origin_domain:
-                    tfdata["meta_data"][cf_resource][
-                        "origin"
-                    ] = handle_cloudfront_domains(
-                        str(origin_source), origin_domain, tfdata["meta_data"]
-                    )
+                if isinstance(origin_source,dict):     
+                    origin_domain = helpers.cleanup(
+                        origin_source.get("domain_name")
+                    ).strip()
+                    if origin_domain:
+                        tfdata["meta_data"][cf_resource][
+                            "origin"
+                        ] = handle_cloudfront_domains(
+                            str(origin_source), origin_domain, tfdata["meta_data"]
+                        )
     return tfdata
 
 

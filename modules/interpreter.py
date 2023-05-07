@@ -90,7 +90,7 @@ def find_replace_values(varstring, module, tfdata):
         "\$\{var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value
     ) or re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall("\$\{local\.[A-Za-z0-9_\-]+\}", value) or re.findall(
-        "local\.[A-Za-z0-9_\-]+[\} ,]+", value) or re.findall("local\.[A-Za-z0-9_\-]+\}", value)
+        "local\.[A-Za-z0-9_\-]+[\} ,]+", value) or re.findall("local\.[A-Za-z0-9_\-]+", value)
     
     modulevar_found_list = (
         re.findall("\$\{module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value)
@@ -413,25 +413,10 @@ def get_metadata(tfdata):  # -> set
                             meta_data["aws_cloudwatch_log_group.logs"] = item[
                                 resource_type
                             ][resource_name]
-                # click.echo(f'    {resource_type}.{resource_name}')
+                click.echo(f'    {resource_type}.{resource_name}')
                 node_list.append(f"{resource_type}.{resource_name}")
                 meta_data[f"{resource_type}.{resource_name}"] = item[k][i]
                 meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
-
-    # Handle CF Special meta data
-    cf_data = [s for s in meta_data.keys() if "aws_cloudfront" in s]
-    if cf_data:
-        for cf_resource in cf_data:
-            if "origin" in meta_data[cf_resource]:
-                for origin_source in meta_data[cf_resource]["origin"]:
-                    if isinstance(origin_source, str) and origin_source.startswith("{"):
-                        origin_source = literal_eval(origin_source)
-                    origin_domain = cleanup(origin_source.get("domain_name")).strip()
-                    if origin_domain:
-                        meta_data[cf_resource]["origin"] = handle_cloudfront_domains(
-                            str(origin_source), origin_domain, meta_data
-                        )
-
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
     return tfdata

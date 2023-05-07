@@ -1,0 +1,96 @@
+{
+    "aws_acm_certificate.acm": [],
+    "aws_alb.elb": [
+        "aws_fargate.ecs"
+    ],
+    "aws_appautoscaling_policy.scale_down": [
+        "aws_appautoscaling_target.this"
+    ],
+    "aws_appautoscaling_policy.scale_up": [
+        "aws_appautoscaling_target.this"
+    ],
+    "aws_appautoscaling_target.this": [
+        "aws_fargate.ecs"
+    ],
+    "aws_cloudfront_distribution.this": [
+        "aws_acm_certificate.acm"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_appautoscaling_policy.scale_down",
+        "aws_appautoscaling_policy.scale_up",
+        "aws_fargate.ecs"
+    ],
+    "aws_customer_gateway.this": [],
+    "aws_ecr_repository.ecr": [],
+    "aws_ecs_cluster.ecs": [],
+    "aws_efs_file_system.efs": [],
+    "aws_fargate.ecs": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_ecs_cluster.ecs",
+        "aws_efs_file_system.efs",
+        "aws_rds_aurora.this",
+        "aws_ssm_parameter.ssmparam"
+    ],
+    "aws_group.shared_services": [
+        "aws_acm_certificate.acm",
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_efs_file_system.efs",
+        "aws_ssm_parameter.ssmparam"
+    ],
+    "aws_iam_policy.task_execution_policy": [],
+    "aws_iam_policy.task_policy": [],
+    "aws_iam_role.task_execution_role": [
+        "aws_fargate.ecs",
+        "aws_iam_role_policy_attachment.task_execution_policy_attach"
+    ],
+    "aws_iam_role.task_role": [
+        "aws_fargate.ecs",
+        "aws_iam_role_policy_attachment.task_policy_attach"
+    ],
+    "aws_iam_role_policy_attachment.task_execution_policy_attach": [
+        "aws_iam_policy.task_execution_policy"
+    ],
+    "aws_iam_role_policy_attachment.task_policy_attach": [
+        "aws_iam_policy.task_policy"
+    ],
+    "aws_lambda_permission.lb": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_lb.elb": [
+        "aws_alb.elb"
+    ],
+    "aws_rds_aurora.this": [
+        "aws_rds_cluster.this",
+        "random_string.snapshot_suffix"
+    ],
+    "aws_route53_record.route_53": [
+        "aws_cloudfront_distribution.this"
+    ],
+    "aws_security_group.alb": [
+        "aws_alb.elb"
+    ],
+    "aws_security_group.db": [
+        "aws_rds_aurora.this"
+    ],
+    "aws_security_group.efs": [
+        "aws_fargate.ecs"
+    ],
+    "aws_security_group.this": [
+        "aws_alb.elb"
+    ],
+    "aws_security_group.wordpress": [
+        "aws_security_group.alb",
+        "aws_security_group.efs"
+    ],
+    "aws_security_group_rule.this": [],
+    "aws_ssm_parameter.ssmparam": [],
+    "aws_vpc.this": [
+        "aws_lb.elb"
+    ],
+    "random_string.snapshot_suffix": [],
+    "tv_aws_users.users": [
+        "aws_route53_record.route_53"
+    ]
+}

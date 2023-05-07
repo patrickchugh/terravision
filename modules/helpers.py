@@ -288,7 +288,7 @@ def list_of_parents(searchdict: dict, target: str):
                 final_list.append(key)
         elif isinstance(value, dict):
             for subkey in value.keys():
-                if target in str(value[subkey]):
+                if target in str(value[subkey]) or target in subkey:
                     final_list.append(key)
         elif isinstance(value, list):
             if target in value:
