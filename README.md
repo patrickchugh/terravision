@@ -43,7 +43,7 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 1. Install all dependencies as listed above
 2. Clone the repo ``git clone https://github.com/patrickchugh/terravision.git``
 3. Add the terravision folder to your `PATH` value e.g. ``export PATH=$PATH:/Users/yourname/git/terravision/`` so you can run it from anywhere.
-4. Install python requirements ``cd terravision & pip install -r requirements.txt``
+4. Install python requirements ``cd terravision && pip install -r requirements.txt``
 5. Ensure your terravision python script is executable with ``chmod +x terravision`` 
 6. Run `terravision` and specify your Terraform source files in the format:
 ``` bash
@@ -54,7 +54,10 @@ For Terraform source code in a Git repo you can also use the form:
 ``` bash
 $ terravision draw --source https://github.com/your-repo/terraform-examples.git
 ```
-
+Use the `//` character for subfolders within Git repos if the code you want is under a folder hierarchy.
+``` bash
+$ terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
+```
 # Example Terraforms to try
 Unrelated to my project, but here are a few third-party Terraform examples to try:
 ``` bash

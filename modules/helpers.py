@@ -287,8 +287,8 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
         elif isinstance(value, dict):
-            for subkey in value:
-                if target in value[subkey]:
+            for subkey in value.keys():
+                if target in str(value[subkey]):
                     final_list.append(key)
         elif isinstance(value, list):
             if target in value:
@@ -361,8 +361,7 @@ def cleanup_curlies(text: str) -> str:
 # Cleans out special characters
 def cleanup(text: str) -> str:
     text = str(text)
-    # for ch in ['\\', '`', '*', '{', '}', '[', ']', '(', ')', '>', '!', '$', '\'', '"']:
-    for ch in ["\\", "`", "*", "{", "}", "(", ")", ">", "!", "$", "'", '"', "  "]:
+    for ch in ["\\", "`", "*", "{", "}", "(", ")", ">", "!", "$", "'", '"', "  ",",","["]:
         if ch in text:
             text = text.replace(ch, " ")
     return text.strip()
