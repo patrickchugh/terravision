@@ -76,13 +76,143 @@ def handle_metadata_vars(tfdata):
     return tfdata
 
 
+# def find_replace_values(varstring, module, tfdata):
+#     value = str(varstring)
+#     var_found_list = re.findall("\$\{var\.[A-Za-z0-9_\-]+\}", value) or re.findall(
+#         "var\.[A-Za-z0-9_\-]+[\}.,\)\[]", value) or re.findall(
+#         "var\.[A-Za-z0-9_\-]+\}", value) or re.findall("var\.[A-Za-z0-9_\-.]+", value)
+#     for index, var in enumerate(var_found_list):
+#         var_found_list[index] = helpers.cleanup(var)
+#     data_found_list = re.findall(
+#         "\${data\.[A-Za-z0-9_\-\.\[\]]+\}", value
+#     ) or re.findall("data\.[A-Za-z0-9_\-\.\[\]]+", value)
+#     varobject_found_list = re.findall(
+#         "\$\{var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value
+#     ) or re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
+#     local_found_list = re.findall("\$\{local\.[A-Za-z0-9_\-]+\}", value) or re.findall(
+#         "local\.[A-Za-z0-9_\-]+[\} ,]+", value) or re.findall("local\.[A-Za-z0-9_\-]+", value)
+    
+#     modulevar_found_list = (
+#         re.findall("\$\{module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value)
+#         or re.findall("module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
+#         or re.findall("module\.[A-Za-z0-9_\-]+", value)
+#     )
+#     for d in data_found_list:
+#         for search_string, keyvalue in DATA_REPLACEMENTS.items():
+#             if search_string in d:
+#                 value = str(value.replace(d, str(keyvalue)))
+#         if value == varstring:
+#             value = str(value.replace(d, '"UNKNOWN"'))
+#     for module_var in modulevar_found_list:
+#         cleantext = fix_lists(module_var)
+#         splitlist = cleantext.split(".")
+#         outputname = find_between(cleantext, splitlist[1] + ".", " ")
+#         oldvalue = value
+#         for ofile in tfdata["all_output"].keys():
+#             for i in tfdata["all_output"][ofile]:
+#                 if outputname in i.keys():
+#                     value = value.replace(module_var, i[outputname]["value"])
+#                     for keyword in ["var.", "local.", "module.", "data."]:
+#                         if keyword in value:
+#                             if "module." in value:
+#                                 mod = value.split("module.")[1].split(".")[0]
+#                             else:
+#                                 mod = module
+#                             value = find_replace_values(value, mod, tfdata)
+#                     break
+#         if value == oldvalue:
+#             value = value.replace(module_var, '"UNKNOWN"')
+#     for varitem in var_found_list:
+#         lookup = varitem.split("var.")[1].lower().replace("}", "").replace(" ","").replace(".","")
+#         if (lookup in tfdata["variable_map"][module].keys()) and (
+#             "var." + lookup not in str(tfdata["variable_map"][module][lookup])
+#         ):
+#             # Possible object type var encountered
+#             obj = ""
+#             for item in varobject_found_list:
+#                 if lookup in item:
+#                     obj = tfdata["variable_map"][module][lookup]
+#                     varitem = item
+
+#             if value.count(lookup) < 2 and obj != "" and isinstance(obj, dict):
+#                 key = varitem.split(".")[2]
+#                 if key in obj.keys():
+#                     keyvalue = obj[key]
+#                 else:
+#                     keyvalue = obj
+#                 if (
+#                     isinstance(keyvalue, str)
+#                     and not keyvalue.startswith("[")
+#                     and not keyvalue.startswith("{")
+#                 ):
+#                     keyvalue = f'"{keyvalue}"'
+#                 value = value.replace(varitem, str(keyvalue),1)
+#             elif value.count(lookup) < 2 and obj == "":
+#                 replacement_value = str(tfdata["variable_map"][module].get(lookup))
+#                 if (
+#                     isinstance(replacement_value, str)
+#                     and '"' not in replacement_value
+#                     and not replacement_value.startswith("[")
+#                 ):
+#                     replacement_value = f'"{replacement_value}"'
+#                 value = value.replace(varitem, replacement_value,1)
+#             else:
+#                 value = value.replace(
+#                     varitem, str(tfdata["variable_map"][module][lookup]) + " ",1
+#                 )
+#         elif lookup in tfdata["variable_map"][module].keys():
+#             if "var." in tfdata["variable_map"][module].get(lookup) :
+#                 value = value.replace(varitem, '"UNKNOWN"',1)
+#             else:
+#                 value = value.replace(
+#                     varitem, str(tfdata["variable_map"][module].get(lookup),1)
+#                 )
+#             break
+#         elif helpers.list_of_parents(tfdata["variable_map"],lookup):
+#             module_list = helpers.list_of_parents(tfdata["variable_map"],lookup)
+#             module_name = module_list[0]
+#             value = value.replace(
+#                 varitem, str(tfdata["variable_map"][module_name].get(lookup)),1
+#             )
+#             break
+#         else:
+#             click.echo(
+#                 click.style(
+#                     f"\nERROR: No variable value supplied for {varitem} but it is referenced in module {module} ",
+#                     fg="white",
+#                     bold=True,
+#                 )
+#             )
+#             click.echo(
+#                 "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n"
+#             )
+#             exit()
+#     # Handle Locals
+#     for localitem in local_found_list:
+#         lookup = cleanup(localitem.split("local.")[1])
+#         if tfdata["all_locals"]:
+#             if lookup in tfdata["all_locals"][module].keys():
+#                 replacement_value = tfdata["all_locals"][module].get(lookup)
+#                 value = value.replace(localitem, str(replacement_value))
+#             else:
+#                 if lookup in tfdata["all_locals"]["main"].keys():
+#                     replacement_value = tfdata["all_locals"]["main"].get(lookup)
+#                     value = value.replace(localitem, str(replacement_value))
+#                 else:
+#                     value = value.replace(localitem, "None")
+#                     click.echo(
+#                         f"    WARNING: Cannot resolve {localitem}, assigning empty value in module {module}"
+#                     )
+#         else:
+#             value = value.replace(localitem, "None")
+#             click.echo(f"    ERROR: Cannot find definition for local var {localitem}")
+#             exit()
+#     return value
 def find_replace_values(varstring, module, tfdata):
     value = str(varstring)
     var_found_list = re.findall("\$\{var\.[A-Za-z0-9_\-]+\}", value) or re.findall(
-        "var\.[A-Za-z0-9_\-]+[\}.,\)\[]", value) or re.findall(
-        "var\.[A-Za-z0-9_\-]+\}", value) or re.findall("var\.[A-Za-z0-9_\-.]+", value)
-    for index, var in enumerate(var_found_list):
-        var_found_list[index] = helpers.cleanup(var)
+        "var\.[A-Za-z0-9_\-]+", value
+    )
     data_found_list = re.findall(
         "\${data\.[A-Za-z0-9_\-\.\[\]]+\}", value
     ) or re.findall("data\.[A-Za-z0-9_\-\.\[\]]+", value)
@@ -90,19 +220,17 @@ def find_replace_values(varstring, module, tfdata):
         "\$\{var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value
     ) or re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall("\$\{local\.[A-Za-z0-9_\-]+\}", value) or re.findall(
-        "local\.[A-Za-z0-9_\-]+[\} ,]+", value) or re.findall("local\.[A-Za-z0-9_\-]+", value)
-    
-    modulevar_found_list = (
-        re.findall("\$\{module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value)
-        or re.findall("module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
-        or re.findall("module\.[A-Za-z0-9_\-]+", value)
+        "local\.[A-Za-z0-9_\-]+", value
     )
+    modulevar_found_list = re.findall(
+        "\$\{module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\}", value
+    ) or re.findall("module\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     for d in data_found_list:
         for search_string, keyvalue in DATA_REPLACEMENTS.items():
             if search_string in d:
                 value = str(value.replace(d, str(keyvalue)))
         if value == varstring:
-            value = str(value.replace(d, '"UNKNOWN"'))
+            value = str(value.replace(d, "UNKNOWN"))
     for module_var in modulevar_found_list:
         cleantext = fix_lists(module_var)
         splitlist = cleantext.split(".")
@@ -112,18 +240,11 @@ def find_replace_values(varstring, module, tfdata):
             for i in tfdata["all_output"][ofile]:
                 if outputname in i.keys():
                     value = value.replace(module_var, i[outputname]["value"])
-                    for keyword in ["var.", "local.", "module.", "data."]:
-                        if keyword in value:
-                            if "module." in value:
-                                mod = value.split("module.")[1].split(".")[0]
-                            else:
-                                mod = module
-                            value = find_replace_values(value, mod, tfdata)
                     break
         if value == oldvalue:
-            value = value.replace(module_var, '"UNKNOWN"')
+            value = value.replace(module_var, "UNKNOWN")
     for varitem in var_found_list:
-        lookup = varitem.split("var.")[1].lower().replace("}", "").replace(" ","").replace(".","")
+        lookup = varitem.split("var.")[1].lower().replace("}", "")
         if (lookup in tfdata["variable_map"][module].keys()) and (
             "var." + lookup not in str(tfdata["variable_map"][module][lookup])
         ):
@@ -133,20 +254,17 @@ def find_replace_values(varstring, module, tfdata):
                 if lookup in item:
                     obj = tfdata["variable_map"][module][lookup]
                     varitem = item
-
+            click.echo(f'  var.{lookup}')
             if value.count(lookup) < 2 and obj != "" and isinstance(obj, dict):
                 key = varitem.split(".")[2]
-                if key in obj.keys():
-                    keyvalue = obj[key]
-                else:
-                    keyvalue = obj
+                keyvalue = obj[key]
                 if (
                     isinstance(keyvalue, str)
                     and not keyvalue.startswith("[")
                     and not keyvalue.startswith("{")
                 ):
                     keyvalue = f'"{keyvalue}"'
-                value = value.replace(varitem, str(keyvalue),1)
+                value = value.replace(varitem, str(keyvalue))
             elif value.count(lookup) < 2 and obj == "":
                 replacement_value = str(tfdata["variable_map"][module].get(lookup))
                 if (
@@ -155,24 +273,14 @@ def find_replace_values(varstring, module, tfdata):
                     and not replacement_value.startswith("[")
                 ):
                     replacement_value = f'"{replacement_value}"'
-                value = value.replace(varitem, replacement_value,1)
+                value = value.replace(varitem, replacement_value)
             else:
                 value = value.replace(
-                    varitem, str(tfdata["variable_map"][module][lookup]) + " ",1
+                    varitem, str(tfdata["variable_map"][module][lookup]) + " "
                 )
-        elif lookup in tfdata["variable_map"][module].keys():
-            if "var." in tfdata["variable_map"][module].get(lookup) :
-                value = value.replace(varitem, '"UNKNOWN"',1)
-            else:
-                value = value.replace(
-                    varitem, str(tfdata["variable_map"][module].get(lookup),1)
-                )
-            break
-        elif helpers.list_of_parents(tfdata["variable_map"],lookup):
-            module_list = helpers.list_of_parents(tfdata["variable_map"],lookup)
-            module_name = module_list[0]
+        elif lookup in tfdata["variable_map"]["main"].keys():
             value = value.replace(
-                varitem, str(tfdata["variable_map"][module_name].get(lookup)),1
+                varitem, str(tfdata["variable_map"]["main"].get(lookup))
             )
             break
         else:
@@ -195,14 +303,10 @@ def find_replace_values(varstring, module, tfdata):
                 replacement_value = tfdata["all_locals"][module].get(lookup)
                 value = value.replace(localitem, str(replacement_value))
             else:
-                if lookup in tfdata["all_locals"]["main"].keys():
-                    replacement_value = tfdata["all_locals"]["main"].get(lookup)
-                    value = value.replace(localitem, str(replacement_value))
-                else:
-                    value = value.replace(localitem, "None")
-                    click.echo(
-                        f"    WARNING: Cannot resolve {localitem}, assigning empty value in module {module}"
-                    )
+                value = value.replace(localitem, "None")
+                click.echo(
+                    f"    WARNING: Cannot resolve {localitem}, assigning empty value"
+                )
         else:
             value = value.replace(localitem, "None")
             click.echo(f"    ERROR: Cannot find definition for local var {localitem}")
@@ -211,7 +315,6 @@ def find_replace_values(varstring, module, tfdata):
 
 
 def extract_locals(tfdata):
-    click.echo("\n  Parsing locals...")
     module_locals = dict()
     # Remove array layer of locals dict structure and copy over to final_locals dict first
     if not tfdata.get("all_locals"):
@@ -420,6 +523,7 @@ def get_metadata(tfdata):  # -> set
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
     return tfdata
+ 
 
 def get_variable_values(tfdata) -> dict:
     """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""

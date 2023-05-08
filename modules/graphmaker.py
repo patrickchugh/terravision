@@ -21,6 +21,8 @@ SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
 # Make final graph structure to be used for drawing
 def make_graph_dict(tfdata: dict):
+    # Handle special relationships that require pre-processing
+    tfdata = handle_special_resources(tfdata, False)
     # Start with an empty connections list for all nodes/resources we know about
     graphdict = dict.fromkeys(tfdata["node_list"], [])
     num_resources = len(tfdata["node_list"])
@@ -69,7 +71,7 @@ def make_graph_dict(tfdata: dict):
     tfdata = consolidate_nodes(tfdata)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
-    # Handle special relationships that require additional logic
+    # Handle special relationships that require post-processing
     tfdata = handle_special_resources(tfdata)
     # Handle multiple resources created by count attribute
     tfdata = create_multiple_resources(tfdata)
@@ -247,7 +249,7 @@ def add_multiples_to_parents(
             else:
                 suffixed_name = resource + "-" + str(i + 1)
             if (
-                tfdata["meta_data"].get(parent.split("-")[0])
+                parent.split("-")[0] in tfdata["meta_data"].keys()
                 and (
                     not tfdata["meta_data"][parent.split("-")[0]].get("count")
                     or tfdata["meta_data"][parent.split("-")[0]].get("count") == 1
@@ -400,12 +402,16 @@ def create_multiple_resources(tfdata):
     return tfdata
 
 
-def handle_special_resources(tfdata: dict):
+# Handle resources which require pre/post-processing before/after being added to graphdict
+def handle_special_resources(tfdata: dict, graph_dict=True):
     resource_types = [k.split(".")[0] for k in tfdata["node_list"]]
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
-        if resource_prefix in resource_types or matching_substring:
-            tfdata = getattr(resource_handlers, handler)(tfdata)
+        if (resource_prefix in resource_types or matching_substring):
+            if graph_dict:
+                tfdata = getattr(resource_handlers, handler)(tfdata)
+            elif handler.endswith("_pregraph"):
+                tfdata = getattr(resource_handlers, handler)(tfdata)
     return tfdata
 
 
@@ -428,9 +434,7 @@ def dict_generator(indict, pre=None):
 
 
 # Function to check whether a particular resource mentions another known resource (relationship)
-def check_relationship(
-    listitem: str, plist: list, nodes: list, hidden: dict
-):  # -> list
+def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict):# -> list
     connection_list = []
     resource_name = helpers.cleanup(listitem)
     resource_associated_with = plist[1] + "." + plist[2]

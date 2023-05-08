@@ -146,7 +146,7 @@ AWS_IMPLIED_CONNECTIONS = {
 
 # List of special resources and handler function name
 AWS_SPECIAL_RESOURCES = {
-    'aws_cloudfront_distribution' : 'aws_handle_cloudfront',
+    'aws_cloudfront_distribution' : 'aws_handle_cloudfront_pregraph',
     'aws_subnet' : 'aws_handle_subnet_azs',
     'aws_appautoscaling_target' : 'aws_handle_autoscaling',
     'aws_efs_file_system' : 'aws_handle_efs',

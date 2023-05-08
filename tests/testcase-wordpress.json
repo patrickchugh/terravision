@@ -120,7 +120,9 @@
     "aws_internet_gateway.igw": [
         "tv_aws_internet.internet"
     ],
-    "aws_lambda_permission.lb": [],
+    "aws_lambda_permission.lb": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
     "aws_lb.elb": [
         "aws_alb.elb-1",
         "aws_alb.elb-2",
