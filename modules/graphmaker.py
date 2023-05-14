@@ -152,8 +152,8 @@ def handle_variants(tfdata: dict):
         for resource in list(tfdata["graphdict"][renamed_node]):
             if resource[-1].isdigit() :
                 resource_name = node.split("-")[0]
-        else:
-            resource_name = resource
+            else:
+                resource_name = resource
             variant_suffix = helpers.check_variant(
                 resource, tfdata["meta_data"][resource_name]
             )
