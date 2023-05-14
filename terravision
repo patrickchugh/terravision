@@ -26,7 +26,8 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     # Replace metadata (resource attributes) variables and locals with actual values
     tfdata = interpreter.handle_metadata_vars(tfdata)
     # Inject parent module variables that are referenced downstream in sub modules
-    tfdata = interpreter.inject_module_variables(tfdata)
+    if 'all_modules' in tfdata.keys() :
+        tfdata = interpreter.inject_module_variables(tfdata)
     # Dump out findings after file scans are complete
     helpers.output_log(tfdata)
     # Handle conditionally created resources e.g. with count or foreach attribute
