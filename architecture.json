@@ -1,0 +1,12 @@
+{
+    "aws_cloudfront_distribution.s3_distribution": [],
+    "aws_cloudfront_origin_access_identity.create-repo": [
+        "aws_cloudfront_distribution.s3_distribution"
+    ],
+    "aws_s3_bucket.create-repo": [
+        "aws_cloudfront_distribution.s3_distribution"
+    ],
+    "aws_s3_bucket_policy.allow_access_from_cloudfront": [
+        "aws_s3_bucket.create-repo"
+    ]
+}

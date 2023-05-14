@@ -137,7 +137,10 @@ def handle_variants(tfdata: dict):
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
         node_title = node.split(".")[1]
-        node_name = node.split("-")[0]
+        if node[-1].isdigit() :
+            node_name = node.split("-")[0]
+        else:
+            node_name = node
         renamed_node = helpers.check_variant(node, tfdata["meta_data"][node_name])
         if renamed_node and node.split(".")[0] not in SPECIAL_RESOURCES.keys():
             renamed_node = renamed_node + "." + node_title
@@ -147,8 +150,12 @@ def handle_variants(tfdata: dict):
             renamed_node = node
         # Go through each connection and rename
         for resource in list(tfdata["graphdict"][renamed_node]):
+            if resource[-1].isdigit() :
+                resource_name = node.split("-")[0]
+        else:
+            resource_name = resource
             variant_suffix = helpers.check_variant(
-                resource, tfdata["meta_data"][resource.split("-")[0]]
+                resource, tfdata["meta_data"][resource_name]
             )
             variant_label = resource.split(".")[1]
             if (

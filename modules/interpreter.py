@@ -392,6 +392,8 @@ def get_metadata(tfdata):  # -> set
     """
     node_list = []
     meta_data = dict()
+    # Default module is assumed main unless over-ridden
+    mod = "main"
     if not tfdata.get("all_resource"):
         click.echo(
             click.style(
@@ -407,9 +409,8 @@ def get_metadata(tfdata):  # -> set
             # We have a module file being processed
             modarr = filename.split(";")
             mod = modarr[1]
-        else:
+        elif 'all_module' in tfdata.keys():
             # Default module assumed to be main
-            mod = "main"
             # Search for mod name in all_module and switch module scope if found
             for _, module_list in tfdata["all_module"].items():
                 for module in module_list:
