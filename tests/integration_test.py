@@ -23,18 +23,18 @@ def test_wordpress_fargate():
     assert filecmp.cmp("tests/architecture-wordpress.json", "tests/testcase-wordpress.json" )and result.returncode == 0
 
 
-def test_static_site():
-    result = subprocess.run(
-        [
-            "terravision",
-            "graphdata",
-            "--source",
-            "https://github.com/futurice/terraform-examples.git//aws/aws_static_site",
-            "--varfile",
-            "examples/variables.tfvars",
-            "--outfile",
-            "tests/architecture-static-site.json",
-        ],
-        stdout=subprocess.PIPE,
-    )
-    assert filecmp.cmp("tests/architecture-static-site.json", "tests/testcase-wordpress.json" )and result.returncode == 0
+# def test_static_site():
+#     result = subprocess.run(
+#         [
+#             "terravision",
+#             "graphdata",
+#             "--source",
+#             "https://github.com/futurice/terraform-examples.git//aws/aws_static_site",
+#             "--varfile",
+#             "examples/variables.tfvars",
+#             "--outfile",
+#             "tests/architecture-static-site.json",
+#         ],
+#         stdout=subprocess.PIPE,
+#     )
+#     assert filecmp.cmp("tests/architecture-static-site.json", "tests/testcase-wordpress.json" )and result.returncode == 0

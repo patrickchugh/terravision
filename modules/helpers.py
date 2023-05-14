@@ -279,6 +279,15 @@ def check_variant(resource: str, metadata: dict) -> str:
             return False
     return False
 
+def find_replace(find: str, replace: str, string: str) :
+    original_string = string
+    string = string.replace(find + ' ', replace)
+    string = string.replace(find + ',', replace)
+    string = string.replace(find + '}', replace)
+    string = string.replace(find + ')', replace)
+    if string == original_string :
+        string = string.replace(find, replace)
+    return string
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
