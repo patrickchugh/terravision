@@ -234,11 +234,14 @@ class Conversion:
         exp = exp.replace("[", "")
         exp = exp.replace("]", "")
         exp = exp.replace("!F", "T")
+        exp = exp.replace("!  None", 'F')
         exp = exp.replace('"None"', '""')
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)
         for np in none_parameters:
             exp = exp.replace(np, '""')
+        
         exp = exp.replace("None", '""')
+        exp = exp.replace("  ", "")
         exp = self.hash_strings(exp)
         counter = -1
         tried = 1

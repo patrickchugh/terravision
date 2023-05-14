@@ -60,33 +60,36 @@ def aws_handle_autoscaling(tfdata: dict):
             pass
     return tfdata
 
-
+# Create link to CF if its domain name is referred to in other metadata
 def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> str:
     for key, value in mdata.items():
         for k, v in value.items():
-            if domain in str(v) and not domain.startswith("aws_"):
+            if domain in str(v) and not domain.startswith("aws_") and not key.startswith("aws_cloudfront") and not key.startswith("aws_route53"):
                 o = origin_string.replace(domain, key)
                 return origin_string.replace(domain, key)
     return origin_string
 
 
-def aws_handle_cloudfront(tfdata: dict):
+def aws_handle_cloudfront_pregraph(tfdata: dict):
     cf_data = [s for s in tfdata["meta_data"].keys() if "aws_cloudfront" in s]
     if cf_data:
         for cf_resource in cf_data:
             if "origin" in tfdata["meta_data"][cf_resource]:
                 origin_source = tfdata["meta_data"][cf_resource]["origin"]
-                if isinstance(origin_source, str) and origin_source.startswith("{"):
+                if isinstance(origin_source, str) and (origin_source.startswith("{") or origin_source.startswith("[")):
                     origin_source = helpers.literal_eval(origin_source)
-                origin_domain = helpers.cleanup(
-                    origin_source.get("domain_name")
-                ).strip()
-                if origin_domain:
-                    tfdata["meta_data"][cf_resource][
-                        "origin"
-                    ] = handle_cloudfront_domains(
-                        str(origin_source), origin_domain, tfdata["meta_data"]
-                    )
+                if isinstance(origin_source, list)  :
+                    origin_source = origin_source[0]    
+                if isinstance(origin_source,dict):     
+                    origin_domain = helpers.cleanup(
+                        origin_source.get("domain_name")
+                    ).strip()
+                    if origin_domain:
+                        tfdata["meta_data"][cf_resource][
+                            "origin"
+                        ] = handle_cloudfront_domains(
+                            str(origin_source), origin_domain, tfdata["meta_data"]
+                        )
     return tfdata
 
 

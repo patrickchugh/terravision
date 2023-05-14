@@ -279,6 +279,15 @@ def check_variant(resource: str, metadata: dict) -> str:
             return False
     return False
 
+def find_replace(find: str, replace: str, string: str) :
+    original_string = string
+    string = string.replace(find + ' ', replace)
+    string = string.replace(find + ',', replace)
+    string = string.replace(find + '}', replace)
+    string = string.replace(find + ')', replace)
+    if string == original_string :
+        string = string.replace(find, replace)
+    return string
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
@@ -287,8 +296,8 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
         elif isinstance(value, dict):
-            for subkey in value:
-                if target in value[subkey]:
+            for subkey in value.keys():
+                if target in str(value[subkey]) or target in subkey:
                     final_list.append(key)
         elif isinstance(value, list):
             if target in value:
@@ -361,8 +370,7 @@ def cleanup_curlies(text: str) -> str:
 # Cleans out special characters
 def cleanup(text: str) -> str:
     text = str(text)
-    # for ch in ['\\', '`', '*', '{', '}', '[', ']', '(', ')', '>', '!', '$', '\'', '"']:
-    for ch in ["\\", "`", "*", "{", "}", "(", ")", ">", "!", "$", "'", '"', "  "]:
+    for ch in ["\\", "`", "*", "{", "}", "(", ")", ">", "!", "$", "'", '"', "  ",",","["]:
         if ch in text:
             text = text.replace(ch, " ")
     return text.strip()

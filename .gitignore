@@ -134,3 +134,4 @@ architecture.dot
 .vscode/
 architecture.dot.png
 architecture.gv.dot
+tests/architecture*.json

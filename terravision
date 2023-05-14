@@ -157,6 +157,8 @@ def graphdata(
             sort_keys=True,
         )
     )
+    if not outfile.endswith(".json"):
+        outfile += ".json"
     click.echo(f"\nExporting graph object into file {outfile}")
     with open(outfile, "w") as f:
         json.dump(
