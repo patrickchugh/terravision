@@ -1,5 +1,5 @@
 # TerraVision
-TerraVision is a CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams. It runs  100% Client Side and dynamically parses your conditionally created resources and variables in Terraform for automatic visualisation of your architecture. Terravision is designed to be a Docs as Code tool that can be included in your CI/CD pipeline for automatically generating architecture diagrams that are accurate and always up to date after your build/test/release pipeline phases. Currently Supports AWS and soon Google and Azure cloud.
+TerraVision is a CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams. It solves the problem of keeping documentation up to date and is far more accurate than relying on the initial diagram hand drawn by the cloud architect that doesn't match reality anymore. It runs 100% Client Side and dynamically parses your conditionally created resources and variables in Terraform to generate an automatic image or text representation of your architecture. Terravision is designed to be a 'Docs as Code' (DaC) tool that can be included in your CI/CD pipeline to update architecture diagrams after your build/test/release pipeline phases. Currently Supports AWS and soon Google and Azure cloud.
 
 Turn this... 
 
@@ -22,16 +22,16 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 	- Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
 	- YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
 3. Consistency across organisation
-	- Do you have standard modules or code blocks for all applications? Terravision auto downloads external modules to ensure the most updated architecture shown for all downstream Terraform projects
-	- Consistent design of architecture diagrams using industry standard icons and style across teams (Standardised company logo, specific png artwork also possible)
+	- Auto downloads your organisational / external modules to ensure the latest view of downstream Terraform modules
+	- Consistent design of architecture diagrams using industry standard icons and AWS/GCP/Azure approved style across teams 
 4. Accurate Visibility 
-	- Real time state of diagram shows current infrastructure that matches exactly what is deployed in production, not a diagram of how the app looked 6 months ago
-	- Helps in architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
+	- Real time state of diagram shows current infrastructure that matches exactly what is deployed in production today
+	- Helps in third party architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
 	- Custom Diagram code and output images can be put into source/version control for better maintainability and discoverability
 5. Security
 	- Don't need to give access to your AWS account or CLI to draw diagram
 	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
-    - All source code stays in your local environment, diagrams are generated on your machines
+  - All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
 
 # Installation and Usage
 
@@ -65,6 +65,8 @@ Unrelated to my project, but here are a few third-party Terraform examples to tr
 terravision draw --source https://github.com/futurice/terraform-examples.git//aws/aws_static_site --varfile examples/variables.tfvars --show
 
 terravision draw --source https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate --varfile examples/variables.tfvars --show
+
+terravision draw --source https://github.com/k-mitevski/terraform-k8s.git//01_terraform_eks --show
 
 
 ```

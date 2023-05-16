@@ -208,7 +208,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
     target_has_count = (
         tfdata["meta_data"][target_resource].get("count")
-        and tfdata["meta_data"][target_resource].get("count") > 1
+        and tfdata["meta_data"][target_resource].get("count") >= 1
     )
     not_already_multiple = "-" not in target_resource
     no_special_handler = (
