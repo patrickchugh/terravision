@@ -31,7 +31,7 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 5. Security
 	- Don't need to give access to your AWS account or CLI to draw diagram
 	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
-  - All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
+  	- All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
 
 # Installation and Usage
 
