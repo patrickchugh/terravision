@@ -78,6 +78,13 @@ AWS_CONSOLIDATED_NODES = [
             "import_location": "resource_classes.aws.storage",
             "vpc": False,
         }
+    },
+    {
+        "aws_kms": {
+            "resource_name": "aws_kms_key.kms",
+            "import_location": "resource_classes.aws.kms",
+            "vpc": False,
+        }
     }
 ]
 
@@ -115,8 +122,10 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_route53": {"link": ["tv_aws_users.users"], "arrow": "reverse"}},
     {"aws_dx": {"link": ["tv_aws_onprem.corporate_datacenter", "tv_aws_cgw.customer_gateway"], "arrow": "forward"}},
     {"aws_internet_gateway": {"link": ["tv_aws_internet.internet"], "arrow": "forward"}},
+    {"aws_eks_cluster": {"link": ["aws_eks_service.eks"], "arrow": "reverse"}},
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
+    {"aws_eks_cluster": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
     {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
     {"aws_lambda": {"link": ["aws_cloudwatch_log_group.cloudwatch"], "arrow": "forward"}}
 

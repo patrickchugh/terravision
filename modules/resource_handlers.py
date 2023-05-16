@@ -258,3 +258,9 @@ def aws_handle_dbsubnet(tfdata: dict):
     for dbs in db_subnet_nodes:
         del tfdata["graphdict"][dbs]
     return tfdata
+
+def aws_handle_eks(tfdata: dict) :
+    eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
+    # for eks in eks_nodes:
+    #     del tfdata["graphdict"][eks]
+    return tfdata

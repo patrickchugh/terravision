@@ -5,7 +5,7 @@ phases:
     runtime-versions:
       python: 3.7
     commands:
-      - pip3 install pytest PyInstaller click python-hcl2 GitPython graphviz requests tqdm
+      - pip3 install -r requirements.txt
       - git version
   pre_build:
     commands:

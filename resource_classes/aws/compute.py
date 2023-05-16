@@ -23,6 +23,8 @@ class ElasticContainerRegistry(_Compute):
 class EC2(_Compute):
     _icon = "ec2.png"
 
+class EC2_instances(_Compute):
+    _icon = "ec2-instances.png"
 
 class ElasticBeanstalk(_Compute):
     _icon = "elastic-beanstalk.png"
@@ -111,6 +113,7 @@ aws_fargate= Fargate
 aws_ecs_ec2 = EC2
 aws_ec2ecs = EC2
 aws_eks_service = ElasticKubernetesService
+aws_eks_cluster = EC2_instances
 aws_elastic_beanstalk_application = ElasticBeanstalk
 aws_instance = EC2
 aws_lambda_function = Lambda
