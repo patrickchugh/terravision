@@ -17,7 +17,7 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 	- Save Visio/Drawing software licenses - Terravision is free and open source
 	- Doesn't require any cost incurring cloud resources to be spun up, it works instantly from your local machine
 2. Accelerate and Automate
-	- Wasting time with diagram tools aligning, connecting dots and laying out icons is not the best use of a highly paid architects time
+	- Regularlly updating diagrams aligning, connecting dots and laying out icons is not the best use of a highly paid architects time
 	- Use TF variable files as inputs to create multiple variant diagrams from the same TF code
 	- Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
 	- YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
