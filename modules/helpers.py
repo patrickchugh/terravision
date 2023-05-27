@@ -367,6 +367,30 @@ def cleanup_curlies(text: str) -> str:
     return text.strip()
 
 
+# Filter out ${} variable padding from strings
+def strip_var_curlies(s: str):
+    final_string = ""
+    stack = []
+    if "${" in s:
+        s = s.replace("${", "~")
+    for i in range(len(s)):
+        if s[i] == "~" :
+            stack.append(s[i])
+        elif (s[i] == "{"):
+            stack.append(s[i])
+            final_string += s[i]
+        elif (stack and stack[-1] == '~' and s[i] == '}'):
+            stack.pop()
+            final_string += " "
+        elif (stack and stack[-1] == '{' and s[i] == '}'):
+            stack.pop()
+            final_string += s[i]
+        else:
+            final_string += s[i]
+    return final_string
+
+
+
 # Cleans out special characters
 def cleanup(text: str) -> str:
     text = str(text)
