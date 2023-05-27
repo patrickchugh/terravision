@@ -212,9 +212,8 @@ def replace_var_values(found_list: list, varobject_found_list: list, value: str,
 
 def find_replace_values(varstring, module, tfdata):
     # Regex string matching to create lists of different variable markers found
-    value = str(varstring)
-    var_found_list = re.findall("\$\{var\.[A-Za-z0-9_\-]+\}", value) or re.findall(
-        "var\.[A-Za-z0-9_\-]+", value)
+    value = helpers.strip_var_curlies(str(varstring))
+    var_found_list = re.findall("var\.[A-Za-z0-9_\-]+", value)
     data_found_list = re.findall("data\.[A-Za-z0-9_\-\.\[\]]+", value)
     varobject_found_list = re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall("local\.[A-Za-z0-9_\-\.\[\]]+", value)
@@ -372,10 +371,14 @@ def handle_conditional_resources(tfdata):
                     click.echo(
                         f"    ERROR: {mod} : {resource} count = 0 (Error in evaluation of value {exp})"
                     )
+                    tfdata['meta_data'][resource]['count'] = 0
+                    tfdata['meta_data'][resource]['ERROR_count'] = eval_string
             else:
                 click.echo(
                     f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
                 )
+                tfdata['meta_data'][resource]['count'] = 0
+                tfdata['meta_data'][resource]['ERROR_count'] = eval_string
     tfdata["hidden"] = [
         key
         for key, attr_list in tfdata["meta_data"].items()

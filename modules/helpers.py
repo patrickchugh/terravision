@@ -286,7 +286,7 @@ def find_replace(find: str, replace: str, string: str) :
     # string = string.replace(find + '}', replace)
     # string = string.replace(find + ')', replace)
     # if string == original_string :
-    string = string.replace(find, replace)
+    string = string.replace(find, replace,1)
     return string
 
 def list_of_parents(searchdict: dict, target: str):
@@ -345,8 +345,6 @@ def fix_lists(eval_string: str):
         eval_string = eval_string.replace("${", "", 1)
     eval_string = eval_string.replace("[\"['", "")
     eval_string = eval_string.replace("']\"]", "")
-    # eval_string = eval_string.replace("['", '')
-    # eval_string = eval_string.replace("']", '')
     eval_string = eval_string.replace('["[', "[")
     eval_string = eval_string.replace(']"]', "]")
     eval_string = eval_string.replace("[[", "[")
