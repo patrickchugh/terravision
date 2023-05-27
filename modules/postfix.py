@@ -239,7 +239,7 @@ class Conversion:
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)
         for np in none_parameters:
             exp = exp.replace(np, '""')
-        
+        exp = exp.replace("!None", ' T ')
         exp = exp.replace("None", '""')
         exp = exp.replace("  ", "")
         exp = self.hash_strings(exp)
