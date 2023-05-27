@@ -281,12 +281,12 @@ def check_variant(resource: str, metadata: dict) -> str:
 
 def find_replace(find: str, replace: str, string: str) :
     original_string = string
-    string = string.replace(find + ' ', replace)
-    string = string.replace(find + ',', replace)
-    string = string.replace(find + '}', replace)
-    string = string.replace(find + ')', replace)
-    if string == original_string :
-        string = string.replace(find, replace)
+    # string = string.replace(find + ' ', replace)
+    # # string = string.replace(find + ',', replace)
+    # string = string.replace(find + '}', replace)
+    # string = string.replace(find + ')', replace)
+    # if string == original_string :
+    string = string.replace(find, replace)
     return string
 
 def list_of_parents(searchdict: dict, target: str):
@@ -365,6 +365,30 @@ def cleanup_curlies(text: str) -> str:
         if ch in text:
             text = text.replace(ch, " ")
     return text.strip()
+
+
+# Filter out ${} variable padding from strings
+def strip_var_curlies(s: str):
+    final_string = ""
+    stack = []
+    if "${" in s:
+        s = s.replace("${", "~")
+    for i in range(len(s)):
+        if s[i] == "~" :
+            stack.append(s[i])
+        elif (s[i] == "{"):
+            stack.append(s[i])
+            final_string += s[i]
+        elif (stack and stack[-1] == '~' and s[i] == '}'):
+            stack.pop()
+            final_string += " "
+        elif (stack and stack[-1] == '{' and s[i] == '}'):
+            stack.pop()
+            final_string += s[i]
+        else:
+            final_string += s[i]
+    return final_string
+
 
 
 # Cleans out special characters
