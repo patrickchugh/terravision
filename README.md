@@ -42,10 +42,11 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 ## Quickstart
 1. Install all dependencies as listed above
 2. Clone the repo ``git clone https://github.com/patrickchugh/terravision.git``
-3. Add the terravision folder to your `PATH` value e.g. ``export PATH=$PATH:/Users/yourname/git/terravision/`` so you can run it from anywhere.
-4. Install python requirements ``cd terravision && pip install -r requirements.txt``
-5. Ensure your terravision python script is executable with ``chmod +x terravision`` 
-6. Run `terravision` and specify your Terraform source files in the format:
+3. Get the working directory (full path) by doing `cd terravision` and doing `pwd`.
+4. Add the terravision folder to your `PATH` value e.g. ``export PATH=$PATH:/Users/<PATH TO TERRAFORM>`` so you can run it from anywhere. `<PATH TO TERRAFORM>` would be the output from line 3.
+5. Install python requirements ``cd terravision && pip install -r requirements.txt``
+6. Ensure your terravision python script is executable with ``chmod +x terravision``
+7. Run `terravision` and specify your Terraform source files in the format:
 ``` bash
 $ terravision draw --source ~/src/my-terraform-code
 ```
