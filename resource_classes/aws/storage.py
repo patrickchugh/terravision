@@ -1,5 +1,3 @@
-
-
 from . import _AWS
 
 
@@ -89,6 +87,3 @@ aws_fsx_windows_file_system = FsxForWindowsFileServer
 aws_glacier_vault = S3Glacier
 aws_s3_bucket = SimpleStorageServiceS3
 aws_storagegateway_gateway = StorageGateway
-
-
-

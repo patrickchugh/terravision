@@ -1,12 +1,5 @@
-from ast import literal_eval
-from contextlib import suppress
-
-from modules.tf_function_handlers import tf_function_handlers
-from sys import exit
-
-import modules.helpers as helpers
-import modules.annotations as annotations
 import modules.cloud_config as cloud_config
+import modules.helpers as helpers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -51,20 +44,30 @@ def aws_handle_autoscaling(tfdata: dict):
         pass
     # Now replace any references within subnets to asg targets with the name of asg
     for asg in asg_resources:
-        for connection in tfdata["graphdict"][asg] :
-            asg_target_parents = helpers.list_of_parents(tfdata["graphdict"],connection)
-            subnets_to_change = [k for k in asg_target_parents if k.startswith("aws_subnet")]
-            for subnet in subnets_to_change :
+        for connection in tfdata["graphdict"][asg]:
+            asg_target_parents = helpers.list_of_parents(
+                tfdata["graphdict"], connection
+            )
+            subnets_to_change = [
+                k for k in asg_target_parents if k.startswith("aws_subnet")
+            ]
+            for subnet in subnets_to_change:
                 tfdata["graphdict"][subnet].append(asg)
                 tfdata["graphdict"][subnet].remove(connection)
             pass
     return tfdata
 
+
 # Create link to CF if its domain name is referred to in other metadata
 def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> str:
     for key, value in mdata.items():
         for k, v in value.items():
-            if domain in str(v) and not domain.startswith("aws_") and not key.startswith("aws_cloudfront") and not key.startswith("aws_route53"):
+            if (
+                domain in str(v)
+                and not domain.startswith("aws_")
+                and not key.startswith("aws_cloudfront")
+                and not key.startswith("aws_route53")
+            ):
                 o = origin_string.replace(domain, key)
                 return origin_string.replace(domain, key)
     return origin_string
@@ -76,11 +79,13 @@ def aws_handle_cloudfront_pregraph(tfdata: dict):
         for cf_resource in cf_data:
             if "origin" in tfdata["meta_data"][cf_resource]:
                 origin_source = tfdata["meta_data"][cf_resource]["origin"]
-                if isinstance(origin_source, str) and (origin_source.startswith("{") or origin_source.startswith("[")):
+                if isinstance(origin_source, str) and (
+                    origin_source.startswith("{") or origin_source.startswith("[")
+                ):
                     origin_source = helpers.literal_eval(origin_source)
-                if isinstance(origin_source, list)  :
-                    origin_source = origin_source[0]    
-                if isinstance(origin_source,dict):     
+                if isinstance(origin_source, list):
+                    origin_source = origin_source[0]
+                if isinstance(origin_source, dict):
                     origin_domain = helpers.cleanup(
                         origin_source.get("domain_name")
                     ).strip()
@@ -103,7 +108,7 @@ def aws_handle_subnet_azs(tfdata: dict):
     for subnet in subnet_resources:
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
         for parent in parents_list:
-            if subnet in tfdata["graphdict"][parent] :
+            if subnet in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].remove(subnet)
             if not tfdata["graphdict"].get("aws_az.az"):
                 tfdata["graphdict"]["aws_az.az"] = [subnet]
@@ -169,7 +174,8 @@ def aws_handle_sg(tfdata: dict):
             if (
                 target in tfdata["graphdict"][node]
                 and not node.startswith("aws_security_group")
-                and node.split(".")[0] in GROUP_NODES and not node.startswith('aws_vpc')
+                and node.split(".")[0] in GROUP_NODES
+                and not node.startswith("aws_vpc")
             ):
                 tfdata["graphdict"][node].remove(target)
                 tfdata["graphdict"][node].append(replacement_sg)
@@ -191,7 +197,7 @@ def aws_handle_sharedgroup(tfdata: dict):
                 tfdata["graphdict"]["aws_group.shared_services"] = []
                 tfdata["meta_data"]["aws_group.shared_services"] = {}
             tfdata["graphdict"]["aws_group.shared_services"].append(node)
-    if tfdata["graphdict"].get("aws_group.shared_services") :
+    if tfdata["graphdict"].get("aws_group.shared_services"):
         for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
             if helpers.consolidated_node_check(service) and "cluster" not in service:
                 tfdata["graphdict"]["aws_group.shared_services"] = list(
@@ -214,23 +220,25 @@ def aws_handle_lb(tfdata: dict):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
             tfdata["graphdict"][renamed_node].append(connection)
-            tfdata["meta_data"][renamed_node] = dict(
-                tfdata["meta_data"]["aws_lb.elb"]
-            )
+            tfdata["meta_data"][renamed_node] = dict(tfdata["meta_data"]["aws_lb.elb"])
             if tfdata["meta_data"][connection].get("count"):
                 if tfdata["meta_data"][connection].get("count") > 1:
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
             tfdata["graphdict"][lb].remove(connection)
-            parents = helpers.list_of_parents(tfdata['graphdict'],lb)
-            for p in parents :
-                p_type = p.split('.')[0] 
-                if p_type in GROUP_NODES and p_type not in SHARED_SERVICES and p_type != 'aws_vpc':
+            parents = helpers.list_of_parents(tfdata["graphdict"], lb)
+            for p in parents:
+                p_type = p.split(".")[0]
+                if (
+                    p_type in GROUP_NODES
+                    and p_type not in SHARED_SERVICES
+                    and p_type != "aws_vpc"
+                ):
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
     tfdata["graphdict"][lb].append(renamed_node)
-    
+
     return tfdata
 
 
@@ -259,7 +267,8 @@ def aws_handle_dbsubnet(tfdata: dict):
         del tfdata["graphdict"][dbs]
     return tfdata
 
-def aws_handle_eks(tfdata: dict) :
+
+def aws_handle_eks(tfdata: dict):
     eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
     # for eks in eks_nodes:
     #     del tfdata["graphdict"][eks]

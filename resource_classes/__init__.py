@@ -3,19 +3,20 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import List, Union, Dict
-#from graphviz import Digraph
-from graphviz import Source, Digraph, render
 from random import randint
+from typing import Dict, List, Union
+
+# from graphviz import Digraph
+from graphviz import Digraph, Source, render
 
 # Global contexts for a resource_classes and a cluster.
 # Allowing all nodes to draw to one canvas class
 
 __diagram = contextvars.ContextVar("resource_classes")
 __cluster = contextvars.ContextVar("cluster")
-defaultdir = 'LR'
+defaultdir = "LR"
 
-#basepath = os.environ.get('resource_images', '/home/username/')
+# basepath = os.environ.get('resource_images', '/home/username/')
 try:
     base_path = sys._MEIPASS
 except:
@@ -121,7 +122,7 @@ class Canvas:
         elif not filename:
             filename = "_".join(self.name.split()).lower()
         self.filename = filename
-        self.dot = Digraph(self.name, filename=self.filename + '.gv')
+        self.dot = Digraph(self.name, filename=self.filename + ".gv")
 
         # Set Title of Diagram
         self.dot.graph_attr["label"] = self.name
@@ -144,7 +145,7 @@ class Canvas:
         #     raise ValueError(f'"{curvestyle}" is not a valid curvestyle')
         self.dot.graph_attr["splines"] = curvestyle
 
-        if not self._validate_outformat(outformat) and outformat !='dot':
+        if not self._validate_outformat(outformat) and outformat != "dot":
             raise ValueError(f'"{outformat}" is not a valid output format')
         self.outformat = outformat
 
@@ -208,11 +209,21 @@ class Canvas:
         self.dot.subgraph(dot)
 
     def pre_render(self) -> str:
-        return self.dot.render(format='dot', quiet=True, cleanup=False, directory=Path.cwd())
-    
+        return self.dot.render(
+            format="dot", quiet=True, cleanup=False, directory=Path.cwd()
+        )
+
     def render(self) -> str:
-        dotsource = Source.from_file(self.filename+'.dot', engine='dot', directory=Path.cwd())
-        filename = dotsource.render(format=self.outformat, view=self.show, quiet=True, engine='dot', directory=Path.cwd())
+        dotsource = Source.from_file(
+            self.filename + ".dot", engine="dot", directory=Path.cwd()
+        )
+        filename = dotsource.render(
+            format=self.outformat,
+            view=self.show,
+            quiet=True,
+            engine="dot",
+            directory=Path.cwd(),
+        )
         return filename
 
 
@@ -230,7 +241,10 @@ class Cluster:
     }
 
     def __init__(
-        self, label: str = "cluster", direction: str = "LR", graph_attr: dict = {},
+        self,
+        label: str = "cluster",
+        direction: str = "LR",
+        graph_attr: dict = {},
     ):
         """Cluster represents a cluster context.
 
@@ -284,8 +298,8 @@ class Cluster:
 
     def subgraph(self, dot: Digraph) -> None:
         self.dot.subgraph(dot)
- 
- 
+
+
 class Node:
     """Node represents a node for a specific backend service."""
 
@@ -304,7 +318,7 @@ class Node:
         """
         # Generates an ID for identifying a node.
         self._id = self._rand_id(self, attrs)
-        #label = f'< <font color="blue">{label} </font>>'
+        # label = f'< <font color="blue">{label} </font>>'
         self.label = label
         # fmt: off
         padding = 0.4 * (label.count('\n'))
@@ -348,7 +362,7 @@ class Node:
             return other
 
     def __rsub__(self, other: Union[List["Node"], List["Edge"]]):
-        """ Called for [Nodes] and [Edges] - Self because list don't have __sub__ operators. """
+        """Called for [Nodes] and [Edges] - Self because list don't have __sub__ operators."""
         for o in other:
             if isinstance(o, Edge):
                 o.connect(self)
@@ -506,7 +520,9 @@ class Edge:
         """Called for [Nodes] or [Edges] << Self because list of Edges don't have __lshift__ operators."""
         return self.append(other, reverse=True)
 
-    def append(self, other: Union[List["Node"], List["Edge"]], forward=None, reverse=None) -> List["Edge"]:
+    def append(
+        self, other: Union[List["Node"], List["Edge"]], forward=None, reverse=None
+    ) -> List["Edge"]:
         result = []
         for o in other:
             if isinstance(o, Edge):
@@ -515,8 +531,7 @@ class Edge:
                 self._attrs = o.attrs.copy()
                 result.append(o)
             else:
-                result.append(
-                    Edge(o, forward=forward, reverse=reverse, **self._attrs))
+                result.append(Edge(o, forward=forward, reverse=reverse, **self._attrs))
         return result
 
     def connect(self, other: Union["Node", "Edge", List["Node"]]):

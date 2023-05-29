@@ -1,5 +1,3 @@
-
-
 from . import _AWS
 
 
@@ -7,7 +5,8 @@ class _Management(_AWS):
     _type = "management"
     _icon_dir = "resource_images/aws/management"
 
-#TODO: Add Autoscaling as group
+
+# TODO: Add Autoscaling as group
 class AutoScaling(_Management):
     _icon = "auto-scaling.png"
 
@@ -90,7 +89,7 @@ aws_cloudformation_stack = Cloudformation
 aws_cloudformation_stack_set = Cloudformation
 aws_cloudtrail = Cloudtrail
 aws_cloudwatch_log = Cloudwatch
-aws_cloudwatch= Cloudwatch
+aws_cloudwatch = Cloudwatch
 aws_cloudwatch_composite_alarm = Cloudwatch
 aws_cloudwatch_dashboard = Cloudwatch
 aws_cloudwatch_log_destination = Cloudwatch
@@ -110,4 +109,3 @@ aws_servicecatalog_portfolio = ServiceCatalog
 aws_ssm_document = SystemsManager
 aws_ssm_patch_baseline = SystemsManager
 aws_ssm_parameter = SystemsManagerParameterStore
-

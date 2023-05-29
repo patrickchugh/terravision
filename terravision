@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-import click
-import sys
 import json
-import shutil
 import os
-import modules.fileparser as fileparser
-import modules.interpreter as interpreter
-import modules.helpers as helpers
-import modules.drawing as drawing
-import modules.graphmaker as graphmaker
-
-from pprint import pprint
+import shutil
+import sys
 from pathlib import Path
+from pprint import pprint
+
+import click
+
+import modules.drawing as drawing
+import modules.fileparser as fileparser
+import modules.graphmaker as graphmaker
+import modules.helpers as helpers
+import modules.interpreter as interpreter
 
 
 def compile_tfdata(source: list, varfile: list, annotate=""):

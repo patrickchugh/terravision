@@ -1,8 +1,10 @@
 from . import _AWS
 
+
 class _Compute(_AWS):
     _type = "compute"
     _icon_dir = "resource_images/aws/compute"
+
 
 class ApplicationAutoScaling(_Compute):
     _icon = "application-auto-scaling.png"
@@ -23,8 +25,10 @@ class ElasticContainerRegistry(_Compute):
 class EC2(_Compute):
     _icon = "ec2.png"
 
+
 class EC2_instances(_Compute):
     _icon = "ec2-instances.png"
+
 
 class ElasticBeanstalk(_Compute):
     _icon = "elastic-beanstalk.png"
@@ -33,11 +37,14 @@ class ElasticBeanstalk(_Compute):
 class ElasticContainerService(_Compute):
     _icon = "elastic-container-service.png"
 
+
 class ElasticIP(_Compute):
     _icon = "ec2-elastic-ip-address.png"
 
+
 class ElasticKubernetesService(_Compute):
     _icon = "elastic-kubernetes-service.png"
+
 
 ## TODO: Requires review as specified as part of ECS task definition
 class Fargate(_Compute):
@@ -108,8 +115,8 @@ aws_ecrpublic_repository = ElasticContainerRegistry
 aws_ecs_service = ElasticContainerService
 aws_ecs_cluster = ElasticContainerService
 aws_ecs = ElasticContainerService
-aws_ecs_fargate= Fargate
-aws_fargate= Fargate
+aws_ecs_fargate = Fargate
+aws_fargate = Fargate
 aws_ecs_ec2 = EC2
 aws_ec2ecs = EC2
 aws_eks_service = ElasticKubernetesService

@@ -1,6 +1,7 @@
 import filecmp
 import subprocess
 
+
 def test_help():
     result = subprocess.run(["terravision", "--help"], stdout=subprocess.PIPE)
     assert "Terravision" in result.stdout.decode("utf-8") and result.returncode == 0
@@ -20,7 +21,12 @@ def test_wordpress_fargate():
         ],
         stdout=subprocess.PIPE,
     )
-    assert filecmp.cmp("tests/architecture-wordpress.json", "tests/testcase-wordpress.json" )and result.returncode == 0
+    assert (
+        filecmp.cmp(
+            "tests/architecture-wordpress.json", "tests/testcase-wordpress.json"
+        )
+        and result.returncode == 0
+    )
 
 
 # def test_static_site():

@@ -1,6 +1,6 @@
 from ast import literal_eval
-from contextlib import suppress
 from itertools import product
+
 from modules.postfix import Conversion, Evaluate
 
 
@@ -58,9 +58,9 @@ class tf_function_handlers:
         else:
             return False
 
-    def regexall(param) :
+    def regexall(param):
         param = resolve_nested_functions(param)
-        params = param.split(',')
+        params = param.split(",")
         print(params)
 
     def concat(param):
@@ -128,9 +128,14 @@ class tf_function_handlers:
             return 0
         if param.isnumeric():
             return int(param)
-        if param.startswith('"[') or param.startswith('"{') or param.startswith("[") or param.startswith("{"):
-            if param.startswith('"') :
-                param = param.replace('"','')
+        if (
+            param.startswith('"[')
+            or param.startswith('"{')
+            or param.startswith("[")
+            or param.startswith("{")
+        ):
+            if param.startswith('"'):
+                param = param.replace('"', "")
             return len(literal_eval(param))
 
     def keys(param):

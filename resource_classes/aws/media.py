@@ -1,5 +1,3 @@
-
-
 from . import _AWS
 
 
@@ -55,4 +53,3 @@ class ElementalServer(_Media):
 # Aliases
 
 aws_elastictranscoder_pipeline = ElasticTranscoder
-

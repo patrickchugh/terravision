@@ -1,27 +1,18 @@
-import ast
-import fileinput
 import os
 import re
 import shutil
 import tempfile
-import click
-import git
-import hcl2
-import requests
-import yaml
-
-from git import RemoteProgress
-from requests.api import head
-from tqdm import tqdm
-from contextlib import suppress
-from dataclasses import replace
 from pathlib import Path
-from posixpath import dirname, split
 from sys import exit
 from urllib.parse import urlparse
+
+import click
+import git
+import requests
+from git import RemoteProgress
+from tqdm import tqdm
+
 from modules.helpers import *
-from modules.postfix import Conversion, Evaluate
-from sys import exit
 
 # Create Tempdir and Module Cache Directories
 all_repos = list()
@@ -32,6 +23,7 @@ dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 if not os.path.exists(MODULE_DIR):
     os.makedirs(MODULE_DIR)
+
 
 class CloneProgress(RemoteProgress):
     def __init__(self):
@@ -120,11 +112,11 @@ def get_clone_url(sourceURL: str):
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
         try:
-            module_repo = gitaddress.replace('/','_')
+            module_repo = gitaddress.replace("/", "_")
             module_cache_path = os.path.join(MODULE_DIR, module_repo)
             if os.path.exists(module_cache_path):
                 githubURL = gitaddress
-            else :
+            else:
                 r = requests.get(domain + gitaddress, headers=headers)
                 githubURL = r.json()["source"]
         except:

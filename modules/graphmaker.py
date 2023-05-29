@@ -1,13 +1,10 @@
-from ast import literal_eval
-from contextlib import suppress
-import click
 import json
-from modules.tf_function_handlers import tf_function_handlers
-from sys import exit
-import sys
-import modules.helpers as helpers
+
+import click
+
 import modules.annotations as annotations
 import modules.cloud_config as cloud_config
+import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
@@ -127,7 +124,7 @@ def consolidate_nodes(tfdata: dict):
             tfdata["graphdict"][connected_resource] = list(
                 filter(lambda a: a != "null", tfdata["graphdict"][connected_resource])
             )
-        if resource.startswith("null_resource") :
+        if resource.startswith("null_resource"):
             del tfdata["graphdict"][resource]
     tfdata["graphdict"] = tfdata["graphdict"]
     return tfdata
@@ -137,7 +134,7 @@ def handle_variants(tfdata: dict):
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
         node_title = node.split(".")[1]
-        if node[-1].isdigit() and node[-2] == '-':
+        if node[-1].isdigit() and node[-2] == "-":
             node_name = node.split("-")[0]
         else:
             node_name = node
@@ -150,7 +147,7 @@ def handle_variants(tfdata: dict):
             renamed_node = node
         # Go through each connection and rename
         for resource in list(tfdata["graphdict"][renamed_node]):
-            if resource[-1].isdigit() and resource[-2] == '-':
+            if resource[-1].isdigit() and resource[-2] == "-":
                 resource_name = resource.split("-")[0]
             else:
                 resource_name = resource
@@ -414,7 +411,7 @@ def handle_special_resources(tfdata: dict, graph_dict=True):
     resource_types = [k.split(".")[0] for k in tfdata["node_list"]]
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
-        if (resource_prefix in resource_types or matching_substring):
+        if resource_prefix in resource_types or matching_substring:
             if graph_dict:
                 tfdata = getattr(resource_handlers, handler)(tfdata)
             elif handler.endswith("_pregraph"):
@@ -441,7 +438,9 @@ def dict_generator(indict, pre=None):
 
 
 # Function to check whether a particular resource mentions another known resource (relationship)
-def check_relationship(listitem: str, plist: list, nodes: list, hidden: dict):# -> list
+def check_relationship(
+    listitem: str, plist: list, nodes: list, hidden: dict
+):  # -> list
     connection_list = []
     resource_name = helpers.cleanup(listitem)
     resource_associated_with = plist[1] + "." + plist[2]
