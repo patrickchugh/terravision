@@ -1,0 +1,50 @@
+{
+    "aws_acm_certificate.acm": [
+        "random_string.name_suffix"
+    ],
+    "aws_cloudfront_distribution.this": [
+        "aws_acm_certificate.acm",
+        "aws_lambda_function.origin_response",
+        "aws_lambda_function.viewer_request",
+        "random_string.s3_read_password"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_group.shared_services": [
+        "aws_acm_certificate.acm",
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_iam_policy.this": [
+        "random_string.name_suffix"
+    ],
+    "aws_iam_role.this": [
+        "aws_iam_role_policy_attachment.this",
+        "aws_lambda_function.origin_response",
+        "aws_lambda_function.viewer_request",
+        "random_string.name_suffix"
+    ],
+    "aws_iam_role_policy_attachment.this": [
+        "aws_iam_policy.this"
+    ],
+    "aws_lambda_function.origin_response": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "random_string.name_suffix"
+    ],
+    "aws_lambda_function.viewer_request": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "random_string.name_suffix"
+    ],
+    "aws_route53_record.route_53": [
+        "aws_acm_certificate.acm",
+        "aws_cloudfront_distribution.this"
+    ],
+    "aws_s3_bucket.this": [],
+    "aws_s3_bucket_policy.this": [
+        "random_string.s3_read_password"
+    ],
+    "random_string.name_suffix": [],
+    "random_string.s3_read_password": [],
+    "random_string.zipfile_name": [],
+    "tv_aws_users.users": [
+        "aws_route53_record.route_53"
+    ]
+}
