@@ -51,7 +51,7 @@ jobs:
       # install your root project, if required
       #----------------------------------------------
       - name: Install project
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --with test
 
       #----------------------------------------------
       # add terravision to PATH
