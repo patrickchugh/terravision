@@ -1,5 +1,6 @@
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
+from ast import literal_eval
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -82,7 +83,7 @@ def aws_handle_cloudfront_pregraph(tfdata: dict):
                 if isinstance(origin_source, str) and (
                     origin_source.startswith("{") or origin_source.startswith("[")
                 ):
-                    origin_source = helpers.literal_eval(origin_source)
+                    origin_source = literal_eval(origin_source)
                 if isinstance(origin_source, list):
                     origin_source = origin_source[0]
                 if isinstance(origin_source, dict):
