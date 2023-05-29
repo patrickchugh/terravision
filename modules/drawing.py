@@ -8,6 +8,7 @@ import click
 
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
+
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
 from resource_classes.aws.analytics import *
