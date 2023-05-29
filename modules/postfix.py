@@ -1,6 +1,5 @@
 import hashlib
 import re
-import sys
 
 
 def compute_hash(bstring):

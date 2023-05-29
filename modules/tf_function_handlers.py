@@ -1,5 +1,4 @@
 from ast import literal_eval
-from contextlib import suppress
 from itertools import product
 
 from modules.postfix import Conversion, Evaluate

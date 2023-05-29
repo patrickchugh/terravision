@@ -3,20 +3,14 @@ import os
 import re
 import tempfile
 from contextlib import suppress
-from dataclasses import replace
 from pathlib import Path
-from posixpath import dirname, split
 from sys import exit
-from urllib.parse import urlparse
 
 import click
 import yaml
-from requests.api import head
-from tqdm import tqdm
 
 import hcl2
 import modules.gitlibs as gitlibs
-import modules.helpers as helpers
 
 # Create Tempdir and Module Cache Directories
 all_repos = list()

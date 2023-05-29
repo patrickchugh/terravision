@@ -1,6 +1,5 @@
 import os
 import re
-from ast import literal_eval
 from contextlib import suppress
 from pathlib import Path
 from sys import exit

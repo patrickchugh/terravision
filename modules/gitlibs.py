@@ -1,27 +1,19 @@
-import ast
-import fileinput
+
 import os
 import re
 import shutil
 import tempfile
-from contextlib import suppress
-from dataclasses import replace
 from pathlib import Path
-from posixpath import dirname, split
 from sys import exit
 from urllib.parse import urlparse
 
 import click
 import git
 import requests
-import yaml
 from git import RemoteProgress
-from requests.api import head
 from tqdm import tqdm
 
-import hcl2
 from modules.helpers import *
-from modules.postfix import Conversion, Evaluate
 
 # Create Tempdir and Module Cache Directories
 all_repos = list()

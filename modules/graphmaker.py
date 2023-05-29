@@ -1,8 +1,4 @@
 import json
-import sys
-from ast import literal_eval
-from contextlib import suppress
-from sys import exit
 
 import click
 
@@ -10,7 +6,6 @@ import modules.annotations as annotations
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
-from modules.tf_function_handlers import tf_function_handlers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
