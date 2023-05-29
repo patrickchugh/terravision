@@ -93,7 +93,7 @@ def cli():
     default="architecture",
     help="Filename for output diagram (default architecture.dot.png)",
 )
-@click.option("--format", default="png", help="File format (png/pdf/svg/json/bmp)")
+@click.option("--format", default="png", help="File format (png/pdf/svg/bmp)")
 @click.option(
     "--show", is_flag=True, default=False, help="Show diagram after generation"
 )
