@@ -2,10 +2,10 @@
 
 ## Type of Change
 
-[ ] Bug Fix
-[ ] New Feature
-[ ] Refactor
-[ ] Documentation
+* [ ] Bug Fix
+* [ ] New Feature
+* [ ] Refactor
+* [ ] Documentation
 
 ## Checklist
 
