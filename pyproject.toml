@@ -19,3 +19,9 @@ python-hcl2 = "4.3.0"
 pyinstaller = "5.8.0"
 python = ">=3.9,<3.11"
 PyYAML = "6.0"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.1"
