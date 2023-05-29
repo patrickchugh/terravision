@@ -2,7 +2,7 @@
 ---
 name: lint-and-test
 
-on: [push, fork]
+on: push
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
