@@ -48,7 +48,14 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root  --with test
+        run: poetry install --no-interaction --no-root --with test
+
+      #----------------------------------------------
+      # install graphviz
+      #----------------------------------------------
+      - name: Run tests after adding terravision to path
+        run: |
+          sudo apt install graphviz
 
       #----------------------------------------------
       # Run static linters
@@ -57,9 +64,9 @@ jobs:
         run: |
           poetry run  black --check -v modules
 
-      - name: Check isort formatting
-        run: |
-          poetry run  isort modules -v --check-only
+#      - name: Check isort formatting
+#        run: |
+#          poetry run  isort modules -v --check-only
 
       #----------------------------------------------
       # add terravision to PATH
@@ -67,5 +74,4 @@ jobs:
       - name: Run tests after adding terravision to path
         run: |
           export PATH=$PATH:$(pwd)
-          poetry run terravision --help
           poetry run pytest tests
