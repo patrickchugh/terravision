@@ -1,46 +1,57 @@
-import modules.cloud_config as cloud_config
-import click
 import sys
+
+import click
+
+import modules.cloud_config as cloud_config
 import modules.helpers as helpers
- 
+
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 
+
 def add_annotations(tfdata: dict):
-    graphdict = tfdata['graphdict']
+    graphdict = tfdata["graphdict"]
     for node in list(graphdict):
         for auto_node in AUTO_ANNOTATIONS:
             node_prefix = str(list(auto_node.keys())[0])
             if node.startswith(node_prefix):
-                new_nodes = auto_node[node_prefix]['link']
+                new_nodes = auto_node[node_prefix]["link"]
                 for new_node in new_nodes:
-                    if new_node.endswith('.*') :                      
-                        annotation_node = helpers.find_resource_containing(tfdata['graphdict'].keys(), new_node.split('.')[0])
-                        if not annotation_node :
-                            click.echo(f'ERROR: Cannot find any resource with mask "{new_node}" for annotations!')
+                    if new_node.endswith(".*"):
+                        annotation_node = helpers.find_resource_containing(
+                            tfdata["graphdict"].keys(), new_node.split(".")[0]
+                        )
+                        if not annotation_node:
+                            click.echo(
+                                f'ERROR: Cannot find any resource with mask "{new_node}" for annotations!'
+                            )
                             sys.exit()
-                    else :
+                    else:
                         annotation_node = new_node
-                    if auto_node[node_prefix]['arrow'] == 'forward' :
-                        graphdict[node] = helpers.append_dictlist(graphdict[node], annotation_node)
-                        if not graphdict.get(annotation_node) :
+                    if auto_node[node_prefix]["arrow"] == "forward":
+                        graphdict[node] = helpers.append_dictlist(
+                            graphdict[node], annotation_node
+                        )
+                        if not graphdict.get(annotation_node):
                             graphdict[annotation_node] = list()
-                    else :
-                        if graphdict.get(annotation_node) :
+                    else:
+                        if graphdict.get(annotation_node):
                             new_connections = list(graphdict[annotation_node])
                             new_connections.append(annotation_node)
                             graphdict[annotation_node] = list(new_connections)
                         else:
                             graphdict[annotation_node] = [node]
-                    tfdata['meta_data'][annotation_node] = dict()
+                    tfdata["meta_data"][annotation_node] = dict()
 
-    tfdata['graphdict'] = graphdict
+    tfdata["graphdict"] = graphdict
     # Check if user has supplied annotations file
-    if tfdata.get('annotations') :
-        tfdata['graphdict'] = modify_nodes(tfdata['graphdict'], tfdata['annotations'])
-        tfdata['meta_data'] = modify_metadata(tfdata['annotations'], tfdata['graphdict'], tfdata['meta_data']) 
+    if tfdata.get("annotations"):
+        tfdata["graphdict"] = modify_nodes(tfdata["graphdict"], tfdata["annotations"])
+        tfdata["meta_data"] = modify_metadata(
+            tfdata["annotations"], tfdata["graphdict"], tfdata["meta_data"]
+        )
     return tfdata
 
-    
+
 # TODO: Make this function DRY
 def modify_nodes(graphdict: dict, annotate: dict) -> dict:
     click.echo("\nUser Defined Modifications :\n")
@@ -118,4 +129,3 @@ def modify_metadata(annotations, graphdict: dict, metadata: dict) -> dict:
                 else:
                     metadata[node][param] = annotations["update"][node][param]
     return metadata
-

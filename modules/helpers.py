@@ -1,12 +1,14 @@
-from ast import literal_eval
-from contextlib import suppress
-import click
 import os
 import re
-from modules.tf_function_handlers import tf_function_handlers
-from sys import exit
+from ast import literal_eval
+from contextlib import suppress
 from pathlib import Path
+from sys import exit
+
+import click
+
 import modules.cloud_config as cloud_config
+from modules.tf_function_handlers import tf_function_handlers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -26,12 +28,14 @@ def check_for_domain(string: str) -> bool:
             return True
     return False
 
-def check_list_for_dash(connections: list) :
+
+def check_list_for_dash(connections: list):
     has_dash = True
     for item in connections:
-        if not '-' in item :
+        if not "-" in item:
             has_dash = False
     return has_dash
+
 
 def sort_graphdict(graphdict: dict):
     for key in graphdict:
@@ -211,12 +215,14 @@ def output_log(tfdata):
                 for item in valuelist:
                     if isinstance(item, dict):
                         for key in item:
-                            output_string = f"    {fname}: {key}.{next(iter(item[key]))}"
-                            output_string = output_string.replace(';','|')
+                            output_string = (
+                                f"    {fname}: {key}.{next(iter(item[key]))}"
+                            )
+                            output_string = output_string.replace(";", "|")
                             click.echo(output_string)
                     else:
                         output_string = f"    {fname}: {item}"
-                        output_string = output_string.replace(';','|')
+                        output_string = output_string.replace(";", "|")
                         click.echo(output_string)
     if tfdata.get("variable_map"):
         click.echo("\n  Variable List:")
@@ -251,8 +257,8 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
     for item in searchdict:
         if target_resource in searchdict[item]:
             final_dict[item] = searchdict[item]
-        for listitem in searchdict[item] :
-            if target_resource in listitem :
+        for listitem in searchdict[item]:
+            if target_resource in listitem:
                 final_dict[item] = searchdict[item]
     return final_dict
 
@@ -269,25 +275,31 @@ def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)
     return new_list
-    
+
+
 def check_variant(resource: str, metadata: dict) -> str:
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):
             for keyword in NODE_VARIANTS[variant_service]:
-                if keyword in str(metadata) and  NODE_VARIANTS[variant_service] != resource:
+                if (
+                    keyword in str(metadata)
+                    and NODE_VARIANTS[variant_service] != resource
+                ):
                     return NODE_VARIANTS[variant_service][keyword]
             return False
     return False
 
-def find_replace(find: str, replace: str, string: str) :
+
+def find_replace(find: str, replace: str, string: str):
     original_string = string
     # string = string.replace(find + ' ', replace)
     # # string = string.replace(find + ',', replace)
     # string = string.replace(find + '}', replace)
     # string = string.replace(find + ')', replace)
     # if string == original_string :
-    string = string.replace(find, replace,1)
+    string = string.replace(find, replace, 1)
     return string
+
 
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
@@ -303,19 +315,22 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
             for item in value:
-                if not item :
+                if not item:
                     continue
-                if item.startswith(target) and key not in final_list :
+                if item.startswith(target) and key not in final_list:
                     final_list.append(key)
     return final_list
 
-def any_parent_has_count(tfdata: dict, target_resource: str) :
+
+def any_parent_has_count(tfdata: dict, target_resource: str):
     parents_list = list_of_parents(tfdata["graphdict"], target_resource)
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
     for parent in parents_list:
         if (
-            tfdata["meta_data"].get(parent) and tfdata["meta_data"][parent].get("count") and tfdata["meta_data"][parent].get("count") >1
+            tfdata["meta_data"].get(parent)
+            and tfdata["meta_data"][parent].get("count")
+            and tfdata["meta_data"][parent].get("count") > 1
         ) or "-" in parent:
             any_parent_has_count = True
     return any_parent_has_count
@@ -328,6 +343,7 @@ def consolidated_node_check(resource_type: str):
         if resource_type.startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
+
 
 def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
     final_list = list()
@@ -372,15 +388,15 @@ def strip_var_curlies(s: str):
     if "${" in s:
         s = s.replace("${", "~")
     for i in range(len(s)):
-        if s[i] == "~" :
+        if s[i] == "~":
             stack.append(s[i])
-        elif (s[i] == "{"):
+        elif s[i] == "{":
             stack.append(s[i])
             final_string += s[i]
-        elif (stack and stack[-1] == '~' and s[i] == '}'):
+        elif stack and stack[-1] == "~" and s[i] == "}":
             stack.pop()
             final_string += " "
-        elif (stack and stack[-1] == '{' and s[i] == '}'):
+        elif stack and stack[-1] == "{" and s[i] == "}":
             stack.pop()
             final_string += s[i]
         else:
@@ -388,11 +404,26 @@ def strip_var_curlies(s: str):
     return final_string
 
 
-
 # Cleans out special characters
 def cleanup(text: str) -> str:
     text = str(text)
-    for ch in ["\\", "`", "*", "{", "}", "(", ")", ">", "!", "$", "'", '"', "  ",",","["]:
+    for ch in [
+        "\\",
+        "`",
+        "*",
+        "{",
+        "}",
+        "(",
+        ")",
+        ">",
+        "!",
+        "$",
+        "'",
+        '"',
+        "  ",
+        ",",
+        "[",
+    ]:
         if ch in text:
             text = text.replace(ch, " ")
     return text.strip()

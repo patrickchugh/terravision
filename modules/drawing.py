@@ -1,14 +1,13 @@
-from distutils.command.check import check
-import modules.helpers as helpers
-import click
+import datetime
 import os
 import sys
+from distutils.command.check import check
 from pathlib import Path
-import modules.helpers as helpers
+
+import click
+
 import modules.cloud_config as cloud_config
-
-import datetime
-
+import modules.helpers as helpers
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
 from resource_classes.aws.analytics import *
@@ -314,7 +313,7 @@ def render_diagram(
         "fontsize": "20",
         "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
     }
-    #getattr(sys.modules[__name__], "Node")(**footer_style)
+    # getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
     setcluster(cloudGroup)
@@ -347,6 +346,6 @@ def render_diagram(
     click.echo(f"  Output file: {myDiagram.render()}")
     os.remove(path_to_predot)
     os.remove(path_to_postdot)
-    os.remove(outfile+'.gv')
+    os.remove(outfile + ".gv")
     click.echo(f"  Completed!")
     setdiagram(None)

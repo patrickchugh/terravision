@@ -1,5 +1,3 @@
-
-
 from . import _AWS
 
 
@@ -7,7 +5,8 @@ class _Database(_AWS):
     _type = "database"
     _icon_dir = "resource_images/aws/database"
 
-# 
+
+#
 class Aurora(_Database):
     _icon = "aurora-instance.png"
 
@@ -92,4 +91,3 @@ aws_elasticache_cluster = ElastiCache
 aws_neptune_cluster = Neptune
 aws_qldb_ledger = QuantumLedgerDatabaseQldb
 aws_redshift_cluster = Redshift
-

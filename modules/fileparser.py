@@ -2,20 +2,21 @@ import fileinput
 import os
 import re
 import tempfile
-import click
-import hcl2
-import yaml
-
-from requests.api import head
-from tqdm import tqdm
 from contextlib import suppress
 from dataclasses import replace
 from pathlib import Path
 from posixpath import dirname, split
 from sys import exit
 from urllib.parse import urlparse
-import  modules.helpers as helpers
-import  modules.gitlibs as gitlibs
+
+import click
+import yaml
+from requests.api import head
+from tqdm import tqdm
+
+import hcl2
+import modules.gitlibs as gitlibs
+import modules.helpers as helpers
 
 # Create Tempdir and Module Cache Directories
 all_repos = list()
@@ -105,7 +106,9 @@ def handle_module(modules_list, tf_file_paths, filename):
         # Convert Source URLs to module cache paths
         if not module_source.startswith(".") and not module_source.startswith("\\"):
             localfolder = module_source.replace("/", "_")
-            cache_path = str(os.path.join(temp_modules_dir, ";" + key + ";" + localfolder))
+            cache_path = str(
+                os.path.join(temp_modules_dir, ";" + key + ";" + localfolder)
+            )
             module_source_dict[key] = {
                 "cache_path": str(cache_path),
                 "source_file": filename,

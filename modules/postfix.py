@@ -1,6 +1,6 @@
-import sys
 import hashlib
 import re
+import sys
 
 
 def compute_hash(bstring):
@@ -61,7 +61,6 @@ class Evaluate:
     def evaluatePostfix(self, exp):
         # Iterate over the expression for conversion
         for i in exp:
-
             # If the scanned character is an operand
             # (number here) push it to the stack
             if i.isdigit() or i == " ":
@@ -234,12 +233,12 @@ class Conversion:
         exp = exp.replace("[", "")
         exp = exp.replace("]", "")
         exp = exp.replace("!F", "T")
-        exp = exp.replace("!  None", 'F')
+        exp = exp.replace("!  None", "F")
         exp = exp.replace('"None"', '""')
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)
         for np in none_parameters:
             exp = exp.replace(np, '""')
-        exp = exp.replace("!None", ' T ')
+        exp = exp.replace("!None", " T ")
         exp = exp.replace("None", '""')
         exp = exp.replace("  ", "")
         exp = self.hash_strings(exp)
