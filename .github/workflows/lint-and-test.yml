@@ -59,7 +59,7 @@ jobs:
       - name: Add terravision to path
         run: |
           export PATH=$PATH:$(pwd)
-          terravision --help
+          poetry run terravision --help
 
       #----------------------------------------------
       #              run test suite
