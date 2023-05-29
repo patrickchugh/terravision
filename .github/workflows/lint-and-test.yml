@@ -56,15 +56,8 @@ jobs:
       #----------------------------------------------
       # add terravision to PATH
       #----------------------------------------------
-      - name: Add terravision to path
+      - name: Add terravision to path and run tests
         run: |
           export PATH=$PATH:$(pwd)
           poetry run terravision --help
-
-      #----------------------------------------------
-      #              run test suite
-      #----------------------------------------------
-      - name: Run tests
-        run: |
-          source .venv/bin/activate
           poetry run pytest tests
