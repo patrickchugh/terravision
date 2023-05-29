@@ -51,6 +51,17 @@ jobs:
         run: poetry install --no-interaction --no-root  --with test
 
       #----------------------------------------------
+      # Run static linters
+      #----------------------------------------------
+      - name: Check black formatting
+        run: |
+          poetry run  black --check -v app
+
+      - name: Check isort formatting
+        run: |
+          poetry run  isort app -v --check-only
+
+      #----------------------------------------------
       # add terravision to PATH
       #----------------------------------------------
       - name: Run tests after adding terravision to path
