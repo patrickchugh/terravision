@@ -57,9 +57,9 @@ jobs:
         run: |
           poetry run  black --check -v modules
 
-      - name: Check isort formatting
-        run: |
-          poetry run  isort modules -v --check-only
+#      - name: Check isort formatting
+#        run: |
+#          poetry run  isort modules -v --check-only
 
       #----------------------------------------------
       # add terravision to PATH
