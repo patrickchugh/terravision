@@ -136,7 +136,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
             filepath = Path(filename)
             fname = filepath.parent.name + "/" + filepath.name
             click.echo(f"  Parsing {filename}")
-            with click.open_file(filename, "r",encoding="utf8") as f:
+            with click.open_file(filename, "r", encoding="utf8") as f:
                 # with suppress(Exception):
                 filedict[filename] = hcl2.load(f)
                 # Handle HCL parsing errors due to unexpected characters
