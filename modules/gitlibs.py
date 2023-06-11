@@ -137,6 +137,12 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
     click.echo(click.style("Loading Sources..", fg="white", bold=True))
     subfolder = ""
     reponame = sourceURL.replace("/", "_")
+
+    # WINDOWS OS FILE COMPATIBILITY
+    reponame = sourceURL.replace("?", "_")
+    reponame = reponame.replace(":", "_")
+    reponame = reponame.replace("=", "_")
+
     module_cache_path = os.path.join(MODULE_DIR, reponame)
     # Identify source repo and construct final git clone URL
     click.echo(f"  Downloading External Module: {sourceURL}")
