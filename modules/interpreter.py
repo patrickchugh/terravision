@@ -471,6 +471,8 @@ def get_variable_values(tfdata) -> dict:
                 # Populate dict with default values first
                 if "default" in item[k]:
                     var_value = item[k]["default"]
+                    if isinstance(var_value,str) :
+                        var_value = f'"{var_value}"'
                 else:
                     var_value = ""
                 var_data[var_name] = var_value
