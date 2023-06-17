@@ -32,11 +32,11 @@ def verify_json_output(github_repo, var_file, expected_output):
     assert result == expected
 
 
-# def test_wordpress_fargate():
-#     github_repo = "https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate"
-#     var_file = "examples/variables.tfvars"
-#     expected_output = f"{os.getcwd()}/tests/testcase-wordpress.json"
-#     verify_json_output(github_repo, var_file, expected_output)
+def test_wordpress_fargate():
+    github_repo = f"{base_repo}//aws/wordpress_fargate"
+    var_file = "examples/variables.tfvars"
+    expected_output = f"{os.getcwd()}/tests/testcase-wordpress.json"
+    verify_json_output(github_repo, var_file, expected_output)
 
 
 def test_static_site():
