@@ -164,6 +164,7 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
         else:
             return os.path.join(module_cache_path, subfolder)
     else:
+        module_cache_path = os.path.join(module_cache_path, ";" + module + ";")
         os.makedirs(module_cache_path)
         try:
             clonepath = git.Repo.clone_from(

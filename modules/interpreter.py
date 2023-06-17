@@ -151,6 +151,8 @@ def replace_var_values(
             .replace(" ", "")
             .replace(".", "")
         )
+        if not module:
+            module = "main"
         if (lookup in tfdata["variable_map"][module].keys()) and (
             "var." + lookup not in str(tfdata["variable_map"][module][lookup])
         ):

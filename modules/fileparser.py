@@ -13,7 +13,6 @@ import hcl2
 import modules.gitlibs as gitlibs
 
 # Create Tempdir and Module Cache Directories
-all_repos = list()
 annotations = dict()
 start_dir = Path.cwd()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
@@ -70,6 +69,7 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
 def handle_module(modules_list, tf_file_paths, filename):
     temp_modules_dir = temp_dir.name
     module_source_dict = dict()
+    all_repos = list()
     # For every module source location, download the files into a new temporary subdirectory
     for i in modules_list:
         for k in i.keys():
@@ -115,13 +115,72 @@ def handle_module(modules_list, tf_file_paths, filename):
     return {"tf_file_paths": tf_file_paths, "module_source_dict": module_source_dict}
 
 
+def iterative_read(
+    tf_file_paths: dict, hcl_dict: dict, extract_sections: list, tfdata: dict
+):
+    # Parse each TF file encountered in source locations
+    module_source_dict = dict()
+    for filename in tf_file_paths:
+        filepath = Path(filename)
+        fname = filepath.parent.name + "/" + filepath.name
+        click.echo(f"  Parsing {filename}")
+        with click.open_file(filename, "r", encoding="utf8") as f:
+            # with suppress(Exception):
+            hcl_dict[filename] = hcl2.load(f)
+            # Handle HCL parsing errors due to unexpected characters
+            if not filename in hcl_dict.keys():
+                click.echo(
+                    f"   WARNING: Unknown Error reading TF file {filename}. Attempting character cleanup fix.."
+                )
+                with tempfile.TemporaryDirectory(dir=temp_dir.name) as tempclean:
+                    f_tmp = clean_file(filename, str(tempclean))
+                    hcl_dict[filename] = hcl2.load(f_tmp)
+                    if not filename in hcl_dict.keys():
+                        click.echo(
+                            f"   ERROR: Unknown Error reading TF file {filename}. Aborting!"
+                        )
+                        exit()
+            # Isolate variables, locals and other sections of interest into tfdata dict
+            for section in extract_sections:
+                if section in hcl_dict[filename]:
+                    section_name = "all_" + section
+                    if not section_name in tfdata.keys():
+                        tfdata[section_name] = {}
+                    tfdata[section_name][filename] = hcl_dict[filename][section]
+                    click.echo(
+                        click.style(
+                            f"    Found {len(hcl_dict[filename][section])} {section} stanza(s)",
+                            fg="green",
+                        )
+                    )
+                    if section == "module":
+                        # Expand source locations to include any newly found sub-module locations
+                        module_data = handle_module(
+                            hcl_dict[filename]["module"], tf_file_paths, filename
+                        )
+                        tf_file_paths = module_data["tf_file_paths"]
+                        # Get list of modules and their sources
+                        for mod in module_data["module_source_dict"]:
+                            module_source_dict[mod] = module_data["module_source_dict"][
+                                mod
+                            ]
+                        if "module_source_dict" in tfdata.keys():
+                            tfdata["module_source_dict"] = {
+                                **tfdata["module_source_dict"],
+                                **module_source_dict,
+                            }
+                        else:
+                            tfdata["module_source_dict"] = module_source_dict
+    return tfdata
+
+
 def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
     global annotations
     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """
-    filedict = dict()
+    hcl_dict = dict()
     tfdata = dict()
     variable_list = dict()
-    module_source_dict = dict()
+    module_sources_found = dict()
     cwd = os.getcwd()
     for source in source_list:
         # Get List of Terraform Files to parse
@@ -130,52 +189,7 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
             with open(annotate, "r") as file:
                 click.echo(f"  Will use architecture annotation file : {file.name} \n")
                 annotations = yaml.safe_load(file)
-        click.echo(click.style("Reading Terraforms..", fg="white", bold=True))
-        # Parse each TF file encountered in source locations
-        for filename in tf_file_paths:
-            filepath = Path(filename)
-            fname = filepath.parent.name + "/" + filepath.name
-            click.echo(f"  Parsing {filename}")
-            with click.open_file(filename, "r", encoding="utf8") as f:
-                # with suppress(Exception):
-                filedict[filename] = hcl2.load(f)
-                # Handle HCL parsing errors due to unexpected characters
-                if not filename in filedict.keys():
-                    click.echo(
-                        f"   WARNING: Unknown Error reading TF file {filename}. Attempting character cleanup fix.."
-                    )
-                    with tempfile.TemporaryDirectory(dir=temp_dir.name) as tempclean:
-                        f_tmp = clean_file(filename, str(tempclean))
-                        filedict[filename] = hcl2.load(f_tmp)
-                        if not filename in filedict.keys():
-                            click.echo(
-                                f"   ERROR: Unknown Error reading TF file {filename}. Aborting!"
-                            )
-                            exit()
-                # Isolate variables, locals and other sections of interest into tfdata dict
-                for section in EXTRACT:
-                    if section in filedict[filename]:
-                        section_name = "all_" + section
-                        if not section_name in tfdata.keys():
-                            tfdata[section_name] = {}
-                        tfdata[section_name][filename] = filedict[filename][section]
-                        click.echo(
-                            click.style(
-                                f"    Found {len(filedict[filename][section])} {section} stanza(s)",
-                                fg="green",
-                            )
-                        )
-                        if section == "module":
-                            # Expand source locations to include any newly found sub-module locations
-                            module_data = handle_module(
-                                filedict[filename]["module"], tf_file_paths, filename
-                            )
-                            tf_file_paths = module_data["tf_file_paths"]
-                            # Get list of modules and their sources
-                            for mod in module_data["module_source_dict"]:
-                                module_source_dict[mod] = module_data[
-                                    "module_source_dict"
-                                ][mod]
+        tfdata = iterative_read(tf_file_paths, hcl_dict, EXTRACT, tfdata)
     # Auto load any tfvars
     for file in tf_file_paths:
         if "auto.tfvars" in file:
@@ -184,7 +198,6 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
     if len(varfile_list) == 0 and tfdata.get("all_variable"):
         varfile_list = tfdata["all_variable"].keys()
     tfdata["varfile_list"] = varfile_list
-    tfdata["module_source_dict"] = module_source_dict
     tfdata["tempdir"] = temp_dir
     tfdata["annotations"] = annotations
     return tfdata
