@@ -17,7 +17,7 @@ from modules.helpers import *
 # Create Tempdir and Module Cache Directories
 all_repos = list()
 annotations = dict()
-temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
+# temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
@@ -132,18 +132,16 @@ def get_clone_url(sourceURL: str):
             githubURL = handle_readme_source(r)
     return githubURL, subfolder
 
-
-def clone_files(sourceURL: str, tempdir: str, module=""):
+def clone_files(sourceURL: str, tempdir: str, module="main"):
     click.echo(click.style("Loading Sources..", fg="white", bold=True))
     subfolder = ""
     reponame = sourceURL.replace("/", "_")
-
     # WINDOWS OS FILE COMPATIBILITY
     reponame = sourceURL.replace("?", "_")
     reponame = reponame.replace(":", "_")
     reponame = reponame.replace("=", "_")
-
     module_cache_path = os.path.join(MODULE_DIR, reponame)
+    codepath =  module_cache_path + f";{module};"
     # Identify source repo and construct final git clone URL
     click.echo(f"  Downloading External Module: {sourceURL}")
     githubURL, subfolder = get_clone_url(sourceURL)
@@ -153,22 +151,19 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
         )
     )
     # Now do a git clone or skip if we already have seen this module before
-    if os.path.exists(module_cache_path):
+    if os.path.exists(codepath):
         click.echo(
             f"  Skipping download of module {reponame}, found existing folder in module cache"
         )
-        if module:
-            temp_module_path = os.path.join(tempdir, ";" + module + ";" + reponame)
-            shutil.copytree(module_cache_path, temp_module_path)
-            return os.path.join(temp_module_path, subfolder)
-        else:
-            return os.path.join(module_cache_path, subfolder)
+        
+        temp_module_path = os.path.join(tempdir, f";{module};{reponame}")
+        shutil.copytree(codepath, temp_module_path)
+        return os.path.join(temp_module_path,  subfolder)
     else:
-        module_cache_path = os.path.join(module_cache_path, ";" + module + ";")
-        os.makedirs(module_cache_path)
+        os.makedirs(codepath)
         try:
             clonepath = git.Repo.clone_from(
-                githubURL, str(module_cache_path), progress=CloneProgress()
+                githubURL, str(codepath), progress=CloneProgress()
             )
         except:
             click.echo(
@@ -178,6 +173,6 @@ def clone_files(sourceURL: str, tempdir: str, module=""):
                     bold=True,
                 )
             )
-            os.rmdir(module_cache_path)
+            shutil.rmtree(codepath, ignore_errors=True)
             exit()
-    return os.path.join(module_cache_path, subfolder)
+    return os.path.join(codepath, subfolder)
