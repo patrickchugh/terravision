@@ -132,6 +132,7 @@ def get_clone_url(sourceURL: str):
             githubURL = handle_readme_source(r)
     return githubURL, subfolder
 
+
 def clone_files(sourceURL: str, tempdir: str, module="main"):
     click.echo(click.style("Loading Sources..", fg="white", bold=True))
     subfolder = ""
@@ -141,7 +142,7 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     reponame = reponame.replace(":", "_")
     reponame = reponame.replace("=", "_")
     module_cache_path = os.path.join(MODULE_DIR, reponame)
-    codepath =  module_cache_path + f";{module};"
+    codepath = module_cache_path + f";{module};"
     # Identify source repo and construct final git clone URL
     click.echo(f"  Downloading External Module: {sourceURL}")
     githubURL, subfolder = get_clone_url(sourceURL)
@@ -155,10 +156,10 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         click.echo(
             f"  Skipping download of module {reponame}, found existing folder in module cache"
         )
-        
+
         temp_module_path = os.path.join(tempdir, f";{module};{reponame}")
         shutil.copytree(codepath, temp_module_path)
-        return os.path.join(temp_module_path,  subfolder)
+        return os.path.join(temp_module_path, subfolder)
     else:
         os.makedirs(codepath)
         try:

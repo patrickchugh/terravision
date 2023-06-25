@@ -202,8 +202,8 @@ def always_draw_edge(origin: str, destination: str, tfdata: dict) -> bool:
         return True
     if origin in str(AUTO_ANNOTATIONS):
         return True
-    if tfdata["meta_data"].get(origin) :
-        if tfdata["meta_data"][origin].get("edge_labels") :
+    if tfdata["meta_data"].get(origin):
+        if tfdata["meta_data"][origin].get("edge_labels"):
             return True
     return False
 

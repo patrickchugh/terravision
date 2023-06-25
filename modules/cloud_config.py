@@ -227,7 +227,7 @@ AWS_ACRONYMS_LIST = [
 
 AWS_NAME_REPLACEMENTS = {
     "az": "Availability Zone",
-    "appautoscaling_target" : "Auto Scaling",
+    "appautoscaling_target": "Auto Scaling",
     "route_table_association": "Route Table",
     "ecs_service_fargate": "Fargate",
     "eip": "Elastic IP",

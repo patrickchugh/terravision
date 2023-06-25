@@ -121,11 +121,11 @@ def pretty_name(name: str, show_title=True) -> str:
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
     service_label = service_label.split("-")[0]
-    if servicename.startswith(service_label.replace("_","")) : 
+    if servicename.startswith(service_label.replace("_", "")):
         service_label = ""
-    if servicename in NAME_REPLACEMENTS.keys() :
+    if servicename in NAME_REPLACEMENTS.keys():
         servicename = NAME_REPLACEMENTS[servicename]
-    if service_label.title == servicename : 
+    if service_label.title == servicename:
         service_label = ""
     final_label = (service_label if show_title else "") + " " + servicename
     final_label = final_label[:22]
@@ -133,7 +133,7 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = final_label.replace("-", " ")
     final_label = final_label.replace("this", "").strip()
     for acro in ACRONYMS_LIST:
-        if acro in final_label :
+        if acro in final_label:
             final_label = final_label.title()[:20]
             final_label = final_label.replace(acro.title(), acro.upper())
             return final_label
