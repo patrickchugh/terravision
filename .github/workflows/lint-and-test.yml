@@ -36,12 +36,12 @@ jobs:
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
-      #- name: Load cached venv
-      #  id: cached-poetry-dependencies
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: .venv
-      #    key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       #----------------------------------------------
       # install dependencies if cache does not exist
@@ -67,6 +67,6 @@ jobs:
       - name: Run tests after adding terravision to path
         run: |
           export PATH=$PATH:$(pwd)
-          poetry run rm -rf ~/.terravision
+          rm -rf ~/.terravision
           poetry run terravision --help
           poetry run pytest tests
