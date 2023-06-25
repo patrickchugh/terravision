@@ -197,3 +197,45 @@ AWS_SHARED_SERVICES = [
     "aws_eip",
     "aws_kms_key",
 ]
+
+AWS_ALWAYS_DRAW_LINE = ["aws_lb", "aws_iam_role"]
+
+AWS_ACRONYMS_LIST = [
+    "acm",
+    "alb",
+    "ec2",
+    "kms",
+    "elb",
+    "eip",
+    "ecr",
+    "nlb",
+    "efs",
+    "ebs",
+    "iam",
+    "ip",
+    "api",
+    "acm",
+    "ecs",
+    "rds",
+    "lb",
+    "alb",
+    "elb",
+    "nlb",
+    "nat",
+    "vpc",
+]
+
+AWS_NAME_REPLACEMENTS = {
+    "az": "Availability Zone",
+    "appautoscaling_target" : "Auto Scaling",
+    "route_table_association": "Route Table",
+    "ecs_service_fargate": "Fargate",
+    "eip": "Elastic IP",
+    "instance": "EC2",
+    "lambda_function": "",
+    "iam_role": "Role",
+    "dx": "Direct Connect",
+    "cloudfront_distribution": "Cloudfront",
+    "iam_policy": "policy",
+    "this": "",
+}

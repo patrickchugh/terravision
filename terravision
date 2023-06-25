@@ -15,6 +15,20 @@ import modules.helpers as helpers
 import modules.interpreter as interpreter
 
 
+def show_banner():
+    banner = (
+        "\n\n\n"
+        " _____                          _     _             \n"
+        "/__   \\___ _ __ _ __ __ ___   _(_)___(_) ___  _ __  \n"
+        "  / /\\/ _ \\ '__| '__/ _` \\ \\ / / / __| |/ _ \\| '_ \\ \n"
+        " / / |  __/ |  | | | (_| |\\ V /| \\__ \\ | (_) | | | |\n"
+        " \\/   \\___|_|  |_|  \\__,_| \\_/ |_|___/_|\\___/|_| |_|\n"
+        "                                                    \n"
+        "\n"
+    )
+    print(banner)
+
+
 def compile_tfdata(source: list, varfile: list, annotate=""):
     # Parse HCL files from Terraform
     tfdata = fileparser.parse_tf_files(source, varfile, annotate)
@@ -27,7 +41,7 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     # Replace metadata (resource attributes) variables and locals with actual values
     tfdata = interpreter.handle_metadata_vars(tfdata)
     # Inject parent module variables that are referenced downstream in sub modules
-    if 'all_modules' in tfdata.keys() :
+    if "all_modules" in tfdata.keys():
         tfdata = interpreter.inject_module_variables(tfdata)
     # Dump out findings after file scans are complete
     helpers.output_log(tfdata)
@@ -108,6 +122,7 @@ def cli():
 @click.option("--avl_classes", hidden=True)
 def draw(source, varfile, outfile, format, show, simplified, annotate, avl_classes):
     """Draws Architecture Diagram"""
+    show_banner()
     preflight_check()
     tfdata = compile_tfdata(source, varfile, annotate)
     drawing.render_diagram(
@@ -148,6 +163,7 @@ def graphdata(
     source, varfile, show_services, annotate, avl_classes, outfile="graphdata.json"
 ):
     """List Cloud Resources and Relations as JSON"""
+    show_banner()
     preflight_check()
     tfdata = compile_tfdata(source, varfile, annotate)
     click.echo(click.style("\nOutput JSON Dictionary :", fg="white", bold=True))
