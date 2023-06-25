@@ -135,3 +135,4 @@ architecture.dot
 architecture.dot.png
 architecture.gv.dot
 tests/architecture*.json
+output/result.json

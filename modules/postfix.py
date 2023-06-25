@@ -232,6 +232,7 @@ class Conversion:
         exp = exp.replace("[", "")
         exp = exp.replace("]", "")
         exp = exp.replace("!F", "T")
+        exp = exp.replace("!0", "1")
         exp = exp.replace("!  None", "F")
         exp = exp.replace('"None"', '""')
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)

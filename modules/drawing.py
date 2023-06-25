@@ -46,6 +46,11 @@ GROUP_NODES = cloud_config.AWS_GROUP_NODES
 DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 OUTER_NODES = cloud_config.AWS_OUTER_NODES
+AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
+OUTER_NODES = cloud_config.AWS_OUTER_NODES
+EDGE_NODES = cloud_config.AWS_EDGE_NODES
+SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
+ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
@@ -165,9 +170,17 @@ def handle_nodes(
                     ) or not connectedNode._id in tfdata["connected_nodes"].get(
                         originNode._id
                     ):
-                        if originNode != connectedNode:
+                        if originNode != connectedNode and ok_to_connect(
+                            resource_type, node_type
+                        ):
+                            line_style = (
+                                "solid"
+                                if always_draw_edge(resource_type, node_type, tfdata)
+                                else "invis"
+                            )
                             originNode.connect(
-                                connectedNode, Edge(forward=True, label=label)
+                                connectedNode,
+                                Edge(forward=True, label=label, style=line_style),
                             )
                             if not tfdata["connected_nodes"].get(originNode._id):
                                 tfdata["connected_nodes"][originNode._id] = list()
@@ -179,6 +192,28 @@ def handle_nodes(
                             )
 
     return newNode, drawn_resources
+
+
+# Ensure all edge lines are invisible unless they match this criteria
+def always_draw_edge(origin: str, destination: str, tfdata: dict) -> bool:
+    if origin in ALWAYS_DRAW_LINE or destination in ALWAYS_DRAW_LINE:
+        return True
+    if origin in EDGE_NODES or destination in EDGE_NODES:
+        return True
+    if origin in str(AUTO_ANNOTATIONS):
+        return True
+    if tfdata["meta_data"].get(origin):
+        if tfdata["meta_data"][origin].get("edge_labels"):
+            return True
+    return False
+
+
+# Determines if connections should exist between the nodes for keeping rank
+def ok_to_connect(origin: str, destination: str) -> bool:
+    if origin in SHARED_SERVICES or destination in SHARED_SERVICES:
+        return False
+    else:
+        return True
 
 
 # Recursive function to draw out groups and subgroups along with their nodes

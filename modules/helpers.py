@@ -15,6 +15,8 @@ GROUP_NODES = cloud_config.AWS_GROUP_NODES
 CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
+ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
+NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
@@ -114,58 +116,28 @@ def pretty_name(name: str, show_title=True) -> str:
     if "null_" in name or "random" in name or "time_sleep" in name:
         return "Null"
     else:
+        name = name.replace("tv_aws_", "")
         name = name.replace("aws_", "")
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
-    if servicename == "az":
-        return "Availability Zone"
-    if servicename == "route_table_association":
-        servicename = "Route Table"
-    if servicename == "ecs_service_fargate":
-        servicename = "Fargate"
-    if servicename == "instance":
-        servicename = "ec2"
-    if servicename == "lambda_function":
-        servicename = ""
-    if servicename == "iam_role":
-        servicename = "role"
-    if servicename == "dx":
-        servicename = "Direct Connect"
-    if servicename == "iam_policy":
-        servicename = "policy"
-    if resourcename == "this":
-        resourcename = ""
-    if servicename[0:3] in [
-        "acm",
-        "ec2",
-        "kms",
-        "elb",
-        "nlb",
-        "efs",
-        "ebs",
-        "iam",
-        "api",
-        "acm",
-        "ecs",
-        "rds",
-        "lb",
-        "alb",
-        "elb",
-        "nlb",
-        "nat",
-        "vpc",
-    ]:
-        acronym = servicename[0:3]
-        servicename = servicename.replace(acronym, acronym.upper())
-        servicename = servicename[0:3] + " " + servicename[4:].title()
-    else:
-        servicename = servicename.title()
-    final_label = (service_label.title() if show_title else "") + " " + servicename
+    service_label = service_label.split("-")[0]
+    if servicename.startswith(service_label.replace("_", "")):
+        service_label = ""
+    if servicename in NAME_REPLACEMENTS.keys():
+        servicename = NAME_REPLACEMENTS[servicename]
+    if service_label.title == servicename:
+        service_label = ""
+    final_label = (service_label if show_title else "") + " " + servicename
     final_label = final_label[:22]
     final_label = final_label.replace("_", " ")
     final_label = final_label.replace("-", " ")
-    final_label = final_label.replace("This", "").strip()
-    return str(final_label)[:20]
+    final_label = final_label.replace("this", "").strip()
+    for acro in ACRONYMS_LIST:
+        if acro in final_label:
+            final_label = final_label.title()[:20]
+            final_label = final_label.replace(acro.title(), acro.upper())
+            return final_label
+    return str(final_label.title())[:20]
 
 
 def replace_variables(vartext, filename, all_variables, quotes=False):

@@ -5,8 +5,6 @@ import uuid
 from pathlib import Path
 from random import randint
 from typing import Dict, List, Union
-
-# from graphviz import Digraph
 from graphviz import Digraph, Source, render
 
 # Global contexts for a resource_classes and a cluster.
@@ -55,7 +53,7 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "4.5",
+        "nodesep": "2",
         "fontname": "Sans-Serif",
         "fontsize": "30",
         "fontcolor": "#2D3436",
@@ -64,8 +62,6 @@ class Canvas:
         "ranksep": "5",
         "center": "true",
         "pad" : "1.5",
-        "ranksep" :"8",
-
     }
     _default_node_attrs = {
         "shape": "box",
