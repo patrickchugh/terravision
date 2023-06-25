@@ -67,6 +67,6 @@ jobs:
       - name: Run tests after adding terravision to path
         run: |
           export PATH=$PATH:$(pwd)
-          poetry run rm ~/.terravision
+          poetry run rm -rf ~/.terravision
           poetry run terravision --help
           poetry run pytest tests
