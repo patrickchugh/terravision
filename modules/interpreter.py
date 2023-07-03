@@ -2,9 +2,7 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
-
 import click
-
 import hcl2
 import modules.helpers as helpers
 from modules.helpers import *
@@ -162,7 +160,6 @@ def replace_var_values(
                 if lookup in item:
                     obj = tfdata["variable_map"][module][lookup]
                     varitem = item
-
             if value.count(lookup) < 2 and obj != "" and isinstance(obj, dict):
                 key = varitem.split(".")[2]
                 if key in obj.keys():
@@ -360,7 +357,8 @@ def handle_conditional_resources(tfdata):
     for resource, attr_list in tfdata["meta_data"].items():
         mod = tfdata["meta_data"][resource]["module"]
         eval_string = find_conditional_statements(resource, attr_list)
-        if eval_string:
+        if eval_string and not "ERROR" in eval_string:
+            original_string = tfdata["meta_data"][resource]["original_count"]
             if "module." in eval_string:
                 eval_string = handle_module_vars(eval_string, tfdata)
             if "aws_" and "[*]." in eval_string:
@@ -379,7 +377,10 @@ def handle_conditional_resources(tfdata):
                     if eval_value == "" or eval_value == " ":
                         eval_value = 0
                     click.echo(
-                        f"    Module {mod} : {resource} count = {eval_value} ({exp})"
+                        f"    Module {mod} : {resource} count = {original_string}"
+                    )
+                    click.echo(
+                        f"                   {resource} count = {eval_value} ({exp})"
                     )
                     attr_list["count"] = int(eval_value)
                 else:
@@ -450,7 +451,10 @@ def get_metadata(tfdata):  # -> set
                             ][resource_name]
                 click.echo(f"    {resource_type}.{resource_name}")
                 node_list.append(f"{resource_type}.{resource_name}")
-                meta_data[f"{resource_type}.{resource_name}"] = item[k][i]
+                md = item[k][i]
+                if md.get("count"):
+                    md["original_count"] = md["count"]
+                meta_data[f"{resource_type}.{resource_name}"] = md
                 meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list

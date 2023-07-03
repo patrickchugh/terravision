@@ -1,6 +1,5 @@
 from ast import literal_eval
 from itertools import product
-
 from modules.postfix import Conversion, Evaluate
 
 
@@ -168,3 +167,11 @@ class tf_function_handlers:
         param = resolve_nested_functions(param)
         paramlist = literal_eval(param)
         return list(product(*paramlist))
+
+    def _try(param):
+        param = resolve_nested_functions(param)
+        param = param.replace(",,", ",F,")
+        if param.endswith(","):
+            param = param[0:-1]
+        paramlist = literal_eval(param)
+        return paramlist[0]

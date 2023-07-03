@@ -206,18 +206,19 @@ class Canvas:
 
     def pre_render(self) -> str:
         return self.dot.render(
-            format="dot", quiet=True, cleanup=False, directory=Path.cwd()
+            format="dot", quiet=True, cleanup=True, directory=Path.cwd()
         )
 
     def render(self) -> str:
         dotsource = Source.from_file(
-            self.filename + ".dot", engine="dot", directory=Path.cwd()
+            self.filename + ".dot", engine="neato", directory=Path.cwd()
         )
         filename = dotsource.render(
+            neato_no_op=2,
             format=self.outformat,
             view=self.show,
             quiet=True,
-            engine="dot",
+            engine="neato",
             directory=Path.cwd(),
         )
         return filename
