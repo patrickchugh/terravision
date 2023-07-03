@@ -348,7 +348,7 @@ def render_diagram(
         "fontsize": "20",
         "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
     }
-    # getattr(sys.modules[__name__], "Node")(**footer_style)
+    getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
     setcluster(cloudGroup)
@@ -377,8 +377,7 @@ def render_diagram(
     )
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
-    # os.remove(path_to_predot)
-    # os.remove(path_to_postdot)
-    # os.remove(outfile + ".gv")
+    os.remove(path_to_predot)
+    os.remove(path_to_postdot)
     click.echo(f"  Completed!")
     setdiagram(None)
