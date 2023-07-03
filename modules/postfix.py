@@ -88,7 +88,10 @@ class Evaluate:
                 estr = estr.replace("G", " >= ")
                 estr = estr.replace("L", " <= ")
                 # print(estr)
-                self.push(eval(estr))
+                try:
+                    self.push(eval(estr))
+                except :
+                    return "ERROR!"
                 self.push(" ")
             elif i == ":":
                 val1 = ""

@@ -351,6 +351,14 @@ def handle_splat_statements(eval_string, tfdata):
     resource = resource_type + "." + resource_name
     return tfdata["meta_data"][resource]["count"]
 
+def show_error(mod, resource, eval_string, exp, tfdata):
+    click.echo(
+                    f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
+                )
+    tfdata["meta_data"][resource]["count"] = 0
+    tfdata["meta_data"][resource]["ERROR_count"] = eval_string
+    return tfdata
+
 
 def handle_conditional_resources(tfdata):
     click.echo(f"\n  Conditional Resource List:")
@@ -376,13 +384,16 @@ def handle_conditional_resources(tfdata):
                     eval_value = obj.evaluatePostfix(pf)
                     if eval_value == "" or eval_value == " ":
                         eval_value = 0
-                    click.echo(
-                        f"    Module {mod} : {resource} count = {original_string}"
-                    )
-                    click.echo(
-                        f"                   {resource} count = {eval_value} ({exp})"
-                    )
-                    attr_list["count"] = int(eval_value)
+                    if eval_value == "ERROR!" :
+                         show_error(mod, resource, eval_string, exp, tfdata)
+                    else: 
+                        click.echo(
+                            f"    Module {mod} : {resource} count = {original_string}"
+                        )
+                        click.echo(
+                            f"                   {resource} count = {eval_value} ({exp})"
+                        )
+                        attr_list["count"] = int(eval_value)
                 else:
                     click.echo(
                         f"    ERROR: {mod} : {resource} count = 0 (Error in evaluation of value {exp})"
@@ -390,11 +401,7 @@ def handle_conditional_resources(tfdata):
                     tfdata["meta_data"][resource]["count"] = 0
                     tfdata["meta_data"][resource]["ERROR_count"] = eval_string
             else:
-                click.echo(
-                    f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
-                )
-                tfdata["meta_data"][resource]["count"] = 0
-                tfdata["meta_data"][resource]["ERROR_count"] = eval_string
+                show_error(mod, resource, eval_string, exp, tfdata)
     tfdata["hidden"] = [
         key
         for key, attr_list in tfdata["meta_data"].items()
@@ -402,6 +409,7 @@ def handle_conditional_resources(tfdata):
         or str(attr_list.get("count")).startswith("$")
     ]
     return tfdata
+
 
 
 def get_metadata(tfdata):  # -> set
