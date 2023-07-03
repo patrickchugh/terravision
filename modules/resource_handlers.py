@@ -163,9 +163,6 @@ def aws_handle_sg(tfdata: dict):
                     newlist = list(tfdata["graphdict"][target])
                     newlist.remove(connection)
                     tfdata["graphdict"][target] = newlist
-                elif connection.startswith("aws_security_group"):
-                    tfdata["graphdict"][target].remove(connection)
-                    del tfdata["graphdict"][connection]
         # Remove Security Group Rules from associations with the security group
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_security_group_rule":
