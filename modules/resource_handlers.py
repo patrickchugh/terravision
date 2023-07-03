@@ -171,6 +171,7 @@ def aws_handle_sg(tfdata: dict):
                 ):
                     tfdata["graphdict"][target].remove(connection)
                     del tfdata["graphdict"][connection]
+                    
         # Remove Security Group Rules from associations with the security group
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_security_group_rule":
@@ -180,6 +181,9 @@ def aws_handle_sg(tfdata: dict):
                     and len(tfdata["graphdict"][connection]) == 0
                 ):
                     del tfdata["graphdict"][connection]
+                plist = helpers.list_of_parents(tfdata["graphdict"], connection)
+                for p in plist:
+                    tfdata["graphdict"][p].remove(connection)
         # Remove any security group relationships if they are associated with the VPC already
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_vpc":
