@@ -476,6 +476,7 @@ def get_variable_values(tfdata) -> dict:
         tfdata["all_variable"] = dict()
     var_data = dict()
     var_mappings = dict()
+    matching = list()
     # Load default values from all existing files in source locations
     for var_source_file, var_list in tfdata["all_variable"].items():
         var_source_dir = str(Path(var_source_file).parent)
@@ -491,12 +492,13 @@ def get_variable_values(tfdata) -> dict:
                     var_value = ""
                 var_data[var_name] = var_value
                 # Also update var mapping dict with modules and matching variables
-                matching = [
-                    m
-                    for m in tfdata["module_source_dict"]
-                    if tfdata["module_source_dict"][m]["cache_path"][1:-1]
-                    in str(var_source_file)
-                ]  # omit first char of module source in case it is a .
+                if tfdata.get("module_source_dict") :
+                    matching = [
+                        m
+                        for m in tfdata["module_source_dict"]
+                        if tfdata["module_source_dict"][m]["cache_path"][1:-1]
+                        in str(var_source_file)
+                    ]  # omit first char of module source in case it is a .
                 if not matching:
                     if not var_mappings.get("main"):
                         var_mappings["main"] = {}
@@ -507,7 +509,7 @@ def get_variable_values(tfdata) -> dict:
                         var_mappings[mod] = {}
                         var_mappings[mod]["source_dir"] = var_source_dir
                     var_mappings[mod][var_name] = var_value
-    if tfdata["module_source_dict"]:
+    if tfdata.get("module_source_dict") :
         # Insert module parameters as variable names
         for file, modulelist in tfdata["all_module"].items():
             for module in modulelist:
