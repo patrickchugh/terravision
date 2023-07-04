@@ -3,9 +3,7 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
-
 import click
-
 import modules.cloud_config as cloud_config
 from modules.tf_function_handlers import tf_function_handlers
 
@@ -17,7 +15,6 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
 NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
-
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
 
@@ -52,7 +49,9 @@ def url(string: str) -> str:
 
 def check_for_tf_functions(string):
     for tf_function in dir(tf_function_handlers):
-        if tf_function + "(" in string and "ERROR!_" + tf_function not in string:
+        if (
+            tf_function + "(" in string or "_" + tf_function + "(" in string
+        ) and "ERROR!_" + tf_function not in string:
             return tf_function
     return False
 
@@ -132,12 +131,16 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = final_label.replace("_", " ")
     final_label = final_label.replace("-", " ")
     final_label = final_label.replace("this", "").strip()
+    acronym = False
+    final_label = final_label.title()[:21]
     for acro in ACRONYMS_LIST:
-        if acro in final_label:
-            final_label = final_label.title()[:20]
+        if acro.title() in final_label:
+            acronym = True
             final_label = final_label.replace(acro.title(), acro.upper())
-            return final_label
-    return str(final_label.title())[:20]
+    if acronym:
+        return final_label
+    else:
+        return str(final_label.title())[:21]
 
 
 def replace_variables(vartext, filename, all_variables, quotes=False):

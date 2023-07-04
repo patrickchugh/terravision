@@ -3,16 +3,20 @@ import json
 import os
 import shutil
 import sys
-from pathlib import Path
-from pprint import pprint
-
+import sys
 import click
-
 import modules.drawing as drawing
 import modules.fileparser as fileparser
 import modules.graphmaker as graphmaker
 import modules.helpers as helpers
 import modules.interpreter as interpreter
+from pathlib import Path
+from pprint import pprint
+
+def my_excepthook(type, value, traceback):
+    print (f'Unhandled error: {type}, {value}, {traceback}')
+
+sys.excepthook = my_excepthook
 
 
 def show_banner():

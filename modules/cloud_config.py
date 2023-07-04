@@ -1,4 +1,4 @@
-# Any resource names with certain prefixes are consolidated into one node
+#Any resource names with certain prefixes are consolidated into one node
 AWS_CONSOLIDATED_NODES = [
     {
         "aws_route53": {
@@ -87,7 +87,6 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
 ]
-
 # List of Group type nodes and order to draw them in
 AWS_GROUP_NODES = [
     "aws_vpc",
@@ -98,7 +97,6 @@ AWS_GROUP_NODES = [
     "aws_security_group",
     "tv_aws_onprem",
 ]
-
 # Nodes to be drawn first inside the AWS Cloud but outside any subnets or VPCs
 AWS_EDGE_NODES = [
     "aws_route53",
@@ -106,10 +104,8 @@ AWS_EDGE_NODES = [
     "aws_internet_gateway" "aws_api_gateway",
     "aws_apigateway",
 ]
-
 # Nodes outside Cloud boundary
 AWS_OUTER_NODES = ["tv_aws_users", "tv_aws_internet"]
-
 # Order to draw nodes - leave empty string list till last to denote everything else
 AWS_DRAW_ORDER = [
     AWS_OUTER_NODES,
@@ -118,7 +114,6 @@ AWS_DRAW_ORDER = [
     AWS_CONSOLIDATED_NODES,
     [""],
 ]
-
 # List of prefixes where additional nodes should be created automatically
 AWS_AUTO_ANNOTATIONS = [
     {"aws_route53": {"link": ["tv_aws_users.users"], "arrow": "reverse"}},
@@ -149,7 +144,6 @@ AWS_AUTO_ANNOTATIONS = [
         }
     },
 ]
-
 # Variant icons for the same service - matches keyword in meta data and changes resource type
 AWS_NODE_VARIANTS = {
     "aws_ecs_service": {"FARGATE": "aws_fargate", "EC2": "aws_ec2ecs"},
@@ -160,7 +154,6 @@ AWS_NODE_VARIANTS = {
         "postgres": "aws_rds_postgres",
     },
 }
-
 # Automatically reverse arrow direction for these resources
 AWS_REVERSE_ARROW_LIST = [
     "aws_route53",
@@ -170,12 +163,10 @@ AWS_REVERSE_ARROW_LIST = [
     "aws_iam_role.",
     "aws_lb",
 ]
-
 AWS_IMPLIED_CONNECTIONS = {
     "certificate_arn": "aws_acm_certificate",
     "container_definitions": "aws_ecr_repository",
 }
-
 # List of special resources and handler function name
 AWS_SPECIAL_RESOURCES = {
     "aws_cloudfront_distribution": "aws_handle_cloudfront_pregraph",
@@ -187,7 +178,6 @@ AWS_SPECIAL_RESOURCES = {
     "aws_lb": "aws_handle_lb",
     "aws_": "aws_handle_sharedgroup",
 }
-
 AWS_SHARED_SERVICES = [
     "aws_acm_certificate",
     "aws_cloudwatch_log_group",
@@ -197,36 +187,36 @@ AWS_SHARED_SERVICES = [
     "aws_eip",
     "aws_kms_key",
 ]
-
 AWS_ALWAYS_DRAW_LINE = ["aws_lb", "aws_iam_role"]
-
 AWS_ACRONYMS_LIST = [
     "acm",
     "alb",
+    "db",
     "ec2",
     "kms",
     "elb",
     "eip",
+    "eks",
     "ecr",
     "nlb",
     "efs",
     "ebs",
     "iam",
     "ip",
+    "igw",
     "api",
     "acm",
     "ecs",
     "rds",
     "lb",
     "alb",
-    "elb",
     "nlb",
     "nat",
     "vpc",
 ]
-
 AWS_NAME_REPLACEMENTS = {
     "az": "Availability Zone",
+    "alb" : "App Load Balancer",
     "appautoscaling_target": "Auto Scaling",
     "route_table_association": "Route Table",
     "ecs_service_fargate": "Fargate",

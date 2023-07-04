@@ -51,6 +51,7 @@
         "aws_fargate.ecs-2",
         "aws_fargate.ecs-3"
     ],
+    "aws_customer_gateway.this": [],
     "aws_default_network_acl.this": [],
     "aws_default_route_table.default": [],
     "aws_default_security_group.this": [],
@@ -121,6 +122,9 @@
     ],
     "aws_internet_gateway.igw": [
         "tv_aws_internet.internet"
+    ],
+    "aws_lambda_permission.lb": [
+        "aws_cloudwatch_log_group.cloudwatch"
     ],
     "aws_lb.elb": [
         "aws_alb.elb-1",
@@ -219,27 +223,7 @@
     "aws_security_group.efs-3": [
         "aws_efs_mount_target.this-3"
     ],
-    "aws_security_group.this-1": [
-        "aws_alb.elb-1"
-    ],
-    "aws_security_group.this-2": [
-        "aws_alb.elb-2"
-    ],
-    "aws_security_group.this-3": [
-        "aws_alb.elb-3"
-    ],
-    "aws_security_group.wordpress-1": [
-        "aws_security_group.alb-1",
-        "aws_security_group.efs-1"
-    ],
-    "aws_security_group.wordpress-2": [
-        "aws_security_group.alb-2",
-        "aws_security_group.efs-2"
-    ],
-    "aws_security_group.wordpress-3": [
-        "aws_security_group.alb-3",
-        "aws_security_group.efs-3"
-    ],
+    "aws_security_group_rule.this": [],
     "aws_ssm_parameter.ssmparam": [],
     "aws_subnet.private-1": [
         "aws_appautoscaling_target.this-1",

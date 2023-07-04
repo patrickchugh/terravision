@@ -138,7 +138,10 @@ def handle_variants(tfdata: dict):
             node_name = node.split("-")[0]
         else:
             node_name = node
-        renamed_node = helpers.check_variant(node, tfdata["meta_data"][node_name])
+        if node_name.startswith("aws") :
+            renamed_node = helpers.check_variant(node, tfdata["meta_data"][node_name])
+        else :
+            renamed_node = False
         if renamed_node and node.split(".")[0] not in SPECIAL_RESOURCES.keys():
             renamed_node = renamed_node + "." + node_title
             tfdata["graphdict"][renamed_node] = list(tfdata["graphdict"][node])
@@ -151,10 +154,11 @@ def handle_variants(tfdata: dict):
                 resource_name = resource.split("-")[0]
             else:
                 resource_name = resource
-            variant_suffix = helpers.check_variant(
-                resource, tfdata["meta_data"][resource_name]
-            )
-            variant_label = resource.split(".")[1]
+            if resource_name.startswith("aws") :
+                variant_suffix = helpers.check_variant(
+                    resource, tfdata["meta_data"][resource_name]
+                )
+                variant_label = resource.split(".")[1]
             if (
                 variant_suffix
                 and resource.split(".")[0] not in SPECIAL_RESOURCES.keys()

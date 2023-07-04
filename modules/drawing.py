@@ -348,7 +348,7 @@ def render_diagram(
         "fontsize": "20",
         "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
     }
-    # getattr(sys.modules[__name__], "Node")(**footer_style)
+    getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
     setcluster(cloudGroup)
@@ -371,16 +371,13 @@ def render_diagram(
     bundle_dir = Path(__file__).parent.parent
     path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
     path_to_postdot = Path.cwd() / f"{outfile}.dot"
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        os.system(
+    # Check if tfinstaller is running by doing if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    os.system(
             f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}"
-        )
-    else:
-        os.system(f"gvpr -c -q -f {path_to_script} {outfile}.gv.dot -o {outfile}.dot")
+    )
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
     os.remove(path_to_predot)
     os.remove(path_to_postdot)
-    os.remove(outfile + ".gv")
     click.echo(f"  Completed!")
     setdiagram(None)
