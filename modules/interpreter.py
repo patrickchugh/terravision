@@ -462,8 +462,9 @@ def get_metadata(tfdata):  # -> set
                 md = item[k][i]
                 if md.get("count"):
                     md["original_count"] = md["count"]
-                meta_data[f"{resource_type}.{resource_name}"] = md
-                meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
+                if resource_type.startswith("aws") :
+                    meta_data[f"{resource_type}.{resource_name}"] = md
+                    meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
     tfdata["meta_data"] = meta_data
     tfdata["node_list"] = node_list
     return tfdata

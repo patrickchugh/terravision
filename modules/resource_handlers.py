@@ -103,7 +103,7 @@ def aws_handle_subnet_azs(tfdata: dict):
     subnet_resources = [
         k
         for k, v in tfdata["meta_data"].items()
-        if k.startswith("aws_subnet") and k not in tfdata["hidden"]
+        if k and k.startswith("aws_subnet") and k not in tfdata["hidden"]
     ]
     # subnet_resources = [k for k,v in tfdata['meta_data'].items() if k not in tfdata['hidden'] and 'availability_zone' in v.keys() ]
     for subnet in subnet_resources:

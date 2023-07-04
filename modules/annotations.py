@@ -21,11 +21,9 @@ def add_annotations(tfdata: dict):
                             tfdata["graphdict"].keys(), new_node.split(".")[0]
                         )
                         if not annotation_node:
-                            click.echo(
-                                f'ERROR: Cannot find any resource with mask "{new_node}" for annotations!'
-                            )
-                            sys.exit()
+                             annotation_node = new_node.split(".")[0] + ".this"
                     else:
+                        tfdata["graphdict"][new_node] = list()
                         annotation_node = new_node
                     if auto_node[node_prefix]["arrow"] == "forward":
                         graphdict[node] = helpers.append_dictlist(
