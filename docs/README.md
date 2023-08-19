@@ -3,11 +3,11 @@ TerraVision is a CLI tool that converts Terraform code into Professional Cloud A
 
 Turn this... 
 
-![Terraform Code](./images/code.png "Turn Terraform code")
+![Terraform Code](../images/code.png "Turn Terraform code")
 
 into this...
 
-<img src="./images/architecture.png" width="640" height="580">
+<img src="../images/architecture.png" width="640" height="580">
 
 
 This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
