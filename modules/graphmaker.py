@@ -154,6 +154,7 @@ def handle_variants(tfdata: dict):
                 resource_name = resource.split("-")[0]
             else:
                 resource_name = resource
+            variant_suffix = ''
             if resource_name.startswith("aws") :
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"][resource_name]

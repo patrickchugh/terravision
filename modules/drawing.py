@@ -346,7 +346,7 @@ def render_diagram(
         "height": "0",
         "width": "0",
         "fontsize": "20",
-        "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\tSource: {str(source)}",
+        "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\nSource: {str(source)}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary
