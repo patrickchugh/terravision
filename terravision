@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import sys
-import sys
 import click
 import modules.drawing as drawing
 import modules.fileparser as fileparser
@@ -83,8 +82,6 @@ def preflight_check():
 def cli():
     """
     Terravision 0.2 Alpha
-
-    Copyright 2022 Patrick Chugh. All rights reserved.
 
     Terravision generates professional cloud architecture diagrams from Terraform scripts
 
