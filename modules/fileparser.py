@@ -30,7 +30,9 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     global annotations
     yaml_detected = False
     # If source is a Git address, clone to temp dir
-    if ("github" in source or "bitbucket" in source or "gitlab" in source) and source.startswith("http"):
+    if (
+        "github" in source or "bitbucket" in source or "gitlab" in source
+    ) and source.startswith("http"):
         source_location = gitlibs.clone_files(source, temp_dir.name)
     else:
         # Source is a local folder

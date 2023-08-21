@@ -1,4 +1,4 @@
-#Any resource names with certain prefixes are consolidated into one node
+# Any resource names with certain prefixes are consolidated into one node
 AWS_CONSOLIDATED_NODES = [
     {
         "aws_route53": {
@@ -216,7 +216,7 @@ AWS_ACRONYMS_LIST = [
 ]
 AWS_NAME_REPLACEMENTS = {
     "az": "Availability Zone",
-    "alb" : "App Load Balancer",
+    "alb": "App Load Balancer",
     "appautoscaling_target": "Auto Scaling",
     "route_table_association": "Route Table",
     "ecs_service_fargate": "Fargate",

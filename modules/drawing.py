@@ -372,9 +372,7 @@ def render_diagram(
     path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
     path_to_postdot = Path.cwd() / f"{outfile}.dot"
     # Check if tfinstaller is running by doing if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-    os.system(
-            f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}"
-    )
+    os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
     # Generate Final Output file
     click.echo(f"  Output file: {myDiagram.render()}")
     os.remove(path_to_predot)

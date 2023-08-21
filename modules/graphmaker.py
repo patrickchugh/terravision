@@ -138,9 +138,9 @@ def handle_variants(tfdata: dict):
             node_name = node.split("-")[0]
         else:
             node_name = node
-        if node_name.startswith("aws") :
+        if node_name.startswith("aws"):
             renamed_node = helpers.check_variant(node, tfdata["meta_data"][node_name])
-        else :
+        else:
             renamed_node = False
         if renamed_node and node.split(".")[0] not in SPECIAL_RESOURCES.keys():
             renamed_node = renamed_node + "." + node_title
@@ -154,8 +154,8 @@ def handle_variants(tfdata: dict):
                 resource_name = resource.split("-")[0]
             else:
                 resource_name = resource
-            variant_suffix = ''
-            if resource_name.startswith("aws") :
+            variant_suffix = ""
+            if resource_name.startswith("aws"):
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"][resource_name]
                 )
