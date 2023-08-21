@@ -44,13 +44,7 @@
         "aws_acm_certificate.acm",
         "aws_lb.elb"
     ],
-    "aws_cloudwatch_log_group.cloudwatch": [
-        "aws_appautoscaling_policy.scale_down",
-        "aws_appautoscaling_policy.scale_up",
-        "aws_fargate.ecs-1",
-        "aws_fargate.ecs-2",
-        "aws_fargate.ecs-3"
-    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
     "aws_customer_gateway.this": [],
     "aws_default_network_acl.this": [],
     "aws_default_route_table.default": [],
