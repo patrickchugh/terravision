@@ -21,7 +21,7 @@ def add_annotations(tfdata: dict):
                             tfdata["graphdict"].keys(), new_node.split(".")[0]
                         )
                         if not annotation_node:
-                             annotation_node = new_node.split(".")[0] + ".this"
+                            annotation_node = new_node.split(".")[0] + ".this"
                     else:
                         tfdata["graphdict"][new_node] = list()
                         annotation_node = new_node

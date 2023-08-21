@@ -90,7 +90,7 @@ class Evaluate:
                 # print(estr)
                 try:
                     self.push(eval(estr))
-                except :
+                except:
                     return "ERROR!"
                 self.push(" ")
             elif i == ":":
