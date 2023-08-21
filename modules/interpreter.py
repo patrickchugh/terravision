@@ -91,7 +91,7 @@ def replace_local_values(found_list: list, value, module, tfdata):
     for localitem in found_list:
         lookup = cleanup(localitem.split("local.")[1])
         if tfdata["all_locals"]:
-            if lookup in tfdata["all_locals"][module].keys():
+            if module in tfdata["all_locals"] and lookup in tfdata["all_locals"][module].keys():
                 replacement_value = tfdata["all_locals"][module].get(lookup)
                 # value = value.replace(localitem, str(replacement_value))
                 value = helpers.find_replace(localitem, str(replacement_value), value)
