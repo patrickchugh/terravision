@@ -54,9 +54,9 @@ def get_clone_url(sourceURL: str):
     subfolder = ""
     # Handle Case where full git url is given
     if (
-        "github.com" in sourceURL
-        or "gitlab.com" in sourceURL
-        or sourceURL.startswith("https://git")
+        ("github.com" in sourceURL
+        or "gitlab.com" in sourceURL)
+        and sourceURL.startswith("https://git")
     ):
         gitaddress = ""
         subfolder = ""
