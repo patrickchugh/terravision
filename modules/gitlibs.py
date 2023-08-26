@@ -55,7 +55,7 @@ def get_clone_url(sourceURL: str):
     git_tag = ""
     # Handle Case where full git url is given
     if (
-        "github.com" in sourceURL or "gitlab.com" in sourceURL
+        "github.com" in sourceURL or "gitlab.com" or "bitbucket" in sourceURL
     ) or sourceURL.startswith("https://git"):
         if "?ref" in sourceURL :
             git_tag = sourceURL.split("?ref=")[1]
