@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from sys import exit
 from urllib.parse import urlparse
-
+import modules.helpers as helpers
 import click
 import git
 import requests
@@ -53,21 +53,8 @@ def get_clone_url(sourceURL: str):
     gitaddress = ""
     subfolder = ""
     git_tag = ""
-    # Handle Case where full git url is given
-    if (
-        "github.com" in sourceURL or "gitlab.com" in sourceURL
-    ) and sourceURL.startswith("https://git"):
-        gitaddress = ""
-        subfolder = ""
-      
-        # Handle subfolder of git repo
-        if sourceURL.count("//") > 1:
-            subfolder_array = sourceURL.split("//")
-            subfolder = subfolder_array[2].split("?")[0]
-            gitaddress = subfolder_array[0] + "//" + subfolder_array[1]
-        githubURL = gitaddress if gitaddress else sourceURL
     # Handle case where ssh git URL is given
-    elif (
+    if (
         sourceURL.startswith("git::ssh://")
         or sourceURL.startswith("git@git")
         or "git::" in sourceURL
@@ -90,6 +77,18 @@ def get_clone_url(sourceURL: str):
                 gitaddress = gitaddress.split("?ref=")[0]
                 git_tag = sourceURL.split("?ref=")[1]
         githubURL = gitaddress
+    # Handle Case where full git url is given
+    elif helpers.check_for_domain(sourceURL):
+        if "?ref" in sourceURL :
+            git_tag = sourceURL.split("?ref=")[1]
+            sourceURL = sourceURL.split("?ref=")[0]
+        # Handle subfolder of git repo
+        if sourceURL.count("//") > 1:
+            subfolder_array = sourceURL.split("//")
+            subfolder = subfolder_array[2].split("?")[0]
+            githubURL = subfolder_array[0] + "//" + subfolder_array[1]
+        else :
+            githubURL = "https://" + sourceURL if not "http" in sourceURL else sourceURL
     else:
         # URL is a Terraform Registry Module linked via git
         gitaddress = sourceURL
