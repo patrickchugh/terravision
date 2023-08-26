@@ -83,6 +83,8 @@ def get_clone_url(sourceURL: str):
             subfolder_array = gitaddress.split("//")
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
+        else :
+            gitaddress = gitaddress.split("?ref=")[0]
         githubURL = gitaddress
     else:
         # URL is a Terraform Registry Module linked via git
