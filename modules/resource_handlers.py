@@ -208,10 +208,18 @@ def aws_handle_sg(tfdata: dict):
                 tfdata["graphdict"][node].remove(target)
                 tfdata["graphdict"][node].append(replacement_sg)
     # TODO: Merge any security groups which share the same identical connection
+    # Handle subnets pointing to sg targets
     list_of_sgs = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_security_group"
     )
-    pass
+    for sg in list_of_sgs :
+        for sg_connection in tfdata['graphdict'][sg] :
+            parent_list = helpers.list_of_parents(tfdata['graphdict'],sg_connection)
+            for parent in parent_list:
+                if parent.startswith("aws_subnet") :
+                    tfdata['graphdict'][parent].append(sg)
+                    tfdata['graphdict'][parent].remove(sg_connection)
+
     return tfdata
 
 

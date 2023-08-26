@@ -92,7 +92,11 @@ def handle_module(modules_list, tf_file_paths, filename):
                         tf_file_paths = find_tf_files(os.getcwd(), tf_file_paths)
                         os.chdir(start_dir)
                 else:
-                    modfolder = gitlibs.clone_files(sourceURL, temp_modules_dir, k)
+                    if not os.path.isdir(sourceURL):
+                        modfolder = gitlibs.clone_files(sourceURL, temp_modules_dir, k)
+                    else :
+                        # local module
+                        modfolder = sourceURL
                     tf_file_paths = find_tf_files(modfolder, tf_file_paths)
     # Create a mapping dict between modules and their source dirs for variable separation
     for i in range(len(modules_list)):
