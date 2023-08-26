@@ -56,16 +56,16 @@ def get_clone_url(sourceURL: str):
     # Handle Case where full git url is given
     if (
         "github.com" in sourceURL or "gitlab.com" in sourceURL
-    ) and sourceURL.startswith("https://git"):
-        gitaddress = ""
-        subfolder = ""
-      
+    ) or sourceURL.startswith("https://git"):
+        if "?ref" in sourceURL :
+            git_tag = sourceURL.split("?ref=")[1]
+            sourceURL = sourceURL.split("?ref=")[0]
         # Handle subfolder of git repo
         if sourceURL.count("//") > 1:
             subfolder_array = sourceURL.split("//")
             subfolder = subfolder_array[2].split("?")[0]
             gitaddress = subfolder_array[0] + "//" + subfolder_array[1]
-        githubURL = gitaddress if gitaddress else sourceURL
+        githubURL = "http://" + sourceURL if not "http" in sourceURL else sourceURL
     # Handle case where ssh git URL is given
     elif (
         sourceURL.startswith("git::ssh://")

@@ -99,12 +99,13 @@ def replace_local_values(found_list: list, value, module, tfdata):
                 # value = value.replace(localitem, str(replacement_value))
                 value = helpers.find_replace(localitem, str(replacement_value), value)
             else:
-                if lookup in tfdata["all_locals"]["main"].keys():
-                    replacement_value = tfdata["all_locals"]["main"].get(lookup)
-                    # value = value.replace(localitem, str(replacement_value))
-                    value = helpers.find_replace(
-                        localitem, str(replacement_value), value
-                    )
+                if tfdata["all_locals"].get("main"):
+                    if lookup in tfdata["all_locals"]["main"].keys() :
+                        replacement_value = tfdata["all_locals"]["main"].get(lookup)
+                        # value = value.replace(localitem, str(replacement_value))
+                        value = helpers.find_replace(
+                            localitem, str(replacement_value), value
+                        )
                 else:
                     value = value.replace(localitem, "None")
                     click.echo(
