@@ -212,13 +212,13 @@ def aws_handle_sg(tfdata: dict):
     list_of_sgs = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_security_group"
     )
-    for sg in list_of_sgs :
-        for sg_connection in tfdata['graphdict'][sg] :
-            parent_list = helpers.list_of_parents(tfdata['graphdict'],sg_connection)
+    for sg in list_of_sgs:
+        for sg_connection in tfdata["graphdict"][sg]:
+            parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
             for parent in parent_list:
-                if parent.startswith("aws_subnet") :
-                    tfdata['graphdict'][parent].append(sg)
-                    tfdata['graphdict'][parent].remove(sg_connection)
+                if parent.startswith("aws_subnet"):
+                    tfdata["graphdict"][parent].append(sg)
+                    tfdata["graphdict"][parent].remove(sg_connection)
 
     return tfdata
 
