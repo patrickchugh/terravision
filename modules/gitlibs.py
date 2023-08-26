@@ -52,12 +52,14 @@ def handle_readme_source(resp) -> str:
 def get_clone_url(sourceURL: str):
     gitaddress = ""
     subfolder = ""
+    git_tag = ""
     # Handle Case where full git url is given
     if (
         "github.com" in sourceURL or "gitlab.com" in sourceURL
     ) and sourceURL.startswith("https://git"):
         gitaddress = ""
         subfolder = ""
+      
         # Handle subfolder of git repo
         if sourceURL.count("//") > 1:
             subfolder_array = sourceURL.split("//")
@@ -85,6 +87,7 @@ def get_clone_url(sourceURL: str):
             gitaddress = subfolder_array[0]
         else :
             gitaddress = gitaddress.split("?ref=")[0]
+            git_tag = sourceURL.split("?ref=")[1]
         githubURL = gitaddress
     else:
         # URL is a Terraform Registry Module linked via git
@@ -133,7 +136,7 @@ def get_clone_url(sourceURL: str):
             exit()
         if githubURL == "":
             githubURL = handle_readme_source(r)
-    return githubURL, subfolder
+    return githubURL, subfolder, git_tag
 
 
 def clone_files(sourceURL: str, tempdir: str, module="main"):
@@ -148,7 +151,7 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     codepath = module_cache_path + f";{module};"
     # Identify source repo and construct final git clone URL
     click.echo(f"  Downloading External Module: {sourceURL}")
-    githubURL, subfolder = get_clone_url(sourceURL)
+    githubURL, subfolder, tag = get_clone_url(sourceURL)
     click.echo(
         click.style(
             f"    Cloning from Terraform registry source: {githubURL}", fg="green"
@@ -165,9 +168,12 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         return os.path.join(temp_module_path, subfolder)
     else:
         os.makedirs(codepath)
+        options = []
+        if tag :
+            options.append("--branch "+ tag)
         try:
             clonepath = git.Repo.clone_from(
-                githubURL, str(codepath), progress=CloneProgress()
+                githubURL, str(codepath), multi_options=options, progress=CloneProgress()
             )
         except:
             click.echo(

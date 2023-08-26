@@ -30,9 +30,7 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     global annotations
     yaml_detected = False
     # If source is a Git address, clone to temp dir
-    if (
-        "github" in source or "bitbucket" in source or "gitlab" in source
-    ) or source.startswith("http"):
+    if not os.path.isdir(source):
         source_location = gitlibs.clone_files(source, temp_dir.name)
     else:
         # Source is a local folder
@@ -82,7 +80,7 @@ def handle_module(modules_list, tf_file_paths, filename):
             if not sourceURL in all_repos:
                 all_repos.append(sourceURL)
                 # Handle local modules on disk
-                if sourceURL.startswith(".") or sourceURL.startswith("\\"):
+                if sourceURL.startswith(".") or sourceURL.startswith("\\") or os.path.isdir(sourceURL):
                     if not str(temp_modules_dir) in filename:
                         current_filepath = os.path.abspath(filename)
                         tf_dir = os.path.dirname(current_filepath)
