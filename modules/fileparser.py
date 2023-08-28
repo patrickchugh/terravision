@@ -5,10 +5,8 @@ import tempfile
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
-
 import click
 import yaml
-
 import hcl2
 import modules.gitlibs as gitlibs
 

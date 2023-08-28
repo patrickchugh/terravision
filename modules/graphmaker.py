@@ -63,7 +63,7 @@ def make_graph_dict(tfdata: dict):
                 graphdict[resource].remove(hidden_resource)
     tfdata["graphdict"] = graphdict
     click.echo(click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True))
-    print(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Handle consolidated nodes where nodes are grouped into one node
     tfdata = consolidate_nodes(tfdata)
     # Handle automatic and user annotations
@@ -77,7 +77,7 @@ def make_graph_dict(tfdata: dict):
     # Dump graphdict
     click.echo(click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
-    print(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata
 
 

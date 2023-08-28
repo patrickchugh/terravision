@@ -9,12 +9,14 @@ import modules.fileparser as fileparser
 import modules.graphmaker as graphmaker
 import modules.helpers as helpers
 import modules.interpreter as interpreter
+import modules.tfwrapper as tfwrapper
+import modules.graphmaker as graphmaker
 from pathlib import Path
 from pprint import pprint
 
 
 def my_excepthook(type, value, traceback):
-    print (f'Unhandled error: {type}, {value}, {traceback}')
+    print(f"Unhandled error: {type}, {value}, {traceback}")
 
 
 def show_banner():
@@ -31,32 +33,52 @@ def show_banner():
     print(banner)
 
 
-def compile_tfdata(source: list, varfile: list, annotate=""):
-    # Parse HCL files from Terraform
-    tfdata = fileparser.parse_tf_files(source, varfile, annotate)
-    # Load default variable values and user variable values
-    tfdata = interpreter.get_variable_values(tfdata)
-    # Create view of locals by module
-    tfdata = interpreter.extract_locals(tfdata)
-    # Create metadata view from nested TF file resource attributes
-    tfdata = interpreter.get_metadata(tfdata)
-    # Replace metadata (resource attributes) variables and locals with actual values
-    tfdata = interpreter.handle_metadata_vars(tfdata)
-    # Inject parent module variables that are referenced downstream in sub modules
-    if "all_modules" in tfdata.keys():
-        tfdata = interpreter.inject_module_variables(tfdata)
-    # Dump out findings after file scans are complete
-    helpers.output_log(tfdata)
-    # Handle conditionally created resources e.g. with count or foreach attribute
-    tfdata = interpreter.handle_conditional_resources(tfdata)
-    # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    tfdata = graphmaker.make_graph_dict(tfdata)
+def compile_tfdata(source: list, varfile: list, terraform: bool, annotate=""):   
+    if terraform:
+        # Call terraform binary to extract a graph and plan info from output
+        tfdata = tfwrapper.tf_initplan(source, varfile)
+        # make graphdict from tf graph
+        tfdata = tfwrapper.tf_makegraph(tfdata)
+        # Show original dict
+        click.echo(click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True))
+        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+        # Handle consolidated nodes where nodes are grouped into one node
+        tfdata = graphmaker.consolidate_nodes(tfdata)
+        # Handle automatic and user annotations
+        tfdata = graphmaker.annotations.add_annotations(tfdata)
+        # Handle special relationships that require post-processing
+        tfdata = graphmaker.handle_special_resources(tfdata)
+        tfdata = graphmaker.handle_variants(tfdata)
+        # Dump final graphdict
+        click.echo(click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True))
+        tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
+        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    else :
+        # Parse HCL files from Terraform
+        tfdata = fileparser.parse_tf_files(source, varfile, annotate)
+        # Load default variable values and user variable values
+        tfdata = interpreter.get_variable_values(tfdata)
+        # Create view of locals by module
+        tfdata = interpreter.extract_locals(tfdata)
+        # Create metadata view from nested TF file resource attributes
+        tfdata = interpreter.get_metadata(tfdata)
+        # Replace metadata (resource attributes) variables and locals with actual values
+        tfdata = interpreter.handle_metadata_vars(tfdata)
+        # Inject parent module variables that are referenced downstream in sub modules
+        if "all_modules" in tfdata.keys():
+            tfdata = interpreter.inject_module_variables(tfdata)
+        # Dump out findings after file scans are complete
+        helpers.output_log(tfdata)
+        # Handle conditionally created resources e.g. with count or foreach attribute
+        tfdata = interpreter.handle_conditional_resources(tfdata)
+        # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
+        tfdata = graphmaker.make_graph_dict(tfdata)
     return tfdata
 
 
 def preflight_check():
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
-    dependencies = ["dot", "gvpr", "git"]
+    dependencies = ["dot", "gvpr", "git", "terraform"]
     bundle_dir = Path(__file__).parent
     sys.path.append(bundle_dir)
     for exe in dependencies:
@@ -76,12 +98,10 @@ def preflight_check():
 
 
 # Default help banner
-@click.version_option(version=0.2, prog_name="terravision")
+@click.version_option(version=0.5, prog_name="terravision")
 @click.group()
 def cli():
     """
-    Terravision 0.2 Alpha
-
     Terravision generates professional cloud architecture diagrams from Terraform scripts
 
     For help with a specific command type:
@@ -94,9 +114,7 @@ def cli():
 
 # Draw Diagram Command
 @cli.command()
-@click.option(
-    "--debug", is_flag=True, default=False, help="Dump exception tracebacks"
-)
+@click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
 @click.option(
     "--source",
     multiple=True,
@@ -121,16 +139,24 @@ def cli():
     default=False,
     help="Simplified high level services shown only",
 )
+@click.option(
+    "--terraform",
+    is_flag=True,
+    default=False,
+    help="Skip code parsing and use Terraform to generate plans",
+)
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option("--avl_classes", hidden=True)
-def draw(debug, source, varfile, outfile, format, show, simplified, annotate, avl_classes):
+def draw(
+    debug, source, varfile, outfile, format, show, simplified, terraform, annotate, avl_classes
+):
     """Draws Architecture Diagram"""
     if not debug:
         sys.excepthook = my_excepthook
 
     show_banner()
     preflight_check()
-    tfdata = compile_tfdata(source, varfile, annotate)
+    tfdata = compile_tfdata(source, varfile, terraform, annotate)
     drawing.render_diagram(
         tfdata,
         show,
@@ -143,9 +169,7 @@ def draw(debug, source, varfile, outfile, format, show, simplified, annotate, av
 
 # List Resources Command
 @cli.command()
-@click.option(
-    "--debug", is_flag=True, default=False, help="Dump exception tracebacks"
-)
+@click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
 @click.option(
     "--source",
     multiple=True,
@@ -169,7 +193,13 @@ def draw(debug, source, varfile, outfile, format, show, simplified, annotate, av
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option("--avl_classes", hidden=True)
 def graphdata(
-    debug, source, varfile, show_services, annotate, avl_classes, outfile="graphdata.json"
+    debug,
+    source,
+    varfile,
+    show_services,
+    annotate,
+    avl_classes,
+    outfile="graphdata.json",
 ):
     """List Cloud Resources and Relations as JSON"""
     if not debug:
