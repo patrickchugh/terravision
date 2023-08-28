@@ -509,6 +509,7 @@ def get_variable_values(tfdata) -> dict:
                         var_value = f'"{var_value}"'
                 else:
                     var_value = ""
+                click.echo(f"    var.{var_name}")
                 var_data[var_name] = var_value
                 # Also update var mapping dict with modules and matching variables
                 if tfdata.get("module_source_dict"):
