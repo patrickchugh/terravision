@@ -26,6 +26,14 @@ def check_for_domain(string: str) -> bool:
             return True
     return False
 
+def get_no_module_name(node: str) :
+    if not node :
+        return
+    if node.startswith("module.") :
+        no_module_name = node.split("module.")[1].split(".")[1] +"." + node.split('.')[3]
+    else :
+        no_module_name = node
+    return no_module_name
 
 def check_list_for_dash(connections: list):
     has_dash = True

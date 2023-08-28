@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import click
 import modules.gitlibs as gitlibs
+import modules.helpers as helpers
 import tempfile
 import shutil
 import json
@@ -64,22 +65,27 @@ def make_tf_data(plandata: dict, graphdata: dict):
 def tf_makegraph(tfdata: dict) :
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
+    tfdata["node_list"] = list()
+    tfdata["hidden"] = dict()
+    tfdata["annotations"] = dict()
     gvid_table = list()
     # Make an initial dict with resources created and empty connections
     for object in tfdata["tf_resources_created"] :
         node = object["address"].replace("[","-")
         node = node.replace("]","")
-        tfdata["graphdict"][node] = list()
+        no_module_name = helpers.get_no_module_name(node)
+        tfdata["graphdict"][no_module_name] = list()
+        tfdata["node_list"].append(no_module_name)
         # add metadata
         details = object["change"]["after"]
         details.update(object["change"]["after_unknown"])
         details.update(object["change"]["after_sensitive"])
-        tfdata["meta_data"][node] = details
+        tfdata["meta_data"][no_module_name] = details
     # Make a lookup table of gvids mapping resources to ids
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
         gvid_table.append("")
-        gvid_table[gvid] = item.get("label")
+        gvid_table[gvid] = helpers.get_no_module_name(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in tfdata["graphdict"] :
         node_id = gvid_table.index(node.split("-")[0])
