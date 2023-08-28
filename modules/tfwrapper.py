@@ -73,6 +73,10 @@ def tf_makegraph(tfdata: dict) :
     for object in tfdata["tf_resources_created"] :
         node = object["address"].replace("[","-")
         node = node.replace("]","")
+        if "-" in node:
+            number = node.split("-")[1]
+            number = str(int(number) + 1)
+            node = node.split("-")[0] + "-" + number
         no_module_name = helpers.get_no_module_name(node)
         tfdata["graphdict"][no_module_name] = list()
         tfdata["node_list"].append(no_module_name)
@@ -80,6 +84,8 @@ def tf_makegraph(tfdata: dict) :
         details = object["change"]["after"]
         details.update(object["change"]["after_unknown"])
         details.update(object["change"]["after_sensitive"])
+        if "-" in node :
+            details["count"] = 3
         tfdata["meta_data"][no_module_name] = details
     # Make a lookup table of gvids mapping resources to ids
     for item in tfdata["tfgraph"]["objects"]:

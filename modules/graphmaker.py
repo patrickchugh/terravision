@@ -77,7 +77,7 @@ def make_graph_dict(tfdata: dict):
     # Dump graphdict
     click.echo(click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
-    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    print(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata
 
 
@@ -378,12 +378,16 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
 def create_multiple_resources(tfdata):
     # Get a list of all potential resources with a >1 count attribute
     multi_resources = [
-        k
+        k.split("-")[0]
         for k, v in tfdata["meta_data"].items()
         if "count" in v
         and isinstance(tfdata["meta_data"][k]["count"], int)
         and tfdata["meta_data"][k]["count"] > 1
     ]
+    # insert the list to the set
+    list_set = set(multi_resources)
+    # convert the set to the list
+    multi_resources = (list(list_set))
     tfdata = handle_count_resources(multi_resources, tfdata)
     # Now remove the original resource names
     for resource in multi_resources:
