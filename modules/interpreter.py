@@ -69,7 +69,7 @@ def handle_metadata_vars(tfdata):
                 or "local." in value
                 or "module." in value
                 or "data." in value
-            ) and key != "depends_on":
+            ) and key != "depends_on" and key != "original_count":
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
             tfdata["meta_data"][resource][key] = value
@@ -100,7 +100,7 @@ def replace_local_values(found_list: list, value, module, tfdata):
                 value = helpers.find_replace(localitem, str(replacement_value), value)
             else:
                 if tfdata["all_locals"].get("main"):
-                    if lookup in tfdata["all_locals"]["main"].keys() :
+                    if lookup in tfdata["all_locals"]["main"].keys():
                         replacement_value = tfdata["all_locals"]["main"].get(lookup)
                         # value = value.replace(localitem, str(replacement_value))
                         value = helpers.find_replace(
@@ -306,7 +306,7 @@ def find_conditional_statements(resource, attr_list: dict):
     # Handle conditional counts and loops
     if "for_each" in attr_list:
         eval_string = attr_list["for_each"]
-        return "ERROR!" + helpers.cleanup_curlies(eval_string)
+        return "ERROR!" + eval_string
     if (
         "count" in attr_list.keys()
         and not isinstance(attr_list["count"], int)
@@ -377,9 +377,16 @@ def handle_conditional_resources(tfdata):
             if "aws_" and "[*]." in eval_string:
                 eval_string = handle_splat_statements(eval_string, tfdata)
             # We have a conditionally created resource
+            checks = 0
+            original_step1 = eval_string
             while check_for_tf_functions(eval_string) != False:
+                if checks > 100:
+                    break
                 eval_string = helpers.fix_lists(eval_string)
                 eval_string = eval_tf_functions(eval_string)
+                checks = checks + 1
+            if checks > 100:
+                eval_string = eval_string + "ERROR!"
             exp = eval_string
             if not "ERROR!" in exp:
                 obj = Conversion(len(exp))
@@ -395,8 +402,15 @@ def handle_conditional_resources(tfdata):
                         click.echo(
                             f"    Module {mod} : {resource} count = {original_string}"
                         )
+                        if checks > 1 :
+                            click.echo(
+                                f"                 {resource} count = {original_step1}"
+                            )
                         click.echo(
-                            f"                   {resource} count = {eval_value} ({exp})"
+                            f"                 {resource} count = {exp})"
+                        )
+                        click.echo(
+                            f"                 {resource} count = {eval_value}"
                         )
                         attr_list["count"] = int(eval_value)
                 else:
@@ -465,7 +479,7 @@ def get_metadata(tfdata):  # -> set
                 node_list.append(f"{resource_type}.{resource_name}")
                 md = item[k][i]
                 if md.get("count"):
-                    md["original_count"] = md["count"]
+                    md["original_count"] = str(md["count"])
                 if resource_type.startswith("aws"):
                     meta_data[f"{resource_type}.{resource_name}"] = md
                     meta_data[f"{resource_type}.{resource_name}"]["module"] = mod

@@ -175,3 +175,8 @@ class tf_function_handlers:
             param = param[0:-1]
         paramlist = literal_eval(param)
         return paramlist[0]
+    
+    def cidrsubnet(param):
+        param = resolve_nested_functions(param)
+        paramlist = param.split(",")
+        return f'"{paramlist[0]}"'
