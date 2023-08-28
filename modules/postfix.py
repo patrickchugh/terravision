@@ -70,8 +70,14 @@ class Evaluate:
                 val1 = ""
                 val2 = ""
                 # Trim leading spaces until we find first value for val1
+                tried = 0
                 while self.peek() == " ":
+                    if tried > 100 :
+                        break
+                    tried = tried + 1
                     self.pop()
+                if tried > 100 :
+                    return "ERROR!"
                 # Accumulate multi digit operand until we hit a space
                 while self.peek() != " ":
                     val1 = str(self.pop()) + val1
@@ -185,13 +191,20 @@ class Conversion:
         return ch.isdigit() or ch == "T" or ch == "F"
 
     def hash_strings(self, exp):
+        tried = 0
         while exp.count('"') > 1:
+            if tried > 100 :
+                break
             split_array = exp.split('"')
             string = split_array[1]
             if len(string) > 0:
                 exp = exp.replace('"' + string + '"', compute_hash(str.encode(string)))
             else:
                 exp = exp.replace('""', "0")
+            tried = tried + 1
+        if tried > 100 :
+            return "ERROR"
+        tried = 0
         while exp.count("'") > 1:
             split_array = exp.split("'")
             string = split_array[1]
@@ -199,6 +212,9 @@ class Conversion:
                 exp = exp.replace("'" + string + "'", compute_hash(str.encode(string)))
             else:
                 exp = exp.replace("''", "0")
+            tried = tried + 1
+        if tried > 100 :
+            return "ERROR"
         return exp
 
     # Check if the precedence of operator is strictly
@@ -247,9 +263,10 @@ class Conversion:
         exp = self.hash_strings(exp)
         counter = -1
         tried = 1
+        spaces = 0 
         while exp.count("?") > 1:
-            if tried > 10:
-                return "ERROR!"
+            if tried > 20:
+                break
             num_ifs = exp.count("?")
             begin_index = find_nth(exp, "?", num_ifs)
             end_index = find_nth(exp, ":", num_ifs)
@@ -257,11 +274,15 @@ class Conversion:
             while exp[spaces] == " ":
                 spaces = spaces - 1
                 if spaces > 100:
-                    return "ERROR!"
+                    break
             middle = exp[spaces:end_index]
             parsed_value = self.evaluate_subexp(middle)
             exp = exp.replace(middle, str(parsed_value))
             tried = tried + 1
+        if spaces > 100:
+                return "ERROR!"
+        if tried > 20:
+                return "ERROR!"
         # Iterate over the expression for conversion
         for i in exp:
             counter += 1
