@@ -15,10 +15,20 @@
     "aws_appautoscaling_policy.scale_up": [
         "aws_cloudwatch_log_group.cloudwatch"
     ],
-    "aws_appautoscaling_target.this": [
+    "aws_appautoscaling_target.this-1": [
         "aws_appautoscaling_policy.scale_down",
         "aws_appautoscaling_policy.scale_up",
-        "aws_fargate.ecs"
+        "aws_fargate.ecs-1"
+    ],
+    "aws_appautoscaling_target.this-2": [
+        "aws_appautoscaling_policy.scale_down",
+        "aws_appautoscaling_policy.scale_up",
+        "aws_fargate.ecs-2"
+    ],
+    "aws_appautoscaling_target.this-3": [
+        "aws_appautoscaling_policy.scale_down",
+        "aws_appautoscaling_policy.scale_up",
+        "aws_fargate.ecs-3"
     ],
     "aws_az.us-east-1a": [
         "aws_subnet.private-1",
@@ -32,14 +42,12 @@
         "aws_subnet.private-3",
         "aws_subnet.public-3"
     ],
-    "aws_cloudwatch_log_group.cloudwatch": [
-        "aws_fargate.ecs"
-    ],
+    "aws_cloudfront_distribution.this": [],
+    "aws_cloudwatch_log_group.cloudwatch": [],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
     "aws_efs_file_system.efs": [
-        "aws_efs_mount_target.this",
-        "aws_fargate.ecs"
+        "aws_efs_mount_target.this"
     ],
     "aws_efs_mount_target.this-1": [],
     "aws_efs_mount_target.this-2": [],
@@ -130,6 +138,9 @@
     "aws_route.private_nat_gateway-2": [],
     "aws_route.private_nat_gateway-3": [],
     "aws_route.public_internet_gateway-1": [],
+    "aws_route53_record.route_53": [
+        "aws_acm_certificate.acm"
+    ],
     "aws_route_table.private-1": [
         "aws_route.private_nat_gateway",
         "aws_route_table_association.private"
@@ -222,5 +233,6 @@
     "random_string.snapshot_suffix": [
         "aws_rds_aurora.this"
     ],
-    "tv_aws_internet.internet": []
+    "tv_aws_internet.internet": [],
+    "tv_aws_users.users": []
 }

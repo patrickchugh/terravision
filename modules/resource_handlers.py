@@ -14,7 +14,6 @@ SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 def aws_handle_autoscaling(tfdata: dict):
     # Check if any nodes in connection list are referenced by an autoscaling group
     try:
-
         scaler_links = next(
             v
             for k, v in tfdata["graphdict"].items()
@@ -53,7 +52,6 @@ def aws_handle_autoscaling(tfdata: dict):
                     tfdata["meta_data"][check_service]["count"] = tfdata["meta_data"][
                         subnet
                     ]["count"]
-
     # Now replace any references within subnets to asg targets with the name of asg
     for asg in asg_resources:
         for connection in tfdata["graphdict"][asg]:
@@ -201,9 +199,9 @@ def aws_handle_sg(tfdata: dict):
             for connection in list(tfdata["graphdict"][target]):
                 if connection.startswith("aws_security_group"):
                     tfdata["graphdict"][target].remove(connection)
-        # Remove any nested security groups
-        if target_type == "aws_security_group":
-            del tfdata["graphdict"][target]
+        # # Remove any nested security groups
+        # if target_type == "aws_security_group":
+        #     del tfdata["graphdict"][target]
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
         replacement_sg = [k for k in references if k.startswith("aws_security_group")]
@@ -272,8 +270,8 @@ def aws_handle_lb(tfdata: dict):
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
-            # if tfdata["meta_data"][connection].get("desired_count"):
-            #     tfdata["meta_data"][connection]["count"] =  tfdata["meta_data"][renamed_node]["count"]
+            if tfdata["meta_data"][connection].get("desired_count"):
+                tfdata["meta_data"][connection]["count"] =  tfdata["meta_data"][renamed_node]["count"]
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
