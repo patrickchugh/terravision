@@ -12,37 +12,48 @@ SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
 
 def aws_handle_autoscaling(tfdata: dict):
+    # Check if any nodes in connection list are referenced by an autoscaling group
     try:
-        # Check if any nodes in connection list are referenced by an autoscaling group
+
         scaler_links = next(
             v
             for k, v in tfdata["graphdict"].items()
             if "aws_appautoscaling_target" in k
         )
-        asg_resources = [
-            r for r in tfdata["graphdict"] if r.startswith("aws_appautoscaling_target")
-        ]
-        for asg in asg_resources:
-            new_list = list()
-            for check_service in scaler_links:
-                possible_subnets = [
-                    k for k in tfdata["graphdict"] if k.startswith("aws_subnet")
-                ]
-                for sub in possible_subnets:
-                    if check_service in tfdata["graphdict"][sub]:
-                        # this subnet is part of an autoscaling group so note it
-                        new_list.append(sub)
-                # Apply counts for subnets to the asg target
-                for subnet in new_list:
-                    if not tfdata["meta_data"][asg].get("count"):
-                        tfdata["meta_data"][asg]["count"] = tfdata["meta_data"][subnet][
-                            "count"
-                        ]
-                        tfdata["meta_data"][check_service]["count"] = tfdata[
-                            "meta_data"
-                        ][subnet]["count"]
     except:
         pass
+    asg_resources = [
+        r for r in tfdata["graphdict"] if r.startswith("aws_appautoscaling_target")
+    ]
+    asg_targets = list()
+    for r in asg_resources:
+        asg_targets.extend(helpers.list_of_parents(tfdata["graphdict"], r))
+    # Add targets to connections of the autoscaling group
+    for asg in asg_resources:
+        for target in asg_targets:
+            tfdata["graphdict"][asg].append(target)
+            tfdata["meta_data"][asg]["count"] = 3
+    # Now adjust subnet counts if required
+    for asg in asg_resources:
+        new_list = list()
+        for check_service in scaler_links:
+            possible_subnets = [
+                k for k in tfdata["graphdict"] if k.startswith("aws_subnet")
+            ]
+            for sub in possible_subnets:
+                if check_service in tfdata["graphdict"][sub]:
+                    # this subnet is part of an autoscaling group so note it
+                    new_list.append(sub)
+            # Apply counts for subnets to the asg target
+            for subnet in new_list:
+                if not tfdata["meta_data"][asg].get("count"):
+                    tfdata["meta_data"][asg]["count"] = tfdata["meta_data"][subnet][
+                        "count"
+                    ]
+                    tfdata["meta_data"][check_service]["count"] = tfdata["meta_data"][
+                        subnet
+                    ]["count"]
+
     # Now replace any references within subnets to asg targets with the name of asg
     for asg in asg_resources:
         for connection in tfdata["graphdict"][asg]:
@@ -105,22 +116,22 @@ def aws_handle_subnet_azs(tfdata: dict):
         for k, v in tfdata["meta_data"].items()
         if k and k.startswith("aws_subnet") and k not in tfdata["hidden"]
     ]
-    # subnet_resources = [k for k,v in tfdata['meta_data'].items() if k not in tfdata['hidden'] and 'availability_zone' in v.keys() ]
     for subnet in subnet_resources:
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
         for parent in parents_list:
+            # Remove references to subnet and replace with AZ
             if subnet in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].remove(subnet)
-            if not tfdata["graphdict"].get("aws_az.az"):
-                tfdata["graphdict"]["aws_az.az"] = [subnet]
-                if tfdata["meta_data"][subnet].get("count"):
-                    tfdata["meta_data"]["aws_az.az"] = {"count": ""}
-                    tfdata["meta_data"]["aws_az.az"]["count"] = tfdata["meta_data"][
-                        subnet
-                    ]["count"]
-            else:
-                tfdata["graphdict"]["aws_az.az"].append(subnet)
-            tfdata["graphdict"][parent].append("aws_az.az")
+            az = "aws_az." + tfdata["meta_data"][subnet].get("availability_zone")
+            if not az in tfdata["graphdict"].keys():
+                tfdata["graphdict"][az] = list()
+                tfdata["meta_data"][az] = {"count": ""}
+                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet][
+                    "count"
+                ]
+            tfdata["graphdict"][az].append(subnet)
+            if az not in tfdata["graphdict"][parent] :
+                tfdata["graphdict"][parent].append(az)
     return tfdata
 
 
@@ -261,6 +272,8 @@ def aws_handle_lb(tfdata: dict):
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
+            # if tfdata["meta_data"][connection].get("desired_count"):
+            #     tfdata["meta_data"][connection]["count"] =  tfdata["meta_data"][renamed_node]["count"]
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
@@ -302,8 +315,14 @@ def aws_handle_dbsubnet(tfdata: dict):
     return tfdata
 
 
-def aws_handle_eks(tfdata: dict):
-    eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
+def aws_handle_ecs(tfdata: dict):
+    # eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
+    ecs_nodes = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_ecs_service"
+    )
+    # for ecs in ecs_nodes:
+    #     tfdata["meta_data"][ecs]["count"] = 3
+    # ecs_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_ek_cluster")
     # for eks in eks_nodes:
     #     del tfdata["graphdict"][eks]
     return tfdata

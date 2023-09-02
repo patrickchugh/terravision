@@ -33,53 +33,57 @@ def show_banner():
     print(banner)
 
 
-def compile_tfdata(source: list, varfile: list, terraform: bool, annotate=""):
-    if terraform:
-        # Call terraform binary to extract a graph and plan info from output
-        tfdata = tfwrapper.tf_initplan(source, varfile)
-        # make graphdict from tf graph
-        tfdata = tfwrapper.tf_makegraph(tfdata)
-        # Show original dict
-        click.echo(
-            click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True)
-        )
-        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
-        # Handle consolidated nodes where nodes are grouped into one node
-        tfdata = graphmaker.consolidate_nodes(tfdata)
-        # Handle automatic and user annotations
-        tfdata = graphmaker.annotations.add_annotations(tfdata)
-        # Handle special relationships that require post-processing
-        tfdata = graphmaker.handle_special_resources(tfdata)
-        # Handle multiple resources created by count attribute
-        tfdata = graphmaker.create_multiple_resources(tfdata)
-        # Handle variant of services
-        tfdata = graphmaker.handle_variants(tfdata)
-        # Dump final graphdict
-        click.echo(
-            click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True)
-        )
-        tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
-        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
-    else:
-        # Parse HCL files from Terraform
-        tfdata = fileparser.parse_tf_files(source, varfile, annotate)
-        # Load default variable values and user variable values
-        tfdata = interpreter.get_variable_values(tfdata)
-        # Create view of locals by module
-        tfdata = interpreter.extract_locals(tfdata)
-        # Create metadata view from nested TF file resource attributes
-        tfdata = interpreter.get_metadata(tfdata)
-        # Replace metadata (resource attributes) variables and locals with actual values
-        tfdata = interpreter.handle_metadata_vars(tfdata)
-        # Inject parent module variables that are referenced downstream in sub modules
-        if "all_modules" in tfdata.keys():
-            tfdata = interpreter.inject_module_variables(tfdata)
-        # Dump out findings after file scans are complete
-        helpers.output_log(tfdata)
-        # Handle conditionally created resources e.g. with count or foreach attribute
-        tfdata = interpreter.handle_conditional_resources(tfdata)
-        # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-        tfdata = graphmaker.make_graph_dict(tfdata)
+def compile_tfdata(source: list, varfile: list, annotate=""):
+    # Call terraform binary to extract a graph and plan info from output
+    #tfdata = tfwrapper.tf_initplan(source, varfile)
+    file=open("unprocessed.json","r")
+    tfdata=json.load(file)
+    # with open('unprocessed.json', 'w') as fp:
+    #     json.dump(tfdata, fp)
+    # make graphdict from tf graph
+    tfdata = tfwrapper.tf_makegraph(tfdata)
+    # Show original dict
+    click.echo(
+        click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True)
+    )
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    
+    # Handle consolidated nodes where nodes are grouped into one node
+    tfdata = graphmaker.consolidate_nodes(tfdata)
+    # Handle automatic and user annotations
+    tfdata = graphmaker.annotations.add_annotations(tfdata)
+    # Handle special relationships that require post-processing
+    tfdata = graphmaker.handle_special_resources(tfdata)
+    # Handle multiple resources created by count attribute
+    tfdata = graphmaker.create_multiple_parents(tfdata)
+    # Handle variant of services
+    tfdata = graphmaker.handle_variants(tfdata)
+    # Dump final graphdict
+    click.echo(
+        click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True)
+    )
+    tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    # else:
+    #     # Parse HCL files from Terraform
+    #     tfdata = fileparser.parse_tf_files(source, varfile, annotate)
+    #     # Load default variable values and user variable values
+    #     tfdata = interpreter.get_variable_values(tfdata)
+    #     # Create view of locals by module
+    #     tfdata = interpreter.extract_locals(tfdata)
+    #     # Create metadata view from nested TF file resource attributes
+    #     tfdata = interpreter.get_metadata(tfdata)
+    #     # Replace metadata (resource attributes) variables and locals with actual values
+    #     tfdata = interpreter.handle_metadata_vars(tfdata)
+    #     # Inject parent module variables that are referenced downstream in sub modules
+    #     if "all_modules" in tfdata.keys():
+    #         tfdata = interpreter.inject_module_variables(tfdata)
+    #     # Dump out findings after file scans are complete
+    #     helpers.output_log(tfdata)
+    #     # Handle conditionally created resources e.g. with count or foreach attribute
+    #     tfdata = interpreter.handle_conditional_resources(tfdata)
+    #     # Create Graph Data Structure in the format {node: [connected_node1,connected_node2]}
+    #     tfdata = graphmaker.make_graph_dict(tfdata)
     return tfdata
 
 
@@ -146,12 +150,6 @@ def cli():
     default=False,
     help="Simplified high level services shown only",
 )
-@click.option(
-    "--terraform",
-    is_flag=True,
-    default=False,
-    help="Skip code parsing and use Terraform to generate plans",
-)
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option("--avl_classes", hidden=True)
 def draw(
@@ -162,7 +160,6 @@ def draw(
     format,
     show,
     simplified,
-    terraform,
     annotate,
     avl_classes,
 ):
@@ -172,7 +169,7 @@ def draw(
 
     show_banner()
     preflight_check()
-    tfdata = compile_tfdata(source, varfile, terraform, annotate)
+    tfdata = compile_tfdata(source, varfile, annotate)
     drawing.render_diagram(
         tfdata,
         show,
@@ -202,12 +199,6 @@ def draw(
     help="Only show unique list of cloud services actually used",
 )
 @click.option(
-    "--terraform",
-    is_flag=True,
-    default=False,
-    help="Skip code parsing and use Terraform to generate plans",
-)
-@click.option(
     "--outfile",
     default="architecture",
     help="Filename for output list (default architecture.json)",
@@ -220,7 +211,6 @@ def graphdata(
     varfile,
     show_services,
     annotate,
-    terraform,
     avl_classes,
     outfile="graphdata.json",
 ):
@@ -230,7 +220,7 @@ def graphdata(
 
     show_banner()
     preflight_check()
-    tfdata = compile_tfdata(source, varfile, terraform,  annotate)
+    tfdata = compile_tfdata(source, varfile,annotate)
     click.echo(click.style("\nOutput JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
     click.echo(

@@ -7,6 +7,7 @@ import modules.helpers as helpers
 import tempfile
 import shutil
 import json
+import ipaddr
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -71,6 +72,7 @@ def tf_makegraph(tfdata: dict) :
     gvid_table = list()
     # Make an initial dict with resources created and empty connections
     for object in tfdata["tf_resources_created"] :
+        # Replace multi count notation 
         node = object["address"].replace("[","-")
         node = node.replace("]","")
         if "-" in node:
@@ -80,13 +82,17 @@ def tf_makegraph(tfdata: dict) :
         no_module_name = helpers.get_no_module_name(node)
         tfdata["graphdict"][no_module_name] = list()
         tfdata["node_list"].append(no_module_name)
-        # add metadata
+        # Add metadata
         details = object["change"]["after"]
         details.update(object["change"]["after_unknown"])
         details.update(object["change"]["after_sensitive"])
+        if "module." in object["address"] :
+            modname = object["address"].split(".")[1]
+            details["module"] = modname
         if "-" in node :
             details["count"] = 3
         tfdata["meta_data"][no_module_name] = details
+    tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     # Make a lookup table of gvids mapping resources to ids
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
@@ -101,5 +107,25 @@ def tf_makegraph(tfdata: dict) :
             # Check that the connection is part of the nodes that will be created (exists in graphdict)
             if node_id == head and len([ k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail]) ]) > 0 :
                 tfdata["graphdict"][node].append(gvid_table[tail])
+    tfdata = add_implied_relations(tfdata)
     return tfdata
  
+def add_implied_relations(tfdata:dict) :
+    # Handle VPC / Subnet relationships
+    vpc_resources = [
+        k
+        for k, v in tfdata["graphdict"].items()
+        if k.startswith("aws_vpc")
+    ]
+    subnet_resources = [
+        k
+        for k, v in tfdata["graphdict"].items()
+        if k.startswith("aws_subnet")
+    ]
+    for vpc in vpc_resources:
+        vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
+        for subnet in subnet_resources:
+            subnet_cidr =  ipaddr.IPNetwork(tfdata["meta_data"][subnet]["cidr_block"])
+            if subnet_cidr.overlaps(vpc_cidr) :
+                tfdata["graphdict"][vpc].append(subnet)
+    return tfdata

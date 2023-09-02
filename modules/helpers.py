@@ -33,6 +33,7 @@ def get_no_module_name(node: str) :
         no_module_name = node.split("module.")[1].split(".")[1] +"." + node.split('.')[3]
     else :
         no_module_name = node
+    #no_module_name = no_module_name.split("-")[0]
     return no_module_name
 
 def check_list_for_dash(connections: list):
