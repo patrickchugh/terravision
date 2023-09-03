@@ -23,6 +23,19 @@ if not os.path.exists(MODULE_DIR):
 # List of dictionary sections to extract from TF file
 EXTRACT = ["module", "output", "variable", "locals", "resource", "data"]
 
+def walklevel(some_dir, level=1):
+    paths = list()
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir):
+        if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
+            paths.append(os.path.join(root, file))
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
+    return paths
 
 def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     global annotations
@@ -34,10 +47,13 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
         # Source is a local folder
         source_location = source.strip()
     if recursive:
-        for root, _, files in os.walk(source_location):
-            for file in files:
-                if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
-                    paths.append(os.path.join(root, file))
+        for root, dir, files in os.walk(source_location):
+            for d in dir:
+                for r, f, d in os.walk(d) :
+                    for file in f:
+                        if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
+                            paths.append(os.path.join(root, file))
+                break
     else:
         files = [f for f in os.listdir(source_location)]
         click.echo(f"  Added Source Location: {source}")
@@ -78,7 +94,11 @@ def handle_module(modules_list, tf_file_paths, filename):
             if not sourceURL in all_repos:
                 all_repos.append(sourceURL)
                 # Handle local modules on disk
-                if sourceURL.startswith(".") or sourceURL.startswith("\\") or os.path.isdir(sourceURL):
+                if (
+                    sourceURL.startswith(".")
+                    or sourceURL.startswith("\\")
+                    or os.path.isdir(sourceURL)
+                ):
                     if not str(temp_modules_dir) in filename:
                         current_filepath = os.path.abspath(filename)
                         tf_dir = os.path.dirname(current_filepath)
@@ -118,7 +138,7 @@ def handle_module(modules_list, tf_file_paths, filename):
 
 
 def iterative_read(
-    tf_file_paths: dict, hcl_dict: dict, extract_sections: list, tfdata: dict
+    tf_file_paths: dict, hcl_dict: dict, extract_sections: list, tfdata: dict, nogit=False
 ):
     # Parse each TF file encountered in source locations
     module_source_dict = dict()
@@ -155,7 +175,7 @@ def iterative_read(
                             fg="green",
                         )
                     )
-                    if section == "module":
+                    if section == "module" and nogit == False:
                         # Expand source locations to include any newly found sub-module locations
                         module_data = handle_module(
                             hcl_dict[filename]["module"], tf_file_paths, filename
@@ -176,7 +196,36 @@ def iterative_read(
     return tfdata
 
 
-def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
+# def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
+#     global annotations
+#     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """
+#     hcl_dict = dict()
+#     tfdata = dict()
+#     variable_list = dict()
+#     module_sources_found = dict()
+#     cwd = os.getcwd()
+#     for source in source_list:
+#         # Get List of Terraform Files to parse
+#         tf_file_paths = find_tf_files(source)
+#         if annotate:
+#             with open(annotate, "r") as file:
+#                 click.echo(f"  Will use architecture annotation file : {file.name} \n")
+#                 annotations = yaml.safe_load(file)
+#         tfdata = iterative_read(tf_file_paths, hcl_dict, EXTRACT, tfdata)
+#     # Auto load any tfvars
+#     for file in tf_file_paths:
+#         if "auto.tfvars" in file:
+#             varfile_list = varfile_list + (file,)
+#     # Load in variables from user file into a master list
+#     if len(varfile_list) == 0 and tfdata.get("all_variable"):
+#         varfile_list = tfdata["all_variable"].keys()
+#     tfdata["varfile_list"] = varfile_list
+#     tfdata["tempdir"] = temp_dir
+#     tfdata["annotations"] = annotations
+#     return tfdata
+
+
+def read_tfcache(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
     global annotations
     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """
     hcl_dict = dict()
@@ -185,13 +234,14 @@ def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # ->
     module_sources_found = dict()
     cwd = os.getcwd()
     for source in source_list:
+        tfdir = os.path.join(source, ".terraform", "modules")
         # Get List of Terraform Files to parse
-        tf_file_paths = find_tf_files(source)
+        tf_file_paths = find_tf_files(tfdir, [], True)
         if annotate:
             with open(annotate, "r") as file:
                 click.echo(f"  Will use architecture annotation file : {file.name} \n")
                 annotations = yaml.safe_load(file)
-        tfdata = iterative_read(tf_file_paths, hcl_dict, EXTRACT, tfdata)
+        tfdata = iterative_read(tf_file_paths, hcl_dict, EXTRACT, tfdata, True)
     # Auto load any tfvars
     for file in tf_file_paths:
         if "auto.tfvars" in file:
