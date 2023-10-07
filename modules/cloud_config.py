@@ -66,13 +66,6 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_eip": {
-            "resource_name": "aws_eip.eip",
-            "import_location": "resource_classes.aws.network",
-            "vpc": True,
-        }
-    },
-    {
         "aws_efs_file_system": {
             "resource_name": "aws_efs_file_system.efs",
             "import_location": "resource_classes.aws.storage",
@@ -184,7 +177,6 @@ AWS_SHARED_SERVICES = [
     "aws_ecr_repository",
     "aws_efs_file_system",
     "aws_ssm_parameter",
-    "aws_eip",
     "aws_kms_key",
 ]
 AWS_ALWAYS_DRAW_LINE = ["aws_lb", "aws_iam_role"]

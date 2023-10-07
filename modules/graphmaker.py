@@ -1,11 +1,11 @@
 import json
-
 import click
-
 import modules.annotations as annotations
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
+import modules.interpreter as interpreter
+
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -16,45 +16,114 @@ SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
 
+def supplement_graph_dict(tfdata):
+    # Load default variable values and user variable values
+    tfdata = interpreter.get_variable_values(tfdata)
+    # Create view of locals by module
+    tfdata = interpreter.extract_locals(tfdata)
+    # Create metadata view from nested TF file resource attributes
+    tfdata = interpreter.get_metadata(tfdata)
+    # Replace metadata (resource attributes) variables and locals with actual values
+    tfdata = interpreter.handle_metadata_vars(tfdata)
+    # Inject parent module variables that are referenced downstream in sub modules
+    if "all_module" in tfdata.keys():
+        tfdata = interpreter.inject_module_variables(tfdata)
+    # Dump out findings after file scans are complete
+    helpers.output_log(tfdata)
+    # Append Graph Data Structure in the format {node: [connected_node1,connected_node2]}
+    tfdata = add_relations(tfdata)
+    return tfdata
+
+
+# Function to check whether a particular resource mentions another known resource (relationship)
+def check_relationship(
+    resource_associated_with: str, plist: list, tfdata: dict
+):  # -> list
+    nodes = tfdata["node_list"] 
+    hidden = tfdata["hidden"]
+    connection_list = []
+    # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
+    for param in plist:
+        matching = [s for s in nodes if s.split("-")[0] in param]
+        # Check if there are any implied connections based on keywords in the param list
+        found_connection = [s for s in IMPLIED_CONNECTIONS.keys() if s in param]
+        if found_connection:
+            for n in nodes:
+                if n.startswith(IMPLIED_CONNECTIONS[found_connection[0]]):
+                    matching.append(n)
+        if matching:
+            for matched_resource in matching:
+                reverse = False
+                matched_type = matched_resource.split(".")[0]
+                if (
+                    matched_resource not in hidden
+                    and resource_associated_with not in hidden
+                ):
+                    reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in param]
+                    if len(reverse_origin_match) > 0:
+                        reverse = True
+                        reverse_dest_match = [
+                            s
+                            for s in REVERSE_ARROW_LIST
+                            if s in resource_associated_with
+                        ]
+                        if len(reverse_dest_match) > 0:
+                            if REVERSE_ARROW_LIST.index(
+                                reverse_dest_match[0]
+                            ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
+                                reverse = False
+                    if reverse:
+                        if resource_associated_with not in tfdata["graphdict"][matched_resource] :
+                            connection_list.append(matched_resource)
+                            connection_list.append(resource_associated_with)
+                            # Output relationship to console log in reverse order for certain group nodes
+                            click.echo(
+                                f"   {matched_resource} --> {resource_associated_with} (Reversed)"
+                            )
+                    else:
+                        if matched_resource not in tfdata["graphdict"][resource_associated_with] :
+                            connection_list.append(resource_associated_with)
+                            connection_list.append(matched_resource)
+    return connection_list
+
+
 # Make final graph structure to be used for drawing
-def make_graph_dict(tfdata: dict):
-    # Handle special relationships that require pre-processing
-    tfdata = handle_special_resources(tfdata, False)
-    # Start with an empty connections list for all nodes/resources we know about
-    graphdict = dict.fromkeys(tfdata["node_list"], [])
-    num_resources = len(tfdata["node_list"])
+def add_relations(tfdata: dict):
+    # Start with an existing connections list for all nodes/resources we know about
+    graphdict = tfdata["graphdict"]
+    created_resources = len(dict.fromkeys(tfdata["graphdict"]))
+    num_resources = len(tfdata["all_node_list"])
     click.echo(
         click.style(
-            f"\nComputing Relations between {num_resources - len(tfdata['hidden'])} out of {num_resources} resources...",
+            f"\nChecking for additional links between {created_resources} created out of {num_resources} total resources...",
             fg="white",
             bold=True,
         )
     )
     # Determine relationship between resources and append to graphdict when found
-    for param_list in dict_generator(tfdata["all_resource"]):
-        for listitem in param_list:
-            if isinstance(listitem, str):
-                lisitem_tocheck = listitem
-                matching_result = check_relationship(
-                    lisitem_tocheck, param_list, tfdata["node_list"], tfdata["hidden"]
-                )
-                if matching_result:
-                    for i in range(0, len(matching_result), 2):
-                        a_list = list(graphdict[matching_result[i]])
-                        if not matching_result[i + 1] in a_list:
-                            a_list.append(matching_result[i + 1])
-                        graphdict[matching_result[i]] = a_list
-            if isinstance(listitem, list):
-                for i in listitem:
-                    matching_result = check_relationship(
-                        i, param_list, tfdata["node_list"], tfdata["hidden"]
-                    )
-                    if matching_result:
-                        a_list = list(graphdict[matching_result[0]])
-                        if not matching_result[1] in a_list:
-                            a_list.append(matching_result[1])
-                        graphdict[matching_result[0]] = a_list
-    # Hide nodes where count = 0
+    for node in tfdata["node_list"]:
+        if node not in tfdata["meta_data"].keys() :
+            nodename = node.split("-")[0]
+        else :
+            nodename = node
+        if nodename.startswith("random") :
+            continue
+        for param_list in dict_generator(tfdata["meta_data"][nodename]):
+            matching_result = check_relationship(
+                node,
+                param_list,
+                tfdata,
+            )
+            if matching_result:
+                for i in range(0, len(matching_result), 2):
+                    a_list = list(graphdict[matching_result[i]])
+                    if not matching_result[i + 1] in a_list:
+                        click.echo(
+                                f"   {matching_result[i]} --> {matching_result[i + 1]}"
+                        )
+                        a_list.append(matching_result[i + 1])
+                    graphdict[matching_result[i]] = a_list
+    # Hide nodes where specified
     for hidden_resource in tfdata["hidden"]:
         del graphdict[hidden_resource]
     for resource in graphdict:
@@ -62,27 +131,15 @@ def make_graph_dict(tfdata: dict):
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
     tfdata["graphdict"] = graphdict
-    click.echo(click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True))
-    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
-    # Handle consolidated nodes where nodes are grouped into one node
-    tfdata = consolidate_nodes(tfdata)
-    # Handle automatic and user annotations
-    tfdata = annotations.add_annotations(tfdata)
-    # Handle special relationships that require post-processing
-    tfdata = handle_special_resources(tfdata)
-    # Handle multiple resources created by count attribute
-    tfdata = create_multiple_resources(tfdata)
-    # Handle special node variants
-    tfdata = handle_variants(tfdata)
-    # Dump graphdict
-    click.echo(click.style(f"\nFinal Graphviz Input Dictionary", fg="white", bold=True))
-    tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
-    print(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata
 
 
 def consolidate_nodes(tfdata: dict):
     for resource in dict(tfdata["graphdict"]):
+        if resource not in tfdata["meta_data"].keys() :
+            res = resource.split("-")[0]
+        else :
+            res = resource
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["graphdict"].get(consolidated_name):
@@ -90,14 +147,14 @@ def consolidate_nodes(tfdata: dict):
                 if not tfdata["graphdict"].get(consolidated_name):
                     tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][resource]
+                tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
             )
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])
             )
             del tfdata["graphdict"][resource]
-            del tfdata["meta_data"][resource]
+            del tfdata["meta_data"][res]
             connected_resource = consolidated_name
         else:
             connected_resource = resource
@@ -253,7 +310,7 @@ def add_multiples_to_parents(
             if "-" in parent:
                 # We have a suffix so check it matches the i count
                 existing_suffix = parent.split("-")[1]
-                if existing_suffix == str(i + 1) :
+                if existing_suffix == str(i + 1):
                     suffixed_name = resource + "-" + str(i + 1)
                 else:
                     suffixed_name = resource + "-" + existing_suffix
@@ -310,11 +367,11 @@ def add_multiples_to_parents(
                 else:
                     if resource in tfdata["graphdict"][parent]:
                         tfdata["graphdict"][parent].remove(resource)
-                    for sim in tfdata["graphdict"][parent] :
-                        if sim.split("-")[0] == suffixed_name.split("-")[0] :
+                    for sim in tfdata["graphdict"][parent]:
+                        if sim.split("-")[0] == suffixed_name.split("-")[0]:
                             tfdata["graphdict"][parent].remove(sim)
                     tfdata["graphdict"][parent].append(suffixed_name)
-                   
+
     return tfdata
 
 
@@ -466,58 +523,3 @@ def dict_generator(indict, pre=None):
                 yield pre + [key, value]
     else:
         yield pre + [indict]
-
-
-# Function to check whether a particular resource mentions another known resource (relationship)
-def check_relationship(
-    listitem: str, plist: list, nodes: list, hidden: dict
-):  # -> list
-    connection_list = []
-    resource_name = helpers.cleanup(listitem)
-    resource_associated_with = plist[1] + "." + plist[2]
-    # Check if an existing node name appears in parameters of current resource being checked
-    matching = [s for s in nodes if s in resource_name]
-    # Check if there are any implied connections based on keywords in the param list
-    if not matching:
-        found_connection = [s for s in IMPLIED_CONNECTIONS.keys() if s in resource_name]
-        if found_connection:
-            for n in nodes:
-                if n.startswith(IMPLIED_CONNECTIONS[found_connection[0]]):
-                    matching = [n]
-    if matching:
-        for matched_resource in matching:
-            reverse = False
-            matched_type = matched_resource.split(".")[0]
-            if (
-                matched_resource not in hidden
-                and resource_associated_with not in hidden
-            ):
-                reverse_origin_match = [
-                    s for s in REVERSE_ARROW_LIST if s in resource_name
-                ]
-                if len(reverse_origin_match) > 0:
-                    reverse = True
-                    reverse_dest_match = [
-                        s for s in REVERSE_ARROW_LIST if s in resource_associated_with
-                    ]
-                    if len(reverse_dest_match) > 0:
-                        if REVERSE_ARROW_LIST.index(
-                            reverse_dest_match[0]
-                        ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
-                            reverse = False
-                if reverse:
-                    connection_list.append(matched_resource)
-                    connection_list.append(resource_associated_with)
-                    # Output relationship to console log in reverse order for certain group nodes
-                    click.echo(
-                        f"   {matched_resource} --> {resource_associated_with} (Reversed)"
-                    )
-                else:  # Exception Ignore outgoing connections mentioned in depends on
-                    if listitem in plist:
-                        i = plist.index(listitem)
-                        if plist[3] == "depends_on":
-                            continue
-                    connection_list.append(resource_associated_with)
-                    connection_list.append(matched_resource)
-                    click.echo(f"   {resource_associated_with} --> {matched_resource}")
-    return connection_list

@@ -433,7 +433,7 @@ def handle_conditional_resources(tfdata):
 def get_metadata(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
-    Returns a set with a node_list of unique resources, resource attributes (metadata) and hidden (zero count) nodes
+    Returns a set with a node_list of unique resources, resource attributes (metadata)
     """
     node_list = []
     meta_data = dict()
@@ -484,7 +484,8 @@ def get_metadata(tfdata):  # -> set
                     meta_data[f"{resource_type}.{resource_name}"] = md
                     meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
     tfdata["meta_data"] = meta_data
-    tfdata["node_list"] = node_list
+    tfdata["all_node_list"] = node_list
+    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
     return tfdata
 
 

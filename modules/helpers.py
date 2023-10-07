@@ -215,7 +215,10 @@ def output_log(tfdata):
             click.echo(f"\n    Module: {module}")
             for key in variable:
                 if not key.startswith("source"):
-                    click.echo(f"      var.{key} = {variable[key]}")
+                    showval = str(variable[key])
+                    if len(showval) > 60 :
+                        showval = showval[:60] + "..."
+                    click.echo(f"      var.{key} = {showval}")
     return
 
 

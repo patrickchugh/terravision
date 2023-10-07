@@ -33,6 +33,7 @@ def show_banner():
     print(banner)
 
 
+
 def compile_tfdata(source: list, varfile: list, annotate=""):
     # Call terraform binary to extract a graph and plan info from output
     #tfdata = tfwrapper.tf_initplan(source, varfile)
@@ -41,23 +42,25 @@ def compile_tfdata(source: list, varfile: list, annotate=""):
     tfdata["workdir"] = source[0]
     # with open('unprocessed.json', 'w') as fp:
     #     json.dump(tfdata, fp)
-    # make graphdict from tf graph
+    # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
     # Show original dict
     click.echo(
         click.style(f"\nUnprocessed Graph Dictionary:", fg="white", bold=True)
     )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
-    # Parse HCL files from Terraform
-    tfdata = fileparser.read_tfcache(source, varfile, annotate)
+    # Parse HCL files from Terraform cache to gather resource info
+    tfdata = fileparser.read_tfcache(source, varfile, annotate, tfdata)
+    # Handle special relationships that require pre-processing
+    tfdata = graphmaker.handle_special_resources(tfdata, False)
+     # Supplement graphdict with relationships from HCL files
+    tfdata = graphmaker.supplement_graph_dict(tfdata)
      # Handle consolidated nodes where nodes are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
-    # Handle multiple resources created by count attribute
-    tfdata = graphmaker.create_multiple_parents(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
     # Dump final graphdict
