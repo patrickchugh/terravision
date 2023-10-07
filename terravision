@@ -44,9 +44,8 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
     # Show original dict
-    if debug:
-        click.echo(click.style(f"\nUnprocessed TF Graph Dictionary:", fg="white", bold=True))
-        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    click.echo(click.style(f"\nUnprocessed TF Graph Dictionary:", fg="white", bold=True))
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
     tfdata = fileparser.read_tfcache(source, varfile, annotate, tfdata)
     # Handle special relationships that require pre-processing

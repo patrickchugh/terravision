@@ -1,6 +1,7 @@
 {
     "aws_acm_certificate.acm": [],
     "aws_alb.elb-1": [
+        "aws_acm_certificate.acm",
         "aws_fargate.ecs-1"
     ],
     "aws_alb.elb-2": [
