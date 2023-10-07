@@ -156,6 +156,7 @@ def aws_handle_efs(tfdata: dict):
 
 def aws_handle_sg(tfdata: dict):
     bound_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
+    bound_nodes = [s for s in bound_nodes if not s.startswith("aws_security_group")]
     for target in bound_nodes:
         target_type = target.split(".")[0]
         # Look for any nodes with relationships to security groups and then reverse the relationship
@@ -199,9 +200,6 @@ def aws_handle_sg(tfdata: dict):
             for connection in list(tfdata["graphdict"][target]):
                 if connection.startswith("aws_security_group"):
                     tfdata["graphdict"][target].remove(connection)
-        # # Remove any nested security groups
-        # if target_type == "aws_security_group":
-        #     del tfdata["graphdict"][target]
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
         replacement_sg = [k for k in references if k.startswith("aws_security_group")]
@@ -256,15 +254,16 @@ def aws_handle_sharedgroup(tfdata: dict):
 
 
 def aws_handle_lb(tfdata: dict):
-    found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
+    found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb.")
     for lb in found_lbs:
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
         renamed_node = lb_type + "." + "elb"
         for connection in list(tfdata["graphdict"][lb]):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
+                tfdata["meta_data"][renamed_node] = dict()
             tfdata["graphdict"][renamed_node].append(connection)
-            tfdata["meta_data"][renamed_node] = dict(tfdata["meta_data"]["aws_lb.elb"])
+            tfdata["meta_data"][renamed_node] = dict(tfdata["meta_data"][lb])
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:

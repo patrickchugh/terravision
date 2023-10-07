@@ -16,7 +16,7 @@ SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 
 
-def supplement_graph_dict(tfdata):
+def supplement_graph_dict(tfdata, debug):
     # Load default variable values and user variable values
     tfdata = interpreter.get_variable_values(tfdata)
     # Create view of locals by module
@@ -29,27 +29,33 @@ def supplement_graph_dict(tfdata):
     if "all_module" in tfdata.keys():
         tfdata = interpreter.inject_module_variables(tfdata)
     # Dump out findings after file scans are complete
-    helpers.output_log(tfdata)
+    if debug:
+        helpers.output_log(tfdata)
     # Append Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = add_relations(tfdata)
     return tfdata
 
 
 # Function to check whether a particular resource mentions another known resource (relationship)
+# Returns a list containing pairs of related nodes where index i an i+i are related
 def check_relationship(
     resource_associated_with: str, plist: list, tfdata: dict
 ):  # -> list
-    nodes = tfdata["node_list"] 
+    nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
-    connection_list = []
+    connection_pairs = list()
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
-        matching = [s for s in nodes if s.split("-")[0] in param]
+        # List comprehension of unique nodes referenced in the parameter
+        matching = list({s for s in nodes if s.split("-")[0] in param})
         # Check if there are any implied connections based on keywords in the param list
-        found_connection = [s for s in IMPLIED_CONNECTIONS.keys() if s in param]
+        found_connection = list({s for s in IMPLIED_CONNECTIONS.keys() if s in param})
         if found_connection:
             for n in nodes:
-                if n.startswith(IMPLIED_CONNECTIONS[found_connection[0]]):
+                if (
+                    n.startswith(IMPLIED_CONNECTIONS[found_connection[0]])
+                    and n not in matching
+                ):
                     matching.append(n)
         if matching:
             for matched_resource in matching:
@@ -62,6 +68,7 @@ def check_relationship(
                     reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in param]
                     if len(reverse_origin_match) > 0:
                         reverse = True
+                        # Don't reverse if the reverse relationship will occur twice on both sides
                         reverse_dest_match = [
                             s
                             for s in REVERSE_ARROW_LIST
@@ -72,26 +79,41 @@ def check_relationship(
                                 reverse_dest_match[0]
                             ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
                                 reverse = False
+                    # Make sure numbered nodes are associated with a connection of the same number
+                    if "-" in matched_resource and "-" in resource_associated_with:
+                        matched_resource_no = matched_resource.split("-")[1]
+                        resource_associated_with_no = resource_associated_with.split(
+                            "-"
+                        )[1]
+                        if matched_resource_no != resource_associated_with_no:
+                            continue
                     if reverse:
-                        if resource_associated_with not in tfdata["graphdict"][matched_resource] :
-                            connection_list.append(matched_resource)
-                            connection_list.append(resource_associated_with)
-                            # Output relationship to console log in reverse order for certain group nodes
-                            click.echo(
-                                f"   {matched_resource} --> {resource_associated_with} (Reversed)"
-                            )
+                        if (
+                            resource_associated_with
+                            not in tfdata["graphdict"][matched_resource]
+                            and matched_resource
+                            not in tfdata["graphdict"][resource_associated_with]
+                        ):
+                            connection_pairs.append(matched_resource)
+                            connection_pairs.append(resource_associated_with)
+
                     else:
-                        if matched_resource not in tfdata["graphdict"][resource_associated_with] :
-                            connection_list.append(resource_associated_with)
-                            connection_list.append(matched_resource)
-    return connection_list
+                        if (
+                            matched_resource
+                            not in tfdata["graphdict"][resource_associated_with]
+                            and resource_associated_with
+                            not in tfdata["graphdict"][matched_resource]
+                        ):
+                            connection_pairs.append(resource_associated_with)
+                            connection_pairs.append(matched_resource)
+    return connection_pairs
 
 
 # Make final graph structure to be used for drawing
 def add_relations(tfdata: dict):
     # Start with an existing connections list for all nodes/resources we know about
     graphdict = tfdata["graphdict"]
-    created_resources = len(dict.fromkeys(tfdata["graphdict"]))
+    created_resources = len(tfdata["node_list"])
     num_resources = len(tfdata["all_node_list"])
     click.echo(
         click.style(
@@ -102,27 +124,35 @@ def add_relations(tfdata: dict):
     )
     # Determine relationship between resources and append to graphdict when found
     for node in tfdata["node_list"]:
-        if node not in tfdata["meta_data"].keys() :
-            nodename = node.split("-")[0]
-        else :
-            nodename = node
-        if nodename.startswith("random") :
+        if node.startswith("aws_az.") :
             continue
-        for param_list in dict_generator(tfdata["meta_data"][nodename]):
+        if node not in tfdata["meta_data"].keys():
+            nodename = node.split("-")[0]
+        else:
+            nodename = node
+        if nodename.startswith("random"):
+            continue
+        for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
             matching_result = check_relationship(
                 node,
-                param_list,
+                param_item_list,
                 tfdata,
             )
             if matching_result:
                 for i in range(0, len(matching_result), 2):
-                    a_list = list(graphdict[matching_result[i]])
-                    if not matching_result[i + 1] in a_list:
-                        click.echo(
-                                f"   {matching_result[i]} --> {matching_result[i + 1]}"
-                        )
-                        a_list.append(matching_result[i + 1])
-                    graphdict[matching_result[i]] = a_list
+                    origin = matching_result[i]
+                    dest = matching_result[i + 1]
+                    c_list = list(graphdict[origin])
+                    if not dest in c_list:
+                        click.echo(f"   {origin} --> {dest}")
+                        c_list.append(dest)
+                        if (
+                            "-" in origin
+                            and "-" in dest
+                            and dest.split("-")[0] in c_list
+                        ):
+                            c_list.remove(dest.split("-")[0])
+                    graphdict[origin] = c_list
     # Hide nodes where specified
     for hidden_resource in tfdata["hidden"]:
         del graphdict[hidden_resource]
@@ -136,9 +166,9 @@ def add_relations(tfdata: dict):
 
 def consolidate_nodes(tfdata: dict):
     for resource in dict(tfdata["graphdict"]):
-        if resource not in tfdata["meta_data"].keys() :
+        if resource not in tfdata["meta_data"].keys():
             res = resource.split("-")[0]
-        else :
+        else:
             res = resource
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
@@ -209,11 +239,12 @@ def handle_variants(tfdata: dict):
             renamed_node = node
         # Go through each connection and rename
         for resource in list(tfdata["graphdict"][renamed_node]):
-            if resource[-1].isdigit() and resource[-2] == "-":
-                resource_name = resource.split("-")[0]
+            if "-" in resource:
+                if resource[-1].isdigit() and resource[-2] == "-":
+                    resource_name = resource.split("-")[0]
             else:
                 resource_name = resource
-            variant_suffix = ""
+                variant_suffix = ""
             if resource_name.startswith("aws"):
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"].get(resource_name)
@@ -496,14 +527,14 @@ def create_multiple_parents(tfdata):
 
 # Handle resources which require pre/post-processing before/after being added to graphdict
 def handle_special_resources(tfdata: dict, graph_dict=True):
-    resource_types = [k.split(".")[0] for k in tfdata["node_list"]]
+    resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
         if resource_prefix in resource_types or matching_substring:
-            if graph_dict:
-                tfdata = getattr(resource_handlers, handler)(tfdata)
-            elif handler.endswith("_pregraph"):
-                tfdata = getattr(resource_handlers, handler)(tfdata)
+            # if graph_dict:
+            tfdata = getattr(resource_handlers, handler)(tfdata)
+            # elif handler.endswith("_pregraph"):
+            #     tfdata = getattr(resource_handlers, handler)(tfdata)
     return tfdata
 
 
