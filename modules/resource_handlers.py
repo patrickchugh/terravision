@@ -111,8 +111,8 @@ def aws_handle_cloudfront_pregraph(tfdata: dict):
 def aws_handle_subnet_azs(tfdata: dict):
     subnet_resources = [
         k
-        for k, v in tfdata["meta_data"].items()
-        if k and k.startswith("aws_subnet") and k not in tfdata["hidden"]
+        for k in tfdata["graphdict"]
+        if k.startswith("aws_subnet") and k not in tfdata["hidden"]
     ]
     for subnet in subnet_resources:
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)

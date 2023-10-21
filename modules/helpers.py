@@ -26,15 +26,19 @@ def check_for_domain(string: str) -> bool:
             return True
     return False
 
-def get_no_module_name(node: str) :
-    if not node :
+
+def get_no_module_name(node: str):
+    if not node:
         return
-    if node.startswith("module.") :
-        no_module_name = node.split("module.")[1].split(".")[1] +"." + node.split('.')[3]
-    else :
+    if node.startswith("module."):
+        no_module_name = (
+            node.split("module.")[1].split(".")[1] + "." + node.split(".")[3]
+        )
+    else:
         no_module_name = node
-    #no_module_name = no_module_name.split("-")[0]
+    # no_module_name = no_module_name.split("-")[0]
     return no_module_name
+
 
 def check_list_for_dash(connections: list):
     has_dash = True
@@ -216,7 +220,7 @@ def output_log(tfdata):
             for key in variable:
                 if not key.startswith("source"):
                     showval = str(variable[key])
-                    if len(showval) > 60 :
+                    if len(showval) > 60:
                         showval = showval[:60] + "..."
                     click.echo(f"      var.{key} = {showval}")
     return
@@ -313,11 +317,14 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
     for parent in parents_list:
+        if "-" in parent:
+            any_parent_has_count = True
+            break
         if (
             tfdata["meta_data"].get(parent)
             and tfdata["meta_data"][parent].get("count")
             and tfdata["meta_data"][parent].get("count") > 1
-        ) or "-" in parent:
+        ):
             any_parent_has_count = True
     return any_parent_has_count
 

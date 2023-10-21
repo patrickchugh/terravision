@@ -44,12 +44,12 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
     # Show original dict
-    click.echo(click.style(f"\nUnprocessed TF Graph Dictionary:", fg="white", bold=True))
+    click.echo(
+        click.style(f"\nUnprocessed TF Graph Dictionary:", fg="white", bold=True)
+    )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
-    tfdata = fileparser.read_tfcache(source, varfile, annotate, tfdata)
-    # Handle special relationships that require pre-processing
-    # tfdata = graphmaker.handle_special_resources(tfdata)
+    tfdata = fileparser.read_tfsource(source, varfile, annotate, tfdata)
     # Supplement graphdict with relationships from HCL files
     tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
     # Handle consolidated nodes where nodes are grouped into one node
@@ -60,6 +60,8 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = graphmaker.handle_special_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
+    # Duplicate resources across subgroups where necessary
+    tfdata = graphmaker.create_multiple_parents(tfdata)
     # Dump final graphdict
     click.echo(click.style(f"\nProcessed Graphviz Dictionary", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
