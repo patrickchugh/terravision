@@ -1,5 +1,7 @@
 {
-    "aws_acm_certificate.acm": [],
+    "aws_acm_certificate.acm": [
+        "aws_lb.elb"
+    ],
     "aws_alb.elb-1": [
         "aws_fargate.ecs-1"
     ],
@@ -30,15 +32,15 @@
         "aws_appautoscaling_policy.scale_up",
         "aws_fargate.ecs-3"
     ],
-    "aws_az.us-east-1a": [
+    "aws_az.us_east_1a": [
         "aws_subnet.private-1",
         "aws_subnet.public-1"
     ],
-    "aws_az.us-east-1b": [
+    "aws_az.us_east_1b": [
         "aws_subnet.private-2",
         "aws_subnet.public-2"
     ],
-    "aws_az.us-east-1c": [
+    "aws_az.us_east_1c": [
         "aws_subnet.private-3",
         "aws_subnet.public-3"
     ],
@@ -124,16 +126,20 @@
         "aws_alb.elb-3"
     ],
     "aws_nat_gateway.this-1": [
-        "aws_eip.eip",
-        "aws_internet_gateway.igw"
+        "aws_eip.nat-1",
+        "aws_internet_gateway.igw",
+        "aws_internet_gateway.igw",
+        "aws_route.private_nat_gateway"
     ],
     "aws_nat_gateway.this-2": [
-        "aws_eip.eip",
-        "aws_internet_gateway.igw"
+        "aws_eip.nat-2",
+        "aws_internet_gateway.igw",
+        "aws_route.private_nat_gateway"
     ],
     "aws_nat_gateway.this-3": [
-        "aws_eip.eip",
-        "aws_internet_gateway.igw"
+        "aws_eip.nat-3",
+        "aws_internet_gateway.igw",
+        "aws_route.private_nat_gateway"
     ],
     "aws_rds_aurora.this-1": [
         "aws_rds_cluster.this",
@@ -215,8 +221,10 @@
     "aws_security_group.efs-3": [
         "aws_efs_mount_target.this-3"
     ],
-    "aws_security_group_rule.this": [],
-    "aws_ssm_parameter.ssmparam": [],
+    "aws_security_group.wordpress": [],
+    "aws_ssm_parameter.ssmparam": [
+        "aws_fargate.ecs"
+    ],
     "aws_subnet.private-1": [
         "aws_appautoscaling_target.this-1",
         "aws_route_table_association.private-1",

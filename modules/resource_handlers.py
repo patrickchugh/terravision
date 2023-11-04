@@ -120,15 +120,16 @@ def aws_handle_subnet_azs(tfdata: dict):
             # Remove references to subnet and replace with AZ
             if subnet in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].remove(subnet)
-            az = "aws_az." + tfdata["meta_data"][subnet].get("availability_zone")
+            az = "aws_az." + tfdata["original_metadata"][subnet].get(
+                "availability_zone"
+            )
+            # az = az.replace("-", "_")
             if not az in tfdata["graphdict"].keys():
                 tfdata["graphdict"][az] = list()
                 tfdata["meta_data"][az] = {"count": ""}
-                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet][
-                    "count"
-                ]
+                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet]["count"]
             tfdata["graphdict"][az].append(subnet)
-            if az not in tfdata["graphdict"][parent] :
+            if az not in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].append(az)
     return tfdata
 
@@ -315,4 +316,11 @@ def aws_handle_ecs(tfdata: dict):
     # ecs_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_ek_cluster")
     # for eks in eks_nodes:
     #     del tfdata["graphdict"][eks]
+    return tfdata
+
+
+def random_string_handler(tfdata: dict):
+    randoms = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "random_string.")
+    for r in randoms:
+        del tfdata["graphdict"][r]
     return tfdata

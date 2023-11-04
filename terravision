@@ -54,16 +54,18 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
     # Handle consolidated nodes where nodes are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
+    # Handle conditional statements
+    tfdata = interpreter.handle_conditional_resources(tfdata, debug)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
+    # Duplicate resources across subgroups where necessary
+    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
-    # Duplicate resources across subgroups where necessary
-    tfdata = graphmaker.create_multiple_parents(tfdata)
     # Dump final graphdict
-    click.echo(click.style(f"\nProcessed Graphviz Dictionary", fg="white", bold=True))
+    click.echo(click.style(f"\Augmented Graphviz Dictionary", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata

@@ -54,13 +54,14 @@ def tf_initplan(source: tuple, varfile: list):
         else:
             click.echo("ERROR running terraform plan")
             exit()
-    tfdata["workdir"] = os.getcwd()
+
     os.chdir(start_dir)
     return make_tf_data(plandata, graphdata)
 
 
 def make_tf_data(plandata: dict, graphdata: dict):
     tfdata = dict()
+    tfdata["workdir"] = os.getcwd()
     tfdata["tf_resources_created"] = plandata["resource_changes"]
     tfdata["tfgraph"] = graphdata
     return tfdata
@@ -121,7 +122,6 @@ def tf_makegraph(tfdata: dict):
                 )
                 > 0
             ):
-                node_type = node.split(".")[0]
                 conn = gvid_table[tail]
                 conn_type = gvid_table[tail].split(".")[0]
                 if conn_type in REVERSE_ARROW_LIST:
@@ -132,6 +132,7 @@ def tf_makegraph(tfdata: dict):
                     tfdata["graphdict"][node].append(conn)
     tfdata = add_vpc_implied_relations(tfdata)
     tfdata["original_graphdict"] = dict(tfdata["graphdict"])
+    tfdata["original_metadata"] = dict(tfdata["meta_data"])
     return tfdata
 
 

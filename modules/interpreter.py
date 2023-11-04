@@ -275,7 +275,7 @@ def extract_locals(tfdata):
     return tfdata
 
 
-def eval_tf_functions(eval_string):
+def eval_tf_functions(eval_string, debug=False):
     # Check if there are any Terraform functions used to compute resources
     function_name = check_for_tf_functions(eval_string)
     # Determine startpos of function parameter
@@ -305,7 +305,7 @@ def eval_tf_functions(eval_string):
     # Call emulated Teraform function to get predicted result
     with suppress(Exception):
         eval_result = str(getattr(tf_function_handlers, function_name)(func_param))
-    if not eval_result:
+    if not eval_result and debug:
         click.echo(f"    WARNING: Unable to evaluate {function_name}({func_param})")
         eval_result = f"ERROR!_{function_name}(" + func_param + ")"
     eval_string = eval_string.replace(
@@ -327,8 +327,9 @@ def find_conditional_statements(resource, attr_list: dict):
     ):
         eval_string = str(attr_list["count"])
         return helpers.cleanup_curlies(eval_string)
-    for attrib in attr_list:
-        if "for" in attrib and ("in" in attrib or ":" in attrib):
+    for attrib, value in attr_list.items():
+        val = str(value)
+        if "for " in val and ("in" in val or ":" in val or "?" in val):
             eval_string = attr_list[attrib]
             # we have a for loop so deal with that part first
             # TODO: Implement for loop handling for real, for now just null it out
@@ -378,10 +379,10 @@ def show_error(mod, resource, eval_string, exp, tfdata):
     return tfdata
 
 
-def handle_conditional_resources(tfdata):
+def handle_conditional_resources(tfdata, debug=False):
     click.echo(f"\n  Conditional Resource List:")
     for resource, attr_list in tfdata["meta_data"].items():
-        mod = tfdata["meta_data"][resource]["module"]
+        mod = tfdata["meta_data"][resource].get("module")
         eval_string = find_conditional_statements(resource, attr_list)
         if eval_string and not "ERROR" in eval_string:
             original_string = tfdata["meta_data"][resource]["original_count"]
@@ -396,7 +397,7 @@ def handle_conditional_resources(tfdata):
                 if checks > 100:
                     break
                 eval_string = helpers.fix_lists(eval_string)
-                eval_string = eval_tf_functions(eval_string)
+                eval_string = eval_tf_functions(eval_string, debug)
                 checks = checks + 1
             if checks > 100:
                 eval_string = eval_string + "ERROR!"
@@ -422,7 +423,7 @@ def handle_conditional_resources(tfdata):
                         click.echo(f"                 {resource} count = {exp})")
                         click.echo(f"                 {resource} count = {eval_value}")
                         attr_list["count"] = int(eval_value)
-                else:
+                elif debug:
                     click.echo(
                         f"    ERROR: {mod} : {resource} count = 0 (Error in evaluation of value {exp})"
                     )
@@ -430,12 +431,7 @@ def handle_conditional_resources(tfdata):
                     tfdata["meta_data"][resource]["ERROR_count"] = eval_string
             else:
                 show_error(mod, resource, eval_string, exp, tfdata)
-    tfdata["hidden"] = [
-        key
-        for key, attr_list in tfdata["meta_data"].items()
-        if str(attr_list.get("count")) == "0"
-        or str(attr_list.get("count")).startswith("$")
-    ]
+    tfdata["hidden"] = [node for node in tfdata["graphdict"] if "random" in node]
     return tfdata
 
 
@@ -487,7 +483,11 @@ def get_metadata(tfdata):  # -> set
                 md = item[k][i]
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
-                if resource_type.startswith("aws"):
+                if (
+                    resource_type.startswith("aws")
+                    and f"{resource_type}.{resource_name}"
+                    or f"{resource_type}.{resource_name}-1" in tfdata["node_list"]
+                ):
                     meta_data[f"{resource_type}.{resource_name}"] = md
                     meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
                     if f"{resource_type}.{resource_name}-1" in tfdata["node_list"]:

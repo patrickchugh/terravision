@@ -291,6 +291,16 @@ def find_replace(find: str, replace: str, string: str):
     return string
 
 
+def list_of_parent_nodes(graphdict: dict, nodelist: list):
+    parent_list = list()
+    for node in nodelist:
+        parent_nodes = list_of_parents(graphdict, node)
+        for p in parent_nodes:
+            if "-" not in p:
+                parent_list.append(p)
+    return parent_list
+
+
 def list_of_parents(searchdict: dict, target: str):
     final_list = list()
     for key, value in searchdict.items():
@@ -320,11 +330,7 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
         if "-" in parent:
             any_parent_has_count = True
             break
-        if (
-            tfdata["meta_data"].get(parent)
-            and tfdata["meta_data"][parent].get("count")
-            and tfdata["meta_data"][parent].get("count") > 1
-        ):
+        if tfdata["meta_data"].get(parent) and tfdata["meta_data"][parent].get("count"):
             any_parent_has_count = True
     return any_parent_has_count
 

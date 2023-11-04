@@ -170,6 +170,7 @@ AWS_SPECIAL_RESOURCES = {
     "aws_security_group": "aws_handle_sg",  # place after db_subnet handler
     "aws_lb": "aws_handle_lb",
     "aws_": "aws_handle_sharedgroup",
+    "random_string": "random_string_handler",
 }
 AWS_SHARED_SERVICES = [
     "aws_acm_certificate",
