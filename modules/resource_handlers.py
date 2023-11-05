@@ -254,12 +254,17 @@ def aws_handle_lb(tfdata: dict):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
             tfdata["graphdict"][renamed_node].append(connection)
-            tfdata["meta_data"][renamed_node] = dict(tfdata["meta_data"]["aws_lb.elb"])
-            if tfdata["meta_data"][connection].get("count"):
-                if tfdata["meta_data"][connection].get("count") > 1:
-                    tfdata["meta_data"][renamed_node]["count"] = int(
-                        tfdata["meta_data"][connection]["count"]
-                    )
+
+            if (
+                tfdata["meta_data"][connection].get("count")
+                and connection.split(".")[0] not in SHARED_SERVICES
+            ):
+                tfdata["meta_data"][renamed_node] = dict(
+                    tfdata["meta_data"]["aws_lb.elb"]
+                )
+                tfdata["meta_data"][renamed_node]["count"] = int(
+                    tfdata["meta_data"][connection]["count"]
+                )
             # tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:

@@ -267,9 +267,9 @@
         "aws_security_group.alb-3"
     ],
     "aws_vpc.this": [
-        "aws_az.az-1",
-        "aws_az.az-2",
-        "aws_az.az-3",
+        "aws_az.us-east-1a",
+        "aws_az.us-east-1b",
+        "aws_az.us-east-1c",
         "aws_default_network_acl.this",
         "aws_default_route_table.default",
         "aws_default_security_group.this",
@@ -277,7 +277,6 @@
         "aws_lb.elb",
         "aws_route_table.public"
     ],
-    "random_string.snapshot_suffix": [],
     "tv_aws_internet.internet": [],
     "tv_aws_users.users": [
         "aws_route53_record.route_53"
