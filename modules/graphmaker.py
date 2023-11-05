@@ -1,3 +1,4 @@
+from math import e
 from numpy import delete
 import click
 import modules.cloud_config as cloud_config
@@ -29,7 +30,7 @@ def supplement_graph_dict(tfdata, debug):
     # Dump out findings after file scans are complete
     if debug:
         helpers.output_log(tfdata)
-    # Append Graph Data Structure in the format {node: [connected_node1,connected_node2]}
+    # Append additional relationships to Graph Data Structure in the format {node: [connected_node1,connected_node2]}
     tfdata = add_relations(tfdata)
     return tfdata
 
@@ -168,8 +169,7 @@ def consolidate_nodes(tfdata: dict):
         if consolidated_name:
             if not tfdata["graphdict"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
-                if not tfdata["graphdict"].get(consolidated_name):
-                    tfdata["meta_data"][consolidated_name] = dict()
+                tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(
                 tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
             )
@@ -445,6 +445,7 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
             if (
                 needs_multiple(resource, check_multiple_resource, tfdata)
                 and new_name not in tfdata["graphdict"][check_multiple_resource]
+                and new_name not in new_list
             ):
                 new_list.append(new_name)
                 new_list.remove(resource)
@@ -461,8 +462,8 @@ def needs_multiple(resource: str, parent: str, tfdata):
     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
     target_has_count = (
-        tfdata["original_metadata"][target_resource].get("count")
-        and tfdata["original_metadata"][target_resource].get("count") >= 1
+        tfdata["meta_data"][target_resource].get("count")
+        and tfdata["meta_data"][target_resource].get("count") >= 1
     )
     not_already_multiple = "-" not in target_resource
     no_special_handler = (
@@ -495,164 +496,157 @@ def needs_multiple(resource: str, parent: str, tfdata):
     return False
 
 
-def add_multiples_to_parents(i: int, resource: str, tfdata: dict):
+def add_multiples_to_parents(
+    i: int, resource: str, multi_resources: list, tfdata: dict
+):
     parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
     # Add numbered name to all original parents which may have been missed due to no count property
     for parent in parents_list:
-        if "-" in parent:
-            # We have a suffix so check it matches the i count
-            existing_suffix = parent.split("-")[1]
-            if existing_suffix == str(i + 1):
-                suffixed_name = resource + "-" + str(i + 1)
+        if parent not in multi_resources:
+            if "-" in parent:
+                # We have a suffix so check it matches the i count
+                existing_suffix = parent.split("-")[1]
+                if existing_suffix == str(i + 1):
+                    suffixed_name = resource + "-" + str(i + 1)
+                else:
+                    suffixed_name = resource + "-" + existing_suffix
             else:
-                suffixed_name = resource + "-" + existing_suffix
-        elif "-" in resource:
-            suffixed_name = resource
-        else:
-            suffixed_name = resource + "-" + str(i + 1)
-        if (
-            parent.split("-")[0] in tfdata["meta_data"].keys()
-            and (
-                not tfdata["meta_data"][parent.split("-")[0]].get("count")
-                or tfdata["meta_data"][parent.split("-")[0]].get("count") == 1
-            )
-            and not parent.startswith("aws_group.shared")
-            and not suffixed_name in tfdata["graphdict"][parent]
-            and not ("cluster" in suffixed_name and "cluster" in parent)
-            and "aws_route_table." not in resource
-        ):
-            # Handle special case for security groups where if any parent has count>1, then create a numbered sg
+                suffixed_name = resource + "-" + str(i + 1)
             if (
-                helpers.any_parent_has_count(tfdata, resource)
-                and parent.split(".")[0] == "aws_security_group"
-                and "-" not in parent
-            ) or (
-                helpers.any_parent_has_count(tfdata, resource)
-                and parent.split(".")[0] == "aws_security_group"
-                and "-" in parent
-                and helpers.check_list_for_dash(tfdata["graphdict"][parent])
+                parent.split("-")[0] in tfdata["meta_data"].keys()
+                and (
+                    not tfdata["meta_data"][parent.split("-")[0]].get("count")
+                    or tfdata["meta_data"][parent.split("-")[0]].get("count") == 1
+                )
+                and not parent.startswith("aws_group.shared")
+                and not suffixed_name in tfdata["graphdict"][parent]
+                and not ("cluster" in suffixed_name and "cluster" in parent)
+                and "aws_route_table." not in resource
             ):
+                # Handle special case for security groups where if any parent has count>1, then create a numbered sg
                 if (
-                    parent + "-" + str(i + 1) not in tfdata["graphdict"].keys()
+                    helpers.any_parent_has_count(tfdata, resource)
+                    and parent.split(".")[0] == "aws_security_group"
                     and "-" not in parent
-                ):
-                    tfdata["graphdict"][parent + "-" + str(i + 1)] = list(
-                        tfdata["graphdict"][parent]
-                    )
-                if (
-                    tfdata["graphdict"].get(parent + "-" + str(i + 1))
-                    and "-" not in parent
+                ) or (
+                    helpers.any_parent_has_count(tfdata, resource)
+                    and parent.split(".")[0] == "aws_security_group"
+                    and "-" in parent
+                    and helpers.check_list_for_dash(tfdata["graphdict"][parent])
                 ):
                     if (
-                        suffixed_name
-                        not in tfdata["graphdict"][parent + "-" + str(i + 1)]
-                        # and "aws_security_group" not in suffixed_name.split(".")[0]
+                        parent + "-" + str(i + 1) not in tfdata["graphdict"].keys()
+                        and "-" not in parent
                     ):
-                        tfdata["graphdict"][parent + "-" + str(i + 1)].append(
-                            suffixed_name
+                        tfdata["graphdict"][parent + "-" + str(i + 1)] = list(
+                            tfdata["graphdict"][parent]
                         )
-                    if resource in tfdata["graphdict"][parent + "-" + str(i + 1)]:
-                        tfdata["graphdict"][parent + "-" + str(i + 1)].remove(resource)
-                    tfdata["meta_data"][parent + "-" + str(i + 1)] = tfdata[
-                        "meta_data"
-                    ][parent]
-            else:
-                tfdata["graphdict"][parent].append(suffixed_name)
-                if resource in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].remove(resource)
+                    if (
+                        tfdata["graphdict"].get(parent + "-" + str(i + 1))
+                        and "-" not in parent
+                    ):
+                        if (
+                            suffixed_name
+                            not in tfdata["graphdict"][parent + "-" + str(i + 1)]
+                            # and "aws_security_group" not in suffixed_name.split(".")[0]
+                        ):
+                            tfdata["graphdict"][parent + "-" + str(i + 1)].append(
+                                suffixed_name
+                            )
+                        if resource in tfdata["graphdict"][parent + "-" + str(i + 1)]:
+                            tfdata["graphdict"][parent + "-" + str(i + 1)].remove(
+                                resource
+                            )
+                        tfdata["meta_data"][parent + "-" + str(i + 1)] = tfdata[
+                            "meta_data"
+                        ][parent]
+                else:
+                    tfdata["graphdict"][parent].append(suffixed_name)
+                    if resource in tfdata["graphdict"][parent]:
+                        tfdata["graphdict"][parent].remove(resource)
     return tfdata
 
 
-def handle_count_resources(tfdata: dict):
+def handle_count_resources(multi_resources: list, tfdata: dict):
     # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
-    for resource in dict(tfdata["graphdict"]):
-        # maxcount = tfdata["meta_data"][resource].get("count")
-        # if not maxcount and tfdata["original_metadata"].get(resource):
-        #     maxcount = (
-        #         tfdata["original_metadata"][resource].get("count")
-        #         if tfdata["original_metadata"][resource].get("count")
-        #         else 0
-        #     )
-        # elif not maxcount:
-        #     maxcount = 0
-        # for i in range(maxcount):
-        # Get connections replaced with numbered suffixes
-        resource_i = add_number_suffix(i + 1, resource, tfdata)
-        not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
-        if not_shared_service:
-            tfdata = add_multiples_to_parents(i, resource, tfdata)
-        if not_shared_service and "-" not in resource:
-            # Create a top level node with number suffix and connect to numbered connections
-            tfdata["graphdict"][resource + "-" + str(i + 1)] = resource_i
-            tfdata["meta_data"][resource + "-" + str(i + 1)] = tfdata["meta_data"][
-                resource
-            ]
-            tfdata = add_multiples_to_parents(i, resource, tfdata)
-            # Check if numbered connection node exists as a top level node in graphdict and create if necessary
-            for numbered_node in resource_i:
-                original_name = numbered_node.split("-")[0]
-                if (
-                    "-" in numbered_node
-                    and helpers.list_of_dictkeys_containing(
-                        tfdata["graphdict"], original_name
-                    )
-                    and "-" not in original_name
-                    and not helpers.consolidated_node_check(original_name)
-                ):
-                    if i == 0:
-                        if (
-                            original_name in tfdata["graphdict"].keys()
-                            and original_name + "-1" not in tfdata["graphdict"].keys()
-                        ):
-                            tfdata["graphdict"][numbered_node] = list(
-                                tfdata["graphdict"][original_name]
-                            )
+    for resource in multi_resources:
+        for i in range(tfdata["meta_data"][resource]["count"]):
+            # Get connections replaced with numbered suffixes
+            resource_i = add_number_suffix(i + 1, resource, tfdata)
+            not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
+            if not_shared_service:
+                # Create a top level node with number suffix and connect to numbered connections
+                tfdata["graphdict"][resource] = resource_i
+                tfdata["meta_data"][resource] = tfdata["meta_data"][resource]
+                tfdata = add_multiples_to_parents(i, resource, multi_resources, tfdata)
+                # Check if numbered connection node exists as a top level node in graphdict and create if necessary
+                for numbered_node in resource_i:
+                    original_name = numbered_node.split("-")[0]
+                    if (
+                        "-" in numbered_node
+                        and helpers.list_of_dictkeys_containing(
+                            tfdata["graphdict"], original_name
+                        )
+                        and original_name not in multi_resources
+                        and not helpers.consolidated_node_check(original_name)
+                    ):
+                        if i == 0:
+                            if (
+                                original_name in tfdata["graphdict"].keys()
+                                and original_name + "-1"
+                                not in tfdata["graphdict"].keys()
+                            ):
+                                tfdata["graphdict"][numbered_node] = list(
+                                    tfdata["graphdict"][original_name]
+                                )
+                                tfdata = add_multiples_to_parents(
+                                    i, original_name, multi_resources, tfdata
+                                )
+                                del tfdata["graphdict"][original_name]
+                        else:
+                            if (original_name + "-" + str(i)) in tfdata[
+                                "graphdict"
+                            ] and numbered_node not in tfdata["graphdict"]:
+                                tfdata["graphdict"][numbered_node] = list(
+                                    tfdata["graphdict"][original_name + "-" + str(i)]
+                                )
+                            elif tfdata["graphdict"].get(
+                                original_name + "-" + str(i + 1)
+                            ):
+                                tfdata["graphdict"][numbered_node] = list(
+                                    tfdata["graphdict"][
+                                        original_name + "-" + str(i + 1)
+                                    ]
+                                )
                             tfdata = add_multiples_to_parents(
                                 i, original_name, multi_resources, tfdata
                             )
-                            del tfdata["graphdict"][original_name]
-                    else:
-                        if (original_name + "-" + str(i)) in tfdata[
-                            "graphdict"
-                        ] and numbered_node not in tfdata["graphdict"]:
-                            tfdata["graphdict"][numbered_node] = list(
-                                tfdata["graphdict"][original_name + "-" + str(i)]
-                            )
-                        else:
-                            tfdata["graphdict"][numbered_node] = list(
-                                tfdata["graphdict"][original_name + "-" + str(i + 1)]
-                            )
-                        tfdata = add_multiples_to_parents(
-                            i, original_name, multi_resources, tfdata
-                        )
     return tfdata
 
 
 def create_multiple_resources(tfdata):
     # Get a list of all potential resources with a >1 count attribute
     multi_resources = [
-        k
-        for k, v in tfdata["original_metadata"].items()
-        if "count" in v
-        and isinstance(tfdata["original_metadata"][k]["count"], int)
-        and tfdata["original_metadata"][k]["count"] > 1
+        n
+        for n in tfdata["graphdict"]
+        if (
+            "-" not in n
+            and tfdata["meta_data"].get(n)
+            and tfdata["meta_data"][n].get("count")
+        )
     ]
-    tfdata = handle_count_resources(tfdata)
-    # Now remove the original resource names
-    # for resource in multi_resources:
-    #     if (
-    #         helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
-    #         and not resource.split(".")[0] in SHARED_SERVICES
-    #     ):
-    #         del tfdata["graphdict"][resource]
-    #     parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
-    #     for parent in parents_list:
-    #         if (
-    #             resource in tfdata["graphdict"][parent]
-    #             and not parent.startswith("aws_group.shared")
-    #             and not "-" in parent
-    #         ):
-    #             tfdata["graphdict"][parent].remove(resource)
+    needs_multiple = list()
+    for node, connections in tfdata["graphdict"].items():
+        for c in connections:
+            if "-" not in c:
+                parents_list = helpers.list_of_parents(tfdata["graphdict"], c)
+                parent_has_multi = False
+                for p in parents_list:
+                    if "-" in p:
+                        parent_has_multi = True
+                if parent_has_multi and c not in needs_multiple:
+                    needs_multiple.append(c)
+    tfdata = handle_count_resources(multi_resources, tfdata)
     # Delete any original security group nodes that have been replaced with numbered suffixes
     security_group_list = [
         k

@@ -3,6 +3,7 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
+from xmlrpc.client import Boolean
 import click
 import modules.cloud_config as cloud_config
 from modules.tf_function_handlers import tf_function_handlers
@@ -336,12 +337,18 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
 
 
 # Takes a resource and returns a standardised consolidated node if matched with the static definitions
-def consolidated_node_check(resource_type: str):
+def consolidated_node_check(resource_type: str) -> bool:
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
         if resource_type.startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
+
+
+def remove_all_items(test_list: list, item: str) -> list:
+    # using filter() + __ne__ to perform the task
+    res = list(filter((item).__ne__, test_list))
+    return res
 
 
 def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
