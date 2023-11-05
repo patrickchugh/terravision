@@ -573,11 +573,17 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
         for i in range(tfdata["meta_data"][resource]["count"]):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
+            resource_has_count = (
+                tfdata["meta_data"][resource].get("count")
+                and tfdata["meta_data"][resource].get("count") > 1
+            )
             not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
             if not_shared_service:
                 # Create a top level node with number suffix and connect to numbered connections
-                tfdata["graphdict"][resource] = resource_i
-                tfdata["meta_data"][resource] = tfdata["meta_data"][resource]
+                tfdata["graphdict"][resource + "-" + str(i + 1)] = resource_i
+                tfdata["meta_data"][resource + "-" + str(i + 1)] = tfdata["meta_data"][
+                    resource
+                ]
                 tfdata = add_multiples_to_parents(i, resource, multi_resources, tfdata)
                 # Check if numbered connection node exists as a top level node in graphdict and create if necessary
                 for numbered_node in resource_i:
@@ -610,9 +616,7 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
                                 tfdata["graphdict"][numbered_node] = list(
                                     tfdata["graphdict"][original_name + "-" + str(i)]
                                 )
-                            elif tfdata["graphdict"].get(
-                                original_name + "-" + str(i + 1)
-                            ):
+                            else:
                                 tfdata["graphdict"][numbered_node] = list(
                                     tfdata["graphdict"][
                                         original_name + "-" + str(i + 1)
@@ -635,18 +639,22 @@ def create_multiple_resources(tfdata):
             and tfdata["meta_data"][n].get("count")
         )
     ]
-    needs_multiple = list()
-    for node, connections in tfdata["graphdict"].items():
-        for c in connections:
-            if "-" not in c:
-                parents_list = helpers.list_of_parents(tfdata["graphdict"], c)
-                parent_has_multi = False
-                for p in parents_list:
-                    if "-" in p:
-                        parent_has_multi = True
-                if parent_has_multi and c not in needs_multiple:
-                    needs_multiple.append(c)
     tfdata = handle_count_resources(multi_resources, tfdata)
+    # Now remove the original resource names
+    for resource in multi_resources:
+        if (
+            helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
+            and not resource.split(".")[0] in SHARED_SERVICES
+        ):
+            del tfdata["graphdict"][resource]
+        parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
+        for parent in parents_list:
+            if (
+                resource in tfdata["graphdict"][parent]
+                and not parent.startswith("aws_group.shared")
+                and not "-" in parent
+            ):
+                tfdata["graphdict"][parent].remove(resource)
     # Delete any original security group nodes that have been replaced with numbered suffixes
     security_group_list = [
         k

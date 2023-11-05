@@ -3,12 +3,15 @@
         "aws_lb.elb"
     ],
     "aws_alb.elb-1": [
+        "aws_acm_certificate.acm",
         "aws_fargate.ecs-1"
     ],
     "aws_alb.elb-2": [
+        "aws_acm_certificate.acm",
         "aws_fargate.ecs-2"
     ],
     "aws_alb.elb-3": [
+        "aws_acm_certificate.acm",
         "aws_fargate.ecs-3"
     ],
     "aws_appautoscaling_policy.scale_down": [
@@ -45,10 +48,13 @@
         "aws_subnet.public-3"
     ],
     "aws_cloudfront_distribution.this": [
-        "aws_acm_certificate.acm",
-        "aws_lb.elb"
+        "aws_route53_record.route_53"
     ],
-    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_fargate.ecs-1",
+        "aws_fargate.ecs-2",
+        "aws_fargate.ecs-3"
+    ],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
     "aws_efs_file_system.efs": [],
@@ -61,7 +67,9 @@
     "aws_efs_mount_target.this-3": [
         "aws_efs_file_system.efs"
     ],
-    "aws_eip.eip": [],
+    "aws_eip.nat-1": [],
+    "aws_eip.nat-2": [],
+    "aws_eip.nat-3": [],
     "aws_fargate.ecs-1": [
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_ecr_repository.ecr",
