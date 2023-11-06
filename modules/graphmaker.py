@@ -35,6 +35,35 @@ def supplement_graph_dict(tfdata, debug):
     return tfdata
 
 
+def reverse_relations(tfdata: dict) -> dict:
+    for node, connections in tfdata["graphdict"].items():
+        for c in connections:
+            reverse = False
+            reverse_origin_match = [s for s in REVERSE_ARROW_LIST if c.startswith(s)]
+            if len(reverse_origin_match) > 0 and node.split(".")[0] not in GROUP_NODES:
+                reverse = True
+                # Don't reverse if the reverse relationship will occur twice on both sides
+                reverse_dest_match = [
+                    s for s in REVERSE_ARROW_LIST if node.startswith(s)
+                ]
+                if len(reverse_dest_match) > 0:
+                    if REVERSE_ARROW_LIST.index(
+                        reverse_dest_match[0]
+                    ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
+                        reverse = False
+                        for c in connections:
+                            for delete in reverse_origin_match:
+                                if c.startswith(delete):
+                                    tfdata["graphdict"][node].remove(c)
+            if reverse:
+                for c in connections:
+                    for rev in reverse_origin_match:
+                        if c.startswith(rev):
+                            tfdata["graphdict"][c].append(node)
+                            tfdata["graphdict"][node].remove(c)
+    return tfdata
+
+
 # Function to check whether a particular resource mentions another known resource (relationship)
 # Returns a list containing pairs of related nodes where index i an i+i are related
 def check_relationship(
@@ -446,7 +475,7 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
                 needs_multiple(resource, check_multiple_resource, tfdata)
                 and new_name not in tfdata["graphdict"][check_multiple_resource]
                 and new_name not in new_list
-            ):
+            ) or new_name in tfdata["graphdict"].keys():
                 new_list.append(new_name)
                 new_list.remove(resource)
     return new_list

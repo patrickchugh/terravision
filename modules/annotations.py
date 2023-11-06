@@ -15,11 +15,13 @@ def add_annotations(tfdata: dict):
             node_prefix = str(list(auto_node.keys())[0])
             if node.startswith(node_prefix):
                 new_nodes = auto_node[node_prefix]["link"]
+                delete_nodes = auto_node[node_prefix].get("delete")
                 for new_node in new_nodes:
                     if new_node.endswith(".*"):
                         annotation_node = helpers.find_resource_containing(
                             tfdata["graphdict"].keys(), new_node.split(".")[0]
                         )
+
                         if not annotation_node:
                             annotation_node = new_node.split(".")[0] + ".this"
                     else:
@@ -29,6 +31,11 @@ def add_annotations(tfdata: dict):
                         graphdict[node] = helpers.append_dictlist(
                             graphdict[node], annotation_node
                         )
+                        if delete_nodes:
+                            for delnode in delete_nodes:
+                                for conn in graphdict[node]:
+                                    if conn.startswith(delnode):
+                                        graphdict[node].remove(conn)
                         if not graphdict.get(annotation_node):
                             graphdict[annotation_node] = list()
                     else:

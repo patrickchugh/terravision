@@ -268,6 +268,17 @@ def append_dictlist(thelist: list, new_item: object):
     return new_list
 
 
+def remove_recursive(graphdict: dict) -> dict:
+    for node, connections in graphdict.items():
+        if node in connections:
+            print(node)
+        for c in connections:
+            if graphdict.get(c):
+                if node in graphdict.get(c):
+                    print(node, c)
+    return graphdict
+
+
 def check_variant(resource: str, metadata: dict) -> str:
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):

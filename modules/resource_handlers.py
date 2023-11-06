@@ -1,3 +1,4 @@
+from debugpy import connect
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 from ast import literal_eval
@@ -74,7 +75,20 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> s
     return origin_string
 
 
-def aws_handle_cloudfront_pregraph(tfdata: dict):
+def handle_cloudfront_lbs(tfdata: dict) -> dict:
+    cf_distros = [s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s]
+    lbs = [s for s in tfdata["graphdict"].keys() if "aws_lb." in s]
+    for node, connections in dict(tfdata["graphdict"]).items():
+        for cf in cf_distros:
+            if cf in connections:
+                for lb in lbs:
+                    if node in tfdata["graphdict"][lb]:
+                        tfdata["graphdict"][cf].append(lb)
+                        tfdata["graphdict"][node].remove(cf)
+    return tfdata
+
+
+def handle_cf_origins(tfdata: dict) -> dict:
     cf_data = [s for s in tfdata["meta_data"].keys() if "aws_cloudfront" in s]
     if cf_data:
         for cf_resource in cf_data:
@@ -90,12 +104,27 @@ def aws_handle_cloudfront_pregraph(tfdata: dict):
                     origin_domain = helpers.cleanup(
                         origin_source.get("domain_name")
                     ).strip()
+                    if (
+                        tfdata["meta_data"][cf_resource].get("viewer_certificate")
+                        and "acm_certificate_arn"
+                        in tfdata["meta_data"][cf_resource]["viewer_certificate"]
+                    ):
+                        tfdata["graphdict"][cf_resource].append(
+                            "aws_acm_certificate.acm"
+                        )
                     if origin_domain:
                         tfdata["meta_data"][cf_resource][
                             "origin"
                         ] = handle_cloudfront_domains(
                             str(origin_source), origin_domain, tfdata["meta_data"]
                         )
+    return tfdata
+
+
+def aws_handle_cloudfront_pregraph(tfdata: dict):
+    tfdata = handle_cloudfront_lbs(tfdata)
+    tfdata = handle_cf_origins(tfdata)
+
     return tfdata
 
 
@@ -125,24 +154,50 @@ def aws_handle_subnet_azs(tfdata: dict):
     return tfdata
 
 
+# def aws_handle_efs(tfdata: dict):
+#     parents = helpers.list_of_parents(tfdata["graphdict"], "aws_efs_file_system")
+#     do_replacements = False
+#     for parent_node in parents:
+#         if parent_node.startswith("aws_efs_mount_target"):
+#             do_replacements = True
+#             parent_mount_target = parent_node
+#     if do_replacements:
+#         for node in tfdata["graphdict"]:
+#             for connection in tfdata["graphdict"][node]:
+#                 if connection.startswith("aws_efs_file") and not node.startswith(
+#                     "aws_efs"
+#                 ):
+#                     # we have a mount target pointing to EFS file system so replace all references to efs_file_system directly
+#                     # to the mount target instead
+#                     if not parent_mount_target in tfdata["graphdict"][node]:
+#                         tfdata["graphdict"][node].remove(connection)
+#                         tfdata["graphdict"][node].append(parent_mount_target)
+#     return tfdata
+
+
 def aws_handle_efs(tfdata: dict):
-    parents = helpers.list_of_parents(tfdata["graphdict"], "aws_efs_file_system")
-    do_replacements = False
-    for parent_node in parents:
-        if parent_node.startswith("aws_efs_mount_target"):
-            do_replacements = True
-            parent_mount_target = parent_node
-    if do_replacements:
-        for node in tfdata["graphdict"]:
-            for connection in tfdata["graphdict"][node]:
-                if connection.startswith("aws_efs_file") and not node.startswith(
-                    "aws_efs"
-                ):
-                    # we have a mount target pointing to EFS file system so replace all references to efs_file_system directly
-                    # to the mount target instead
-                    if not parent_mount_target in tfdata["graphdict"][node]:
-                        tfdata["graphdict"][node].remove(connection)
-                        tfdata["graphdict"][node].append(parent_mount_target)
+    efs_systems = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_efs_file_system"
+    )
+    efs_mount_targets = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_efs_mount_target"
+    )
+    for efs in efs_systems:
+        for connection in tfdata["graphdict"][efs]:
+            if connection.startswith("aws_efs_mount_target"):
+                target = connection
+        for connection in list(tfdata["graphdict"][efs]):
+            if (
+                not connection.startswith("aws_efs_mount_target")
+                and "-" not in connection
+            ):
+                tfdata["graphdict"][connection].append(target)
+            elif "-" in connection:
+                suffix = connection.split("-")[1]
+                suffixed_name = "aws_efs_mount_target-" + suffix
+                if suffixed_name in efs_mount_targets:
+                    tfdata["graphdict"][connection].append(suffixed_name)
+            tfdata["graphdict"][efs].remove(connection)
     return tfdata
 
 
@@ -265,7 +320,7 @@ def aws_handle_lb(tfdata: dict):
                 tfdata["meta_data"][renamed_node]["count"] = int(
                     tfdata["meta_data"][connection]["count"]
                 )
-            # tfdata["graphdict"][lb].remove(connection)
+            tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
                 p_type = p.split(".")[0]

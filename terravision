@@ -34,18 +34,23 @@ def show_banner():
 
 
 def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
+    if source[0].endswith(".json"):
+        file = open(source[0], "r")
+        tfdata = dict()
+        tfdata["annotations"] = dict()
+        tfdata["meta_data"] = dict()
+        tfdata["graphdict"] = json.load(file)
+        return tfdata
     # Call terraform binary to extract a graph and plan info from output
     # tfdata = tfwrapper.tf_initplan(source, varfile)
     file = open("unprocessed.json", "r")
     tfdata = json.load(file)
     tfdata["workdir"] = source[0]
-    # with open('unprocessed.json', 'w') as fp:
-    #     json.dump(tfdata, fp)
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
     # Show original dict
     click.echo(
-        click.style(f"\nUnprocessed TF Graph Dictionary:", fg="white", bold=True)
+        click.style(f"\nUnprocessed TF Graph Dictionary:\n", fg="white", bold=True)
     )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
@@ -64,8 +69,12 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
+    # Reverse relationship directions for certain group resources
+    tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict
-    click.echo(click.style(f"\Augmented Graphviz Dictionary", fg="white", bold=True))
+    click.echo(
+        click.style(f"\nAugmented Graphviz Dictionary:\n", fg="white", bold=True)
+    )
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata
@@ -115,7 +124,7 @@ def cli():
     "--source",
     multiple=True,
     default=["."],
-    help="Source files location (Git URL or folder)",
+    help="Source files location (Git URL, Folder or .JSON file)",
 )
 @click.option(
     "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
