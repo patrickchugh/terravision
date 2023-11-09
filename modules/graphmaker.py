@@ -13,6 +13,7 @@ CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
+AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 
 
 def supplement_graph_dict(tfdata, debug):
@@ -40,7 +41,11 @@ def reverse_relations(tfdata: dict) -> dict:
         for c in connections:
             reverse = False
             reverse_origin_match = [s for s in REVERSE_ARROW_LIST if c.startswith(s)]
-            if len(reverse_origin_match) > 0 and node.split(".")[0] not in GROUP_NODES:
+            if (
+                len(reverse_origin_match) > 0
+                and node.split(".")[0] not in GROUP_NODES
+                and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
+            ):
                 reverse = True
                 # Don't reverse if the reverse relationship will occur twice on both sides
                 reverse_dest_match = [
@@ -657,6 +662,18 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
     return tfdata
 
 
+def handle_singular_references(tfdata: dict) -> dict:
+    for node, connections in dict(tfdata["graphdict"]).items():
+        for c in list(connections):
+            if "-" in node and not "-" in c:
+                suffix = node.split("-")[1]
+                suffixed_node = f"{c}-{suffix}"
+                if suffixed_node in tfdata["graphdict"]:
+                    tfdata["graphdict"][node].append(suffixed_node)
+                    tfdata["graphdict"][node].remove(c)
+    return tfdata
+
+
 def create_multiple_resources(tfdata):
     # Get a list of all potential resources with a >1 count attribute
     multi_resources = [
@@ -668,7 +685,10 @@ def create_multiple_resources(tfdata):
             and tfdata["meta_data"][n].get("count")
         )
     ]
+    # Create multiple nodes for count resources as necessary
     tfdata = handle_count_resources(multi_resources, tfdata)
+    # Replace links to single nodes with multi nodes if they exist
+    tfdata = handle_singular_references(tfdata)
     # Now remove the original resource names
     for resource in multi_resources:
         if (

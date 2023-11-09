@@ -165,7 +165,7 @@ AWS_NODE_VARIANTS = {
 
 # Automatically reverse arrow direction for these resources
 AWS_REVERSE_ARROW_LIST = [
-    "aws_cloudfront",
+    "aws_route53",
     "aws_vpc.",
     "aws_subnet.",
     "aws_appautoscaling_target",
@@ -194,13 +194,20 @@ AWS_SHARED_SERVICES = [
     "aws_acm_certificate",
     "aws_cloudwatch_log_group",
     "aws_ecr_repository",
+    "aws_ecs_cluster",
     "aws_efs_file_system",
     "aws_ssm_parameter",
     "aws_kms_key",
     "aws_eip",
 ]
 
-AWS_ALWAYS_DRAW_LINE = ["aws_lb", "aws_iam_role"]
+AWS_ALWAYS_DRAW_LINE = [
+    "aws_lb",
+    "aws_iam_role",
+    "aws_alb",
+    "aws_nlb",
+    "aws_efs_mount_target",
+]
 
 AWS_ACRONYMS_LIST = [
     "acm",

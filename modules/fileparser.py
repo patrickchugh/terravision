@@ -190,6 +190,7 @@ def read_tfsource(
     # Auto load any tfvars
     for file in tf_file_paths:
         if "auto.tfvars" in file:
+            click.echo(f"  Will use auto variables from file : {file.name} \n")
             varfile_list = varfile_list + (file,)
     # Load in variables from user file into a master list
     if len(varfile_list) == 0 and tfdata.get("all_variable"):

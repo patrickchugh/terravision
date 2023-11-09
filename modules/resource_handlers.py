@@ -83,8 +83,12 @@ def handle_cloudfront_lbs(tfdata: dict) -> dict:
             if cf in connections:
                 for lb in lbs:
                     if node in tfdata["graphdict"][lb]:
+                        lb_parents = helpers.list_of_parents(tfdata["graphdict"], lb)
                         tfdata["graphdict"][cf].append(lb)
                         tfdata["graphdict"][node].remove(cf)
+                        for parent in lb_parents:
+                            if parent.split(".")[0] not in GROUP_NODES:
+                                tfdata["graphdict"][parent].remove(lb)
     return tfdata
 
 
@@ -202,8 +206,8 @@ def aws_handle_efs(tfdata: dict):
 
 
 def aws_handle_sg(tfdata: dict):
-    bound_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
-    bound_nodes = [s for s in bound_nodes if not s.startswith("aws_security_group")]
+    all_sg_parents = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
+    bound_nodes = [s for s in all_sg_parents if not s.startswith("aws_security_group")]
     for target in bound_nodes:
         target_type = target.split(".")[0]
         # Look for any nodes with relationships to security groups and then reverse the relationship
@@ -332,6 +336,7 @@ def aws_handle_lb(tfdata: dict):
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
     tfdata["graphdict"][lb].append(renamed_node)
+    # tfdata["meta_data"][renamed_node] = tfdata["meta_data"][lb]
     return tfdata
 
 
