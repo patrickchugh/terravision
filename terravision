@@ -72,9 +72,7 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     # Reverse relationship directions for certain group resources
     tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict
-    click.echo(
-        click.style(f"\nAugmented Graphviz Dictionary:\n", fg="white", bold=True)
-    )
+    click.echo(click.style(f"\nEnriched Graphviz Dictionary:\n", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     return tfdata

@@ -194,6 +194,7 @@ def add_relations(tfdata: dict):
 
 
 def consolidate_nodes(tfdata: dict):
+    saved_count = 0
     for resource in dict(tfdata["graphdict"]):
         if resource not in tfdata["meta_data"].keys():
             res = resource.split("-")[0]
@@ -204,9 +205,14 @@ def consolidate_nodes(tfdata: dict):
             if not tfdata["graphdict"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
+            original_count = tfdata["meta_data"][res].get("count")
+            merged_count = tfdata["meta_data"][consolidated_name].get("count")
+            if original_count and not merged_count:
+                saved_count = original_count
             tfdata["meta_data"][consolidated_name] = dict(
                 tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
             )
+            # Don't over-ride count values with 0 when merging
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])
@@ -235,6 +241,8 @@ def consolidate_nodes(tfdata: dict):
                     ):
                         tfdata["graphdict"][connected_resource].insert(index, "null")
                         tfdata["graphdict"][connected_resource].remove(connection)
+        # if saved_count > 0 and consolidated_name:
+        #     tfdata["meta_data"][consolidated_name]["count"] = saved_count
         if "null" in tfdata["graphdict"][connected_resource]:
             tfdata["graphdict"][connected_resource] = list(
                 filter(lambda a: a != "null", tfdata["graphdict"][connected_resource])

@@ -4,6 +4,8 @@ from contextlib import suppress
 from pathlib import Path
 from sys import exit
 from xmlrpc.client import Boolean
+
+from numpy import isin
 import click
 import modules.cloud_config as cloud_config
 from modules.tf_function_handlers import tf_function_handlers
@@ -342,7 +344,8 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
         if "-" in parent:
             any_parent_has_count = True
             break
-        if tfdata["meta_data"].get(parent) and tfdata["meta_data"][parent].get("count"):
+        c = tfdata["meta_data"][parent].get("count")
+        if tfdata["meta_data"].get(parent) and isinstance(c, int):
             any_parent_has_count = True
     return any_parent_has_count
 
