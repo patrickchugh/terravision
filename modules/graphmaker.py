@@ -2,6 +2,7 @@ from math import e
 from numpy import delete
 import click
 import modules.cloud_config as cloud_config
+from modules.drawing import EDGE_NODES
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 import modules.interpreter as interpreter
@@ -14,6 +15,9 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
+EDGE_NODES = cloud_config.AWS_EDGE_NODES
+FORCED_DEST = cloud_config.AWS_FORCED_DEST
+FORCED_ORIGIN = cloud_config.AWS_FORCED_ORIGIN
 
 
 def supplement_graph_dict(tfdata, debug):
@@ -37,35 +41,26 @@ def supplement_graph_dict(tfdata, debug):
 
 
 def reverse_relations(tfdata: dict) -> dict:
-    for node, connections in tfdata["graphdict"].items():
-        for c in connections:
-            reverse = False
-            reverse_origin_match = [s for s in REVERSE_ARROW_LIST if c.startswith(s)]
-            if (
-                len(reverse_origin_match) > 0
-                and node.split(".")[0] not in GROUP_NODES
-                and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
-            ):
-                reverse = True
-                # Don't reverse if the reverse relationship will occur twice on both sides
-                reverse_dest_match = [
-                    s for s in REVERSE_ARROW_LIST if node.startswith(s)
-                ]
-                if len(reverse_dest_match) > 0:
-                    if REVERSE_ARROW_LIST.index(
-                        reverse_dest_match[0]
-                    ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
-                        reverse = False
-                        for c in connections:
-                            for delete in reverse_origin_match:
-                                if c.startswith(delete):
-                                    tfdata["graphdict"][node].remove(c)
-            if reverse:
-                for c in connections:
-                    for rev in reverse_origin_match:
-                        if c.startswith(rev):
-                            tfdata["graphdict"][c].append(node)
-                            tfdata["graphdict"][node].remove(c)
+    for node, connections in dict(tfdata["graphdict"]).items():
+        reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
+        for c in list(connections):
+            if reverse_dest:
+                tfdata["graphdict"][c].append(node)
+                tfdata["graphdict"][node].remove(c)
+            reverse_origin = (
+                len(
+                    [
+                        s
+                        for s in FORCED_ORIGIN
+                        if c.startswith(s)
+                        and not node.split(".")[0] in str(AUTO_ANNOTATIONS)
+                    ]
+                )
+                > 0
+            )
+            if reverse_origin:
+                tfdata["graphdict"][c].append(node)
+                tfdata["graphdict"][node].remove(c)
     return tfdata
 
 
@@ -159,7 +154,7 @@ def add_relations(tfdata: dict):
             nodename = node.split("-")[0]
         else:
             nodename = node
-        if nodename.startswith("random"):
+        if nodename.startswith("random") or node.startswith("aws_security_group"):
             continue
         for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
             matching_result = check_relationship(
@@ -172,7 +167,9 @@ def add_relations(tfdata: dict):
                     origin = matching_result[i]
                     dest = matching_result[i + 1]
                     c_list = list(graphdict[origin])
-                    if not dest in c_list:
+                    if not dest in c_list and not origin.startswith(
+                        "aws_security_group"
+                    ):
                         click.echo(f"   {origin} --> {dest}")
                         c_list.append(dest)
                         if (
@@ -590,7 +587,6 @@ def add_multiples_to_parents(
                         if (
                             suffixed_name
                             not in tfdata["graphdict"][parent + "-" + str(i + 1)]
-                            # and "aws_security_group" not in suffixed_name.split(".")[0]
                         ):
                             tfdata["graphdict"][parent + "-" + str(i + 1)].append(
                                 suffixed_name
@@ -602,6 +598,23 @@ def add_multiples_to_parents(
                         tfdata["meta_data"][parent + "-" + str(i + 1)] = tfdata[
                             "meta_data"
                         ][parent]
+                        # Now check other connections in security group
+                        for index in range(0, len(tfdata["graphdict"][parent])):
+                            c = tfdata["graphdict"][parent + "-" + str(i + 1)][index]
+                            if c.split(".")[0] not in SHARED_SERVICES:
+                                suffixed_connection = c + "-" + str(i + 1)
+                                if (
+                                    not suffixed_connection
+                                    in tfdata["graphdict"][parent + "-" + str(i + 1)]
+                                    and "-" not in c
+                                ):
+                                    tfdata["graphdict"][
+                                        parent + "-" + str(i + 1)
+                                    ].append(suffixed_connection)
+                                    tfdata["graphdict"][
+                                        parent + "-" + str(i + 1)
+                                    ].remove(c)
+
                 else:
                     tfdata["graphdict"][parent].append(suffixed_name)
                     if resource in tfdata["graphdict"][parent]:
@@ -615,10 +628,6 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
         for i in range(tfdata["meta_data"][resource]["count"]):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
-            resource_has_count = (
-                tfdata["meta_data"][resource].get("count")
-                and tfdata["meta_data"][resource].get("count") > 1
-            )
             not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
             if not_shared_service:
                 # Create a top level node with number suffix and connect to numbered connections
@@ -679,6 +688,7 @@ def handle_singular_references(tfdata: dict) -> dict:
                 if suffixed_node in tfdata["graphdict"]:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
+
     return tfdata
 
 

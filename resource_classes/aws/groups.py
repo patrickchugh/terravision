@@ -63,7 +63,11 @@ class GenericAutoScalingGroup(Cluster):
 
 class GenericGroup(Cluster):
     def __init__(self, label="Shared Services", **kwargs):
-        graph_attrs = {"style": "dashed", "margin": "150", "pencolor": "black"}
+        graph_attrs = {
+            "style": "dashed",
+            "margin": "100",
+            "pencolor": "black",
+        }
         super().__init__(label, defaultdir, graph_attrs)
 
 

@@ -59,17 +59,17 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
     # Handle conditional statements
     tfdata = interpreter.handle_conditional_resources(tfdata, debug)
-    # Handle consolidated nodes where nodes are grouped into one node
+    # Handle consolidated nodes where multiple resources are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
-    # Duplicate resources across subgroups where necessary
+    # Duplicate resources across AZs and Subnets where necessary
     tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
-    # Reverse relationship directions for certain group resources
+    # Reverse relationship directions for certain original tfgraph connections
     tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict
     click.echo(click.style(f"\nEnriched Graphviz Dictionary:\n", fg="white", bold=True))

@@ -163,14 +163,27 @@ AWS_NODE_VARIANTS = {
     },
 }
 
-# Automatically reverse arrow direction for these resources
+# Automatically reverse arrow direction for these resources when discovered through source
 AWS_REVERSE_ARROW_LIST = [
     "aws_route53",
+    "aws_cloudfront",
     "aws_vpc.",
     "aws_subnet.",
     "aws_appautoscaling_target",
     "aws_iam_role.",
+    "aws_rds_aurora",
 ]
+
+# Force certain resources to be a destination connection only - original TF node relationships only
+AWS_FORCED_DEST = [
+    "aws_rds",
+]
+
+# Force certain resources to be a origin connection only - original TF node relationships only
+AWS_FORCED_ORIGIN = [
+    "aws_route53",
+]
+
 
 AWS_IMPLIED_CONNECTIONS = {
     "certificate_arn": "aws_acm_certificate",
@@ -207,6 +220,10 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_alb",
     "aws_nlb",
     "aws_efs_mount_target",
+    "aws_ecs_service",
+    "aws_rds_aurora",
+    "aws_rds_mysql",
+    "aws_rds_postgres",
 ]
 
 AWS_ACRONYMS_LIST = [
