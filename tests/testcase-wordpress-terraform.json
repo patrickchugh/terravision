@@ -54,6 +54,9 @@
         "aws_fargate.ecs-2",
         "aws_fargate.ecs-3"
     ],
+    "aws_db_subnet_group.this": [
+        "aws_rds_aurora.this"
+    ],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
     "aws_efs_file_system.efs": [],
@@ -210,6 +213,7 @@
     "aws_security_group.efs-3": [
         "aws_efs_mount_target.this-3"
     ],
+    "aws_security_group.wordpress": [],
     "aws_ssm_parameter.ssmparam": [
         "aws_fargate.ecs-1",
         "aws_fargate.ecs-2",

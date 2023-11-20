@@ -296,11 +296,6 @@ def check_variant(resource: str, metadata: dict) -> str:
 
 def find_replace(find: str, replace: str, string: str):
     original_string = string
-    # string = string.replace(find + ' ', replace)
-    # # string = string.replace(find + ',', replace)
-    # string = string.replace(find + '}', replace)
-    # string = string.replace(find + ')', replace)
-    # if string == original_string :
     string = string.replace(find, replace, 1)
     return string
 
