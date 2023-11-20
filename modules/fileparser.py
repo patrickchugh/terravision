@@ -51,7 +51,11 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
         files = [f for f in os.listdir(source_location)]
         click.echo(f"  Added Source Location: {source}")
         for file in files:
-            if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
+            if (
+                file.lower().endswith(".tf")
+                or file.lower().endswith("auto.tfvars")
+                or "terraform.tfvars" in file
+            ):
                 paths.append(os.path.join(source_location, file))
             if (
                 file.lower().endswith("architecture.yml")
@@ -189,8 +193,8 @@ def read_tfsource(
         tfdata = iterative_parse(tf_file_paths, hcl_dict, EXTRACT, tfdata, tf_mod_dir)
     # Auto load any tfvars
     for file in tf_file_paths:
-        if "auto.tfvars" in file:
-            click.echo(f"  Will use auto variables from file : {file.name} \n")
+        if "auto.tfvars" in file or "terraform.tfvars" in file:
+            click.echo(f"  Will use auto variables from file : {file} \n")
             varfile_list = varfile_list + (file,)
     # Load in variables from user file into a master list
     if len(varfile_list) == 0 and tfdata.get("all_variable"):

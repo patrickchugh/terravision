@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 from random import randint
 from typing import Dict, List, Union
-from graphviz import Digraph, Source, render
+from graphviz import Digraph, Source
+import shutil
 
 # Global contexts for a resource_classes and a cluster.
 # Allowing all nodes to draw to one canvas class
@@ -437,8 +438,9 @@ class Node:
         return f"{self._provider}.{self._type}.{self.__class__.__name__}.{uuid.uuid4().hex}"
 
     def _load_icon(self):
-        basedir = Path(os.path.abspath(os.path.dirname(__file__)))
-        return os.path.join(basedir.parent, self._icon_dir, self._icon)
+        # basedir = Path(os.path.abspath(os.path.dirname(__file__)))
+        basedir = shutil.which("terravision") or os.path.isfile("terravision")
+        return os.path.join(Path(basedir).parent, self._icon_dir, self._icon)
 
 
 class Edge:

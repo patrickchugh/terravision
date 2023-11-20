@@ -38,11 +38,17 @@ def tf_initplan(source: tuple, varfile: list):
                 )
             )
             exit()
-        vfile = varfile[0]
+        if varfile:
+            vfile = varfile[0]
+            if not os.path.isabs(vfile):
+                vfile = os.path.join(start_dir, vfile)
         click.echo(
             click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
         )
-        returncode = os.system(f"terraform plan -var-file {vfile} -out tfplan.bin")
+        if varfile:
+            returncode = os.system(f"terraform plan -var-file {vfile} -out tfplan.bin")
+        else:
+            returncode = os.system(f"terraform plan -out tfplan.bin")
         click.echo(click.style(f"\nAnalysing Plan..\n", fg="white", bold=True))
         if (
             os.path.exists("tfplan.bin")
