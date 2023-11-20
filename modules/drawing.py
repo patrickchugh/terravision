@@ -210,7 +210,12 @@ def always_draw_edge(origin: str, destination: str, tfdata: dict) -> bool:
 
 # Determines if connections should exist between the nodes for keeping rank
 def ok_to_connect(origin: str, destination: str) -> bool:
-    if origin in SHARED_SERVICES or destination in SHARED_SERVICES:
+    if (
+        origin in SHARED_SERVICES
+        or destination in SHARED_SERVICES
+        and origin not in ALWAYS_DRAW_LINE
+        and destination not in ALWAYS_DRAW_LINE
+    ):
         return False
     else:
         return True
@@ -346,7 +351,7 @@ def render_diagram(
         "height": "0",
         "width": "0",
         "fontsize": "20",
-        "label": f"Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)\nSource: {str(source)}",
+        "label": f"* Machine generated at {datetime.datetime.now()} using Terravision (https://terra-vision.net)   Source: {str(source)}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
     # Setup Outer cloud boundary

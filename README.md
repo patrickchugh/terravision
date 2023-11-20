@@ -35,12 +35,13 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 
 # Installation and Usage
 
-## Dependencies for all versions
+## External Dependencies for all versions
 * graphviz https://graphviz.org/download/
 * git https://git-scm.com/downloads
+* terraform https://developer.hashicorp.com/terraform/downloads
 
 ## Quickstart
-1. Install all dependencies as listed above
+1. Install all external dependencies as listed above
 2. Clone the repo ``git clone https://github.com/patrickchugh/terravision.git``
 3. Get the working directory (full path) by doing `cd terravision` and doing `pwd`.
 4. Add the terravision folder to your `PATH` value e.g. ``export PATH=$PATH:/Users/<PATH TO TERRAFORM>`` so you can run it from anywhere. `<PATH TO TERRAFORM>` would be the output from line 3.

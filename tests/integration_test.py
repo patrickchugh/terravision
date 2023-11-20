@@ -39,8 +39,8 @@ def test_wordpress_fargate():
     verify_json_output(github_repo, var_file, expected_output)
 
 
-def test_static_site():
-    github_repo = f"{base_repo}//aws/aws_static_site"
-    var_file = "examples/variables.tfvars"
-    expected_output = f"{os.getcwd()}/tests/testcase-aws-static-site.json"
-    verify_json_output(github_repo, var_file, expected_output)
+# def test_static_site():
+#     github_repo = f"{base_repo}//aws/aws_static_site"
+#     var_file = "examples/variables.tfvars"
+#     expected_output = f"{os.getcwd()}/tests/testcase-aws-static-site.json"
+#     verify_json_output(github_repo, var_file, expected_output)

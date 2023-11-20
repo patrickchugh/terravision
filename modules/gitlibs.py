@@ -72,14 +72,14 @@ def get_clone_url(sourceURL: str):
             subfolder_array = gitaddress.split("//")
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
-        else :
-            if "?ref" in gitaddress :
+        else:
+            if "?ref" in gitaddress:
                 gitaddress = gitaddress.split("?ref=")[0]
                 git_tag = sourceURL.split("?ref=")[1]
         githubURL = gitaddress
     # Handle Case where full git url is given
     elif helpers.check_for_domain(sourceURL):
-        if "?ref" in sourceURL :
+        if "?ref" in sourceURL:
             git_tag = sourceURL.split("?ref=")[1]
             sourceURL = sourceURL.split("?ref=")[0]
         # Handle subfolder of git repo
@@ -87,7 +87,7 @@ def get_clone_url(sourceURL: str):
             subfolder_array = sourceURL.split("//")
             subfolder = subfolder_array[2].split("?")[0]
             githubURL = subfolder_array[0] + "//" + subfolder_array[1]
-        else :
+        else:
             githubURL = "https://" + sourceURL if not "http" in sourceURL else sourceURL
     else:
         # URL is a Terraform Registry Module linked via git
@@ -140,7 +140,7 @@ def get_clone_url(sourceURL: str):
 
 
 def clone_files(sourceURL: str, tempdir: str, module="main"):
-    click.echo(click.style("Loading Sources..", fg="white", bold=True))
+    click.echo(click.style("\nLoading Sources..", fg="white", bold=True))
     subfolder = ""
     reponame = sourceURL.replace("/", "_")
     # WINDOWS OS FILE COMPATIBILITY
@@ -169,11 +169,14 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     else:
         os.makedirs(codepath)
         options = []
-        if tag :
-            options.append("--branch "+ tag)
+        if tag:
+            options.append("--branch " + tag)
         try:
             clonepath = git.Repo.clone_from(
-                githubURL, str(codepath), multi_options=options, progress=CloneProgress()
+                githubURL,
+                str(codepath),
+                multi_options=options,
+                progress=CloneProgress(),
             )
         except:
             click.echo(

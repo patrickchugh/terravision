@@ -3,6 +3,9 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
+from xmlrpc.client import Boolean
+
+from numpy import isin
 import click
 import modules.cloud_config as cloud_config
 from modules.tf_function_handlers import tf_function_handlers
@@ -25,6 +28,19 @@ def check_for_domain(string: str) -> bool:
         if dot in string:
             return True
     return False
+
+
+def get_no_module_name(node: str):
+    if not node:
+        return
+    if node.startswith("module."):
+        no_module_name = (
+            node.split("module.")[1].split(".")[1] + "." + node.split(".")[3]
+        )
+    else:
+        no_module_name = node
+    # no_module_name = no_module_name.split("-")[0]
+    return no_module_name
 
 
 def check_list_for_dash(connections: list):
@@ -206,7 +222,10 @@ def output_log(tfdata):
             click.echo(f"\n    Module: {module}")
             for key in variable:
                 if not key.startswith("source"):
-                    click.echo(f"      var.{key} = {variable[key]}")
+                    showval = str(variable[key])
+                    if len(showval) > 60:
+                        showval = showval[:60] + "..."
+                    click.echo(f"      var.{key} = {showval}")
     return
 
 
@@ -251,6 +270,17 @@ def append_dictlist(thelist: list, new_item: object):
     return new_list
 
 
+def remove_recursive(graphdict: dict) -> dict:
+    for node, connections in graphdict.items():
+        if node in connections:
+            print(node)
+        for c in connections:
+            if graphdict.get(c):
+                if node in graphdict.get(c):
+                    print(node, c)
+    return graphdict
+
+
 def check_variant(resource: str, metadata: dict) -> str:
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):
@@ -266,13 +296,18 @@ def check_variant(resource: str, metadata: dict) -> str:
 
 def find_replace(find: str, replace: str, string: str):
     original_string = string
-    # string = string.replace(find + ' ', replace)
-    # # string = string.replace(find + ',', replace)
-    # string = string.replace(find + '}', replace)
-    # string = string.replace(find + ')', replace)
-    # if string == original_string :
     string = string.replace(find, replace, 1)
     return string
+
+
+def list_of_parent_nodes(graphdict: dict, nodelist: list):
+    parent_list = list()
+    for node in nodelist:
+        parent_nodes = list_of_parents(graphdict, node)
+        for p in parent_nodes:
+            if "-" not in p:
+                parent_list.append(p)
+    return parent_list
 
 
 def list_of_parents(searchdict: dict, target: str):
@@ -301,22 +336,28 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
     for parent in parents_list:
-        if (
-            tfdata["meta_data"].get(parent)
-            and tfdata["meta_data"][parent].get("count")
-            and tfdata["meta_data"][parent].get("count") > 1
-        ) or "-" in parent:
+        if "-" in parent:
+            any_parent_has_count = True
+            break
+        c = tfdata["meta_data"][parent].get("count")
+        if tfdata["meta_data"].get(parent) and isinstance(c, int):
             any_parent_has_count = True
     return any_parent_has_count
 
 
 # Takes a resource and returns a standardised consolidated node if matched with the static definitions
-def consolidated_node_check(resource_type: str):
+def consolidated_node_check(resource_type: str) -> bool:
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
         if resource_type.startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
+
+
+def remove_all_items(test_list: list, item: str) -> list:
+    # using filter() + __ne__ to perform the task
+    res = list(filter((item).__ne__, test_list))
+    return res
 
 
 def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
