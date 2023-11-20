@@ -380,12 +380,21 @@ def show_error(mod, resource, eval_string, exp, tfdata):
 
 
 def handle_conditional_resources(tfdata, debug=False):
-    click.echo(f"\n  Conditional Resource List:")
+    click.echo(
+        click.style(
+            f"\nConditional resource list:",
+            fg="white",
+            bold=True,
+        )
+    )
     for resource, attr_list in tfdata["meta_data"].items():
         mod = tfdata["meta_data"][resource].get("module")
         eval_string = find_conditional_statements(resource, attr_list)
         if eval_string and not "ERROR" in eval_string:
             original_string = tfdata["meta_data"][resource]["original_count"]
+            original_string = (
+                original_string[:75] if len(original_string) > 75 else original_string
+            )
             if "module." in eval_string:
                 eval_string = handle_module_vars(eval_string, tfdata)
             if "aws_" and "[*]." in eval_string:
@@ -444,7 +453,13 @@ def get_metadata(tfdata):  # -> set
     meta_data = dict()
     # Default module is assumed main unless over-ridden
     mod = "main"
-    click.echo("\n  Processing Resource Attributes..\n")
+    click.echo(
+        click.style(
+            f"\nProcessing resources..",
+            fg="white",
+            bold=True,
+        )
+    )
     if not tfdata.get("all_resource"):
         click.echo(
             click.style(
@@ -504,7 +519,13 @@ def get_metadata(tfdata):  # -> set
 
 def get_variable_values(tfdata) -> dict:
     """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""
-    click.echo("\nProcessing Variables..\n")
+    click.echo(
+        click.style(
+            f"\nProcessing variables..",
+            fg="white",
+            bold=True,
+        )
+    )
     if not tfdata.get("all_variable"):
         tfdata["all_variable"] = dict()
     var_data = dict()

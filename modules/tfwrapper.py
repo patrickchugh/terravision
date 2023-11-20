@@ -49,7 +49,7 @@ def tf_initplan(source: tuple, varfile: list):
             returncode = os.system(f"terraform plan -var-file {vfile} -out tfplan.bin")
         else:
             returncode = os.system(f"terraform plan -out tfplan.bin")
-        click.echo(click.style(f"\nAnalysing Plan..\n", fg="white", bold=True))
+        click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
         if (
             os.path.exists("tfplan.bin")
             and os.system(f"terraform show -json tfplan.bin > tfplan.json") == 0
