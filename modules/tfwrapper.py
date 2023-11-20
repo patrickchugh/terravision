@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 import click
 import modules.gitlibs as gitlibs
