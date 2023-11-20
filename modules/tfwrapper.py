@@ -31,7 +31,13 @@ def tf_initplan(source: tuple, varfile: list):
             os.chdir(codepath)
         returncode = os.system(f"terraform init")
         if returncode > 0:
-            click.echo("ERROR running terraform init command")
+            click.echo(
+                click.style(
+                    f"\n  ERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
+                    fg="red",
+                    bold=True,
+                )
+            )
             exit()
         vfile = varfile[0]
         click.echo(
@@ -53,7 +59,7 @@ def tf_initplan(source: tuple, varfile: list):
             else:
                 click.echo(
                     click.style(
-                        f"\n  ERROR: Invalud output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                        f"\n  ERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
                         fg="red",
                         bold=True,
                     )
@@ -62,7 +68,7 @@ def tf_initplan(source: tuple, varfile: list):
         else:
             click.echo(
                 click.style(
-                    f"\n  ERROR: Invalud output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                    f"\n  ERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
                     fg="red",
                     bold=True,
                 )
