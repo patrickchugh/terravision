@@ -253,6 +253,10 @@ def aws_handle_sg(tfdata: dict):
                 if parent.startswith("aws_subnet"):
                     tfdata["graphdict"][parent].append(sg)
                     tfdata["graphdict"][parent].remove(sg_connection)
+    # Remove orhpan security groups
+    for sg in list_of_sgs:
+        if not tfdata["graphdict"][sg]:
+            del tfdata["graphdict"][sg]
     return tfdata
 
 

@@ -42,9 +42,7 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
         tfdata["graphdict"] = json.load(file)
         return tfdata
     # Call terraform binary to extract a graph and plan info from output
-    # tfdata = tfwrapper.tf_initplan(source, varfile)
-    file = open("unprocessed.json", "r")
-    tfdata = json.load(file)
+    tfdata = tfwrapper.tf_initplan(source, varfile)
     tfdata["workdir"] = source[0]
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)

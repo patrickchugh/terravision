@@ -34,9 +34,11 @@ def tf_initplan(source: tuple, varfile: list):
             click.echo("ERROR running terraform init command")
             exit()
         vfile = varfile[0]
-        click.echo("\nRunning terraform plan..")
+        click.echo(
+            click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
+        )
         returncode = os.system(f"terraform plan -var-file {vfile} -out tfplan.bin")
-        click.echo("Analysing plan..")
+        click.echo(click.style(f"\nAnalysing Plan..\n", fg="white", bold=True))
         if (
             os.path.exists("tfplan.bin")
             and os.system(f"terraform show -json tfplan.bin > tfplan.json") == 0
@@ -49,12 +51,23 @@ def tf_initplan(source: tuple, varfile: list):
                 f = open("tfgraph.json")
                 graphdata = json.load(f)
             else:
-                click.echo("ERROR running terraform graph")
+                click.echo(
+                    click.style(
+                        f"\n  ERROR: Invalud output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                        fg="red",
+                        bold=True,
+                    )
+                )
                 exit()
         else:
-            click.echo("ERROR running terraform plan")
+            click.echo(
+                click.style(
+                    f"\n  ERROR: Invalud output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                    fg="red",
+                    bold=True,
+                )
+            )
             exit()
-
     os.chdir(start_dir)
     return make_tf_data(plandata, graphdata)
 
