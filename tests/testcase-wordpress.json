@@ -57,6 +57,9 @@
     "aws_db_subnet_group.this": [
         "aws_rds_aurora.this"
     ],
+    "aws_default_network_acl.this-1": [],
+    "aws_default_route_table.default-1": [],
+    "aws_default_security_group.this-1": [],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
     "aws_efs_file_system.efs": [],
@@ -69,7 +72,9 @@
     "aws_efs_mount_target.this-3": [
         "aws_efs_file_system.efs"
     ],
-    "aws_eip.elastic_ip": [],
+    "aws_eip.elastic_ip": [
+        "aws_internet_gateway.igw"
+    ],
     "aws_fargate.ecs-1": [
         "aws_ecr_repository.ecr",
         "aws_ecs_cluster.ecs",
@@ -213,7 +218,6 @@
     "aws_security_group.efs-3": [
         "aws_efs_mount_target.this-3"
     ],
-    "aws_security_group.wordpress": [],
     "aws_ssm_parameter.ssmparam": [
         "aws_fargate.ecs-1",
         "aws_fargate.ecs-2",
@@ -253,6 +257,9 @@
         "aws_az.us-east-1a",
         "aws_az.us-east-1b",
         "aws_az.us-east-1c",
+        "aws_default_network_acl.this-1",
+        "aws_default_route_table.default-1",
+        "aws_default_security_group.this-1",
         "aws_internet_gateway.igw",
         "aws_lb.elb",
         "aws_route_table.private-1",

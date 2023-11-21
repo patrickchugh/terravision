@@ -11,6 +11,9 @@ import modules.cloud_config as cloud_config
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
+basedir = os.path.dirname(shutil.which("terravision")) or os.path.dirname(
+    os.path.isfile("terravision")
+)
 start_dir = Path.cwd()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
 abspath = os.path.abspath(__file__)
@@ -23,12 +26,24 @@ def tf_initplan(source: tuple, varfile: list):
     for sourceloc in source:
         if os.path.isdir(sourceloc):
             os.chdir(sourceloc)
+            codepath = sourceloc
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
             codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
-            shutil.copy("override.tf", codepath)
+            ovpath = os.path.join(basedir, "override.tf")
+            shutil.copy(ovpath, codepath)
             os.chdir(codepath)
-        returncode = os.system(f"terraform init")
+            codepath = [codepath]
+            if len(os.listdir()) == 0:
+                click.echo(
+                    click.style(
+                        f"\n  ERROR: No files found to process.",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+                exit()
+        returncode = os.system(f"terraform init -reconfigure")
         if returncode > 0:
             click.echo(
                 click.style(
@@ -46,9 +61,11 @@ def tf_initplan(source: tuple, varfile: list):
             click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
         )
         if varfile:
-            returncode = os.system(f"terraform plan -var-file {vfile} -out tfplan.bin")
+            returncode = os.system(
+                f"terraform plan -refresh=false -var-file {vfile} -out tfplan.bin"
+            )
         else:
-            returncode = os.system(f"terraform plan -out tfplan.bin")
+            returncode = os.system(f"terraform plan -refresh=false -out tfplan.bin")
         click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
         if (
             os.path.exists("tfplan.bin")
@@ -80,11 +97,12 @@ def tf_initplan(source: tuple, varfile: list):
             )
             exit()
     os.chdir(start_dir)
-    return make_tf_data(plandata, graphdata)
+    return make_tf_data(plandata, graphdata, codepath)
 
 
-def make_tf_data(plandata: dict, graphdata: dict):
+def make_tf_data(plandata: dict, graphdata: dict, codepath: str) -> dict:
     tfdata = dict()
+    tfdata["codepath"] = codepath
     tfdata["workdir"] = os.getcwd()
     tfdata["tf_resources_created"] = plandata["resource_changes"]
     tfdata["tfgraph"] = graphdata

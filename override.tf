@@ -1,5 +1,5 @@
 terraform {
   backend "local" {
-     
+
   }
 }
