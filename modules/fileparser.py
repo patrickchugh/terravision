@@ -2,15 +2,13 @@ import fileinput
 import os
 import re
 import tempfile
-from contextlib import suppress
 from pathlib import Path
 from sys import exit
-
 import click
 import yaml
-
 import hcl2
 import modules.gitlibs as gitlibs
+
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -26,6 +24,21 @@ if not os.path.exists(MODULE_DIR):
 EXTRACT = ["module", "output", "variable", "locals", "resource", "data"]
 
 
+def walklevel(some_dir, level=1):
+    paths = list()
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir):
+        if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
+            paths.append(os.path.join(root, file))
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
+    return paths
+
+
 def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     global annotations
     yaml_detected = False
@@ -35,16 +48,14 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
     else:
         # Source is a local folder
         source_location = source.strip()
-    if recursive:
-        for root, _, files in os.walk(source_location):
-            for file in files:
-                if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
-                    paths.append(os.path.join(root, file))
-    else:
         files = [f for f in os.listdir(source_location)]
         click.echo(f"  Added Source Location: {source}")
         for file in files:
-            if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
+            if (
+                file.lower().endswith(".tf")
+                or file.lower().endswith("auto.tfvars")
+                or "terraform.tfvars" in file
+            ):
                 paths.append(os.path.join(source_location, file))
             if (
                 file.lower().endswith("architecture.yml")
@@ -58,6 +69,15 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
                     )
                     yaml_detected = True
                     annotations = yaml.safe_load(file)
+        if recursive:
+            for root, dir, files in os.walk(source_location):
+                for d in dir:
+                    subdir = os.path.join(root, d)
+                    for file in os.listdir(subdir):
+                        if file.lower().endswith(".tf") or file.lower().endswith(
+                            "auto.tfvars"
+                        ):
+                            paths.append(os.path.join(subdir, file))
     if len(paths) == 0:
         click.echo(
             "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
@@ -69,33 +89,6 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
 def handle_module(modules_list, tf_file_paths, filename):
     temp_modules_dir = temp_dir.name
     module_source_dict = dict()
-    all_repos = list()
-    # For every module source location, download the files into a new temporary subdirectory
-    for i in modules_list:
-        for k in i.keys():
-            if isinstance(i[k]["source"], list):
-                sourceURL = i[k]["source"][0]
-            else:
-                sourceURL = i[k]["source"]
-            if not sourceURL in all_repos:
-                all_repos.append(sourceURL)
-                # Handle local modules on disk
-                if sourceURL.startswith(".") or sourceURL.startswith("\\") or os.path.isdir(sourceURL):
-                    if not str(temp_modules_dir) in filename:
-                        current_filepath = os.path.abspath(filename)
-                        tf_dir = os.path.dirname(current_filepath)
-                        os.chdir(tf_dir)
-                        os.chdir(sourceURL)
-                        modfolder = str(os.getcwd())
-                        tf_file_paths = find_tf_files(os.getcwd(), tf_file_paths)
-                        os.chdir(start_dir)
-                else:
-                    if not os.path.isdir(sourceURL):
-                        modfolder = gitlibs.clone_files(sourceURL, temp_modules_dir, k)
-                    else:
-                        # local module
-                        modfolder = sourceURL
-                    tf_file_paths = find_tf_files(modfolder, tf_file_paths)
     # Create a mapping dict between modules and their source dirs for variable separation
     for i in range(len(modules_list)):
         module_stanza = modules_list[i]
@@ -119,11 +112,15 @@ def handle_module(modules_list, tf_file_paths, filename):
     return {"tf_file_paths": tf_file_paths, "module_source_dict": module_source_dict}
 
 
-def iterative_read(
-    tf_file_paths: dict, hcl_dict: dict, extract_sections: list, tfdata: dict
+def iterative_parse(
+    tf_file_paths: dict,
+    hcl_dict: dict,
+    extract_sections: list,
+    tfdata: dict,
+    tf_mod_dir,
 ):
     # Parse each TF file encountered in source locations
-    module_source_dict = dict()
+    tfdata["module_source_dict"] = dict()
     for filename in tf_file_paths:
         filepath = Path(filename)
         fname = filepath.parent.name + "/" + filepath.name
@@ -159,44 +156,45 @@ def iterative_read(
                     )
                     if section == "module":
                         # Expand source locations to include any newly found sub-module locations
-                        module_data = handle_module(
-                            hcl_dict[filename]["module"], tf_file_paths, filename
-                        )
-                        tf_file_paths = module_data["tf_file_paths"]
-                        # Get list of modules and their sources
-                        for mod in module_data["module_source_dict"]:
-                            module_source_dict[mod] = module_data["module_source_dict"][
-                                mod
-                            ]
-                        if "module_source_dict" in tfdata.keys():
-                            tfdata["module_source_dict"] = {
-                                **tfdata["module_source_dict"],
-                                **module_source_dict,
-                            }
-                        else:
-                            tfdata["module_source_dict"] = module_source_dict
+                        for mod_dict in hcl_dict[filename]["module"]:
+                            module_name = next(iter(mod_dict))
+                            modpath = os.path.join(tf_mod_dir, module_name)
+                            if os.path.isdir(modpath):
+                                source_files_list = find_tf_files(modpath)
+                                tf_file_paths.extend(source_files_list)
+                                tfdata["module_source_dict"][module_name] = str(modpath)
+                            else:
+                                click.echo(
+                                    click.style(
+                                        f"\n  ERROR: {modpath} module directory not found in terraform cache. Please ensure you have run terraform init and downloaded all source files first.",
+                                        fg="red",
+                                        bold=True,
+                                    )
+                                )
+                                exit()
     return tfdata
 
 
-def parse_tf_files(source_list: list, varfile_list: tuple, annotate: str):  # -> dict
+def read_tfsource(
+    source_list: list, varfile_list: tuple, annotate: str, tfdata: dict
+):  # -> dict
     global annotations
     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """
+    click.echo(click.style("\nParsing Terraform Source Files..", fg="white", bold=True))
     hcl_dict = dict()
-    tfdata = dict()
-    variable_list = dict()
-    module_sources_found = dict()
-    cwd = os.getcwd()
     for source in source_list:
         # Get List of Terraform Files to parse
-        tf_file_paths = find_tf_files(source)
+        tf_file_paths = find_tf_files(source, [], False)
+        tf_mod_dir = os.path.join(source, ".terraform", "modules")
         if annotate:
             with open(annotate, "r") as file:
                 click.echo(f"  Will use architecture annotation file : {file.name} \n")
                 annotations = yaml.safe_load(file)
-        tfdata = iterative_read(tf_file_paths, hcl_dict, EXTRACT, tfdata)
+        tfdata = iterative_parse(tf_file_paths, hcl_dict, EXTRACT, tfdata, tf_mod_dir)
     # Auto load any tfvars
     for file in tf_file_paths:
-        if "auto.tfvars" in file:
+        if "auto.tfvars" in file or "terraform.tfvars" in file:
+            click.echo(f"  Will use auto variables from file : {file} \n")
             varfile_list = varfile_list + (file,)
     # Load in variables from user file into a master list
     if len(varfile_list) == 0 and tfdata.get("all_variable"):

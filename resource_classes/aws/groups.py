@@ -1,4 +1,6 @@
 import sys
+import os
+import shutil
 from pathlib import Path
 
 from resource_classes import Cluster
@@ -7,7 +9,11 @@ defaultdir = "LR"
 try:
     base_path = sys._MEIPASS
 except:
-    base_path = Path.cwd()
+    # base_path = Path(os.path.abspath(os.path.dirname(__file__)))
+    base_path = os.path.dirname(shutil.which("terravision")) or os.path.dirname(
+        os.path.isfile("terravision")
+    )
+    pass
 
 
 class VPCgroup(Cluster):
@@ -63,7 +69,11 @@ class GenericAutoScalingGroup(Cluster):
 
 class GenericGroup(Cluster):
     def __init__(self, label="Shared Services", **kwargs):
-        graph_attrs = {"style": "dashed", "margin": "150", "pencolor": "black"}
+        graph_attrs = {
+            "style": "dashed",
+            "margin": "100",
+            "pencolor": "black",
+        }
         super().__init__(label, defaultdir, graph_attrs)
 
 

@@ -9,11 +9,11 @@ from modules.helpers import *
 from modules.postfix import Conversion, Evaluate
 
 DATA_REPLACEMENTS = {
-    "data.aws_availability_zones": "['AZ1', 'AZ2', 'AZ3']",
-    "data.aws_availability_zones_names": "['us-east-1a', 'us-east-1b', 'us-east-1c']",
-    "data.aws_subnet_ids": "['subnet-a', 'subnet-b', 'subnet-c']",
-    "data.aws_vpc_ids": "['vpc-a', 'vpc-b', 'vpc-c']",
-    "data.aws_security_group_ids": "['sg-a', 'sg-b', 'sg-c']",
+    "data.aws_availability_zones": ["AZ1", "AZ2", "AZ3"],
+    "data.aws_availability_zones_names": ["us-east-1a", "us-east-1b", "us-east-1c"],
+    "data.aws_subnet_ids": ["subnet-a", "subnet-b", "subnet-c"],
+    "data.aws_vpc_ids": ["vpc-a", "vpc-b", "vpc-c"],
+    "data.aws_security_group_ids": ["sg-a", "sg-b", "sg-c"],
 }
 
 
@@ -65,11 +65,15 @@ def handle_metadata_vars(tfdata):
         for key, orig_value in attr_list.items():
             value = str(orig_value)
             while (
-                "var." in value
-                or "local." in value
-                or "module." in value
-                or "data." in value
-            ) and key != "depends_on" and key != "original_count":
+                (
+                    "var." in value
+                    or "local." in value
+                    or "module." in value
+                    or "data." in value
+                )
+                and key != "depends_on"
+                and key != "original_count"
+            ):
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
             tfdata["meta_data"][resource][key] = value
@@ -81,7 +85,15 @@ def replace_data_values(found_list: list, value: str, tfdata: dict):
     for d in found_list:
         for search_string, keyvalue in DATA_REPLACEMENTS.items():
             if search_string in d:
-                value = str(value.replace(d, str(keyvalue)))
+                if (
+                    initial_value.startswith("${data.")
+                    and len(found_list) == 1
+                    and not isinstance(keyvalue, str)
+                ):
+                    value = keyvalue
+                else:
+                    value = str(value.replace(d, str(keyvalue)))
+
         if value == initial_value:
             value = str(value.replace(d, '"UNKNOWN"'))
     return value
@@ -233,6 +245,7 @@ def find_replace_values(varstring, module, tfdata):
     local_found_list = re.findall("local\.[A-Za-z0-9_\-\.\[\]]+", value)
     modulevar_found_list = re.findall("module\.[A-Za-z0-9_\-\.\[\]]+", value)
     # Replace found variable strings with variable values
+
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)
     value = replace_var_values(
@@ -262,7 +275,7 @@ def extract_locals(tfdata):
     return tfdata
 
 
-def eval_tf_functions(eval_string):
+def eval_tf_functions(eval_string, debug=False):
     # Check if there are any Terraform functions used to compute resources
     function_name = check_for_tf_functions(eval_string)
     # Determine startpos of function parameter
@@ -292,7 +305,7 @@ def eval_tf_functions(eval_string):
     # Call emulated Teraform function to get predicted result
     with suppress(Exception):
         eval_result = str(getattr(tf_function_handlers, function_name)(func_param))
-    if not eval_result:
+    if not eval_result and debug:
         click.echo(f"    WARNING: Unable to evaluate {function_name}({func_param})")
         eval_result = f"ERROR!_{function_name}(" + func_param + ")"
     eval_string = eval_string.replace(
@@ -314,8 +327,9 @@ def find_conditional_statements(resource, attr_list: dict):
     ):
         eval_string = str(attr_list["count"])
         return helpers.cleanup_curlies(eval_string)
-    for attrib in attr_list:
-        if "for" in attrib and ("in" in attrib or ":" in attrib):
+    for attrib, value in attr_list.items():
+        val = str(value)
+        if "for " in val and ("in" in val or ":" in val or "?" in val):
             eval_string = attr_list[attrib]
             # we have a for loop so deal with that part first
             # TODO: Implement for loop handling for real, for now just null it out
@@ -365,13 +379,22 @@ def show_error(mod, resource, eval_string, exp, tfdata):
     return tfdata
 
 
-def handle_conditional_resources(tfdata):
-    click.echo(f"\n  Conditional Resource List:")
+def handle_conditional_resources(tfdata, debug=False):
+    click.echo(
+        click.style(
+            f"\nConditional resource list:",
+            fg="white",
+            bold=True,
+        )
+    )
     for resource, attr_list in tfdata["meta_data"].items():
-        mod = tfdata["meta_data"][resource]["module"]
+        mod = tfdata["meta_data"][resource].get("module")
         eval_string = find_conditional_statements(resource, attr_list)
         if eval_string and not "ERROR" in eval_string:
             original_string = tfdata["meta_data"][resource]["original_count"]
+            original_string = (
+                original_string[:75] if len(original_string) > 75 else original_string
+            )
             if "module." in eval_string:
                 eval_string = handle_module_vars(eval_string, tfdata)
             if "aws_" and "[*]." in eval_string:
@@ -383,7 +406,7 @@ def handle_conditional_resources(tfdata):
                 if checks > 100:
                     break
                 eval_string = helpers.fix_lists(eval_string)
-                eval_string = eval_tf_functions(eval_string)
+                eval_string = eval_tf_functions(eval_string, debug)
                 checks = checks + 1
             if checks > 100:
                 eval_string = eval_string + "ERROR!"
@@ -402,18 +425,14 @@ def handle_conditional_resources(tfdata):
                         click.echo(
                             f"    Module {mod} : {resource} count = {original_string}"
                         )
-                        if checks > 1 :
+                        if checks > 1:
                             click.echo(
                                 f"                 {resource} count = {original_step1}"
                             )
-                        click.echo(
-                            f"                 {resource} count = {exp})"
-                        )
-                        click.echo(
-                            f"                 {resource} count = {eval_value}"
-                        )
+                        click.echo(f"                 {resource} count = {exp})")
+                        click.echo(f"                 {resource} count = {eval_value}")
                         attr_list["count"] = int(eval_value)
-                else:
+                elif debug:
                     click.echo(
                         f"    ERROR: {mod} : {resource} count = 0 (Error in evaluation of value {exp})"
                     )
@@ -421,24 +440,26 @@ def handle_conditional_resources(tfdata):
                     tfdata["meta_data"][resource]["ERROR_count"] = eval_string
             else:
                 show_error(mod, resource, eval_string, exp, tfdata)
-    tfdata["hidden"] = [
-        key
-        for key, attr_list in tfdata["meta_data"].items()
-        if str(attr_list.get("count")) == "0"
-        or str(attr_list.get("count")).startswith("$")
-    ]
+    tfdata["hidden"] = [node for node in tfdata["graphdict"] if "random" in node]
     return tfdata
 
 
 def get_metadata(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
-    Returns a set with a node_list of unique resources, resource attributes (metadata) and hidden (zero count) nodes
+    Returns a set with a node_list of unique resources, resource attributes (metadata)
     """
     node_list = []
     meta_data = dict()
     # Default module is assumed main unless over-ridden
     mod = "main"
+    click.echo(
+        click.style(
+            f"\nProcessing resources..",
+            fg="white",
+            bold=True,
+        )
+    )
     if not tfdata.get("all_resource"):
         click.echo(
             click.style(
@@ -450,18 +471,16 @@ def get_metadata(tfdata):  # -> set
         tfdata["all_resource"] = {}
         tfdata["node_list"] = {}
     for filename, resource_list in tfdata["all_resource"].items():
-        if ";" in filename:
-            # We have a module file being processed
-            modarr = filename.split(";")
-            mod = modarr[1]
-        elif "all_module" in tfdata.keys():
+        if "all_module" in tfdata.keys():
             # Default module assumed to be main
             # Search for mod name in all_module and switch module scope if found
+            mod = "main"
             for _, module_list in tfdata["all_module"].items():
                 for module in module_list:
                     for moddata in module:
-                        if module[moddata]["source"].strip(".") in filename:
+                        if ".terraform" in filename:
                             mod = moddata
+                            break
         for item in resource_list:
             for k in item.keys():
                 resource_type = k
@@ -475,22 +494,38 @@ def get_metadata(tfdata):  # -> set
                             meta_data["aws_cloudwatch_log_group.logs"] = item[
                                 resource_type
                             ][resource_name]
-                click.echo(f"    {resource_type}.{resource_name}")
                 node_list.append(f"{resource_type}.{resource_name}")
                 md = item[k][i]
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
-                if resource_type.startswith("aws"):
+                if (
+                    resource_type.startswith("aws")
+                    and f"{resource_type}.{resource_name}"
+                    or f"{resource_type}.{resource_name}-1" in tfdata["node_list"]
+                ):
                     meta_data[f"{resource_type}.{resource_name}"] = md
                     meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
+                    if f"{resource_type}.{resource_name}-1" in tfdata["node_list"]:
+                        for i in range(1, 4):
+                            meta_data[f"{resource_type}.{resource_name}-{i}"] = md
+                            meta_data[f"{resource_type}.{resource_name}-{i}"][
+                                "module"
+                            ] = mod
     tfdata["meta_data"] = meta_data
-    tfdata["node_list"] = node_list
+    tfdata["all_node_list"] = node_list
+    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
     return tfdata
 
 
 def get_variable_values(tfdata) -> dict:
     """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""
-    click.echo("Processing Variables..")
+    click.echo(
+        click.style(
+            f"\nProcessing variables..",
+            fg="white",
+            bold=True,
+        )
+    )
     if not tfdata.get("all_variable"):
         tfdata["all_variable"] = dict()
     var_data = dict()
@@ -509,15 +544,13 @@ def get_variable_values(tfdata) -> dict:
                         var_value = f'"{var_value}"'
                 else:
                     var_value = ""
-                click.echo(f"    var.{var_name}")
                 var_data[var_name] = var_value
                 # Also update var mapping dict with modules and matching variables
                 if tfdata.get("module_source_dict"):
                     matching = [
                         m
                         for m in tfdata["module_source_dict"]
-                        if tfdata["module_source_dict"][m]["cache_path"][1:-1]
-                        in str(var_source_file)
+                        if tfdata["module_source_dict"][m] in str(var_source_file)
                     ]  # omit first char of module source in case it is a .
                 if not matching:
                     if not var_mappings.get("main"):
