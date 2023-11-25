@@ -214,7 +214,7 @@ def aws_handle_sg(tfdata: dict):
                     and len(tfdata["graphdict"][connection]) == 0
                 ):
                     tfdata["graphdict"][target].remove(connection)
-                    del tfdata["graphdict"][connection]
+                    tfdata["graphdict"][connection].append(target)
         # Remove Security Group Rules from associations with the security group
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_security_group_rule":
@@ -232,15 +232,15 @@ def aws_handle_sg(tfdata: dict):
         replacement_sg = [k for k in references if k.startswith("aws_security_group")]
         if replacement_sg:
             replacement_sg = replacement_sg[0]
-        for node in references:
-            if (
-                target in tfdata["graphdict"][node]
-                and not node.startswith("aws_security_group")
-                and node.split(".")[0] in GROUP_NODES
-                and not node.startswith("aws_vpc")
-            ):
-                tfdata["graphdict"][node].remove(target)
-                tfdata["graphdict"][node].append(replacement_sg)
+            for node in references:
+                if (
+                    target in tfdata["graphdict"][node]
+                    and not node.startswith("aws_security_group")
+                    and node.split(".")[0] in GROUP_NODES
+                    and not node.startswith("aws_vpc")
+                ):
+                    tfdata["graphdict"][node].remove(target)
+                    tfdata["graphdict"][node].append(replacement_sg)
     # TODO: Merge any security groups which share the same identical connection
     # Handle subnets pointing to sg targets
     list_of_sgs = helpers.list_of_dictkeys_containing(
@@ -255,7 +255,7 @@ def aws_handle_sg(tfdata: dict):
                     tfdata["graphdict"][parent].remove(sg_connection)
     # Remove orhpan security groups
     for sg in list_of_sgs:
-        if not tfdata["graphdict"][sg]:
+        if len(tfdata["graphdict"][sg]) == 0:
             del tfdata["graphdict"][sg]
     return tfdata
 
@@ -268,7 +268,8 @@ def aws_handle_sharedgroup(tfdata: dict):
             if not tfdata["graphdict"].get("aws_group.shared_services"):
                 tfdata["graphdict"]["aws_group.shared_services"] = []
                 tfdata["meta_data"]["aws_group.shared_services"] = {}
-            tfdata["graphdict"]["aws_group.shared_services"].append(node)
+            if node not in tfdata["graphdict"]["aws_group.shared_services"]:
+                tfdata["graphdict"]["aws_group.shared_services"].append(node)
     if tfdata["graphdict"].get("aws_group.shared_services"):
         for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
             if helpers.consolidated_node_check(service) and "cluster" not in service:

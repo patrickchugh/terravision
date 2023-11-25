@@ -4,6 +4,8 @@ import re
 import tempfile
 from pathlib import Path
 from sys import exit
+
+from numpy import source
 import click
 import yaml
 import hcl2
@@ -78,11 +80,11 @@ def find_tf_files(source: str, paths=list(), recursive=False) -> list:
                             "auto.tfvars"
                         ):
                             paths.append(os.path.join(subdir, file))
-    if len(paths) == 0:
-        click.echo(
-            "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
-        )
-        exit()
+        if len(paths) == 0:
+            click.echo(
+                "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
+            )
+            exit()
     return paths
 
 
@@ -159,19 +161,20 @@ def iterative_parse(
                         for mod_dict in hcl_dict[filename]["module"]:
                             module_name = next(iter(mod_dict))
                             modpath = os.path.join(tf_mod_dir, module_name)
-                            if os.path.isdir(modpath):
-                                source_files_list = find_tf_files(modpath)
-                                tf_file_paths.extend(source_files_list)
-                                tfdata["module_source_dict"][module_name] = str(modpath)
-                            else:
-                                click.echo(
-                                    click.style(
-                                        f"\n  ERROR: {modpath} module directory not found in terraform cache. Please ensure you have run terraform init and downloaded all source files first.",
-                                        fg="red",
-                                        bold=True,
-                                    )
-                                )
-                                exit()
+                            sourcemod = mod_dict[module_name]["source"]
+                            if sourcemod.startswith("."):
+                                curdir = os.getcwd()
+                                os.chdir(os.path.dirname(filename))
+                                modpath = os.path.abspath(sourcemod)
+                                os.chdir(curdir)
+                            if not os.path.isdir(modpath):
+                                modpath = mod_dict[module_name]["source"]
+                            source_files_list = find_tf_files(modpath)
+                            existing_files = list(tf_file_paths)
+                            tf_file_paths.extend(
+                                x for x in source_files_list if x not in existing_files
+                            )
+                            tfdata["module_source_dict"][module_name] = str(modpath)
     return tfdata
 
 

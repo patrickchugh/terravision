@@ -33,13 +33,15 @@ def check_for_domain(string: str) -> bool:
 def get_no_module_name(node: str):
     if not node:
         return
-    if node.startswith("module."):
+    if "module." in node:
+        modcount = node.count("module.")
         no_module_name = (
-            node.split("module.")[1].split(".")[1] + "." + node.split(".")[3]
+            node.split("module.")[modcount].split(".")[1]
+            + "."
+            + node.split(".")[(modcount + modcount) + 1]
         )
     else:
         no_module_name = node
-    # no_module_name = no_module_name.split("-")[0]
     return no_module_name
 
 

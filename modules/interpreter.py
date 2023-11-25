@@ -145,9 +145,20 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                         if keyword in value:
                             if "module." in value:
                                 mod = value.split("module.")[1].split(".")[0]
+                                if mod == module:
+                                    # Check for variable with same name first
+                                    if outputname in tfdata["variable_list"]:
+                                        value = value.replace(
+                                            module_var,
+                                            tfdata["variable_list"][outputname],
+                                        )
+                                        if value == oldvalue:
+                                            value = value.replace(
+                                                module_var, '"UNKNOWN"'
+                                            )
                             else:
                                 mod = module
-                            value = find_replace_values(value, mod, tfdata)
+                                value = find_replace_values(value, mod, tfdata)
                     break
         if value == oldvalue:
             value = value.replace(module_var, '"UNKNOWN"')

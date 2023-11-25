@@ -154,7 +154,11 @@ def add_relations(tfdata: dict):
             nodename = node.split("-")[0]
         else:
             nodename = node
-        if nodename.startswith("random") or node.startswith("aws_security_group"):
+        if (
+            nodename.startswith("random")
+            or node.startswith("aws_security_group")
+            or node.startswith("null")
+        ):
             continue
         for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
             matching_result = check_relationship(
@@ -441,9 +445,9 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
 def handle_special_resources(tfdata: dict):
     resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
-        matching_substring = [s for s in resource_types if resource_prefix in s]
-        if resource_prefix in resource_types or matching_substring:
-            tfdata = getattr(resource_handlers, handler)(tfdata)
+        for rt in resource_types:
+            if resource_prefix == rt or resource_prefix in rt:
+                tfdata = getattr(resource_handlers, handler)(tfdata)
     return tfdata
 
 

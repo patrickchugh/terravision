@@ -118,15 +118,15 @@ def setup_graph(tfdata: dict):
     # Make an initial dict with resources created and empty connections
     for object in tfdata["tf_resources_created"]:
         # Replace multi count notation
-        node = object["address"].replace("[", "-")
-        node = node.replace("]", "")
-        if "-" in node:
-            number = node.split("-")[1]
-            number = str(int(number) + 1)
-            node = node.split("-")[0] + "-" + number
-        no_module_name = helpers.get_no_module_name(node)
-        tfdata["graphdict"][no_module_name] = list()
-        tfdata["node_list"].append(no_module_name)
+        node = object["type"] + "." + object["name"]
+        if "index" in object.keys():
+            if not isinstance(object["index"], int):
+                suffix = ""
+            else:
+                suffix = "-" + str(int(object.get("index")) + 1)
+            node = node + suffix
+        tfdata["graphdict"][node] = list()
+        tfdata["node_list"].append(node)
         # Add metadata
         details = object["change"]["after"]
         details.update(object["change"]["after_unknown"])
@@ -136,7 +136,7 @@ def setup_graph(tfdata: dict):
             details["module"] = modname
         if "-" in node:
             details["count"] = 3
-        tfdata["meta_data"][no_module_name] = details
+        tfdata["meta_data"][node] = details
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     return tfdata
 
