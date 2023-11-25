@@ -121,7 +121,7 @@ def setup_graph(tfdata: dict):
         node = object["type"] + "." + object["name"]
         if "index" in object.keys():
             if not isinstance(object["index"], int):
-                suffix = ""
+                suffix = "_" + object["index"].replace("-", "_")
             else:
                 suffix = "-" + str(int(object.get("index")) + 1)
             node = node + suffix
