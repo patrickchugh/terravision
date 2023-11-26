@@ -8,3 +8,4 @@ tqdm==4.65.0
 python-hcl2==4.3.0
 pyinstaller==5.8.0
 ipaddr==2.2.0
+numpy==1.23.4

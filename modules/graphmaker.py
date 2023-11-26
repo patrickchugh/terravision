@@ -136,6 +136,25 @@ def check_relationship(
     return connection_pairs
 
 
+# Extend original relationships with associated numbered nodes
+def check_for_index_matches(connection_pairs: list, tfdata: dict) -> list:
+    for i in range(0, len(connection_pairs), 2):
+        if "-" in connection_pairs[i]:
+            origin = connection_pairs[i].split("-")[0]
+            dest = connection_pairs[i + 1].split("-")[0]
+            next_index = str(int(connection_pairs[i].split("-")[1]) + 1)
+            if origin + "-" + next_index in tfdata["node_list"]:
+                if dest + "-" + next_index not in tfdata["node_list"]:
+                    tfdata["graphdict"][dest + "-" + next_index] = list()
+                if (
+                    dest + "-" + next_index
+                    not in tfdata["graphdict"][origin + "-" + next_index]
+                ):
+                    connection_pairs.append(origin + "-" + next_index)
+                    connection_pairs.append(dest + "-" + next_index)
+    return connection_pairs, tfdata
+
+
 # Make final graph structure to be used for drawing
 def add_relations(tfdata: dict):
     # Start with an existing connections list for all nodes/resources we know about
@@ -154,7 +173,11 @@ def add_relations(tfdata: dict):
             nodename = node.split("-")[0]
         else:
             nodename = node
-        if nodename.startswith("random") or node.startswith("aws_security_group"):
+        if (
+            nodename.startswith("random")
+            or node.startswith("aws_security_group")
+            or node.startswith("null")
+        ):
             continue
         for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
             matching_result = check_relationship(
@@ -201,10 +224,6 @@ def consolidate_nodes(tfdata: dict):
             if not tfdata["graphdict"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
-            original_count = tfdata["meta_data"][res].get("count")
-            merged_count = tfdata["meta_data"][consolidated_name].get("count")
-            if original_count and not merged_count:
-                saved_count = original_count
             tfdata["meta_data"][consolidated_name] = dict(
                 tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
             )
@@ -438,6 +457,13 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
 
 
 # Handle resources which require pre/post-processing before/after being added to graphdict
+# def handle_special_resources(tfdata: dict):
+#     resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
+#     for resource_prefix, handler in SPECIAL_RESOURCES.items():
+#         for rt in resource_types:
+#             if resource_prefix == rt or resource_prefix in rt:
+#                 tfdata = getattr(resource_handlers, handler)(tfdata)
+#     return tfdata
 def handle_special_resources(tfdata: dict):
     resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
     for resource_prefix, handler in SPECIAL_RESOURCES.items():

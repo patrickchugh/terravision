@@ -72,11 +72,11 @@ class Evaluate:
                 # Trim leading spaces until we find first value for val1
                 tried = 0
                 while self.peek() == " ":
-                    if tried > 100 :
+                    if tried > 100:
                         break
                     tried = tried + 1
                     self.pop()
-                if tried > 100 :
+                if tried > 100:
                     return "ERROR!"
                 # Accumulate multi digit operand until we hit a space
                 while self.peek() != " ":
@@ -193,7 +193,7 @@ class Conversion:
     def hash_strings(self, exp):
         tried = 0
         while exp.count('"') > 1:
-            if tried > 100 :
+            if tried > 100:
                 break
             split_array = exp.split('"')
             string = split_array[1]
@@ -202,7 +202,7 @@ class Conversion:
             else:
                 exp = exp.replace('""', "0")
             tried = tried + 1
-        if tried > 100 :
+        if tried > 100:
             return "ERROR"
         tried = 0
         while exp.count("'") > 1:
@@ -213,7 +213,7 @@ class Conversion:
             else:
                 exp = exp.replace("''", "0")
             tried = tried + 1
-        if tried > 100 :
+        if tried > 100:
             return "ERROR"
         return exp
 
@@ -253,6 +253,7 @@ class Conversion:
         exp = exp.replace("!F", "T")
         exp = exp.replace("!0", "1")
         exp = exp.replace("!  None", "F")
+        exp = exp.replace("UNKNOWN", "F")
         exp = exp.replace('"None"', '""')
         none_parameters = re.findall("None\.[A-Za-z0-9_-]+", exp)
         for np in none_parameters:
@@ -263,7 +264,7 @@ class Conversion:
         exp = self.hash_strings(exp)
         counter = -1
         tried = 1
-        spaces = 0 
+        spaces = 0
         while exp.count("?") > 1:
             if tried > 20:
                 break
@@ -280,9 +281,9 @@ class Conversion:
             exp = exp.replace(middle, str(parsed_value))
             tried = tried + 1
         if spaces > 100:
-                return "ERROR!"
+            return "ERROR!"
         if tried > 20:
-                return "ERROR!"
+            return "ERROR!"
         # Iterate over the expression for conversion
         for i in exp:
             counter += 1
