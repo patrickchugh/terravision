@@ -118,12 +118,13 @@ def setup_graph(tfdata: dict):
     # Make an initial dict with resources created and empty connections
     for object in tfdata["tf_resources_created"]:
         # Replace multi count notation
-        node = object["type"] + "." + object["name"]
+        node = object["address"]
         if "index" in object.keys():
+            node = object["type"] + "." + object["name"]
             if not isinstance(object["index"], int):
-                suffix = "_" + object["index"].replace("-", "_")
+                suffix = "_" + object["index"]
             else:
-                suffix = "-" + str(int(object.get("index")) + 1)
+                suffix = "~" + str(int(object.get("index")) + 1)
             node = node + suffix
         tfdata["graphdict"][node] = list()
         tfdata["node_list"].append(node)
@@ -134,7 +135,7 @@ def setup_graph(tfdata: dict):
         if "module." in object["address"]:
             modname = object["address"].split(".")[1]
             details["module"] = modname
-        if "-" in node:
+        if "~" in node:
             details["count"] = 3
         tfdata["meta_data"][node] = details
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
@@ -152,7 +153,7 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = helpers.get_no_module_name(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        node_id = gvid_table.index(node.split("-")[0])
+        node_id = gvid_table.index(node.split("~")[0])
         for connection in tfdata["tfgraph"]["edges"]:
             head = connection["head"]
             tail = connection["tail"]

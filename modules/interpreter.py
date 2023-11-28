@@ -512,14 +512,14 @@ def get_metadata(tfdata):  # -> set
                 if (
                     resource_type.startswith("aws")
                     and f"{resource_type}.{resource_name}"
-                    or f"{resource_type}.{resource_name}-1" in tfdata["node_list"]
+                    or f"{resource_type}.{resource_name}~1" in tfdata["node_list"]
                 ):
                     meta_data[f"{resource_type}.{resource_name}"] = md
                     meta_data[f"{resource_type}.{resource_name}"]["module"] = mod
-                    if f"{resource_type}.{resource_name}-1" in tfdata["node_list"]:
+                    if f"{resource_type}.{resource_name}~1" in tfdata["node_list"]:
                         for i in range(1, 4):
-                            meta_data[f"{resource_type}.{resource_name}-{i}"] = md
-                            meta_data[f"{resource_type}.{resource_name}-{i}"][
+                            meta_data[f"{resource_type}.{resource_name}~{i}"] = md
+                            meta_data[f"{resource_type}.{resource_name}~{i}"][
                                 "module"
                             ] = mod
     tfdata["meta_data"] = meta_data
