@@ -171,6 +171,8 @@ def add_relations(tfdata: dict):
     for node in tfdata["node_list"]:
         if node not in tfdata["meta_data"].keys():
             nodename = node.split("~")[0]
+            if "_0." in nodename:
+                nodename = nodename.split("_0.")[0]
         else:
             nodename = node
         if (
@@ -219,6 +221,8 @@ def consolidate_nodes(tfdata: dict):
             res = resource.split("~")[0]
         else:
             res = resource
+        if "_0." in res:
+            res = res.split("_0.")[0]
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["graphdict"].get(consolidated_name):
@@ -233,7 +237,7 @@ def consolidate_nodes(tfdata: dict):
                 | set(tfdata["graphdict"][resource])
             )
             del tfdata["graphdict"][resource]
-            del tfdata["meta_data"][res]
+            # del tfdata["meta_data"][res]
             connected_resource = consolidated_name
         else:
             connected_resource = resource

@@ -34,14 +34,10 @@ def get_no_module_name(node: str):
     if not node:
         return
     if "module." in node:
-        modcount = node.count("module.")
-        no_module_name = (
-            node.split("module.")[modcount].split(".")[1]
-            + "."
-            + node.split(".")[(modcount + modcount) + 1]
-        )
+        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
     else:
         no_module_name = node
+    no_module_name = no_module_name.replace("-", "_")
     return no_module_name
 
 

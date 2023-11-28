@@ -153,7 +153,10 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = helpers.get_no_module_name(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        node_id = gvid_table.index(node.split("~")[0])
+        if "0." in node:
+            node_id = gvid_table.index(node.split("_0.")[0])
+        else:
+            node_id = gvid_table.index(node.split("~")[0])
         for connection in tfdata["tfgraph"]["edges"]:
             head = connection["head"]
             tail = connection["tail"]
