@@ -34,12 +34,7 @@ def get_no_module_name(node: str):
     if not node:
         return
     if "module." in node:
-        modcount = node.count("module.")
-        no_module_name = (
-            node.split("module.")[modcount].split(".")[1]
-            + "."
-            + node.split(".")[(modcount + modcount) + 1]
-        )
+        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
     else:
         no_module_name = node
     return no_module_name
@@ -48,7 +43,7 @@ def get_no_module_name(node: str):
 def check_list_for_dash(connections: list):
     has_dash = True
     for item in connections:
-        if not "-" in item:
+        if not "~" in item:
             has_dash = False
     return has_dash
 
@@ -115,7 +110,7 @@ def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
     if (end == " " or end == "") and not middle.endswith(" "):
         for i in range(0, len(middle)):
             char = middle[i]
-            if not char.isalpha() and char != "_" and char != "-":
+            if not char.isalpha() and char != "_" and char != "~":
                 end = char
                 middle = text.split(begin, 1)[1].split(end, 1)[0]
                 break
@@ -137,7 +132,7 @@ def pretty_name(name: str, show_title=True) -> str:
         name = name.replace("aws_", "")
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
-    service_label = service_label.split("-")[0]
+    service_label = service_label.split("~")[0]
     if servicename.startswith(service_label.replace("_", "")):
         service_label = ""
     if servicename in NAME_REPLACEMENTS.keys():
@@ -147,7 +142,7 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = (service_label if show_title else "") + " " + servicename
     final_label = final_label[:22]
     final_label = final_label.replace("_", " ")
-    final_label = final_label.replace("-", " ")
+    final_label = final_label.replace("~", " ")
     final_label = final_label.replace("this", "").strip()
     acronym = False
     final_label = final_label.title()[:21]
@@ -307,7 +302,7 @@ def list_of_parent_nodes(graphdict: dict, nodelist: list):
     for node in nodelist:
         parent_nodes = list_of_parents(graphdict, node)
         for p in parent_nodes:
-            if "-" not in p:
+            if "~" not in p:
                 parent_list.append(p)
     return parent_list
 
@@ -338,7 +333,7 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
     for parent in parents_list:
-        if "-" in parent:
+        if "~" in parent:
             any_parent_has_count = True
             break
         c = tfdata["meta_data"][parent].get("count")

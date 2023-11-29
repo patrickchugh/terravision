@@ -147,6 +147,7 @@ def aws_handle_subnet_azs(tfdata: dict):
             az = "aws_az." + tfdata["original_metadata"][subnet].get(
                 "availability_zone"
             )
+            az = az.replace("-", "~")
             if not az in tfdata["graphdict"].keys():
                 tfdata["graphdict"][az] = list()
                 tfdata["meta_data"][az] = {"count": ""}
@@ -171,12 +172,12 @@ def aws_handle_efs(tfdata: dict):
         for connection in list(tfdata["graphdict"][efs]):
             if (
                 not connection.startswith("aws_efs_mount_target")
-                and "-" not in connection
+                and "~" not in connection
             ):
                 tfdata["graphdict"][connection].append(target)
-            elif "-" in connection:
-                suffix = connection.split("-")[1]
-                suffixed_name = "aws_efs_mount_target-" + suffix
+            elif "~" in connection:
+                suffix = connection.split("~")[1]
+                suffixed_name = "aws_efs_mount_target~" + suffix
                 if suffixed_name in efs_mount_targets:
                     tfdata["graphdict"][connection].append(suffixed_name)
             tfdata["graphdict"][efs].remove(connection)
@@ -199,9 +200,9 @@ def aws_handle_sg(tfdata: dict):
                 ):
                     newlist = list([target])
                     # Create numbered security group if connection has -[1..3] suffix
-                    if "-" in target:
-                        suffix = target.split("-")[1]
-                        suffixed_name = connection + "-" + suffix
+                    if "~" in target:
+                        suffix = target.split("~")[1]
+                        suffixed_name = connection + "~" + suffix
                         tfdata["graphdict"][suffixed_name] = newlist
                     else:
                         tfdata["graphdict"][connection] = newlist

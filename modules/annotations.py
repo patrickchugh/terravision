@@ -95,7 +95,7 @@ def modify_nodes(graphdict: dict, annotate: dict) -> dict:
     if annotate.get("remove"):
         for node in annotate["remove"]:
             if node in graphdict or "*" in node:
-                click.echo(f"- {node}")
+                click.echo(f"~ {node}")
                 prefix = node.split("*")[0]
                 if "*" in node and node.startswith(prefix):
                     del graphdict[node]
