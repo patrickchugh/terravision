@@ -118,11 +118,11 @@ def setup_graph(tfdata: dict):
     # Make an initial dict with resources created and empty connections
     for object in tfdata["tf_resources_created"]:
         # Replace multi count notation
-        node = object["address"]
+        node = helpers.get_no_module_name(object["address"])
         if "index" in object.keys():
             node = object["type"] + "." + object["name"]
             if not isinstance(object["index"], int):
-                suffix = "_" + object["index"]
+                suffix = "[" + object["index"] + "]"
             else:
                 suffix = "~" + str(int(object.get("index")) + 1)
             node = node + suffix
@@ -153,8 +153,8 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = helpers.get_no_module_name(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        if "0." in node:
-            node_id = gvid_table.index(node.split("_0.")[0])
+        if "[" in node:
+            node_id = gvid_table.index(node.split("[")[0])
         else:
             node_id = gvid_table.index(node.split("~")[0])
         for connection in tfdata["tfgraph"]["edges"]:

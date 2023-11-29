@@ -37,7 +37,6 @@ def get_no_module_name(node: str):
         no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
     else:
         no_module_name = node
-    no_module_name = no_module_name.replace("-", "_")
     return no_module_name
 
 
