@@ -461,13 +461,6 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
 
 
 # Handle resources which require pre/post-processing before/after being added to graphdict
-# def handle_special_resources(tfdata: dict):
-#     resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
-#     for resource_prefix, handler in SPECIAL_RESOURCES.items():
-#         for rt in resource_types:
-#             if resource_prefix == rt or resource_prefix in rt:
-#                 tfdata = getattr(resource_handlers, handler)(tfdata)
-#     return tfdata
 def handle_special_resources(tfdata: dict):
     resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
