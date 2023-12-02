@@ -25,7 +25,7 @@ output_sections = ["locals", "module", "resource", "data"]
 def check_for_domain(string: str) -> bool:
     exts = [".com", ".net", ".org", ".io", ".biz"]
     for dot in exts:
-        if dot in string:
+        if dot in string and not string.startswith("."):
             return True
     return False
 
@@ -162,7 +162,7 @@ def replace_variables(vartext, filename, all_variables, quotes=False):
         filename = filename[0]
     vartext = str(vartext).strip()
     replaced_vartext = vartext
-    var_found_list = re.findall("var\.[A-Za-z0-9_-]+", vartext)
+    var_found_list = re.findall(r"var\.[A-Za-z0-9_-]+", vartext)
     if var_found_list:
         for varstring in var_found_list:
             varname = varstring.replace("var.", "").lower()
@@ -239,7 +239,7 @@ def getvar(variable_name, all_variables_dict):
         for var in all_variables_dict:
             if var.lower() == variable_name.lower():
                 return all_variables_dict[var]
-        return "NOTFOUND"
+    return "NOTFOUND"
 
 
 def find_resource_references(searchdict: dict, target_resource: str) -> dict:

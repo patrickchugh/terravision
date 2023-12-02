@@ -16,6 +16,7 @@ basedir = os.path.dirname(shutil.which("terravision")) or os.path.dirname(
 )
 start_dir = Path.cwd()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
+os.environ["TF_DATA_DIR"] = temp_dir.name
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
@@ -63,23 +64,32 @@ def tf_initplan(source: tuple, varfile: list):
         click.echo(
             click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
         )
+        # Get Temporary directory paths for intermediary files
+        tempdir = os.path.dirname(temp_dir.name)
+        tfplan_path = os.path.join(tempdir, "tfplan.bin")
+        tfplan_json_path = os.path.join(tempdir, "tfplan.json")
+        tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
+        tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
         if varfile:
             returncode = os.system(
-                f"terraform plan -refresh=false -var-file {vfile} -out tfplan.bin"
+                f"terraform plan -refresh=false -var-file {vfile} -out {tfplan_path}"
             )
         else:
-            returncode = os.system(f"terraform plan -refresh=false -out tfplan.bin")
+            returncode = os.system(f"terraform plan -refresh=false -out {tfplan_path}")
         click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
         if (
-            os.path.exists("tfplan.bin")
-            and os.system(f"terraform show -json tfplan.bin > tfplan.json") == 0
+            os.path.exists(tfplan_path)
+            and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}")
+            == 0
         ):
-            f = open("tfplan.json")
+            f = open(tfplan_json_path)
             plandata = json.load(f)
-            returncode = os.system(f"terraform graph > tfgraph.dot")
-            if os.path.exists("tfgraph.dot"):
-                returncode = os.system(f"dot -Txdot_json -o tfgraph.json tfgraph.dot")
-                f = open("tfgraph.json")
+            returncode = os.system(f"terraform graph > {tfgraph_path}")
+            if os.path.exists(tfgraph_path):
+                returncode = os.system(
+                    f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}"
+                )
+                f = open(tfgraph_json_path)
                 graphdata = json.load(f)
             else:
                 click.echo(

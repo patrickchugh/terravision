@@ -175,12 +175,10 @@ AWS_REVERSE_ARROW_LIST = [
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
-AWS_FORCED_DEST = [
-    "aws_rds",
-]
+AWS_FORCED_DEST = ["aws_rds", "aws_instance"]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = ["aws_route53", "aws_lb"]
+AWS_FORCED_ORIGIN = ["aws_route53"]
 
 
 AWS_IMPLIED_CONNECTIONS = {
