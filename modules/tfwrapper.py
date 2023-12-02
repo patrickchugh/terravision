@@ -47,7 +47,7 @@ def tf_initplan(source: tuple, varfile: list):
         if returncode > 0:
             click.echo(
                 click.style(
-                    f"\n  ERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
+                    f"\nERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
                     fg="red",
                     bold=True,
                 )
@@ -81,7 +81,7 @@ def tf_initplan(source: tuple, varfile: list):
             else:
                 click.echo(
                     click.style(
-                        f"\n  ERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
                         fg="red",
                         bold=True,
                     )
@@ -90,7 +90,7 @@ def tf_initplan(source: tuple, varfile: list):
         else:
             click.echo(
                 click.style(
-                    f"\n  ERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                    f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
                     fg="red",
                     bold=True,
                 )
@@ -104,7 +104,17 @@ def make_tf_data(plandata: dict, graphdata: dict, codepath: str) -> dict:
     tfdata = dict()
     tfdata["codepath"] = codepath
     tfdata["workdir"] = os.getcwd()
-    tfdata["tf_resources_created"] = plandata["resource_changes"]
+    if plandata.get("resource_changes"):
+        tfdata["tf_resources_created"] = plandata["resource_changes"]
+    else:
+        click.echo(
+            click.style(
+                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
     tfdata["tfgraph"] = graphdata
     return tfdata
 
