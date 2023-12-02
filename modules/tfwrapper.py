@@ -23,6 +23,9 @@ REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(source: tuple, varfile: list):
+    tfdata = dict()
+    tfdata["codepath"] = list()
+    tfdata["workdir"] = os.getcwd()
     for sourceloc in source:
         if os.path.isdir(sourceloc):
             os.chdir(sourceloc)
@@ -96,14 +99,13 @@ def tf_initplan(source: tuple, varfile: list):
                 )
             )
             exit()
+        tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
     os.chdir(start_dir)
-    return make_tf_data(plandata, graphdata, codepath)
+    return tfdata
 
 
-def make_tf_data(plandata: dict, graphdata: dict, codepath: str) -> dict:
-    tfdata = dict()
+def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -> dict:
     tfdata["codepath"] = codepath
-    tfdata["workdir"] = os.getcwd()
     if plandata.get("resource_changes"):
         tfdata["tf_resources_created"] = plandata["resource_changes"]
     else:

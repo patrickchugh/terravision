@@ -150,11 +150,11 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     module_cache_path = os.path.join(MODULE_DIR, reponame)
     codepath = module_cache_path + f";{module};"
     # Identify source repo and construct final git clone URL
-    click.echo(f"  Downloading External Module: {sourceURL}")
+    click.echo(f"  Processing External Module: {sourceURL}")
     githubURL, subfolder, tag = get_clone_url(sourceURL)
     click.echo(
         click.style(
-            f"    Cloning from Terraform registry source: {githubURL}", fg="green"
+            f"    Assuming code from Terraform registry source: {githubURL}", fg="green"
         )
     )
     # Now do a git clone or skip if we already have seen this module before
