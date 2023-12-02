@@ -179,7 +179,7 @@ def iterative_parse(
 
 
 def read_tfsource(
-    source_list: list, varfile_list: tuple, annotate: str, tfdata: dict
+    source_list: tuple, varfile_list: tuple, annotate: str, tfdata: dict
 ):  # -> dict
     global annotations
     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """

@@ -225,7 +225,7 @@ def consolidate_nodes(tfdata: dict):
             res = res.split("[")[0]
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
-            if not tfdata["graphdict"].get(consolidated_name):
+            if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(

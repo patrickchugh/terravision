@@ -54,7 +54,12 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
-    tfdata = fileparser.read_tfsource(tfdata["codepath"], varfile, annotate, tfdata)
+    codepath = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
+    tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
     # Supplement graphdict with relationships from HCL files
     tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
     # Handle conditional statements
