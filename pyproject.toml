@@ -2,7 +2,7 @@
 # Change this section to be project specific
 name = "terravision"
 version = "0.0.1"
-description = "Terraform Diagram Visualizer"
+description = "Terraform Architecture Visualizer"
 authors = []
 readme = 'README.md'
 exclude = []
@@ -20,7 +20,7 @@ pyinstaller = "5.8.0"
 python = ">=3.9,<3.12"
 PyYAML = "6.0"
 numpy = ">=1.23.4"
-
+debugpy = "^1.8.0"
 
 [tool.poetry.group.test]
 optional = true
