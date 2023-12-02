@@ -180,9 +180,7 @@ AWS_FORCED_DEST = [
 ]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = [
-    "aws_route53",
-]
+AWS_FORCED_ORIGIN = ["aws_route53", "aws_lb"]
 
 
 AWS_IMPLIED_CONNECTIONS = {
