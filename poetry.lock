@@ -296,6 +296,16 @@ files = [
 ]
 
 [[package]]
+name = "ipaddr"
+version = "2.2.0"
+description = "Google's IP address manipulation library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ipaddr-2.2.0.tar.gz", hash = "sha256:4092dfe667588d16aa12b59acb7c8a4024e5dcb23a681cd0b0b602373eca88d6"},
+]
+
+[[package]]
 name = "isort"
 version = "5.12.0"
 description = "A Python utility / library to sort Python imports."
@@ -711,4 +721,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "6c22376191f0b2225cdd219fc5341a8a70cad93f3d8213a7e1549c6ad9ab3a68"
+content-hash = "32f87571faf5d7ea9ee9ce74ab12f641500807ed60d89f06ad67c389aad095f9"
