@@ -14,19 +14,22 @@ def test_help():
 
 def verify_json_output(github_repo, expected_output):
     output_file = os.path.join(Path.cwd(), "output.json")
-    result = subprocess.run(
-        [
-            "terravision",
-            "graphdata",
-            "--source",
-            github_repo,
-            "--outfile",
-            output_file,
-        ],
-        stdout=subprocess.PIPE,
+    returncode = os.system(
+        f"terravision graphdata --source {github_repo} --outfile {output_file}"
     )
-    assert result.returncode == 0
-    assert os.path.isfile(output_file)
+    # result = subprocess.run(
+    #     [
+    #         "terravision",
+    #         "graphdata",
+    #         "--source",
+    #         github_repo,
+    #         "--outfile",
+    #         output_file,
+    #     ],
+    #     stdout=subprocess.PIPE,
+    # )
+    assert returncode == 0
+    assert os.path.exists(output_file)
     o_json_file = open(output_file)
     result = json.load(o_json_file)
     e_json_file = open(expected_output)
