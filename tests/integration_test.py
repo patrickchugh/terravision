@@ -31,6 +31,7 @@ def verify_json_output(github_repo, expected_output):
     result = json.load(o_json_file)
     e_json_file = open(expected_output)
     expected = json.load(e_json_file)
+    os.remove(output_file)
     assert result == expected
 
 
