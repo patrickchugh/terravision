@@ -26,7 +26,7 @@ def verify_json_output(github_repo, expected_output):
         stdout=subprocess.PIPE,
     )
     assert result.returncode == 0
-    assert os.path.isfile(output_file)
+    assert os.path.exists(output_file)
     o_json_file = open(output_file)
     result = json.load(o_json_file)
     e_json_file = open(expected_output)
