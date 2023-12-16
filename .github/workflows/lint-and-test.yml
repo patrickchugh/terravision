@@ -2,12 +2,7 @@
 ---
 name: lint-and-test
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+on: push
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -51,9 +46,11 @@ jobs:
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
-      - name: Install dependencies
+      - name: Install python dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root  --with test
+      - name: Install Linux dependencies
+        run: sudo apt-get update && sudo apt-get install terraform graphviz
 
       #----------------------------------------------
       # Run static linters
