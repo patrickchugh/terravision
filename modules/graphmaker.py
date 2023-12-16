@@ -44,7 +44,10 @@ def reverse_relations(tfdata: dict) -> dict:
     for node, connections in dict(tfdata["graphdict"]).items():
         reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
         for c in list(connections):
-            if reverse_dest:
+            if reverse_dest and (
+                "count" not in tfdata["meta_data"][c].keys()
+                or tfdata["meta_data"][c].get("count")
+            ):
                 tfdata["graphdict"][c].append(node)
                 tfdata["graphdict"][node].remove(c)
             reverse_origin = (
@@ -316,8 +319,10 @@ def handle_variants(tfdata: dict):
                 new_list = list(tfdata["graphdict"][renamed_node])
                 new_list.remove(resource)
                 node_title = resource.split(".")[1]
-                new_list.append(variant_suffix + "." + variant_label)
+                new_variant_name = variant_suffix + "." + variant_label
+                new_list.append(new_variant_name)
                 tfdata["graphdict"][renamed_node] = new_list
+                tfdata["meta_data"][new_variant_name] = tfdata["meta_data"][resource]
     return tfdata
 
 

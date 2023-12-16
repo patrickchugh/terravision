@@ -402,7 +402,11 @@ def handle_conditional_resources(tfdata, debug=False):
         mod = tfdata["meta_data"][resource].get("module")
         eval_string = find_conditional_statements(resource, attr_list)
         if eval_string and not "ERROR" in eval_string:
-            original_string = tfdata["meta_data"][resource]["original_count"]
+            original_string = (
+                tfdata["meta_data"][resource]["original_count"]
+                if tfdata["meta_data"][resource].get("original_count")
+                else tfdata["meta_data"][resource]["count"]
+            )
             original_string = (
                 original_string[:75] if len(original_string) > 75 else original_string
             )
@@ -461,7 +465,7 @@ def get_metadata(tfdata):  # -> set
     Returns a set with a node_list of unique resources, resource attributes (metadata)
     """
     node_list = []
-    meta_data = dict()
+    meta_data = dict(tfdata["original_metadata"])
     # Default module is assumed main unless over-ridden
     mod = "main"
     click.echo(

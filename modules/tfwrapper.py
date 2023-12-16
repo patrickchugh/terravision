@@ -213,10 +213,13 @@ def add_vpc_implied_relations(tfdata: dict):
     subnet_resources = [
         k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet")
     ]
-    for vpc in vpc_resources:
-        vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
-        for subnet in subnet_resources:
-            subnet_cidr = ipaddr.IPNetwork(tfdata["meta_data"][subnet]["cidr_block"])
-            if subnet_cidr.overlaps(vpc_cidr):
-                tfdata["graphdict"][vpc].append(subnet)
+    if len(vpc_resources) > 0 and len(subnet_resources) > 0:
+        for vpc in vpc_resources:
+            vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
+            for subnet in subnet_resources:
+                subnet_cidr = ipaddr.IPNetwork(
+                    tfdata["meta_data"][subnet]["cidr_block"]
+                )
+                if subnet_cidr.overlaps(vpc_cidr):
+                    tfdata["graphdict"][vpc].append(subnet)
     return tfdata
