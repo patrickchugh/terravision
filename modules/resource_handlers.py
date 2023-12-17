@@ -326,20 +326,21 @@ def aws_handle_dbsubnet(tfdata: dict):
     )
     for dbsubnet in db_subnet_list:
         db_grouping = helpers.list_of_parents(tfdata["graphdict"], dbsubnet)
-        for subnet in db_grouping:
-            if subnet.startswith("aws_subnet"):
-                tfdata["graphdict"][subnet].remove(dbsubnet)
-                az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
-                vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
-                if dbsubnet not in tfdata["graphdict"][vpc]:
-                    tfdata["graphdict"][vpc].append(dbsubnet)
-        for rds in tfdata["graphdict"][dbsubnet]:
-            rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
-            for check_sg in rds_references:
-                if check_sg.startswith("aws_security_group"):
-                    tfdata["graphdict"][vpc].remove(dbsubnet)
-                    tfdata["graphdict"][vpc].append(check_sg)
-                    break
+        if db_grouping:
+            for subnet in db_grouping:
+                if subnet.startswith("aws_subnet"):
+                    tfdata["graphdict"][subnet].remove(dbsubnet)
+                    az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
+                    vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
+                    if dbsubnet not in tfdata["graphdict"][vpc]:
+                        tfdata["graphdict"][vpc].append(dbsubnet)
+            for rds in tfdata["graphdict"][dbsubnet]:
+                rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
+                for check_sg in rds_references:
+                    if check_sg.startswith("aws_security_group"):
+                        tfdata["graphdict"][vpc].remove(dbsubnet)
+                        tfdata["graphdict"][vpc].append(check_sg)
+                        break
     return tfdata
     # db_subnet_list = helpers.find_resource_references(
     #     tfdata["graphdict"], "aws_db_subnet_group"

@@ -1,13 +1,13 @@
 # yamllint disable rule:line-length
 ---
 name: lint-and-test
-
 on: push
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -44,23 +44,33 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       #----------------------------------------------
-      # install dependencies if cache does not exist
+      #       Retrieve temporary AWS credentials
       #----------------------------------------------
-      - name: Install dependencies
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::166659698090:role/githubactions
+          role-session-name: ghasession
+          aws-region: us-east-1
+        
+      #----------------------------------------------
+      # install dependencies
+      #----------------------------------------------
+      - name: Install python dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root  --with test
-
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+        
       #----------------------------------------------
       # Run static linters
       #----------------------------------------------
       - name: Check black formatting
         run: |
           poetry run  black --check -v modules
-
-#      - name: Check isort formatting
-#        run: |
-#          poetry run  isort modules -v --check-only
-
+          
       #----------------------------------------------
       # add terravision to PATH
       #----------------------------------------------

@@ -134,6 +134,7 @@ def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -
 def setup_graph(tfdata: dict):
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
+    tfdata["all_output"] = dict()
     tfdata["node_list"] = list()
     tfdata["hidden"] = dict()
     tfdata["annotations"] = dict()

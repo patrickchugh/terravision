@@ -164,7 +164,8 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         )
 
         temp_module_path = os.path.join(tempdir, f";{module};{reponame}")
-        shutil.copytree(codepath, temp_module_path)
+        if not os.path.exists(temp_module_path):
+            shutil.copytree(codepath, temp_module_path)
         return os.path.join(temp_module_path, subfolder)
     else:
         os.makedirs(codepath)
