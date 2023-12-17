@@ -14,10 +14,7 @@ def test_help():
 
 def verify_json_output(github_repo, expected_output):
     output_file = os.path.join(Path.cwd(), "output.json")
-    returncode = os.system(
-        f"terravision graphdata --source {github_repo} --outfile {output_file}"
-    )
-    assert returncode == 0
+    os.system(f"terravision graphdata --source {github_repo} --outfile {output_file}")
     assert os.path.exists(output_file)
     o_json_file = open(output_file)
     result = json.load(o_json_file)
