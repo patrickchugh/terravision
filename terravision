@@ -62,8 +62,6 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
     # Supplement graphdict with relationships from HCL files
     tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
-    # Handle conditional statements
-    tfdata = interpreter.handle_conditional_resources(tfdata, debug)
     # Handle consolidated nodes where multiple resources are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
     # Handle automatic and user annotations

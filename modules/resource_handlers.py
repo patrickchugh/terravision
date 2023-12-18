@@ -342,28 +342,6 @@ def aws_handle_dbsubnet(tfdata: dict):
                         tfdata["graphdict"][vpc].append(check_sg)
                         break
     return tfdata
-    # db_subnet_list = helpers.find_resource_references(
-    #     tfdata["graphdict"], "aws_db_subnet_group"
-    # )
-    # for subnet_reference in db_subnet_list:
-    #     if subnet_reference.startswith("aws_rds"):
-    #         tfdata["graphdict"][subnet_reference].append(subnet_reference)
-    #         for check_subnet in tfdata["graphdict"][subnet_reference]:
-    #             if check_subnet.startswith("aws_db_subnet"):
-    #                 tfdata["graphdict"][subnet_reference].remove(check_subnet)
-    #     else:
-    #         for check_subnet in tfdata["graphdict"][subnet_reference]:
-    #             if check_subnet.startswith("aws_db_subnet"):
-    #                 tfdata["graphdict"][subnet_reference].remove(check_subnet)
-    #                 find_rds = helpers.list_of_dictkeys_containing(
-    #                     tfdata["graphdict"], "aws_rds_cluster"
-    #                 )
-    #                 tfdata["graphdict"][subnet_reference].append(find_rds[0])
-    # db_subnet_nodes = helpers.list_of_dictkeys_containing(
-    #     tfdata["graphdict"], "aws_db_subnet_group"
-    # )
-    # for dbs in db_subnet_nodes:
-    #     del tfdata["graphdict"][dbs]
 
 
 def aws_handle_ecs(tfdata: dict):

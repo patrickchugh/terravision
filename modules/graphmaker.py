@@ -78,9 +78,11 @@ def check_relationship(
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
-        matching = list({s for s in nodes if s.split("~")[0] in param})
+        matching = list({s for s in nodes if s.split("~")[0] in str(param)})
         # Check if there are any implied connections based on keywords in the param list
-        found_connection = list({s for s in IMPLIED_CONNECTIONS.keys() if s in param})
+        found_connection = list(
+            {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
+        )
         if found_connection:
             for n in nodes:
                 if (
@@ -95,7 +97,9 @@ def check_relationship(
                     matched_resource not in hidden
                     and resource_associated_with not in hidden
                 ):
-                    reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in param]
+                    reverse_origin_match = [
+                        s for s in REVERSE_ARROW_LIST if s in str(param)
+                    ]
                     if len(reverse_origin_match) > 0:
                         reverse = True
                         # Don't reverse if the reverse relationship will occur twice on both sides
@@ -184,7 +188,12 @@ def add_relations(tfdata: dict):
             or node.startswith("null")
         ):
             continue
-        for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
+        if nodename not in tfdata["meta_data"].keys():
+            dg = dict_generator(tfdata["original_metadata"][node])
+            tfdata["meta_data"][node] = tfdata["original_metadata"][node]
+        else:
+            dg = dict_generator(tfdata["meta_data"][nodename])
+        for param_item_list in dg:
             matching_result = check_relationship(
                 node,
                 param_item_list,
@@ -527,7 +536,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
     target_has_count = (
         tfdata["meta_data"][target_resource].get("count")
-        and tfdata["meta_data"][target_resource].get("count") >= 1
+        and int(tfdata["meta_data"][target_resource].get("count")) >= 1
     )
     not_already_multiple = "~" not in target_resource
     no_special_handler = (
@@ -538,7 +547,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
     if resource.split(".")[0] == "aws_security_group":
         security_group_with_count = (
             tfdata["original_metadata"][parent].get("count")
-            and tfdata["original_metadata"][parent].get("count") > 1
+            and int(tfdata["original_metadata"][parent].get("count")) > 1
         )
     else:
         security_group_with_count = False
@@ -632,7 +641,7 @@ def add_multiples_to_parents(
 def handle_count_resources(multi_resources: list, tfdata: dict):
     # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
     for resource in multi_resources:
-        for i in range(tfdata["meta_data"][resource]["count"]):
+        for i in range(int(tfdata["meta_data"][resource]["count"])):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
             not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
