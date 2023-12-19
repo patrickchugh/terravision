@@ -217,11 +217,7 @@ def consolidate_nodes(tfdata: dict):
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
-            tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"].get(consolidated_name)
-                if tfdata["meta_data"].get(consolidated_name)
-                else tfdata["meta_data"].get(res)
-            )
+            tfdata["meta_data"][consolidated_name].update(tfdata["meta_data"][res])
             # Don't over-ride count values with 0 when merging
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
