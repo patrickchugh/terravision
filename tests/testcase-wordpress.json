@@ -47,6 +47,7 @@
     ],
     "aws_cloudfront_distribution.this": [
         "aws_acm_certificate.acm",
+        "aws_acm_certificate.acm",
         "aws_lb.elb"
     ],
     "aws_cloudwatch_log_group.cloudwatch": [
@@ -123,6 +124,7 @@
     "aws_iam_role_policy_attachment.task_execution_policy_attach": [],
     "aws_iam_role_policy_attachment.task_policy_attach": [],
     "aws_internet_gateway.igw": [
+        "aws_eip.elastic_ip",
         "aws_route.public_internet_gateway",
         "tv_aws_internet.internet"
     ],
@@ -165,6 +167,7 @@
         "aws_route_table.public~1"
     ],
     "aws_route53_record.route_53": [
+        "aws_acm_certificate.acm",
         "aws_cloudfront_distribution.this"
     ],
     "aws_route_table.private~1": [

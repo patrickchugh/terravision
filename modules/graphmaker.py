@@ -719,6 +719,10 @@ def create_multiple_resources(tfdata):
             "~" not in n
             and tfdata["meta_data"].get(n)
             and tfdata["meta_data"][n].get("count")
+            and (
+                not helpers.consolidated_node_check(n)
+                and n.split(".")[0] not in NODE_VARIANTS.keys()
+            )
         )
     ]
     # Create multiple nodes for count resources as necessary

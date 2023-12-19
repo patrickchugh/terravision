@@ -67,9 +67,17 @@ def tf_initplan(source: tuple, varfile: list):
         # Get Temporary directory paths for intermediary files
         tempdir = os.path.dirname(temp_dir.name)
         tfplan_path = os.path.join(tempdir, "tfplan.bin")
+        if os.path.exists(tfplan_path):
+            os.remove(tfplan_path)
         tfplan_json_path = os.path.join(tempdir, "tfplan.json")
+        if os.path.exists(tfplan_json_path):
+            os.remove(tfplan_json_path)
         tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
+        if os.path.exists(tfgraph_path):
+            os.remove(tfgraph_path)
         tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
+        if os.path.exists(tfgraph_json_path):
+            os.remove(tfgraph_json_path)
         if varfile:
             returncode = os.system(
                 f"terraform plan -refresh=false -var-file {vfile} -out {tfplan_path}"

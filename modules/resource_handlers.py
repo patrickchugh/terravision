@@ -285,6 +285,7 @@ def aws_handle_sharedgroup(tfdata: dict):
     return tfdata
 
 
+# Check type of LB and create variant node. Replace all parent connections with new node
 def aws_handle_lb(tfdata: dict):
     found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
     for lb in found_lbs:
@@ -316,7 +317,7 @@ def aws_handle_lb(tfdata: dict):
                 ):
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
-    tfdata["graphdict"][lb].append(renamed_node)
+        tfdata["graphdict"][lb].append(renamed_node)
     return tfdata
 
 

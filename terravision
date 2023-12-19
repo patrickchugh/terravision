@@ -68,10 +68,10 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
-    # Duplicate resources across AZs and Subnets where necessary
-    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
+    # Duplicate resources across AZs and Subnets where necessary
+    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Reverse relationship directions for certain original tfgraph connections
     tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict
