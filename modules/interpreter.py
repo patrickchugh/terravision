@@ -13,6 +13,24 @@ DATA_REPLACEMENTS = {
 }
 
 
+def resolve_all_variables(tfdata, debug):
+    # Load default variable values and user variable values
+    tfdata = get_variable_values(tfdata)
+    # Create view of locals by module
+    tfdata = extract_locals(tfdata)
+    # Create metadata view from nested TF file resource attributes
+    tfdata = get_metadata(tfdata)
+    # Replace metadata (resource attributes) variables and locals with actual values
+    tfdata = handle_metadata_vars(tfdata)
+    # Inject parent module variables that are referenced downstream in sub modules
+    if "all_module" in tfdata.keys():
+        tfdata = inject_module_variables(tfdata)
+    # Dump out findings after file scans are complete
+    if debug:
+        helpers.output_log(tfdata)
+    return tfdata
+
+
 def inject_module_variables(tfdata: dict):
     for file, module_list in tfdata["all_module"].items():
         for module_items in module_list:
@@ -60,10 +78,11 @@ def handle_metadata_vars(tfdata):
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
+            # TODO: Use Regex to check that preceding character is a space or operand
             while (
                 (
                     "var." in value
-                    or "local." in value
+                    or " local." in value
                     or "module." in value
                     or "data." in value
                 )
@@ -379,7 +398,7 @@ def get_metadata(tfdata):  # -> set
                         meta_data[resource_node]["count"] = int(
                             tfdata["original_metadata"][resource_node]["count"]
                         )
-                if (
+                elif (
                     f"{resource_node}~1" in tfdata["node_list"]
                     and tfdata["original_metadata"][f"{resource_node}~1"]["count"] > 1
                 ):
@@ -387,9 +406,13 @@ def get_metadata(tfdata):  # -> set
                         1,
                         tfdata["original_metadata"][f"{resource_node}~1"]["count"] + 1,
                     ):
+                        meta_data[resource_node] = md
                         meta_data[f"{resource_node}~{i}"] = md
                         meta_data[f"{resource_node}~{i}"]["module"] = mod
                         meta_data[f"{resource_node}~{i}"]["count"] = int(
+                            tfdata["original_metadata"][f"{resource_node}~1"]["count"]
+                        )
+                        meta_data[resource_node]["count"] = int(
                             tfdata["original_metadata"][f"{resource_node}~1"]["count"]
                         )
     tfdata["meta_data"] = meta_data

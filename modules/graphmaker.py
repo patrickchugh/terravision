@@ -20,34 +20,11 @@ FORCED_DEST = cloud_config.AWS_FORCED_DEST
 FORCED_ORIGIN = cloud_config.AWS_FORCED_ORIGIN
 
 
-def supplement_graph_dict(tfdata, debug):
-    # Load default variable values and user variable values
-    tfdata = interpreter.get_variable_values(tfdata)
-    # Create view of locals by module
-    tfdata = interpreter.extract_locals(tfdata)
-    # Create metadata view from nested TF file resource attributes
-    tfdata = interpreter.get_metadata(tfdata)
-    # Replace metadata (resource attributes) variables and locals with actual values
-    tfdata = interpreter.handle_metadata_vars(tfdata)
-    # Inject parent module variables that are referenced downstream in sub modules
-    if "all_module" in tfdata.keys():
-        tfdata = interpreter.inject_module_variables(tfdata)
-    # Dump out findings after file scans are complete
-    if debug:
-        helpers.output_log(tfdata)
-    # Append additional relationships to Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    tfdata = add_relations(tfdata)
-    return tfdata
-
-
 def reverse_relations(tfdata: dict) -> dict:
     for node, connections in dict(tfdata["graphdict"]).items():
         reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
         for c in list(connections):
-            if reverse_dest and (
-                "count" not in tfdata["meta_data"][c].keys()
-                or tfdata["meta_data"][c].get("count")
-            ):
+            if reverse_dest:
                 tfdata["graphdict"][c].append(node)
                 tfdata["graphdict"][node].remove(c)
             reverse_origin = (
@@ -241,7 +218,9 @@ def consolidate_nodes(tfdata: dict):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
+                tfdata["meta_data"].get(consolidated_name)
+                if tfdata["meta_data"].get(consolidated_name)
+                else tfdata["meta_data"].get(res)
             )
             # Don't over-ride count values with 0 when merging
             tfdata["graphdict"][consolidated_name] = list(

@@ -81,6 +81,7 @@ S3 = SimpleStorageServiceS3
 # Terraform Resource Mappings
 aws_backup_plan = Backup
 aws_efs_file_system = ElasticFileSystemEFS
+aws_ebs_volume = ElasticBlockStoreEBS
 aws_efs = ElasticFileSystemEFS
 aws_fsx_lustre_file_system = FsxForLustre
 aws_fsx_windows_file_system = FsxForWindowsFileServer
