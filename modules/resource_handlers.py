@@ -306,6 +306,7 @@ def aws_handle_lb(tfdata: dict):
                 tfdata["meta_data"][renamed_node]["count"] = int(
                     tfdata["meta_data"][connection]["count"]
                 )
+                tfdata["meta_data"][lb]["count"] = 1
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
