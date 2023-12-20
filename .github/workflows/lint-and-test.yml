@@ -47,7 +47,7 @@ jobs:
       #       Retrieve temporary AWS credentials
       #----------------------------------------------
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::166659698090:role/githubactions
           role-session-name: ghasession
