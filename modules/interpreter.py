@@ -322,14 +322,6 @@ def handle_module_vars(eval_string, tfdata):
     return eval_string
 
 
-def handle_splat_statements(eval_string, tfdata):
-    splitlist = eval_string.split(".")
-    resource_type = "aws_" + helpers.find_between(eval_string, "aws_", ".")
-    resource_name = helpers.find_between(eval_string, ".", "[")
-    resource = resource_type + "." + resource_name
-    return tfdata["meta_data"][resource]["count"]
-
-
 def show_error(mod, resource, eval_string, exp, tfdata):
     click.echo(
         f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"

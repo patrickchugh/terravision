@@ -203,16 +203,16 @@ def tf_makegraph(tfdata: dict):
                 conn = gvid_table[tail]
                 conn_type = gvid_table[tail].split(".")[0]
                 # Find out the actual nodes with ~ suffix where link is not specific to a numbered node
-                matched_connection = [
+                matched_connections = [
                     k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
-                ][0]
-                matched_node = [
+                ]
+                matched_nodes = [
                     k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
-                ][0]
-                if not node in tfdata["graphdict"]:
-                    node = matched_node
-                if not conn in tfdata["graphdict"]:
-                    conn = matched_connection
+                ]
+                if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
+                    node = matched_nodes[0]
+                if not conn in tfdata["graphdict"] and len(matched_connections) == 1:
+                    conn = matched_connections[0]
                 if conn_type in REVERSE_ARROW_LIST:
                     if not conn in tfdata["graphdict"].keys():
                         tfdata["graphdict"][conn] = list()

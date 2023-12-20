@@ -125,7 +125,7 @@
     "aws_iam_role_policy_attachment.task_policy_attach": [],
     "aws_internet_gateway.igw": [
         "aws_eip.elastic_ip",
-        "aws_route.public_internet_gateway",
+        "aws_route.public_internet_gateway~1",
         "tv_aws_internet.internet"
     ],
     "aws_lb.elb": [
