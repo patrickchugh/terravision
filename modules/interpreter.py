@@ -75,6 +75,7 @@ def inject_module_variables(tfdata: dict):
 
 
 def handle_metadata_vars(tfdata):
+    loops = 0
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
@@ -88,9 +89,11 @@ def handle_metadata_vars(tfdata):
                 )
                 and key != "depends_on"
                 and key != "original_count"
+                and loops < 1000
             ):
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
+                loops += 1
             tfdata["meta_data"][resource][key] = value
     return tfdata
 

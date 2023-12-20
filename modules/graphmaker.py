@@ -210,13 +210,17 @@ def consolidate_nodes(tfdata: dict):
             res = resource
         if "[" in res:
             res = res.split("[")[0]
+        if tfdata["meta_data"].get(res):
+            resdata = tfdata["meta_data"].get(res)
+        else:
+            resdata = tfdata["meta_data"][resource]
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
+                tfdata["meta_data"][consolidated_name] | resdata
             )
             # Don't over-ride count values with 0 when merging
             tfdata["graphdict"][consolidated_name] = list(
