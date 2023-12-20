@@ -213,6 +213,7 @@ AWS_SHARED_SERVICES = [
 AWS_ALWAYS_DRAW_LINE = [
     "aws_lb",
     "aws_iam_role",
+    "aws_volume_attachment",
     "aws_alb",
     "aws_nlb",
     "aws_efs_mount_target",

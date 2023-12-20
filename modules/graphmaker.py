@@ -1,11 +1,9 @@
 from math import e
-from numpy import delete
 import click
 import modules.cloud_config as cloud_config
-from modules.drawing import EDGE_NODES
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
-import modules.interpreter as interpreter
+
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -18,26 +16,6 @@ AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 EDGE_NODES = cloud_config.AWS_EDGE_NODES
 FORCED_DEST = cloud_config.AWS_FORCED_DEST
 FORCED_ORIGIN = cloud_config.AWS_FORCED_ORIGIN
-
-
-def supplement_graph_dict(tfdata, debug):
-    # Load default variable values and user variable values
-    tfdata = interpreter.get_variable_values(tfdata)
-    # Create view of locals by module
-    tfdata = interpreter.extract_locals(tfdata)
-    # Create metadata view from nested TF file resource attributes
-    tfdata = interpreter.get_metadata(tfdata)
-    # Replace metadata (resource attributes) variables and locals with actual values
-    tfdata = interpreter.handle_metadata_vars(tfdata)
-    # Inject parent module variables that are referenced downstream in sub modules
-    if "all_module" in tfdata.keys():
-        tfdata = interpreter.inject_module_variables(tfdata)
-    # Dump out findings after file scans are complete
-    if debug:
-        helpers.output_log(tfdata)
-    # Append additional relationships to Graph Data Structure in the format {node: [connected_node1,connected_node2]}
-    tfdata = add_relations(tfdata)
-    return tfdata
 
 
 def reverse_relations(tfdata: dict) -> dict:
@@ -75,9 +53,11 @@ def check_relationship(
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
-        matching = list({s for s in nodes if s.split("~")[0] in param})
+        matching = list({s for s in nodes if s.split("~")[0] in str(param)})
         # Check if there are any implied connections based on keywords in the param list
-        found_connection = list({s for s in IMPLIED_CONNECTIONS.keys() if s in param})
+        found_connection = list(
+            {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
+        )
         if found_connection:
             for n in nodes:
                 if (
@@ -92,7 +72,9 @@ def check_relationship(
                     matched_resource not in hidden
                     and resource_associated_with not in hidden
                 ):
-                    reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in param]
+                    reverse_origin_match = [
+                        s for s in REVERSE_ARROW_LIST if s in str(param)
+                    ]
                     if len(reverse_origin_match) > 0:
                         reverse = True
                         # Don't reverse if the reverse relationship will occur twice on both sides
@@ -181,7 +163,12 @@ def add_relations(tfdata: dict):
             or node.startswith("null")
         ):
             continue
-        for param_item_list in dict_generator(tfdata["meta_data"][nodename]):
+        if nodename not in tfdata["meta_data"].keys():
+            dg = dict_generator(tfdata["original_metadata"][node])
+            tfdata["meta_data"][node] = tfdata["original_metadata"][node]
+        else:
+            dg = dict_generator(tfdata["meta_data"][nodename])
+        for param_item_list in dg:
             matching_result = check_relationship(
                 node,
                 param_item_list,
@@ -223,13 +210,17 @@ def consolidate_nodes(tfdata: dict):
             res = resource
         if "[" in res:
             res = res.split("[")[0]
+        if tfdata["meta_data"].get(res):
+            resdata = tfdata["meta_data"].get(res)
+        else:
+            resdata = tfdata["meta_data"][resource]
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
             tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"][consolidated_name] | tfdata["meta_data"][res]
+                tfdata["meta_data"][consolidated_name] | resdata
             )
             # Don't over-ride count values with 0 when merging
             tfdata["graphdict"][consolidated_name] = list(
@@ -316,8 +307,10 @@ def handle_variants(tfdata: dict):
                 new_list = list(tfdata["graphdict"][renamed_node])
                 new_list.remove(resource)
                 node_title = resource.split(".")[1]
-                new_list.append(variant_suffix + "." + variant_label)
+                new_variant_name = variant_suffix + "." + variant_label
+                new_list.append(new_variant_name)
                 tfdata["graphdict"][renamed_node] = new_list
+                tfdata["meta_data"][new_variant_name] = tfdata["meta_data"][resource]
     return tfdata
 
 
@@ -522,7 +515,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
     target_has_count = (
         tfdata["meta_data"][target_resource].get("count")
-        and tfdata["meta_data"][target_resource].get("count") >= 1
+        and int(tfdata["meta_data"][target_resource].get("count")) >= 1
     )
     not_already_multiple = "~" not in target_resource
     no_special_handler = (
@@ -533,7 +526,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
     if resource.split(".")[0] == "aws_security_group":
         security_group_with_count = (
             tfdata["original_metadata"][parent].get("count")
-            and tfdata["original_metadata"][parent].get("count") > 1
+            and int(tfdata["original_metadata"][parent].get("count")) > 1
         )
     else:
         security_group_with_count = False
@@ -627,7 +620,7 @@ def add_multiples_to_parents(
 def handle_count_resources(multi_resources: list, tfdata: dict):
     # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
     for resource in multi_resources:
-        for i in range(tfdata["meta_data"][resource]["count"]):
+        for i in range(int(tfdata["meta_data"][resource]["count"])):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
             not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
@@ -705,6 +698,7 @@ def create_multiple_resources(tfdata):
             "~" not in n
             and tfdata["meta_data"].get(n)
             and tfdata["meta_data"][n].get("count")
+            and not helpers.consolidated_node_check(n)
         )
     ]
     # Create multiple nodes for count resources as necessary

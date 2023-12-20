@@ -60,20 +60,20 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
         else tfdata["codepath"]
     )
     tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+    # Handle all variables found in metadata
+    tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Supplement graphdict with relationships from HCL files
-    tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
-    # Handle conditional statements
-    tfdata = interpreter.handle_conditional_resources(tfdata, debug)
+    tfdata = graphmaker.add_relations(tfdata)
     # Handle consolidated nodes where multiple resources are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
-    # Duplicate resources across AZs and Subnets where necessary
-    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
+    # Duplicate resources across AZs and Subnets where necessary
+    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Reverse relationship directions for certain original tfgraph connections
     tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict

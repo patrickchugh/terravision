@@ -3,12 +3,8 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
-from xmlrpc.client import Boolean
-
-from numpy import isin
 import click
 import modules.cloud_config as cloud_config
-from modules.tf_function_handlers import tf_function_handlers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS

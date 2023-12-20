@@ -67,9 +67,17 @@ def tf_initplan(source: tuple, varfile: list):
         # Get Temporary directory paths for intermediary files
         tempdir = os.path.dirname(temp_dir.name)
         tfplan_path = os.path.join(tempdir, "tfplan.bin")
+        if os.path.exists(tfplan_path):
+            os.remove(tfplan_path)
         tfplan_json_path = os.path.join(tempdir, "tfplan.json")
+        if os.path.exists(tfplan_json_path):
+            os.remove(tfplan_json_path)
         tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
+        if os.path.exists(tfgraph_path):
+            os.remove(tfgraph_path)
         tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
+        if os.path.exists(tfgraph_json_path):
+            os.remove(tfgraph_json_path)
         if varfile:
             returncode = os.system(
                 f"terraform plan -refresh=false -var-file {vfile} -out {tfplan_path}"
@@ -134,6 +142,7 @@ def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -
 def setup_graph(tfdata: dict):
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
+    tfdata["all_output"] = dict()
     tfdata["node_list"] = list()
     tfdata["hidden"] = dict()
     tfdata["annotations"] = dict()
@@ -193,6 +202,17 @@ def tf_makegraph(tfdata: dict):
             ):
                 conn = gvid_table[tail]
                 conn_type = gvid_table[tail].split(".")[0]
+                # Find out the actual nodes with ~ suffix where link is not specific to a numbered node
+                matched_connections = [
+                    k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
+                ]
+                matched_nodes = [
+                    k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
+                ]
+                if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
+                    node = matched_nodes[0]
+                if not conn in tfdata["graphdict"] and len(matched_connections) == 1:
+                    conn = matched_connections[0]
                 if conn_type in REVERSE_ARROW_LIST:
                     if not conn in tfdata["graphdict"].keys():
                         tfdata["graphdict"][conn] = list()
@@ -213,10 +233,13 @@ def add_vpc_implied_relations(tfdata: dict):
     subnet_resources = [
         k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet")
     ]
-    for vpc in vpc_resources:
-        vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
-        for subnet in subnet_resources:
-            subnet_cidr = ipaddr.IPNetwork(tfdata["meta_data"][subnet]["cidr_block"])
-            if subnet_cidr.overlaps(vpc_cidr):
-                tfdata["graphdict"][vpc].append(subnet)
+    if len(vpc_resources) > 0 and len(subnet_resources) > 0:
+        for vpc in vpc_resources:
+            vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
+            for subnet in subnet_resources:
+                subnet_cidr = ipaddr.IPNetwork(
+                    tfdata["meta_data"][subnet]["cidr_block"]
+                )
+                if subnet_cidr.overlaps(vpc_cidr):
+                    tfdata["graphdict"][vpc].append(subnet)
     return tfdata

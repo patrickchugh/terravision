@@ -41,50 +41,48 @@ def walklevel(some_dir, level=1):
     return paths
 
 
-def find_tf_files(source: str, paths=list(), recursive=False) -> list:
+def find_tf_files(source: str, paths=list(), mod="main", recursive=False) -> list:
     global annotations
     yaml_detected = False
     # If source is a Git address, clone to temp dir
     if not os.path.isdir(source):
-        source_location = gitlibs.clone_files(source, temp_dir.name)
+        source_location = gitlibs.clone_files(source, temp_dir.name, mod)
     else:
         # Source is a local folder
         source_location = source.strip()
-        files = [f for f in os.listdir(source_location)]
-        click.echo(f"  Added Source Location: {source}")
-        for file in files:
-            if (
-                file.lower().endswith(".tf")
-                or file.lower().endswith("auto.tfvars")
-                or "terraform.tfvars" in file
-            ):
-                paths.append(os.path.join(source_location, file))
-            if (
-                file.lower().endswith("architecture.yml")
-                or file.lower().endswith("architecture.yaml")
-                and not yaml_detected
-            ):
-                full_filepath = Path(source_location).joinpath(file)
-                with open(full_filepath, "r") as file:
-                    click.echo(
-                        f"  Detected architecture annotation file : {file.name} \n"
-                    )
-                    yaml_detected = True
-                    annotations = yaml.safe_load(file)
-        if recursive:
-            for root, dir, files in os.walk(source_location):
-                for d in dir:
-                    subdir = os.path.join(root, d)
-                    for file in os.listdir(subdir):
-                        if file.lower().endswith(".tf") or file.lower().endswith(
-                            "auto.tfvars"
-                        ):
-                            paths.append(os.path.join(subdir, file))
-        if len(paths) == 0:
-            click.echo(
-                "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
-            )
-            exit()
+    files = [f for f in os.listdir(source_location)]
+    click.echo(f"  Added Source Location: {source}")
+    for file in files:
+        if (
+            file.lower().endswith(".tf")
+            or file.lower().endswith("auto.tfvars")
+            or "terraform.tfvars" in file
+        ):
+            paths.append(os.path.join(source_location, file))
+        if (
+            file.lower().endswith("architecture.yml")
+            or file.lower().endswith("architecture.yaml")
+            and not yaml_detected
+        ):
+            full_filepath = Path(source_location).joinpath(file)
+            with open(full_filepath, "r") as file:
+                click.echo(f"  Detected architecture annotation file : {file.name} \n")
+                yaml_detected = True
+                annotations = yaml.safe_load(file)
+    if recursive:
+        for root, dir, files in os.walk(source_location):
+            for d in dir:
+                subdir = os.path.join(root, d)
+                for file in os.listdir(subdir):
+                    if file.lower().endswith(".tf") or file.lower().endswith(
+                        "auto.tfvars"
+                    ):
+                        paths.append(os.path.join(subdir, file))
+    if len(paths) == 0:
+        click.echo(
+            "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
+        )
+        exit()
     return paths
 
 
@@ -169,7 +167,7 @@ def iterative_parse(
                                 os.chdir(curdir)
                             if not os.path.isdir(modpath):
                                 modpath = mod_dict[module_name]["source"]
-                            source_files_list = find_tf_files(modpath)
+                            source_files_list = find_tf_files(modpath, [], module_name)
                             existing_files = list(tf_file_paths)
                             tf_file_paths.extend(
                                 x for x in source_files_list if x not in existing_files

@@ -285,6 +285,7 @@ def aws_handle_sharedgroup(tfdata: dict):
     return tfdata
 
 
+# Check type of LB and create variant node. Replace all parent connections with new node
 def aws_handle_lb(tfdata: dict):
     found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
     for lb in found_lbs:
@@ -305,6 +306,7 @@ def aws_handle_lb(tfdata: dict):
                 tfdata["meta_data"][renamed_node]["count"] = int(
                     tfdata["meta_data"][connection]["count"]
                 )
+                tfdata["meta_data"][lb]["count"] = 1
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
@@ -316,7 +318,7 @@ def aws_handle_lb(tfdata: dict):
                 ):
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
-    tfdata["graphdict"][lb].append(renamed_node)
+        tfdata["graphdict"][lb].append(renamed_node)
     return tfdata
 
 
@@ -326,43 +328,22 @@ def aws_handle_dbsubnet(tfdata: dict):
     )
     for dbsubnet in db_subnet_list:
         db_grouping = helpers.list_of_parents(tfdata["graphdict"], dbsubnet)
-        for subnet in db_grouping:
-            if subnet.startswith("aws_subnet"):
-                tfdata["graphdict"][subnet].remove(dbsubnet)
-                az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
-                vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
-                if dbsubnet not in tfdata["graphdict"][vpc]:
-                    tfdata["graphdict"][vpc].append(dbsubnet)
-        for rds in tfdata["graphdict"][dbsubnet]:
-            rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
-            for check_sg in rds_references:
-                if check_sg.startswith("aws_security_group"):
-                    tfdata["graphdict"][vpc].remove(dbsubnet)
-                    tfdata["graphdict"][vpc].append(check_sg)
-                    break
+        if db_grouping:
+            for subnet in db_grouping:
+                if subnet.startswith("aws_subnet"):
+                    tfdata["graphdict"][subnet].remove(dbsubnet)
+                    az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
+                    vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
+                    if dbsubnet not in tfdata["graphdict"][vpc]:
+                        tfdata["graphdict"][vpc].append(dbsubnet)
+            for rds in tfdata["graphdict"][dbsubnet]:
+                rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
+                for check_sg in rds_references:
+                    if check_sg.startswith("aws_security_group"):
+                        tfdata["graphdict"][vpc].remove(dbsubnet)
+                        tfdata["graphdict"][vpc].append(check_sg)
+                        break
     return tfdata
-    # db_subnet_list = helpers.find_resource_references(
-    #     tfdata["graphdict"], "aws_db_subnet_group"
-    # )
-    # for subnet_reference in db_subnet_list:
-    #     if subnet_reference.startswith("aws_rds"):
-    #         tfdata["graphdict"][subnet_reference].append(subnet_reference)
-    #         for check_subnet in tfdata["graphdict"][subnet_reference]:
-    #             if check_subnet.startswith("aws_db_subnet"):
-    #                 tfdata["graphdict"][subnet_reference].remove(check_subnet)
-    #     else:
-    #         for check_subnet in tfdata["graphdict"][subnet_reference]:
-    #             if check_subnet.startswith("aws_db_subnet"):
-    #                 tfdata["graphdict"][subnet_reference].remove(check_subnet)
-    #                 find_rds = helpers.list_of_dictkeys_containing(
-    #                     tfdata["graphdict"], "aws_rds_cluster"
-    #                 )
-    #                 tfdata["graphdict"][subnet_reference].append(find_rds[0])
-    # db_subnet_nodes = helpers.list_of_dictkeys_containing(
-    #     tfdata["graphdict"], "aws_db_subnet_group"
-    # )
-    # for dbs in db_subnet_nodes:
-    #     del tfdata["graphdict"][dbs]
 
 
 def aws_handle_ecs(tfdata: dict):
