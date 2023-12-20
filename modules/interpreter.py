@@ -82,7 +82,7 @@ def handle_metadata_vars(tfdata):
             while (
                 (
                     "var." in value
-                    or " local." in value
+                    or "local." in value
                     or "module." in value
                     or "data." in value
                 )

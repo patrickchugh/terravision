@@ -162,10 +162,7 @@
         "aws_nat_gateway.this~3",
         "aws_route_table.private~3"
     ],
-    "aws_route.public_internet_gateway~1": [
-        "aws_internet_gateway.igw",
-        "aws_route_table.public~1"
-    ],
+    "aws_route.public_internet_gateway~1": [],
     "aws_route53_record.route_53": [
         "aws_acm_certificate.acm",
         "aws_cloudfront_distribution.this"

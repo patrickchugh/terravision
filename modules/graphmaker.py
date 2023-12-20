@@ -1,11 +1,9 @@
 from math import e
-from numpy import delete
 import click
 import modules.cloud_config as cloud_config
-from modules.drawing import EDGE_NODES
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
-import modules.interpreter as interpreter
+
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
