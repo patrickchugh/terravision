@@ -78,5 +78,5 @@ jobs:
         run: |
           export PATH=$PATH:$(pwd)
           rm -rf ~/.terravision
-          poetry run terravision --help
+          poetry run terravision --version
           poetry run pytest tests -v

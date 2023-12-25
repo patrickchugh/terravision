@@ -11,9 +11,8 @@ import modules.cloud_config as cloud_config
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
-basedir = os.path.dirname(shutil.which("terravision")) or os.path.dirname(
-    os.path.isfile("terravision")
-)
+#basedir =  os.path.dirname(os.path.isfile("terravision"))
+basedir = Path(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 start_dir = Path.cwd()
 temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
 os.environ["TF_DATA_DIR"] = temp_dir.name
@@ -222,11 +221,21 @@ def tf_makegraph(tfdata: dict):
     tfdata = add_vpc_implied_relations(tfdata)
     tfdata["original_graphdict"] = dict(tfdata["graphdict"])
     tfdata["original_metadata"] = dict(tfdata["meta_data"])
+    #TODO: Add a helper function to detect _aws, azurerm and google provider prefixes on resource names
+    if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0 :
+        click.echo(
+            click.style(
+                f"\nERROR: No AWS, Azure or Google resources will be created with current plan. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
     return tfdata
 
 
+# Handle VPC / Subnet relationships
 def add_vpc_implied_relations(tfdata: dict):
-    # Handle VPC / Subnet relationships
     vpc_resources = [
         k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc")
     ]

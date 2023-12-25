@@ -2,17 +2,14 @@ import sys
 import os
 import shutil
 from pathlib import Path
-
 from resource_classes import Cluster
 
 defaultdir = "LR"
 try:
     base_path = sys._MEIPASS
 except:
-    # base_path = Path(os.path.abspath(os.path.dirname(__file__)))
-    base_path = os.path.dirname(shutil.which("terravision")) or os.path.dirname(
-        os.path.isfile("terravision")
-    )
+    base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
+    default_dir = base_path
     pass
 
 
