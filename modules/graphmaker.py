@@ -96,6 +96,7 @@ def check_relationship(
                         )[1]
                         if matched_resource_no != resource_associated_with_no:
                             continue
+                    # Reverse match order for certain resources
                     if reverse:
                         if (
                             resource_associated_with
@@ -105,7 +106,6 @@ def check_relationship(
                         ):
                             connection_pairs.append(matched_resource)
                             connection_pairs.append(resource_associated_with)
-
                     else:
                         if (
                             matched_resource
@@ -119,22 +119,22 @@ def check_relationship(
 
 
 # Extend original relationships with associated numbered nodes
-def check_for_index_matches(connection_pairs: list, tfdata: dict) -> list:
-    for i in range(0, len(connection_pairs), 2):
-        if "~" in connection_pairs[i]:
-            origin = connection_pairs[i].split("~")[0]
-            dest = connection_pairs[i + 1].split("~")[0]
-            next_index = str(int(connection_pairs[i].split("~")[1]) + 1)
-            if origin + "~" + next_index in tfdata["node_list"]:
-                if dest + "~" + next_index not in tfdata["node_list"]:
-                    tfdata["graphdict"][dest + "~" + next_index] = list()
-                if (
-                    dest + "~" + next_index
-                    not in tfdata["graphdict"][origin + "~" + next_index]
-                ):
-                    connection_pairs.append(origin + "~" + next_index)
-                    connection_pairs.append(dest + "~" + next_index)
-    return connection_pairs, tfdata
+# def check_for_index_matches(connection_pairs: list, tfdata: dict) -> list:
+#     for i in range(0, len(connection_pairs), 2):
+#         if "~" in connection_pairs[i]:
+#             origin = connection_pairs[i].split("~")[0]
+#             dest = connection_pairs[i + 1].split("~")[0]
+#             next_index = str(int(connection_pairs[i].split("~")[1]) + 1)
+#             if origin + "~" + next_index in tfdata["node_list"]:
+#                 if dest + "~" + next_index not in tfdata["node_list"]:
+#                     tfdata["graphdict"][dest + "~" + next_index] = list()
+#                 if (
+#                     dest + "~" + next_index
+#                     not in tfdata["graphdict"][origin + "~" + next_index]
+#                 ):
+#                     connection_pairs.append(origin + "~" + next_index)
+#                     connection_pairs.append(dest + "~" + next_index)
+#     return connection_pairs, tfdata
 
 
 # Make final graph structure to be used for drawing
@@ -174,7 +174,7 @@ def add_relations(tfdata: dict):
                 param_item_list,
                 tfdata,
             )
-            if matching_result:
+            if matching_result and len(matching_result) >= 2:
                 for i in range(0, len(matching_result), 2):
                     origin = matching_result[i]
                     dest = matching_result[i + 1]
