@@ -46,7 +46,7 @@ def tf_initplan(source: tuple, varfile: list):
                     )
                 )
                 exit()
-        returncode = os.system(f"terraform init -reconfigure")
+        returncode = os.system(f"terraform init")
         if returncode > 0:
             click.echo(
                 click.style(
