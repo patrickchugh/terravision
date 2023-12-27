@@ -228,6 +228,7 @@ def aws_handle_sg(tfdata: dict):
                 plist = helpers.list_of_parents(tfdata["graphdict"], connection)
                 for p in plist:
                     tfdata["graphdict"][p].remove(connection)
+        
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
         replacement_sg = [k for k in references if k.startswith("aws_security_group")]

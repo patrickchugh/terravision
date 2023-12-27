@@ -386,14 +386,21 @@ def get_metadata(tfdata):  # -> set
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
                 resource_node = f"{resource_type}.{resource_name}"
-                if resource_node in tfdata["node_list"]:
+                if helpers.find_resource_containing(tfdata["node_list"], resource_node):
+                    matching_node = helpers.find_resource_containing(
+                        tfdata["node_list"], resource_node
+                    )
                     meta_data[resource_node] = md
                     meta_data[resource_node]["module"] = mod
-                    if md.get("count"):
+                    if md.get("count") and tfdata["original_metadata"][
+                        matching_node
+                    ].get("count"):
                         meta_data[resource_node]["count"] = int(
-                            tfdata["original_metadata"][resource_node]["count"]
+                            tfdata["original_metadata"][matching_node]["count"]
                         )
-                elif (
+                    else:
+                        meta_data[resource_node]["count"] = 1
+                if (
                     f"{resource_node}~1" in tfdata["node_list"]
                     and tfdata["original_metadata"][f"{resource_node}~1"]["count"] > 1
                 ):
@@ -473,7 +480,7 @@ def get_variable_values(tfdata) -> dict:
         # Over-write defaults with passed varfile specified values
         for varfile in tfdata["varfile_list"]:
             # Open supplied varfile for reading
-            with click.open_file(varfile, "r") as f:
+            with click.open_file(varfile, encoding="utf8", mode="r") as f:
                 variable_values = hcl2.load(f)
             for uservar in variable_values:
                 var_data[uservar.lower()] = variable_values[uservar]
