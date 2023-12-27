@@ -398,7 +398,7 @@ def get_metadata(tfdata):  # -> set
                         meta_data[resource_node]["count"] = int(
                             tfdata["original_metadata"][matching_node]["count"]
                         )
-                    else:
+                    elif md.get("count"):
                         meta_data[resource_node]["count"] = 1
                 if (
                     f"{resource_node}~1" in tfdata["node_list"]
