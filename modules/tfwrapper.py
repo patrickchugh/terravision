@@ -237,10 +237,10 @@ def tf_makegraph(tfdata: dict):
 # Handle VPC / Subnet relationships
 def add_vpc_implied_relations(tfdata: dict):
     vpc_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc")
+        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc.")
     ]
     subnet_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet")
+        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet.")
     ]
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:
