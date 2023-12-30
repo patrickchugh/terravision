@@ -1,0 +1,24 @@
+{
+    "name": "terravision",
+    "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11",
+    "remoteEnv": {
+        "PATH": "${containerWorkspaceFolder}:${containerEnv:PATH}"
+    },
+    "containerEnv": {
+        "SHELL": "/bin/zsh"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hashicorp.terraform"
+            ]
+        }
+    },
+    "postCreateCommand": "sudo ./.devcontainer/post_create.sh",
+    "remoteUser": "vscode"
+}

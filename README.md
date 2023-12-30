@@ -60,6 +60,11 @@ Use the `//` character for subfolders within Git repos if the code you want is u
 ``` bash
 $ terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
+
+## Quickstart using the devcontainer
+1. Clone the repo ``git clone https://github.com/patrickchugh/terravision.git``
+2. Using [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), select ``Dev Containers: Open Folder in Container...`` and select the project folder.
+
 # Example Terraforms to try
 Unrelated to my project, but here are a few third-party Terraform examples to try:
 ``` bash
