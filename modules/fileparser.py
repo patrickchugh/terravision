@@ -60,7 +60,7 @@ def find_tf_files(source: str, paths=list(), mod="main", recursive=False) -> lis
         ):
             paths.append(os.path.join(source_location, file))
         if (
-            file.lower().endswith("architecture.yml")
+            file.lower().endswith("terravision.yml")
             or file.lower().endswith("architecture.yaml")
             and not yaml_detected
         ):

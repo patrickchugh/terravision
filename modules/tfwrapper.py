@@ -83,12 +83,13 @@ def tf_initplan(source: tuple, varfile: list):
             )
         else:
             returncode = os.system(f"terraform plan -refresh=false -out {tfplan_path}")
-        click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+        click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
         if (
             os.path.exists(tfplan_path)
             and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}")
             == 0
         ):
+            click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
