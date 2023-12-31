@@ -118,25 +118,6 @@ def check_relationship(
     return connection_pairs
 
 
-# Extend original relationships with associated numbered nodes
-# def check_for_index_matches(connection_pairs: list, tfdata: dict) -> list:
-#     for i in range(0, len(connection_pairs), 2):
-#         if "~" in connection_pairs[i]:
-#             origin = connection_pairs[i].split("~")[0]
-#             dest = connection_pairs[i + 1].split("~")[0]
-#             next_index = str(int(connection_pairs[i].split("~")[1]) + 1)
-#             if origin + "~" + next_index in tfdata["node_list"]:
-#                 if dest + "~" + next_index not in tfdata["node_list"]:
-#                     tfdata["graphdict"][dest + "~" + next_index] = list()
-#                 if (
-#                     dest + "~" + next_index
-#                     not in tfdata["graphdict"][origin + "~" + next_index]
-#                 ):
-#                     connection_pairs.append(origin + "~" + next_index)
-#                     connection_pairs.append(dest + "~" + next_index)
-#     return connection_pairs, tfdata
-
-
 # Make final graph structure to be used for drawing
 def add_relations(tfdata: dict):
     # Start with an existing connections list for all nodes/resources we know about

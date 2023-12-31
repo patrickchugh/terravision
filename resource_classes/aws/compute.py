@@ -121,6 +121,7 @@ aws_ecs_ec2 = EC2
 aws_ec2ecs = EC2
 aws_eks_service = ElasticKubernetesService
 aws_eks_cluster = EC2_instances
+aws_eks_node_group = EC2_instances
 aws_elastic_beanstalk_application = ElasticBeanstalk
 aws_instance = EC2
 aws_lambda_function = Lambda
