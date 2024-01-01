@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import subprocess
 import click
 import modules.gitlibs as gitlibs
 import modules.helpers as helpers
@@ -104,6 +105,9 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
+            click.echo(
+                click.style(f"\nMapping Graph Connections..\n", fg="white", bold=True)
+            )
             if os.path.exists(tfgraph_path):
                 returncode = os.system(f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}")
                 f = open(tfgraph_json_path)

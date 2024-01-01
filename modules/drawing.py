@@ -345,15 +345,7 @@ def render_diagram(
         title, filename=outfile, outformat=format, show=picshow, direction="TB"
     )
     setdiagram(myDiagram)
-    # Setup footer
-    footer_style = {
-        "_footernode": "1",
-        "height": "0",
-        "width": "0",
-        "fontsize": "20",
-        "label": f"Machine generated at {datetime.datetime.now()}\nTerravision (https://terra-vision.net)\nSource: {str(source)}",
-    }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
+
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
     setcluster(cloudGroup)
@@ -367,6 +359,16 @@ def render_diagram(
         all_drawn_resources_list = draw_objects(
             node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
         )
+    # Setup footer
+    footer_style = {
+        "_footernode": "1",
+        "shape": "record",
+        "width": "25",
+        "height": "2",
+        "fontsize": "18",
+        "label": f"Machine generated using Terravision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
+    }
+    getattr(sys.modules[__name__], "Node")(**footer_style)
     # Add main outer cloud group to canvas
     myDiagram.subgraph(cloudGroup.dot)
     # Render completed DOT
