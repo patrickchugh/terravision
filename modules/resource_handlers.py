@@ -184,12 +184,11 @@ def aws_handle_efs(tfdata: dict):
     return tfdata
 
 
-def aws_handle_sg(tfdata: dict):
-    list_of_sgs = helpers.list_of_dictkeys_containing(
+def handle_indirect_sg_rules(tfdata: dict) -> dict:
+    sglist = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_security_group."
     )
-    # Handle indirect association to resources via SG rule
-    for sg in list_of_sgs:
+    for sg in sglist:
         for sg_connection in tfdata["graphdict"][sg]:
             if sg_connection.startswith("aws_security_group_rule"):
                 matched_resource = helpers.find_resource_containing(
@@ -200,12 +199,15 @@ def aws_handle_sg(tfdata: dict):
                     tfdata["graphdict"][sg].append(
                         tfdata["graphdict"][matched_resource][0]
                     )
+    return tfdata
+
+
+def handle_sg_relationships(tfdata: dict) -> dict:
     all_sg_parents = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
     bound_nodes = [s for s in all_sg_parents if not s.startswith("aws_security_group")]
     for target in bound_nodes:
         target_type = target.split(".")[0]
-        # Look for any nodes with relationships to security groups and then reverse the relationship
-        # putting the parent node into a cluster named after the security group
+        # Look for any nodes related to security groups and reverse the relationship, making child as parent
         if not target_type in GROUP_NODES and target_type != "aws_security_group_rule":
             for connection in tfdata["graphdict"][target]:
                 if (
@@ -243,7 +245,6 @@ def aws_handle_sg(tfdata: dict):
                 plist = helpers.list_of_parents(tfdata["graphdict"], connection)
                 for p in plist:
                     tfdata["graphdict"][p].remove(connection)
-
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
         replacement_sg = [k for k in references if k.startswith("aws_security_group")]
@@ -258,9 +259,29 @@ def aws_handle_sg(tfdata: dict):
                 ):
                     tfdata["graphdict"][node].remove(target)
                     tfdata["graphdict"][node].append(replacement_sg)
-    # TODO: Merge any security groups which share the same identical connection
-    # Handle subnets pointing to sg targets
+    return tfdata
 
+
+def duplicate_sg_connections(tfdata: dict) -> dict:
+    results = helpers.find_common_elements(tfdata["graphdict"], "aws_security_group.")
+    for i in range(0, len(results)):
+        sg2 = results[i][1]
+        common = results[i][2]
+        if common in tfdata["graphdict"][sg2]:
+            tfdata["graphdict"][sg2].remove(common)
+            tfdata["graphdict"][sg2].append(common + str(i))
+    return tfdata
+
+
+def aws_handle_sg(tfdata: dict) -> dict:
+    # Handle indirect association to resources via SG rule
+    tfdata = handle_indirect_sg_rules(tfdata)
+    # Main handler for SG relationships
+    tfdata = handle_sg_relationships(tfdata)
+    # Handle subnets pointing to sg targets
+    list_of_sgs = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_security_group."
+    )
     for sg in list_of_sgs:
         for sg_connection in tfdata["graphdict"][sg]:
             parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
@@ -268,7 +289,8 @@ def aws_handle_sg(tfdata: dict):
                 if parent.startswith("aws_subnet"):
                     tfdata["graphdict"][parent].append(sg)
                     tfdata["graphdict"][parent].remove(sg_connection)
-
+    # Merge any security groups which share the same identical connection
+    tfdata = duplicate_sg_connections(tfdata)
     # Remove orhpan security groups
     for sg in list_of_sgs:
         if len(tfdata["graphdict"][sg]) == 0:

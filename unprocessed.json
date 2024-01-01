@@ -1,4 +1,4 @@
-Unprocessed terraform graph dictionary: {
+{
     "aws_cloudwatch_log_group.this~1": [
         "aws_eks_cluster.this~1"
     ],

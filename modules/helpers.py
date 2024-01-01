@@ -238,6 +238,17 @@ def getvar(variable_name, all_variables_dict):
     return "NOTFOUND"
 
 
+def find_common_elements(dict_of_lists: dict, keyword: str) -> list:
+    results = []
+    for key1, list1 in dict_of_lists.items():
+        for key2, list2 in dict_of_lists.items():
+            if key1 != key2:
+                for element in list1:
+                    if element in list2 and keyword in key1 and keyword in key2:
+                        results.append((key1, key2, element))
+    return results
+
+
 def find_resource_references(searchdict: dict, target_resource: str) -> dict:
     final_dict = dict()
     for item in searchdict:
