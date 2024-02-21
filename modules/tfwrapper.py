@@ -22,7 +22,7 @@ MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 
 
-def tf_initplan(source: tuple, varfile: list):
+def tf_initplan(source: tuple, varfile: list, workspace: str):
     tfdata = dict()
     tfdata["codepath"] = list()
     tfdata["workdir"] = os.getcwd()
@@ -60,9 +60,21 @@ def tf_initplan(source: tuple, varfile: list):
             vfile = varfile[0]
             if not os.path.isabs(vfile):
                 vfile = os.path.join(start_dir, vfile)
-        click.echo(
-            click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
-        )
+
+        click.echo(click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True))
+        # init workspace
+        returncode = os.system(f"terraform workspace select {workspace}")
+        if returncode:
+            click.echo(
+                click.style(
+                    f"\nERROR: Invalid output from 'terraform workspace select {workspace}' command.",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit()
+
+        click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
         # Get Temporary directory paths for intermediary files
         tempdir = os.path.dirname(temp_dir.name)
         tfplan_path = os.path.join(tempdir, "tfplan.bin")
@@ -86,16 +98,13 @@ def tf_initplan(source: tuple, varfile: list):
         click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
         if (
             os.path.exists(tfplan_path)
-            and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}")
-            == 0
+            and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}") == 0
         ):
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
             if os.path.exists(tfgraph_path):
-                returncode = os.system(
-                    f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}"
-                )
+                returncode = os.system(f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}")
                 f = open(tfgraph_json_path)
                 graphdata = json.load(f)
             else:
@@ -194,10 +203,7 @@ def tf_makegraph(tfdata: dict):
             # Check that the connection is part of the nodes that will be created (exists in graphdict)
             if (
                 node_id == head
-                and len(
-                    [k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])]
-                )
-                > 0
+                and len([k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])]) > 0
             ):
                 conn = gvid_table[tail]
                 conn_type = gvid_table[tail].split(".")[0]
@@ -205,9 +211,7 @@ def tf_makegraph(tfdata: dict):
                 matched_connections = [
                     k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
                 ]
-                matched_nodes = [
-                    k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
-                ]
+                matched_nodes = [k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])]
                 if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
                     node = matched_nodes[0]
                 if not conn in tfdata["graphdict"] and len(matched_connections) == 1:
@@ -236,19 +240,13 @@ def tf_makegraph(tfdata: dict):
 
 # Handle VPC / Subnet relationships
 def add_vpc_implied_relations(tfdata: dict):
-    vpc_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc.")
-    ]
-    subnet_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet.")
-    ]
+    vpc_resources = [k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc.")]
+    subnet_resources = [k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet.")]
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:
             vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
             for subnet in subnet_resources:
-                subnet_cidr = ipaddr.IPNetwork(
-                    tfdata["meta_data"][subnet]["cidr_block"]
-                )
+                subnet_cidr = ipaddr.IPNetwork(tfdata["meta_data"][subnet]["cidr_block"])
                 if subnet_cidr.overlaps(vpc_cidr):
                     tfdata["graphdict"][vpc].append(subnet)
     return tfdata
