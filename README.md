@@ -52,6 +52,11 @@ This software is still in alpha testing and **code is shared on an "AS IS" BASIS
 $ terravision draw --source ~/src/my-terraform-code
 ```
 
+For Terraform stacks with workspaces, you can use the `--workspace` parameter:
+```bash
+$ terraform draw --source ~/src/my-terraform-code --workspace development
+```
+
 For Terraform source code in a Git repo you can also use the form:
 ``` bash
 $ terravision draw --source https://github.com/your-repo/terraform-examples.git
@@ -69,8 +74,6 @@ terravision draw --source https://github.com/futurice/terraform-examples.git//aw
 terravision draw --source https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate --varfile examples/variables.tfvars --show
 
 terravision draw --source https://github.com/k-mitevski/terraform-k8s.git//01_terraform_eks --show
-
-
 ```
 
 # Annotating generated diagrams
