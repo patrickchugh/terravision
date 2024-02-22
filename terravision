@@ -105,7 +105,7 @@ def preflight_check():
 
     # take just the first line
     version_line = data[0]
-    print(version_line)
+    print(f"\n{version_line}")
     version = version_line.split(" ")[1].replace("v", "")
 
     # break up version numbers
