@@ -94,6 +94,33 @@ def preflight_check():
                 )
             )
             sys.exit()
+    # check the terraform version is suitable for terravision
+    click.echo(click.style("\nChecking Terraform Version...", fg="white", bold=True))
+    returncode = os.system("terraform -v >> terraform_version.txt")
+    # read the file and ensure the version is correct
+    with open("terraform_version.txt", "r") as fh:
+        data = fh.read().split("\n")
+
+    os.remove("terraform_version.txt")
+
+    # take just the first line
+    version_line = data[0]
+    print(version_line)
+    version = version_line.split(" ")[1].replace("v", "")
+
+    # break up version numbers
+    version_major = version.split(".")[0]
+
+    # if version major != 1
+    if version_major != "1":
+        click.echo(
+            click.style(
+                f"\n  ERROR: Terraform Version '{version}' is not supported. Please upgrade to >= v1.0.0",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit()
     return
 
 
