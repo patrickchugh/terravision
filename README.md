@@ -65,16 +65,6 @@ Use the `//` character for subfolders within Git repos if the code you want is u
 ``` bash
 $ terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
-# Example Terraforms to try
-Unrelated to my project, but here are a few third-party Terraform examples to try:
-``` bash
-
-terravision draw --source https://github.com/futurice/terraform-examples.git//aws/aws_static_site --varfile examples/variables.tfvars --show
-
-terravision draw --source https://github.com/futurice/terraform-examples.git//aws/wordpress_fargate --varfile examples/variables.tfvars --show
-
-terravision draw --source https://github.com/k-mitevski/terraform-k8s.git//01_terraform_eks --show
-```
 
 # Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include an `architecture.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
