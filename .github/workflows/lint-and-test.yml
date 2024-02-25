@@ -1,7 +1,13 @@
 # yamllint disable rule:line-length
 ---
 name: lint-and-test
-on: push
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
