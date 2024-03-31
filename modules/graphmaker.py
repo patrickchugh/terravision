@@ -185,6 +185,9 @@ def add_relations(tfdata: dict):
 
 def consolidate_nodes(tfdata: dict):
     for resource in dict(tfdata["graphdict"]):
+        if resource.startswith("null_resource"):
+            del tfdata["graphdict"][resource]
+            continue
         if resource not in tfdata["meta_data"].keys():
             res = resource.split("~")[0]
         else:
@@ -236,8 +239,7 @@ def consolidate_nodes(tfdata: dict):
             tfdata["graphdict"][connected_resource] = list(
                 filter(lambda a: a != "null", tfdata["graphdict"][connected_resource])
             )
-        if resource.startswith("null_resource"):
-            del tfdata["graphdict"][resource]
+
     tfdata["graphdict"] = tfdata["graphdict"]
     return tfdata
 

@@ -127,7 +127,11 @@ def iterative_parse(
         click.echo(f"  Parsing {filename}")
         with click.open_file(filename, "r", encoding="utf8") as f:
             # with suppress(Exception):
-            hcl_dict[filename] = hcl2.load(f)
+            try:
+                hcl_dict[filename] = hcl2.load(f)
+            except Exception as error:
+                print("A Terraform HCL parsing error occurred:", filename, error)
+                continue
             # Handle HCL parsing errors due to unexpected characters
             if not filename in hcl_dict.keys():
                 click.echo(
