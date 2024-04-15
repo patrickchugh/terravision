@@ -117,10 +117,10 @@ def handle_cf_origins(tfdata: dict) -> dict:
                             "aws_acm_certificate.acm"
                         )
                     if origin_domain:
-                        tfdata["meta_data"][cf_resource][
-                            "origin"
-                        ] = handle_cloudfront_domains(
-                            str(origin_source), origin_domain, tfdata["meta_data"]
+                        tfdata["meta_data"][cf_resource]["origin"] = (
+                            handle_cloudfront_domains(
+                                str(origin_source), origin_domain, tfdata["meta_data"]
+                            )
                         )
     return tfdata
 
@@ -151,7 +151,9 @@ def aws_handle_subnet_azs(tfdata: dict):
             if not az in tfdata["graphdict"].keys():
                 tfdata["graphdict"][az] = list()
                 tfdata["meta_data"][az] = {"count": ""}
-                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet]["count"]
+                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet].get(
+                    "count"
+                )
             tfdata["graphdict"][az].append(subnet)
             if az not in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].append(az)
@@ -380,6 +382,17 @@ def aws_handle_dbsubnet(tfdata: dict):
                         tfdata["graphdict"][vpc].remove(dbsubnet)
                         tfdata["graphdict"][vpc].append(check_sg)
                         break
+    return tfdata
+
+
+def aws_handle_vpcendpoints(tfdata: dict):
+    vpc_endpoints = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_vpc_endpoint"
+    )
+    vpc = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_vpc.")[0]
+    for vpc_endpoint in vpc_endpoints:
+        tfdata["graphdict"][vpc].append(vpc_endpoint)
+        del tfdata["graphdict"][vpc_endpoint]
     return tfdata
 
 
