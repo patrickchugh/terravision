@@ -21,13 +21,17 @@ def aws_handle_autoscaling(tfdata: dict):
             if "aws_appautoscaling_target" in k
         )
         asg_resources = [
-            r for r in tfdata["graphdict"] if r.startswith("aws_appautoscaling_target")
+            r
+            for r in tfdata["graphdict"]
+            if helpers.get_no_module_name(r).startswith("aws_appautoscaling_target")
         ]
         for asg in asg_resources:
             new_list = list()
             for check_service in scaler_links:
                 possible_subnets = [
-                    k for k in tfdata["graphdict"] if k.startswith("aws_subnet")
+                    k
+                    for k in tfdata["graphdict"]
+                    if helpers.get_no_module_name(k).startswith("aws_subnet")
                 ]
                 for sub in possible_subnets:
                     if check_service in tfdata["graphdict"][sub]:
@@ -51,7 +55,9 @@ def aws_handle_autoscaling(tfdata: dict):
                 tfdata["graphdict"], connection
             )
             subnets_to_change = [
-                k for k in asg_target_parents if k.startswith("aws_subnet")
+                k
+                for k in asg_target_parents
+                if helpers.get_no_module_name(k).startswith("aws_subnet")
             ]
             for subnet in subnets_to_change:
                 tfdata["graphdict"][subnet].append(asg)
@@ -136,7 +142,8 @@ def aws_handle_subnet_azs(tfdata: dict):
     subnet_resources = [
         k
         for k in tfdata["graphdict"]
-        if k.startswith("aws_subnet") and k not in tfdata["hidden"]
+        if helpers.get_no_module_name(k).startswith("aws_subnet")
+        and k not in tfdata["hidden"]
     ]
     for subnet in subnet_resources:
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
@@ -206,14 +213,20 @@ def handle_indirect_sg_rules(tfdata: dict) -> dict:
 
 def handle_sg_relationships(tfdata: dict) -> dict:
     all_sg_parents = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
-    bound_nodes = [s for s in all_sg_parents if not s.startswith("aws_security_group")]
+    bound_nodes = [
+        s
+        for s in all_sg_parents
+        if not helpers.get_no_module_name(s).startswith("aws_security_group")
+    ]
     for target in bound_nodes:
-        target_type = target.split(".")[0]
+        target_type = helpers.get_no_module_name(target).split(".")[0]
         # Look for any nodes related to security groups and reverse the relationship, making child as parent
         if not target_type in GROUP_NODES and target_type != "aws_security_group_rule":
             for connection in tfdata["graphdict"][target]:
                 if (
-                    connection.startswith("aws_security_group.")
+                    helpers.get_no_module_name(connection).startswith(
+                        "aws_security_group."
+                    )
                     and connection in tfdata["graphdict"].keys()
                     and tfdata["graphdict"][connection]
                 ):
@@ -229,7 +242,9 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                     newlist.remove(connection)
                     tfdata["graphdict"][target] = newlist
                 elif (
-                    connection.startswith("aws_security_group.")
+                    helpers.get_no_module_name(connection).startswith(
+                        "aws_security_group."
+                    )
                     and connection in tfdata["graphdict"].keys()
                     and len(tfdata["graphdict"][connection]) == 0
                 ):
@@ -249,15 +264,21 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                     tfdata["graphdict"][p].remove(connection)
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
-        replacement_sg = [k for k in references if k.startswith("aws_security_group")]
+        replacement_sg = [
+            k
+            for k in references
+            if helpers.get_no_module_name(k).startswith("aws_security_group")
+        ]
         if replacement_sg:
             replacement_sg = replacement_sg[0]
             for node in references:
                 if (
                     target in tfdata["graphdict"][node]
-                    and not node.startswith("aws_security_group")
-                    and node.split(".")[0] in GROUP_NODES
-                    and not node.startswith("aws_vpc")
+                    and not helpers.get_no_module_name(node).startswith(
+                        "aws_security_group"
+                    )
+                    and helpers.get_no_module_name(node).split(".")[0] in GROUP_NODES
+                    and not helpers.get_no_module_name(node).startswith("aws_vpc")
                 ):
                     tfdata["graphdict"][node].remove(target)
                     tfdata["graphdict"][node].append(replacement_sg)
@@ -291,6 +312,12 @@ def aws_handle_sg(tfdata: dict) -> dict:
                 if parent.startswith("aws_subnet"):
                     tfdata["graphdict"][parent].append(sg)
                     tfdata["graphdict"][parent].remove(sg_connection)
+    # Delete SGs within VPCs
+    for sg in list_of_sgs:
+        parent_list = helpers.list_of_parents(tfdata["graphdict"], sg)
+        for parent in parent_list:
+            if helpers.get_no_module_name(parent).startswith("aws_vpc"):
+                tfdata["graphdict"][parent].remove(sg)
     # Merge any security groups which share the same identical connection
     tfdata = duplicate_sg_connections(tfdata)
     # Remove orhpan security groups

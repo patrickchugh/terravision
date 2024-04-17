@@ -1,0 +1,28 @@
+{
+    "aws_az.us~east~1a": [
+        "module.subnets.aws_subnet.private_subnet",
+        "module.subnets.aws_subnet.public_subnet"
+    ],
+    "aws_internet_gateway.igw": [
+        "tv_aws_internet.internet"
+    ],
+    "module.ec2_instance_private.aws_instance.ubuntu_ec2": [],
+    "module.ec2_instance_public.aws_instance.ubuntu_ec2": [],
+    "module.security_groups.aws_security_group.private_sg": [
+        "module.ec2_instance_private.aws_instance.ubuntu_ec2"
+    ],
+    "module.security_groups.aws_security_group.public_sg": [
+        "module.ec2_instance_public.aws_instance.ubuntu_ec2"
+    ],
+    "module.subnets.aws_subnet.private_subnet": [
+        "module.security_groups.aws_security_group.private_sg"
+    ],
+    "module.subnets.aws_subnet.public_subnet": [
+        "module.security_groups.aws_security_group.public_sg"
+    ],
+    "module.vpc.aws_vpc.basic_vpc": [
+        "aws_az.us~east~1a",
+        "aws_internet_gateway.igw"
+    ],
+    "tv_aws_internet.internet": []
+}

@@ -98,7 +98,7 @@ def handle_nodes(
     tfdata: dict,
     drawn_resources: list,
 ):
-    resource_type = resource.split(".")[0]
+    resource_type = helpers.get_no_module_name(resource).split(".")[0]
     if not resource_type in avl_classes:
         return
     # If we have already drawn this node as part of a previous loop of other connections just get node ID
@@ -117,7 +117,7 @@ def handle_nodes(
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             connectedNode = None
-            c_resource = node_connection
+            c_resource = helpers.get_no_module_name(node_connection)
             node_type = str(c_resource).split(".")[0]
             # Ensure any connections from outside nodes to inside cloud nodes appear correctly
             if node_type in OUTER_NODES:
@@ -184,11 +184,11 @@ def handle_nodes(
                             )
                             if not tfdata["connected_nodes"].get(originNode._id):
                                 tfdata["connected_nodes"][originNode._id] = list()
-                            tfdata["connected_nodes"][
-                                originNode._id
-                            ] = helpers.append_dictlist(
-                                tfdata["connected_nodes"][originNode._id],
-                                connectedNode._id,
+                            tfdata["connected_nodes"][originNode._id] = (
+                                helpers.append_dictlist(
+                                    tfdata["connected_nodes"][originNode._id],
+                                    connectedNode._id,
+                                )
                             )
 
     return newNode, drawn_resources
@@ -230,7 +230,7 @@ def handle_group(
     tfdata: dict,
     drawn_resources: list,
 ):
-    resource_type = resource.split(".")[0]
+    resource_type = helpers.get_no_module_name(resource).split(".")[0]
     if not resource_type in avl_classes:
         return
     newGroup = getattr(sys.modules[__name__], resource_type)(
@@ -242,7 +242,7 @@ def handle_group(
     # Now add in any nodes contained within this group
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
-            node_type = str(node_connection).split(".")[0]
+            node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
             if node_type in GROUP_NODES and node_type in avl_classes:
                 # We have a subgroup within a Cluster group
                 subGroup, drawn_resources = handle_group(
@@ -289,7 +289,7 @@ def draw_objects(
         else:
             node_check = node_type
         for resource in tfdata["graphdict"]:
-            resource_type = resource.split(".")[0]
+            resource_type = helpers.get_no_module_name(resource).split(".")[0]
             targetGroup = diagramCanvas if resource_type in OUTER_NODES else cloudGroup
             if resource_type in avl_classes:
                 if (

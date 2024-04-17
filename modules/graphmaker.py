@@ -19,12 +19,15 @@ FORCED_ORIGIN = cloud_config.AWS_FORCED_ORIGIN
 
 
 def reverse_relations(tfdata: dict) -> dict:
-    for node, connections in dict(tfdata["graphdict"]).items():
+    for n, connections in dict(tfdata["graphdict"]).items():
+        node = helpers.get_no_module_name(n)
         reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
         for c in list(connections):
             if reverse_dest:
-                tfdata["graphdict"][c].append(node)
-                tfdata["graphdict"][node].remove(c)
+                if not tfdata["graphdict"].get(c):
+                    tfdata["graphdict"][c] = list()
+                tfdata["graphdict"][c].append(n)
+                tfdata["graphdict"][n].remove(c)
             reverse_origin = (
                 len(
                     [
@@ -37,7 +40,7 @@ def reverse_relations(tfdata: dict) -> dict:
                 > 0
             )
             if reverse_origin:
-                tfdata["graphdict"][c].append(node)
+                tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][node].remove(c)
     return tfdata
 
@@ -54,6 +57,9 @@ def check_relationship(
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
         matching = list({s for s in nodes if s.split("~")[0] in str(param)})
+        matching = list(
+            {s for s in nodes if helpers.get_no_module_name(s) in str(param)}
+        )
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
@@ -185,7 +191,7 @@ def add_relations(tfdata: dict):
 
 def consolidate_nodes(tfdata: dict):
     for resource in dict(tfdata["graphdict"]):
-        if resource.startswith("null_resource"):
+        if "null_resource" in resource:
             del tfdata["graphdict"][resource]
             continue
         if resource not in tfdata["meta_data"].keys():
@@ -247,18 +253,22 @@ def consolidate_nodes(tfdata: dict):
 def handle_variants(tfdata: dict):
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
-        node_title = node.split(".")[1]
+        node_title = helpers.get_no_module_name(node).split(".")[1]
         if node[-1].isdigit() and node[-2] == "~":
             node_name = node.split("~")[0]
         else:
             node_name = node
-        if node_name.startswith("aws"):
+        if helpers.get_no_module_name(node_name).startswith("aws"):
             renamed_node = helpers.check_variant(
                 node, tfdata["meta_data"].get(node_name)
             )
         else:
             renamed_node = False
-        if renamed_node and node.split(".")[0] not in SPECIAL_RESOURCES.keys():
+        if (
+            renamed_node
+            and helpers.get_no_module_name(node).split(".")[0]
+            not in SPECIAL_RESOURCES.keys()
+        ):
             renamed_node = renamed_node + "." + node_title
             tfdata["graphdict"][renamed_node] = list(tfdata["graphdict"][node])
             del tfdata["graphdict"][node]
@@ -279,7 +289,8 @@ def handle_variants(tfdata: dict):
                 variant_label = resource.split(".")[1]
             if (
                 variant_suffix
-                and resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
+                and helpers.get_no_module_name(resource).split(".")[0]
+                not in SPECIAL_RESOURCES.keys()
                 and not renamed_node.startswith("aws_group.shared")
                 and (
                     resource not in tfdata["graphdict"]["aws_group.shared_services"]
@@ -438,7 +449,9 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
 
 # Handle resources which require pre/post-processing before/after being added to graphdict
 def handle_special_resources(tfdata: dict):
-    resource_types = list({k.split(".")[0] for k in tfdata["node_list"]})
+    resource_types = list(
+        {helpers.get_no_module_name(k).split(".")[0] for k in tfdata["node_list"]}
+    )
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
         if resource_prefix in resource_types or matching_substring:
@@ -675,7 +688,7 @@ def handle_singular_references(tfdata: dict) -> dict:
 def create_multiple_resources(tfdata):
     # Get a list of all potential resources with a >1 count attribute
     multi_resources = [
-        n
+        helpers.get_no_module_name(n)
         for n in tfdata["graphdict"]
         if (
             "~" not in n

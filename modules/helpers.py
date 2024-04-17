@@ -5,6 +5,7 @@ from pathlib import Path
 from sys import exit
 import click
 import modules.cloud_config as cloud_config
+import modules.helpers as helpers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -14,6 +15,7 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
 NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
+
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
 
@@ -24,6 +26,17 @@ def check_for_domain(string: str) -> bool:
         if dot in string and not string.startswith("."):
             return True
     return False
+
+
+def process_graphdict(relations_graphdict: dict):
+    processed_dict = {}
+    for key, value in relations_graphdict.items():
+        processed_dict[get_no_module_name(key)] = relations_graphdict[key]
+        processed_value = []
+        for item in value:
+            processed_value.append(get_no_module_name(item))
+        processed_dict[get_no_module_name(key)] = processed_value
+    return processed_dict
 
 
 def get_no_module_name(node: str):
@@ -116,6 +129,13 @@ def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
         return middle
 
 
+def remove_duplicate_words(string):
+    words = string.split()
+    unique_words = set(words)
+    unique_words_list = list(unique_words)
+    return " ".join(unique_words_list)
+
+
 def pretty_name(name: str, show_title=True) -> str:
     """
     Beautification for AWS Labels
@@ -126,6 +146,7 @@ def pretty_name(name: str, show_title=True) -> str:
     else:
         name = name.replace("tv_aws_", "")
         name = name.replace("aws_", "")
+    name = get_no_module_name(name)
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
     service_label = service_label.split("~")[0]
@@ -146,6 +167,7 @@ def pretty_name(name: str, show_title=True) -> str:
         if acro.title() in final_label:
             acronym = True
             final_label = final_label.replace(acro.title(), acro.upper())
+    final_label = remove_duplicate_words(final_label)
     if acronym:
         return final_label
     else:
@@ -330,7 +352,12 @@ def list_of_parents(searchdict: dict, target: str):
             for item in value:
                 if not item:
                     continue
-                if item.startswith(target) and key not in final_list:
+                if (
+                    helpers.get_no_module_name(item).startswith(
+                        helpers.get_no_module_name(target)
+                    )
+                    and key not in final_list
+                ):
                     final_list.append(key)
     return final_list
 
@@ -353,7 +380,7 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
 def consolidated_node_check(resource_type: str) -> bool:
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
-        if resource_type.startswith(prefix) and resource_type:
+        if get_no_module_name(resource_type).startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
 

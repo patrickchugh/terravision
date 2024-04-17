@@ -112,6 +112,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
+            tfdata["plandata"] = dict
             click.echo(
                 click.style(
                     f"\nConverting TF Graph Connections..  (this may take a while)\n",
@@ -176,7 +177,8 @@ def setup_graph(tfdata: dict):
     for object in tfdata["tf_resources_created"]:
         if object["mode"] == "managed":
             # Replace multi count notation
-            node = helpers.get_no_module_name(object["address"])
+            # node = helpers.get_no_module_name(object["address"])
+            node = str(object["address"])
             if "index" in object.keys():
                 node = object["type"] + "." + object["name"]
                 if not isinstance(object["index"], int):
@@ -208,7 +210,7 @@ def tf_makegraph(tfdata: dict):
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
         gvid_table.append("")
-        gvid_table[gvid] = helpers.get_no_module_name(item.get("label"))
+        gvid_table[gvid] = str(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
         if "[" in node:

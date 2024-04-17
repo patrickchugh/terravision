@@ -10,7 +10,8 @@ AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 
 def add_annotations(tfdata: dict):
     graphdict = tfdata["graphdict"]
-    for node in list(graphdict):
+    for n in list(graphdict):
+        node = helpers.get_no_module_name(n)
         for auto_node in AUTO_ANNOTATIONS:
             node_prefix = str(list(auto_node.keys())[0])
             if node.startswith(node_prefix):
@@ -46,7 +47,6 @@ def add_annotations(tfdata: dict):
                         else:
                             graphdict[annotation_node] = [node]
                     tfdata["meta_data"][annotation_node] = dict()
-
     tfdata["graphdict"] = graphdict
     # Check if user has supplied annotations file
     if tfdata.get("annotations"):

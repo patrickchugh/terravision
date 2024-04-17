@@ -1,3 +1,5 @@
+from hmac import new
+import resource
 import modules.helpers as helpers
 import hcl2
 import click
@@ -193,7 +195,6 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                         else:
                             # Output is a attribute or string
                             value = value.replace(module_var, i[outputname]["value"])
-                            break
             else:
                 continue
         if value == oldvalue:
@@ -322,6 +323,34 @@ def extract_locals(tfdata):
     return tfdata
 
 
+def find_module_names(tfdata):
+    # Create dict for mutation of names
+    tfdata["all_renamed_resources"] = dict(tfdata["all_resource"])
+    # Loop through each resource in tfdata["all_resource"]
+    for file, resourcelist in tfdata["all_resource"].items():
+        # Loop through each module in tfdata["module_source_dict"]
+        for module_name, module_path in tfdata["module_source_dict"].items():
+            if module_path in file:
+                # We have a resource created within a module, so add the prefix to all the resource names
+                for index, elementdict in enumerate(resourcelist):
+                    for key, value in elementdict.items():
+                        for resource_name in value:
+                            renamed_resource_name = (
+                                "module." + module_name + "." + resource_name
+                            )
+                            new_dict = dict(
+                                tfdata["all_renamed_resources"][file][index][key]
+                            )
+                            new_dict.update(
+                                {renamed_resource_name: value[resource_name]}
+                            )
+                            del new_dict[resource_name]
+                    tfdata["all_renamed_resources"][file][index][key] = new_dict
+                break
+    tfdata["all_resource"] = tfdata["all_renamed_resources"]
+    return tfdata
+
+
 # def handle_module_vars(eval_string, module, tfdata):
 #     outvalue = ""
 #     splitlist = eval_string.split(".")
@@ -398,15 +427,28 @@ def get_metadata(tfdata):  # -> set
                             meta_data["aws_cloudwatch_log_group.logs"] = item[
                                 resource_type
                             ][resource_name]
-                click.echo(f"   {resource_type}.{resource_name}")
-                omd = dict(tfdata["original_metadata"][k + "." + i])
+                click.echo(f"   {resource_name}")
+                if "module." in i:
+                    mod = i.split(".")[1]
+                    name = (
+                        "module."
+                        + mod
+                        + "."
+                        + resource_type
+                        + "."
+                        + resource_name.split(".")[2]
+                    )
+                    omd = dict(tfdata["original_metadata"][name])
+                    resource_node = name
+                else:
+                    omd = dict(tfdata["original_metadata"][k + "." + i])
+                    resource_node = f"{resource_type}.{resource_name}"
                 md = item[k][i]
                 omd.update(md)
                 md = omd
                 # Capture original count value string
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
-                resource_node = f"{resource_type}.{resource_name}"
                 if helpers.find_resource_containing(tfdata["node_list"], resource_node):
                     matching_node = helpers.find_resource_containing(
                         tfdata["node_list"], resource_node
