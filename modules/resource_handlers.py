@@ -212,7 +212,9 @@ def handle_indirect_sg_rules(tfdata: dict) -> dict:
 
 
 def handle_sg_relationships(tfdata: dict) -> dict:
-    all_sg_parents = helpers.list_of_parents(tfdata["graphdict"], "aws_security_group.")
+    all_sg_parents = helpers.list_of_parents(
+        tfdata["graphdict"], "aws_security_group.*"
+    )
     bound_nodes = [
         s
         for s in all_sg_parents
