@@ -128,7 +128,7 @@ def get_clone_url(sourceURL: str):
         except:
             click.echo(
                 click.style(
-                    "\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings",
+                    f"\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings\n\n Code: {r.status_code} - {r.reason}",
                     fg="red",
                     bold=True,
                 )

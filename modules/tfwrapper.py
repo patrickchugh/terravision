@@ -180,7 +180,7 @@ def setup_graph(tfdata: dict):
             # node = helpers.get_no_module_name(object["address"])
             node = str(object["address"])
             if "index" in object.keys():
-                node = object["type"] + "." + object["name"]
+                # node = object["type"] + "." + object["name"]
                 if not isinstance(object["index"], int):
                     suffix = "[" + object["index"] + "]"
                 else:
@@ -193,7 +193,7 @@ def setup_graph(tfdata: dict):
             details.update(object["change"]["after_unknown"])
             details.update(object["change"]["after_sensitive"])
             if "module." in object["address"]:
-                modname = object["address"].split(".")[1]
+                modname = object["module_address"].split("module.")[1]
                 details["module"] = modname
             if "~" in node:
                 details["count"] = 3

@@ -413,7 +413,7 @@ def get_metadata(tfdata):  # -> set
                             meta_data["aws_cloudwatch_log_group.logs"] = item[
                                 resource_type
                             ][resource_name]
-                click.echo(f"   {resource_name}")
+                click.echo(f"   {resource_type}.{resource_name}")
                 if "module." in i:
                     mod = i.split(".")[1]
                     name = (
@@ -427,8 +427,11 @@ def get_metadata(tfdata):  # -> set
                     omd = dict(tfdata["original_metadata"][name])
                     resource_node = name
                 else:
-                    omd = dict(tfdata["original_metadata"][k + "." + i])
+                    # omd = dict(tfdata["original_metadata"][k + "." + i])
                     resource_node = f"{resource_type}.{resource_name}"
+                    if resource_node not in tfdata["original_metadata"].keys():
+                        resource_node = f"{resource_type}.{resource_name}[0]~1"
+                    omd = dict(tfdata["original_metadata"][resource_node])
                 md = item[k][i]
                 omd.update(md)
                 md = omd
