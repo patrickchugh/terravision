@@ -1,4 +1,5 @@
 from hmac import new
+from multiprocessing import process
 import resource
 import modules.helpers as helpers
 import hcl2
@@ -323,53 +324,38 @@ def extract_locals(tfdata):
     return tfdata
 
 
-def find_module_names(tfdata):
-    # Create dict for mutation of names
-    tfdata["all_renamed_resources"] = dict(tfdata["all_resource"])
+def prefix_module_names(tfdata):
+    # List to hold unique resources that have been processed (needed when modules called more than once)
+    processed_list = []
     # Loop through each resource in tfdata["all_resource"]
-    for file, resourcelist in tfdata["all_resource"].items():
+    for file, resourcelist in dict(tfdata["all_resource"]).items():
         # Loop through each module in tfdata["module_source_dict"]
         for module_name, module_path in tfdata["module_source_dict"].items():
             if module_path in file:
-                # We have a resource created within a module, so add the prefix to all the resource names
+                # We have a resource created within a module, so add the .module prefix to all the resource names
                 for index, elementdict in enumerate(resourcelist):
                     for key, value in elementdict.items():
                         for resource_name in value:
                             renamed_resource_name = (
                                 "module." + module_name + "." + resource_name
                             )
-                            new_dict = dict(
-                                tfdata["all_renamed_resources"][file][index][key]
-                            )
-                            new_dict.update(
-                                {renamed_resource_name: value[resource_name]}
-                            )
-                            del new_dict[resource_name]
-                    tfdata["all_renamed_resources"][file][index][key] = new_dict
-                break
-    tfdata["all_resource"] = tfdata["all_renamed_resources"]
+                            if (
+                                "module." not in resource_name
+                                and renamed_resource_name not in processed_list
+                            ):
+
+                                new_dict = dict(
+                                    tfdata["all_resource"][file][index][key]
+                                )
+                                new_dict.update(
+                                    {renamed_resource_name: value[resource_name]}
+                                )
+                                del new_dict[resource_name]
+                                tfdata["all_resource"][file][index] = {key: new_dict}
+                                processed_list.append(renamed_resource_name)
+                            else:
+                                break
     return tfdata
-
-
-# def handle_module_vars(eval_string, module, tfdata):
-#     outvalue = ""
-#     splitlist = eval_string.split(".")
-#     outputname = helpers.find_between(eval_string, splitlist[1] + ".", " ")
-#     for file in tfdata["all_output"].keys():
-#         for i in tfdata["all_output"][file]:
-#             if outputname in i.keys() and "module."+module+"." in i.get(outputname)["value"]:
-#                 outvalue = i[outputname]["value"]
-#                 if "*.id" in outvalue:
-#                     resource_name = helpers.fix_lists(outvalue.split(".*")[0])
-#                     outvalue = tfdata["meta_data"][resource_name]["count"]
-#                     outvalue = helpers.find_conditional_statements(outvalue)
-#                 break
-#     stringarray = eval_string.split(".")
-#     modulevar = helpers.cleanup(
-#         "module" + "." + stringarray[1] + "." + stringarray[2]
-#     ).strip()
-#     eval_string = eval_string.replace(modulevar, outvalue)
-#     return eval_string
 
 
 def show_error(mod, resource, eval_string, exp, tfdata):

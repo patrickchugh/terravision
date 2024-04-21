@@ -63,7 +63,7 @@ def compile_tfdata(
     )
     tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
     # Enrich resource names with module names
-    tfdata = interpreter.find_module_names(tfdata)
+    tfdata = interpreter.prefix_module_names(tfdata)
     # Handle all variables found in metadata
     tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Supplement graphdict with relationships from HCL files

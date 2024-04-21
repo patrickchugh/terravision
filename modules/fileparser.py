@@ -178,11 +178,17 @@ def iterative_parse(
                             )
                             tfdata["module_source_dict"][module_name] = str(modpath)
     # Look for module files that are called more than once
-    for module, filepath in tfdata["module_source_dict"].items():
-        for c_module, c_filepath in tfdata["module_source_dict"].items():
-            if c_filepath == filepath:
-                duplicate = c_module
-
+    oldpath = []
+    for module, modpath in tfdata["module_source_dict"].items():
+        if modpath in oldpath:
+            duplicate = modpath
+            for filepath, res_list in tfdata["all_resource"].items():
+                if duplicate in filepath:
+                    tfdata["all_resource"][filepath].append(
+                        tfdata["all_resource"][filepath][0]
+                    )
+        else:
+            oldpath.append(modpath)
     return tfdata
 
 
