@@ -33,7 +33,7 @@ def reverse_relations(tfdata: dict) -> dict:
                     [
                         s
                         for s in FORCED_ORIGIN
-                        if c.startswith(s)
+                        if helpers.get_no_module_name(c).startswith(s)
                         and not node.split(".")[0] in str(AUTO_ANNOTATIONS)
                     ]
                 )
@@ -67,7 +67,9 @@ def check_relationship(
         if found_connection:
             for n in nodes:
                 if (
-                    n.startswith(IMPLIED_CONNECTIONS[found_connection[0]])
+                    helpers.get_no_module_name(n).startswith(
+                        IMPLIED_CONNECTIONS[found_connection[0]]
+                    )
                     and n not in matching
                 ):
                     matching.append(n)
@@ -145,9 +147,9 @@ def add_relations(tfdata: dict):
         else:
             nodename = node
         if (
-            nodename.startswith("random")
-            or node.startswith("aws_security_group")
-            or node.startswith("null")
+            helpers.get_no_module_name(nodename).startswith("random")
+            or helpers.get_no_module_name(node).startswith("aws_security_group")
+            or helpers.get_no_module_name(node).startswith("null")
         ):
             continue
         if nodename not in tfdata["meta_data"].keys():
@@ -166,9 +168,9 @@ def add_relations(tfdata: dict):
                     origin = matching_result[i]
                     dest = matching_result[i + 1]
                     c_list = list(graphdict[origin])
-                    if not dest in c_list and not origin.startswith(
-                        "aws_security_group"
-                    ):
+                    if not dest in c_list and not helpers.get_no_module_name(
+                        origin
+                    ).startswith("aws_security_group"):
                         click.echo(f"   {origin} --> {dest}")
                         c_list.append(dest)
                         if (
@@ -282,7 +284,7 @@ def handle_variants(tfdata: dict):
                     resource_name = resource.split("~")[0]
             else:
                 resource_name = resource
-            if resource_name.startswith("aws"):
+            if helpers.get_no_module_name(resource_name).startswith("aws"):
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"].get(resource_name)
                 )
@@ -438,7 +440,7 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
     security_group_list = [
         k
         for k in tfdata["graphdict"]
-        if k.startswith("aws_security_group") and "~" in k
+        if helpers.get_no_module_name(k).startswith("aws_security_group") and "~" in k
     ]
     for security_group in security_group_list:
         check_original = security_group.split("~")[0]
@@ -545,7 +547,11 @@ def needs_multiple(resource: str, parent: str, tfdata):
 
 
 def extend_sg_groups(tfdata: dict) -> dict:
-    list_of_sgs = [s for s in tfdata["graphdict"] if s.startswith("aws_security_group")]
+    list_of_sgs = [
+        s
+        for s in tfdata["graphdict"]
+        if helpers.get_no_module_name(s).startswith("aws_security_group")
+    ]
     for sg in list_of_sgs:
         expanded = False
         for connection in list(tfdata["graphdict"][sg]):
@@ -616,7 +622,10 @@ def add_multiples_to_parents(
 def handle_count_resources(multi_resources: list, tfdata: dict):
     # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
     for resource in multi_resources:
-        for i in range(int(tfdata["meta_data"][resource]["count"])):
+        # max_i = tfdata["meta_data"][resource].get("count")
+        # TODO: Properly determine max_i based on AZs and subnets
+        max_i = 3
+        for i in range(max_i):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
             not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
@@ -686,15 +695,18 @@ def handle_singular_references(tfdata: dict) -> dict:
 
 
 def create_multiple_resources(tfdata):
-    # Get a list of all potential resources with a >1 count attribute
+    # Get a list of all potential resources with a potential >1 count attribute
     multi_resources = [
         n
         for n in tfdata["graphdict"]
         if (
-            "~1" in n
-            and not n.split("~")[0] + "~2" in tfdata["graphdict"].keys()
+            "~" not in n
             and tfdata["meta_data"].get(n)
-            and tfdata["meta_data"][n].get("count")
+            and (
+                tfdata["meta_data"][n].get("count")
+                or tfdata["meta_data"][n].get("desired_count")
+                or tfdata["meta_data"][n].get("max_capacity")
+            )
             and not helpers.consolidated_node_check(n)
         )
     ]
@@ -721,7 +733,7 @@ def create_multiple_resources(tfdata):
     security_group_list = [
         k
         for k in tfdata["graphdict"]
-        if k.startswith("aws_security_group") and "~" in k
+        if helpers.get_no_module_name(k).startswith("aws_security_group") and "~" in k
     ]
     for security_group in security_group_list:
         check_original = security_group.split("~")[0]

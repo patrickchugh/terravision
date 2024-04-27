@@ -14,7 +14,7 @@ def add_annotations(tfdata: dict):
         # node = helpers.get_no_module_name(n)
         for auto_node in AUTO_ANNOTATIONS:
             node_prefix = str(list(auto_node.keys())[0])
-            if node.startswith(node_prefix):
+            if helpers.get_no_module_name(node).startswith(node_prefix):
                 new_nodes = auto_node[node_prefix]["link"]
                 delete_nodes = auto_node[node_prefix].get("delete")
                 for new_node in new_nodes:
@@ -35,7 +35,9 @@ def add_annotations(tfdata: dict):
                         if delete_nodes:
                             for delnode in delete_nodes:
                                 for conn in graphdict[node]:
-                                    if conn.startswith(delnode):
+                                    if helpers.get_no_module_name(conn).startswith(
+                                        delnode
+                                    ):
                                         graphdict[node].remove(conn)
                         if not graphdict.get(annotation_node):
                             graphdict[annotation_node] = list()
@@ -76,7 +78,7 @@ def modify_nodes(graphdict: dict, annotate: dict) -> dict:
                 if "*" in startnode:
                     prefix = startnode.split("*")[0]
                     for node in graphdict:
-                        if node.startswith(prefix):
+                        if helpers.get_no_module_name(node).startswith(prefix):
                             graphdict[node].append(connection)
                 else:
                     graphdict[startnode].append(connection)
@@ -88,7 +90,10 @@ def modify_nodes(graphdict: dict, annotate: dict) -> dict:
                 if "*" in startnode:
                     prefix = startnode.split("*")[0]
                     for node in graphdict:
-                        if node.startswith(prefix) and connection in graphdict[node]:
+                        if (
+                            helpers.get_no_module_name(node).startswith(prefix)
+                            and connection in graphdict[node]
+                        ):
                             graphdict[node].remove(connection)
                 else:
                     graphdict[startnode].delete(connection)
@@ -97,7 +102,7 @@ def modify_nodes(graphdict: dict, annotate: dict) -> dict:
             if node in graphdict or "*" in node:
                 click.echo(f"~ {node}")
                 prefix = node.split("*")[0]
-                if "*" in node and node.startswith(prefix):
+                if "*" in node and helpers.get_no_module_name(node).startswith(prefix):
                     del graphdict[node]
                 else:
                     del graphdict[node]

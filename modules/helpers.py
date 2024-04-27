@@ -389,7 +389,12 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
         if "~" in parent:
             any_parent_has_count = True
             break
-        c = tfdata["meta_data"][parent].get("count")
+        c = (
+            tfdata["meta_data"][parent].get("count")
+            or tfdata["meta_data"][parent].get("for_each")
+            or tfdata["meta_data"][parent].get("desired_count")
+            or tfdata["meta_data"][parent].get("max_capacity")
+        )
         if tfdata["meta_data"].get(parent) and isinstance(c, int):
             any_parent_has_count = True
     return any_parent_has_count

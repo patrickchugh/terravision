@@ -61,10 +61,12 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
     consolidated_dest_prefix = [
         k
         for k in list(CONSOLIDATED_NODES)
-        if dest_resource.startswith(list(k.keys())[0])
+        if helpers.get_no_module_name(dest_resource).startswith(list(k.keys())[0])
     ]
     consolidated_origin_prefix = [
-        k for k in CONSOLIDATED_NODES if origin_resource.startswith(list(k.keys())[0])
+        k
+        for k in CONSOLIDATED_NODES
+        if helpers.get_no_module_name(origin_resource).startswith(list(k.keys())[0])
     ]
     if consolidated_origin_prefix:
         candidate_resources = helpers.list_of_dictkeys_containing(

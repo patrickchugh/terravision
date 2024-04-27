@@ -195,8 +195,6 @@ def setup_graph(tfdata: dict):
             if "module." in object["address"]:
                 modname = object["module_address"].split("module.")[1]
                 details["module"] = modname
-            # if "~" in node:
-            #     details["count"] = 3
             tfdata["meta_data"][node] = details
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     return tfdata
@@ -268,10 +266,14 @@ def tf_makegraph(tfdata: dict):
 # Handle VPC / Subnet relationships
 def add_vpc_implied_relations(tfdata: dict):
     vpc_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_vpc.")
+        k
+        for k, v in tfdata["graphdict"].items()
+        if helpers.get_no_module_name(k).startswith("aws_vpc.")
     ]
     subnet_resources = [
-        k for k, v in tfdata["graphdict"].items() if k.startswith("aws_subnet.")
+        k
+        for k, v in tfdata["graphdict"].items()
+        if helpers.get_no_module_name(k).startswith("aws_subnet.")
     ]
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:

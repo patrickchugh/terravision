@@ -73,8 +73,8 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: dict) -> s
             if (
                 domain in str(v)
                 and not domain.startswith("aws_")
-                and not key.startswith("aws_cloudfront")
-                and not key.startswith("aws_route53")
+                and not helpers.get_no_module_name(key).startswith("aws_cloudfront")
+                and not helpers.get_no_module_name(key).startswith("aws_route53")
             ):
                 o = origin_string.replace(domain, key)
                 return origin_string.replace(domain, key)
@@ -180,7 +180,9 @@ def aws_handle_efs(tfdata: dict):
                 target = connection
         for connection in list(tfdata["graphdict"][efs]):
             if (
-                not connection.startswith("aws_efs_mount_target")
+                not helpers.get_no_module_name(connection).startswith(
+                    "aws_efs_mount_target"
+                )
                 and "~" not in connection
             ):
                 tfdata["graphdict"][connection].append(target)
@@ -199,7 +201,9 @@ def handle_indirect_sg_rules(tfdata: dict) -> dict:
     )
     for sg in sglist:
         for sg_connection in tfdata["graphdict"][sg]:
-            if sg_connection.startswith("aws_security_group_rule"):
+            if helpers.get_no_module_name(sg_connection).startswith(
+                "aws_security_group_rule"
+            ):
                 matched_resource = helpers.find_resource_containing(
                     tfdata["graphdict"].keys(), sg_connection
                 )
@@ -311,7 +315,7 @@ def aws_handle_sg(tfdata: dict) -> dict:
         for sg_connection in tfdata["graphdict"][sg]:
             parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
             for parent in parent_list:
-                if parent.startswith("aws_subnet"):
+                if helpers.get_no_module_name(parent).startswith("aws_subnet"):
                     tfdata["graphdict"][parent].append(sg)
                     tfdata["graphdict"][parent].remove(sg_connection)
     # Delete SGs within VPCs
@@ -363,18 +367,18 @@ def aws_handle_lb(tfdata: dict):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
             tfdata["graphdict"][renamed_node].append(connection)
-
             if (
                 tfdata["meta_data"][connection].get("count")
-                and connection.split(".")[0] not in SHARED_SERVICES
-            ):
+                or tfdata["meta_data"][connection].get("desired_count")
+            ) and connection.split(".")[0] not in SHARED_SERVICES:
                 tfdata["meta_data"][renamed_node] = dict(
                     tfdata["meta_data"]["aws_lb.elb"]
                 )
-                tfdata["meta_data"][renamed_node]["count"] = int(
-                    tfdata["meta_data"][connection]["count"]
-                )
+                # tfdata["meta_data"][renamed_node]["count"] = int(
+                #     tfdata["meta_data"][connection]["count"]
+                # )
                 tfdata["meta_data"][lb]["count"] = 1
+                tfdata["meta_data"][renamed_node]["count"] = 1
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
@@ -398,7 +402,7 @@ def aws_handle_dbsubnet(tfdata: dict):
         db_grouping = helpers.list_of_parents(tfdata["graphdict"], dbsubnet)
         if db_grouping:
             for subnet in db_grouping:
-                if subnet.startswith("aws_subnet"):
+                if helpers.get_no_module_name(subnet).startswith("aws_subnet"):
                     tfdata["graphdict"][subnet].remove(dbsubnet)
                     az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
                     vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
@@ -407,7 +411,9 @@ def aws_handle_dbsubnet(tfdata: dict):
             for rds in tfdata["graphdict"][dbsubnet]:
                 rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
                 for check_sg in rds_references:
-                    if check_sg.startswith("aws_security_group"):
+                    if helpers.get_no_module_name(check_sg).startswith(
+                        "aws_security_group"
+                    ):
                         tfdata["graphdict"][vpc].remove(dbsubnet)
                         tfdata["graphdict"][vpc].append(check_sg)
                         break
