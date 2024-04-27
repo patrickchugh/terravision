@@ -64,10 +64,10 @@
     "aws_efs_mount_target.this[0]~1": [
         "aws_efs_file_system.efs"
     ],
-    "aws_efs_mount_target.this~2": [
+    "aws_efs_mount_target.this[1]~2": [
         "aws_efs_file_system.efs"
     ],
-    "aws_efs_mount_target.this~3": [
+    "aws_efs_mount_target.this[2]~3": [
         "aws_efs_file_system.efs"
     ],
     "aws_eip.elastic_ip": [

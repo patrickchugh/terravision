@@ -167,31 +167,26 @@ def aws_handle_subnet_azs(tfdata: dict):
     return tfdata
 
 
-def aws_handle_efs(tfdata: dict):
+# Add relationships between all EFS mount targets and the EFS file system service
+def aws_handle_efs(tfdata: dict) -> dict:
     efs_systems = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_efs_file_system"
     )
     efs_mount_targets = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_efs_mount_target"
     )
-    for efs in efs_systems:
-        for connection in tfdata["graphdict"][efs]:
-            if connection.startswith("aws_efs_mount_target"):
-                target = connection
-        for connection in list(tfdata["graphdict"][efs]):
-            if (
-                not helpers.get_no_module_name(connection).startswith(
+    for target in efs_mount_targets:
+        for fs in efs_systems:
+            if fs not in tfdata["graphdict"][target]:
+                tfdata["graphdict"][target].append(fs)
+            for fs_connection in tfdata["graphdict"][fs]:
+                if helpers.get_no_module_name(fs_connection).startswith(
                     "aws_efs_mount_target"
-                )
-                and "~" not in connection
-            ):
-                tfdata["graphdict"][connection].append(target)
-            elif "~" in connection:
-                suffix = connection.split("~")[1]
-                suffixed_name = "aws_efs_mount_target~" + suffix
-                if suffixed_name in efs_mount_targets:
-                    tfdata["graphdict"][connection].append(suffixed_name)
-            tfdata["graphdict"][efs].remove(connection)
+                ):
+                    tfdata["graphdict"][fs].remove(fs_connection)
+                else:
+                    tfdata["graphdict"][fs_connection].append(fs)
+                    tfdata["graphdict"][fs].remove(fs_connection)
     return tfdata
 
 

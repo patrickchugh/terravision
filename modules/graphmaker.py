@@ -375,11 +375,13 @@ def add_multiples_to_parents(
                 # Handle special case for security groups where if any parent has count>1, then create a numbered sg
                 if (
                     helpers.any_parent_has_count(tfdata, resource)
-                    and parent.split(".")[0] == "aws_security_group"
+                    and helpers.get_no_module_name(parent).split(".")[0]
+                    == "aws_security_group"
                     and "~" not in parent
                 ) or (
                     helpers.any_parent_has_count(tfdata, resource)
-                    and parent.split(".")[0] == "aws_security_group"
+                    and helpers.get_no_module_name(parent).split(".")[0]
+                    == "aws_security_group"
                     and "~" in parent
                     and helpers.check_list_for_dash(tfdata["graphdict"][parent])
                 ):
@@ -493,7 +495,11 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
         if tfdata["meta_data"].get(resource):
             new_name = resource + "~" + str(i)
             if (
-                needs_multiple(resource, check_multiple_resource, tfdata)
+                needs_multiple(
+                    helpers.get_no_module_name(resource),
+                    check_multiple_resource,
+                    tfdata,
+                )
                 and new_name not in tfdata["graphdict"][check_multiple_resource]
                 and new_name not in new_list
             ) or new_name in tfdata["graphdict"].keys():
@@ -521,7 +527,7 @@ def needs_multiple(resource: str, parent: str, tfdata):
         or resource.split(".")[0] in GROUP_NODES
     )
     not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
-    if resource.split(".")[0] == "aws_security_group":
+    if helpers.get_no_module_name(resource).split(".")[0] == "aws_security_group":
         security_group_with_count = (
             tfdata["original_metadata"][parent].get("count")
             and int(tfdata["original_metadata"][parent].get("count")) > 1
