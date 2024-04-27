@@ -195,8 +195,8 @@ def setup_graph(tfdata: dict):
             if "module." in object["address"]:
                 modname = object["module_address"].split("module.")[1]
                 details["module"] = modname
-            if "~" in node:
-                details["count"] = 3
+            # if "~" in node:
+            #     details["count"] = 3
             tfdata["meta_data"][node] = details
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     return tfdata

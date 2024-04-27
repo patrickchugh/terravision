@@ -688,10 +688,11 @@ def handle_singular_references(tfdata: dict) -> dict:
 def create_multiple_resources(tfdata):
     # Get a list of all potential resources with a >1 count attribute
     multi_resources = [
-        helpers.get_no_module_name(n)
+        n
         for n in tfdata["graphdict"]
         if (
-            "~" not in n
+            "~1" in n
+            and not n.split("~")[0] + "~2" in tfdata["graphdict"].keys()
             and tfdata["meta_data"].get(n)
             and tfdata["meta_data"][n].get("count")
             and not helpers.consolidated_node_check(n)
