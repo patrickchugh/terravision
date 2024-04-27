@@ -49,10 +49,11 @@ def handle_module_vars(eval_string, tfdata):
                     outvalue = helpers.find_conditional_statements(outvalue)
                     break
     stringarray = eval_string.split(".")
-    modulevar = helpers.cleanup(
-        "module" + "." + stringarray[1] + "." + stringarray[2]
-    ).strip()
-    eval_string = eval_string.replace(modulevar, outvalue)
+    if len(stringarray) >= 3:
+        modulevar = helpers.cleanup(
+            "module" + "." + stringarray[1] + "." + stringarray[2]
+        ).strip()
+        eval_string = eval_string.replace(modulevar, outvalue)
     return eval_string
 
 
@@ -62,7 +63,7 @@ def inject_module_variables(tfdata: dict):
             for module, params in module_items.items():
                 module_source = params["source"]
                 for key, value in params.items():
-                    if "module." in str(value):
+                    if "module." in str(value) and key != "depends_on":
                         value = handle_module_vars(str(value), tfdata)
                     if "var." in str(value):
                         if isinstance(value, list):
@@ -100,7 +101,6 @@ def inject_module_variables(tfdata: dict):
 
 
 def handle_metadata_vars(tfdata):
-    loops = 0
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
@@ -114,11 +114,9 @@ def handle_metadata_vars(tfdata):
                 )
                 and key != "depends_on"
                 and key != "original_count"
-                and loops < 1000
             ):
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
-                loops += 1
             tfdata["meta_data"][resource][key] = value
     return tfdata
 
@@ -161,11 +159,11 @@ def replace_local_values(found_list: list, value, module, tfdata):
                         value = helpers.find_replace(
                             localitem, str(replacement_value), value
                         )
-                else:
-                    value = value.replace(localitem, "None")
-                    click.echo(
-                        f"    WARNING: Cannot resolve {localitem}, assigning empty value in module {module}"
-                    )
+                    else:
+                        value = value.replace(localitem, "None")
+                        click.echo(
+                            f"   WARNING: Cannot resolve {localitem}, assigning empty value in module {module}"
+                        )
         else:
             # value = value.replace(localitem, "None")
             value = helpers.find_replace(localitem, "None", value)
@@ -176,30 +174,33 @@ def replace_local_values(found_list: list, value, module, tfdata):
 
 def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict):
     for module_var in found_list:
-        cleantext = helpers.fix_lists(module_var)
-        splitlist = cleantext.split(".")
-        outputname = helpers.find_between(cleantext, splitlist[1] + ".", " ")
-        oldvalue = value
-        mod = value.split("module.")[1].split(".")[0]
-        for ofile in tfdata["all_output"].keys():
-            if "modules" and mod in ofile:
-                # We have found the right output file
-                for i in tfdata["all_output"][ofile]:
-                    if outputname in i.keys():
-                        if (
-                            "module." in i[outputname]["value"]
-                            or "var." in i[outputname]["value"]
-                            or "local." in i[outputname]["value"]
-                        ):
-                            # Output is not a resource attribute so recursively resolve value
-                            value = find_replace_values(value, mod, tfdata)
-                        else:
-                            # Output is a attribute or string
-                            value = value.replace(module_var, i[outputname]["value"])
-            else:
-                continue
-        if value == oldvalue:
-            value = value.replace(module_var, '"UNKNOWN"')
+        if "module." in value:
+            cleantext = helpers.fix_lists(module_var)
+            splitlist = cleantext.split(".")
+            outputname = helpers.find_between(cleantext, splitlist[1] + ".", " ")
+            oldvalue = value
+            mod = value.split("module.")[1].split(".")[0]
+            for ofile in tfdata["all_output"].keys():
+                if "modules" and f";{mod};" in ofile:
+                    # We have found the right output file
+                    for i in tfdata["all_output"][ofile]:
+                        if outputname in i.keys():
+                            if (
+                                "module." in i[outputname]["value"]
+                                or "var." in i[outputname]["value"]
+                                or "local." in i[outputname]["value"]
+                            ):
+                                # Output is not a resource attribute so recursively resolve value
+                                value = find_replace_values(value, mod, tfdata)
+                            else:
+                                # Output is a attribute or string
+                                value = value.replace(
+                                    module_var, i[outputname]["value"]
+                                )
+                else:
+                    continue
+            if value == oldvalue:
+                value = value.replace(module_var, '"UNKNOWN"')
     return value
 
 
@@ -294,7 +295,6 @@ def find_replace_values(varstring, module, tfdata):
     local_found_list = re.findall("local\.[A-Za-z0-9_\-\.\[\]]+", value)
     modulevar_found_list = re.findall("module\.[A-Za-z0-9_\-\.\[\]]+", value)
     # Replace found variable strings with variable values
-
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)
     value = replace_var_values(
@@ -334,10 +334,10 @@ def prefix_module_names(tfdata):
             if module_path in file:
                 # We have a resource created within a module, so add the .module prefix to all the resource names
                 for index, elementdict in enumerate(resourcelist):
-                    for key, value in elementdict.items():
+                    for resource_type, value in elementdict.items():
                         for resource_name in value:
                             renamed_resource_name = (
-                                "module." + module_name + "." + resource_name
+                                f"module.{module_name}.{resource_type}.{resource_name}"
                             )
                             if (
                                 "module." not in resource_name
@@ -345,13 +345,15 @@ def prefix_module_names(tfdata):
                             ):
 
                                 new_dict = dict(
-                                    tfdata["all_resource"][file][index][key]
+                                    tfdata["all_resource"][file][index][resource_type]
                                 )
                                 new_dict.update(
                                     {renamed_resource_name: value[resource_name]}
                                 )
                                 del new_dict[resource_name]
-                                tfdata["all_resource"][file][index] = {key: new_dict}
+                                tfdata["all_resource"][file][index] = {
+                                    resource_type: new_dict
+                                }
                                 processed_list.append(renamed_resource_name)
                             else:
                                 break
@@ -396,10 +398,8 @@ def get_metadata(tfdata):  # -> set
         if ";" in filename:
             mod = filename.split(";")[1]
         for item in resource_list:
-            for k in item.keys():
-                resource_type = k
-                for i in item[k]:
-                    resource_name = i
+            for resource_type in item.keys():
+                for resource_name in item[resource_type]:
                     # Check if Cloudwatch is present in policies and create node for Cloudwatch service if found
                     if resource_type == "aws_iam_policy":
                         if "logs:" in item[resource_type][resource_name]["policy"][0]:
@@ -413,26 +413,29 @@ def get_metadata(tfdata):  # -> set
                             meta_data["aws_cloudwatch_log_group.logs"] = item[
                                 resource_type
                             ][resource_name]
-                click.echo(f"   {resource_type}.{resource_name}")
-                if "module." in i:
-                    mod = i.split(".")[1]
-                    name = (
-                        "module."
-                        + mod
-                        + "."
-                        + resource_type
-                        + "."
-                        + resource_name.split(".")[2]
-                    )
-                    omd = dict(tfdata["original_metadata"][name])
-                    resource_node = name
+                if "module." in resource_name:
+                    mod = resource_name.split(".")[1]
+                    resource_node = resource_name
                 else:
-                    # omd = dict(tfdata["original_metadata"][k + "." + i])
                     resource_node = f"{resource_type}.{resource_name}"
-                    if resource_node not in tfdata["original_metadata"].keys():
-                        resource_node = f"{resource_type}.{resource_name}[0]~1"
-                    omd = dict(tfdata["original_metadata"][resource_node])
-                md = item[k][i]
+                click.echo(f"   {resource_node}")
+                # If numbering not present add
+                if not resource_node in tfdata["original_metadata"].keys():
+                    # TODO: check if there is a count attribute as well here before renaming
+                    if "[0]~1" not in resource_node:
+                        resource_node = f"{resource_node}[0]~1"
+                    # Sometimes resource names get mutated due to dynamic stanzas so just guess the resource name by type
+                    if not resource_node in tfdata["original_metadata"].keys():
+                        resource_node = helpers.list_of_dictkeys_containing(
+                            tfdata["original_metadata"],
+                            f"module.{mod}.{resource_type}.",
+                        )
+                        if not resource_node:
+                            break  # resource would not be created so ignore
+                        else:
+                            resource_node = resource_node[0]
+                omd = dict(tfdata["original_metadata"][resource_node])
+                md = item[resource_type][resource_name]
                 omd.update(md)
                 md = omd
                 # Capture original count value string

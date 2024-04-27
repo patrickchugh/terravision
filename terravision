@@ -137,7 +137,7 @@ def preflight_check():
 
 
 # Default help banner
-@click.version_option(version=0.5, prog_name="terravision")
+@click.version_option(version=0.6, prog_name="Terravision")
 @click.group()
 def cli():
     """

@@ -10,8 +10,8 @@ AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
 
 def add_annotations(tfdata: dict):
     graphdict = tfdata["graphdict"]
-    for n in list(graphdict):
-        node = helpers.get_no_module_name(n)
+    for node in list(graphdict):
+        # node = helpers.get_no_module_name(n)
         for auto_node in AUTO_ANNOTATIONS:
             node_prefix = str(list(auto_node.keys())[0])
             if node.startswith(node_prefix):

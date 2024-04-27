@@ -177,7 +177,7 @@ def iterative_parse(
                                 x for x in source_files_list if x not in existing_files
                             )
                             tfdata["module_source_dict"][module_name] = str(modpath)
-    # Look for module files that are called more than once
+    # Look for module files that are called more than once and add to resource list
     oldpath = []
     for module, modpath in tfdata["module_source_dict"].items():
         if modpath in oldpath:

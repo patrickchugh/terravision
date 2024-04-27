@@ -47,7 +47,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                     )
                 )
                 exit()
-        returncode = os.system(f"terraform init")
+        returncode = os.system(f"terraform init --upgrade")
         if returncode > 0:
             click.echo(
                 click.style(
@@ -213,10 +213,12 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = str(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        if "[" in node:
-            node_id = gvid_table.index(node.split("[")[0])
+        nodename = node.split("~")[0]
+        if nodename in gvid_table:
+            node_id = gvid_table.index(nodename)
         else:
-            node_id = gvid_table.index(node.split("~")[0])
+            nodename = helpers.remove_brackets_and_numbers(nodename)
+            node_id = gvid_table.index(nodename)
         for connection in tfdata["tfgraph"]["edges"]:
             head = connection["head"]
             tail = connection["tail"]

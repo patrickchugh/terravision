@@ -139,3 +139,4 @@ output/result.json
 architecture.json
 result.json
 output.json
+tests/multi-module-test.json

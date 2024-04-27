@@ -136,6 +136,23 @@ def remove_duplicate_words(string):
     return " ".join(unique_words_list)
 
 
+# 'aws_lb_target_group_attachment.mytg1["1"][1]'
+
+
+# Function to remove square brackets from string
+def remove_brackets_and_numbers(input_string):
+    output_string = ""
+    in_bracket = False
+    for char in input_string:
+        if char == "[":
+            in_bracket = True
+        elif char == "]":
+            in_bracket = False
+        elif not in_bracket and char not in ["[", "]"]:
+            output_string += char
+    return output_string
+
+
 def pretty_name(name: str, show_title=True) -> str:
     """
     Beautification for AWS Labels

@@ -276,12 +276,12 @@ def handle_variants(tfdata: dict):
             renamed_node = node
         # Go through each connection and rename
         for resource in list(tfdata["graphdict"][renamed_node]):
+            variant_suffix = ""
             if "~" in resource:
                 if resource[-1].isdigit() and resource[-2] == "~":
                     resource_name = resource.split("~")[0]
             else:
                 resource_name = resource
-                variant_suffix = ""
             if resource_name.startswith("aws"):
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"].get(resource_name)
