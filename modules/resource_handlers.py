@@ -179,6 +179,7 @@ def aws_handle_efs(tfdata: dict) -> dict:
         for fs in efs_systems:
             if fs not in tfdata["graphdict"][target]:
                 tfdata["graphdict"][target].append(fs)
+            # Remove any references to the mount target from EFS resource
             for fs_connection in tfdata["graphdict"][fs]:
                 if helpers.get_no_module_name(fs_connection).startswith(
                     "aws_efs_mount_target"
@@ -187,6 +188,17 @@ def aws_handle_efs(tfdata: dict) -> dict:
                 else:
                     tfdata["graphdict"][fs_connection].append(fs)
                     tfdata["graphdict"][fs].remove(fs_connection)
+    # Replace any references to the EFS service with mount target
+    for node, connections in dict(tfdata["graphdict"]).items():
+        if helpers.consolidated_node_check(node):
+            for connection in connections:
+                if helpers.get_no_module_name(connection).startswith(
+                    "aws_efs_file_system"
+                ):
+                    target = efs_mount_targets[0].split("~")[0]
+                    target = helpers.remove_brackets_and_numbers(target)
+                    tfdata["graphdict"][node].remove(connection)
+                    tfdata["graphdict"][node].append(target)
     return tfdata
 
 

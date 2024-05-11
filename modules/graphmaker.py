@@ -481,7 +481,7 @@ def dict_generator(indict, pre=None):
         yield pre + [indict]
 
 
-# Loop through every connected node that has a count >0 and add suffix -i where i is the source node prefix
+# Loop through every connected node that has a count >0 and add suffix ~i where i is the source node suffix
 def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
     if not helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], check_multiple_resource
@@ -490,20 +490,26 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
     # Loop through each connection for this target resource
     new_list = list(tfdata["graphdict"][check_multiple_resource])
     for resource in list(tfdata["graphdict"][check_multiple_resource]):
-        if "~" in resource:
-            continue
-        if tfdata["meta_data"].get(resource):
-            new_name = resource + "~" + str(i)
+        matching_resource_list = helpers.list_of_dictkeys_containing(
+            tfdata["meta_data"], resource
+        )
+        for res in matching_resource_list:
             if (
-                needs_multiple(
-                    helpers.get_no_module_name(resource),
-                    check_multiple_resource,
-                    tfdata,
+                "~" in res
+                and res.split("~")[1] == str(i)  # we have matching seq number suffix
+                and res not in new_list
+                and (
+                    needs_multiple(
+                        helpers.get_no_module_name(res),
+                        check_multiple_resource,
+                        tfdata,
+                    )
+                    or res in tfdata["graphdict"].keys()
                 )
-                and new_name not in tfdata["graphdict"][check_multiple_resource]
-                and new_name not in new_list
-            ) or new_name in tfdata["graphdict"].keys():
-                new_list.append(new_name)
+                and res not in tfdata["graphdict"][check_multiple_resource]
+                and res not in new_list
+            ):
+                new_list.append(res)
                 new_list.remove(resource)
     return new_list
 
@@ -696,12 +702,20 @@ def handle_singular_references(tfdata: dict) -> dict:
                 if suffixed_node in tfdata["graphdict"]:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
-
+            # If cosolidated node, add all connections to node
+            if "~" in c and helpers.consolidated_node_check(node):
+                for i in range(1, int(c.split("~")[1]) + 4):
+                    suffixed_node = f"{c.split('~')[0]}~{i}"
+                    if (
+                        suffixed_node in tfdata["graphdict"]
+                        and suffixed_node not in tfdata["graphdict"][node]
+                    ):
+                        tfdata["graphdict"][node].append(suffixed_node)
     return tfdata
 
 
 def create_multiple_resources(tfdata):
-    # Get a list of all potential resources with a potential >1 count attribute
+    # Get a list of all potential resources with a count type attribute
     multi_resources = [
         n
         for n in tfdata["graphdict"]
@@ -712,6 +726,7 @@ def create_multiple_resources(tfdata):
                 tfdata["meta_data"][n].get("count")
                 or tfdata["meta_data"][n].get("desired_count")
                 or tfdata["meta_data"][n].get("max_capacity")
+                or tfdata["meta_data"][n].get("for_each")
             )
             and not helpers.consolidated_node_check(n)
         )
