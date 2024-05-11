@@ -33,7 +33,9 @@ def show_banner():
     print(banner)
 
 
-def compile_tfdata(source: list, varfile: list, workspace: str, debug: bool, annotate=""):
+def compile_tfdata(
+    source: list, varfile: list, workspace: str, debug: bool, annotate=""
+):
     if source[0].endswith(".json"):
         file = open(source[0], "r")
         tfdata = dict()
@@ -47,11 +49,21 @@ def compile_tfdata(source: list, varfile: list, workspace: str, debug: bool, ann
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
     # Show original dict
-    click.echo(click.style(f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True))
+    click.echo(
+        click.style(
+            f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True
+        )
+    )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
-    codepath = [tfdata["codepath"]] if isinstance(tfdata["codepath"], str) else tfdata["codepath"]
+    codepath = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
     tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+    # Enrich resource names with module names
+    tfdata = interpreter.prefix_module_names(tfdata)
     # Handle all variables found in metadata
     tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Supplement graphdict with relationships from HCL files
@@ -125,7 +137,7 @@ def preflight_check():
 
 
 # Default help banner
-@click.version_option(version=0.5, prog_name="terravision")
+@click.version_option(version=0.6, prog_name="Terravision")
 @click.group()
 def cli():
     """
@@ -149,16 +161,23 @@ def cli():
     help="Source files location (Git URL, Folder or .JSON file)",
 )
 @click.option(
-    "--workspace", multiple=False, default="default", help="The Terraform workspace to initialise"
+    "--workspace",
+    multiple=False,
+    default="default",
+    help="The Terraform workspace to initialise",
 )
-@click.option("--varfile", multiple=True, default=[], help="Path to .tfvars variables file")
+@click.option(
+    "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
+)
 @click.option(
     "--outfile",
     default="architecture",
     help="Filename for output diagram (default architecture.dot.png)",
 )
 @click.option("--format", default="png", help="File format (png/pdf/svg/bmp)")
-@click.option("--show", is_flag=True, default=False, help="Show diagram after generation")
+@click.option(
+    "--show", is_flag=True, default=False, help="Show diagram after generation"
+)
 @click.option(
     "--simplified",
     is_flag=True,
@@ -206,9 +225,14 @@ def draw(
     help="Source files location (Git URL or folder)",
 )
 @click.option(
-    "--workspace", multiple=False, default="default", help="The Terraform workspace to initialise"
+    "--workspace",
+    multiple=False,
+    default="default",
+    help="The Terraform workspace to initialise",
 )
-@click.option("--varfile", multiple=True, default=[], help="Path to .tfvars variables file")
+@click.option(
+    "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
+)
 @click.option(
     "--show_services",
     is_flag=True,

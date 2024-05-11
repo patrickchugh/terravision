@@ -60,7 +60,7 @@ def find_tf_files(source: str, paths=list(), mod="main", recursive=False) -> lis
         ):
             paths.append(os.path.join(source_location, file))
         if (
-            file.lower().endswith("architecture.yml")
+            file.lower().endswith("terravision.yml")
             or file.lower().endswith("architecture.yaml")
             and not yaml_detected
         ):
@@ -127,7 +127,11 @@ def iterative_parse(
         click.echo(f"  Parsing {filename}")
         with click.open_file(filename, "r", encoding="utf8") as f:
             # with suppress(Exception):
-            hcl_dict[filename] = hcl2.load(f)
+            try:
+                hcl_dict[filename] = hcl2.load(f)
+            except Exception as error:
+                print("A Terraform HCL parsing error occurred:", filename, error)
+                continue
             # Handle HCL parsing errors due to unexpected characters
             if not filename in hcl_dict.keys():
                 click.echo(
@@ -173,6 +177,18 @@ def iterative_parse(
                                 x for x in source_files_list if x not in existing_files
                             )
                             tfdata["module_source_dict"][module_name] = str(modpath)
+    # Look for module files that are called more than once and add to resource list
+    oldpath = []
+    for module, modpath in tfdata["module_source_dict"].items():
+        if modpath in oldpath:
+            duplicate = modpath
+            for filepath, res_list in tfdata["all_resource"].items():
+                if duplicate in filepath:
+                    tfdata["all_resource"][filepath].append(
+                        tfdata["all_resource"][filepath][0]
+                    )
+        else:
+            oldpath.append(modpath)
     return tfdata
 
 

@@ -61,10 +61,12 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
     consolidated_dest_prefix = [
         k
         for k in list(CONSOLIDATED_NODES)
-        if dest_resource.startswith(list(k.keys())[0])
+        if helpers.get_no_module_name(dest_resource).startswith(list(k.keys())[0])
     ]
     consolidated_origin_prefix = [
-        k for k in CONSOLIDATED_NODES if origin_resource.startswith(list(k.keys())[0])
+        k
+        for k in CONSOLIDATED_NODES
+        if helpers.get_no_module_name(origin_resource).startswith(list(k.keys())[0])
     ]
     if consolidated_origin_prefix:
         candidate_resources = helpers.list_of_dictkeys_containing(
@@ -98,7 +100,7 @@ def handle_nodes(
     tfdata: dict,
     drawn_resources: list,
 ):
-    resource_type = resource.split(".")[0]
+    resource_type = helpers.get_no_module_name(resource).split(".")[0]
     if not resource_type in avl_classes:
         return
     # If we have already drawn this node as part of a previous loop of other connections just get node ID
@@ -117,7 +119,7 @@ def handle_nodes(
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             connectedNode = None
-            c_resource = node_connection
+            c_resource = helpers.get_no_module_name(node_connection)
             node_type = str(c_resource).split(".")[0]
             # Ensure any connections from outside nodes to inside cloud nodes appear correctly
             if node_type in OUTER_NODES:
@@ -184,11 +186,11 @@ def handle_nodes(
                             )
                             if not tfdata["connected_nodes"].get(originNode._id):
                                 tfdata["connected_nodes"][originNode._id] = list()
-                            tfdata["connected_nodes"][
-                                originNode._id
-                            ] = helpers.append_dictlist(
-                                tfdata["connected_nodes"][originNode._id],
-                                connectedNode._id,
+                            tfdata["connected_nodes"][originNode._id] = (
+                                helpers.append_dictlist(
+                                    tfdata["connected_nodes"][originNode._id],
+                                    connectedNode._id,
+                                )
                             )
 
     return newNode, drawn_resources
@@ -230,7 +232,7 @@ def handle_group(
     tfdata: dict,
     drawn_resources: list,
 ):
-    resource_type = resource.split(".")[0]
+    resource_type = helpers.get_no_module_name(resource).split(".")[0]
     if not resource_type in avl_classes:
         return
     newGroup = getattr(sys.modules[__name__], resource_type)(
@@ -242,7 +244,7 @@ def handle_group(
     # Now add in any nodes contained within this group
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
-            node_type = str(node_connection).split(".")[0]
+            node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
             if node_type in GROUP_NODES and node_type in avl_classes:
                 # We have a subgroup within a Cluster group
                 subGroup, drawn_resources = handle_group(
@@ -289,7 +291,7 @@ def draw_objects(
         else:
             node_check = node_type
         for resource in tfdata["graphdict"]:
-            resource_type = resource.split(".")[0]
+            resource_type = helpers.get_no_module_name(resource).split(".")[0]
             targetGroup = diagramCanvas if resource_type in OUTER_NODES else cloudGroup
             if resource_type in avl_classes:
                 if (
@@ -345,15 +347,7 @@ def render_diagram(
         title, filename=outfile, outformat=format, show=picshow, direction="TB"
     )
     setdiagram(myDiagram)
-    # Setup footer
-    footer_style = {
-        "_footernode": "1",
-        "height": "0",
-        "width": "0",
-        "fontsize": "20",
-        "label": f"Machine generated at {datetime.datetime.now()}\nTerravision (https://terra-vision.net)\nSource: {str(source)}",
-    }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
+
     # Setup Outer cloud boundary
     cloudGroup = AWSgroup()
     setcluster(cloudGroup)
@@ -367,6 +361,16 @@ def render_diagram(
         all_drawn_resources_list = draw_objects(
             node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
         )
+    # Setup footer
+    footer_style = {
+        "_footernode": "1",
+        "shape": "record",
+        "width": "25",
+        "height": "2",
+        "fontsize": "18",
+        "label": f"Machine generated using Terravision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
+    }
+    getattr(sys.modules[__name__], "Node")(**footer_style)
     # Add main outer cloud group to canvas
     myDiagram.subgraph(cloudGroup.dot)
     # Render completed DOT

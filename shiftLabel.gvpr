@@ -38,4 +38,4 @@ BEGIN{
 BEG_G{
   labelShift($G);
 }
-N[_footernode=="1"]{pos=sprintf("%.0f,%.0f", 500, -200)}
+N[_footernode=="1"]{pos=sprintf("%.0f,%.0f!", 0, -200)}

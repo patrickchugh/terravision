@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="terravision",
-    version="0.1",
+    version="0.6",
     py_modules=["terravision"],
     install_requires=[
         "Click",

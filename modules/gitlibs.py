@@ -128,7 +128,7 @@ def get_clone_url(sourceURL: str):
         except:
             click.echo(
                 click.style(
-                    "\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings",
+                    f"\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings\n\n Code: {r.status_code} - {r.reason}",
                     fg="red",
                     bold=True,
                 )
@@ -182,7 +182,7 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         except:
             click.echo(
                 click.style(
-                    f"\nERROR: Unable to call Git to clone repository! Check git and SSH fingerprints and keys are correct and ensure the URL {githubURL} is reachable via CLI.",
+                    f"\nERROR: Unable to call Git to clone repository! Check git and SSH fingerprints and keys are correct and ensure the repo {githubURL} is reachable via the git CLI.",
                     fg="red",
                     bold=True,
                 )
