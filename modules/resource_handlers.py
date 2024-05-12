@@ -375,7 +375,8 @@ def aws_handle_lb(tfdata: dict):
                 tfdata["graphdict"][renamed_node] = list()
             tfdata["graphdict"][renamed_node].append(connection)
             if (
-                tfdata["meta_data"][connection].get("count")
+                tfdata["meta_data"].get(connection)
+                and tfdata["meta_data"][connection].get("count")
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 tfdata["meta_data"][renamed_node] = dict(

@@ -183,18 +183,15 @@
     "module.vpc.aws_route.public_internet_gateway[0]~1": [],
     "module.vpc.aws_route_table.private[0]~1": [
         "module.vpc.aws_route.private_nat_gateway",
-        "module.vpc.aws_route_table_association.private",
-        "aws_appautoscaling_target.this~1"
+        "module.vpc.aws_route_table_association.private"
     ],
     "module.vpc.aws_route_table.private[1]~2": [
         "module.vpc.aws_route.private_nat_gateway",
-        "module.vpc.aws_route_table_association.private",
-        "aws_appautoscaling_target.this~2"
+        "module.vpc.aws_route_table_association.private"
     ],
     "module.vpc.aws_route_table.private[2]~3": [
         "module.vpc.aws_route.private_nat_gateway",
-        "module.vpc.aws_route_table_association.private",
-        "aws_appautoscaling_target.this~3"
+        "module.vpc.aws_route_table_association.private"
     ],
     "module.vpc.aws_route_table.public[0]~1": [
         "module.vpc.aws_route.public_internet_gateway[0]~1",
