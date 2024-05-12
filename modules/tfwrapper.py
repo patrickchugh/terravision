@@ -217,36 +217,44 @@ def tf_makegraph(tfdata: dict):
         else:
             nodename = helpers.remove_brackets_and_numbers(nodename)
             node_id = gvid_table.index(nodename)
-        for connection in tfdata["tfgraph"]["edges"]:
-            head = connection["head"]
-            tail = connection["tail"]
-            # Check that the connection is part of the nodes that will be created (exists in graphdict)
-            if (
-                node_id == head
-                and len(
-                    [k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])]
-                )
-                > 0
-            ):
-                conn = gvid_table[tail]
-                conn_type = gvid_table[tail].split(".")[0]
-                # Find out the actual nodes with ~ suffix where link is not specific to a numbered node
-                matched_connections = [
-                    k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
-                ]
-                matched_nodes = [
-                    k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
-                ]
-                if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
-                    node = matched_nodes[0]
-                if not conn in tfdata["graphdict"] and len(matched_connections) == 1:
-                    conn = matched_connections[0]
-                if conn_type in REVERSE_ARROW_LIST:
-                    if not conn in tfdata["graphdict"].keys():
-                        tfdata["graphdict"][conn] = list()
-                    tfdata["graphdict"][conn].append(node)
-                else:
-                    tfdata["graphdict"][node].append(conn)
+        if tfdata["tfgraph"].get("edges"):
+            for connection in tfdata["tfgraph"]["edges"]:
+                head = connection["head"]
+                tail = connection["tail"]
+                # Check that the connection is part of the nodes that will be created (exists in graphdict)
+                if (
+                    node_id == head
+                    and len(
+                        [
+                            k
+                            for k in tfdata["graphdict"]
+                            if k.startswith(gvid_table[tail])
+                        ]
+                    )
+                    > 0
+                ):
+                    conn = gvid_table[tail]
+                    conn_type = gvid_table[tail].split(".")[0]
+                    # Find out the actual nodes with ~ suffix where link is not specific to a numbered node
+                    matched_connections = [
+                        k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
+                    ]
+                    matched_nodes = [
+                        k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
+                    ]
+                    if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
+                        node = matched_nodes[0]
+                    if (
+                        not conn in tfdata["graphdict"]
+                        and len(matched_connections) == 1
+                    ):
+                        conn = matched_connections[0]
+                    if conn_type in REVERSE_ARROW_LIST:
+                        if not conn in tfdata["graphdict"].keys():
+                            tfdata["graphdict"][conn] = list()
+                        tfdata["graphdict"][conn].append(node)
+                    else:
+                        tfdata["graphdict"][node].append(conn)
     tfdata = add_vpc_implied_relations(tfdata)
     tfdata["original_graphdict"] = dict(tfdata["graphdict"])
     tfdata["original_metadata"] = dict(tfdata["meta_data"])
