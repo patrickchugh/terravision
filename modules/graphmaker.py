@@ -488,10 +488,11 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
     ):
         return list()
     # Loop through each connection for this target resource
+
     new_list = list(tfdata["graphdict"][check_multiple_resource])
     for resource in list(tfdata["graphdict"][check_multiple_resource]):
         matching_resource_list = helpers.list_of_dictkeys_containing(
-            tfdata["meta_data"], resource
+            tfdata["graphdict"], resource
         )
         for res in matching_resource_list:
             if (
@@ -693,6 +694,7 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
     return tfdata
 
 
+# Handle cases where a connection to only one of n numbered node exists
 def handle_singular_references(tfdata: dict) -> dict:
     for node, connections in dict(tfdata["graphdict"]).items():
         for c in list(connections):
