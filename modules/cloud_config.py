@@ -175,14 +175,10 @@ AWS_REVERSE_ARROW_LIST = [
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
-AWS_FORCED_DEST = [
-    "aws_rds",
-]
+AWS_FORCED_DEST = ["aws_rds", "aws_instance"]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = [
-    "aws_route53",
-]
+AWS_FORCED_ORIGIN = ["aws_route53"]
 
 
 AWS_IMPLIED_CONNECTIONS = {
@@ -199,6 +195,7 @@ AWS_SPECIAL_RESOURCES = {
     "aws_db_subnet": "aws_handle_dbsubnet",
     "aws_security_group": "aws_handle_sg",  # place after db_subnet handler
     "aws_lb": "aws_handle_lb",
+    "aws_vpc_endpoint": "aws_handle_vpcendpoints",
     "aws_": "aws_handle_sharedgroup",
     "random_string": "random_string_handler",
 }
@@ -217,6 +214,7 @@ AWS_SHARED_SERVICES = [
 AWS_ALWAYS_DRAW_LINE = [
     "aws_lb",
     "aws_iam_role",
+    "aws_volume_attachment",
     "aws_alb",
     "aws_nlb",
     "aws_efs_mount_target",

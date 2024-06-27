@@ -176,6 +176,7 @@ aws_dx_connection = DirectConnect
 aws_dx = DirectConnect
 aws_lb_target_group = ElasticLoadBalancing
 aws_lb = ElasticLoadBalancing
+aws_elb = ElbClassicLoadBalancer
 aws_lb_alb = ElbApplicationLoadBalancer
 aws_lb_nlb = ElbNetworkLoadBalancer
 aws_alb = ElbApplicationLoadBalancer

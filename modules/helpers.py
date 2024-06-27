@@ -3,12 +3,9 @@ import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
-from xmlrpc.client import Boolean
-
-from numpy import isin
 import click
 import modules.cloud_config as cloud_config
-from modules.tf_function_handlers import tf_function_handlers
+import modules.helpers as helpers
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -18,6 +15,7 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
 NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
+
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data"]
 
@@ -25,28 +23,36 @@ output_sections = ["locals", "module", "resource", "data"]
 def check_for_domain(string: str) -> bool:
     exts = [".com", ".net", ".org", ".io", ".biz"]
     for dot in exts:
-        if dot in string:
+        if dot in string and not string.startswith("."):
             return True
     return False
+
+
+def process_graphdict(relations_graphdict: dict):
+    processed_dict = {}
+    for key, value in relations_graphdict.items():
+        processed_dict[get_no_module_name(key)] = relations_graphdict[key]
+        processed_value = []
+        for item in value:
+            processed_value.append(get_no_module_name(item))
+        processed_dict[get_no_module_name(key)] = processed_value
+    return processed_dict
 
 
 def get_no_module_name(node: str):
     if not node:
         return
-    if node.startswith("module."):
-        no_module_name = (
-            node.split("module.")[1].split(".")[1] + "." + node.split(".")[3]
-        )
+    if "module." in node:
+        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
     else:
         no_module_name = node
-    # no_module_name = no_module_name.split("-")[0]
     return no_module_name
 
 
 def check_list_for_dash(connections: list):
     has_dash = True
     for item in connections:
-        if not "-" in item:
+        if not "~" in item:
             has_dash = False
     return has_dash
 
@@ -113,7 +119,7 @@ def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
     if (end == " " or end == "") and not middle.endswith(" "):
         for i in range(0, len(middle)):
             char = middle[i]
-            if not char.isalpha() and char != "_" and char != "-":
+            if not char.isalpha() and char != "_" and char != "~":
                 end = char
                 middle = text.split(begin, 1)[1].split(end, 1)[0]
                 break
@@ -121,6 +127,30 @@ def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
         return text.replace(begin + middle, alternative, 1)
     else:
         return middle
+
+
+def remove_duplicate_words(string):
+    words = string.split()
+    unique_words = set(words)
+    unique_words_list = list(unique_words)
+    return " ".join(unique_words_list)
+
+
+# 'aws_lb_target_group_attachment.mytg1["1"][1]'
+
+
+# Function to remove square brackets from string
+def remove_brackets_and_numbers(input_string):
+    output_string = ""
+    in_bracket = False
+    for char in input_string:
+        if char == "[":
+            in_bracket = True
+        elif char == "]":
+            in_bracket = False
+        elif not in_bracket and char not in ["[", "]"]:
+            output_string += char
+    return output_string
 
 
 def pretty_name(name: str, show_title=True) -> str:
@@ -133,9 +163,10 @@ def pretty_name(name: str, show_title=True) -> str:
     else:
         name = name.replace("tv_aws_", "")
         name = name.replace("aws_", "")
+    name = get_no_module_name(name)
     servicename = name.split(".")[0]
     service_label = name.split(".")[-1]
-    service_label = service_label.split("-")[0]
+    service_label = service_label.split("~")[0]
     if servicename.startswith(service_label.replace("_", "")):
         service_label = ""
     if servicename in NAME_REPLACEMENTS.keys():
@@ -145,7 +176,7 @@ def pretty_name(name: str, show_title=True) -> str:
     final_label = (service_label if show_title else "") + " " + servicename
     final_label = final_label[:22]
     final_label = final_label.replace("_", " ")
-    final_label = final_label.replace("-", " ")
+    final_label = final_label.replace("~", " ")
     final_label = final_label.replace("this", "").strip()
     acronym = False
     final_label = final_label.title()[:21]
@@ -153,6 +184,7 @@ def pretty_name(name: str, show_title=True) -> str:
         if acro.title() in final_label:
             acronym = True
             final_label = final_label.replace(acro.title(), acro.upper())
+    final_label = remove_duplicate_words(final_label)
     if acronym:
         return final_label
     else:
@@ -165,7 +197,7 @@ def replace_variables(vartext, filename, all_variables, quotes=False):
         filename = filename[0]
     vartext = str(vartext).strip()
     replaced_vartext = vartext
-    var_found_list = re.findall("var\.[A-Za-z0-9_-]+", vartext)
+    var_found_list = re.findall(r"var\.[A-Za-z0-9_-]+", vartext)
     if var_found_list:
         for varstring in var_found_list:
             varname = varstring.replace("var.", "").lower()
@@ -242,7 +274,18 @@ def getvar(variable_name, all_variables_dict):
         for var in all_variables_dict:
             if var.lower() == variable_name.lower():
                 return all_variables_dict[var]
-        return "NOTFOUND"
+    return "NOTFOUND"
+
+
+def find_common_elements(dict_of_lists: dict, keyword: str) -> list:
+    results = []
+    for key1, list1 in dict_of_lists.items():
+        for key2, list2 in dict_of_lists.items():
+            if key1 != key2:
+                for element in list1:
+                    if element in list2 and keyword in key1 and keyword in key2:
+                        results.append((key1, key2, element))
+    return results
 
 
 def find_resource_references(searchdict: dict, target_resource: str) -> dict:
@@ -305,7 +348,7 @@ def list_of_parent_nodes(graphdict: dict, nodelist: list):
     for node in nodelist:
         parent_nodes = list_of_parents(graphdict, node)
         for p in parent_nodes:
-            if "-" not in p:
+            if "~" not in p:
                 parent_list.append(p)
     return parent_list
 
@@ -323,11 +366,18 @@ def list_of_parents(searchdict: dict, target: str):
         elif isinstance(value, list):
             if target in value:
                 final_list.append(key)
-            for item in value:
-                if not item:
-                    continue
-                if item.startswith(target) and key not in final_list:
-                    final_list.append(key)
+            elif ".*" in target:
+                newtarget = target.replace("*", "")
+                for item in value:
+                    if not item:
+                        continue
+                    if (
+                        helpers.get_no_module_name(item).startswith(
+                            helpers.get_no_module_name(newtarget)
+                        )
+                        and key not in final_list
+                    ):
+                        final_list.append(key)
     return final_list
 
 
@@ -336,10 +386,15 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
     for parent in parents_list:
-        if "-" in parent:
+        if "~" in parent:
             any_parent_has_count = True
             break
-        c = tfdata["meta_data"][parent].get("count")
+        c = (
+            tfdata["meta_data"][parent].get("count")
+            or tfdata["meta_data"][parent].get("for_each")
+            or tfdata["meta_data"][parent].get("desired_count")
+            or tfdata["meta_data"][parent].get("max_capacity")
+        )
         if tfdata["meta_data"].get(parent) and isinstance(c, int):
             any_parent_has_count = True
     return any_parent_has_count
@@ -349,7 +404,7 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
 def consolidated_node_check(resource_type: str) -> bool:
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
-        if resource_type.startswith(prefix) and resource_type:
+        if get_no_module_name(resource_type).startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]
     return False
 

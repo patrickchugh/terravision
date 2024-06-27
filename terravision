@@ -33,7 +33,9 @@ def show_banner():
     print(banner)
 
 
-def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
+def compile_tfdata(
+    source: list, varfile: list, workspace: str, debug: bool, annotate=""
+):
     if source[0].endswith(".json"):
         file = open(source[0], "r")
         tfdata = dict()
@@ -42,7 +44,7 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
         tfdata["graphdict"] = json.load(file)
         return tfdata
     # Call terraform binary to extract a graph and plan info from output
-    tfdata = tfwrapper.tf_initplan(source, varfile)
+    tfdata = tfwrapper.tf_initplan(source, varfile, workspace)
     # tfdata["workdir"] = source[0]
     # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
     tfdata = tfwrapper.tf_makegraph(tfdata)
@@ -54,21 +56,28 @@ def compile_tfdata(source: list, varfile: list, debug: bool, annotate=""):
     )
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Parse HCL files from Terraform cache to gather resource info
-    tfdata = fileparser.read_tfsource(tfdata["codepath"], varfile, annotate, tfdata)
+    codepath = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
+    tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+    # Enrich resource names with module names
+    tfdata = interpreter.prefix_module_names(tfdata)
+    # Handle all variables found in metadata
+    tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Supplement graphdict with relationships from HCL files
-    tfdata = graphmaker.supplement_graph_dict(tfdata, debug)
-    # Handle conditional statements
-    tfdata = interpreter.handle_conditional_resources(tfdata, debug)
+    tfdata = graphmaker.add_relations(tfdata)
     # Handle consolidated nodes where multiple resources are grouped into one node
     tfdata = graphmaker.consolidate_nodes(tfdata)
     # Handle automatic and user annotations
     tfdata = annotations.add_annotations(tfdata)
     # Handle special relationships that require post-processing
     tfdata = graphmaker.handle_special_resources(tfdata)
-    # Duplicate resources across AZs and Subnets where necessary
-    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Handle variant of services
     tfdata = graphmaker.handle_variants(tfdata)
+    # Duplicate resources across AZs and Subnets where necessary
+    tfdata = graphmaker.create_multiple_resources(tfdata)
     # Reverse relationship directions for certain original tfgraph connections
     tfdata = graphmaker.reverse_relations(tfdata)
     # Dump final graphdict
@@ -97,11 +106,38 @@ def preflight_check():
                 )
             )
             sys.exit()
+    # check the terraform version is suitable for terravision
+    click.echo(click.style("\nChecking Terraform Version...", fg="white", bold=True))
+    returncode = os.system("terraform -v >> terraform_version.txt")
+    # read the file and ensure the version is correct
+    with open("terraform_version.txt", "r") as fh:
+        data = fh.read().split("\n")
+
+    os.remove("terraform_version.txt")
+
+    # take just the first line
+    version_line = data[0]
+    print(f"\n{version_line}")
+    version = version_line.split(" ")[1].replace("v", "")
+
+    # break up version numbers
+    version_major = version.split(".")[0]
+
+    # if version major != 1
+    if version_major != "1":
+        click.echo(
+            click.style(
+                f"\n  ERROR: Terraform Version '{version}' is not supported. Please upgrade to >= v1.0.0",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit()
     return
 
 
 # Default help banner
-@click.version_option(version=0.5, prog_name="terravision")
+@click.version_option(version=0.6, prog_name="Terravision")
 @click.group()
 def cli():
     """
@@ -123,6 +159,12 @@ def cli():
     multiple=True,
     default=["."],
     help="Source files location (Git URL, Folder or .JSON file)",
+)
+@click.option(
+    "--workspace",
+    multiple=False,
+    default="default",
+    help="The Terraform workspace to initialise",
 )
 @click.option(
     "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
@@ -147,6 +189,7 @@ def cli():
 def draw(
     debug,
     source,
+    workspace,
     varfile,
     outfile,
     format,
@@ -161,7 +204,7 @@ def draw(
 
     show_banner()
     preflight_check()
-    tfdata = compile_tfdata(source, varfile, debug, annotate)
+    tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
     drawing.render_diagram(
         tfdata,
         show,
@@ -180,6 +223,12 @@ def draw(
     multiple=True,
     default=["."],
     help="Source files location (Git URL or folder)",
+)
+@click.option(
+    "--workspace",
+    multiple=False,
+    default="default",
+    help="The Terraform workspace to initialise",
 )
 @click.option(
     "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
@@ -201,6 +250,7 @@ def graphdata(
     debug,
     source,
     varfile,
+    workspace,
     show_services,
     annotate,
     avl_classes,
@@ -212,7 +262,7 @@ def graphdata(
 
     show_banner()
     preflight_check()
-    tfdata = compile_tfdata(source, varfile, debug, annotate)
+    tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
     click.echo(click.style("\nOutput JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
     click.echo(

@@ -4,6 +4,8 @@ import re
 import tempfile
 from pathlib import Path
 from sys import exit
+
+from numpy import source
 import click
 import yaml
 import hcl2
@@ -39,45 +41,43 @@ def walklevel(some_dir, level=1):
     return paths
 
 
-def find_tf_files(source: str, paths=list(), recursive=False) -> list:
+def find_tf_files(source: str, paths=list(), mod="main", recursive=False) -> list:
     global annotations
     yaml_detected = False
     # If source is a Git address, clone to temp dir
     if not os.path.isdir(source):
-        source_location = gitlibs.clone_files(source, temp_dir.name)
+        source_location = gitlibs.clone_files(source, temp_dir.name, mod)
     else:
         # Source is a local folder
         source_location = source.strip()
-        files = [f for f in os.listdir(source_location)]
-        click.echo(f"  Added Source Location: {source}")
-        for file in files:
-            if (
-                file.lower().endswith(".tf")
-                or file.lower().endswith("auto.tfvars")
-                or "terraform.tfvars" in file
-            ):
-                paths.append(os.path.join(source_location, file))
-            if (
-                file.lower().endswith("architecture.yml")
-                or file.lower().endswith("architecture.yaml")
-                and not yaml_detected
-            ):
-                full_filepath = Path(source_location).joinpath(file)
-                with open(full_filepath, "r") as file:
-                    click.echo(
-                        f"  Detected architecture annotation file : {file.name} \n"
-                    )
-                    yaml_detected = True
-                    annotations = yaml.safe_load(file)
-        if recursive:
-            for root, dir, files in os.walk(source_location):
-                for d in dir:
-                    subdir = os.path.join(root, d)
-                    for file in os.listdir(subdir):
-                        if file.lower().endswith(".tf") or file.lower().endswith(
-                            "auto.tfvars"
-                        ):
-                            paths.append(os.path.join(subdir, file))
+    files = [f for f in os.listdir(source_location)]
+    click.echo(f"  Added Source Location: {source}")
+    for file in files:
+        if (
+            file.lower().endswith(".tf")
+            or file.lower().endswith("auto.tfvars")
+            or "terraform.tfvars" in file
+        ):
+            paths.append(os.path.join(source_location, file))
+        if (
+            file.lower().endswith("terravision.yml")
+            or file.lower().endswith("architecture.yaml")
+            and not yaml_detected
+        ):
+            full_filepath = Path(source_location).joinpath(file)
+            with open(full_filepath, "r") as file:
+                click.echo(f"  Detected architecture annotation file : {file.name} \n")
+                yaml_detected = True
+                annotations = yaml.safe_load(file)
+    if recursive:
+        for root, dir, files in os.walk(source_location):
+            for d in dir:
+                subdir = os.path.join(root, d)
+                for file in os.listdir(subdir):
+                    if file.lower().endswith(".tf") or file.lower().endswith(
+                        "auto.tfvars"
+                    ):
+                        paths.append(os.path.join(subdir, file))
     if len(paths) == 0:
         click.echo(
             "ERROR: No Terraform .tf files found in current directory or your source location. Use --source parameter to specify location or Github URL of source files"
@@ -127,7 +127,11 @@ def iterative_parse(
         click.echo(f"  Parsing {filename}")
         with click.open_file(filename, "r", encoding="utf8") as f:
             # with suppress(Exception):
-            hcl_dict[filename] = hcl2.load(f)
+            try:
+                hcl_dict[filename] = hcl2.load(f)
+            except Exception as error:
+                print("A Terraform HCL parsing error occurred:", filename, error)
+                continue
             # Handle HCL parsing errors due to unexpected characters
             if not filename in hcl_dict.keys():
                 click.echo(
@@ -159,24 +163,37 @@ def iterative_parse(
                         for mod_dict in hcl_dict[filename]["module"]:
                             module_name = next(iter(mod_dict))
                             modpath = os.path.join(tf_mod_dir, module_name)
-                            if os.path.isdir(modpath):
-                                source_files_list = find_tf_files(modpath)
-                                tf_file_paths.extend(source_files_list)
-                                tfdata["module_source_dict"][module_name] = str(modpath)
-                            else:
-                                click.echo(
-                                    click.style(
-                                        f"\n  ERROR: {modpath} module directory not found in terraform cache. Please ensure you have run terraform init and downloaded all source files first.",
-                                        fg="red",
-                                        bold=True,
-                                    )
-                                )
-                                exit()
+                            sourcemod = mod_dict[module_name]["source"]
+                            if sourcemod.startswith("."):
+                                curdir = os.getcwd()
+                                os.chdir(os.path.dirname(filename))
+                                modpath = os.path.abspath(sourcemod)
+                                os.chdir(curdir)
+                            if not os.path.isdir(modpath):
+                                modpath = mod_dict[module_name]["source"]
+                            source_files_list = find_tf_files(modpath, [], module_name)
+                            existing_files = list(tf_file_paths)
+                            tf_file_paths.extend(
+                                x for x in source_files_list if x not in existing_files
+                            )
+                            tfdata["module_source_dict"][module_name] = str(modpath)
+    # Look for module files that are called more than once and add to resource list
+    oldpath = []
+    for module, modpath in tfdata["module_source_dict"].items():
+        if modpath in oldpath:
+            duplicate = modpath
+            for filepath, res_list in tfdata["all_resource"].items():
+                if duplicate in filepath:
+                    tfdata["all_resource"][filepath].append(
+                        tfdata["all_resource"][filepath][0]
+                    )
+        else:
+            oldpath.append(modpath)
     return tfdata
 
 
 def read_tfsource(
-    source_list: list, varfile_list: tuple, annotate: str, tfdata: dict
+    source_list: tuple, varfile_list: tuple, annotate: str, tfdata: dict
 ):  # -> dict
     global annotations
     """ Parse all .TF extension files in source folder and returns dict with variables and resources found """

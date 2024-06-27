@@ -137,3 +137,6 @@ architecture.gv.dot
 tests/architecture*.json
 output/result.json
 architecture.json
+result.json
+output.json
+tests/multi-module-test.json

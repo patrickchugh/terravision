@@ -128,7 +128,7 @@ def get_clone_url(sourceURL: str):
         except:
             click.echo(
                 click.style(
-                    "\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings",
+                    f"\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. Check authorisation token, server address and network settings\n\n Code: {r.status_code} - {r.reason}",
                     fg="red",
                     bold=True,
                 )
@@ -150,11 +150,11 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     module_cache_path = os.path.join(MODULE_DIR, reponame)
     codepath = module_cache_path + f";{module};"
     # Identify source repo and construct final git clone URL
-    click.echo(f"  Downloading External Module: {sourceURL}")
+    click.echo(f"  Processing External Module: {sourceURL}")
     githubURL, subfolder, tag = get_clone_url(sourceURL)
     click.echo(
         click.style(
-            f"    Cloning from Terraform registry source: {githubURL}", fg="green"
+            f"    Assuming code from Terraform registry source: {githubURL}", fg="green"
         )
     )
     # Now do a git clone or skip if we already have seen this module before
@@ -164,7 +164,8 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         )
 
         temp_module_path = os.path.join(tempdir, f";{module};{reponame}")
-        shutil.copytree(codepath, temp_module_path)
+        if not os.path.exists(temp_module_path):
+            shutil.copytree(codepath, temp_module_path)
         return os.path.join(temp_module_path, subfolder)
     else:
         os.makedirs(codepath)
@@ -181,7 +182,7 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
         except:
             click.echo(
                 click.style(
-                    f"\nERROR: Unable to call Git to clone repository! Check git and SSH fingerprints and keys are correct and ensure the URL {githubURL} is reachable via CLI.",
+                    f"\nERROR: Unable to call Git to clone repository! Check git and SSH fingerprints and keys are correct and ensure the repo {githubURL} is reachable via the git CLI.",
                     fg="red",
                     bold=True,
                 )
