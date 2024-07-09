@@ -4,6 +4,7 @@ from contextlib import suppress
 from pathlib import Path
 from sys import exit
 import click
+import json
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 
@@ -26,6 +27,14 @@ def check_for_domain(string: str) -> bool:
         if dot in string and not string.startswith("."):
             return True
     return False
+
+
+# Export dict to a file called tfdata.json
+def export_tfdata(tfdata: dict):
+    tfdata["tempdir"] = str(tfdata["tempdir"])
+    with open("tfdata.json", "w") as file:
+        json.dump(tfdata, file, indent=4)
+    click.echo(f"  Debug flag used. Current state has been written to tfdata.json")
 
 
 def process_graphdict(relations_graphdict: dict):

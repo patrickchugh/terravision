@@ -215,6 +215,9 @@ def consolidate_nodes(tfdata: dict):
                 tfdata["meta_data"][consolidated_name] | resdata
             )
             # Don't over-ride count values with 0 when merging
+            if consolidated_name not in tfdata["graphdict"].keys():
+                tfdata["graphdict"][consolidated_name] = list()
+            tfdata["graphdict"][consolidated_name]
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])

@@ -112,7 +112,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
-            tfdata["plandata"] = dict
+            tfdata["plandata"] = dict(plandata)
             click.echo(
                 click.style(
                     f"\nConverting TF Graph Connections..  (this may take a while)\n",

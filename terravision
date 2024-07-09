@@ -36,36 +36,46 @@ def show_banner():
 def compile_tfdata(
     source: list, varfile: list, workspace: str, debug: bool, annotate=""
 ):
+    # User passed pre-generated JSON tfdata or tfgraph file
     if source[0].endswith(".json"):
+        click.echo(
+            "Source is a pre-generated JSON tfdata or tfgraph file. Will not call terraform binary."
+        )
         file = open(source[0], "r")
         tfdata = dict()
         tfdata["annotations"] = dict()
         tfdata["meta_data"] = dict()
-        tfdata["graphdict"] = json.load(file)
-        return tfdata
-    # Call terraform binary to extract a graph and plan info from output
-    tfdata = tfwrapper.tf_initplan(source, varfile, workspace)
-    # tfdata["workdir"] = source[0]
-    # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
-    tfdata = tfwrapper.tf_makegraph(tfdata)
-    # Show original dict
-    click.echo(
-        click.style(
-            f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True
+        jsondata = json.load(file)
+        if "all_resource" in jsondata.keys():
+            # We are using a tfdata.json state file
+            tfdata = jsondata
+            tfdata["graphdict"] = tfdata["original_graphdict"]
+        else:
+            tfdata["graphdict"] = jsondata
+            return tfdata
+    else:
+        # Call terraform binary to extract a graph and plan info from output
+        tfdata = tfwrapper.tf_initplan(source, varfile, workspace)
+        # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
+        tfdata = tfwrapper.tf_makegraph(tfdata)
+        # Show original dict
+        click.echo(
+            click.style(
+                f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True
+            )
         )
-    )
-    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
-    # Parse HCL files from Terraform cache to gather resource info
-    codepath = (
-        [tfdata["codepath"]]
-        if isinstance(tfdata["codepath"], str)
-        else tfdata["codepath"]
-    )
-    tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
-    # Enrich resource names with module names
-    tfdata = interpreter.prefix_module_names(tfdata)
-    # Handle all variables found in metadata
-    tfdata = interpreter.resolve_all_variables(tfdata, debug)
+        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+        # Parse HCL files from Terraform cache to gather resource info
+        codepath = (
+            [tfdata["codepath"]]
+            if isinstance(tfdata["codepath"], str)
+            else tfdata["codepath"]
+        )
+        tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+        # Enrich resource names with module names
+        tfdata = interpreter.prefix_module_names(tfdata)
+        # Handle all variables found in metadata
+        tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Supplement graphdict with relationships from HCL files
     tfdata = graphmaker.add_relations(tfdata)
     # Handle consolidated nodes where multiple resources are grouped into one node
@@ -84,6 +94,9 @@ def compile_tfdata(
     click.echo(click.style(f"\nEnriched graphviz dictionary:\n", fg="white", bold=True))
     tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
     click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
+    # If debug flag is used, export tfdata to a JSON file
+    if debug:
+        helpers.export_tfdata(tfdata)
     return tfdata
 
 
