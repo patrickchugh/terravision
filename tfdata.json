@@ -1,6 +1,6 @@
 {
     "codepath": [
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate"
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate"
     ],
     "workdir": "/Users/patrick/git/terravision",
     "plandata": {
@@ -16654,6 +16654,56 @@
         },
         "relevant_attributes": [
             {
+                "resource": "aws_rds_cluster.this",
+                "attribute": [
+                    "endpoint"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_target.this",
+                "attribute": [
+                    "service_namespace"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "default_security_group_id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "cidr_block"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group_attachment.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.public[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_ssm_parameter.db_master_password",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group.main",
+                "attribute": []
+            },
+            {
                 "resource": "module.vpc.aws_route_table.private",
                 "attribute": []
             },
@@ -16664,9 +16714,25 @@
                 ]
             },
             {
-                "resource": "aws_cloudfront_distribution.this",
+                "resource": "module.alb.aws_lb.this[0]",
                 "attribute": [
-                    "hosted_zone_id"
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "main_route_table_id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_cloudwatch_log_group.flow_log[0]",
+                "attribute": [
+                    "arn"
                 ]
             },
             {
@@ -16674,25 +16740,21 @@
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table.public[0]",
+                "resource": "module.vpc.aws_nat_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
                 "attribute": [
-                    "id"
+                    "arn"
                 ]
             },
             {
-                "resource": "aws_ecs_cluster.this",
-                "attribute": [
-                    "id"
-                ]
+                "resource": "module.vpc.aws_subnet.outpost",
+                "attribute": []
             },
             {
-                "resource": "aws_ecs_cluster.this",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_appautoscaling_policy.scale_up",
                 "attribute": [
                     "arn"
                 ]
@@ -16702,37 +16764,57 @@
                 "attribute": []
             },
             {
-                "resource": "data.aws_availability_zones.this",
-                "attribute": [
-                    "names"
-                ]
+                "resource": "module.vpc.aws_route.database_nat_gateway",
+                "attribute": []
             },
             {
-                "resource": "aws_db_subnet_group.this",
+                "resource": "aws_iam_role.task_execution_role",
                 "attribute": [
                     "name"
                 ]
             },
             {
-                "resource": "aws_ecs_task_definition.this",
+                "resource": "aws_security_group.efs",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.public",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_eip.nat",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.public",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_policy.task_policy",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.alb.aws_lb.this[0]",
+                "resource": "aws_cloudwatch_log_group.wordpress",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_internet_gateway.this[0]",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "owner_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.elasticache",
+                "resource": "module.alb.aws_lb_listener.frontend_https",
                 "attribute": []
             },
             {
@@ -16742,35 +16824,35 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "module.acm.aws_acm_certificate.this[0]",
                 "attribute": [
-                    "ipv6_cidr_block"
+                    "domain_validation_options"
                 ]
-            },
-            {
-                "resource": "aws_iam_role.task_role",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route.private_nat_gateway",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route.database_nat_gateway",
-                "attribute": []
             },
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "default_route_table_id"
+                    "default_network_acl_id"
                 ]
             },
             {
-                "resource": "aws_efs_file_system.this",
+                "resource": "aws_security_group.db",
                 "attribute": [
                     "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this[0]",
+                "attribute": [
+                    "vpc_id"
                 ]
             },
             {
@@ -16780,43 +16862,9 @@
                 ]
             },
             {
-                "resource": "aws_appautoscaling_policy.scale_down",
+                "resource": "aws_appautoscaling_target.this",
                 "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_policy.scale_up",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.database",
-                "attribute": []
-            },
-            {
-                "resource": "module.alb.aws_lb_listener.frontend_https",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "aws_rds_cluster.this",
-                "attribute": [
-                    "endpoint"
-                ]
-            },
-            {
-                "resource": "aws_iam_role.task_execution_role",
-                "attribute": [
-                    "arn"
+                    "scalable_dimension"
                 ]
             },
             {
@@ -16826,15 +16874,55 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table_association.private",
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "ipv6_association_id"
+                ]
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this",
                 "attribute": []
             },
             {
-                "resource": "module.alb.aws_lb_target_group_attachment.this",
+                "resource": "module.vpc.aws_route_table.intra",
                 "attribute": []
             },
             {
-                "resource": "module.acm_alb.aws_acm_certificate_validation.this",
+                "resource": "module.vpc.aws_subnet.intra",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "aws_ecs_cluster.this",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_ecs_cluster.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate_validation.this",
                 "attribute": []
             },
             {
@@ -16850,53 +16938,19 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table_association.elasticache",
+                "resource": "module.vpc.aws_customer_gateway.this",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table_association.public",
+                "resource": "module.vpc.aws_route.private_ipv6_egress",
                 "attribute": []
             },
             {
-                "resource": "aws_iam_role.task_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_ssm_parameter.db_master_user",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_cloudwatch_log_group.wordpress",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "scalable_dimension"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_target_group.main",
+                "resource": "module.vpc.aws_route_table_association.database",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "module.alb.aws_lb.this",
+                "resource": "module.vpc.aws_route.private_nat_gateway",
                 "attribute": []
             },
             {
@@ -16904,41 +16958,7 @@
                 "attribute": []
             },
             {
-                "resource": "aws_iam_policy.task_policy",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "service_namespace"
-                ]
-            },
-            {
-                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_lb_target_group.this",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "default_security_group_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.public",
-                "attribute": []
-            },
-            {
-                "resource": "aws_ecs_service.this",
+                "resource": "data.aws_region.current",
                 "attribute": [
                     "name"
                 ]
@@ -16948,73 +16968,27 @@
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_subnet.intra",
+                "resource": "module.vpc.aws_subnet.elasticache",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route.private_ipv6_egress",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "default_network_acl_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_nat_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "aws_security_group.db",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
+                "resource": "aws_iam_role.task_role",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_ecs_task_definition.this",
                 "attribute": [
-                    "instance_tenancy"
+                    "arn"
                 ]
             },
             {
-                "resource": "module.acm_alb.aws_acm_certificate.this",
+                "resource": "module.acm_alb.aws_route53_record.validation",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table_association.redshift_public",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.database",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate_validation.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_route53_record.validation",
-                "attribute": []
-            },
-            {
-                "resource": "aws_cloudfront_distribution.this",
-                "attribute": [
-                    "domain_name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_internet_gateway.this[0]",
+                "resource": "module.acm.aws_acm_certificate.this[0]",
                 "attribute": [
                     "arn"
                 ]
@@ -17026,47 +17000,65 @@
                 ]
             },
             {
-                "resource": "aws_security_group.efs",
+                "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "id"
+                    "ipv6_cidr_block"
                 ]
             },
             {
-                "resource": "random_string.snapshot_suffix",
+                "resource": "aws_db_subnet_group.this",
                 "attribute": [
-                    "result"
+                    "name"
                 ]
             },
             {
-                "resource": "module.acm_alb.aws_route53_record.validation",
+                "resource": "data.aws_availability_zones.this",
+                "attribute": [
+                    "names"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate_validation.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.redshift_public",
                 "attribute": []
             },
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "main_route_table_id"
+                    "default_route_table_id"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.task_execution_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_cloudfront_distribution.this",
+                "attribute": [
+                    "domain_name"
                 ]
             },
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "cidr_block"
+                    "owner_id"
                 ]
             },
             {
-                "resource": "module.vpc.aws_subnet.outpost",
+                "resource": "module.alb.aws_lb.this",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_cloudwatch_log_group.flow_log[0]",
+                "resource": "aws_iam_policy.task_execution_policy",
                 "attribute": [
                     "arn"
                 ]
@@ -17078,19 +17070,53 @@
                 ]
             },
             {
+                "resource": "module.acm.aws_route53_record.validation",
+                "attribute": []
+            },
+            {
+                "resource": "aws_ecs_service.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "instance_tenancy"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_role.task_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
                 "resource": "aws_security_group.alb",
                 "attribute": [
                     "id"
                 ]
             },
             {
-                "resource": "module.vpc.aws_subnet.private",
-                "attribute": []
+                "resource": "random_string.snapshot_suffix",
+                "attribute": [
+                    "result"
+                ]
             },
             {
-                "resource": "aws_ssm_parameter.db_master_password",
+                "resource": "aws_lb_target_group.this",
                 "attribute": [
                     "arn"
+                ]
+            },
+            {
+                "resource": "aws_cloudfront_distribution.this",
+                "attribute": [
+                    "hosted_zone_id"
                 ]
             },
             {
@@ -17100,59 +17126,33 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_subnet.redshift",
+                "resource": "module.vpc.aws_subnet.database",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_eip.nat",
+                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
                 "attribute": []
             },
             {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
+                "resource": "aws_efs_file_system.this",
                 "attribute": [
-                    "domain_validation_options"
+                    "id"
                 ]
             },
             {
-                "resource": "aws_iam_role.task_execution_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "aws_iam_policy.task_execution_policy",
+                "resource": "aws_ssm_parameter.db_master_user",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.vpc.aws_customer_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_appautoscaling_policy.scale_down",
                 "attribute": [
-                    "ipv6_association_id"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this[0]",
-                "attribute": [
-                    "vpc_id"
-                ]
-            },
-            {
-                "resource": "data.aws_region.current",
-                "attribute": [
-                    "name"
+                    "arn"
                 ]
             }
         ],
-        "timestamp": "2024-06-09T19:13:14Z",
+        "timestamp": "2024-07-09T20:21:06Z",
         "errored": false
     },
     "tf_resources_created": [
@@ -35956,7 +35956,7 @@
         }
     },
     "all_output": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm;terraform-aws-modules/acm/aws/outputs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/outputs.tf": [
             {
                 "acm_certificate_arn": {
                     "description": "The ARN of the certificate",
@@ -36000,7 +36000,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm_alb;terraform-aws-modules/acm/aws/outputs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/outputs.tf": [
             {
                 "acm_certificate_arn": {
                     "description": "The ARN of the certificate",
@@ -36044,7 +36044,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;alb;terraform-aws-modules/alb/aws/outputs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/outputs.tf": [
             {
                 "id": {
                     "description": "The ID and ARN of the load balancer we created",
@@ -36112,7 +36112,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws/outputs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/outputs.tf": [
             {
                 "vpc_id": {
                     "description": "The ID of the VPC",
@@ -38722,7 +38722,7 @@
         "vpc": "terraform-aws-modules/vpc/aws"
     },
     "all_data": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/data.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/data.tf": [
             {
                 "aws_region": {
                     "current": {}
@@ -38739,7 +38739,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
             {
                 "aws_route53_zone": {
                     "this": {
@@ -38748,14 +38748,14 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;alb;terraform-aws-modules/alb/aws/main.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/main.tf": [
             {
                 "aws_partition": {
                     "current": {}
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
             {
                 "aws_iam_policy_document": {
                     "flow_log_cloudwatch_assume_role": {
@@ -38805,7 +38805,7 @@
         ]
     },
     "all_resource": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/efs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/efs.tf": [
             {
                 "aws_efs_file_system": {
                     "this": {
@@ -38855,7 +38855,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
             {
                 "aws_route53_record": {
                     "ipv4": {
@@ -38889,7 +38889,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/fargate.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/fargate.tf": [
             {
                 "aws_iam_role": {
                     "task_execution_role": {
@@ -39208,7 +39208,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
             {
                 "aws_cloudfront_distribution": {
                     "this": {
@@ -39390,7 +39390,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
             {
                 "aws_security_group": {
                     "alb": {
@@ -39428,7 +39428,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/db.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/db.tf": [
             {
                 "random_string": {
                     "snapshot_suffix": {
@@ -39529,7 +39529,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm;terraform-aws-modules/acm/aws/main.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/main.tf": [
             {
                 "aws_acm_certificate": {
                     "module.acm.aws_acm_certificate.this": {
@@ -39633,7 +39633,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm_alb;terraform-aws-modules/acm/aws/main.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/main.tf": [
             {
                 "aws_acm_certificate": {
                     "this": {
@@ -39737,7 +39737,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;alb;terraform-aws-modules/alb/aws/main.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/main.tf": [
             {
                 "aws_lb": {
                     "module.alb.aws_lb.this": {
@@ -40481,7 +40481,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws/main.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/main.tf": [
             {
                 "aws_vpc": {
                     "module.vpc.aws_vpc.this": {
@@ -41532,7 +41532,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
             {
                 "aws_flow_log": {
                     "module.vpc.aws_flow_log.this": {
@@ -41609,7 +41609,7 @@
         ]
     },
     "all_module": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
             {
                 "acm": {
                     "source": "terraform-aws-modules/acm/aws",
@@ -41623,7 +41623,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
             {
                 "acm_alb": {
                     "source": "terraform-aws-modules/acm/aws",
@@ -41657,7 +41657,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/vpc.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/vpc.tf": [
             {
                 "vpc": {
                     "source": "terraform-aws-modules/vpc/aws",
@@ -41677,7 +41677,7 @@
         ]
     },
     "all_variable": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/variables.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/variables.tf": [
             {
                 "tags": {
                     "description": "AWS Tags to add to all resources created (where possible); see https://aws.amazon.com/answers/account-management/aws-tagging-strategies/",
@@ -41870,7 +41870,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm;terraform-aws-modules/acm/aws/variables.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/variables.tf": [
             {
                 "create_certificate": {
                     "description": "Whether to create ACM certificate",
@@ -42018,7 +42018,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm_alb;terraform-aws-modules/acm/aws/variables.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/variables.tf": [
             {
                 "create_certificate": {
                     "description": "Whether to create ACM certificate",
@@ -42166,7 +42166,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;alb;terraform-aws-modules/alb/aws/variables.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/variables.tf": [
             {
                 "create": {
                     "description": "Controls if resources should be created (affects nearly all resources)",
@@ -42483,7 +42483,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws/variables.tf": [
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/variables.tf": [
             {
                 "create_vpc": {
                     "description": "Controls if VPC should be created (it affects almost all resources)",
@@ -44288,9 +44288,9 @@
         }
     },
     "varfile_list": [
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/terraform.tfvars"
+        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/terraform.tfvars"
     ],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf'>",
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3'>",
     "variable_list": {
         "tags": "${var.tags}",
         "prefix": "\"wordpress\"",
@@ -44794,7 +44794,7 @@
     },
     "variable_map": {
         "main": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp_p6rgehf/;main;https_/github.com/patrickchugh/terraform-examples.git/aws/wordpress_fargate/aws/wordpress_fargate\"",
+            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_/github.com/patrickchugh/terraform-examples.git/aws/wordpress_fargate/aws/wordpress_fargate\"",
             "tags": {},
             "prefix": "\"wordpress\"",
             "site_domain": "\"route53.example.com\"",
@@ -44837,7 +44837,7 @@
             "source": "main"
         },
         "acm": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm;terraform-aws-modules/acm/aws\"",
+            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws\"",
             "create_certificate": true,
             "create_route53_records_only": false,
             "validate_certificate": true,
@@ -44865,7 +44865,7 @@
             }
         },
         "acm_alb": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;acm;terraform-aws-modules/acm/aws\"",
+            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws\"",
             "create_certificate": true,
             "create_route53_records_only": false,
             "validate_certificate": true,
@@ -44890,7 +44890,7 @@
             "version": "\"~> v2.0\""
         },
         "alb": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;alb;terraform-aws-modules/alb/aws\"",
+            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws\"",
             "create": true,
             "tags": "\"{}\"",
             "access_logs": {},
@@ -44945,7 +44945,7 @@
             "https_listeners": "[{'certificate_arn': '${module.acm_alb.this_acm_certificate_arn}', 'port': 443}]"
         },
         "vpc": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxwhoy7uf/;vpc;terraform-aws-modules/vpc/aws\"",
+            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws\"",
             "create_vpc": true,
             "name": "\"wordpress\"-\"dev\"",
             "cidr": "\"10.0.0.0/16\"",

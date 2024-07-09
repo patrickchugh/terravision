@@ -1,4 +1,5 @@
 import os
+import copy
 from pathlib import Path
 import subprocess
 import click
@@ -256,8 +257,8 @@ def tf_makegraph(tfdata: dict):
                     else:
                         tfdata["graphdict"][node].append(conn)
     tfdata = add_vpc_implied_relations(tfdata)
-    tfdata["original_graphdict"] = dict(tfdata["graphdict"])
-    tfdata["original_metadata"] = dict(tfdata["meta_data"])
+    tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
+    tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
     # TODO: Add a helper function to detect _aws, azurerm and google provider prefixes on resource names
     if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0:
         click.echo(

@@ -49,7 +49,7 @@ def compile_tfdata(
         if "all_resource" in jsondata.keys():
             # We are using a tfdata.json state file
             tfdata = jsondata
-            tfdata["graphdict"] = tfdata["original_graphdict"]
+            tfdata["graphdict"] = dict(tfdata["original_graphdict"])
         else:
             tfdata["graphdict"] = jsondata
             return tfdata
@@ -58,13 +58,6 @@ def compile_tfdata(
         tfdata = tfwrapper.tf_initplan(source, varfile, workspace)
         # Make initial graphdict from Terraform graph in the format {node: [connected_node1,connected_node2]}
         tfdata = tfwrapper.tf_makegraph(tfdata)
-        # Show original dict
-        click.echo(
-            click.style(
-                f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True
-            )
-        )
-        click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
         # Parse HCL files from Terraform cache to gather resource info
         codepath = (
             [tfdata["codepath"]]
@@ -76,6 +69,13 @@ def compile_tfdata(
         tfdata = interpreter.prefix_module_names(tfdata)
         # Handle all variables found in metadata
         tfdata = interpreter.resolve_all_variables(tfdata, debug)
+    # Show original dict
+    click.echo(
+        click.style(
+            f"\nUnprocessed terraform graph dictionary:\n", fg="white", bold=True
+        )
+    )
+    click.echo(json.dumps(tfdata["graphdict"], indent=4, sort_keys=True))
     # Supplement graphdict with relationships from HCL files
     tfdata = graphmaker.add_relations(tfdata)
     # Handle consolidated nodes where multiple resources are grouped into one node

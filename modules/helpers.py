@@ -34,7 +34,13 @@ def export_tfdata(tfdata: dict):
     tfdata["tempdir"] = str(tfdata["tempdir"])
     with open("tfdata.json", "w") as file:
         json.dump(tfdata, file, indent=4)
-    click.echo(f"  Debug flag used. Current state has been written to tfdata.json")
+    click.echo(
+        click.style(
+            f"\nINFO: Debug flag used. Current state has been written to tfdata.json\n",
+            fg="white",
+            bold=True,
+        )
+    )
 
 
 def process_graphdict(relations_graphdict: dict):
