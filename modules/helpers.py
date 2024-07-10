@@ -382,17 +382,17 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
             elif ".*" in target:
-                newtarget = target.replace("*", "")
-                for item in value:
-                    if not item:
-                        continue
-                    if (
-                        helpers.get_no_module_name(item).startswith(
-                            helpers.get_no_module_name(newtarget)
-                        )
-                        and key not in final_list
-                    ):
-                        final_list.append(key)
+                target = target.replace("*", "")
+            for item in value:
+                if not item:
+                    continue
+                if (
+                    helpers.get_no_module_name(item).startswith(
+                        helpers.get_no_module_name(target)
+                    )
+                    and key not in final_list
+                ):
+                    final_list.append(key)
     return final_list
 
 

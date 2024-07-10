@@ -1,8 +1,8 @@
 {
     "codepath": [
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate"
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate"
     ],
-    "workdir": "/Users/patrick/git/terravision",
+    "workdir": "C:\\Users\\pares\\git\\terravision",
     "plandata": {
         "format_version": "1.2",
         "terraform_version": "1.6.6",
@@ -7580,9 +7580,9 @@
                             "schema_version": 0,
                             "values": {
                                 "account_id": "166659698090",
-                                "arn": "arn:aws:iam::166659698090:user/neogeno",
+                                "arn": "arn:aws:iam::166659698090:user/tf-readonly",
                                 "id": "166659698090",
-                                "user_id": "AIDAI2NDKK5CQYAAHJHTM"
+                                "user_id": "AIDASNTNRFWVGVGYYD4ZS"
                             },
                             "sensitive_values": {}
                         },
@@ -8540,7 +8540,7 @@
                         "provider_config_key": "aws",
                         "expressions": {
                             "policy": {
-                                "constant_value": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": [\n        \"ecr:GetAuthorizationToken\",\n        \"ecr:BatchCheckLayerAvailability\",\n        \"ecr:GetDownloadUrlForLayer\",\n        \"ecr:BatchGetImage\",\n        \"logs:CreateLogStream\",\n        \"logs:PutLogEvents\",\n        \"ssm:GetParameters\",\n        \"kms:Decrypt\"\n      ],\n      \"Resource\": \"*\"\n    }\n  ]\n  }\n"
+                                "constant_value": "{\r\n  \"Version\": \"2012-10-17\",\r\n  \"Statement\": [\r\n    {\r\n      \"Effect\": \"Allow\",\r\n      \"Action\": [\r\n        \"ecr:GetAuthorizationToken\",\r\n        \"ecr:BatchCheckLayerAvailability\",\r\n        \"ecr:GetDownloadUrlForLayer\",\r\n        \"ecr:BatchGetImage\",\r\n        \"logs:CreateLogStream\",\r\n        \"logs:PutLogEvents\",\r\n        \"ssm:GetParameters\",\r\n        \"kms:Decrypt\"\r\n      ],\r\n      \"Resource\": \"*\"\r\n    }\r\n  ]\r\n  }\r\n"
                             }
                         },
                         "schema_version": 0
@@ -8553,7 +8553,7 @@
                         "provider_config_key": "aws",
                         "expressions": {
                             "policy": {
-                                "constant_value": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": [\n        \"elasticfilesystem:ClientMount\",\n        \"elasticfilesystem:ClientWrite\"\n      ],\n      \"Resource\": \"*\"\n    }\n  ]\n  }\n"
+                                "constant_value": "{\r\n  \"Version\": \"2012-10-17\",\r\n  \"Statement\": [\r\n    {\r\n      \"Effect\": \"Allow\",\r\n      \"Action\": [\r\n        \"elasticfilesystem:ClientMount\",\r\n        \"elasticfilesystem:ClientWrite\"\r\n      ],\r\n      \"Resource\": \"*\"\r\n    }\r\n  ]\r\n  }\r\n"
                             }
                         },
                         "schema_version": 0
@@ -8566,7 +8566,7 @@
                         "provider_config_key": "aws",
                         "expressions": {
                             "assume_role_policy": {
-                                "constant_value": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Principal\": {\n        \"Service\": [\n          \"ecs-tasks.amazonaws.com\"\n        ]\n      },\n      \"Action\": \"sts:AssumeRole\"\n    }\n  ]\n}\n"
+                                "constant_value": "{\r\n  \"Version\": \"2012-10-17\",\r\n  \"Statement\": [\r\n    {\r\n      \"Effect\": \"Allow\",\r\n      \"Principal\": {\r\n        \"Service\": [\r\n          \"ecs-tasks.amazonaws.com\"\r\n        ]\r\n      },\r\n      \"Action\": \"sts:AssumeRole\"\r\n    }\r\n  ]\r\n}\r\n"
                             },
                             "name": {
                                 "references": [
@@ -8590,7 +8590,7 @@
                         "provider_config_key": "aws",
                         "expressions": {
                             "assume_role_policy": {
-                                "constant_value": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Principal\": {\n        \"Service\": [\n          \"ecs-tasks.amazonaws.com\"\n        ]\n      },\n      \"Action\": \"sts:AssumeRole\"\n    }\n  ]\n}\n"
+                                "constant_value": "{\r\n  \"Version\": \"2012-10-17\",\r\n  \"Statement\": [\r\n    {\r\n      \"Effect\": \"Allow\",\r\n      \"Principal\": {\r\n        \"Service\": [\r\n          \"ecs-tasks.amazonaws.com\"\r\n        ]\r\n      },\r\n      \"Action\": \"sts:AssumeRole\"\r\n    }\r\n  ]\r\n}\r\n"
                             },
                             "name": {
                                 "references": [
@@ -16654,80 +16654,14 @@
         },
         "relevant_attributes": [
             {
-                "resource": "aws_rds_cluster.this",
-                "attribute": [
-                    "endpoint"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "service_namespace"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "default_security_group_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "cidr_block"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_target_group_attachment.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_ecs_cluster.this",
                 "attribute": [
                     "id"
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table.public[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_ssm_parameter.db_master_password",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_target_group.main",
+                "resource": "module.vpc.aws_route_table_association.redshift_public",
                 "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.private",
-                "attribute": []
-            },
-            {
-                "resource": "data.aws_route53_zone.this",
-                "attribute": [
-                    "zone_id"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.private",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "main_route_table_id"
-                ]
             },
             {
                 "resource": "module.vpc.aws_cloudwatch_log_group.flow_log[0]",
@@ -16736,69 +16670,17 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table.database",
+                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_nat_gateway.this",
+                "resource": "module.vpc.aws_route_table.redshift",
                 "attribute": []
             },
             {
-                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.outpost",
-                "attribute": []
-            },
-            {
-                "resource": "aws_appautoscaling_policy.scale_up",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route.database_nat_gateway",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_execution_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "aws_security_group.efs",
+                "resource": "aws_efs_file_system.this",
                 "attribute": [
                     "id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.public",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_eip.nat",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.public",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_policy.task_policy",
-                "attribute": [
-                    "arn"
                 ]
             },
             {
@@ -16808,25 +16690,53 @@
                 ]
             },
             {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "default_security_group_id"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group_attachment.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_cloudfront_distribution.this",
+                "attribute": [
+                    "hosted_zone_id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.intra",
+                "attribute": []
+            },
+            {
                 "resource": "module.vpc.aws_internet_gateway.this[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "data.aws_availability_zones.this",
+                "attribute": [
+                    "names"
+                ]
+            },
+            {
+                "resource": "aws_ecs_service.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_policy.scale_up",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.alb.aws_lb_listener.frontend_https",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
+                "resource": "module.vpc.aws_internet_gateway.this[0]",
                 "attribute": [
-                    "domain_validation_options"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "domain_validation_options"
+                    "arn"
                 ]
             },
             {
@@ -16836,35 +16746,15 @@
                 ]
             },
             {
-                "resource": "aws_security_group.db",
+                "resource": "aws_iam_role.task_role",
                 "attribute": [
-                    "id"
+                    "arn"
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table_association.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.private",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this[0]",
+                "resource": "data.aws_route53_zone.this",
                 "attribute": [
-                    "vpc_id"
-                ]
-            },
-            {
-                "resource": "aws_lb_target_group.this",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "scalable_dimension"
+                    "zone_id"
                 ]
             },
             {
@@ -16874,71 +16764,11 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "ipv6_association_id"
-                ]
+                "resource": "module.vpc.aws_subnet.public",
+                "attribute": []
             },
             {
                 "resource": "module.acm_alb.aws_acm_certificate.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "aws_ecs_cluster.this",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_ecs_cluster.this",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate_validation.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "resource_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_customer_gateway.this",
                 "attribute": []
             },
             {
@@ -16946,55 +16776,23 @@
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table_association.database",
+                "resource": "module.vpc.aws_route_table_association.redshift",
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route.private_nat_gateway",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.public",
-                "attribute": []
-            },
-            {
-                "resource": "data.aws_region.current",
+                "resource": "aws_iam_role.task_execution_role",
                 "attribute": [
                     "name"
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_role",
+                "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "arn"
+                    "default_route_table_id"
                 ]
             },
             {
-                "resource": "aws_ecs_task_definition.this",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.acm_alb.aws_route53_record.validation",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route.public_internet_gateway[0]",
+                "resource": "aws_security_group.alb",
                 "attribute": [
                     "id"
                 ]
@@ -17006,19 +16804,47 @@
                 ]
             },
             {
-                "resource": "aws_db_subnet_group.this",
+                "resource": "module.vpc.aws_route.database_nat_gateway",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this[0]",
                 "attribute": [
-                    "name"
+                    "vpc_id"
                 ]
             },
             {
-                "resource": "data.aws_availability_zones.this",
+                "resource": "module.acm.aws_acm_certificate.this[0]",
                 "attribute": [
-                    "names"
+                    "domain_validation_options"
                 ]
+            },
+            {
+                "resource": "module.vpc.aws_customer_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.database",
+                "attribute": []
             },
             {
                 "resource": "module.vpc.aws_subnet.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.intra",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.elasticache",
                 "attribute": []
             },
             {
@@ -17026,19 +16852,203 @@
                 "attribute": []
             },
             {
-                "resource": "module.vpc.aws_route_table_association.redshift_public",
+                "resource": "module.vpc.aws_route_table.private",
                 "attribute": []
+            },
+            {
+                "resource": "aws_db_subnet_group.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_policy.scale_down",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.public",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_role.task_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_iam_policy.task_execution_policy",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_rds_cluster.this",
+                "attribute": [
+                    "endpoint"
+                ]
             },
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "default_route_table_id"
+                    "instance_tenancy"
                 ]
             },
             {
                 "resource": "aws_iam_role.task_execution_role",
                 "attribute": [
                     "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "ipv6_association_id"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_listener.frontend_https",
+                "attribute": []
+            },
+            {
+                "resource": "aws_ecs_cluster.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.acm_alb.aws_route53_record.validation",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group.main",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.private",
+                "attribute": []
+            },
+            {
+                "resource": "random_string.snapshot_suffix",
+                "attribute": [
+                    "result"
+                ]
+            },
+            {
+                "resource": "aws_ssm_parameter.db_master_password",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route.public_internet_gateway[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.database",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_ecs_task_definition.this",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_lb_target_group.this",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_route53_record.validation",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_eip.nat",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "cidr_block"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "main_route_table_id"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_policy.task_policy",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_target.this",
+                "attribute": [
+                    "scalable_dimension"
+                ]
+            },
+            {
+                "resource": "aws_lb_target_group.this",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "enable_dns_hostnames"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.public",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.public[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_target.this",
+                "attribute": [
+                    "service_namespace"
                 ]
             },
             {
@@ -17050,94 +17060,48 @@
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.intra",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.database",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "domain_validation_options"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_nat_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_security_group.db",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "data.aws_region.current",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
                     "owner_id"
                 ]
             },
             {
-                "resource": "module.alb.aws_lb.this",
+                "resource": "module.acm.aws_acm_certificate_validation.this",
                 "attribute": []
-            },
-            {
-                "resource": "aws_iam_policy.task_execution_policy",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_internet_gateway.this[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_route53_record.validation",
-                "attribute": []
-            },
-            {
-                "resource": "aws_ecs_service.this",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "instance_tenancy"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "aws_security_group.alb",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "random_string.snapshot_suffix",
-                "attribute": [
-                    "result"
-                ]
-            },
-            {
-                "resource": "aws_lb_target_group.this",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_cloudfront_distribution.this",
-                "attribute": [
-                    "hosted_zone_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "enable_dns_hostnames"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.database",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "aws_efs_file_system.this",
-                "attribute": [
-                    "id"
-                ]
             },
             {
                 "resource": "aws_ssm_parameter.db_master_user",
@@ -17146,13 +17110,49 @@
                 ]
             },
             {
-                "resource": "aws_appautoscaling_policy.scale_down",
+                "resource": "module.acm.aws_acm_certificate.this[0]",
                 "attribute": [
                     "arn"
                 ]
+            },
+            {
+                "resource": "module.alb.aws_lb.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route.private_nat_gateway",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_security_group.efs",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_appautoscaling_target.this",
+                "attribute": [
+                    "resource_id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.outpost",
+                "attribute": []
+            },
+            {
+                "resource": "module.alb.aws_lb.this",
+                "attribute": []
             }
         ],
-        "timestamp": "2024-07-09T20:21:06Z",
+        "timestamp": "2024-07-10T12:55:22Z",
         "errored": false
     },
     "tf_resources_created": [
@@ -33554,6 +33554,208 @@
         ]
     },
     "meta_data": {
+        "aws_security_group.alb": {
+            "description": "Allow HTTPS inbound traffc",
+            "egress": "[{'from_port': 0, 'to_port': 0, 'protocol': '-1', 'cidr_blocks': ['0.0.0.0/0']}]",
+            "ingress": "[{'from_port': 443, 'to_port': 443, 'protocol': 'tcp', 'cidr_blocks': ['0.0.0.0/0']}, {'from_port': 0, 'to_port': 0, 'protocol': '-1', 'self': True}]",
+            "name": "\"wordpress\" -alb-\"dev\" ",
+            "revoke_rules_on_delete": "False",
+            "tags": "\"{}\" ",
+            "timeouts": "None",
+            "arn": "True",
+            "id": "True",
+            "name_prefix": "True",
+            "owner_id": "True",
+            "tags_all": "{}",
+            "vpc_id": "${try(aws_vpc.this[0].id, None)} ",
+            "module": "main"
+        },
+        "aws_cloudfront_distribution.this": {
+            "aliases": "['\"route53.example.com\" ']",
+            "comment": "\"route53.example.com\" ",
+            "custom_error_response": "[{'error_code': 400, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 403, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 404, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 405, 'error_caching_min_ttl': '\"30\" '}]",
+            "default_cache_behavior": "[{'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['*'], 'cookies': [{'forward': 'all'}]}], 'viewer_protocol_policy': 'redirect-to-https', 'min_ttl': 0, 'default_ttl': 0, 'max_ttl': 0, 'compress': True}]",
+            "default_root_object": "None",
+            "enabled": "True",
+            "http_version": "http2",
+            "is_ipv6_enabled": "True",
+            "logging_config": "[]",
+            "ordered_cache_behavior": "[{'path_pattern': 'wp-content/*', 'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['Host'], 'cookies': [{'forward': 'all'}]}], 'min_ttl': 900, 'default_ttl': 900, 'max_ttl': 900, 'compress': True, 'viewer_protocol_policy': 'redirect-to-https'}, {'path_pattern': 'wp-includes/*', 'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['Host'], 'cookies': [{'forward': 'all'}]}], 'min_ttl': 3600, 'default_ttl': 3600, 'max_ttl': 3600, 'compress': True, 'viewer_protocol_policy': 'redirect-to-https'}]",
+            "origin": "{'domain_name': '\"aws_lb_listener_rule.wordpress\" ', 'origin_id': 'alb', 'custom_origin_config': [{'http_port': 80, 'https_port': 443, 'origin_protocol_policy': 'https-only', 'origin_ssl_protocols': ['TLSv1', 'TLSv1.1', 'TLSv1.2']}]}",
+            "origin_group": "[]",
+            "price_class": "\"PriceClass_100\" ",
+            "restrictions": "[{'geo_restriction': [{'restriction_type': 'none'}]}]",
+            "retain_on_delete": "False",
+            "staging": "False",
+            "tags": "\"{}\" ",
+            "viewer_certificate": "[{'acm_certificate_arn': '\"UNKNOWN\" ', 'ssl_support_method': 'sni-only', 'minimum_protocol_version': 'TLSv1.1_2016'}]",
+            "wait_for_deployment": "True",
+            "web_acl_id": "None",
+            "arn": "True",
+            "caller_reference": "True",
+            "continuous_deployment_policy_id": "True",
+            "domain_name": "True",
+            "etag": "True",
+            "hosted_zone_id": "True",
+            "id": "True",
+            "in_progress_validation_batches": "True",
+            "last_modified_time": "True",
+            "status": "True",
+            "tags_all": "{}",
+            "trusted_key_groups": "[]",
+            "trusted_signers": "[]",
+            "depends_on": "['${aws_ecs_service.this}']",
+            "module": "main"
+        },
+        "random_string.snapshot_suffix": {
+            "keepers": "None",
+            "length": "8",
+            "lower": "True",
+            "min_lower": "0",
+            "min_numeric": "0",
+            "min_special": "0",
+            "min_upper": "0",
+            "number": "True",
+            "numeric": "True",
+            "override_special": "None",
+            "special": "False",
+            "upper": "True",
+            "id": "True",
+            "result": "True",
+            "module": "main"
+        },
+        "aws_rds_cluster.this": {
+            "allow_major_version_upgrade": "None",
+            "availability_zones": "['AZ1', 'AZ2', 'AZ3'] ",
+            "backtrack_window": "None",
+            "backup_retention_period": "\"1\" ",
+            "cluster_identifier": "\"wordpress\" -\"dev\" ",
+            "copy_tags_to_snapshot": "False",
+            "database_name": "wordpress",
+            "db_cluster_instance_class": "None",
+            "db_instance_parameter_group_name": "None",
+            "db_subnet_group_name": "${aws_db_subnet_group.this.name}",
+            "delete_automated_backups": "True",
+            "deletion_protection": "None",
+            "domain": "None",
+            "domain_iam_role_name": "None",
+            "enable_global_write_forwarding": "False",
+            "enable_http_endpoint": "False",
+            "enable_local_write_forwarding": "False",
+            "enabled_cloudwatch_logs_exports": "None",
+            "engine": "aurora-mysql",
+            "engine_mode": "serverless",
+            "engine_version": "\"5.6.10a\" ",
+            "global_cluster_identifier": "None",
+            "iam_database_authentication_enabled": "None",
+            "iops": "None",
+            "manage_master_user_password": "None",
+            "master_password": "\"password\" ",
+            "master_username": "\"user\" ",
+            "preferred_backup_window": "\"07:00-09:00\" ",
+            "replication_source_identifier": "None",
+            "restore_to_point_in_time": "[]",
+            "s3_import": "[]",
+            "scaling_configuration": "[{'auto_pause': '\"True\" ', 'seconds_until_auto_pause': '\"300\" ', 'max_capacity': '\"1\" ', 'min_capacity': '\"1\" '}]",
+            "serverlessv2_scaling_configuration": "[]",
+            "skip_final_snapshot": "False",
+            "snapshot_identifier": "None",
+            "source_region": "None",
+            "tags": "\"{}\" ",
+            "timeouts": "None",
+            "allocated_storage": "True",
+            "apply_immediately": "True",
+            "arn": "True",
+            "cluster_identifier_prefix": "True",
+            "cluster_members": "[]",
+            "cluster_resource_id": "True",
+            "db_cluster_parameter_group_name": "True",
+            "db_system_id": "True",
+            "endpoint": "True",
+            "engine_version_actual": "True",
+            "final_snapshot_identifier": "\"wordpress\" -\"dev\" -random_string.snapshot_suffix.result ",
+            "hosted_zone_id": "True",
+            "iam_roles": "[]",
+            "id": "True",
+            "kms_key_id": "True",
+            "master_user_secret": "[]",
+            "master_user_secret_kms_key_id": "True",
+            "network_type": "True",
+            "port": "True",
+            "preferred_maintenance_window": "True",
+            "reader_endpoint": "True",
+            "storage_encrypted": "True",
+            "storage_type": "True",
+            "tags_all": "{}",
+            "vpc_security_group_ids": "['${aws_security_group.db.id}']",
+            "module": "main"
+        },
+        "aws_db_subnet_group.this": {
+            "description": "Managed by Terraform",
+            "name": "\"wordpress\" -\"dev\" ",
+            "tags": "\"{}\" ",
+            "arn": "True",
+            "id": "True",
+            "name_prefix": "True",
+            "subnet_ids": "${aws_subnet.private[*].id} ",
+            "supported_network_types": "[]",
+            "tags_all": "{}",
+            "vpc_id": "True",
+            "module": "main"
+        },
+        "aws_security_group.db": {
+            "description": "Managed by Terraform",
+            "egress": "[{'protocol': '-1', 'from_port': 0, 'to_port': 0, 'cidr_blocks': ['0.0.0.0/0']}]",
+            "ingress": "[{'protocol': 'tcp', 'from_port': 3306, 'to_port': 3306, 'self': True}]",
+            "name": "\"wordpress\" -db-\"dev\" ",
+            "revoke_rules_on_delete": "False",
+            "tags": "\"{}\" ",
+            "timeouts": "None",
+            "arn": "True",
+            "id": "True",
+            "name_prefix": "True",
+            "owner_id": "True",
+            "tags_all": "{}",
+            "vpc_id": "${try(aws_vpc.this[0].id, None)} ",
+            "lifecycle": "[{'create_before_destroy': True}]",
+            "module": "main"
+        },
+        "aws_ssm_parameter.db_master_user": {
+            "allowed_pattern": "None",
+            "description": "None",
+            "name": "/\"wordpress\" /\"dev\" /db_master_user",
+            "overwrite": "None",
+            "tags": "\"{}\" ",
+            "type": "SecureString",
+            "value": "\"user\" ",
+            "arn": "True",
+            "data_type": "True",
+            "id": "True",
+            "insecure_value": "True",
+            "key_id": "True",
+            "tags_all": "{}",
+            "tier": "True",
+            "version": "True",
+            "module": "main"
+        },
+        "aws_ssm_parameter.db_master_password": {
+            "allowed_pattern": "None",
+            "description": "None",
+            "name": "/\"wordpress\" /\"dev\" /db_master_password",
+            "overwrite": "None",
+            "tags": "\"{}\" ",
+            "type": "SecureString",
+            "value": "\"password\" ",
+            "arn": "True",
+            "data_type": "True",
+            "id": "True",
+            "insecure_value": "True",
+            "key_id": "True",
+            "tags_all": "{}",
+            "tier": "True",
+            "version": "True",
+            "module": "main"
+        },
         "aws_efs_file_system.this": {
             "creation_token": "\"wordpress\" -\"dev\" ",
             "lifecycle_policy": "[]",
@@ -33608,48 +33810,6 @@
             "owner_id": "True",
             "tags_all": "{}",
             "vpc_id": "${try(aws_vpc.this[0].id, None)} ",
-            "module": "main"
-        },
-        "aws_route53_record.ipv4": {
-            "alias": "[{'name': '${aws_cloudfront_distribution.this.domain_name}', 'zone_id': '${aws_cloudfront_distribution.this.hosted_zone_id}', 'evaluate_target_health': False}]",
-            "cidr_routing_policy": "[]",
-            "failover_routing_policy": "[]",
-            "geolocation_routing_policy": "[]",
-            "geoproximity_routing_policy": "[]",
-            "health_check_id": "None",
-            "latency_routing_policy": "[]",
-            "multivalue_answer_routing_policy": "None",
-            "name": "\"route53.example.com\" ",
-            "records": "None",
-            "set_identifier": "None",
-            "ttl": "None",
-            "type": "A",
-            "weighted_routing_policy": "[]",
-            "zone_id": "\"UNKNOWN\" ",
-            "allow_overwrite": "True",
-            "fqdn": "True",
-            "id": "True",
-            "module": "main"
-        },
-        "aws_route53_record.ipv6": {
-            "alias": "[{'name': '${aws_cloudfront_distribution.this.domain_name}', 'zone_id': '${aws_cloudfront_distribution.this.hosted_zone_id}', 'evaluate_target_health': False}]",
-            "cidr_routing_policy": "[]",
-            "failover_routing_policy": "[]",
-            "geolocation_routing_policy": "[]",
-            "geoproximity_routing_policy": "[]",
-            "health_check_id": "None",
-            "latency_routing_policy": "[]",
-            "multivalue_answer_routing_policy": "None",
-            "name": "\"route53.example.com\" ",
-            "records": "None",
-            "set_identifier": "None",
-            "ttl": "None",
-            "type": "AAAA",
-            "weighted_routing_policy": "[]",
-            "zone_id": "\"UNKNOWN\" ",
-            "allow_overwrite": "True",
-            "fqdn": "True",
-            "id": "True",
             "module": "main"
         },
         "aws_iam_role.task_execution_role": {
@@ -33990,242 +34150,8 @@
             "id": "True",
             "module": "main"
         },
-        "aws_cloudfront_distribution.this": {
-            "aliases": "['\"route53.example.com\" ']",
-            "comment": "\"route53.example.com\" ",
-            "custom_error_response": "[{'error_code': 400, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 403, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 404, 'error_caching_min_ttl': '\"30\"  '}, {'error_code': 405, 'error_caching_min_ttl': '\"30\" '}]",
-            "default_cache_behavior": "[{'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['*'], 'cookies': [{'forward': 'all'}]}], 'viewer_protocol_policy': 'redirect-to-https', 'min_ttl': 0, 'default_ttl': 0, 'max_ttl': 0, 'compress': True}]",
-            "default_root_object": "None",
-            "enabled": "True",
-            "http_version": "http2",
-            "is_ipv6_enabled": "True",
-            "logging_config": "[]",
-            "ordered_cache_behavior": "[{'path_pattern': 'wp-content/*', 'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['Host'], 'cookies': [{'forward': 'all'}]}], 'min_ttl': 900, 'default_ttl': 900, 'max_ttl': 900, 'compress': True, 'viewer_protocol_policy': 'redirect-to-https'}, {'path_pattern': 'wp-includes/*', 'allowed_methods': ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT'], 'cached_methods': ['GET', 'HEAD', 'OPTIONS'], 'target_origin_id': 'alb', 'forwarded_values': [{'query_string': True, 'headers': ['Host'], 'cookies': [{'forward': 'all'}]}], 'min_ttl': 3600, 'default_ttl': 3600, 'max_ttl': 3600, 'compress': True, 'viewer_protocol_policy': 'redirect-to-https'}]",
-            "origin": "{'domain_name': '\"aws_lb_listener_rule.wordpress\" ', 'origin_id': 'alb', 'custom_origin_config': [{'http_port': 80, 'https_port': 443, 'origin_protocol_policy': 'https-only', 'origin_ssl_protocols': ['TLSv1', 'TLSv1.1', 'TLSv1.2']}]}",
-            "origin_group": "[]",
-            "price_class": "\"PriceClass_100\" ",
-            "restrictions": "[{'geo_restriction': [{'restriction_type': 'none'}]}]",
-            "retain_on_delete": "False",
-            "staging": "False",
-            "tags": "\"{}\" ",
-            "viewer_certificate": "[{'acm_certificate_arn': '\"UNKNOWN\" ', 'ssl_support_method': 'sni-only', 'minimum_protocol_version': 'TLSv1.1_2016'}]",
-            "wait_for_deployment": "True",
-            "web_acl_id": "None",
-            "arn": "True",
-            "caller_reference": "True",
-            "continuous_deployment_policy_id": "True",
-            "domain_name": "True",
-            "etag": "True",
-            "hosted_zone_id": "True",
-            "id": "True",
-            "in_progress_validation_batches": "True",
-            "last_modified_time": "True",
-            "status": "True",
-            "tags_all": "{}",
-            "trusted_key_groups": "[]",
-            "trusted_signers": "[]",
-            "depends_on": "['${aws_ecs_service.this}']",
-            "module": "main"
-        },
-        "aws_security_group.alb": {
-            "description": "Allow HTTPS inbound traffc",
-            "egress": "[{'from_port': 0, 'to_port': 0, 'protocol': '-1', 'cidr_blocks': ['0.0.0.0/0']}]",
-            "ingress": "[{'from_port': 443, 'to_port': 443, 'protocol': 'tcp', 'cidr_blocks': ['0.0.0.0/0']}, {'from_port': 0, 'to_port': 0, 'protocol': '-1', 'self': True}]",
-            "name": "\"wordpress\" -alb-\"dev\" ",
-            "revoke_rules_on_delete": "False",
-            "tags": "\"{}\" ",
-            "timeouts": "None",
-            "arn": "True",
-            "id": "True",
-            "name_prefix": "True",
-            "owner_id": "True",
-            "tags_all": "{}",
-            "vpc_id": "${try(aws_vpc.this[0].id, None)} ",
-            "module": "main"
-        },
-        "random_string.snapshot_suffix": {
-            "keepers": "None",
-            "length": "8",
-            "lower": "True",
-            "min_lower": "0",
-            "min_numeric": "0",
-            "min_special": "0",
-            "min_upper": "0",
-            "number": "True",
-            "numeric": "True",
-            "override_special": "None",
-            "special": "False",
-            "upper": "True",
-            "id": "True",
-            "result": "True",
-            "module": "main"
-        },
-        "aws_rds_cluster.this": {
-            "allow_major_version_upgrade": "None",
-            "availability_zones": "['AZ1', 'AZ2', 'AZ3'] ",
-            "backtrack_window": "None",
-            "backup_retention_period": "\"1\" ",
-            "cluster_identifier": "\"wordpress\" -\"dev\" ",
-            "copy_tags_to_snapshot": "False",
-            "database_name": "wordpress",
-            "db_cluster_instance_class": "None",
-            "db_instance_parameter_group_name": "None",
-            "db_subnet_group_name": "${aws_db_subnet_group.this.name}",
-            "delete_automated_backups": "True",
-            "deletion_protection": "None",
-            "domain": "None",
-            "domain_iam_role_name": "None",
-            "enable_global_write_forwarding": "False",
-            "enable_http_endpoint": "False",
-            "enable_local_write_forwarding": "False",
-            "enabled_cloudwatch_logs_exports": "None",
-            "engine": "aurora-mysql",
-            "engine_mode": "serverless",
-            "engine_version": "\"5.6.10a\" ",
-            "global_cluster_identifier": "None",
-            "iam_database_authentication_enabled": "None",
-            "iops": "None",
-            "manage_master_user_password": "None",
-            "master_password": "\"password\" ",
-            "master_username": "\"user\" ",
-            "preferred_backup_window": "\"07:00-09:00\" ",
-            "replication_source_identifier": "None",
-            "restore_to_point_in_time": "[]",
-            "s3_import": "[]",
-            "scaling_configuration": "[{'auto_pause': '\"True\" ', 'seconds_until_auto_pause': '\"300\" ', 'max_capacity': '\"1\" ', 'min_capacity': '\"1\" '}]",
-            "serverlessv2_scaling_configuration": "[]",
-            "skip_final_snapshot": "False",
-            "snapshot_identifier": "None",
-            "source_region": "None",
-            "tags": "\"{}\" ",
-            "timeouts": "None",
-            "allocated_storage": "True",
-            "apply_immediately": "True",
-            "arn": "True",
-            "cluster_identifier_prefix": "True",
-            "cluster_members": "[]",
-            "cluster_resource_id": "True",
-            "db_cluster_parameter_group_name": "True",
-            "db_system_id": "True",
-            "endpoint": "True",
-            "engine_version_actual": "True",
-            "final_snapshot_identifier": "\"wordpress\" -\"dev\" -random_string.snapshot_suffix.result ",
-            "hosted_zone_id": "True",
-            "iam_roles": "[]",
-            "id": "True",
-            "kms_key_id": "True",
-            "master_user_secret": "[]",
-            "master_user_secret_kms_key_id": "True",
-            "network_type": "True",
-            "port": "True",
-            "preferred_maintenance_window": "True",
-            "reader_endpoint": "True",
-            "storage_encrypted": "True",
-            "storage_type": "True",
-            "tags_all": "{}",
-            "vpc_security_group_ids": "['${aws_security_group.db.id}']",
-            "module": "main"
-        },
-        "aws_db_subnet_group.this": {
-            "description": "Managed by Terraform",
-            "name": "\"wordpress\" -\"dev\" ",
-            "tags": "\"{}\" ",
-            "arn": "True",
-            "id": "True",
-            "name_prefix": "True",
-            "subnet_ids": "${aws_subnet.private[*].id} ",
-            "supported_network_types": "[]",
-            "tags_all": "{}",
-            "vpc_id": "True",
-            "module": "main"
-        },
-        "aws_security_group.db": {
-            "description": "Managed by Terraform",
-            "egress": "[{'protocol': '-1', 'from_port': 0, 'to_port': 0, 'cidr_blocks': ['0.0.0.0/0']}]",
-            "ingress": "[{'protocol': 'tcp', 'from_port': 3306, 'to_port': 3306, 'self': True}]",
-            "name": "\"wordpress\" -db-\"dev\" ",
-            "revoke_rules_on_delete": "False",
-            "tags": "\"{}\" ",
-            "timeouts": "None",
-            "arn": "True",
-            "id": "True",
-            "name_prefix": "True",
-            "owner_id": "True",
-            "tags_all": "{}",
-            "vpc_id": "${try(aws_vpc.this[0].id, None)} ",
-            "lifecycle": "[{'create_before_destroy': True}]",
-            "module": "main"
-        },
-        "aws_ssm_parameter.db_master_user": {
-            "allowed_pattern": "None",
-            "description": "None",
-            "name": "/\"wordpress\" /\"dev\" /db_master_user",
-            "overwrite": "None",
-            "tags": "\"{}\" ",
-            "type": "SecureString",
-            "value": "\"user\" ",
-            "arn": "True",
-            "data_type": "True",
-            "id": "True",
-            "insecure_value": "True",
-            "key_id": "True",
-            "tags_all": "{}",
-            "tier": "True",
-            "version": "True",
-            "module": "main"
-        },
-        "aws_ssm_parameter.db_master_password": {
-            "allowed_pattern": "None",
-            "description": "None",
-            "name": "/\"wordpress\" /\"dev\" /db_master_password",
-            "overwrite": "None",
-            "tags": "\"{}\" ",
-            "type": "SecureString",
-            "value": "\"password\" ",
-            "arn": "True",
-            "data_type": "True",
-            "id": "True",
-            "insecure_value": "True",
-            "key_id": "True",
-            "tags_all": "{}",
-            "tier": "True",
-            "version": "True",
-            "module": "main"
-        },
-        "module.acm.aws_acm_certificate.this[0]~1": {
-            "certificate_authority_arn": "None",
-            "certificate_body": "None",
-            "certificate_chain": "None",
-            "domain_name": "\"route53.example.com \" ",
-            "domain_validation_options": "[{}]",
-            "early_renewal_duration": "None",
-            "options": "[{'certificate_transparency_logging_preference': 'True  ? \"ENABLED\" : \"DISABLED\" '}]",
-            "private_key": "True",
-            "subject_alternative_names": "[] ",
-            "tags": "\"UNKNOWN\" ",
-            "validation_method": "\"None\" ",
-            "validation_option": "[]",
-            "arn": "True",
-            "id": "True",
-            "key_algorithm": "\"None\" ",
-            "not_after": "True",
-            "not_before": "True",
-            "pending_renewal": "True",
-            "renewal_eligibility": "True",
-            "renewal_summary": "[]",
-            "status": "True",
-            "tags_all": "{}",
-            "type": "True",
-            "validation_emails": "[]",
-            "module": "acm",
-            "count": "1",
-            "dynamic": "[{'validation_option': {'for_each': '{}  ', 'content': [{'domain_name': 'try(validation_option.value[\"domain_name\"], validation_option.key) ', 'validation_domain': 'validation_option.value[\"validation_domain\"] '}]}}]",
-            "lifecycle": "[{'create_before_destroy': True}]",
-            "original_count": "${local.create_certificate ? 1 : 0}"
-        },
-        "module.acm.aws_route53_record.validation[0]~1": {
-            "alias": "[]",
-            "allow_overwrite": "\"True\" ",
+        "aws_route53_record.ipv4": {
+            "alias": "[{'name': '${aws_cloudfront_distribution.this.domain_name}', 'zone_id': '${aws_cloudfront_distribution.this.hosted_zone_id}', 'evaluate_target_health': False}]",
             "cidr_routing_policy": "[]",
             "failover_routing_policy": "[]",
             "geolocation_routing_policy": "[]",
@@ -34233,28 +34159,38 @@
             "health_check_id": "None",
             "latency_routing_policy": "[]",
             "multivalue_answer_routing_policy": "None",
+            "name": "\"route53.example.com\" ",
+            "records": "None",
             "set_identifier": "None",
-            "ttl": "\"60\" ",
+            "ttl": "None",
+            "type": "A",
             "weighted_routing_policy": "[]",
-            "zone_id": "\"\"UNKNOWN\" \" ",
+            "zone_id": "\"UNKNOWN\" ",
+            "allow_overwrite": "True",
             "fqdn": "True",
             "id": "True",
-            "name": "element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_name\"] ",
-            "records": "['element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_value\"] ']",
-            "type": "element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_type\"] ",
-            "module": "acm",
-            "count": "1",
-            "depends_on": "['${aws_acm_certificate.this}']",
-            "original_count": "${local.create_certificate || local.create_route53_records_only && var.validation_method == \"DNS\" && var.create_route53_records && var.validate_certificate || local.create_route53_records_only ? length(local.distinct_domain_names) : 0}"
+            "module": "main"
         },
-        "module.acm.aws_acm_certificate_validation.this[0]~1": {
-            "timeouts": "[{'create': '\"None\" '}]",
-            "certificate_arn": "${aws_acm_certificate.this[0].arn}",
+        "aws_route53_record.ipv6": {
+            "alias": "[{'name': '${aws_cloudfront_distribution.this.domain_name}', 'zone_id': '${aws_cloudfront_distribution.this.hosted_zone_id}', 'evaluate_target_health': False}]",
+            "cidr_routing_policy": "[]",
+            "failover_routing_policy": "[]",
+            "geolocation_routing_policy": "[]",
+            "geoproximity_routing_policy": "[]",
+            "health_check_id": "None",
+            "latency_routing_policy": "[]",
+            "multivalue_answer_routing_policy": "None",
+            "name": "\"route53.example.com\" ",
+            "records": "None",
+            "set_identifier": "None",
+            "ttl": "None",
+            "type": "AAAA",
+            "weighted_routing_policy": "[]",
+            "zone_id": "\"UNKNOWN\" ",
+            "allow_overwrite": "True",
+            "fqdn": "True",
             "id": "True",
-            "validation_record_fqdns": "flatten(['aws_route53_record.validation[*].fqdn ', '[] ']) ",
-            "module": "acm",
-            "count": "1",
-            "original_count": "${local.create_certificate && var.validation_method != None && var.validate_certificate && var.wait_for_validation ? 1 : 0}"
+            "module": "main"
         },
         "module.acm_alb.aws_acm_certificate.this[0]~1": {
             "certificate_authority_arn": "None",
@@ -34320,9 +34256,40 @@
             "count": "1",
             "original_count": "${local.create_certificate && var.validation_method != None && var.validate_certificate && var.wait_for_validation ? 1 : 0}"
         },
+        "module.acm.aws_acm_certificate.this[0]~1": {
+            "certificate_authority_arn": "None",
+            "certificate_body": "None",
+            "certificate_chain": "None",
+            "domain_name": "\"route53.example.com \" ",
+            "domain_validation_options": "[{}]",
+            "early_renewal_duration": "None",
+            "options": "[{'certificate_transparency_logging_preference': 'True  ? \"ENABLED\" : \"DISABLED\" '}]",
+            "private_key": "True",
+            "subject_alternative_names": "[] ",
+            "tags": "\"UNKNOWN\" ",
+            "validation_method": "\"None\" ",
+            "validation_option": "[]",
+            "arn": "True",
+            "id": "True",
+            "key_algorithm": "\"None\" ",
+            "not_after": "True",
+            "not_before": "True",
+            "pending_renewal": "True",
+            "renewal_eligibility": "True",
+            "renewal_summary": "[]",
+            "status": "True",
+            "tags_all": "{}",
+            "type": "True",
+            "validation_emails": "[]",
+            "module": "acm",
+            "count": "1",
+            "dynamic": "[{'validation_option': {'for_each': '{}  ', 'content': [{'domain_name': 'try(validation_option.value[\"domain_name\"], validation_option.key) ', 'validation_domain': 'validation_option.value[\"validation_domain\"] '}]}}]",
+            "lifecycle": "[{'create_before_destroy': True}]",
+            "original_count": "${local.create_certificate ? 1 : 0}"
+        },
         "module.alb.aws_lb.this[0]~1": {
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -34412,6 +34379,39 @@
             "dynamic": "[{'health_check': {'for_each': \"try(['each.value.health_check '], []) \", 'content': [{'enabled': 'try(health_check.value.enabled, None) ', 'healthy_threshold': 'try(health_check.value.healthy_threshold, None) ', 'interval': 'try(health_check.value.interval, None) ', 'matcher': 'try(health_check.value.matcher, None) ', 'path': 'try(health_check.value.path, None) ', 'port': 'try(health_check.value.port, None) ', 'protocol': 'try(health_check.value.protocol, None) ', 'timeout': 'try(health_check.value.timeout, None) ', 'unhealthy_threshold': 'try(health_check.value.unhealthy_threshold, None) '}]}}, {'stickiness': {'for_each': \"try(['each.value.stickiness '], []) \", 'content': [{'cookie_duration': 'try(stickiness.value.cookie_duration, None) ', 'cookie_name': 'try(stickiness.value.cookie_name, None) ', 'enabled': 'try(stickiness.value.enabled, True) ', 'type': '\"application\" == \"network\" ? \"source_ip\" : stickiness.value.type '}]}}, {'target_failover': {'for_each': 'try(each.value.target_failover, []) ', 'content': [{'on_deregistration': 'target_failover.value.on_deregistration ', 'on_unhealthy': 'target_failover.value.on_unhealthy '}]}}, {'target_health_state': {'for_each': \"try(['each.value.target_health_state '], []) \", 'content': [{'enable_unhealthy_connection_termination': 'try(target_health_state.value.enable_unhealthy_connection_termination, True) '}]}}]",
             "lifecycle": "[{'create_before_destroy': True}]"
         },
+        "module.acm.aws_route53_record.validation[0]~1": {
+            "alias": "[]",
+            "allow_overwrite": "\"True\" ",
+            "cidr_routing_policy": "[]",
+            "failover_routing_policy": "[]",
+            "geolocation_routing_policy": "[]",
+            "geoproximity_routing_policy": "[]",
+            "health_check_id": "None",
+            "latency_routing_policy": "[]",
+            "multivalue_answer_routing_policy": "None",
+            "set_identifier": "None",
+            "ttl": "\"60\" ",
+            "weighted_routing_policy": "[]",
+            "zone_id": "\"\"UNKNOWN\" \" ",
+            "fqdn": "True",
+            "id": "True",
+            "name": "element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_name\"] ",
+            "records": "['element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_value\"] ']",
+            "type": "element(\"True\" && True   || \"False\" && \"True\"  ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, \"{}\") : merge(tomap(v), {'domain_name': 'replace(v.domain_name, \"*.\", \"\") '})]) : [] , count.index)[\"resource_record_type\"] ",
+            "module": "acm",
+            "count": "1",
+            "depends_on": "['${aws_acm_certificate.this}']",
+            "original_count": "${local.create_certificate || local.create_route53_records_only && var.validation_method == \"DNS\" && var.create_route53_records && var.validate_certificate || local.create_route53_records_only ? length(local.distinct_domain_names) : 0}"
+        },
+        "module.acm.aws_acm_certificate_validation.this[0]~1": {
+            "timeouts": "[{'create': '\"None\" '}]",
+            "certificate_arn": "${aws_acm_certificate.this[0].arn}",
+            "id": "True",
+            "validation_record_fqdns": "flatten(['aws_route53_record.validation[*].fqdn ', '[] ']) ",
+            "module": "acm",
+            "count": "1",
+            "original_count": "${local.create_certificate && var.validation_method != None && var.validate_certificate && var.wait_for_validation ? 1 : 0}"
+        },
         "module.vpc.aws_vpc.this[0]~1": {
             "assign_generated_ipv6_cidr_block": "\"False\" && !\"False\" ? True : None ",
             "cidr_block": "\"False\" ? None : \"\"10.0.0.0/16\" \" ",
@@ -34469,7 +34469,7 @@
             "original_count": "${local.create_public_subnets && !var.one_nat_gateway_per_az || local.len_public_subnets >= length(var.azs) ? local.len_public_subnets : 0}"
         },
         "module.vpc.aws_route_table.public[0]~1": {
-            "tags": "merge({'Name': '\"False\" ? format(\"\"wordpress\" -\"dev\"   -\"public\"  -%s\", element(\"['AZ1', 'AZ2', 'AZ3'] \", count.index)) : \"\"wordpress\" -\"dev\"   -\"public\" \" '}, \"UNKNOWN\", \"{}\") ",
+            "tags": "merge({'Name': '\"\"wordpress\" -\"dev\" \" -\"public\" '}, \"UNKNOWN\", \"{}\") ",
             "tags_all": "{}",
             "timeouts": "None",
             "arn": "True",
@@ -34480,13 +34480,13 @@
             "vpc_id": "${try(aws_vpc_ipv4_cidr_block_association.this[0].vpc_id, aws_vpc.this[0].id, \"\")} ",
             "module": "vpc",
             "count": "1",
-            "original_count": "${local.create_public_subnets ? local.num_public_route_tables : 0}"
+            "original_count": "${local.create_public_subnets ? 1 : 0}"
         },
         "module.vpc.aws_route_table_association.public[0]~1": {
             "gateway_id": "None",
             "timeouts": "None",
             "id": "True",
-            "route_table_id": "element(aws_route_table.public[*].id, \"False\" ? count.index : 0) ",
+            "route_table_id": "${aws_route_table.public[0].id}",
             "subnet_id": "${element(aws_subnet.public[*].id, count.index)}",
             "module": "vpc",
             "count": "1",
@@ -34571,7 +34571,7 @@
             "original_count": "${local.create_outpost_subnets ? local.len_outpost_subnets : 0}"
         },
         "module.vpc.aws_route_table.private[0]~1": {
-            "tags": "merge({'Name': '\"False\" ? format(\"\"wordpress\" -\"dev\"   -\"intra\"  -%s\", element(\"['AZ1', 'AZ2', 'AZ3'] \", count.index)) : \"\"wordpress\" -\"dev\"   -\"intra\" \" '}, \"UNKNOWN\", \"{}\") ",
+            "tags": "merge({'Name': '\"\"wordpress\" -\"dev\" \" -\"intra\" '}, \"UNKNOWN\", \"{}\") ",
             "tags_all": "{}",
             "timeouts": "None",
             "arn": "True",
@@ -34582,7 +34582,7 @@
             "vpc_id": "${try(aws_vpc_ipv4_cidr_block_association.this[0].vpc_id, aws_vpc.this[0].id, \"\")} ",
             "module": "vpc",
             "count": "1",
-            "original_count": "${local.create_intra_subnets ? local.num_intra_route_tables : 0}"
+            "original_count": "${local.create_intra_subnets ? 1 : 0}"
         },
         "module.vpc.aws_route_table_association.private[0]~1": {
             "gateway_id": "None",
@@ -34641,7 +34641,7 @@
             "tags": "merge({'Name': 'format(\"\"\"wordpress\" -\"dev\" \" -%s\", element(\"['AZ1', 'AZ2', 'AZ3'] \", \"False\" ? 0 : count.index)) '}, \"UNKNOWN\", \"{}\") ",
             "tags_all": "{}",
             "timeouts": "None",
-            "allocation_id": "element(\"False\" ? [] : aws_eip.nat[*].id , \"False\" ? 0 : count.index) ",
+            "allocation_id": "element(\"False\" ? [] : try(aws_eip.nat[*].id, []) , \"False\" ? 0 : count.index) ",
             "association_id": "True",
             "id": "True",
             "network_interface_id": "True",
@@ -35177,7 +35177,7 @@
             "target_health_state": "[]",
             "vpc_id": "try(each.value.vpc_id, ${try(aws_vpc.this[0].id, None)}  ) ",
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -35366,7 +35366,7 @@
             "target_health_state": "[]",
             "vpc_id": "try(each.value.vpc_id, ${try(aws_vpc.this[0].id, None)}  ) ",
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -35601,7 +35601,7 @@
             "target_health_state": "[]",
             "vpc_id": "try(each.value.vpc_id, ${try(aws_vpc.this[0].id, None)}  ) ",
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -35671,7 +35671,7 @@
             "target_health_state": "[]",
             "vpc_id": "try(each.value.vpc_id, ${try(aws_vpc.this[0].id, None)}  ) ",
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -35741,7 +35741,7 @@
             "target_health_state": "[]",
             "vpc_id": "try(each.value.vpc_id, ${try(aws_vpc.this[0].id, None)}  ) ",
             "access_logs": "[]",
-            "client_keep_alive": "\"None\" ",
+            "client_keep_alive": "3600",
             "connection_logs": "[]",
             "customer_owned_ipv4_pool": "\"None\" ",
             "desync_mitigation_mode": "\"None\" ",
@@ -35956,7 +35956,7 @@
         }
     },
     "all_output": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/outputs.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm_alb;terraform-aws-modules/acm/aws\\outputs.tf": [
             {
                 "acm_certificate_arn": {
                     "description": "The ARN of the certificate",
@@ -36000,51 +36000,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/outputs.tf": [
-            {
-                "acm_certificate_arn": {
-                    "description": "The ARN of the certificate",
-                    "value": "${try(aws_acm_certificate_validation.this[0].certificate_arn, aws_acm_certificate.this[0].arn, \"\")}"
-                }
-            },
-            {
-                "acm_certificate_domain_validation_options": {
-                    "description": "A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if DNS-validation was used.",
-                    "value": "${flatten(aws_acm_certificate.this[*].domain_validation_options)}"
-                }
-            },
-            {
-                "acm_certificate_status": {
-                    "description": "Status of the certificate.",
-                    "value": "${try(aws_acm_certificate.this[0].status, \"\")}"
-                }
-            },
-            {
-                "acm_certificate_validation_emails": {
-                    "description": "A list of addresses that received a validation E-Mail. Only set if EMAIL-validation was used.",
-                    "value": "${flatten(aws_acm_certificate.this[*].validation_emails)}"
-                }
-            },
-            {
-                "validation_route53_record_fqdns": {
-                    "description": "List of FQDNs built using the zone domain and name.",
-                    "value": "${aws_route53_record.validation[*].fqdn}"
-                }
-            },
-            {
-                "distinct_domain_names": {
-                    "description": "List of distinct domains names used for the validation.",
-                    "value": "${local.distinct_domain_names}"
-                }
-            },
-            {
-                "validation_domains": {
-                    "description": "List of distinct domain validation options. This is useful if subject alternative names contain wildcards.",
-                    "value": "${local.validation_domains}"
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/outputs.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;alb;terraform-aws-modules/alb/aws\\outputs.tf": [
             {
                 "id": {
                     "description": "The ID and ARN of the load balancer we created",
@@ -36112,7 +36068,51 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/outputs.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm;terraform-aws-modules/acm/aws\\outputs.tf": [
+            {
+                "acm_certificate_arn": {
+                    "description": "The ARN of the certificate",
+                    "value": "${try(aws_acm_certificate_validation.this[0].certificate_arn, aws_acm_certificate.this[0].arn, \"\")}"
+                }
+            },
+            {
+                "acm_certificate_domain_validation_options": {
+                    "description": "A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if DNS-validation was used.",
+                    "value": "${flatten(aws_acm_certificate.this[*].domain_validation_options)}"
+                }
+            },
+            {
+                "acm_certificate_status": {
+                    "description": "Status of the certificate.",
+                    "value": "${try(aws_acm_certificate.this[0].status, \"\")}"
+                }
+            },
+            {
+                "acm_certificate_validation_emails": {
+                    "description": "A list of addresses that received a validation E-Mail. Only set if EMAIL-validation was used.",
+                    "value": "${flatten(aws_acm_certificate.this[*].validation_emails)}"
+                }
+            },
+            {
+                "validation_route53_record_fqdns": {
+                    "description": "List of FQDNs built using the zone domain and name.",
+                    "value": "${aws_route53_record.validation[*].fqdn}"
+                }
+            },
+            {
+                "distinct_domain_names": {
+                    "description": "List of distinct domains names used for the validation.",
+                    "value": "${local.distinct_domain_names}"
+                }
+            },
+            {
+                "validation_domains": {
+                    "description": "List of distinct domain validation options. This is useful if subject alternative names contain wildcards.",
+                    "value": "${local.validation_domains}"
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules/vpc/aws\\outputs.tf": [
             {
                 "vpc_id": {
                     "description": "The ID of the VPC",
@@ -36861,10 +36861,10 @@
     "annotations": {},
     "original_graphdict": {
         "aws_appautoscaling_policy.scale_down": [
-            "aws_cloudwatch_log_group.cloudwatch"
+            "aws_cloudwatch_metric_alarm.cpu_utilization_low"
         ],
         "aws_appautoscaling_policy.scale_up": [
-            "aws_cloudwatch_log_group.cloudwatch"
+            "aws_cloudwatch_metric_alarm.cpu_utilization_high"
         ],
         "aws_appautoscaling_target.this": [
             "aws_appautoscaling_policy.scale_down",
@@ -36897,12 +36897,8 @@
             "aws_efs_mount_target.this"
         ],
         "aws_efs_mount_target.this[0]~1": [],
-        "aws_efs_mount_target.this[1]~2": [
-            "aws_efs_file_system.efs"
-        ],
-        "aws_efs_mount_target.this[2]~3": [
-            "aws_efs_file_system.efs"
-        ],
+        "aws_efs_mount_target.this[1]~2": [],
+        "aws_efs_mount_target.this[2]~3": [],
         "aws_iam_policy.task_execution_policy": [
             "aws_iam_role_policy_attachment.task_execution_policy_attach"
         ],
@@ -36910,11 +36906,11 @@
             "aws_iam_role_policy_attachment.task_policy_attach"
         ],
         "aws_iam_role.task_execution_role": [
-            "aws_ecs_service.ecs",
+            "aws_ecs_task_definition.this",
             "aws_iam_role_policy_attachment.task_execution_policy_attach"
         ],
         "aws_iam_role.task_role": [
-            "aws_ecs_service.ecs",
+            "aws_ecs_task_definition.this",
             "aws_iam_role_policy_attachment.task_policy_attach"
         ],
         "aws_iam_role_policy_attachment.task_execution_policy_attach": [],
@@ -36925,20 +36921,20 @@
             "aws_lb_listener_rule.wordpress"
         ],
         "aws_rds_cluster.this": [
-            "aws_ecs_service.ecs"
+            "aws_ecs_task_definition.this"
         ],
         "aws_route53_record.ipv4": [],
         "aws_route53_record.ipv6": [],
         "aws_route53_record.wordpress": [],
         "aws_security_group.alb": [
-            "aws_ecs_service.ecs",
+            "aws_ecs_service.this",
             "aws_security_group.wordpress"
         ],
         "aws_security_group.db": [
             "aws_rds_cluster.this"
         ],
         "aws_security_group.efs": [
-            "aws_ecs_service.ecs",
+            "aws_ecs_service.this",
             "aws_efs_mount_target.this",
             "aws_security_group.wordpress"
         ],
@@ -37036,12 +37032,15 @@
             "module.vpc.aws_route_table_association.public"
         ],
         "module.vpc.aws_vpc.this[0]~1": [
-            "aws_az.us~east~1a",
-            "aws_az.us~east~1b",
-            "aws_az.us~east~1c",
             "module.vpc.aws_default_network_acl.this[0]~1",
             "module.vpc.aws_default_route_table.default[0]~1",
-            "module.vpc.aws_default_security_group.this[0]~1"
+            "module.vpc.aws_default_security_group.this[0]~1",
+            "module.vpc.aws_subnet.private[0]~1",
+            "module.vpc.aws_subnet.private[1]~2",
+            "module.vpc.aws_subnet.private[2]~3",
+            "module.vpc.aws_subnet.public[0]~1",
+            "module.vpc.aws_subnet.public[1]~2",
+            "module.vpc.aws_subnet.public[2]~3"
         ]
     },
     "original_metadata": {
@@ -38716,96 +38715,402 @@
         }
     },
     "module_source_dict": {
-        "acm": "terraform-aws-modules/acm/aws",
         "acm_alb": "terraform-aws-modules/acm/aws",
         "alb": "terraform-aws-modules/alb/aws",
+        "acm": "terraform-aws-modules/acm/aws",
         "vpc": "terraform-aws-modules/vpc/aws"
     },
-    "all_data": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/data.tf": [
+    "all_module": {
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\alb.tf": [
             {
-                "aws_region": {
-                    "current": {}
+                "acm_alb": {
+                    "source": "terraform-aws-modules/acm/aws",
+                    "version": "~> v2.0",
+                    "domain_name": "${var.public_alb_domain}",
+                    "zone_id": "${data.aws_route53_zone.this.zone_id}",
+                    "tags": "${var.tags}"
                 }
             },
             {
-                "aws_caller_identity": {
-                    "current": {}
-                }
-            },
-            {
-                "aws_availability_zones": {
-                    "this": {}
+                "alb": {
+                    "source": "terraform-aws-modules/alb/aws",
+                    "version": "~> 5.0",
+                    "name": "${var.prefix}-${var.environment}",
+                    "load_balancer_type": "application",
+                    "vpc_id": "${module.vpc.vpc_id}",
+                    "subnets": "${module.vpc.public_subnets}",
+                    "security_groups": [
+                        "${aws_security_group.alb.id}"
+                    ],
+                    "https_listeners": [
+                        {
+                            "certificate_arn": "${module.acm_alb.this_acm_certificate_arn}",
+                            "port": 443
+                        }
+                    ],
+                    "target_groups": [
+                        "{'name': '\"wordpress\"-default-\"dev\"', 'backend_protocol': 'HTTP', 'backend_port': 80}"
+                    ],
+                    "tags": "${var.tags}"
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\cloudfront.tf": [
             {
-                "aws_route53_zone": {
-                    "this": {
-                        "zone_id": "Z1017156O279JAVBAIZ3"
+                "acm": {
+                    "source": "terraform-aws-modules/acm/aws",
+                    "version": "~> v2.0",
+                    "domain_name": "${var.site_domain}",
+                    "zone_id": "${data.aws_route53_zone.this.zone_id}",
+                    "tags": "${var.tags}",
+                    "providers": {
+                        "aws": "${aws.us_east_1}"
                     }
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/main.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\vpc.tf": [
             {
-                "aws_partition": {
-                    "current": {}
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
-            {
-                "aws_iam_policy_document": {
-                    "flow_log_cloudwatch_assume_role": {
-                        "count": "${local.create_flow_log_cloudwatch_iam_role ? 1 : 0}",
-                        "statement": [
-                            {
-                                "sid": "AWSVPCFlowLogsAssumeRole",
-                                "principals": [
-                                    {
-                                        "type": "Service",
-                                        "identifiers": [
-                                            "vpc-flow-logs.amazonaws.com"
-                                        ]
-                                    }
-                                ],
-                                "effect": "Allow",
-                                "actions": [
-                                    "sts:AssumeRole"
-                                ]
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "aws_iam_policy_document": {
-                    "vpc_flow_log_cloudwatch": {
-                        "count": "${local.create_flow_log_cloudwatch_iam_role ? 1 : 0}",
-                        "statement": [
-                            {
-                                "sid": "AWSVPCFlowLogsPushToCloudWatch",
-                                "effect": "Allow",
-                                "actions": [
-                                    "logs:CreateLogStream",
-                                    "logs:PutLogEvents",
-                                    "logs:DescribeLogGroups",
-                                    "logs:DescribeLogStreams"
-                                ],
-                                "resources": [
-                                    "*"
-                                ]
-                            }
-                        ]
-                    }
+                "vpc": {
+                    "source": "terraform-aws-modules/vpc/aws",
+                    "name": "${var.prefix}-${var.environment}",
+                    "version": "5.2.0",
+                    "cidr": "${var.vpc_cidr}",
+                    "azs": "${data.aws_availability_zones.this.names}",
+                    "private_subnets": "${var.private_subnet_cidrs}",
+                    "public_subnets": "${var.public_subnet_cidrs}",
+                    "enable_nat_gateway": true,
+                    "single_nat_gateway": false,
+                    "one_nat_gateway_per_az": false,
+                    "tags": "${var.tags}",
+                    "enable_dns_hostnames": true
                 }
             }
         ]
     },
     "all_resource": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/efs.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\alb.tf": [
+            {
+                "aws_security_group": {
+                    "alb": {
+                        "name": "${var.prefix}-alb-${var.environment}",
+                        "description": "Allow HTTPS inbound traffc",
+                        "vpc_id": "${module.vpc.vpc_id}",
+                        "egress": [
+                            {
+                                "from_port": 0,
+                                "to_port": 0,
+                                "protocol": "-1",
+                                "cidr_blocks": [
+                                    "0.0.0.0/0"
+                                ]
+                            }
+                        ],
+                        "ingress": [
+                            {
+                                "from_port": 443,
+                                "to_port": 443,
+                                "protocol": "tcp",
+                                "cidr_blocks": [
+                                    "0.0.0.0/0"
+                                ]
+                            },
+                            {
+                                "from_port": 0,
+                                "to_port": 0,
+                                "protocol": "-1",
+                                "self": true
+                            }
+                        ],
+                        "tags": "${var.tags}"
+                    }
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\cloudfront.tf": [
+            {
+                "aws_cloudfront_distribution": {
+                    "this": {
+                        "origin": [
+                            {
+                                "domain_name": "${var.public_alb_domain}",
+                                "origin_id": "alb",
+                                "custom_origin_config": [
+                                    {
+                                        "http_port": 80,
+                                        "https_port": 443,
+                                        "origin_protocol_policy": "https-only",
+                                        "origin_ssl_protocols": [
+                                            "TLSv1",
+                                            "TLSv1.1",
+                                            "TLSv1.2"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "enabled": true,
+                        "is_ipv6_enabled": true,
+                        "comment": "${var.site_domain}",
+                        "aliases": [
+                            "${var.site_domain}"
+                        ],
+                        "default_cache_behavior": [
+                            {
+                                "allowed_methods": [
+                                    "DELETE",
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS",
+                                    "PATCH",
+                                    "POST",
+                                    "PUT"
+                                ],
+                                "cached_methods": [
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS"
+                                ],
+                                "target_origin_id": "alb",
+                                "forwarded_values": [
+                                    {
+                                        "query_string": true,
+                                        "headers": [
+                                            "*"
+                                        ],
+                                        "cookies": [
+                                            {
+                                                "forward": "all"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "viewer_protocol_policy": "redirect-to-https",
+                                "min_ttl": 0,
+                                "default_ttl": 0,
+                                "max_ttl": 0,
+                                "compress": true
+                            }
+                        ],
+                        "ordered_cache_behavior": [
+                            {
+                                "path_pattern": "wp-content/*",
+                                "allowed_methods": [
+                                    "DELETE",
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS",
+                                    "PATCH",
+                                    "POST",
+                                    "PUT"
+                                ],
+                                "cached_methods": [
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS"
+                                ],
+                                "target_origin_id": "alb",
+                                "forwarded_values": [
+                                    {
+                                        "query_string": true,
+                                        "headers": [
+                                            "Host"
+                                        ],
+                                        "cookies": [
+                                            {
+                                                "forward": "all"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "min_ttl": 900,
+                                "default_ttl": 900,
+                                "max_ttl": 900,
+                                "compress": true,
+                                "viewer_protocol_policy": "redirect-to-https"
+                            },
+                            {
+                                "path_pattern": "wp-includes/*",
+                                "allowed_methods": [
+                                    "DELETE",
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS",
+                                    "PATCH",
+                                    "POST",
+                                    "PUT"
+                                ],
+                                "cached_methods": [
+                                    "GET",
+                                    "HEAD",
+                                    "OPTIONS"
+                                ],
+                                "target_origin_id": "alb",
+                                "forwarded_values": [
+                                    {
+                                        "query_string": true,
+                                        "headers": [
+                                            "Host"
+                                        ],
+                                        "cookies": [
+                                            {
+                                                "forward": "all"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "min_ttl": 3600,
+                                "default_ttl": 3600,
+                                "max_ttl": 3600,
+                                "compress": true,
+                                "viewer_protocol_policy": "redirect-to-https"
+                            }
+                        ],
+                        "price_class": "${var.cf_price_class}",
+                        "tags": "${var.tags}",
+                        "restrictions": [
+                            {
+                                "geo_restriction": [
+                                    {
+                                        "restriction_type": "none"
+                                    }
+                                ]
+                            }
+                        ],
+                        "viewer_certificate": [
+                            {
+                                "acm_certificate_arn": "${module.acm.this_acm_certificate_arn}",
+                                "ssl_support_method": "sni-only",
+                                "minimum_protocol_version": "TLSv1.1_2016"
+                            }
+                        ],
+                        "custom_error_response": [
+                            {
+                                "error_code": 400,
+                                "error_caching_min_ttl": "${var.error_ttl}"
+                            },
+                            {
+                                "error_code": 403,
+                                "error_caching_min_ttl": "${var.error_ttl}"
+                            },
+                            {
+                                "error_code": 404,
+                                "error_caching_min_ttl": "${var.error_ttl}"
+                            },
+                            {
+                                "error_code": 405,
+                                "error_caching_min_ttl": "${var.error_ttl}"
+                            }
+                        ],
+                        "depends_on": [
+                            "${aws_ecs_service.this}"
+                        ]
+                    }
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\db.tf": [
+            {
+                "random_string": {
+                    "snapshot_suffix": {
+                        "length": 8,
+                        "special": false
+                    }
+                }
+            },
+            {
+                "aws_rds_cluster": {
+                    "this": {
+                        "cluster_identifier": "${var.prefix}-${var.environment}",
+                        "engine": "aurora-mysql",
+                        "engine_mode": "serverless",
+                        "vpc_security_group_ids": [
+                            "${aws_security_group.db.id}"
+                        ],
+                        "db_subnet_group_name": "${aws_db_subnet_group.this.name}",
+                        "engine_version": "${var.db_engine_version}",
+                        "availability_zones": "${data.aws_availability_zones.this.names}",
+                        "database_name": "wordpress",
+                        "master_username": "${var.db_master_username}",
+                        "master_password": "${var.db_master_password}",
+                        "backup_retention_period": "${var.db_backup_retention_days}",
+                        "preferred_backup_window": "${var.db_backup_window}",
+                        "scaling_configuration": [
+                            {
+                                "auto_pause": "${var.db_auto_pause}",
+                                "seconds_until_auto_pause": "${var.db_seconds_until_auto_pause}",
+                                "max_capacity": "${var.db_max_capacity}",
+                                "min_capacity": "${var.db_min_capacity}"
+                            }
+                        ],
+                        "final_snapshot_identifier": "${var.prefix}-${var.environment}-${random_string.snapshot_suffix.result}",
+                        "tags": "${var.tags}"
+                    }
+                }
+            },
+            {
+                "aws_db_subnet_group": {
+                    "this": {
+                        "name": "${var.prefix}-${var.environment}",
+                        "subnet_ids": "${module.vpc.private_subnets}",
+                        "tags": "${var.tags}"
+                    }
+                }
+            },
+            {
+                "aws_security_group": {
+                    "db": {
+                        "vpc_id": "${module.vpc.vpc_id}",
+                        "name": "${var.prefix}-db-${var.environment}",
+                        "ingress": [
+                            {
+                                "protocol": "tcp",
+                                "from_port": 3306,
+                                "to_port": 3306,
+                                "self": true
+                            }
+                        ],
+                        "egress": [
+                            {
+                                "protocol": "-1",
+                                "from_port": 0,
+                                "to_port": 0,
+                                "cidr_blocks": [
+                                    "0.0.0.0/0"
+                                ]
+                            }
+                        ],
+                        "lifecycle": [
+                            {
+                                "create_before_destroy": true
+                            }
+                        ],
+                        "tags": "${var.tags}"
+                    }
+                }
+            },
+            {
+                "aws_ssm_parameter": {
+                    "db_master_user": {
+                        "name": "/${var.prefix}/${var.environment}/db_master_user",
+                        "type": "SecureString",
+                        "value": "${var.db_master_username}",
+                        "tags": "${var.tags}"
+                    }
+                }
+            },
+            {
+                "aws_ssm_parameter": {
+                    "db_master_password": {
+                        "name": "/${var.prefix}/${var.environment}/db_master_password",
+                        "type": "SecureString",
+                        "value": "${var.db_master_password}",
+                        "tags": "${var.tags}"
+                    }
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\efs.tf": [
             {
                 "aws_efs_file_system": {
                     "this": {
@@ -38855,41 +39160,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/route53.tf": [
-            {
-                "aws_route53_record": {
-                    "ipv4": {
-                        "zone_id": "${data.aws_route53_zone.this.zone_id}",
-                        "name": "${var.site_domain}",
-                        "type": "A",
-                        "alias": [
-                            {
-                                "name": "${aws_cloudfront_distribution.this.domain_name}",
-                                "zone_id": "${aws_cloudfront_distribution.this.hosted_zone_id}",
-                                "evaluate_target_health": false
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "aws_route53_record": {
-                    "ipv6": {
-                        "zone_id": "${data.aws_route53_zone.this.zone_id}",
-                        "name": "${var.site_domain}",
-                        "type": "AAAA",
-                        "alias": [
-                            {
-                                "name": "${aws_cloudfront_distribution.this.domain_name}",
-                                "zone_id": "${aws_cloudfront_distribution.this.hosted_zone_id}",
-                                "evaluate_target_health": false
-                            }
-                        ]
-                    }
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/fargate.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\fargate.tf": [
             {
                 "aws_iam_role": {
                     "task_execution_role": {
@@ -39208,358 +39479,18 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\route53.tf": [
             {
-                "aws_cloudfront_distribution": {
-                    "this": {
-                        "origin": [
+                "aws_route53_record": {
+                    "ipv4": {
+                        "zone_id": "${data.aws_route53_zone.this.zone_id}",
+                        "name": "${var.site_domain}",
+                        "type": "A",
+                        "alias": [
                             {
-                                "domain_name": "${var.public_alb_domain}",
-                                "origin_id": "alb",
-                                "custom_origin_config": [
-                                    {
-                                        "http_port": 80,
-                                        "https_port": 443,
-                                        "origin_protocol_policy": "https-only",
-                                        "origin_ssl_protocols": [
-                                            "TLSv1",
-                                            "TLSv1.1",
-                                            "TLSv1.2"
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                        "enabled": true,
-                        "is_ipv6_enabled": true,
-                        "comment": "${var.site_domain}",
-                        "aliases": [
-                            "${var.site_domain}"
-                        ],
-                        "default_cache_behavior": [
-                            {
-                                "allowed_methods": [
-                                    "DELETE",
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS",
-                                    "PATCH",
-                                    "POST",
-                                    "PUT"
-                                ],
-                                "cached_methods": [
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS"
-                                ],
-                                "target_origin_id": "alb",
-                                "forwarded_values": [
-                                    {
-                                        "query_string": true,
-                                        "headers": [
-                                            "*"
-                                        ],
-                                        "cookies": [
-                                            {
-                                                "forward": "all"
-                                            }
-                                        ]
-                                    }
-                                ],
-                                "viewer_protocol_policy": "redirect-to-https",
-                                "min_ttl": 0,
-                                "default_ttl": 0,
-                                "max_ttl": 0,
-                                "compress": true
-                            }
-                        ],
-                        "ordered_cache_behavior": [
-                            {
-                                "path_pattern": "wp-content/*",
-                                "allowed_methods": [
-                                    "DELETE",
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS",
-                                    "PATCH",
-                                    "POST",
-                                    "PUT"
-                                ],
-                                "cached_methods": [
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS"
-                                ],
-                                "target_origin_id": "alb",
-                                "forwarded_values": [
-                                    {
-                                        "query_string": true,
-                                        "headers": [
-                                            "Host"
-                                        ],
-                                        "cookies": [
-                                            {
-                                                "forward": "all"
-                                            }
-                                        ]
-                                    }
-                                ],
-                                "min_ttl": 900,
-                                "default_ttl": 900,
-                                "max_ttl": 900,
-                                "compress": true,
-                                "viewer_protocol_policy": "redirect-to-https"
-                            },
-                            {
-                                "path_pattern": "wp-includes/*",
-                                "allowed_methods": [
-                                    "DELETE",
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS",
-                                    "PATCH",
-                                    "POST",
-                                    "PUT"
-                                ],
-                                "cached_methods": [
-                                    "GET",
-                                    "HEAD",
-                                    "OPTIONS"
-                                ],
-                                "target_origin_id": "alb",
-                                "forwarded_values": [
-                                    {
-                                        "query_string": true,
-                                        "headers": [
-                                            "Host"
-                                        ],
-                                        "cookies": [
-                                            {
-                                                "forward": "all"
-                                            }
-                                        ]
-                                    }
-                                ],
-                                "min_ttl": 3600,
-                                "default_ttl": 3600,
-                                "max_ttl": 3600,
-                                "compress": true,
-                                "viewer_protocol_policy": "redirect-to-https"
-                            }
-                        ],
-                        "price_class": "${var.cf_price_class}",
-                        "tags": "${var.tags}",
-                        "restrictions": [
-                            {
-                                "geo_restriction": [
-                                    {
-                                        "restriction_type": "none"
-                                    }
-                                ]
-                            }
-                        ],
-                        "viewer_certificate": [
-                            {
-                                "acm_certificate_arn": "${module.acm.this_acm_certificate_arn}",
-                                "ssl_support_method": "sni-only",
-                                "minimum_protocol_version": "TLSv1.1_2016"
-                            }
-                        ],
-                        "custom_error_response": [
-                            {
-                                "error_code": 400,
-                                "error_caching_min_ttl": "${var.error_ttl}"
-                            },
-                            {
-                                "error_code": 403,
-                                "error_caching_min_ttl": "${var.error_ttl}"
-                            },
-                            {
-                                "error_code": 404,
-                                "error_caching_min_ttl": "${var.error_ttl}"
-                            },
-                            {
-                                "error_code": 405,
-                                "error_caching_min_ttl": "${var.error_ttl}"
-                            }
-                        ],
-                        "depends_on": [
-                            "${aws_ecs_service.this}"
-                        ]
-                    }
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
-            {
-                "aws_security_group": {
-                    "alb": {
-                        "name": "${var.prefix}-alb-${var.environment}",
-                        "description": "Allow HTTPS inbound traffc",
-                        "vpc_id": "${module.vpc.vpc_id}",
-                        "egress": [
-                            {
-                                "from_port": 0,
-                                "to_port": 0,
-                                "protocol": "-1",
-                                "cidr_blocks": [
-                                    "0.0.0.0/0"
-                                ]
-                            }
-                        ],
-                        "ingress": [
-                            {
-                                "from_port": 443,
-                                "to_port": 443,
-                                "protocol": "tcp",
-                                "cidr_blocks": [
-                                    "0.0.0.0/0"
-                                ]
-                            },
-                            {
-                                "from_port": 0,
-                                "to_port": 0,
-                                "protocol": "-1",
-                                "self": true
-                            }
-                        ],
-                        "tags": "${var.tags}"
-                    }
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/db.tf": [
-            {
-                "random_string": {
-                    "snapshot_suffix": {
-                        "length": 8,
-                        "special": false
-                    }
-                }
-            },
-            {
-                "aws_rds_cluster": {
-                    "this": {
-                        "cluster_identifier": "${var.prefix}-${var.environment}",
-                        "engine": "aurora-mysql",
-                        "engine_mode": "serverless",
-                        "vpc_security_group_ids": [
-                            "${aws_security_group.db.id}"
-                        ],
-                        "db_subnet_group_name": "${aws_db_subnet_group.this.name}",
-                        "engine_version": "${var.db_engine_version}",
-                        "availability_zones": "${data.aws_availability_zones.this.names}",
-                        "database_name": "wordpress",
-                        "master_username": "${var.db_master_username}",
-                        "master_password": "${var.db_master_password}",
-                        "backup_retention_period": "${var.db_backup_retention_days}",
-                        "preferred_backup_window": "${var.db_backup_window}",
-                        "scaling_configuration": [
-                            {
-                                "auto_pause": "${var.db_auto_pause}",
-                                "seconds_until_auto_pause": "${var.db_seconds_until_auto_pause}",
-                                "max_capacity": "${var.db_max_capacity}",
-                                "min_capacity": "${var.db_min_capacity}"
-                            }
-                        ],
-                        "final_snapshot_identifier": "${var.prefix}-${var.environment}-${random_string.snapshot_suffix.result}",
-                        "tags": "${var.tags}"
-                    }
-                }
-            },
-            {
-                "aws_db_subnet_group": {
-                    "this": {
-                        "name": "${var.prefix}-${var.environment}",
-                        "subnet_ids": "${module.vpc.private_subnets}",
-                        "tags": "${var.tags}"
-                    }
-                }
-            },
-            {
-                "aws_security_group": {
-                    "db": {
-                        "vpc_id": "${module.vpc.vpc_id}",
-                        "name": "${var.prefix}-db-${var.environment}",
-                        "ingress": [
-                            {
-                                "protocol": "tcp",
-                                "from_port": 3306,
-                                "to_port": 3306,
-                                "self": true
-                            }
-                        ],
-                        "egress": [
-                            {
-                                "protocol": "-1",
-                                "from_port": 0,
-                                "to_port": 0,
-                                "cidr_blocks": [
-                                    "0.0.0.0/0"
-                                ]
-                            }
-                        ],
-                        "lifecycle": [
-                            {
-                                "create_before_destroy": true
-                            }
-                        ],
-                        "tags": "${var.tags}"
-                    }
-                }
-            },
-            {
-                "aws_ssm_parameter": {
-                    "db_master_user": {
-                        "name": "/${var.prefix}/${var.environment}/db_master_user",
-                        "type": "SecureString",
-                        "value": "${var.db_master_username}",
-                        "tags": "${var.tags}"
-                    }
-                }
-            },
-            {
-                "aws_ssm_parameter": {
-                    "db_master_password": {
-                        "name": "/${var.prefix}/${var.environment}/db_master_password",
-                        "type": "SecureString",
-                        "value": "${var.db_master_password}",
-                        "tags": "${var.tags}"
-                    }
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/main.tf": [
-            {
-                "aws_acm_certificate": {
-                    "module.acm.aws_acm_certificate.this": {
-                        "count": "${local.create_certificate ? 1 : 0}",
-                        "domain_name": "${var.domain_name}",
-                        "subject_alternative_names": "${var.subject_alternative_names}",
-                        "validation_method": "${var.validation_method}",
-                        "key_algorithm": "${var.key_algorithm}",
-                        "options": [
-                            {
-                                "certificate_transparency_logging_preference": "${var.certificate_transparency_logging_preference ? \"ENABLED\" : \"DISABLED\"}"
-                            }
-                        ],
-                        "dynamic": [
-                            {
-                                "validation_option": {
-                                    "for_each": "${var.validation_option}",
-                                    "content": [
-                                        {
-                                            "domain_name": "${try(validation_option.value[\"domain_name\"], validation_option.key)}",
-                                            "validation_domain": "${validation_option.value[\"validation_domain\"]}"
-                                        }
-                                    ]
-                                }
-                            }
-                        ],
-                        "tags": "${var.tags}",
-                        "lifecycle": [
-                            {
-                                "create_before_destroy": true
+                                "name": "${aws_cloudfront_distribution.this.domain_name}",
+                                "zone_id": "${aws_cloudfront_distribution.this.hosted_zone_id}",
+                                "evaluate_target_health": false
                             }
                         ]
                     }
@@ -39567,76 +39498,25 @@
             },
             {
                 "aws_route53_record": {
-                    "module.acm.aws_route53_record.validation": {
-                        "count": "${local.create_certificate || local.create_route53_records_only && var.validation_method == \"DNS\" && var.create_route53_records && var.validate_certificate || local.create_route53_records_only ? length(local.distinct_domain_names) : 0}",
-                        "zone_id": "${var.zone_id}",
-                        "name": "${element(local.validation_domains, count.index)[\"resource_record_name\"]}",
-                        "type": "${element(local.validation_domains, count.index)[\"resource_record_type\"]}",
-                        "ttl": "${var.dns_ttl}",
-                        "records": [
-                            "${element(local.validation_domains, count.index)[\"resource_record_value\"]}"
-                        ],
-                        "allow_overwrite": "${var.validation_allow_overwrite_records}",
-                        "depends_on": [
-                            "${aws_acm_certificate.this}"
-                        ]
-                    }
-                }
-            },
-            {
-                "aws_acm_certificate_validation": {
-                    "module.acm.aws_acm_certificate_validation.this": {
-                        "count": "${local.create_certificate && var.validation_method != None && var.validate_certificate && var.wait_for_validation ? 1 : 0}",
-                        "certificate_arn": "${aws_acm_certificate.this[0].arn}",
-                        "validation_record_fqdns": "${flatten(['${aws_route53_record.validation[*].fqdn}', '${var.validation_record_fqdns}'])}",
-                        "timeouts": [
+                    "ipv6": {
+                        "zone_id": "${data.aws_route53_zone.this.zone_id}",
+                        "name": "${var.site_domain}",
+                        "type": "AAAA",
+                        "alias": [
                             {
-                                "create": "${var.validation_timeout}"
-                            }
-                        ]
-                    }
-                }
-            },
-            {
-                "aws_acm_certificate": {
-                    "module.acm_alb.aws_acm_certificate.this": {
-                        "count": "${local.create_certificate ? 1 : 0}",
-                        "domain_name": "${var.domain_name}",
-                        "subject_alternative_names": "${var.subject_alternative_names}",
-                        "validation_method": "${var.validation_method}",
-                        "key_algorithm": "${var.key_algorithm}",
-                        "options": [
-                            {
-                                "certificate_transparency_logging_preference": "${var.certificate_transparency_logging_preference ? \"ENABLED\" : \"DISABLED\"}"
-                            }
-                        ],
-                        "dynamic": [
-                            {
-                                "validation_option": {
-                                    "for_each": "${var.validation_option}",
-                                    "content": [
-                                        {
-                                            "domain_name": "${try(validation_option.value[\"domain_name\"], validation_option.key)}",
-                                            "validation_domain": "${validation_option.value[\"validation_domain\"]}"
-                                        }
-                                    ]
-                                }
-                            }
-                        ],
-                        "tags": "${var.tags}",
-                        "lifecycle": [
-                            {
-                                "create_before_destroy": true
+                                "name": "${aws_cloudfront_distribution.this.domain_name}",
+                                "zone_id": "${aws_cloudfront_distribution.this.hosted_zone_id}",
+                                "evaluate_target_health": false
                             }
                         ]
                     }
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/main.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm_alb;terraform-aws-modules/acm/aws\\main.tf": [
             {
                 "aws_acm_certificate": {
-                    "this": {
+                    "module.acm_alb.aws_acm_certificate.this": {
                         "count": "${local.create_certificate ? 1 : 0}",
                         "domain_name": "${var.domain_name}",
                         "subject_alternative_names": "${var.subject_alternative_names}",
@@ -39703,7 +39583,7 @@
             },
             {
                 "aws_acm_certificate": {
-                    "this": {
+                    "module.acm.aws_acm_certificate.this": {
                         "count": "${local.create_certificate ? 1 : 0}",
                         "domain_name": "${var.domain_name}",
                         "subject_alternative_names": "${var.subject_alternative_names}",
@@ -39737,7 +39617,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/main.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;alb;terraform-aws-modules/alb/aws\\main.tf": [
             {
                 "aws_lb": {
                     "module.alb.aws_lb.this": {
@@ -39781,7 +39661,6 @@
                                 }
                             }
                         ],
-                        "client_keep_alive": "${var.client_keep_alive}",
                         "customer_owned_ipv4_pool": "${var.customer_owned_ipv4_pool}",
                         "desync_mitigation_mode": "${var.desync_mitigation_mode}",
                         "dns_record_client_routing_policy": "${var.dns_record_client_routing_policy}",
@@ -40136,7 +40015,7 @@
                             },
                             {
                                 "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"host_header\")]}",
+                                    "for_each": "${try(each.value.conditions, [])}",
                                     "content": [
                                         {
                                             "dynamic": [
@@ -40149,18 +40028,7 @@
                                                             }
                                                         ]
                                                     }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"http_header\")]}",
-                                    "content": [
-                                        {
-                                            "dynamic": [
+                                                },
                                                 {
                                                     "http_header": {
                                                         "for_each": "${try(['${condition.value.http_header}'], [])}",
@@ -40171,18 +40039,7 @@
                                                             }
                                                         ]
                                                     }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"http_request_method\")]}",
-                                    "content": [
-                                        {
-                                            "dynamic": [
+                                                },
                                                 {
                                                     "http_request_method": {
                                                         "for_each": "${try(['${condition.value.http_request_method}'], [])}",
@@ -40192,18 +40049,7 @@
                                                             }
                                                         ]
                                                     }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"path_pattern\")]}",
-                                    "content": [
-                                        {
-                                            "dynamic": [
+                                                },
                                                 {
                                                     "path_pattern": {
                                                         "for_each": "${try(['${condition.value.path_pattern}'], [])}",
@@ -40213,18 +40059,7 @@
                                                             }
                                                         ]
                                                     }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"query_string\")]}",
-                                    "content": [
-                                        {
-                                            "dynamic": [
+                                                },
                                                 {
                                                     "query_string": {
                                                         "for_each": "${try(['${condition.value.query_string}'], [])}",
@@ -40235,18 +40070,7 @@
                                                             }
                                                         ]
                                                     }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "condition": {
-                                    "for_each": "${[for condition in each.value.conditions : condition if contains(keys(condition), \"source_ip\")]}",
-                                    "content": [
-                                        {
-                                            "dynamic": [
+                                                },
                                                 {
                                                     "source_ip": {
                                                         "for_each": "${try(['${condition.value.source_ip}'], [])}",
@@ -40481,7 +40305,111 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/main.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm;terraform-aws-modules/acm/aws\\main.tf": [
+            {
+                "aws_acm_certificate": {
+                    "this": {
+                        "count": "${local.create_certificate ? 1 : 0}",
+                        "domain_name": "${var.domain_name}",
+                        "subject_alternative_names": "${var.subject_alternative_names}",
+                        "validation_method": "${var.validation_method}",
+                        "key_algorithm": "${var.key_algorithm}",
+                        "options": [
+                            {
+                                "certificate_transparency_logging_preference": "${var.certificate_transparency_logging_preference ? \"ENABLED\" : \"DISABLED\"}"
+                            }
+                        ],
+                        "dynamic": [
+                            {
+                                "validation_option": {
+                                    "for_each": "${var.validation_option}",
+                                    "content": [
+                                        {
+                                            "domain_name": "${try(validation_option.value[\"domain_name\"], validation_option.key)}",
+                                            "validation_domain": "${validation_option.value[\"validation_domain\"]}"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "tags": "${var.tags}",
+                        "lifecycle": [
+                            {
+                                "create_before_destroy": true
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_route53_record": {
+                    "module.acm.aws_route53_record.validation": {
+                        "count": "${local.create_certificate || local.create_route53_records_only && var.validation_method == \"DNS\" && var.create_route53_records && var.validate_certificate || local.create_route53_records_only ? length(local.distinct_domain_names) : 0}",
+                        "zone_id": "${var.zone_id}",
+                        "name": "${element(local.validation_domains, count.index)[\"resource_record_name\"]}",
+                        "type": "${element(local.validation_domains, count.index)[\"resource_record_type\"]}",
+                        "ttl": "${var.dns_ttl}",
+                        "records": [
+                            "${element(local.validation_domains, count.index)[\"resource_record_value\"]}"
+                        ],
+                        "allow_overwrite": "${var.validation_allow_overwrite_records}",
+                        "depends_on": [
+                            "${aws_acm_certificate.this}"
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_acm_certificate_validation": {
+                    "module.acm.aws_acm_certificate_validation.this": {
+                        "count": "${local.create_certificate && var.validation_method != None && var.validate_certificate && var.wait_for_validation ? 1 : 0}",
+                        "certificate_arn": "${aws_acm_certificate.this[0].arn}",
+                        "validation_record_fqdns": "${flatten(['${aws_route53_record.validation[*].fqdn}', '${var.validation_record_fqdns}'])}",
+                        "timeouts": [
+                            {
+                                "create": "${var.validation_timeout}"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_acm_certificate": {
+                    "this": {
+                        "count": "${local.create_certificate ? 1 : 0}",
+                        "domain_name": "${var.domain_name}",
+                        "subject_alternative_names": "${var.subject_alternative_names}",
+                        "validation_method": "${var.validation_method}",
+                        "key_algorithm": "${var.key_algorithm}",
+                        "options": [
+                            {
+                                "certificate_transparency_logging_preference": "${var.certificate_transparency_logging_preference ? \"ENABLED\" : \"DISABLED\"}"
+                            }
+                        ],
+                        "dynamic": [
+                            {
+                                "validation_option": {
+                                    "for_each": "${var.validation_option}",
+                                    "content": [
+                                        {
+                                            "domain_name": "${try(validation_option.value[\"domain_name\"], validation_option.key)}",
+                                            "validation_domain": "${validation_option.value[\"validation_domain\"]}"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "tags": "${var.tags}",
+                        "lifecycle": [
+                            {
+                                "create_before_destroy": true
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules/vpc/aws\\main.tf": [
             {
                 "aws_vpc": {
                     "module.vpc.aws_vpc.this": {
@@ -40556,9 +40484,9 @@
             {
                 "aws_route_table": {
                     "module.vpc.aws_route_table.public": {
-                        "count": "${local.create_public_subnets ? local.num_public_route_tables : 0}",
+                        "count": "${local.create_public_subnets ? 1 : 0}",
                         "vpc_id": "${local.vpc_id}",
-                        "tags": "${merge({'Name': '${var.create_multiple_public_route_tables ? format(\"${var.name}-${var.public_subnet_suffix}-%s\", element(var.azs, count.index)) : \"${var.name}-${var.public_subnet_suffix}\"}'}, var.tags, var.public_route_table_tags)}"
+                        "tags": "${merge({'Name': '${var.name}-${var.public_subnet_suffix}'}, var.tags, var.public_route_table_tags)}"
                     }
                 }
             },
@@ -40567,7 +40495,7 @@
                     "module.vpc.aws_route_table_association.public": {
                         "count": "${local.create_public_subnets ? local.len_public_subnets : 0}",
                         "subnet_id": "${element(aws_subnet.public[*].id, count.index)}",
-                        "route_table_id": "${element(aws_route_table.public[*].id, var.create_multiple_public_route_tables ? count.index : 0)}"
+                        "route_table_id": "${aws_route_table.public[0].id}"
                     }
                 }
             },
@@ -41098,9 +41026,9 @@
             {
                 "aws_route_table": {
                     "module.vpc.aws_route_table.intra": {
-                        "count": "${local.create_intra_subnets ? local.num_intra_route_tables : 0}",
+                        "count": "${local.create_intra_subnets ? 1 : 0}",
                         "vpc_id": "${local.vpc_id}",
-                        "tags": "${merge({'Name': '${var.create_multiple_intra_route_tables ? format(\"${var.name}-${var.intra_subnet_suffix}-%s\", element(var.azs, count.index)) : \"${var.name}-${var.intra_subnet_suffix}\"}'}, var.tags, var.intra_route_table_tags)}"
+                        "tags": "${merge({'Name': '${var.name}-${var.intra_subnet_suffix}'}, var.tags, var.intra_route_table_tags)}"
                     }
                 }
             },
@@ -41109,7 +41037,7 @@
                     "module.vpc.aws_route_table_association.intra": {
                         "count": "${local.create_intra_subnets ? local.len_intra_subnets : 0}",
                         "subnet_id": "${element(aws_subnet.intra[*].id, count.index)}",
-                        "route_table_id": "${element(aws_route_table.intra[*].id, var.create_multiple_intra_route_tables ? count.index : 0)}"
+                        "route_table_id": "${element(aws_route_table.intra[*].id, 0)}"
                     }
                 }
             },
@@ -41256,7 +41184,7 @@
             {
                 "aws_route": {
                     "module.vpc.aws_route.private_ipv6_egress": {
-                        "count": "${local.create_vpc && var.create_egress_only_igw && var.enable_ipv6 && local.len_private_subnets > 0 ? local.nat_gateway_count : 0}",
+                        "count": "${local.create_vpc && var.create_egress_only_igw && var.enable_ipv6 ? local.len_private_subnets : 0}",
                         "route_table_id": "${element(aws_route_table.private[*].id, count.index)}",
                         "destination_ipv6_cidr_block": "::/0",
                         "egress_only_gateway_id": "${element(aws_egress_only_internet_gateway.this[*].id, 0)}"
@@ -41532,7 +41460,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/vpc-flow-logs.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules/vpc/aws\\vpc-flow-logs.tf": [
             {
                 "aws_flow_log": {
                     "module.vpc.aws_flow_log.this": {
@@ -41571,7 +41499,6 @@
                         "retention_in_days": "${var.flow_log_cloudwatch_log_group_retention_in_days}",
                         "kms_key_id": "${var.flow_log_cloudwatch_log_group_kms_key_id}",
                         "skip_destroy": "${var.flow_log_cloudwatch_log_group_skip_destroy}",
-                        "log_group_class": "${var.flow_log_cloudwatch_log_group_class}",
                         "tags": "${merge(var.tags, var.vpc_flow_log_tags)}"
                     }
                 }
@@ -41608,76 +41535,91 @@
             }
         ]
     },
-    "all_module": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/cloudfront.tf": [
+    "all_data": {
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\data.tf": [
             {
-                "acm": {
-                    "source": "terraform-aws-modules/acm/aws",
-                    "version": "~> v2.0",
-                    "domain_name": "${var.site_domain}",
-                    "zone_id": "${data.aws_route53_zone.this.zone_id}",
-                    "tags": "${var.tags}",
-                    "providers": {
-                        "aws": "${aws.us_east_1}"
+                "aws_region": {
+                    "current": {}
+                }
+            },
+            {
+                "aws_caller_identity": {
+                    "current": {}
+                }
+            },
+            {
+                "aws_availability_zones": {
+                    "this": {}
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\route53.tf": [
+            {
+                "aws_route53_zone": {
+                    "this": {
+                        "zone_id": "Z1017156O279JAVBAIZ3"
                     }
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/alb.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;alb;terraform-aws-modules/alb/aws\\main.tf": [
             {
-                "acm_alb": {
-                    "source": "terraform-aws-modules/acm/aws",
-                    "version": "~> v2.0",
-                    "domain_name": "${var.public_alb_domain}",
-                    "zone_id": "${data.aws_route53_zone.this.zone_id}",
-                    "tags": "${var.tags}"
-                }
-            },
-            {
-                "alb": {
-                    "source": "terraform-aws-modules/alb/aws",
-                    "version": "~> 5.0",
-                    "name": "${var.prefix}-${var.environment}",
-                    "load_balancer_type": "application",
-                    "vpc_id": "${module.vpc.vpc_id}",
-                    "subnets": "${module.vpc.public_subnets}",
-                    "security_groups": [
-                        "${aws_security_group.alb.id}"
-                    ],
-                    "https_listeners": [
-                        {
-                            "certificate_arn": "${module.acm_alb.this_acm_certificate_arn}",
-                            "port": 443
-                        }
-                    ],
-                    "target_groups": [
-                        "{'name': '\"wordpress\"-default-\"dev\"', 'backend_protocol': 'HTTP', 'backend_port': 80}"
-                    ],
-                    "tags": "${var.tags}"
+                "aws_partition": {
+                    "current": {}
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/vpc.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules/vpc/aws\\vpc-flow-logs.tf": [
             {
-                "vpc": {
-                    "source": "terraform-aws-modules/vpc/aws",
-                    "name": "${var.prefix}-${var.environment}",
-                    "version": "5.2.0",
-                    "cidr": "${var.vpc_cidr}",
-                    "azs": "${data.aws_availability_zones.this.names}",
-                    "private_subnets": "${var.private_subnet_cidrs}",
-                    "public_subnets": "${var.public_subnet_cidrs}",
-                    "enable_nat_gateway": true,
-                    "single_nat_gateway": false,
-                    "one_nat_gateway_per_az": false,
-                    "tags": "${var.tags}",
-                    "enable_dns_hostnames": true
+                "aws_iam_policy_document": {
+                    "flow_log_cloudwatch_assume_role": {
+                        "count": "${local.create_flow_log_cloudwatch_iam_role ? 1 : 0}",
+                        "statement": [
+                            {
+                                "sid": "AWSVPCFlowLogsAssumeRole",
+                                "principals": [
+                                    {
+                                        "type": "Service",
+                                        "identifiers": [
+                                            "vpc-flow-logs.amazonaws.com"
+                                        ]
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "actions": [
+                                    "sts:AssumeRole"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_iam_policy_document": {
+                    "vpc_flow_log_cloudwatch": {
+                        "count": "${local.create_flow_log_cloudwatch_iam_role ? 1 : 0}",
+                        "statement": [
+                            {
+                                "sid": "AWSVPCFlowLogsPushToCloudWatch",
+                                "effect": "Allow",
+                                "actions": [
+                                    "logs:CreateLogStream",
+                                    "logs:PutLogEvents",
+                                    "logs:DescribeLogGroups",
+                                    "logs:DescribeLogStreams"
+                                ],
+                                "resources": [
+                                    "*"
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         ]
     },
     "all_variable": {
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/variables.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\variables.tf": [
             {
                 "tags": {
                     "description": "AWS Tags to add to all resources created (where possible); see https://aws.amazon.com/answers/account-management/aws-tagging-strategies/",
@@ -41870,7 +41812,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws/variables.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm_alb;terraform-aws-modules/acm/aws\\variables.tf": [
             {
                 "create_certificate": {
                     "description": "Whether to create ACM certificate",
@@ -42018,155 +41960,7 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm_alb;terraform-aws-modules/acm/aws/variables.tf": [
-            {
-                "create_certificate": {
-                    "description": "Whether to create ACM certificate",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "create_route53_records_only": {
-                    "description": "Whether to create only Route53 records (e.g. using separate AWS provider)",
-                    "type": "${bool}",
-                    "default": false
-                }
-            },
-            {
-                "validate_certificate": {
-                    "description": "Whether to validate certificate by creating Route53 record",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "validation_allow_overwrite_records": {
-                    "description": "Whether to allow overwrite of Route53 records",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "wait_for_validation": {
-                    "description": "Whether to wait for the validation to complete",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "validation_timeout": {
-                    "description": "Define maximum timeout to wait for the validation to complete",
-                    "type": "${string}",
-                    "default": null
-                }
-            },
-            {
-                "certificate_transparency_logging_preference": {
-                    "description": "Specifies whether certificate details should be added to a certificate transparency log",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "domain_name": {
-                    "description": "A domain name for which the certificate should be issued",
-                    "type": "${string}",
-                    "default": ""
-                }
-            },
-            {
-                "subject_alternative_names": {
-                    "description": "A list of domains that should be SANs in the issued certificate",
-                    "type": "${list(string)}",
-                    "default": []
-                }
-            },
-            {
-                "validation_method": {
-                    "description": "Which method to use for validation. DNS or EMAIL are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.",
-                    "type": "${string}",
-                    "default": null,
-                    "validation": [
-                        {
-                            "condition": "${var.validation_method == None || contains(['DNS', 'EMAIL'], coalesce(var.validation_method, 0))}",
-                            "error_message": "This variable is optional. Valid values are DNS, EMAIL, or null."
-                        }
-                    ]
-                }
-            },
-            {
-                "validation_option": {
-                    "description": "The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use.",
-                    "type": "${any}",
-                    "default": {}
-                }
-            },
-            {
-                "create_route53_records": {
-                    "description": "When validation is set to DNS, define whether to create the DNS records internally via Route53 or externally using any DNS provider",
-                    "type": "${bool}",
-                    "default": true
-                }
-            },
-            {
-                "validation_record_fqdns": {
-                    "description": "When validation is set to DNS and the DNS validation records are set externally, provide the fqdns for the validation",
-                    "type": "${list(string)}",
-                    "default": []
-                }
-            },
-            {
-                "zone_id": {
-                    "description": "The ID of the hosted zone to contain this record. Required when validating via Route53",
-                    "type": "${string}",
-                    "default": ""
-                }
-            },
-            {
-                "tags": {
-                    "description": "A mapping of tags to assign to the resource",
-                    "type": "${map(string)}",
-                    "default": {}
-                }
-            },
-            {
-                "dns_ttl": {
-                    "description": "The TTL of DNS recursive resolvers to cache information about this record.",
-                    "type": "${number}",
-                    "default": 60
-                }
-            },
-            {
-                "acm_certificate_domain_validation_options": {
-                    "description": "A list of domain_validation_options created by the ACM certificate to create required Route53 records from it (used when create_route53_records_only is set to true)",
-                    "type": "${any}",
-                    "default": {}
-                }
-            },
-            {
-                "distinct_domain_names": {
-                    "description": "List of distinct domains and SANs (used when create_route53_records_only is set to true)",
-                    "type": "${list(string)}",
-                    "default": []
-                }
-            },
-            {
-                "key_algorithm": {
-                    "description": "Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data",
-                    "type": "${string}",
-                    "default": null
-                }
-            },
-            {
-                "putin_khuylo": {
-                    "description": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!",
-                    "type": "${bool}",
-                    "default": true
-                }
-            }
-        ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws/variables.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;alb;terraform-aws-modules/alb/aws\\variables.tf": [
             {
                 "create": {
                     "description": "Controls if resources should be created (affects nearly all resources)",
@@ -42193,13 +41987,6 @@
                     "description": "Map containing access logging configuration for load balancer",
                     "type": "${map(string)}",
                     "default": {}
-                }
-            },
-            {
-                "client_keep_alive": {
-                    "description": "Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.",
-                    "type": "${number}",
-                    "default": null
                 }
             },
             {
@@ -42483,7 +42270,155 @@
                 }
             }
         ],
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws/variables.tf": [
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm;terraform-aws-modules/acm/aws\\variables.tf": [
+            {
+                "create_certificate": {
+                    "description": "Whether to create ACM certificate",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "create_route53_records_only": {
+                    "description": "Whether to create only Route53 records (e.g. using separate AWS provider)",
+                    "type": "${bool}",
+                    "default": false
+                }
+            },
+            {
+                "validate_certificate": {
+                    "description": "Whether to validate certificate by creating Route53 record",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "validation_allow_overwrite_records": {
+                    "description": "Whether to allow overwrite of Route53 records",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "wait_for_validation": {
+                    "description": "Whether to wait for the validation to complete",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "validation_timeout": {
+                    "description": "Define maximum timeout to wait for the validation to complete",
+                    "type": "${string}",
+                    "default": null
+                }
+            },
+            {
+                "certificate_transparency_logging_preference": {
+                    "description": "Specifies whether certificate details should be added to a certificate transparency log",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "domain_name": {
+                    "description": "A domain name for which the certificate should be issued",
+                    "type": "${string}",
+                    "default": ""
+                }
+            },
+            {
+                "subject_alternative_names": {
+                    "description": "A list of domains that should be SANs in the issued certificate",
+                    "type": "${list(string)}",
+                    "default": []
+                }
+            },
+            {
+                "validation_method": {
+                    "description": "Which method to use for validation. DNS or EMAIL are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.",
+                    "type": "${string}",
+                    "default": null,
+                    "validation": [
+                        {
+                            "condition": "${var.validation_method == None || contains(['DNS', 'EMAIL'], coalesce(var.validation_method, 0))}",
+                            "error_message": "This variable is optional. Valid values are DNS, EMAIL, or null."
+                        }
+                    ]
+                }
+            },
+            {
+                "validation_option": {
+                    "description": "The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use.",
+                    "type": "${any}",
+                    "default": {}
+                }
+            },
+            {
+                "create_route53_records": {
+                    "description": "When validation is set to DNS, define whether to create the DNS records internally via Route53 or externally using any DNS provider",
+                    "type": "${bool}",
+                    "default": true
+                }
+            },
+            {
+                "validation_record_fqdns": {
+                    "description": "When validation is set to DNS and the DNS validation records are set externally, provide the fqdns for the validation",
+                    "type": "${list(string)}",
+                    "default": []
+                }
+            },
+            {
+                "zone_id": {
+                    "description": "The ID of the hosted zone to contain this record. Required when validating via Route53",
+                    "type": "${string}",
+                    "default": ""
+                }
+            },
+            {
+                "tags": {
+                    "description": "A mapping of tags to assign to the resource",
+                    "type": "${map(string)}",
+                    "default": {}
+                }
+            },
+            {
+                "dns_ttl": {
+                    "description": "The TTL of DNS recursive resolvers to cache information about this record.",
+                    "type": "${number}",
+                    "default": 60
+                }
+            },
+            {
+                "acm_certificate_domain_validation_options": {
+                    "description": "A list of domain_validation_options created by the ACM certificate to create required Route53 records from it (used when create_route53_records_only is set to true)",
+                    "type": "${any}",
+                    "default": {}
+                }
+            },
+            {
+                "distinct_domain_names": {
+                    "description": "List of distinct domains and SANs (used when create_route53_records_only is set to true)",
+                    "type": "${list(string)}",
+                    "default": []
+                }
+            },
+            {
+                "key_algorithm": {
+                    "description": "Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data",
+                    "type": "${string}",
+                    "default": null
+                }
+            },
+            {
+                "putin_khuylo": {
+                    "description": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!",
+                    "type": "${bool}",
+                    "default": true
+                }
+            }
+        ],
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules/vpc/aws\\variables.tf": [
             {
                 "create_vpc": {
                     "description": "Controls if VPC should be created (it affects almost all resources)",
@@ -42699,13 +42634,6 @@
             {
                 "public_subnet_enable_resource_name_dns_a_record_on_launch": {
                     "description": "Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`",
-                    "type": "${bool}",
-                    "default": false
-                }
-            },
-            {
-                "create_multiple_public_route_tables": {
-                    "description": "Indicates whether to create a separate route table for each public subnet. Default: `false`",
                     "type": "${bool}",
                     "default": false
                 }
@@ -43487,13 +43415,6 @@
                 }
             },
             {
-                "create_multiple_intra_route_tables": {
-                    "description": "Indicates whether to create a separate route table for each intra subnet. Default: `false`",
-                    "type": "${bool}",
-                    "default": false
-                }
-            },
-            {
                 "intra_subnet_ipv6_prefixes": {
                     "description": "Assigns IPv6 intra subnet id based on the Amazon provided /56 prefix base 10 integer (0-256). Must be of equal length to the corresponding IPv4 subnet list",
                     "type": "${list(string)}",
@@ -44208,13 +44129,6 @@
                 }
             },
             {
-                "flow_log_cloudwatch_log_group_class": {
-                    "description": "Specified the log class of the log group. Possible values are: STANDARD or INFREQUENT_ACCESS",
-                    "type": "${string}",
-                    "default": null
-                }
-            },
-            {
                 "putin_khuylo": {
                     "description": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!",
                     "type": "${bool}",
@@ -44224,12 +44138,6 @@
         ]
     },
     "all_locals": {
-        "acm": {
-            "create_certificate": "${var.create_certificate && var.putin_khuylo}",
-            "create_route53_records_only": "${var.create_route53_records_only && var.putin_khuylo}",
-            "distinct_domain_names": "${coalescelist(var.distinct_domain_names, distinct([for s in concat(['${var.domain_name}'], var.subject_alternative_names) : replace(s, \"*.\", \"\")]))}",
-            "validation_domains": "${local.create_certificate || local.create_route53_records_only ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, var.acm_certificate_domain_validation_options) : merge(tomap(v), {'domain_name': '${replace(v.domain_name, \"*.\", \"\")}'})]) : []}"
-        },
         "acm_alb": {
             "create_certificate": "${var.create_certificate && var.putin_khuylo}",
             "create_route53_records_only": "${var.create_route53_records_only && var.putin_khuylo}",
@@ -44245,10 +44153,13 @@
             "create_security_group": "${local.create && var.create_security_group}",
             "security_group_name": "${try(coalesce(var.security_group_name, var.name, var.name_prefix), \"\")}"
         },
+        "acm": {
+            "create_certificate": "${var.create_certificate && var.putin_khuylo}",
+            "create_route53_records_only": "${var.create_route53_records_only && var.putin_khuylo}",
+            "distinct_domain_names": "${coalescelist(var.distinct_domain_names, distinct([for s in concat(['${var.domain_name}'], var.subject_alternative_names) : replace(s, \"*.\", \"\")]))}",
+            "validation_domains": "${local.create_certificate || local.create_route53_records_only ? distinct([for k , v in try(aws_acm_certificate.this[0].domain_validation_options, var.acm_certificate_domain_validation_options) : merge(tomap(v), {'domain_name': '${replace(v.domain_name, \"*.\", \"\")}'})]) : []}"
+        },
         "vpc": {
-            "redshift_route_table_ids": "${aws_route_table.redshift[*].id}",
-            "public_route_table_ids": "${aws_route_table.public[*].id}",
-            "private_route_table_ids": "${aws_route_table.private[*].id}",
             "len_public_subnets": "${max(length(var.public_subnets), length(var.public_subnet_ipv6_prefixes))}",
             "len_private_subnets": "${max(length(var.private_subnets), length(var.private_subnet_ipv6_prefixes))}",
             "len_database_subnets": "${max(length(var.database_subnets), length(var.database_subnet_ipv6_prefixes))}",
@@ -44260,7 +44171,6 @@
             "vpc_id": "${try(aws_vpc_ipv4_cidr_block_association.this[0].vpc_id, aws_vpc.this[0].id, \"\")}",
             "create_vpc": "${var.create_vpc && var.putin_khuylo}",
             "create_public_subnets": "${local.create_vpc && local.len_public_subnets > 0}",
-            "num_public_route_tables": "${var.create_multiple_public_route_tables ? local.len_public_subnets : 1}",
             "create_private_subnets": "${local.create_vpc && local.len_private_subnets > 0}",
             "create_private_network_acl": "${local.create_private_subnets && var.private_dedicated_network_acl}",
             "create_database_subnets": "${local.create_vpc && local.len_database_subnets > 0}",
@@ -44273,12 +44183,14 @@
             "create_elasticache_route_table": "${local.create_elasticache_subnets && var.create_elasticache_subnet_route_table}",
             "create_elasticache_network_acl": "${local.create_elasticache_subnets && var.elasticache_dedicated_network_acl}",
             "create_intra_subnets": "${local.create_vpc && local.len_intra_subnets > 0}",
-            "num_intra_route_tables": "${var.create_multiple_intra_route_tables ? local.len_intra_subnets : 1}",
             "create_intra_network_acl": "${local.create_intra_subnets && var.intra_dedicated_network_acl}",
             "create_outpost_subnets": "${local.create_vpc && local.len_outpost_subnets > 0}",
             "create_outpost_network_acl": "${local.create_outpost_subnets && var.outpost_dedicated_network_acl}",
             "nat_gateway_count": "${var.single_nat_gateway ? 1 : var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length}",
-            "nat_gateway_ips": "${var.reuse_nat_ips ? var.external_nat_ip_ids : aws_eip.nat[*].id}",
+            "nat_gateway_ips": "${var.reuse_nat_ips ? var.external_nat_ip_ids : try(aws_eip.nat[*].id, [])}",
+            "redshift_route_table_ids": "${aws_route_table.redshift[*].id}",
+            "public_route_table_ids": "${aws_route_table.public[*].id}",
+            "private_route_table_ids": "${aws_route_table.private[*].id}",
             "enable_flow_log": "${var.create_vpc && var.enable_flow_log}",
             "create_flow_log_cloudwatch_iam_role": "${local.enable_flow_log && var.flow_log_destination_type != \"s3\" && var.create_flow_log_cloudwatch_iam_role}",
             "create_flow_log_cloudwatch_log_group": "${local.enable_flow_log && var.flow_log_destination_type != \"s3\" && var.create_flow_log_cloudwatch_log_group}",
@@ -44288,9 +44200,9 @@
         }
     },
     "varfile_list": [
-        "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate/aws/wordpress_fargate/terraform.tfvars"
+        "C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_//github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate\\aws/wordpress_fargate\\terraform.tfvars"
     ],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3'>",
+    "tempdir": "<TemporaryDirectory 'C:\\\\Users\\\\pares\\\\AppData\\\\Local\\\\Temp\\\\tmp97czct5j'>",
     "variable_list": {
         "tags": "${var.tags}",
         "prefix": "\"wordpress\"",
@@ -44338,7 +44250,7 @@
         "wait_for_validation": true,
         "validation_timeout": null,
         "certificate_transparency_logging_preference": true,
-        "domain_name": "${var.public_alb_domain}",
+        "domain_name": "${var.site_domain}",
         "subject_alternative_names": [],
         "validation_method": null,
         "validation_option": {},
@@ -44353,7 +44265,6 @@
         "create": true,
         "access_logs": {},
         "connection_logs": {},
-        "client_keep_alive": null,
         "customer_owned_ipv4_pool": null,
         "desync_mitigation_mode": null,
         "dns_record_client_routing_policy": null,
@@ -44428,7 +44339,6 @@
         "public_subnet_enable_dns64": true,
         "public_subnet_enable_resource_name_dns_aaaa_record_on_launch": true,
         "public_subnet_enable_resource_name_dns_a_record_on_launch": false,
-        "create_multiple_public_route_tables": false,
         "public_subnet_ipv6_prefixes": [],
         "public_subnet_ipv6_native": false,
         "map_public_ip_on_launch": false,
@@ -44617,7 +44527,6 @@
         "intra_subnet_enable_dns64": true,
         "intra_subnet_enable_resource_name_dns_aaaa_record_on_launch": true,
         "intra_subnet_enable_resource_name_dns_a_record_on_launch": false,
-        "create_multiple_intra_route_tables": false,
         "intra_subnet_ipv6_prefixes": [],
         "intra_subnet_ipv6_native": false,
         "intra_subnet_private_dns_hostname_type_on_launch": null,
@@ -44779,22 +44688,21 @@
         "flow_log_cloudwatch_log_group_retention_in_days": null,
         "flow_log_cloudwatch_log_group_kms_key_id": null,
         "flow_log_cloudwatch_log_group_skip_destroy": false,
-        "flow_log_cloudwatch_log_group_class": null,
         "source": "terraform-aws-modules/vpc/aws",
         "version": "5.2.0",
-        "providers": {
-            "aws": "${aws.us_east_1}"
-        },
         "https_listeners": [
             {
                 "certificate_arn": "${module.acm_alb.this_acm_certificate_arn}",
                 "port": 443
             }
-        ]
+        ],
+        "providers": {
+            "aws": "${aws.us_east_1}"
+        }
     },
     "variable_map": {
         "main": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpxh1lhyuk/;main;https_/github.com/patrickchugh/terraform-examples.git/aws/wordpress_fargate/aws/wordpress_fargate\"",
+            "source_dir": "\"C:\\Users\\pares\\AppData\\Local\\Temp\\tmpdnq85a3v\\;main;https_\\github.com\\patrickchugh\\terraform-examples.git\\aws\\wordpress_fargate\\aws\\wordpress_fargate\"",
             "tags": {},
             "prefix": "\"wordpress\"",
             "site_domain": "\"route53.example.com\"",
@@ -44836,8 +44744,33 @@
             "min_task": "\"1\"",
             "source": "main"
         },
+        "acm_alb": {
+            "source_dir": "\"C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm_alb;terraform-aws-modules\\acm\\aws\"",
+            "create_certificate": true,
+            "create_route53_records_only": false,
+            "validate_certificate": true,
+            "validation_allow_overwrite_records": true,
+            "wait_for_validation": true,
+            "validation_timeout": null,
+            "certificate_transparency_logging_preference": true,
+            "domain_name": "\"example.com\"",
+            "subject_alternative_names": [],
+            "validation_method": null,
+            "validation_option": {},
+            "create_route53_records": true,
+            "validation_record_fqdns": [],
+            "zone_id": "\"${data.aws_route53_zone.this.zone_id}\"",
+            "tags": "\"{}\"",
+            "dns_ttl": 60,
+            "acm_certificate_domain_validation_options": {},
+            "distinct_domain_names": [],
+            "key_algorithm": null,
+            "putin_khuylo": true,
+            "source": "\"terraform-aws-modules/acm/aws\"",
+            "version": "\"~> v2.0\""
+        },
         "acm": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws\"",
+            "source_dir": "\"C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;acm_alb;terraform-aws-modules\\acm\\aws\"",
             "create_certificate": true,
             "create_route53_records_only": false,
             "validate_certificate": true,
@@ -44864,38 +44797,12 @@
                 "aws": "${aws.us_east_1}"
             }
         },
-        "acm_alb": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;acm;terraform-aws-modules/acm/aws\"",
-            "create_certificate": true,
-            "create_route53_records_only": false,
-            "validate_certificate": true,
-            "validation_allow_overwrite_records": true,
-            "wait_for_validation": true,
-            "validation_timeout": null,
-            "certificate_transparency_logging_preference": true,
-            "domain_name": "\"example.com\"",
-            "subject_alternative_names": [],
-            "validation_method": null,
-            "validation_option": {},
-            "create_route53_records": true,
-            "validation_record_fqdns": [],
-            "zone_id": "\"${data.aws_route53_zone.this.zone_id}\"",
-            "tags": "\"{}\"",
-            "dns_ttl": 60,
-            "acm_certificate_domain_validation_options": {},
-            "distinct_domain_names": [],
-            "key_algorithm": null,
-            "putin_khuylo": true,
-            "source": "\"terraform-aws-modules/acm/aws\"",
-            "version": "\"~> v2.0\""
-        },
         "alb": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;alb;terraform-aws-modules/alb/aws\"",
+            "source_dir": "\"C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;alb;terraform-aws-modules\\alb\\aws\"",
             "create": true,
             "tags": "\"{}\"",
             "access_logs": {},
             "connection_logs": {},
-            "client_keep_alive": null,
             "customer_owned_ipv4_pool": null,
             "desync_mitigation_mode": null,
             "dns_record_client_routing_policy": null,
@@ -44945,7 +44852,7 @@
             "https_listeners": "[{'certificate_arn': '${module.acm_alb.this_acm_certificate_arn}', 'port': 443}]"
         },
         "vpc": {
-            "source_dir": "\"/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp4lnz1uf3/;vpc;terraform-aws-modules/vpc/aws\"",
+            "source_dir": "\"C:\\Users\\pares\\AppData\\Local\\Temp\\tmp97czct5j\\;vpc;terraform-aws-modules\\vpc\\aws\"",
             "create_vpc": true,
             "name": "\"wordpress\"-\"dev\"",
             "cidr": "\"10.0.0.0/16\"",
@@ -44979,7 +44886,6 @@
             "public_subnet_enable_dns64": true,
             "public_subnet_enable_resource_name_dns_aaaa_record_on_launch": true,
             "public_subnet_enable_resource_name_dns_a_record_on_launch": false,
-            "create_multiple_public_route_tables": false,
             "public_subnet_ipv6_prefixes": [],
             "public_subnet_ipv6_native": false,
             "map_public_ip_on_launch": false,
@@ -45168,7 +45074,6 @@
             "intra_subnet_enable_dns64": true,
             "intra_subnet_enable_resource_name_dns_aaaa_record_on_launch": true,
             "intra_subnet_enable_resource_name_dns_a_record_on_launch": false,
-            "create_multiple_intra_route_tables": false,
             "intra_subnet_ipv6_prefixes": [],
             "intra_subnet_ipv6_native": false,
             "intra_subnet_private_dns_hostname_type_on_launch": null,
@@ -45331,7 +45236,6 @@
             "flow_log_cloudwatch_log_group_retention_in_days": null,
             "flow_log_cloudwatch_log_group_kms_key_id": null,
             "flow_log_cloudwatch_log_group_skip_destroy": false,
-            "flow_log_cloudwatch_log_group_class": null,
             "putin_khuylo": true,
             "source": "\"terraform-aws-modules/vpc/aws\"",
             "version": "\"5.2.0\""

@@ -56,9 +56,13 @@ def check_relationship(
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
-        matching = list({s for s in nodes if s.split("~")[0] in str(param)})
         matching = list(
-            {s for s in nodes if helpers.get_no_module_name(s) in str(param)}
+            {
+                s
+                for s in nodes
+                if helpers.get_no_module_name(s.split("~")[0]).split("[")[0]
+                in str(param)
+            }
         )
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(

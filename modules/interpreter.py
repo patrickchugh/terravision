@@ -1,6 +1,5 @@
 from hmac import new
 from multiprocessing import process
-import resource
 import modules.helpers as helpers
 import hcl2
 import click

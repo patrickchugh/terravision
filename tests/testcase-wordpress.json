@@ -70,7 +70,9 @@
     "aws_efs_mount_target.this[2]~3": [
         "aws_efs_file_system.efs"
     ],
-    "aws_eip.elastic_ip": [],
+    "aws_eip.elastic_ip": [
+        "aws_internet_gateway.igw"
+    ],
     "aws_fargate.ecs~1": [
         "aws_ecr_repository.ecr",
         "aws_ecs_cluster.ecs",
