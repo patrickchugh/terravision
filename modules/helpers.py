@@ -322,6 +322,17 @@ def find_resource_containing(search_list: list, keyword: str):
     return False
 
 
+def find_all_resources_containing(search_list: list, keyword: str):
+    foundlist = list()
+    for actual_name in search_list:
+        if keyword in actual_name:
+            foundlist.append(actual_name)
+    if foundlist:
+        return foundlist
+    else:
+        return False
+
+
 def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)

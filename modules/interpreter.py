@@ -268,7 +268,6 @@ def replace_var_values(
             value = value.replace(
                 varitem, str(tfdata["variable_map"][module_name].get(lookup)), 1
             )
-            # value = helpers.find_replace(varitem. str(tfdata["variable_map"][module_name].get(lookup)), value)
             break
         else:
             click.echo(
@@ -368,7 +367,121 @@ def show_error(mod, resource, eval_string, exp, tfdata):
     return tfdata
 
 
+# Adds additional metadata
+def handle_implied_resources(item, resource_type, resource_name, tfdata, meta_data):
+    # Check if Cloudwatch is present in policies and create node for Cloudwatch service if found
+    if resource_type == "aws_iam_policy":
+        if "logs:" in item[resource_type][resource_name]["policy"][0]:
+            if not "aws_cloudwatch_log_group.logs" in tfdata["node_list"]:
+                tfdata["node_list"].append("aws_cloudwatch_log_group.logs")
+                tfdata["graphdict"]["aws_cloudwatch_log_group.logs"] = []
+            meta_data["aws_cloudwatch_log_group.logs"] = item[resource_type][
+                resource_name
+            ]
+    return meta_data, tfdata
+
+
+def handle_numbered_nodes(resource_node, tfdata, meta_data):
+    # Determine count by number of objects created by Terraform
+    all_matching_list = helpers.find_all_resources_containing(
+        tfdata["node_list"], resource_node.split("[")[0] + "["
+    )
+    resource_count = len(all_matching_list)
+    for actual_name in all_matching_list:
+        meta_data[actual_name] = meta_data[resource_node]
+        meta_data[actual_name]["count"] = resource_count
+    return meta_data
+
+
+def find_actual_resource(
+    node_list: list, resource: str, resource_type: str, mod: str, tfdata: dict
+) -> str:
+    # If we have a singleton resource already in the nodelist no need to search further
+    if resource in node_list:
+        return resource
+    else:
+        # search for possible candidate nodes with number bracket
+        search = f"{resource}["
+        all_candidates = helpers.find_all_resources_containing(node_list, search)
+        if all_candidates:
+            return all_candidates[0]
+        else:
+            # possible name mutation so find closest resource
+            if not resource in tfdata["original_metadata"].keys():
+                resource = helpers.list_of_dictkeys_containing(
+                    tfdata["original_metadata"],
+                    f"module.{mod}.{resource_type}.",
+                )
+                if resource:
+                    return resource[0]
+                else:
+                    return False
+
+
 def get_metadata(tfdata):  # -> set
+    """
+    Extract resource attributes from resources by looping through each resource in each file.
+    Returns a set with a node_list of unique resources, and dict of resource attributes (metadata)
+    """
+    meta_data = dict()
+    # Create list of node names that will be created
+    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
+    # Default module is assumed main unless over-ridden
+    mod = "main"
+    click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
+    if not tfdata.get("all_resource"):
+        click.echo(
+            click.style(
+                f"\nWARNING: Unable to find any resources ", fg="red", bold=True
+            )
+        )
+        tfdata["all_resource"] = dict()
+    else:
+        for filename, resource_list in tfdata["all_resource"].items():
+            if ";" in filename:
+                mod = filename.split(";")[1]
+            # Source code doesn't have final resource names so we need to match them up to right metadata records
+            for item in resource_list:
+                for resource_type in item.keys():
+                    for resource_name in item[resource_type]:
+                        if resource_name.startswith("module."):
+                            resource_node = resource_name
+                        else:
+                            resource_node = f"{resource_type}.{resource_name}"
+
+                        meta_data, tfdata = handle_implied_resources(
+                            item, resource_type, resource_name, tfdata, meta_data
+                        )
+                    click.echo(f"   {resource_node}")
+                    found_node = find_actual_resource(
+                        tfdata["node_list"], resource_node, resource_type, mod, tfdata
+                    )
+                    if not found_node:
+                        break  # not a created resource
+                    else:
+                        # Store original metadata from tf
+                        omd = dict(tfdata["original_metadata"][found_node])
+                        # Get metadata as specified in source files
+                        md = item[resource_type][resource_name]
+                        # Capture original count value string
+                        if md.get("count"):
+                            md["original_count"] = str(md["count"])
+                        # Over-ride original metadata params where present
+                        omd.update(md)
+                        meta_data[resource_node] = omd
+                        meta_data[resource_node]["module"] = mod
+                        meta_data[found_node] = omd
+                        meta_data[found_node]["module"] = mod
+                        # Check if numbered node exists in metadata
+                        if "~" in found_node:
+                            meta_data = handle_numbered_nodes(
+                                found_node, tfdata, meta_data
+                            )
+    tfdata["meta_data"] = meta_data
+    return tfdata
+
+
+def get_metadata_old(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
     Returns a set with a node_list of unique resources, resource attributes (metadata)
@@ -418,7 +531,7 @@ def get_metadata(tfdata):  # -> set
                 else:
                     resource_node = f"{resource_type}.{resource_name}"
                 click.echo(f"   {resource_node}")
-                # If numbering not present add
+                # Check if numbered node exists in metadata
                 if not resource_node in tfdata["original_metadata"].keys():
                     # TODO: check if there is a count attribute as well here before renaming
                     if "[0]~1" not in resource_node:
@@ -543,4 +656,5 @@ def get_variable_values(tfdata) -> dict:
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
     tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings
+
     return tfdata

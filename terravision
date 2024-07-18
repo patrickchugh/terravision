@@ -68,6 +68,7 @@ def compile_tfdata(
         # Enrich resource names with module names
         tfdata = interpreter.prefix_module_names(tfdata)
         # Handle all variables found in metadata
+
         tfdata = interpreter.resolve_all_variables(tfdata, debug)
     # Show original dict
     click.echo(
@@ -125,17 +126,13 @@ def preflight_check():
     # read the file and ensure the version is correct
     with open("terraform_version.txt", "r") as fh:
         data = fh.read().split("\n")
-
     os.remove("terraform_version.txt")
-
     # take just the first line
     version_line = data[0]
     print(f"\n{version_line}")
     version = version_line.split(" ")[1].replace("v", "")
-
     # break up version numbers
     version_major = version.split(".")[0]
-
     # if version major != 1
     if version_major != "1":
         click.echo(
