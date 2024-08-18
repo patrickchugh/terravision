@@ -333,6 +333,17 @@ def find_resource_containing(search_list: list, keyword: str):
     return False
 
 
+def find_all_resources_containing(search_list: list, keyword: str):
+    foundlist = list()
+    for actual_name in search_list:
+        if keyword in actual_name:
+            foundlist.append(actual_name)
+    if foundlist:
+        return foundlist
+    else:
+        return False
+
+
 def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)
@@ -393,17 +404,17 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
             elif ".*" in target:
-                newtarget = target.replace("*", "")
-                for item in value:
-                    if not item:
-                        continue
-                    if (
-                        helpers.get_no_module_name(item).startswith(
-                            helpers.get_no_module_name(newtarget)
-                        )
-                        and key not in final_list
-                    ):
-                        final_list.append(key)
+                target = target.replace("*", "")
+            for item in value:
+                if not item:
+                    continue
+                if (
+                    helpers.get_no_module_name(item).startswith(
+                        helpers.get_no_module_name(target)
+                    )
+                    and key not in final_list
+                ):
+                    final_list.append(key)
     return final_list
 
 
