@@ -114,6 +114,7 @@ def handle_metadata_vars(tfdata):
                 )
                 and key != "depends_on"
                 and key != "original_count"
+                and len(value) < 1000
             ):
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
@@ -185,18 +186,15 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                     # We have found the right output file
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():
+                            # Resolve module var to output
+                            value = value.replace(module_var, i[outputname]["value"])
                             if (
                                 "module." in i[outputname]["value"]
                                 or "var." in i[outputname]["value"]
                                 or "local." in i[outputname]["value"]
                             ):
-                                # Output is not a resource attribute so recursively resolve value
+                                # Output refers to other variables so need to rescursively resolve
                                 value = find_replace_values(value, mod, tfdata)
-                            else:
-                                # Output is a attribute or string
-                                value = value.replace(
-                                    module_var, i[outputname]["value"]
-                                )
                 else:
                     continue
             if value == oldvalue:

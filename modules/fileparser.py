@@ -216,7 +216,7 @@ def read_tfsource(
     # Load in variables from user file into a master list
     if len(varfile_list) == 0 and tfdata.get("all_variable"):
         varfile_list = tfdata["all_variable"].keys()
-    tfdata["varfile_list"] = varfile_list
+    tfdata["varfile_list"] = list(varfile_list)
     tfdata["tempdir"] = temp_dir
     tfdata["annotations"] = annotations
     return tfdata

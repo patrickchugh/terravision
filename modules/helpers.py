@@ -64,6 +64,17 @@ def get_no_module_name(node: str):
     return no_module_name
 
 
+def get_no_module_no_number_name(node: str):
+    if not node:
+        return
+    if "module." in node:
+        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
+    else:
+        no_module_name = node
+    no_module_name = no_module_name.split("[")[0]
+    return no_module_name
+
+
 def check_list_for_dash(connections: list):
     has_dash = True
     for item in connections:

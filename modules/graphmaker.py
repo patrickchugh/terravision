@@ -49,17 +49,30 @@ def reverse_relations(tfdata: dict) -> dict:
 # Returns a list containing pairs of related nodes where index i an i+i are related
 def check_relationship(
     resource_associated_with: str, plist: list, tfdata: dict
-):  # -> list
+) -> list:
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
     connection_pairs = list()
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
-        matching = list({s for s in nodes if s.split("~")[0] in str(param)})
-        matching = list(
-            {s for s in nodes if helpers.get_no_module_name(s) in str(param)}
-        )
+        matching = list({s for s in nodes if s in str(param)})
+        if not matching:
+            matching = list(
+                {
+                    s
+                    for s in nodes
+                    if helpers.get_no_module_name(s).split("~")[0] in str(param)
+                }
+            )
+        if not matching:
+            matching = list(
+                {
+                    s
+                    for s in nodes
+                    if helpers.get_no_module_no_number_name(s) in str(param)
+                }
+            )
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
@@ -146,6 +159,7 @@ def add_relations(tfdata: dict):
                 nodename = nodename.split("[")[0]
         else:
             nodename = node
+
         if (
             helpers.get_no_module_name(nodename).startswith("random")
             or helpers.get_no_module_name(node).startswith("aws_security_group")
@@ -708,7 +722,7 @@ def handle_singular_references(tfdata: dict) -> dict:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If cosolidated node, add all connections to node
-            if "~" in c and helpers.consolidated_node_check(node):
+            if "~" in c and (helpers.consolidated_node_check(node) or "~" not in node):
                 for i in range(1, int(c.split("~")[1]) + 4):
                     suffixed_node = f"{c.split('~')[0]}~{i}"
                     if (

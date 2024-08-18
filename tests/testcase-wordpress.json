@@ -70,7 +70,9 @@
     "aws_efs_mount_target.this[2]~3": [
         "aws_efs_file_system.efs"
     ],
-    "aws_eip.elastic_ip": [],
+    "aws_eip.elastic_ip": [
+        "aws_internet_gateway.igw"
+    ],
     "aws_fargate.ecs~1": [
         "aws_ecr_repository.ecr",
         "aws_ecs_cluster.ecs",
@@ -163,19 +165,20 @@
     "module.vpc.aws_default_route_table.default[0]~1": [],
     "module.vpc.aws_default_security_group.this[0]~1": [],
     "module.vpc.aws_nat_gateway.this[0]~1": [
+        "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
-        "module.vpc.aws_route.private_nat_gateway",
-        "aws_eip.elastic_ip"
+        "aws_internet_gateway.igw",
+        "module.vpc.aws_route.private_nat_gateway"
     ],
     "module.vpc.aws_nat_gateway.this[1]~2": [
+        "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
-        "module.vpc.aws_route.private_nat_gateway",
-        "aws_eip.elastic_ip"
+        "module.vpc.aws_route.private_nat_gateway"
     ],
     "module.vpc.aws_nat_gateway.this[2]~3": [
+        "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
-        "module.vpc.aws_route.private_nat_gateway",
-        "aws_eip.elastic_ip"
+        "module.vpc.aws_route.private_nat_gateway"
     ],
     "module.vpc.aws_route.private_nat_gateway[0]~1": [],
     "module.vpc.aws_route.private_nat_gateway[1]~2": [],
