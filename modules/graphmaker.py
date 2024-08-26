@@ -210,6 +210,7 @@ def add_relations(tfdata: dict):
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
     tfdata["graphdict"] = graphdict
+    tfdata["original_graphdict_with_relations"] = graphdict
     return tfdata
 
 
