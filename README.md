@@ -54,7 +54,7 @@ $ terravision draw --source ~/src/my-terraform-code
 
 For Terraform stacks with workspaces, you can use the `--workspace` parameter:
 ```bash
-$ terraform draw --source ~/src/my-terraform-code --workspace development
+$ terravision draw --source ~/src/my-terraform-code --workspace development
 ```
 
 For Terraform source code in a Git repo you can also use the form:
