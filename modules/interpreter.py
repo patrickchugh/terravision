@@ -289,11 +289,11 @@ def replace_var_values(
 def find_replace_values(varstring, module, tfdata):
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
-    var_found_list = re.findall("var\.[A-Za-z0-9_\-]+", value)
-    data_found_list = re.findall("data\.[A-Za-z0-9_\-\.\[\]]+", value)
-    varobject_found_list = re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
-    local_found_list = re.findall("local\.[A-Za-z0-9_\-\.\[\]]+", value)
-    modulevar_found_list = re.findall("module\.[A-Za-z0-9_\-\.\[\]]+", value)
+    var_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+", value)
+    data_found_list = re.findall(r"data\.[A-Za-z0-9_\-\.\[\]]+", value)
+    varobject_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
+    local_found_list = re.findall(r"local\.[A-Za-z0-9_\-\.\[\]]+", value)
+    modulevar_found_list = re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
     # Replace found variable strings with variable values
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)

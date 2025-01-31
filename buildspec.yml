@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.7
+      python: 3.12
     commands:
       - pip3 install -r requirements.txt
       - git version

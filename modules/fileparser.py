@@ -5,7 +5,6 @@ import tempfile
 from pathlib import Path
 from sys import exit
 
-from numpy import source
 import click
 import yaml
 import hcl2

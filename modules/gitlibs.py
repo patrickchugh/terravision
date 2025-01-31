@@ -39,7 +39,7 @@ class CloneProgress(RemoteProgress):
 def handle_readme_source(resp) -> str:
     readme = resp.json()["root"]["readme"]
     githubURL = "ssh://git@" + find_between(readme, "(https://", ")")
-    found = re.findall("\.........\.net", githubURL)
+    found = re.findall(r"\.........\.net", githubURL)
     for site in found:
         githubURL = githubURL.replace(site, "-ssh" + site)
     githubURL = githubURL.replace("/projects/", ":7999/")

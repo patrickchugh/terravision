@@ -66,6 +66,22 @@ Use the `//` character for subfolders within Git repos if the code you want is u
 $ terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
 
+## Docker
+
+You can run `terravision` as a Docker Container. All you need to do is to build the image:
+
+```sh
+docker build -t terravision .
+```
+
+and then use it within you project, like:
+
+```sh
+$ docker run --rm -it -v $(pwd):/project terravision graphdata --source /project/ --varfile /project/your.tfvars
+
+$ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
+```
+
 # Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include a `terravision.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
 
