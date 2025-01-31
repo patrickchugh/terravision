@@ -464,15 +464,23 @@ def find_replace_values(varstring: str, module: str, tfdata: Dict[str, Any]) -> 
     """
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
+<<<<<<< HEAD
     # Find all variable types using regex patterns
+=======
+>>>>>>> e6f5150 (Updating requirements, adding docker build)
     var_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+", value)
     data_found_list = re.findall(r"data\.[A-Za-z0-9_\-\.\[\]]+", value)
     varobject_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall(r"local\.[A-Za-z0-9_\-\.\[\]]+", value)
+<<<<<<< HEAD
     modulevar_found_list = [
         m.rstrip("[") for m in re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
     ]
     # Replace found variable strings with actual values in order
+=======
+    modulevar_found_list = re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
+    # Replace found variable strings with variable values
+>>>>>>> e6f5150 (Updating requirements, adding docker build)
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)
     value = replace_var_values(
