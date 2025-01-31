@@ -226,6 +226,21 @@ terravision graphdata --source ~/src/my-terraform-code --show_services
 terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.json
 ```
 
+## Docker
+
+You can run `terravision` as a Docker Container. All you need to do is to build the image:
+
+```sh
+docker build -t terravision .
+```
+
+and then use it within you project, like:
+
+```sh
+$ docker run --rm -it -v $(pwd):/project terravision graphdata --source /project/ --varfile /project/your.tfvars
+
+$ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
+```
 
 
 ## Advanced Features
