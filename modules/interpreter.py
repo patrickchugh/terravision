@@ -1,14 +1,13 @@
 from hmac import new
 from multiprocessing import process
-import resource
 import modules.helpers as helpers
 import hcl2
 import click
 import re
 from pathlib import Path
 
+# "data.aws_availability_zones": ["AZ1", "AZ2", "AZ3"],
 DATA_REPLACEMENTS = {
-    "data.aws_availability_zones": ["AZ1", "AZ2", "AZ3"],
     "data.aws_availability_zones_names": ["us-east-1a", "us-east-1b", "us-east-1c"],
     "data.aws_subnet_ids": ["subnet-a", "subnet-b", "subnet-c"],
     "data.aws_vpc_ids": ["vpc-a", "vpc-b", "vpc-c"],
@@ -16,9 +15,9 @@ DATA_REPLACEMENTS = {
 }
 
 
-def resolve_all_variables(tfdata, debug):
+def resolve_all_variables(tfdata, debug: bool, already_processed: bool) -> dict:
     # Load default variable values and user variable values
-    tfdata = get_variable_values(tfdata)
+    tfdata = get_variable_values(tfdata, already_processed)
     # Create view of locals by module
     tfdata = extract_locals(tfdata)
     # Create metadata view from nested TF file resource attributes
@@ -38,22 +37,26 @@ def handle_module_vars(eval_string, tfdata):
     outvalue = ""
     splitlist = eval_string.split(".")
     outputname = helpers.find_between(eval_string, splitlist[1] + ".", " ")
-    mod = helpers.find_between(eval_string, splitlist[0] + ".", " ")
+    mod = helpers.find_between(eval_string, splitlist[0] + ".", ".")
     for file in tfdata["all_output"].keys():
         for i in tfdata["all_output"][file]:
             if outputname in i.keys() and mod in file:
                 outvalue = i[outputname]["value"]
-                if "*.id" in outvalue:
-                    resource_name = helpers.fix_lists(outvalue.split(".*")[0])
-                    outvalue = tfdata["meta_data"][resource_name]["count"]
-                    outvalue = helpers.find_conditional_statements(outvalue)
+                if "*.id" in outvalue and "*.id" in eval_string:
+                    outvalue = tfdata["meta_data"][outvalue]["count"]
+                    break
+                if "*.id" in outvalue and "[" in eval_string and "]" in eval_string:
+                    # Specific number of array being used
+                    index = int(
+                        helpers.find_between(eval_string, "[", "]").replace(" ", "")
+                    )
+                    outvalue = f"module.{mod}.{helpers.strip_var_curlies(outvalue).replace('.*.id', '').strip()}[{index}]"
                     break
     stringarray = eval_string.split(".")
     if len(stringarray) >= 3:
-        modulevar = helpers.cleanup(
-            "module" + "." + stringarray[1] + "." + stringarray[2]
-        ).strip()
-        eval_string = eval_string.replace(modulevar, outvalue)
+        modulevar = "module" + "." + stringarray[1] + "." + stringarray[2]
+        modulevar = modulevar.strip()
+        eval_string = helpers.cleanup_curlies(eval_string.replace(modulevar, outvalue))
     return eval_string
 
 
@@ -86,17 +89,6 @@ def inject_module_variables(tfdata: dict):
                         key != "source" and key != "version"
                     ):  # and key in all_variables.keys():
                         tfdata["variable_map"][module][key] = value
-    # Add quotes for raw strings to aid postfix evaluation
-    for module in tfdata["variable_map"]:
-        for variable in tfdata["variable_map"][module]:
-            value = tfdata["variable_map"][module][variable]
-            if (
-                isinstance(value, str)
-                and "(" not in value
-                and "[" not in value
-                and not value.startswith('"')
-            ):
-                tfdata["variable_map"][module][variable] = f'"{value}"'
     return tfdata
 
 
@@ -109,8 +101,12 @@ def handle_metadata_vars(tfdata):
                 (
                     "var." in value
                     or "local." in value
-                    or "module." in value
                     or "data." in value
+                    or (
+                        "module." in value
+                        and "aws_" not in value
+                        and "UNKNOWN" not in value
+                    )
                 )
                 and key != "depends_on"
                 and key != "original_count"
@@ -175,7 +171,7 @@ def replace_local_values(found_list: list, value, module, tfdata):
 def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict):
     for module_var in found_list:
         if "module." in value:
-            cleantext = helpers.fix_lists(module_var)
+            cleantext = module_var
             splitlist = cleantext.split(".")
             outputname = helpers.find_between(cleantext, splitlist[1] + ".", " ")
             oldvalue = value
@@ -185,22 +181,28 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                     # We have found the right output file
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():
+                            # Resolve module var to output
+                            value = value.replace(module_var, i[outputname]["value"])
                             if (
                                 "module." in i[outputname]["value"]
                                 or "var." in i[outputname]["value"]
                                 or "local." in i[outputname]["value"]
                             ):
-                                # Output is not a resource attribute so recursively resolve value
+                                # Output refers to other variables so need to rescursively resolve
                                 value = find_replace_values(value, mod, tfdata)
-                            else:
-                                # Output is a attribute or string
-                                value = value.replace(
-                                    module_var, i[outputname]["value"]
-                                )
                 else:
                     continue
             if value == oldvalue:
                 value = value.replace(module_var, '"UNKNOWN"')
+                click.echo(
+                    f"   WARNING: Cannot resolve {module_var}, assigning empty value in module {module}"
+                )
+            value = oldvalue.replace(
+                outputname, helpers.strip_var_curlies(value)
+            ).replace('"', "")
+            value = value.replace(" ", "")
+            if "[" in value and "*.id" in value:
+                value = (value.replace(".*.id", "")).strip()
     return value
 
 
@@ -208,8 +210,9 @@ def replace_var_values(
     found_list: list, varobject_found_list: list, value: str, module: str, tfdata: dict
 ):
     for varitem in found_list:
+        varitem_lower = varitem.lower()
         lookup = (
-            varitem.split("var.")[1]
+            varitem_lower.split("var.")[1]
             .lower()
             .replace("}", "")
             .replace(" ", "")
@@ -269,20 +272,22 @@ def replace_var_values(
             value = value.replace(
                 varitem, str(tfdata["variable_map"][module_name].get(lookup)), 1
             )
-            # value = helpers.find_replace(varitem. str(tfdata["variable_map"][module_name].get(lookup)), value)
             break
         else:
-            click.echo(
-                click.style(
-                    f"\nERROR: No variable value supplied for {varitem} but it is referenced in module {module} ",
-                    fg="white",
-                    bold=True,
+            if lookup.lower() in tfdata["variable_list"]:
+                value = tfdata["variable_list"][lookup.lower()]
+            if not value:
+                click.echo(
+                    click.style(
+                        f"\nWARNING: No variable value supplied for {varitem} but it is referenced in module {module} ",
+                        fg="white",
+                        bold=True,
+                    )
                 )
-            )
-            click.echo(
-                "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n"
-            )
-            exit()
+                click.echo(
+                    "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n"
+                )
+                exit()
     return value
 
 
@@ -369,7 +374,121 @@ def show_error(mod, resource, eval_string, exp, tfdata):
     return tfdata
 
 
+# Adds additional metadata
+def handle_implied_resources(item, resource_type, resource_name, tfdata, meta_data):
+    # Check if Cloudwatch is present in policies and create node for Cloudwatch service if found
+    if resource_type == "aws_iam_policy":
+        if "logs:" in item[resource_type][resource_name]["policy"][0]:
+            if not "aws_cloudwatch_log_group.logs" in tfdata["node_list"]:
+                tfdata["node_list"].append("aws_cloudwatch_log_group.logs")
+                tfdata["graphdict"]["aws_cloudwatch_log_group.logs"] = []
+            meta_data["aws_cloudwatch_log_group.logs"] = item[resource_type][
+                resource_name
+            ]
+    return meta_data, tfdata
+
+
+def handle_numbered_nodes(resource_node, tfdata, meta_data):
+    # Determine count by number of objects created by Terraform
+    all_matching_list = helpers.find_all_resources_containing(
+        tfdata["node_list"], resource_node.split("[")[0] + "["
+    )
+    resource_count = len(all_matching_list)
+    for actual_name in all_matching_list:
+        meta_data[actual_name] = meta_data[resource_node]
+        meta_data[actual_name]["count"] = resource_count
+    return meta_data
+
+
+def find_actual_resource(
+    node_list: list, resource: str, resource_type: str, mod: str, tfdata: dict
+) -> str:
+    # If we have a singleton resource already in the nodelist no need to search further
+    if resource in node_list:
+        return resource
+    else:
+        # search for possible candidate nodes with number bracket
+        search = f"{resource}["
+        all_candidates = helpers.find_all_resources_containing(node_list, search)
+        if all_candidates:
+            return all_candidates[0]
+        else:
+            # possible name mutation so find closest resource
+            if not resource in tfdata["original_metadata"].keys():
+                resource = helpers.list_of_dictkeys_containing(
+                    tfdata["original_metadata"],
+                    f"module.{mod}.{resource_type}.",
+                )
+                if resource:
+                    return resource[0]
+                else:
+                    return False
+
+
 def get_metadata(tfdata):  # -> set
+    """
+    Extract resource attributes from resources by looping through each resource in each file.
+    Returns a set with a node_list of unique resources, and dict of resource attributes (metadata)
+    """
+    meta_data = dict()
+    # Create list of node names that will be created
+    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
+    # Default module is assumed main unless over-ridden
+    mod = "main"
+    click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
+    if not tfdata.get("all_resource"):
+        click.echo(
+            click.style(
+                f"\nWARNING: Unable to find any resources ", fg="red", bold=True
+            )
+        )
+        tfdata["all_resource"] = dict()
+    else:
+        for filename, resource_list in tfdata["all_resource"].items():
+            if ";" in filename:
+                mod = filename.split(";")[1]
+            # Source code doesn't have final resource names so we need to match them up to right metadata records
+            for item in resource_list:
+                for resource_type in item.keys():
+                    for resource_name in item[resource_type]:
+                        if resource_name.startswith("module."):
+                            resource_node = resource_name
+                        else:
+                            resource_node = f"{resource_type}.{resource_name}"
+
+                        meta_data, tfdata = handle_implied_resources(
+                            item, resource_type, resource_name, tfdata, meta_data
+                        )
+                    click.echo(f"   {resource_node}")
+                    found_node = find_actual_resource(
+                        tfdata["node_list"], resource_node, resource_type, mod, tfdata
+                    )
+                    if not found_node:
+                        break  # not a created resource
+                    else:
+                        # Store original metadata from tf
+                        omd = dict(tfdata["original_metadata"][found_node])
+                        # Get metadata as specified in source files
+                        md = item[resource_type][resource_name]
+                        # Capture original count value string
+                        if md.get("count"):
+                            md["original_count"] = str(md["count"])
+                        # Over-ride original metadata params where present
+                        omd.update(md)
+                        meta_data[resource_node] = omd
+                        meta_data[resource_node]["module"] = mod
+                        meta_data[found_node] = omd
+                        meta_data[found_node]["module"] = mod
+                        # Check if numbered node exists in metadata
+                        if "~" in found_node:
+                            meta_data = handle_numbered_nodes(
+                                found_node, tfdata, meta_data
+                            )
+    tfdata["meta_data"] = meta_data
+    return tfdata
+
+
+def get_metadata_old(tfdata):  # -> set
     """
     Extract resource attributes from resources by looping through each resource in each file.
     Returns a set with a node_list of unique resources, resource attributes (metadata)
@@ -419,7 +538,7 @@ def get_metadata(tfdata):  # -> set
                 else:
                     resource_node = f"{resource_type}.{resource_name}"
                 click.echo(f"   {resource_node}")
-                # If numbering not present add
+                # Check if numbered node exists in metadata
                 if not resource_node in tfdata["original_metadata"].keys():
                     # TODO: check if there is a count attribute as well here before renaming
                     if "[0]~1" not in resource_node:
@@ -476,7 +595,7 @@ def get_metadata(tfdata):  # -> set
     return tfdata
 
 
-def get_variable_values(tfdata) -> dict:
+def get_variable_values(tfdata, already_processed: bool) -> dict:
     """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""
     click.echo(
         click.style(
@@ -503,7 +622,7 @@ def get_variable_values(tfdata) -> dict:
                         var_value = f'"{var_value}"'
                 else:
                     var_value = ""
-                var_data[var_name] = var_value
+                var_data[var_name.lower()] = var_value
                 # Also update var mapping dict with modules and matching variables
                 if tfdata.get("module_source_dict"):
                     matching = [
@@ -520,7 +639,7 @@ def get_variable_values(tfdata) -> dict:
                     if not var_mappings.get(mod):
                         var_mappings[mod] = {}
                         var_mappings[mod]["source_dir"] = var_source_dir
-                    var_mappings[mod][var_name] = var_value
+                    var_mappings[mod][var_name.lower()] = var_value
     if tfdata.get("module_source_dict"):
         # Insert module parameters as variable names
         for file, modulelist in tfdata["all_module"].items():
@@ -531,7 +650,7 @@ def get_variable_values(tfdata) -> dict:
                         if not var_mappings.get(mod):
                             var_mappings[mod] = {}
                         var_mappings[mod][variable] = params[variable]
-    if tfdata.get("all_variable"):
+    if tfdata.get("all_variable") and not already_processed:
         # Over-write defaults with passed varfile specified values
         for varfile in tfdata["varfile_list"]:
             # Open supplied varfile for reading
@@ -544,4 +663,5 @@ def get_variable_values(tfdata) -> dict:
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
     tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings
+
     return tfdata

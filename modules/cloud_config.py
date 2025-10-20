@@ -178,7 +178,7 @@ AWS_REVERSE_ARROW_LIST = [
 AWS_FORCED_DEST = ["aws_rds", "aws_instance"]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = ["aws_route53"]
+AWS_FORCED_ORIGIN = ["aws_route53", "aws_cloudfront_distribution"]
 
 
 AWS_IMPLIED_CONNECTIONS = {
@@ -259,7 +259,7 @@ AWS_NAME_REPLACEMENTS = {
     "ecs_service_fargate": "Fargate",
     "eip": "Elastic IP",
     "instance": "EC2",
-    "lambda_function": "",
+    "lambda_function": "Lambda",
     "iam_role": "Role",
     "dx": "Direct Connect",
     "cloudfront_distribution": "Cloudfront",

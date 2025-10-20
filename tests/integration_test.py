@@ -15,12 +15,12 @@ BASE_DIR = Path(os.path.abspath(os.path.dirname(__file__)))
 def test_help():
     if WINDOWS:
         result = subprocess.run(
-            ["poetry", "run", "python", f"{PARENT_DIR}/terravision", "--help"],
+            ["poetry", "run", "python", f"{PARENT_DIR}/terravision-ai", "--help"],
             stdout=subprocess.PIPE,
         )
     else:
         result = subprocess.run(["terravision", "--help"], stdout=subprocess.PIPE)
-    assert "Terravision" in result.stdout.decode("utf-8") and result.returncode == 0
+    assert "terravision" in result.stdout.decode("utf-8") and result.returncode == 0
 
 
 def verify_json_output(github_repo, expected_output):
@@ -41,6 +41,7 @@ def verify_json_output(github_repo, expected_output):
     assert result == expected
     o_json_file.close()
     os.remove(output_file)
+
 
 def test_wordpress_fargate():
     github_repo = f"{BASE_REPO}//aws/wordpress_fargate"

@@ -1,4 +1,5 @@
 import os
+import copy
 from pathlib import Path
 import subprocess
 import click
@@ -47,7 +48,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                     )
                 )
                 exit()
-        returncode = os.system(f"terraform init --upgrade")
+        returncode = os.system(f"terraform init --upgrade -reconfigure")
         if returncode > 0:
             click.echo(
                 click.style(
@@ -68,7 +69,9 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
             )
         )
         # init workspace
-        returncode = os.system(f"terraform workspace select {workspace}")
+        returncode = os.system(
+            f"terraform workspace select -or-create=True {workspace}"
+        )
         if returncode:
             click.echo(
                 click.style(
@@ -112,7 +115,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
             f = open(tfplan_json_path)
             plandata = json.load(f)
             returncode = os.system(f"terraform graph > {tfgraph_path}")
-            tfdata["plandata"] = dict
+            tfdata["plandata"] = dict(plandata)
             click.echo(
                 click.style(
                     f"\nConverting TF Graph Connections..  (this may take a while)\n",
@@ -156,7 +159,7 @@ def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -
     else:
         click.echo(
             click.style(
-                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source actually generates resources and has no errors.",
                 fg="red",
                 bold=True,
             )
@@ -211,7 +214,11 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = str(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        nodename = node.split("~")[0]
+        if "module." in node:
+            nodename = helpers.get_no_module_no_number_name(node)
+        else:
+            nodename = node.split("[")[0]
+            nodename = nodename.split("~")[0]
         if nodename in gvid_table:
             node_id = gvid_table.index(nodename)
         else:
@@ -256,8 +263,8 @@ def tf_makegraph(tfdata: dict):
                     else:
                         tfdata["graphdict"][node].append(conn)
     tfdata = add_vpc_implied_relations(tfdata)
-    tfdata["original_graphdict"] = dict(tfdata["graphdict"])
-    tfdata["original_metadata"] = dict(tfdata["meta_data"])
+    tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
+    tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
     # TODO: Add a helper function to detect _aws, azurerm and google provider prefixes on resource names
     if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0:
         click.echo(

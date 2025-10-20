@@ -4,6 +4,7 @@ from contextlib import suppress
 from pathlib import Path
 from sys import exit
 import click
+import json
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 
@@ -17,7 +18,26 @@ ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
 NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
 
 # List of dictionary sections to output in log
-output_sections = ["locals", "module", "resource", "data"]
+output_sections = ["locals", "module", "resource", "data", "output"]
+
+
+def extract_json_from_string(text: str) -> dict:
+    """Extract JSON object from text, handling code blocks and raw JSON."""
+    # Try code block with optional json/JSON marker
+    match = re.search(
+        r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL | re.IGNORECASE
+    )
+    if match:
+        with suppress(json.JSONDecodeError):
+            return json.loads(match.group(1))
+
+    # Try finding raw JSON object
+    match = re.search(r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})", text, re.DOTALL)
+    if match:
+        with suppress(json.JSONDecodeError):
+            return json.loads(match.group(1))
+
+    return {}
 
 
 def check_for_domain(string: str) -> bool:
@@ -26,6 +46,81 @@ def check_for_domain(string: str) -> bool:
         if dot in string and not string.startswith("."):
             return True
     return False
+
+
+# Export dict to a file called tfdata.json
+def export_tfdata(tfdata: dict):
+    tfdata["tempdir"] = str(tfdata["tempdir"])
+    with open("tfdata.json", "w") as file:
+        json.dump(tfdata, file, indent=4)
+    click.echo(
+        click.style(
+            f"\nINFO: Debug flag used. Current state has been written to tfdata.json\n",
+            fg="yellow",
+            bold=True,
+        )
+    )
+
+
+def remove_recursive_links(tfdata: dict):
+    graphdict = tfdata.get("graphdict")
+    circular = find_circular_refs(graphdict)
+    if circular:
+        click.echo(
+            click.style(
+                f"\nINFO: Found {len(circular)} circular references in the graph. These will be removed to prevent rendering issues.\n",
+                fg="yellow",
+                bold=True,
+            )
+        )
+        for i, cycle in enumerate(circular, 1):
+            print(f"  {i}. {' -> '.join(cycle)}")
+            node_b = cycle[-1]
+            node_a = cycle[-2]
+            if node_b in graphdict[node_a]:
+                graphdict[node_a].remove(node_b)
+                click.echo(
+                    click.style(
+                        f"  Removed link from {node_a} to {node_b}",
+                        fg="white",
+                    )
+                )
+    return tfdata
+
+
+def find_circular_refs(graph):
+    """Find all circular references in the dependency graph."""
+    circular_refs = []
+
+    def dfs(node, path, visited_in_path):
+        if node not in graph:
+            return
+        for neighbor in graph[node]:
+            # Normalize neighbor name (remove array indices for comparison)
+            neighbor_base = neighbor.split("[")[0] if "[" in neighbor else neighbor
+            if neighbor in visited_in_path:
+                # Found a cycle
+                cycle_start = path.index(neighbor)
+                cycle = path[cycle_start:] + [neighbor]
+                circular_refs.append(cycle)
+                continue
+            if neighbor in graph:
+                dfs(neighbor, path + [neighbor], visited_in_path | {neighbor})
+
+    for node in graph:
+        dfs(node, [node], {node})
+    # Remove duplicate cycles
+    unique_cycles = []
+    seen = set()
+    for cycle in circular_refs:
+        # Normalize cycle representation
+        min_idx = cycle.index(min(cycle[:-1]))
+        normalized = tuple(cycle[min_idx:-1] + cycle[:min_idx] + [cycle[min_idx]])
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_cycles.append(cycle)
+
+    return unique_cycles
 
 
 def process_graphdict(relations_graphdict: dict):
@@ -46,6 +141,46 @@ def get_no_module_name(node: str):
         no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
     else:
         no_module_name = node
+    return no_module_name
+
+
+def extract_subfolder_from_repo(source_url: str) -> tuple[str, str]:
+    """
+    Extract repo URL and subfolder from a string like 'https://github.com/user/repo.git//code/02-one-server'.
+
+    Returns:
+        tuple: (repo_url, subfolder) - subfolder is empty string if none exists
+    """
+    # Find the subfolder separator // after the protocol
+    if source_url.count("//") > 1:
+        # Split on the second occurrence of //
+        protocol_end = source_url.find("//") + 2
+        remaining = source_url[protocol_end:]
+        if "//" in remaining:
+            repo_part, subfolder = remaining.split("//", 1)
+            repo_url = source_url[:protocol_end] + repo_part
+            subfolder = subfolder.rstrip("/")
+            return repo_url, subfolder
+
+    # Handle URLs without // but ending in path without .git
+    if not source_url.endswith(".git") and "/" in source_url:
+        parts = source_url.rstrip("/").split("/")
+        if len(parts) > 3:  # protocol://domain/user/repo/subfolder
+            repo_url = "/".join(parts[:-1])
+            subfolder = parts[-1]
+            return repo_url, subfolder
+
+    return source_url, ""
+
+
+def get_no_module_no_number_name(node: str):
+    if not node:
+        return
+    if "module." in node:
+        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
+    else:
+        no_module_name = node
+    no_module_name = no_module_name.split("[")[0]
     return no_module_name
 
 
@@ -91,6 +226,10 @@ def unique_services(nodelist: list) -> list:
         service = str(item.split(".")[0]).strip()
         service_list.append(service)
     return sorted(set(service_list))
+
+
+def remove_numbered_suffix(s: str) -> str:
+    return s.split("~")[0] if "~" in s else s
 
 
 def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
@@ -200,7 +339,7 @@ def replace_variables(vartext, filename, all_variables, quotes=False):
     var_found_list = re.findall(r"var\.[A-Za-z0-9_-]+", vartext)
     if var_found_list:
         for varstring in var_found_list:
-            varname = varstring.replace("var.", "").lower()
+            varname = varstring.replace("var.", "")
             with suppress(Exception):
                 if str(all_variables[varname]) == "":
                     replaced_vartext = replaced_vartext.replace(varstring, '""')
@@ -307,6 +446,17 @@ def find_resource_containing(search_list: list, keyword: str):
     return False
 
 
+def find_all_resources_containing(search_list: list, keyword: str):
+    foundlist = list()
+    for actual_name in search_list:
+        if keyword in actual_name:
+            foundlist.append(actual_name)
+    if foundlist:
+        return foundlist
+    else:
+        return False
+
+
 def append_dictlist(thelist: list, new_item: object):
     new_list = list(thelist)
     new_list.append(new_item)
@@ -367,17 +517,17 @@ def list_of_parents(searchdict: dict, target: str):
             if target in value:
                 final_list.append(key)
             elif ".*" in target:
-                newtarget = target.replace("*", "")
-                for item in value:
-                    if not item:
-                        continue
-                    if (
-                        helpers.get_no_module_name(item).startswith(
-                            helpers.get_no_module_name(newtarget)
-                        )
-                        and key not in final_list
-                    ):
-                        final_list.append(key)
+                target = target.replace("*", "")
+            for item in value:
+                if not item:
+                    continue
+                if (
+                    helpers.get_no_module_name(item).startswith(
+                        helpers.get_no_module_name(target)
+                    )
+                    and key not in final_list
+                ):
+                    final_list.append(key)
     return final_list
 
 
@@ -423,25 +573,6 @@ def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
     return final_list
 
 
-# Cleanup lists with special characters
-def fix_lists(eval_string: str):
-    eval_string = eval_string.replace("${[]}", "[]")
-    if "${" in eval_string:
-        eval_string = "".join(eval_string.rsplit("}", 1))
-        eval_string = eval_string.replace("${", "", 1)
-    eval_string = eval_string.replace("[\"['", "")
-    eval_string = eval_string.replace("']\"]", "")
-    eval_string = eval_string.replace('["[', "[")
-    eval_string = eval_string.replace(']"]', "]")
-    eval_string = eval_string.replace("[[", "[")
-    eval_string = eval_string.replace(",)", ")")
-    eval_string = eval_string.replace(",]", "]")
-    eval_string = eval_string.replace("]]", "]")
-    eval_string = eval_string.replace("[True]", "True")
-    eval_string = eval_string.replace("[False]", "False")
-    return eval_string
-
-
 # Cleans out special characters
 def cleanup_curlies(text: str) -> str:
     text = str(text)
@@ -455,6 +586,8 @@ def cleanup_curlies(text: str) -> str:
 def strip_var_curlies(s: str):
     final_string = ""
     stack = []
+    if ".id}" in s:
+        s = s.replace(".id}", "}")
     if "${" in s:
         s = s.replace("${", "~")
     for i in range(len(s)):
@@ -472,6 +605,15 @@ def strip_var_curlies(s: str):
         else:
             final_string += s[i]
     return final_string
+
+
+def extract_terraform_resource(text: str) -> str:
+    """Extract terraform resource type and name from a string like '${module.mymodule.aws_apigatewayv2_api.myapi.id}'"""
+    import re
+
+    pattern = r"\$\{(?:[^(]*\()?(?:module\.[^.]+\.)?([^.]+\.[^.*}]+)(?:\.[^}]*)?\}?"
+    match = re.search(pattern, text)
+    return match.group(1) if match else ""
 
 
 # Cleans out special characters

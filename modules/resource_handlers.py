@@ -151,15 +151,20 @@ def aws_handle_subnet_azs(tfdata: dict):
             # Remove references to subnet and replace with AZ
             if subnet in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].remove(subnet)
-            az = "aws_az." + tfdata["original_metadata"][subnet].get(
-                "availability_zone"
+            az = "aws_az.availability_zone_" + str(
+                tfdata["original_metadata"][subnet].get("availability_zone")
             )
             az = az.replace("-", "~")
+            region = tfdata["original_metadata"][subnet].get("region")
+            if region:
+                az = az.replace("True", region)
+            else:
+                az = az.replace(".True", ".availability_zone")
             if not az in tfdata["graphdict"].keys():
                 tfdata["graphdict"][az] = list()
                 tfdata["meta_data"][az] = {"count": ""}
-                tfdata["meta_data"][az]["count"] = tfdata["meta_data"][subnet].get(
-                    "count"
+                tfdata["meta_data"][az]["count"] = str(
+                    tfdata["meta_data"][subnet].get("count")
                 )
             tfdata["graphdict"][az].append(subnet)
             if az not in tfdata["graphdict"][parent]:

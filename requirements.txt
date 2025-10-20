@@ -7,4 +7,3 @@ tqdm==4.65.0
 python-hcl2==4.3.0
 ipaddr==2.2.0
 debugpy==1.5.1
-ollama== 0.6.0

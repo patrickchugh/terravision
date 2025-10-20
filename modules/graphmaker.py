@@ -1,9 +1,11 @@
 from math import e
 import click
+import re
+import json
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
-
+from typing import Dict, List
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -49,17 +51,33 @@ def reverse_relations(tfdata: dict) -> dict:
 # Returns a list containing pairs of related nodes where index i an i+i are related
 def check_relationship(
     resource_associated_with: str, plist: list, tfdata: dict
-):  # -> list
+) -> list:
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
     connection_pairs = list()
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for param in plist:
         # List comprehension of unique nodes referenced in the parameter
-        matching = list({s for s in nodes if s.split("~")[0] in str(param)})
-        matching = list(
-            {s for s in nodes if helpers.get_no_module_name(s) in str(param)}
-        )
+        if "[" in str(param):
+            matching = list(
+                {
+                    s
+                    for s in nodes
+                    if helpers.remove_numbered_suffix(s) in str(param).replace(".*", "")
+                }
+            )
+        else:
+            if helpers.extract_terraform_resource(str(param)):
+                matching = list(
+                    {
+                        s
+                        for s in nodes
+                        if helpers.extract_terraform_resource(str(param)) in s
+                        or helpers.cleanup_curlies(str(param)) in s
+                    }
+                )
+            else:
+                matching = []
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
@@ -146,6 +164,7 @@ def add_relations(tfdata: dict):
                 nodename = nodename.split("[")[0]
         else:
             nodename = node
+
         if (
             helpers.get_no_module_name(nodename).startswith("random")
             or helpers.get_no_module_name(node).startswith("aws_security_group")
@@ -188,6 +207,7 @@ def add_relations(tfdata: dict):
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
     tfdata["graphdict"] = graphdict
+    tfdata["original_graphdict_with_relations"] = graphdict
     return tfdata
 
 
@@ -215,6 +235,9 @@ def consolidate_nodes(tfdata: dict):
                 tfdata["meta_data"][consolidated_name] | resdata
             )
             # Don't over-ride count values with 0 when merging
+            if consolidated_name not in tfdata["graphdict"].keys():
+                tfdata["graphdict"][consolidated_name] = list()
+            tfdata["graphdict"][consolidated_name]
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])
@@ -250,6 +273,136 @@ def consolidate_nodes(tfdata: dict):
 
     tfdata["graphdict"] = tfdata["graphdict"]
     return tfdata
+
+
+def match_resources(tfdata: dict) -> dict:
+    """
+    Match resources based on their suffix pattern (~N) and indirect dependencies to their corresponding parents.
+    """
+    tfdata["graphdict"] = match_az_to_subnets(tfdata["graphdict"])
+    tfdata["graphdict"] = link_ec2_to_iam_roles(tfdata["graphdict"])
+    tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
+    return tfdata
+
+
+def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Split NAT gateways into multiple instances and update subnet references.
+    """
+    result = dict(terraform_data)
+    suffix_pattern = r"~(\d+)$"
+
+    # Find NAT gateways and count related subnets
+    nat_gateways = [
+        k for k in terraform_data.keys() if "aws_nat_gateway" in k and "~" not in k
+    ]
+
+    for nat_gw in nat_gateways:
+        # Find public subnets that reference this NAT gateway
+        subnet_suffixes = set()
+        for resource, deps in terraform_data.items():
+            if "public_subnets" in resource and "~" in resource:
+                match = re.search(suffix_pattern, resource)
+                if match and nat_gw in deps:
+                    subnet_suffixes.add(match.group(1))
+
+        # Create numbered NAT gateways
+        for suffix in subnet_suffixes:
+            nat_gw_numbered = f"{nat_gw}~{suffix}"
+            result[nat_gw_numbered] = list(terraform_data[nat_gw])
+
+        # Remove original NAT gateway if we created numbered ones
+        if subnet_suffixes:
+            del result[nat_gw]
+
+    # Update subnet references to use numbered NAT gateways
+    for resource, deps in result.items():
+        if "public_subnets" in resource and "~" in resource:
+            match = re.search(suffix_pattern, resource)
+            if match:
+                suffix = match.group(1)
+                new_deps = []
+                for dep in deps:
+                    if "aws_nat_gateway" in dep and "~" not in dep:
+                        new_deps.append(f"{dep}~{suffix}")
+                    else:
+                        new_deps.append(dep)
+                result[resource] = new_deps
+
+    return result
+
+
+def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Add EC2 instances as dependencies to IAM roles when connected through instance profiles.
+    """
+    result = dict(terraform_data)
+
+    # Find IAM roles that connect to instance profiles
+    profile_to_role = {}
+    for resource, deps in terraform_data.items():
+        if "aws_iam_role" in resource:
+            for dep in deps:
+                if "aws_iam_instance_profile" in dep:
+                    profile_to_role[dep] = resource
+
+    # Find instance profiles that connect to EC2 instances and add EC2 to IAM role deps
+    for resource, deps in terraform_data.items():
+        if "aws_iam_instance_profile" in resource and resource in profile_to_role:
+            iam_role = profile_to_role[resource]
+            for dep in deps:
+                if "aws_instance" in dep and dep not in result[iam_role]:
+                    result[iam_role].append(dep)
+
+    return result
+
+
+def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Transform Terraform resource associations to match availability zones
+    with their corresponding subnets based on suffix pattern (~N).
+
+    Args:
+        terraform_data: Dictionary of Terraform resources and their associations
+
+    Returns:
+        Complete dictionary with AZ resources updated and all other resources intact
+    """
+    result = dict(terraform_data)
+
+    # Pattern to extract suffix from resource names
+    suffix_pattern = r"~(\d+)$"
+
+    # Find all availability zones
+    az_resources = [
+        key
+        for key in terraform_data.keys()
+        if key.startswith("aws_az.availability_zone")
+    ]
+
+    for az in az_resources:
+        # Extract suffix from AZ name
+        az_match = re.search(suffix_pattern, az)
+        if not az_match:
+            continue
+
+        az_suffix = az_match.group(1)
+
+        # Get all dependencies of this AZ
+        az_dependencies = terraform_data.get(az, [])
+
+        # Filter subnets that have matching suffix
+        matched_subnets = []
+        for dep in az_dependencies:
+            if "subnet" in dep.lower():
+                dep_match = re.search(suffix_pattern, dep)
+                if dep_match and dep_match.group(1) == az_suffix:
+                    matched_subnets.append(dep)
+
+        # Update only the AZ entries with matched subnets
+        result[az] = matched_subnets
+
+    return result
 
 
 def handle_variants(tfdata: dict):
@@ -635,9 +788,18 @@ def add_multiples_to_parents(
 def handle_count_resources(multi_resources: list, tfdata: dict):
     # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
     for resource in multi_resources:
-        # max_i = tfdata["meta_data"][resource].get("count")
-        # TODO: Properly determine max_i based on AZs and subnets
-        max_i = 3
+        if tfdata["meta_data"][resource].get("count"):
+            max_i = int(tfdata["meta_data"][resource].get("count"))
+        elif tfdata["meta_data"][resource].get("max_capacity"):
+            max_i = int(
+                tfdata["meta_data"][resource].get("max_capacity").replace('"', "")
+            )
+        elif tfdata["meta_data"][resource].get("desired_count"):
+            max_i = int(
+                tfdata["meta_data"][resource].get("desired_count").replace('"', "")
+            )
+        else:
+            max_i = 1
         for i in range(max_i):
             # Get connections replaced with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
@@ -705,7 +867,7 @@ def handle_singular_references(tfdata: dict) -> dict:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If cosolidated node, add all connections to node
-            if "~" in c and helpers.consolidated_node_check(node):
+            if "~" in c and (helpers.consolidated_node_check(node) or "~" not in node):
                 for i in range(1, int(c.split("~")[1]) + 4):
                     suffixed_node = f"{c.split('~')[0]}~{i}"
                     if (
