@@ -52,27 +52,33 @@ def check_relationship(
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
     connection_pairs = list()
+    matching = list()
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
-    for param in plist:
+    for p in plist:
+        param = str(p)
         # List comprehension of unique nodes referenced in the parameter
-        if "[" in str(param):
+
+        if "[" in param and "[*]" not in param:
             matching = list(
                 {
                     s
                     for s in nodes
-                    if helpers.remove_numbered_suffix(s) in str(param).replace(".*", "")
+                    if helpers.remove_numbered_suffix(s) in param.replace(".*", "")
                 }
             )
         else:
-            if helpers.extract_terraform_resource(str(param)):
-                matching = list(
-                    {
-                        s
-                        for s in nodes
-                        if helpers.extract_terraform_resource(str(param)) in s
-                        or helpers.cleanup_curlies(str(param)) in s
-                    }
-                )
+            extracted_resources_list = helpers.extract_terraform_resource(param)
+            if extracted_resources_list:
+                for r in extracted_resources_list:
+                    matching.extend(
+                        list(
+                            {
+                                s
+                                for s in nodes
+                                if r in s or helpers.cleanup_curlies(r) in s
+                            }
+                        )
+                    )
             else:
                 matching = []
         # Check if there are any implied connections based on keywords in the param list

@@ -578,7 +578,7 @@ def cleanup_curlies(text: str) -> str:
     text = str(text)
     for ch in ["$", "{", "}"]:
         if ch in text:
-            text = text.replace(ch, " ")
+            text = text.replace(ch, "")
     return text.strip()
 
 
@@ -607,15 +607,6 @@ def strip_var_curlies(s: str):
     return final_string
 
 
-def extract_terraform_resource(text: str) -> str:
-    """Extract terraform resource type and name from a string like '${module.mymodule.aws_apigatewayv2_api.myapi.id}'"""
-    import re
-
-    pattern = r"\$\{(?:[^(]*\()?(?:module\.[^.]+\.)?([^.]+\.[^.*}]+)(?:\.[^}]*)?\}?"
-    match = re.search(pattern, text)
-    return match.group(1) if match else ""
-
-
 # Cleans out special characters
 def cleanup(text: str) -> str:
     text = str(text)
@@ -639,3 +630,21 @@ def cleanup(text: str) -> str:
         if ch in text:
             text = text.replace(ch, " ")
     return text.strip()
+
+def extract_terraform_resource(text: str) -> list:
+    """Extract terraform resources from string"""
+    import re
+    results = []
+    
+    # Pattern for aws_resource.name (with or without quotes/spaces)
+    aws_pattern = r'(aws_\w+\.\w+)'
+    aws_matches = re.findall(aws_pattern, text)
+    results.extend(aws_matches)
+    
+    # Pattern for module.name.aws_resource.name[*].id
+    module_pattern = r'module\.(\w+)\.(aws_\w+)\.(\w+)(?:\[\*?\])?(?:\.id)?'
+    module_matches = re.findall(module_pattern, text)
+    for match in module_matches:
+        results.append(f"module.{match[0]}.{match[1]}.{match[2]}")
+    
+    return results

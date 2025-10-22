@@ -33,22 +33,23 @@
         "aws_appautoscaling_policy.scale_up",
         "aws_fargate.ecs~3"
     ],
-    "aws_az.us~east~1a": [
+    "aws_az.availability_zone_us_east_1a~1": [
         "module.vpc.aws_subnet.private[0]~1",
         "module.vpc.aws_subnet.public[0]~1"
     ],
-    "aws_az.us~east~1b": [
+    "aws_az.availability_zone_us_east_1b~2": [
         "module.vpc.aws_subnet.private[1]~2",
         "module.vpc.aws_subnet.public[1]~2"
     ],
-    "aws_az.us~east~1c": [
+    "aws_az.availability_zone_us_east_1c~3": [
         "module.vpc.aws_subnet.private[2]~3",
         "module.vpc.aws_subnet.public[2]~3"
     ],
     "aws_cloudfront_distribution.this": [
         "aws_acm_certificate.acm",
         "aws_acm_certificate.acm",
-        "aws_lb.elb"
+        "aws_lb.elb",
+        "aws_route53_record.route_53"
     ],
     "aws_cloudwatch_log_group.cloudwatch": [
         "aws_fargate.ecs~1",

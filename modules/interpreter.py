@@ -104,8 +104,8 @@ def handle_metadata_vars(tfdata):
                     or "data." in value
                     or (
                         "module." in value
-                        and "aws_" not in value
-                        and "UNKNOWN" not in value
+                        and not re.search(r"module\.\w+\.aws_", value)
+                        and not "UNKNOWN" in value
                     )
                 )
                 and key != "depends_on"
@@ -182,6 +182,12 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():
                             # Resolve module var to output
+                            if "module." in module_var and not re.search(
+                                r"module\.\w+\.aws_", module_var
+                            ):
+                                value = value.replace(
+                                    module_var, f"module.{mod}.{module_var}"
+                                )
                             value = value.replace(module_var, i[outputname]["value"])
                             if (
                                 "module." in i[outputname]["value"]
@@ -189,6 +195,7 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                 or "local." in i[outputname]["value"]
                             ):
                                 # Output refers to other variables so need to rescursively resolve
+                                i
                                 value = find_replace_values(value, mod, tfdata)
                 else:
                     continue
@@ -197,10 +204,8 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                 click.echo(
                     f"   WARNING: Cannot resolve {module_var}, assigning empty value in module {module}"
                 )
-            value = oldvalue.replace(
-                outputname, helpers.strip_var_curlies(value)
-            ).replace('"', "")
-            value = value.replace(" ", "")
+
+            value = helpers.cleanup_curlies(value).strip()
             if "[" in value and "*.id" in value:
                 value = (value.replace(".*.id", "")).strip()
     return value
