@@ -179,8 +179,6 @@
         "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
         "module.vpc.aws_route.private_nat_gateway"
-<<<<<<< HEAD
-=======
     ],
     "module.vpc.aws_route.private_nat_gateway[0]~1": [
         "module.vpc.aws_nat_gateway.this[0]~1",
@@ -193,7 +191,6 @@
     "module.vpc.aws_route.private_nat_gateway[2]~3": [
         "module.vpc.aws_nat_gateway.this[2]~3",
         "module.vpc.aws_route_table.private[2]~3"
->>>>>>> 4c48ddb167789f79413da497419fb30e79d74017
     ],
     "module.vpc.aws_route.public_internet_gateway[0]~1": [],
     "module.vpc.aws_route_table.private[0]~1": [

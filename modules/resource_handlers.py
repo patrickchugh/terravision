@@ -1,7 +1,8 @@
-from debugpy import connect
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 from ast import literal_eval
+import re
+from typing import Dict, List
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -138,6 +139,12 @@ def aws_handle_cloudfront_pregraph(tfdata: dict):
     return tfdata
 
 
+def _add_suffix(s):
+    if s and s[-1].isalpha():
+        return s + "~" + str(ord(s[-1].lower()) - ord("a") + 1)
+    return s
+
+
 def aws_handle_subnet_azs(tfdata: dict):
     subnet_resources = [
         k
@@ -154,19 +161,21 @@ def aws_handle_subnet_azs(tfdata: dict):
             az = "aws_az.availability_zone_" + str(
                 tfdata["original_metadata"][subnet].get("availability_zone")
             )
-            az = az.replace("-", "~")
+            az = az.replace("-", "_")
             region = tfdata["original_metadata"][subnet].get("region")
             if region:
                 az = az.replace("True", region)
             else:
                 az = az.replace(".True", ".availability_zone")
+            az = _add_suffix(az)
             if not az in tfdata["graphdict"].keys():
                 tfdata["graphdict"][az] = list()
                 tfdata["meta_data"][az] = {"count": ""}
                 tfdata["meta_data"][az]["count"] = str(
                     tfdata["meta_data"][subnet].get("count")
                 )
-            tfdata["graphdict"][az].append(subnet)
+            if "aws_vpc" in parent:
+                tfdata["graphdict"][az].append(subnet)
             if az not in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].append(az)
     return tfdata
@@ -462,3 +471,133 @@ def random_string_handler(tfdata: dict):
     for r in randoms:
         del tfdata["graphdict"][r]
     return tfdata
+
+
+def match_resources(tfdata: dict) -> dict:
+    """
+    Match resources based on their suffix pattern (~N) and indirect dependencies to their corresponding parents.
+    """
+    tfdata["graphdict"] = match_az_to_subnets(tfdata["graphdict"])
+    tfdata["graphdict"] = link_ec2_to_iam_roles(tfdata["graphdict"])
+    tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
+    return tfdata
+
+
+def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Split NAT gateways into multiple instances and update subnet references.
+    """
+    result = dict(terraform_data)
+    suffix_pattern = r"~(\d+)$"
+
+    # Find NAT gateways and count related subnets
+    nat_gateways = [
+        k for k in terraform_data.keys() if "aws_nat_gateway" in k and "~" not in k
+    ]
+
+    for nat_gw in nat_gateways:
+        # Find public subnets that reference this NAT gateway
+        subnet_suffixes = set()
+        for resource, deps in terraform_data.items():
+            if "public_subnets" in resource and "~" in resource:
+                match = re.search(suffix_pattern, resource)
+                if match and nat_gw in deps:
+                    subnet_suffixes.add(match.group(1))
+
+        # Create numbered NAT gateways
+        for suffix in subnet_suffixes:
+            nat_gw_numbered = f"{nat_gw}~{suffix}"
+            result[nat_gw_numbered] = list(terraform_data[nat_gw])
+
+        # Remove original NAT gateway if we created numbered ones
+        if subnet_suffixes:
+            del result[nat_gw]
+
+    # Update subnet references to use numbered NAT gateways
+    for resource, deps in result.items():
+        if "public_subnets" in resource and "~" in resource:
+            match = re.search(suffix_pattern, resource)
+            if match:
+                suffix = match.group(1)
+                new_deps = []
+                for dep in deps:
+                    if "aws_nat_gateway" in dep and "~" not in dep:
+                        new_deps.append(f"{dep}~{suffix}")
+                    else:
+                        new_deps.append(dep)
+                result[resource] = new_deps
+
+    return result
+
+
+def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Add EC2 instances as dependencies to IAM roles when connected through instance profiles.
+    """
+    result = dict(terraform_data)
+
+    # Find IAM roles that connect to instance profiles
+    profile_to_role = {}
+    for resource, deps in terraform_data.items():
+        if "aws_iam_role" in resource:
+            for dep in deps:
+                if "aws_iam_instance_profile" in dep:
+                    profile_to_role[dep] = resource
+
+    # Find instance profiles that connect to EC2 instances and add EC2 to IAM role deps
+    for resource, deps in terraform_data.items():
+        if "aws_iam_instance_profile" in resource and resource in profile_to_role:
+            iam_role = profile_to_role[resource]
+            for dep in deps:
+                if "aws_instance" in dep and dep not in result[iam_role]:
+                    result[iam_role].append(dep)
+
+    return result
+
+
+def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Transform Terraform resource associations to match availability zones
+    with their corresponding subnets based on suffix pattern (~N).
+
+    Args:
+        terraform_data: Dictionary of Terraform resources and their associations
+
+    Returns:
+        Complete dictionary with AZ resources updated and all other resources intact
+    """
+    result = dict(terraform_data)
+
+    # Pattern to extract suffix from resource names
+    suffix_pattern = r"~(\d+)$"
+
+    # Find all availability zones
+    az_resources = [
+        key
+        for key in terraform_data.keys()
+        if key.startswith("aws_az.availability_zone")
+    ]
+
+    for az in az_resources:
+        # Extract suffix from AZ name
+        az_match = re.search(suffix_pattern, az)
+        if not az_match:
+            continue
+
+        az_suffix = az_match.group(1)
+
+        # Get all dependencies of this AZ
+        az_dependencies = terraform_data.get(az, [])
+
+        # Filter subnets that have matching suffix
+        matched_subnets = []
+        for dep in az_dependencies:
+            if "subnet" in dep.lower():
+                dep_match = re.search(suffix_pattern, dep)
+                if dep_match and dep_match.group(1) == az_suffix:
+                    matched_subnets.append(dep)
+
+        # Update only the AZ entries with matched subnets
+        result[az] = matched_subnets
+
+    return result

@@ -17,6 +17,7 @@ import modules.helpers as helpers
 import modules.interpreter as interpreter
 import modules.tfwrapper as tfwrapper
 import modules.cloud_config as cloud_config
+import modules.resource_handlers as resource_handlers
 
 
 __version__ = "0.8"
@@ -98,7 +99,7 @@ def _enrich_graph_data(tfdata: dict, debug: bool, already_processed: bool) -> di
     tfdata = graphmaker.create_multiple_resources(tfdata)
     tfdata = graphmaker.reverse_relations(tfdata)
     tfdata = helpers.remove_recursive_links(tfdata)
-    tfdata = graphmaker.match_resources(tfdata)
+    tfdata = resource_handlers.match_resources(tfdata)
     return tfdata
 
 
