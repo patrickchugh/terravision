@@ -1,6 +1,6 @@
 # TerraVision
 
-TerraVision is an AI-powered CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams and solves the problem of keeping the most important document in cloud projects, the architecture document, up to date. With high velocity releases the norm now, machine generated architecture diagrams are more accurate than relying on the freestyle diagram drawn by the cloud architect that probably doesn't match reality anymore. 
+TerraVision is an AI-powered CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams and solves the problem of keeping the most important document in cloud projects, the architecture diagram, up to date. With high velocity releases the norm now, machine generated architecture diagrams are more accurate than relying on the freestyle diagram drawn by the cloud architect that probably doesn't match reality anymore. 
 
 TerraVision securely runs 100% Client Side without any dependency or access to your Cloud environment, dynamically parses your conditionally created resources and variables and generates an automatic visual of your architecture. TerraVision is designed to be a 'Docs as Code' (DaC) tool that can be included in your CI/CD pipeline to update architecture diagrams after your build/test/release pipeline phases and supplement other document generators like readthedocs.io alongside it. 
 
@@ -178,8 +178,6 @@ terravision draw --source https://github.com/your-repo/terraform-examples.git
 # Analyze specific subfolder in Git repo
 terravision draw --source https://github.com/your-repo/terraform-examples.git//aws/vpc
 
-# Use with annotations
-terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
 ```
 
 ### Export Graph Data
@@ -200,6 +198,9 @@ terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.js
 
 ### Working with Pre-generated JSON from previous terravision run (faster)
 ```bash
+
+# Use with annotations
+terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
 
 # Export and reuse graph data
 terravision graphdata --source ~/src/terraform --outfile graph.json
@@ -358,10 +359,10 @@ terravision draw --source ~/src/terraform --debug
 ```
 
 This will:
-- Show detailed processing steps
+- Show detailed processing step by step on each resource
 - Export intermediate JSON files
 - Display full error traces
-- Validate all dependencies
+- Show detailed breakdown of intermediate variables
 
 ### Getting Help
 
