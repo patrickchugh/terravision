@@ -104,8 +104,7 @@ def handle_metadata_vars(tfdata):
                     or "data." in value
                     or (
                         "module." in value
-                        and not re.search(r"module\.\w+\.aws_", value)
-                        and not "UNKNOWN" in value
+                        and not re.search(r"module\.[\w-]+\.aws_", value)
                     )
                 )
                 and key != "depends_on"
@@ -183,14 +182,35 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                         if outputname in i.keys():
                             # Resolve module var to output
                             if "module." in module_var and not re.search(
-                                r"module\.\w+\.aws_", module_var
+                                r"module\.[\w-]+\.aws_", module_var
                             ):
-                                value = value.replace(
-                                    module_var, f"module.{mod}.{module_var}"
-                                )
-                            value = value.replace(module_var, i[outputname]["value"])
+                                # Check if specific index is mentioned
+                                if (
+                                    "[" in module_var
+                                    and "[*]" not in module_var
+                                    and "*.id" in i[outputname]["value"]
+                                ):
+                                    value = value.replace(
+                                        module_var, f"module.{mod}.{module_var}"
+                                    )
+                                    value = value.replace(
+                                        module_var, i[outputname]["value"]
+                                    )
+                                    index = helpers.find_between(
+                                        module_var, "[", "]"
+                                    ).replace(" ", "")
+                                    value = helpers.strip_var_curlies(
+                                        value.replace(".*.id", f"[{index}]")
+                                    ).strip()
+                                    continue
+
                             if (
-                                "module." in i[outputname]["value"]
+                                (
+                                    "module." in i[outputname]["value"]
+                                    and not not re.search(
+                                        r"module\.\w+\.aws_", module_var
+                                    )
+                                )
                                 or "var." in i[outputname]["value"]
                                 or "local." in i[outputname]["value"]
                             ):

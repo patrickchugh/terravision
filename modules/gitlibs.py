@@ -305,7 +305,8 @@ def _handle_cached_module(codepath: str, tempdir: str, module: str, reponame: st
         if not os.path.exists(codepath_module):
             codepath_module = codepath
             shutil.copytree(codepath_module, temp_module_path)
-    return os.path.join(temp_module_path, "")
+    # return os.path.join(temp_module_path, "")
+    return os.path.join(codepath_module, "")
 
 
 def _clone_full_repo(sourceURL: str, codepath: str):
