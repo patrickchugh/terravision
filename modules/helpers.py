@@ -648,3 +648,22 @@ def extract_terraform_resource(text: str) -> list:
         results.append(f"module.{match[0]}.{match[1]}.{match[2]}")
     
     return results
+
+def remove_terraform_functions(text: str) -> str:
+    """Remove Terraform functions from ${} expressions, keeping only the inner content."""
+    pattern = r'\$\{([^}]+)\}'
+    
+    def process_expression(match):
+        content = match.group(1)
+        # Common Terraform functions to remove
+        functions = ['try', 'coalesce', 'lookup', 'element', 'length', 'join', 'split', 'format', 'formatlist']
+        
+        for func in functions:
+            func_pattern = rf'{func}\s*\(\s*([^,)]+)(?:\s*,\s*[^)]+)?\s*\)'
+            func_match = re.search(func_pattern, content)
+            if func_match:
+                return func_match.group(1)
+        
+        return content
+    
+    return re.sub(pattern, process_expression, text)

@@ -203,7 +203,6 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                         value.replace(".*.id", f"[{index}]")
                                     ).strip()
                                     continue
-
                             if (
                                 (
                                     "module." in i[outputname]["value"]
@@ -217,6 +216,16 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                 # Output refers to other variables so need to rescursively resolve
                                 i
                                 value = find_replace_values(value, mod, tfdata)
+                                continue
+                            else:
+                                value = value.replace(
+                                    module_var, f"module.{mod}.{module_var}"
+                                )
+                                value = value.replace(
+                                    module_var, i[outputname]["value"]
+                                )
+                                value = helpers.remove_terraform_functions(value)
+                                value = helpers.cleanup_curlies(value).strip()
                 else:
                     continue
             if value == oldvalue:
@@ -225,7 +234,6 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                     f"   WARNING: Cannot resolve {module_var}, assigning empty value in module {module}"
                 )
 
-            value = helpers.cleanup_curlies(value).strip()
             if "[" in value and "*.id" in value:
                 value = (value.replace(".*.id", "")).strip()
     return value
