@@ -61,7 +61,8 @@ def aws_handle_autoscaling(tfdata: dict):
                 if helpers.get_no_module_name(k).startswith("aws_subnet")
             ]
             for subnet in subnets_to_change:
-                tfdata["graphdict"][subnet].append(asg)
+                if asg not in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].append(asg)
                 tfdata["graphdict"][subnet].remove(connection)
             pass
     return tfdata
@@ -274,6 +275,7 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                     )
                     and connection in tfdata["graphdict"].keys()
                     and len(tfdata["graphdict"][connection]) == 0
+                    and target not in tfdata["graphdict"][connection]
                 ):
                     tfdata["graphdict"][target].remove(connection)
                     tfdata["graphdict"][connection].append(target)
@@ -306,6 +308,7 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                     )
                     and helpers.get_no_module_name(node).split(".")[0] in GROUP_NODES
                     and not helpers.get_no_module_name(node).startswith("aws_vpc")
+                    and replacement_sg not in tfdata["graphdict"][node]
                 ):
                     tfdata["graphdict"][node].remove(target)
                     tfdata["graphdict"][node].append(replacement_sg)
@@ -336,7 +339,11 @@ def aws_handle_sg(tfdata: dict) -> dict:
         for sg_connection in tfdata["graphdict"][sg]:
             parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
             for parent in parent_list:
-                if helpers.get_no_module_name(parent).startswith("aws_subnet"):
+                if (
+                    helpers.get_no_module_name(parent).startswith("aws_subnet")
+                    and sg not in tfdata["graphdict"][parent]
+                    and sg + "~1" not in parent_list
+                ):
                     tfdata["graphdict"][parent].append(sg)
                     tfdata["graphdict"][parent].remove(sg_connection)
     # Delete SGs within VPCs
