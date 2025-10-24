@@ -631,39 +631,52 @@ def cleanup(text: str) -> str:
             text = text.replace(ch, " ")
     return text.strip()
 
+
 def extract_terraform_resource(text: str) -> list:
     """Extract terraform resources from string"""
     import re
+
     results = []
-    
+
     # Pattern for aws_resource.name (with or without quotes/spaces)
-    aws_pattern = r'(aws_\w+\.\w+)'
+    aws_pattern = r"(aws_\w+\.\w+)"
     aws_matches = re.findall(aws_pattern, text)
     results.extend(aws_matches)
-    
+
     # Pattern for module.name.aws_resource.name[*].id
-    module_pattern = r'module\.(\w+)\.(aws_\w+)\.(\w+)(?:\[\*?\])?(?:\.id)?'
+    module_pattern = r"module\.(\w+)\.(aws_\w+)\.(\w+)(?:\[\*?\])?(?:\.id)?"
     module_matches = re.findall(module_pattern, text)
     for match in module_matches:
         results.append(f"module.{match[0]}.{match[1]}.{match[2]}")
-    
+
     return results
+
 
 def remove_terraform_functions(text: str) -> str:
     """Remove Terraform functions from ${} expressions, keeping only the inner content."""
-    pattern = r'\$\{([^}]+)\}'
-    
+    pattern = r"\$\{([^}]+)\}"
+
     def process_expression(match):
         content = match.group(1)
         # Common Terraform functions to remove
-        functions = ['try', 'coalesce', 'lookup', 'element', 'length', 'join', 'split', 'format', 'formatlist']
-        
+        functions = [
+            "try",
+            "coalesce",
+            "lookup",
+            "element",
+            "length",
+            "join",
+            "split",
+            "format",
+            "formatlist",
+        ]
+
         for func in functions:
-            func_pattern = rf'{func}\s*\(\s*([^,)]+)(?:\s*,\s*[^)]+)?\s*\)'
+            func_pattern = rf"{func}\s*\(\s*([^,)]+)(?:\s*,\s*[^)]+)?\s*\)"
             func_match = re.search(func_pattern, content)
             if func_match:
                 return func_match.group(1)
-        
+
         return content
-    
+
     return re.sub(pattern, process_expression, text)
