@@ -204,15 +204,6 @@ def url(string: str) -> str:
     return string
 
 
-def check_for_tf_functions(string):
-    for tf_function in dir(tf_function_handlers):
-        if (
-            tf_function + "(" in string or "_" + tf_function + "(" in string
-        ) and "ERROR!_" + tf_function not in string:
-            return tf_function
-    return False
-
-
 def find_nth(string, substring, n):
     if n == 1:
         return string.find(substring)
@@ -425,6 +416,22 @@ def find_common_elements(dict_of_lists: dict, keyword: str) -> list:
                     if element in list2 and keyword in key1 and keyword in key2:
                         results.append((key1, key2, element))
     return results
+
+
+def find_shared_security_groups(graphdict: dict) -> list:
+    """Find all keys where the same security group appears in multiple connection lists"""
+    sg_to_keys = {}
+
+    # Build mapping of security groups to keys that reference them
+    for key, connections in graphdict.items():
+        for connection in connections:
+            if "aws_security_group" in connection:
+                if connection not in sg_to_keys:
+                    sg_to_keys[connection] = []
+                sg_to_keys[connection].append(key)
+
+    # Return keys where security groups are shared (appear in multiple lists)
+    return [key for sg, keys in sg_to_keys.items() if len(keys) > 1 for key in keys]
 
 
 def find_resource_references(searchdict: dict, target_resource: str) -> dict:

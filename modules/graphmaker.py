@@ -141,6 +141,7 @@ def check_relationship(
                             not in tfdata["graphdict"][resource_associated_with]
                             and resource_associated_with
                             not in tfdata["graphdict"][matched_resource]
+                            and matched_resource not in connection_pairs
                         ):
                             connection_pairs.append(resource_associated_with)
                             connection_pairs.append(matched_resource)
@@ -785,6 +786,7 @@ def create_multiple_resources(tfdata):
                 resource in tfdata["graphdict"][parent]
                 and not parent.startswith("aws_group.shared")
                 and not "~" in parent
+                and not tfdata["meta_data"][resource].get("count")
             ):
                 tfdata["graphdict"][parent].remove(resource)
     # Delete any original security group nodes that have been replaced with numbered suffixes

@@ -95,7 +95,10 @@ def handle_cloudfront_lbs(tfdata: dict) -> dict:
                         tfdata["graphdict"][cf].append(lb)
                         tfdata["graphdict"][node].remove(cf)
                         for parent in lb_parents:
-                            if parent.split(".")[0] not in GROUP_NODES:
+                            if (
+                                helpers.get_no_module_name(parent).split(".")[0]
+                                not in GROUP_NODES
+                            ):
                                 tfdata["graphdict"][parent].remove(lb)
     return tfdata
 
@@ -250,6 +253,7 @@ def handle_sg_relationships(tfdata: dict) -> dict:
         target_type = helpers.get_no_module_name(target).split(".")[0]
         # Look for any nodes related to security groups and reverse the relationship, making child as parent
         if not target_type in GROUP_NODES and target_type != "aws_security_group_rule":
+            duplicate_sg_connections = False
             for connection in tfdata["graphdict"][target]:
                 if (
                     helpers.get_no_module_name(connection).startswith(
@@ -265,9 +269,22 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                         suffixed_name = connection + "~" + suffix
                         tfdata["graphdict"][suffixed_name] = newlist
                     else:
-                        tfdata["graphdict"][connection] = newlist
+                        if len(tfdata["graphdict"][connection]) > 0:
+                            tfdata["graphdict"][
+                                connection + "_" + target.split(".")[-1]
+                            ] = newlist
+                            duplicate_sg_connections = True
+                        else:
+                            tfdata["graphdict"][connection] = newlist
                     newlist = list(tfdata["graphdict"][target])
                     newlist.remove(connection)
+                    if duplicate_sg_connections:
+                        for e in tfdata["graphdict"][target]:
+                            if e == connection:
+                                tfdata["graphdict"][target].remove(e)
+                                tfdata["graphdict"][target].append(
+                                    connection + "_" + target.split(".")[-1]
+                                )
                     tfdata["graphdict"][target] = newlist
                 elif (
                     helpers.get_no_module_name(connection).startswith(
@@ -400,14 +417,18 @@ def aws_handle_lb(tfdata: dict):
                 and tfdata["meta_data"][connection].get("count")
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
+                # Sets LB count to the max of the count of any dependencies
                 tfdata["meta_data"][renamed_node] = dict(
                     tfdata["meta_data"]["aws_lb.elb"]
                 )
-                # tfdata["meta_data"][renamed_node]["count"] = int(
-                #     tfdata["meta_data"][connection]["count"]
-                # )
-                tfdata["meta_data"][lb]["count"] = 1
-                tfdata["meta_data"][renamed_node]["count"] = 1
+                if (
+                    tfdata["meta_data"][connection]["count"]
+                    > tfdata["meta_data"][renamed_node]["count"]
+                ):
+                    tfdata["meta_data"][renamed_node]["count"] = int(
+                        tfdata["meta_data"][connection]["count"]
+                    )
+
             tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
