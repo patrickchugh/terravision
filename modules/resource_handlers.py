@@ -2,6 +2,7 @@ import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 from ast import literal_eval
 import re
+import copy
 from typing import Dict, List
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
@@ -412,16 +413,17 @@ def aws_handle_lb(tfdata: dict):
         for connection in list(tfdata["graphdict"][lb]):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
-            tfdata["graphdict"][renamed_node].append(connection)
+            c_type = connection.split(".")[0]
+            if c_type not in SHARED_SERVICES:
+                tfdata["graphdict"][renamed_node].append(connection)
+                tfdata["graphdict"][lb].remove(connection)
             if (
                 tfdata["meta_data"].get(connection)
                 and tfdata["meta_data"][connection].get("count")
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
-                tfdata["meta_data"][renamed_node] = dict(
-                    tfdata["meta_data"]["aws_lb.elb"]
-                )
+                tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"]["aws_lb.elb"])
                 if (
                     tfdata["meta_data"][connection]["count"]
                     > tfdata["meta_data"][renamed_node]["count"]
@@ -429,8 +431,6 @@ def aws_handle_lb(tfdata: dict):
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
-
-            tfdata["graphdict"][lb].remove(connection)
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             for p in parents:
                 p_type = p.split(".")[0]
