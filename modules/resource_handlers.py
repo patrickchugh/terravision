@@ -423,7 +423,9 @@ def aws_handle_lb(tfdata: dict):
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
-                tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"]["aws_lb.elb"])
+                tfdata["meta_data"][renamed_node] = copy.deepcopy(
+                    tfdata["meta_data"]["aws_lb.elb"]
+                )
                 if (
                     tfdata["meta_data"][connection]["count"]
                     > tfdata["meta_data"][renamed_node]["count"]
@@ -432,6 +434,7 @@ def aws_handle_lb(tfdata: dict):
                         tfdata["meta_data"][connection]["count"]
                     )
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
+            # Replace any parent references to original LB instance to the renamed node with LB type
             for p in parents:
                 p_type = p.split(".")[0]
                 if (
