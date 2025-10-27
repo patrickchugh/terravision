@@ -277,14 +277,15 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                         else:
                             tfdata["graphdict"][connection] = newlist
                     newlist = list(tfdata["graphdict"][target])
-                    newlist.remove(connection)
-                    if duplicate_sg_connections:
-                        for e in tfdata["graphdict"][target]:
-                            if e == connection:
-                                tfdata["graphdict"][target].remove(e)
-                                tfdata["graphdict"][target].append(
-                                    connection + "_" + target.split(".")[-1]
-                                )
+                    if connection in newlist:
+                        newlist.remove(connection)
+                    # if duplicate_sg_connections:
+                    #     for e in tfdata["graphdict"][target]:
+                    #         if e == connection:
+                    #             tfdata["graphdict"][target].remove(e)
+                    #             tfdata["graphdict"][target].append(
+                    #                 connection + "_" + target.split(".")[-1]
+                    #             )
                     tfdata["graphdict"][target] = newlist
                 elif (
                     helpers.get_no_module_name(connection).startswith(
