@@ -428,7 +428,8 @@ def handle_numbered_nodes(resource_node, tfdata, meta_data):
     )
     resource_count = len(all_matching_list)
     for actual_name in all_matching_list:
-        meta_data[actual_name] = meta_data[resource_node]
+        import copy
+        meta_data[actual_name] = copy.deepcopy(meta_data[resource_node])
         meta_data[actual_name]["count"] = resource_count
     return meta_data
 

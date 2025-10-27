@@ -2,6 +2,7 @@ import click
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
+import copy
 from typing import Dict, List
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
@@ -150,8 +151,8 @@ def check_relationship(
 
 # Make final graph structure to be used for drawing
 def add_relations(tfdata: dict):
-    # Start with an existing connections list for all nodes/resources we know about
-    graphdict = dict(tfdata["graphdict"])
+    # Start with an independent deepcopy of the connections so in-place edits don't leak
+    graphdict = copy.deepcopy(tfdata["graphdict"])
     created_resources = len(tfdata["node_list"])
     click.echo(
         click.style(
@@ -177,7 +178,7 @@ def add_relations(tfdata: dict):
             continue
         if nodename not in tfdata["meta_data"].keys():
             dg = dict_generator(tfdata["original_metadata"][node])
-            tfdata["meta_data"][node] = tfdata["original_metadata"][node]
+            tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
         else:
             dg = dict_generator(tfdata["meta_data"][nodename])
         for param_item_list in dg:
@@ -211,7 +212,8 @@ def add_relations(tfdata: dict):
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
     tfdata["graphdict"] = graphdict
-    tfdata["original_graphdict_with_relations"] = graphdict
+    # store an immutable snapshot (deep copy) so future mutations to graphdict don't change the snapshot
+    tfdata["original_graphdict_with_relations"] = copy.deepcopy(graphdict)
     return tfdata
 
 
@@ -227,17 +229,18 @@ def consolidate_nodes(tfdata: dict):
         if "[" in res:
             res = res.split("[")[0]
         if tfdata["meta_data"].get(res):
-            resdata = tfdata["meta_data"].get(res)
+            resdata = copy.deepcopy(tfdata["meta_data"].get(res))
         else:
-            resdata = tfdata["meta_data"][resource]
+            resdata = copy.deepcopy(tfdata["meta_data"][resource])
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
-            tfdata["meta_data"][consolidated_name] = dict(
-                tfdata["meta_data"][consolidated_name] | resdata
-            )
+            # Use deepcopy to avoid shared references between consolidated nodes
+            merged_data = copy.deepcopy(tfdata["meta_data"][consolidated_name])
+            merged_data.update(copy.deepcopy(resdata))
+            tfdata["meta_data"][consolidated_name] = merged_data
             # Don't over-ride count values with 0 when merging
             if consolidated_name not in tfdata["graphdict"].keys():
                 tfdata["graphdict"][consolidated_name] = list()
@@ -332,7 +335,7 @@ def handle_variants(tfdata: dict):
                 new_variant_name = variant_suffix + "." + variant_label
                 new_list.append(new_variant_name)
                 tfdata["graphdict"][renamed_node] = new_list
-                tfdata["meta_data"][new_variant_name] = tfdata["meta_data"][resource]
+                tfdata["meta_data"][new_variant_name] = copy.deepcopy(tfdata["meta_data"][resource])
     return tfdata
 
 
@@ -434,9 +437,9 @@ def add_multiples_to_parents(
                             tfdata["graphdict"][parent + "~" + str(i + 1)].remove(
                                 resource
                             )
-                        tfdata["meta_data"][parent + "~" + str(i + 1)] = tfdata[
-                            "meta_data"
-                        ][parent]
+                        tfdata["meta_data"][parent + "~" + str(i + 1)] = copy.deepcopy(
+                            tfdata["meta_data"][parent]
+                        )
                 else:
                     if resource in tfdata["graphdict"][parent]:
                         tfdata["graphdict"][parent].remove(resource)
@@ -680,9 +683,9 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
             if not_shared_service:
                 # Create a top level node with number suffix and connect to numbered connections
                 tfdata["graphdict"][resource + "~" + str(i + 1)] = resource_i
-                tfdata["meta_data"][resource + "~" + str(i + 1)] = tfdata["meta_data"][
-                    resource
-                ]
+                tfdata["meta_data"][resource + "~" + str(i + 1)] = copy.deepcopy(
+                    tfdata["meta_data"][resource]
+                )
                 tfdata = add_multiples_to_parents(i, resource, multi_resources, tfdata)
                 # Check if numbered connection node exists as a top level node in graphdict and create if necessary
                 for numbered_node in resource_i:

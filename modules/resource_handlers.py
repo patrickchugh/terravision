@@ -42,12 +42,17 @@ def aws_handle_autoscaling(tfdata: dict):
                 # Apply counts for subnets to the asg target
                 for subnet in new_list:
                     if not tfdata["meta_data"][asg].get("count"):
-                        tfdata["meta_data"][asg]["count"] = tfdata["meta_data"][subnet][
-                            "count"
-                        ]
-                        tfdata["meta_data"][check_service]["count"] = tfdata[
-                            "meta_data"
-                        ][subnet]["count"]
+                        count_value = tfdata["meta_data"][subnet]["count"]
+                        tfdata["meta_data"][asg]["count"] = (
+                            int(count_value)
+                            if isinstance(count_value, (int, str))
+                            else count_value
+                        )
+                        tfdata["meta_data"][check_service]["count"] = (
+                            int(count_value)
+                            if isinstance(count_value, (int, str))
+                            else count_value
+                        )
     except:
         pass
     # Now replace any references within subnets to asg targets with the name of asg
@@ -273,22 +278,14 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                         if len(tfdata["graphdict"][connection]) > 0:
                             unique_name = connection + "_" + target.split(".")[-1]
                             tfdata["graphdict"][unique_name] = newlist
-                            tfdata["meta_data"][unique_name] = tfdata["meta_data"][
-                                connection
-                            ]
-                            duplicate_sg_connections = True
+                            tfdata["meta_data"][unique_name] = copy.deepcopy(
+                                tfdata["meta_data"][connection]
+                            )
                         else:
                             tfdata["graphdict"][connection] = newlist
                     newlist = list(tfdata["graphdict"][target])
                     if connection in newlist:
                         newlist.remove(connection)
-                    # if duplicate_sg_connections:
-                    #     for e in tfdata["graphdict"][target]:
-                    #         if e == connection:
-                    #             tfdata["graphdict"][target].remove(e)
-                    #             tfdata["graphdict"][target].append(
-                    #                 connection + "_" + target.split(".")[-1]
-                    #             )
                     tfdata["graphdict"][target] = newlist
                 elif (
                     helpers.get_no_module_name(connection).startswith(
@@ -412,6 +409,9 @@ def aws_handle_lb(tfdata: dict):
     for lb in found_lbs:
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
         renamed_node = lb_type + "." + "elb"
+        # Initialize renamed_node metadata once before the loop
+        if not tfdata["meta_data"].get(renamed_node):
+            tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
         for connection in list(tfdata["graphdict"][lb]):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
@@ -425,19 +425,14 @@ def aws_handle_lb(tfdata: dict):
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
-                tfdata["meta_data"][renamed_node] = copy.deepcopy(
-                    tfdata["meta_data"][lb]
-                )
-                if (
-                    tfdata["meta_data"][connection]["count"]
-                    > tfdata["meta_data"][renamed_node]["count"]
+                if int(tfdata["meta_data"][connection]["count"]) > int(
+                    tfdata["meta_data"][renamed_node]["count"]
                 ):
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
                     plist = helpers.list_of_parents(tfdata["graphdict"], renamed_node)
                     for p in plist:
-
                         tfdata["meta_data"][p]["count"] = int(
                             tfdata["meta_data"][connection]["count"]
                         )
