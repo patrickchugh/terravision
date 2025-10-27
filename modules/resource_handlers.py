@@ -271,9 +271,11 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                         tfdata["graphdict"][suffixed_name] = newlist
                     else:
                         if len(tfdata["graphdict"][connection]) > 0:
-                            tfdata["graphdict"][
-                                connection + "_" + target.split(".")[-1]
-                            ] = newlist
+                            unique_name = connection + "_" + target.split(".")[-1]
+                            tfdata["graphdict"][unique_name] = newlist
+                            tfdata["meta_data"][unique_name] = tfdata["meta_data"][
+                                connection
+                            ]
                             duplicate_sg_connections = True
                         else:
                             tfdata["graphdict"][connection] = newlist
@@ -424,7 +426,7 @@ def aws_handle_lb(tfdata: dict):
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
                 tfdata["meta_data"][renamed_node] = copy.deepcopy(
-                    tfdata["meta_data"]["aws_lb.elb"]
+                    tfdata["meta_data"][lb]
                 )
                 if (
                     tfdata["meta_data"][connection]["count"]
@@ -433,6 +435,12 @@ def aws_handle_lb(tfdata: dict):
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
+                    plist = helpers.list_of_parents(tfdata["graphdict"], renamed_node)
+                    for p in plist:
+
+                        tfdata["meta_data"][p]["count"] = int(
+                            tfdata["meta_data"][connection]["count"]
+                        )
             parents = helpers.list_of_parents(tfdata["graphdict"], lb)
             # Replace any parent references to original LB instance to the renamed node with LB type
             for p in parents:
