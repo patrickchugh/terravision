@@ -367,6 +367,8 @@ def render_diagram(
             node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
         )
     # Setup footer
+    if str(source) == "('.',)":
+        source = os.getcwd()
     footer_style = {
         "_footernode": "1",
         "shape": "record",
