@@ -49,6 +49,7 @@ SF = StepFunctions
 aws_appsync_function = Appsync
 aws_cloudwatch_event_rule = Eventbridge
 aws_cloudwatch_event = Eventbridge
+aws_scheduler_schedule_group = Eventbridge
 aws_mq_broker = MQ
 aws_mq_configuration = MQ
 aws_sns_topic = SimpleNotificationServiceSns

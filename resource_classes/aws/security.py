@@ -129,6 +129,7 @@ aws_guardduty_detector = Guardduty
 aws_iam_role = IdentityAndAccessManagementIamRole
 # aws_iam_policy = IAMPermissions
 aws_iam_role_policy_attachment = IAMPermissions
+aws_iam_role_policy = IAMPermissions
 aws_inspector_assessment_template = Inspector
 aws_kms_grant = KeyManagementService
 aws_kms_key = KeyManagementService

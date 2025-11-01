@@ -8,6 +8,7 @@ import json
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 
+
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 GROUP_NODES = cloud_config.AWS_GROUP_NODES
@@ -144,7 +145,7 @@ def get_no_module_name(node: str):
     return no_module_name
 
 
-def extract_subfolder_from_repo(source_url: str) -> tuple[str, str]:
+def extract_subfolder_from_repo(source_url: str):
     """
     Extract repo URL and subfolder from a string like 'https://github.com/user/repo.git//code/02-one-server'.
 

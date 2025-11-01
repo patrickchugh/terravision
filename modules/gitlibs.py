@@ -312,7 +312,10 @@ def _handle_cached_module(codepath: str, tempdir: str, module: str, reponame: st
 def _clone_full_repo(sourceURL: str, codepath: str):
     """Clone entire repository."""
     githubURL, subfolder, tag = get_clone_url(sourceURL)
-    os.makedirs(codepath)
+    if os.path.exists(codepath):
+        shutil.rmtree(codepath)
+    else:
+        os.makedirs(codepath)
 
     options = []
     if tag:
