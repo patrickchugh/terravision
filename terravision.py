@@ -91,6 +91,7 @@ def _process_terraform_source(
 def _enrich_graph_data(tfdata: dict, debug: bool, already_processed: bool) -> dict:
     tfdata = interpreter.prefix_module_names(tfdata)
     tfdata = interpreter.resolve_all_variables(tfdata, debug, already_processed)
+    tfdata = resource_handlers.handle_special_cases(tfdata)
     tfdata = graphmaker.add_relations(tfdata)
     tfdata = graphmaker.consolidate_nodes(tfdata)
     tfdata = annotations.add_annotations(tfdata)
@@ -100,6 +101,7 @@ def _enrich_graph_data(tfdata: dict, debug: bool, already_processed: bool) -> di
     tfdata = graphmaker.reverse_relations(tfdata)
     tfdata = helpers.remove_recursive_links(tfdata)
     tfdata = resource_handlers.match_resources(tfdata)
+
     return tfdata
 
 

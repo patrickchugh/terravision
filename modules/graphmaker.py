@@ -57,9 +57,9 @@ def check_relationship(
     # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
     for p in plist:
         param = str(p)
+        matching = []
         # List comprehension of unique nodes referenced in the parameter
-
-        if "[" in param and "[*]" not in param:
+        if "[" in param and "[*]" not in param and param != "[]":
             matching = list(
                 {
                     s
@@ -76,12 +76,11 @@ def check_relationship(
                             {
                                 s
                                 for s in nodes
-                                if r in s or helpers.cleanup_curlies(r) in s
+                                if (r in s or helpers.cleanup_curlies(r) in s)
+                                and s not in matching
                             }
                         )
                     )
-            else:
-                matching = []
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
@@ -335,7 +334,9 @@ def handle_variants(tfdata: dict):
                 new_variant_name = variant_suffix + "." + variant_label
                 new_list.append(new_variant_name)
                 tfdata["graphdict"][renamed_node] = new_list
-                tfdata["meta_data"][new_variant_name] = copy.deepcopy(tfdata["meta_data"][resource])
+                tfdata["meta_data"][new_variant_name] = copy.deepcopy(
+                    tfdata["meta_data"][resource]
+                )
     return tfdata
 
 

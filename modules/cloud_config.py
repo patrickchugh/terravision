@@ -224,6 +224,10 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_rds_postgres",
 ]
 
+AWS_NEVER_DRAW_LINE = ["aws_iam_role_policy"]
+
+AWS_DISCONNECT_LIST = ["aws_iam_role_policy"]
+
 AWS_ACRONYMS_LIST = [
     "acm",
     "alb",

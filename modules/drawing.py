@@ -51,6 +51,7 @@ OUTER_NODES = cloud_config.AWS_OUTER_NODES
 EDGE_NODES = cloud_config.AWS_EDGE_NODES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
+NEVER_DRAW_LINE = cloud_config.AWS_NEVER_DRAW_LINE
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: dict):
@@ -198,15 +199,19 @@ def handle_nodes(
 
 # Ensure all edge lines are invisible unless they match this criteria
 def always_draw_edge(origin: str, destination: str, tfdata: dict) -> bool:
-    if origin in ALWAYS_DRAW_LINE or destination in ALWAYS_DRAW_LINE:
+    if origin in NEVER_DRAW_LINE:
+        return False
+    else:
         return True
-    if origin in EDGE_NODES or destination in EDGE_NODES:
-        return True
-    if origin in str(AUTO_ANNOTATIONS):
-        return True
-    if tfdata["meta_data"].get(origin):
-        if tfdata["meta_data"][origin].get("edge_labels"):
-            return True
+    # if origin in ALWAYS_DRAW_LINE or destination in ALWAYS_DRAW_LINE:
+    #     return True
+    # if origin in EDGE_NODES or destination in EDGE_NODES:
+    #     return True
+    # if origin in str(AUTO_ANNOTATIONS):
+    #     return True
+    # if tfdata["meta_data"].get(origin):
+    #     if tfdata["meta_data"][origin].get("edge_labels"):
+    #         return True
     return False
 
 

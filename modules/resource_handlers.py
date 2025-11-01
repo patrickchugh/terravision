@@ -12,6 +12,16 @@ CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
+DISCONNECT_SERVICES = cloud_config.AWS_DISCONNECT_LIST
+
+
+def handle_special_cases(tfdata: dict):
+    tfdata["graphdict"] = link_sqs_queue_policy(tfdata["graphdict"])
+    for r in tfdata["graphdict"]:
+        for d in DISCONNECT_SERVICES:
+            if d in r:
+                tfdata["graphdict"][r] = []
+    return tfdata
 
 
 def aws_handle_autoscaling(tfdata: dict):
@@ -587,6 +597,30 @@ def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
                 if "aws_instance" in dep and dep not in result[iam_role]:
                     result[iam_role].append(dep)
 
+    return result
+
+
+def link_sqs_queue_policy(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Add SQS queues as dependencies to resources when connected through queue policies.
+    """
+    result = dict(terraform_data)
+
+    # Find SQS queues that connect to queue policies
+    policy_to_queue = {}
+    for resource, deps in terraform_data.items():
+        if "aws_sqs_queue" in resource:
+            for dep in deps:
+                if "aws_sqs_queue_policy" in dep:
+                    policy_to_queue[dep] = resource
+
+    # Find queue policies that connect to resources and add SQS queue to those resource deps
+    for resource, deps in terraform_data.items():
+        for dep in deps:
+            if "aws_sqs_queue_policy." in dep:
+                sqs_queue = policy_to_queue[dep]
+                if sqs_queue not in result[resource]:
+                    result[resource].append(sqs_queue)
     return result
 
 
