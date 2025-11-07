@@ -101,17 +101,16 @@ def inject_module_variables(tfdata: dict):
 
 
 def handle_metadata_vars(tfdata):
+    # Regex pattern to match var., local., module., or data. with proper word boundaries
+    # Matches when preceded by start of string, whitespace, or common operators
+    var_pattern = re.compile(r'(^|[\s\(\[\{=,])(var\.|local\.|module\.|data\.)')
+
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
-            # TODO: Use Regex to check that preceding character is a space or operand
+            # Use Regex to check that preceding character is a space or operand
             while (
-                (
-                    "var." in value
-                    or "local." in value
-                    or "module." in value
-                    or "data." in value
-                )
+                var_pattern.search(value)
                 and key != "depends_on"
                 and key != "original_count"
             ):
@@ -421,8 +420,9 @@ def get_metadata(tfdata):  # -> set
                 click.echo(f"   {resource_node}")
                 # If numbering not present add
                 if not resource_node in tfdata["original_metadata"].keys():
-                    # TODO: check if there is a count attribute as well here before renaming
-                    if "[0]~1" not in resource_node:
+                    # Check if there is a count attribute before renaming
+                    has_count = item[resource_type][resource_name].get("count")
+                    if has_count and "[0]~1" not in resource_node:
                         resource_node = f"{resource_node}[0]~1"
                     # Sometimes resource names get mutated due to dynamic stanzas so just guess the resource name by type
                     if not resource_node in tfdata["original_metadata"].keys():

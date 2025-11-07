@@ -85,8 +85,6 @@ class Canvas:
 
     # fmt: on
 
-    # TODO: Label position option
-    # TODO: Save directory option (filename + directory?)
     def __init__(
         self,
         name: str = "",
@@ -95,6 +93,8 @@ class Canvas:
         curvestyle: str = "ortho",
         outformat: str = "png",
         show: bool = True,
+        labelloc: str = "t",
+        output_dir: str = "",
         graph_attr: dict = {},
         node_attr: dict = {},
         edge_attr: dict = {},
@@ -109,6 +109,8 @@ class Canvas:
         :param curvestyle: Curve bending style. One of "ortho" or "curved".
         :param outformat: Output file format. Default is 'png'.
         :param show: Open generated image after save if true, just only save otherwise.
+        :param labelloc: Label position. "t" for top, "b" for bottom. Default is "t".
+        :param output_dir: Output directory for saved files. If not given, current directory is used.
         :param graph_attr: Provide graph_attr dot config attributes.
         :param node_attr: Provide node_attr dot config attributes.
         :param edge_attr: Provide edge_attr dot config attributes.
@@ -145,6 +147,12 @@ class Canvas:
         if not self._validate_outformat(outformat) and outformat != "dot":
             raise ValueError(f'"{outformat}" is not a valid output format')
         self.outformat = outformat
+
+        # Set label position
+        self.dot.graph_attr["labelloc"] = labelloc
+
+        # Set output directory
+        self.output_dir = Path(output_dir) if output_dir else Path.cwd()
 
         # Merge passed in attributes
         self.dot.graph_attr.update(graph_attr)
@@ -207,12 +215,12 @@ class Canvas:
 
     def pre_render(self) -> str:
         return self.dot.render(
-            format="dot", quiet=True, cleanup=True, directory=Path.cwd()
+            format="dot", quiet=True, cleanup=True, directory=self.output_dir
         )
 
     def render(self) -> str:
         dotsource = Source.from_file(
-            self.filename + ".dot", engine="neato", directory=Path.cwd()
+            self.filename + ".dot", engine="neato", directory=self.output_dir
         )
         filename = dotsource.render(
             neato_no_op=2,
@@ -220,7 +228,7 @@ class Canvas:
             view=self.show,
             quiet=True,
             engine="neato",
-            directory=Path.cwd(),
+            directory=self.output_dir,
         )
         return filename
 
