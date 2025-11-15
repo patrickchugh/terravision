@@ -64,16 +64,29 @@ def export_tfdata(tfdata: dict):
 
 
 def remove_recursive_links(tfdata: dict):
+    """Remove 2-node circular references from the graph.
+    
+    Detects and removes bidirectional links between two nodes (A->B and B->A)
+    to prevent rendering issues. Longer cycles (A->B->C->A) are preserved.
+    
+    Args:
+        tfdata: Dictionary containing 'graphdict' with node relationships
+        
+    Returns:
+        dict: Updated tfdata with circular references removed from graphdict
+    """
     graphdict = tfdata.get("graphdict")
     circular = find_circular_refs(graphdict)
+    
     if circular:
         click.echo(
             click.style(
-                f"\nINFO: Found {len(circular)} circular references in the graph. These will be removed to prevent rendering issues.\n",
+                f"\nINFO: Found {len(circular)} 2-node circular references in the graph. These will be removed to prevent rendering issues.\n",
                 fg="yellow",
                 bold=True,
             )
         )
+        # Remove one direction of each bidirectional link
         for i, cycle in enumerate(circular, 1):
             print(f"  {i}. {' -> '.join(cycle)}")
             node_b = cycle[-1]
@@ -90,38 +103,34 @@ def remove_recursive_links(tfdata: dict):
 
 
 def find_circular_refs(graph):
-    """Find all circular references in the dependency graph."""
+    """Find 2-node circular references (A->B->A) in the dependency graph.
+    
+    Only detects direct bidirectional links between two nodes. Longer cycles
+    like A->B->C->A are not detected or reported.
+    
+    Args:
+        graph: Dictionary where keys are nodes and values are lists of connected nodes
+        
+    Returns:
+        list: List of cycles, each represented as [node_a, node_b, node_a]
+    """
     circular_refs = []
-
-    def dfs(node, path, visited_in_path):
-        if node not in graph:
-            return
-        for neighbor in graph[node]:
-            # Normalize neighbor name (remove array indices for comparison)
-            neighbor_base = neighbor.split("[")[0] if "[" in neighbor else neighbor
-            if neighbor in visited_in_path:
-                # Found a cycle
-                cycle_start = path.index(neighbor)
-                cycle = path[cycle_start:] + [neighbor]
-                circular_refs.append(cycle)
-                continue
-            if neighbor in graph:
-                dfs(neighbor, path + [neighbor], visited_in_path | {neighbor})
-
-    for node in graph:
-        dfs(node, [node], {node})
-    # Remove duplicate cycles
-    unique_cycles = []
     seen = set()
-    for cycle in circular_refs:
-        # Normalize cycle representation
-        min_idx = cycle.index(min(cycle[:-1]))
-        normalized = tuple(cycle[min_idx:-1] + cycle[:min_idx] + [cycle[min_idx]])
-        if normalized not in seen:
-            seen.add(normalized)
-            unique_cycles.append(cycle)
-
-    return unique_cycles
+    
+    # Check each node and its connections
+    for node_a in graph:
+        if node_a not in graph:
+            continue
+        for node_b in graph[node_a]:
+            # Check if node_b also connects back to node_a
+            if node_b in graph and node_a in graph[node_b]:
+                # Use sorted tuple to avoid duplicate detection (A->B and B->A are the same cycle)
+                cycle_key = tuple(sorted([node_a, node_b]))
+                if cycle_key not in seen:
+                    seen.add(cycle_key)
+                    circular_refs.append([node_a, node_b, node_a])
+    
+    return circular_refs
 
 
 def process_graphdict(relations_graphdict: dict):
