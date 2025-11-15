@@ -203,6 +203,46 @@ def setup_graph(tfdata: dict):
     return tfdata
 
 
+def find_node_in_gvid_table(node: str, gvid_table: list) -> int:
+    """Find node ID in gvid_table by trying different name variations.
+
+    Terraform nodes can have various naming formats:
+    - Original: module.vpc.aws_subnet.public[0]
+    - With tilde suffix: aws_instance.web~2
+    - Module prefixed: module.network.aws_vpc.main
+
+    This function tries multiple variations to find a match.
+    """
+    # Try 1: Exact match with original node name
+    if node in gvid_table:
+        return gvid_table.index(node)
+
+    # Try 2: Remove brackets and numbers (e.g., "resource[0]" -> "resource")
+    nodename = helpers.remove_brackets_and_numbers(node)
+    if nodename in gvid_table:
+        return gvid_table.index(nodename)
+
+    # Try 3: Split on brackets and tilde (e.g., "resource[key]" or "resource~1" -> "resource")
+    nodename = node.split("[")[0].split("~")[0]
+    if nodename in gvid_table:
+        return gvid_table.index(nodename)
+
+    # Try 4: Remove module prefix and numbers (e.g., "module.vpc.aws_subnet.public" -> "aws_subnet.public")
+    nodename = helpers.get_no_module_no_number_name(node)
+    if nodename in gvid_table:
+        return gvid_table.index(nodename)
+
+    # No match found - exit with error
+    click.echo(
+        click.style(
+            f"\nERROR: Cannot map node {node} to graph connections. Exiting.",
+            fg="red",
+            bold=True,
+        )
+    )
+    exit()
+
+
 def tf_makegraph(tfdata: dict):
     # Setup Initial graphdict
     tfdata = setup_graph(tfdata)
@@ -214,16 +254,8 @@ def tf_makegraph(tfdata: dict):
         gvid_table[gvid] = str(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
-        if "module." in node:
-            nodename = helpers.get_no_module_no_number_name(node)
-        else:
-            nodename = node.split("[")[0]
-            nodename = nodename.split("~")[0]
-        if nodename in gvid_table:
-            node_id = gvid_table.index(nodename)
-        else:
-            nodename = helpers.remove_brackets_and_numbers(nodename)
-            node_id = gvid_table.index(nodename)
+        # Find the node ID by trying different name variations
+        node_id = find_node_in_gvid_table(node, gvid_table)
         if tfdata["tfgraph"].get("edges"):
             for connection in tfdata["tfgraph"]["edges"]:
                 head = connection["head"]
@@ -231,13 +263,7 @@ def tf_makegraph(tfdata: dict):
                 # Check that the connection is part of the nodes that will be created (exists in graphdict)
                 if (
                     node_id == head
-                    and len(
-                        [
-                            k
-                            for k in tfdata["graphdict"]
-                            if k.startswith(gvid_table[tail])
-                        ]
-                    )
+                    and len([k for k in tfdata["graphdict"] if gvid_table[tail] in k])
                     > 0
                 ):
                     conn = gvid_table[tail]

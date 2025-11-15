@@ -279,15 +279,15 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     else:
         if helpers.check_for_domain(str(sourceURL)):
             sourceURL = get_clone_url(sourceURL)[0]
-        # Clone specific subfolder only
+        # Set codepath to specific subfolder only
         subfolder = gitelements[1]
-        clone_specific_folder(gitelements[0], subfolder, codepath)
+        _clone_full_repo(sourceURL, codepath)
+        # clone_specific_folder(gitelements[0], subfolder, codepath)
         click.echo(
             click.style(
                 f"  Retrieved code from registry source: {sourceURL}", fg="green"
             )
         )
-
     return os.path.join(codepath, subfolder)
 
 
