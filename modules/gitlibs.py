@@ -134,11 +134,30 @@ def _handle_domain_url(sourceURL: str):
 
     # Handle subfolder in URL
     if sourceURL.count("//") > 1:
-        subfolder_array = sourceURL.split("//")
-        subfolder = subfolder_array[2].split("?")[0]
-        githubURL = subfolder_array[0] + "//" + subfolder_array[1]
+        # URL with // separator: https://domain/repo//subfolder
+        # Find first '//' after protocol, split there for subfolder
+        if sourceURL.startswith(("http://", "https://")):
+            protocol_end = sourceURL.find("//") + 2
+            remaining = sourceURL[protocol_end:]
+            if "//" in remaining:
+                repo_part, subfolder = remaining.split("//", 1)
+                subfolder = subfolder.split("?")[0]
+                githubURL = sourceURL[:protocol_end] + repo_part
+        else:
+            parts = sourceURL.split("//", 1)
+            githubURL = parts[0]
+            subfolder = parts[1].split("?")[0] if len(parts) > 1 else ""
     else:
-        githubURL = "https://" + sourceURL if "http" not in sourceURL else sourceURL
+        # URL with path segments: domain/owner/repo/subfolder/path
+        parts = sourceURL.rstrip("/").split("/")
+        if len(parts) > 3:
+            # Extract first 3 parts as repo URL, rest as subfolder path
+            githubURL = "/".join(parts[:3])
+            subfolder = "/".join(parts[3:])
+        else:
+            githubURL = sourceURL
+        # Add https:// prefix if not present
+        githubURL = "https://" + githubURL if "http" not in githubURL else githubURL
 
     return githubURL, subfolder, git_tag
 
@@ -270,18 +289,16 @@ def clone_files(sourceURL: str, tempdir: str, module="main"):
     # Clone new module
     if module != "main":
         click.echo(f"  Processing External Module named '{module}': {sourceURL}")
-
-    # Check if there is a subfolder element in sourceURL
-    gitelements = helpers.extract_subfolder_from_repo(sourceURL)
-    # Clone entire repo if no subfolder specified
-    if gitelements[0] == sourceURL:
-        subfolder = _clone_full_repo(sourceURL, codepath)
+    # Check if source is URL or local dir
+    if helpers.check_for_domain(str(sourceURL)):
+        githubURL, subfolder, git_tag = get_clone_url(sourceURL)
+        _clone_full_repo(githubURL, subfolder, git_tag, codepath)
     else:
-        if helpers.check_for_domain(str(sourceURL)):
-            sourceURL = get_clone_url(sourceURL)[0]
+        # we have a local path with no domain
         # Set codepath to specific subfolder only
+        gitelements = helpers.extract_subfolder_from_repo(sourceURL)
         subfolder = gitelements[1]
-        _clone_full_repo(sourceURL, codepath)
+        _clone_full_repo(sourceURL, subfolder, "", codepath)
         # clone_specific_folder(gitelements[0], subfolder, codepath)
         click.echo(
             click.style(
@@ -309,9 +326,10 @@ def _handle_cached_module(codepath: str, tempdir: str, module: str, reponame: st
     return os.path.join(codepath_module, "")
 
 
-def _clone_full_repo(sourceURL: str, codepath: str):
+def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str):
     """Clone entire repository."""
-    githubURL, subfolder, tag = get_clone_url(sourceURL)
+    if not helpers.check_for_domain(githubURL):
+        githubURL, subfolder, tag = get_clone_url(githubURL)
     if os.path.exists(codepath):
         shutil.rmtree(codepath)
     else:

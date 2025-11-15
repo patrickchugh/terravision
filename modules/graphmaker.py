@@ -609,8 +609,9 @@ def extend_sg_groups(tfdata: dict) -> dict:
             for node in also_connected:
                 if "~" in node:
                     suffixed_sg = sg + "~" + node.split("~")[1]
-                    tfdata["graphdict"][node].remove(sg)
-                    tfdata["graphdict"][node].append(suffixed_sg)
+                    if sg in tfdata["graphdict"][node]:
+                        tfdata["graphdict"][node].remove(sg)
+                        tfdata["graphdict"][node].append(suffixed_sg)
                     # check if other multiples of the node also have the relationship, if not, add it
                     if "~1" in node:
                         i = 2

@@ -65,19 +65,19 @@ def export_tfdata(tfdata: dict):
 
 def remove_recursive_links(tfdata: dict):
     """Remove 2-node circular references from the graph.
-    
+
     Detects and removes bidirectional links between two nodes (A->B and B->A)
     to prevent rendering issues. Longer cycles (A->B->C->A) are preserved.
-    
+
     Args:
         tfdata: Dictionary containing 'graphdict' with node relationships
-        
+
     Returns:
         dict: Updated tfdata with circular references removed from graphdict
     """
     graphdict = tfdata.get("graphdict")
     circular = find_circular_refs(graphdict)
-    
+
     if circular:
         click.echo(
             click.style(
@@ -104,19 +104,19 @@ def remove_recursive_links(tfdata: dict):
 
 def find_circular_refs(graph):
     """Find 2-node circular references (A->B->A) in the dependency graph.
-    
+
     Only detects direct bidirectional links between two nodes. Longer cycles
     like A->B->C->A are not detected or reported.
-    
+
     Args:
         graph: Dictionary where keys are nodes and values are lists of connected nodes
-        
+
     Returns:
         list: List of cycles, each represented as [node_a, node_b, node_a]
     """
     circular_refs = []
     seen = set()
-    
+
     # Check each node and its connections
     for node_a in graph:
         if node_a not in graph:
@@ -129,7 +129,7 @@ def find_circular_refs(graph):
                 if cycle_key not in seen:
                     seen.add(cycle_key)
                     circular_refs.append([node_a, node_b, node_a])
-    
+
     return circular_refs
 
 
@@ -402,29 +402,63 @@ def output_log(tfdata):
 
 
 def getvar(variable_name, all_variables_dict):
+    """Retrieve a Terraform variable value from environment or variables dictionary.
+
+    Searches for variable values in the following order:
+    1. Environment variable with TF_VAR_ prefix
+    2. Exact match in all_variables_dict
+    3. Case-insensitive match in all_variables_dict
+
+    Args:
+        variable_name: Name of the variable to retrieve (without 'var.' prefix)
+        all_variables_dict: Dictionary containing all defined Terraform variables
+
+    Returns:
+        str: Variable value if found, "NOTFOUND" otherwise
+    """
     # See if variable exists as an environment variable
     env_var = os.getenv("TF_VAR_" + variable_name)
     if env_var:
         return env_var
+
     # Check if it exists in all variables dict
     if variable_name in all_variables_dict:
         return all_variables_dict[variable_name]
-    else:
-        # Check if same variable with different casing exists
-        for var in all_variables_dict:
-            if var.lower() == variable_name.lower():
-                return all_variables_dict[var]
+
+    # Check if same variable with different casing exists
+    for var in all_variables_dict:
+        if var.lower() == variable_name.lower():
+            return all_variables_dict[var]
+
     return "NOTFOUND"
 
 
 def find_common_elements(dict_of_lists: dict, keyword: str) -> list:
+    """Find shared elements between dictionary lists where keys contain a keyword.
+
+    Identifies elements that appear in multiple lists, but only when both keys
+    contain the specified keyword. Useful for finding duplicate connections
+    between similar resources (e.g., security groups).
+
+    Args:
+        dict_of_lists: Dictionary where values are lists of elements
+        keyword: String that must be present in both keys to check for common elements
+
+    Returns:
+        list: List of tuples (key1, key2, common_element) for each shared element
+    """
     results = []
+
+    # Compare each pair of keys in the dictionary
     for key1, list1 in dict_of_lists.items():
         for key2, list2 in dict_of_lists.items():
+            # Skip comparing a key with itself
             if key1 != key2:
+                # Find elements that exist in both lists
                 for element in list1:
                     if element in list2 and keyword in key1 and keyword in key2:
                         results.append((key1, key2, element))
+
     return results
 
 

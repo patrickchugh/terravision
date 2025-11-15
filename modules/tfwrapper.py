@@ -246,12 +246,15 @@ def find_node_in_gvid_table(node: str, gvid_table: list) -> int:
 def tf_makegraph(tfdata: dict):
     # Setup Initial graphdict
     tfdata = setup_graph(tfdata)
-    # Make a lookup table of gvids mapping resources to ids
+    # Make a lookup table of gvids mapping resources to ids from terraform graph command output
     gvid_table = list()
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
         gvid_table.append("")
-        gvid_table[gvid] = str(item.get("label"))
+        if item.get("name").startswith("module."):
+            gvid_table[gvid] = str(item.get("name"))
+        else:
+            gvid_table[gvid] = str(item.get("label"))
     # Populate connections list for each node in graphdict
     for node in dict(tfdata["graphdict"]):
         # Find the node ID by trying different name variations
@@ -282,12 +285,15 @@ def tf_makegraph(tfdata: dict):
                         and len(matched_connections) == 1
                     ):
                         conn = matched_connections[0]
+                    # Ignore multi instance resources for now as tfgraph connections aren't accurate
                     if conn_type in REVERSE_ARROW_LIST:
                         if not conn in tfdata["graphdict"].keys():
                             tfdata["graphdict"][conn] = list()
-                        tfdata["graphdict"][conn].append(node)
+                        if "[" not in conn:
+                            tfdata["graphdict"][conn].append(node)
                     else:
-                        tfdata["graphdict"][node].append(conn)
+                        if "[" not in node:
+                            tfdata["graphdict"][node].append(conn)
     tfdata = add_vpc_implied_relations(tfdata)
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])

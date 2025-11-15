@@ -271,7 +271,7 @@ def handle_sg_relationships(tfdata: dict) -> dict:
         target_type = helpers.get_no_module_name(target).split(".")[0]
         # Look for any nodes related to security groups and reverse the relationship, making child as parent
         if not target_type in GROUP_NODES and target_type != "aws_security_group_rule":
-            duplicate_sg_connections = False
+            sg_to_purge = list()
             for connection in tfdata["graphdict"][target]:
                 if (
                     helpers.get_no_module_name(connection).startswith(
@@ -290,9 +290,11 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                         if len(tfdata["graphdict"][connection]) > 0:
                             unique_name = connection + "_" + target.split(".")[-1]
                             tfdata["graphdict"][unique_name] = newlist
+                            tfdata["graphdict"][connection]
                             tfdata["meta_data"][unique_name] = copy.deepcopy(
                                 tfdata["meta_data"][connection]
                             )
+                            sg_to_purge.append(connection)
                         else:
                             tfdata["graphdict"][connection] = newlist
                     newlist = list(tfdata["graphdict"][target])
@@ -323,25 +325,29 @@ def handle_sg_relationships(tfdata: dict) -> dict:
                     tfdata["graphdict"][p].remove(connection)
         # Replace any references to nodes within the security group with the security group
         references = helpers.list_of_parents(tfdata["graphdict"], target)
-        replacement_sg = [
+        for purge in sg_to_purge:
+            if purge in references:
+                references.remove(purge)
+        replacement_sgs = [
             k
             for k in references
             if helpers.get_no_module_name(k).startswith("aws_security_group")
         ]
-        if replacement_sg:
-            replacement_sg = replacement_sg[0]
-            for node in references:
-                if (
-                    target in tfdata["graphdict"][node]
-                    and not helpers.get_no_module_name(node).startswith(
-                        "aws_security_group"
-                    )
-                    and helpers.get_no_module_name(node).split(".")[0] in GROUP_NODES
-                    and not helpers.get_no_module_name(node).startswith("aws_vpc")
-                    and replacement_sg not in tfdata["graphdict"][node]
-                ):
-                    tfdata["graphdict"][node].remove(target)
-                    tfdata["graphdict"][node].append(replacement_sg)
+        if replacement_sgs:
+            for replaced_group in replacement_sgs:
+                for node in references:
+                    if (
+                        target in tfdata["graphdict"][node]
+                        and not helpers.get_no_module_name(node).startswith(
+                            "aws_security_group"
+                        )
+                        and helpers.get_no_module_name(node).split(".")[0]
+                        in GROUP_NODES
+                        and not helpers.get_no_module_name(node).startswith("aws_vpc")
+                        and replaced_group not in tfdata["graphdict"][node]
+                    ):
+                        tfdata["graphdict"][node].remove(target)
+                        tfdata["graphdict"][node].append(replaced_group)
     return tfdata
 
 
@@ -375,15 +381,19 @@ def aws_handle_sg(tfdata: dict) -> dict:
                     and sg + "~1" not in parent_list
                 ):
                     tfdata["graphdict"][parent].append(sg)
-                    tfdata["graphdict"][parent].remove(sg_connection)
+                    if sg_connection in tfdata["graphdict"][parent]:
+                        tfdata["graphdict"][parent].remove(sg_connection)
     # Delete SGs within VPCs
     for sg in list_of_sgs:
         parent_list = helpers.list_of_parents(tfdata["graphdict"], sg)
         for parent in parent_list:
-            if helpers.get_no_module_name(parent).startswith("aws_vpc"):
+            if (
+                helpers.get_no_module_name(parent).startswith("aws_vpc")
+                and sg in tfdata["graphdict"][parent]
+            ):
                 tfdata["graphdict"][parent].remove(sg)
-    # Merge any security groups which share the same identical connection
-    tfdata = duplicate_sg_connections(tfdata)
+    # # Merge any security groups which share the same identical connection
+    # tfdata = duplicate_sg_connections(tfdata)
     # Remove orhpan security groups
     for sg in list_of_sgs:
         if len(tfdata["graphdict"][sg]) == 0:
@@ -528,7 +538,25 @@ def match_resources(tfdata: dict) -> dict:
     tfdata["graphdict"] = match_sg_to_subnets(tfdata["graphdict"])
     tfdata["graphdict"] = link_ec2_to_iam_roles(tfdata["graphdict"])
     tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
+    tfdata["graphdict"] = _remove_consolidated_subnet_refs(tfdata["graphdict"])
     return tfdata
+
+
+def _remove_consolidated_subnet_refs(graphdict: dict) -> dict:
+    """
+    Remove generic consolidated subnet references from VPC connections.
+    Keep only numbered subnet instances and non-subnet resources.
+    """
+
+    for resource in list(graphdict.keys()):
+        if "aws_vpc" in resource:
+            graphdict[resource] = [
+                conn
+                for conn in graphdict[resource]
+                if not ("aws_subnet" in conn and "~" not in conn and "[" not in conn)
+            ]
+
+    return graphdict
 
 
 def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
@@ -690,7 +718,7 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
             if base_name not in subnet_groups:
                 subnet_groups[base_name] = {"subnets": [], "sg_bases": set()}
             subnet_groups[base_name]["subnets"].append(key)
-            
+
             # Collect security group base names from this subnet
             for dep in terraform_data.get(key, []):
                 if "aws_security_group" in dep:
@@ -705,7 +733,10 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
                 subnet_suffix = subnet_match.group(1)
                 for sg_base in group_data["sg_bases"]:
                     sg_with_suffix = f"{sg_base}~{subnet_suffix}"
-                    if sg_with_suffix in terraform_data and sg_with_suffix not in result[subnet]:
+                    if (
+                        sg_with_suffix in terraform_data
+                        and sg_with_suffix not in result[subnet]
+                    ):
                         result[subnet].append(sg_with_suffix)
 
     return result
