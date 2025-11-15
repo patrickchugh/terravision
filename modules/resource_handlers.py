@@ -16,7 +16,9 @@ DISCONNECT_SERVICES = cloud_config.AWS_DISCONNECT_LIST
 
 
 def handle_special_cases(tfdata: dict):
+    # Handle cases where resources have transitive link via sqs policy
     tfdata["graphdict"] = link_sqs_queue_policy(tfdata["graphdict"])
+    # Remove connections to services specified in disconnect services
     for r in tfdata["graphdict"]:
         for d in DISCONNECT_SERVICES:
             if d in r:
@@ -523,6 +525,7 @@ def match_resources(tfdata: dict) -> dict:
     Match resources based on their suffix pattern (~N) and indirect dependencies to their corresponding parents.
     """
     tfdata["graphdict"] = match_az_to_subnets(tfdata["graphdict"])
+    tfdata["graphdict"] = match_sg_to_subnets(tfdata["graphdict"])
     tfdata["graphdict"] = link_ec2_to_iam_roles(tfdata["graphdict"])
     tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
     return tfdata
@@ -668,5 +671,41 @@ def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
 
         # Update only the AZ entries with matched subnets
         result[az] = matched_subnets
+
+    return result
+
+
+def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Ensure all subnets with same base name have corresponding security groups with matching suffix.
+    """
+    result = dict(terraform_data)
+    suffix_pattern = r"~(\d+)$"
+
+    # Group subnets by base name and collect their security groups
+    subnet_groups = {}
+    for key in terraform_data.keys():
+        if "aws_subnet" in key.lower():
+            base_name = re.sub(r"\[\d+\]~\d+$", "", key)
+            if base_name not in subnet_groups:
+                subnet_groups[base_name] = {"subnets": [], "sg_bases": set()}
+            subnet_groups[base_name]["subnets"].append(key)
+            
+            # Collect security group base names from this subnet
+            for dep in terraform_data.get(key, []):
+                if "aws_security_group" in dep:
+                    sg_base = re.sub(r"~\d+$", "", dep)
+                    subnet_groups[base_name]["sg_bases"].add(sg_base)
+
+    # For each subnet group, ensure all subnets have all security groups with matching suffix
+    for base_name, group_data in subnet_groups.items():
+        for subnet in group_data["subnets"]:
+            subnet_match = re.search(suffix_pattern, subnet)
+            if subnet_match:
+                subnet_suffix = subnet_match.group(1)
+                for sg_base in group_data["sg_bases"]:
+                    sg_with_suffix = f"{sg_base}~{subnet_suffix}"
+                    if sg_with_suffix in terraform_data and sg_with_suffix not in result[subnet]:
+                        result[subnet].append(sg_with_suffix)
 
     return result

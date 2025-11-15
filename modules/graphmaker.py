@@ -81,6 +81,7 @@ def check_relationship(
                             }
                         )
                     )
+
         # Check if there are any implied connections based on keywords in the param list
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
@@ -139,8 +140,8 @@ def check_relationship(
                         if (
                             matched_resource
                             not in tfdata["graphdict"][resource_associated_with]
-                            and resource_associated_with
-                            not in tfdata["graphdict"][matched_resource]
+                            # and resource_associated_with
+                            # not in tfdata["graphdict"][matched_resource]
                             and matched_resource not in connection_pairs
                         ):
                             connection_pairs.append(resource_associated_with)
