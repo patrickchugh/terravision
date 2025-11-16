@@ -30,6 +30,7 @@ into this...
 	- Regularly updating diagrams aligning, connecting dots and laying out icons is not the best use of your architect staff costs
 2. Accelerate and Automate
 	- Use TF variable files as inputs to create multiple variant diagrams from the same TF code
+   - Doesn't require infrastructure to exist to document it. Terravision works off your terraform plan not your remote statefile
 	- Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
 	- YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
 3. Consistency across organisation
@@ -40,14 +41,15 @@ into this...
 	- Helps in third party architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
 	- Custom Diagram code and output images can be put into source/version control for better maintainability and discoverability
 5. Security
-	- Don't need to give access to your AWS account or CLI to draw diagram
+	- Don't need to give access to your AWS account, credentials or CLI to draw diagram
 	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
   	- All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
+   - Only metatdata is saved in memory or external files not any sensitive code or runtime environment values
 
 # Installation and Usage
 
 ## System Requirements
-- **Python 3.8+** 
+- **Python 3.10+** 
 - **Terraform 1.x**   
 - **Git**  
 - **Graphviz**
