@@ -70,6 +70,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v1
+      - name: Mock ssh file
+        run :
+          mkdir -p ~/.ssh
+          touch ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa.pub
         
       #----------------------------------------------
       # Run static linters
