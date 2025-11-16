@@ -150,7 +150,9 @@ def handle_cloudfront_lbs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with CloudFront-LB connections
     """
     # Find CloudFront distributions and load balancers
-    cf_distros = sorted([s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s])
+    cf_distros = sorted(
+        [s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s]
+    )
     lbs = sorted([s for s in tfdata["graphdict"].keys() if "aws_lb." in s])
     # Connect CloudFront to LBs when node connects to both
     for node in sorted(tfdata["graphdict"].keys()):
@@ -464,11 +466,13 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for purge in sg_to_purge:
             if purge in references:
                 references.remove(purge)
-        replacement_sgs = sorted([
-            k
-            for k in references
-            if helpers.get_no_module_name(k).startswith("aws_security_group")
-        ])
+        replacement_sgs = sorted(
+            [
+                k
+                for k in references
+                if helpers.get_no_module_name(k).startswith("aws_security_group")
+            ]
+        )
         if replacement_sgs:
             for replaced_group in replacement_sgs:
                 for node in sorted(references):
@@ -525,7 +529,9 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
     for sg in list_of_sgs:
         for sg_connection in sorted(list(tfdata["graphdict"][sg])):
-            parent_list = sorted(helpers.list_of_parents(tfdata["graphdict"], sg_connection))
+            parent_list = sorted(
+                helpers.list_of_parents(tfdata["graphdict"], sg_connection)
+            )
             # Add SG to parent subnets
             for parent in parent_list:
                 if (
@@ -597,7 +603,9 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with LB variants configured
     """
     # Find all load balancers
-    found_lbs = sorted(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb"))
+    found_lbs = sorted(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
+    )
     for lb in found_lbs:
         # Determine LB type (ALB, NLB, etc.)
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
@@ -624,7 +632,9 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
-                    plist = sorted(helpers.list_of_parents(tfdata["graphdict"], renamed_node))
+                    plist = sorted(
+                        helpers.list_of_parents(tfdata["graphdict"], renamed_node)
+                    )
                     for p in plist:
                         tfdata["meta_data"][p]["count"] = int(
                             tfdata["meta_data"][connection]["count"]
