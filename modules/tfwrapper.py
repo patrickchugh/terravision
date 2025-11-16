@@ -77,7 +77,7 @@ def tf_initplan(
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],
             capture_output=not debug,
-            text=True
+            text=True,
         )
         if result.returncode != 0:
             click.echo(
@@ -105,7 +105,7 @@ def tf_initplan(
         result = subprocess.run(
             ["terraform", "workspace", "select", "-or-create=True", workspace],
             capture_output=not debug,
-            text=True
+            text=True,
         )
         if result.returncode != 0:
             click.echo(
@@ -139,15 +139,23 @@ def tf_initplan(
         # Generate terraform plan with or without varfile
         if varfile:
             result = subprocess.run(
-                ["terraform", "plan", "-refresh=false", "-var-file", vfile, "-out", tfplan_path],
+                [
+                    "terraform",
+                    "plan",
+                    "-refresh=false",
+                    "-var-file",
+                    vfile,
+                    "-out",
+                    tfplan_path,
+                ],
                 capture_output=not debug,
-                text=True
+                text=True,
             )
         else:
             result = subprocess.run(
                 ["terraform", "plan", "-refresh=false", "-out", tfplan_path],
                 capture_output=not debug,
-                text=True
+                text=True,
             )
         if result.returncode != 0:
             click.echo(
@@ -160,7 +168,7 @@ def tf_initplan(
             if not debug and result.stderr:
                 click.echo(click.style(f"Details: {result.stderr}", fg="red"))
             exit(result.returncode)
-        
+
         click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
         # Convert binary plan to JSON format
         if os.path.exists(tfplan_path):
@@ -169,7 +177,7 @@ def tf_initplan(
                     ["terraform", "show", "-json", tfplan_path],
                     stdout=f,
                     stderr=None if debug else subprocess.PIPE,
-                    text=True
+                    text=True,
                 )
             if result.returncode == 0:
                 click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
@@ -182,7 +190,7 @@ def tf_initplan(
                         ["terraform", "graph"],
                         stdout=f,
                         stderr=None if debug else subprocess.PIPE,
-                        text=True
+                        text=True,
                     )
                 tfdata["plandata"] = dict(plandata)
                 click.echo(
@@ -197,7 +205,7 @@ def tf_initplan(
                     result = subprocess.run(
                         ["dot", "-Txdot_json", "-o", tfgraph_json_path, tfgraph_path],
                         capture_output=not debug,
-                        text=True
+                        text=True,
                     )
                     if result.returncode != 0:
                         click.echo(
@@ -208,7 +216,9 @@ def tf_initplan(
                             )
                         )
                         if not debug and result.stderr:
-                            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+                            click.echo(
+                                click.style(f"Details: {result.stderr}", fg="red")
+                            )
                         exit(result.returncode)
                     with open(tfgraph_json_path) as f:
                         graphdata = json.load(f)

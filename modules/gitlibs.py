@@ -37,24 +37,24 @@ if not os.path.exists(MODULE_DIR):
 
 class CloneProgress(RemoteProgress):
     """Progress bar for git clone operations.
-    
+
     Displays a progress bar using tqdm during git repository cloning.
     """
-    
+
     def __init__(self) -> None:
         """Initialize progress bar."""
         super().__init__()
         self.pbar = tqdm(leave=False)
 
     def update(
-        self, 
-        op_code: int, 
-        cur_count: int, 
-        max_count: Optional[int] = None, 
-        message: str = ""
+        self,
+        op_code: int,
+        cur_count: int,
+        max_count: Optional[int] = None,
+        message: str = "",
     ) -> None:
         """Update progress bar with current clone status.
-        
+
         Args:
             op_code: Git operation code
             cur_count: Current progress count
@@ -94,7 +94,7 @@ def handle_readme_source(resp: requests.Response) -> str:
 
 def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
     """Parse source URL and extract git clone URL, subfolder, and tag.
-    
+
     Determines URL type and delegates to appropriate handler function.
     Supports git::, direct domain URLs, and Terraform Registry URLs.
 
@@ -123,13 +123,13 @@ def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
 
 def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
     """Handle URLs with git:: prefix.
-    
+
     Parses git:: prefixed URLs for SSH and HTTPS git repositories,
     extracting the git address, subfolder path, and tag reference.
-    
+
     Args:
         sourceURL: URL with git:: prefix
-    
+
     Returns:
         Tuple of (git_address, subfolder, git_tag)
     """
@@ -145,7 +145,7 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
         split_array = sourceURL.split("git::")
 
     gitaddress = split_array[-1]
-    
+
     # Normalize GitHub and GitLab SSH URLs
     gitaddress = gitaddress.replace("git@github.com/", "git@github.com:")
     gitaddress = gitaddress.replace("git@gitlab.com/", "git@gitlab.com:")
@@ -166,13 +166,13 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
 
 def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
     """Handle direct domain URLs.
-    
+
     Parses direct GitHub, GitLab, or other git hosting URLs, extracting
     the repository URL, subfolder path, and tag reference.
-    
+
     Args:
         sourceURL: Direct domain URL (e.g., github.com/owner/repo)
-    
+
     Returns:
         Tuple of (github_url, subfolder, git_tag)
     """
@@ -209,7 +209,7 @@ def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
             subfolder = "/".join(parts[3:])
         else:
             githubURL = sourceURL
-        
+
         # Ensure HTTPS protocol prefix
         githubURL = "https://" + githubURL if "http" not in githubURL else githubURL
 
@@ -218,13 +218,13 @@ def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
 
 def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
     """Handle Terraform Registry Module URLs.
-    
+
     Resolves Terraform Registry or Terraform Enterprise module URLs to their
     underlying git repository URLs. Handles authentication for private registries.
-    
+
     Args:
         sourceURL: Terraform Registry module URL
-    
+
     Returns:
         Tuple of (github_url, subfolder, git_tag)
     """
@@ -296,7 +296,7 @@ def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
 
 def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> str:
     """Clone only a specific folder from a git repository using sparse checkout.
-    
+
     Uses git sparse checkout to clone only a specific subdirectory from a
     repository, reducing clone time and disk usage for large repositories.
 
@@ -311,7 +311,7 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
     # Initialize empty git repository
     repo = git.Repo.init(destination)
     repo_url = "https://" + repo_url if "http" not in repo_url else repo_url
-    
+
     # Get or create remote origin
     try:
         origin = repo.remote("origin")
@@ -340,7 +340,7 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
 
 def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     """Clone git repository or retrieve from cache.
-    
+
     Main entry point for retrieving Terraform module code. Checks cache first,
     then clones from remote source if needed. Handles both URL and local paths.
 
@@ -370,7 +370,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     # Clone new module
     if module != "main":
         click.echo(f"  Processing External Module named '{module}': {sourceURL}")
-    
+
     # Determine if source is remote URL or local directory
     if helpers.check_for_domain(str(sourceURL)):
         # Remote source: parse URL and clone
@@ -386,27 +386,24 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
                 f"  Retrieved code from registry source: {sourceURL}", fg="green"
             )
         )
-    
+
     return os.path.join(codepath, subfolder)
 
 
 def _handle_cached_module(
-    codepath: str, 
-    tempdir: str, 
-    module: str, 
-    reponame: str
+    codepath: str, tempdir: str, module: str, reponame: str
 ) -> str:
     """Handle retrieval of cached module.
-    
+
     Returns path to cached module without re-downloading. Copies to temp
     directory if needed for isolation.
-    
+
     Args:
         codepath: Path to cached module
         tempdir: Temporary directory for module copies
         module: Module name
         reponame: Repository name
-    
+
     Returns:
         Path to cached module directory
     """
@@ -414,48 +411,43 @@ def _handle_cached_module(
         f"  Skipping download of module {reponame}, "
         f"found existing folder in module cache"
     )
-    
+
     temp_module_path = os.path.join(tempdir, f";{module};{reponame}")
-    
+
     # Determine correct module path
     if f";{module};" in codepath and module != "main":
         codepath_module = os.path.join(codepath, module)
     else:
         codepath_module = codepath
-    
+
     # Copy to temp directory if not already there
     if not os.path.exists(temp_module_path):
         if not os.path.exists(codepath_module):
             codepath_module = codepath
         shutil.copytree(codepath_module, temp_module_path)
-    
+
     return os.path.join(codepath_module, "")
 
 
-def _clone_full_repo(
-    githubURL: str, 
-    subfolder: str, 
-    tag: str, 
-    codepath: str
-) -> str:
+def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) -> str:
     """Clone entire repository.
-    
+
     Performs full git clone of repository with optional branch/tag checkout.
     Displays progress bar during clone operation.
-    
+
     Args:
         githubURL: Git repository URL
         subfolder: Subfolder path within repository
         tag: Git tag or branch to checkout (empty for default branch)
         codepath: Local destination path for clone
-    
+
     Returns:
         Subfolder path within cloned repository
     """
     # Parse URL if not already a domain URL
     if not helpers.check_for_domain(githubURL):
         githubURL, subfolder, tag = get_clone_url(githubURL)
-    
+
     # Clean existing directory or create new one
     if os.path.exists(codepath):
         shutil.rmtree(codepath)

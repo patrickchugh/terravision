@@ -3,6 +3,7 @@
 Handles special cases for AWS resources including security groups, load balancers,
 EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 """
+
 from typing import Dict, List, Any
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
@@ -22,10 +23,10 @@ DISCONNECT_SERVICES = cloud_config.AWS_DISCONNECT_LIST
 
 def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle special resource cases and disconnections.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with special cases handled
     """
@@ -41,10 +42,10 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle AWS autoscaling group relationships and counts.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with autoscaling relationships configured
     """
@@ -111,14 +112,16 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def handle_cloudfront_domains(origin_string: str, domain: str, mdata: Dict[str, Any]) -> str:
+def handle_cloudfront_domains(
+    origin_string: str, domain: str, mdata: Dict[str, Any]
+) -> str:
     """Link CloudFront to resources by matching domain names.
-    
+
     Args:
         origin_string: Original origin configuration string
         domain: Domain name to search for
         mdata: Resource metadata dictionary
-        
+
     Returns:
         Updated origin string with resource references
     """
@@ -139,10 +142,10 @@ def handle_cloudfront_domains(origin_string: str, domain: str, mdata: Dict[str, 
 
 def handle_cloudfront_lbs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Connect CloudFront distributions to load balancers.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with CloudFront-LB connections
     """
@@ -171,10 +174,10 @@ def handle_cloudfront_lbs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Process CloudFront origin configurations and ACM certificates.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with CloudFront origins configured
     """
@@ -219,10 +222,10 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_cloudfront_pregraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Pre-process CloudFront resources before graph generation.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with CloudFront pre-processing complete
     """
@@ -234,10 +237,10 @@ def aws_handle_cloudfront_pregraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def _add_suffix(s: str) -> str:
     """Add numeric suffix based on last character.
-    
+
     Args:
         s: String to add suffix to
-        
+
     Returns:
         String with numeric suffix if last char is alphabetic
     """
@@ -248,10 +251,10 @@ def _add_suffix(s: str) -> str:
 
 def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Create availability zone nodes and link to subnets.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with AZ nodes created
     """
@@ -299,10 +302,10 @@ def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle EFS mount target and file system relationships.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with EFS relationships configured
     """
@@ -346,10 +349,10 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_indirect_sg_rules(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle indirect security group associations via SG rules.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with indirect SG rules resolved
     """
@@ -379,10 +382,10 @@ def handle_indirect_sg_rules(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Process security group relationships and reverse connections.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with SG relationships configured
     """
@@ -391,11 +394,13 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "aws_security_group.*"
     )
     # Filter to non-SG resources and sort for deterministic order
-    bound_nodes = sorted([
-        s
-        for s in all_sg_parents
-        if not helpers.get_no_module_name(s).startswith("aws_security_group")
-    ])
+    bound_nodes = sorted(
+        [
+            s
+            for s in all_sg_parents
+            if not helpers.get_no_module_name(s).startswith("aws_security_group")
+        ]
+    )
     # Process each resource bound to a security group
     for target in bound_nodes:
         target_type = helpers.get_no_module_name(target).split(".")[0]
@@ -482,10 +487,10 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def duplicate_sg_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle duplicate security group connections.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with duplicate SG connections resolved
     """
@@ -501,10 +506,10 @@ def duplicate_sg_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Main handler for AWS security group processing.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with all SG relationships configured
     """
@@ -547,10 +552,10 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Group shared AWS services into a shared services group.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with shared services grouped
     """
@@ -582,10 +587,10 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle load balancer type variants and connections.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with LB variants configured
     """
@@ -639,10 +644,10 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle RDS database subnet group relationships.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with DB subnet groups configured
     """
@@ -677,10 +682,10 @@ def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Move VPC endpoints into VPC parent.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with VPC endpoints moved
     """
@@ -699,10 +704,10 @@ def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle ECS service configurations.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with ECS configured
     """
@@ -720,10 +725,10 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Remove random string resources from graph.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with random strings removed
     """
@@ -735,10 +740,10 @@ def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Match resources based on suffix patterns and dependencies.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with resources matched
     """
@@ -755,12 +760,14 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def _remove_consolidated_subnet_refs(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
+def _remove_consolidated_subnet_refs(
+    graphdict: Dict[str, List[str]],
+) -> Dict[str, List[str]]:
     """Remove generic consolidated subnet references from VPC.
-    
+
     Args:
         graphdict: Resource graph dictionary
-        
+
     Returns:
         Updated graphdict with consolidated subnets removed
     """
@@ -780,10 +787,10 @@ def _remove_consolidated_subnet_refs(graphdict: Dict[str, List[str]]) -> Dict[st
 
 def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Split NAT gateways into numbered instances per subnet.
-    
+
     Args:
         terraform_data: Resource graph dictionary
-        
+
     Returns:
         Updated graph with numbered NAT gateways
     """
@@ -791,9 +798,9 @@ def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[s
     suffix_pattern = r"~(\d+)$"
 
     # Find unnumbered NAT gateways
-    nat_gateways = sorted([
-        k for k in terraform_data.keys() if "aws_nat_gateway" in k and "~" not in k
-    ])
+    nat_gateways = sorted(
+        [k for k in terraform_data.keys() if "aws_nat_gateway" in k and "~" not in k]
+    )
 
     for nat_gw in nat_gateways:
         # Find public subnets that reference this NAT gateway
@@ -833,10 +840,10 @@ def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[s
 
 def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Link EC2 instances to IAM roles via instance profiles.
-    
+
     Args:
         terraform_data: Resource graph dictionary
-        
+
     Returns:
         Updated graph with EC2-IAM links
     """
@@ -863,10 +870,10 @@ def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
 
 def link_sqs_queue_policy(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Link SQS queues to resources via queue policies.
-    
+
     Args:
         terraform_data: Resource graph dictionary
-        
+
     Returns:
         Updated graph with SQS queue links
     """
@@ -905,11 +912,13 @@ def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
     suffix_pattern = r"~(\d+)$"
 
     # Find all availability zone resources
-    az_resources = sorted([
-        key
-        for key in terraform_data.keys()
-        if key.startswith("aws_az.availability_zone")
-    ])
+    az_resources = sorted(
+        [
+            key
+            for key in terraform_data.keys()
+            if key.startswith("aws_az.availability_zone")
+        ]
+    )
 
     # Match each AZ to subnets with same suffix
     for az in az_resources:
@@ -939,10 +948,10 @@ def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
 
 def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Match security groups to subnets by suffix pattern.
-    
+
     Args:
         terraform_data: Resource graph dictionary
-        
+
     Returns:
         Updated graph with SG-subnet matches
     """

@@ -53,10 +53,10 @@ def extract_json_from_string(text: str) -> dict:
 
 def check_for_domain(string: str) -> bool:
     """Check if string contains a domain extension.
-    
+
     Args:
         string: String to check for domain extensions
-    
+
     Returns:
         True if domain extension found
     """
@@ -69,7 +69,7 @@ def check_for_domain(string: str) -> bool:
 
 def export_tfdata(tfdata: Dict[str, Any]) -> None:
     """Export Terraform data dictionary to tfdata.json for debugging.
-    
+
     Args:
         tfdata: Terraform data dictionary to export
     """
@@ -157,10 +157,10 @@ def find_circular_refs(graph):
 
 def process_graphdict(relations_graphdict: Dict[str, Any]) -> Dict[str, Any]:
     """Remove module prefixes from graph dictionary keys and values.
-    
+
     Args:
         relations_graphdict: Graph dictionary with module-prefixed names
-    
+
     Returns:
         Processed dictionary with module prefixes removed
     """
@@ -176,10 +176,10 @@ def process_graphdict(relations_graphdict: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_no_module_name(node: str) -> Optional[str]:
     """Remove module prefix from resource name.
-    
+
     Args:
         node: Resource name potentially with module prefix
-    
+
     Returns:
         Resource name without module prefix
     """
@@ -194,12 +194,12 @@ def get_no_module_name(node: str) -> Optional[str]:
 
 def extract_subfolder_from_repo(source_url: str) -> Tuple[str, str]:
     """Extract repo URL and subfolder from a string.
-    
+
     Handles URLs like 'https://github.com/user/repo.git//code/02-one-server'.
-    
+
     Args:
         source_url: Git repository URL potentially with subfolder
-    
+
     Returns:
         Tuple of (repo_url, subfolder) - subfolder is empty string if none exists
     """
@@ -227,10 +227,10 @@ def extract_subfolder_from_repo(source_url: str) -> Tuple[str, str]:
 
 def get_no_module_no_number_name(node: str) -> Optional[str]:
     """Remove module prefix and array indices from resource name.
-    
+
     Args:
         node: Resource name with potential module prefix and indices
-    
+
     Returns:
         Cleaned resource name
     """
@@ -246,10 +246,10 @@ def get_no_module_no_number_name(node: str) -> Optional[str]:
 
 def check_list_for_dash(connections: List[str]) -> bool:
     """Check if all items in list contain numbered suffix (~).
-    
+
     Args:
         connections: List of connection strings
-    
+
     Returns:
         True if all items have ~ suffix
     """
@@ -262,10 +262,10 @@ def check_list_for_dash(connections: List[str]) -> bool:
 
 def sort_graphdict(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Sort graph dictionary keys and connection lists.
-    
+
     Args:
         graphdict: Graph dictionary to sort
-    
+
     Returns:
         Sorted graph dictionary
     """
@@ -276,10 +276,10 @@ def sort_graphdict(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
 
 def url(string: str) -> str:
     """Add https:// protocol if missing from URL.
-    
+
     Args:
         string: URL string
-    
+
     Returns:
         URL with protocol
     """
@@ -290,12 +290,12 @@ def url(string: str) -> str:
 
 def find_nth(string: str, substring: str, n: int) -> int:
     """Find nth occurrence of substring in string.
-    
+
     Args:
         string: String to search
         substring: Substring to find
         n: Occurrence number (1-indexed)
-    
+
     Returns:
         Index of nth occurrence
     """
@@ -307,10 +307,10 @@ def find_nth(string: str, substring: str, n: int) -> int:
 
 def unique_services(nodelist: List[str]) -> List[str]:
     """Extract unique service types from node list.
-    
+
     Args:
         nodelist: List of resource names
-    
+
     Returns:
         Sorted list of unique service types
     """
@@ -323,10 +323,10 @@ def unique_services(nodelist: List[str]) -> List[str]:
 
 def remove_numbered_suffix(s: str) -> str:
     """Remove numbered suffix (~N) from resource name.
-    
+
     Args:
         s: Resource name potentially with suffix
-    
+
     Returns:
         Resource name without suffix
     """
@@ -334,15 +334,15 @@ def remove_numbered_suffix(s: str) -> str:
 
 
 def find_between(
-    text: str, 
-    begin: str, 
-    end: str, 
-    alternative: str = "", 
-    replace: bool = False, 
-    occurrence: int = 1
+    text: str,
+    begin: str,
+    end: str,
+    alternative: str = "",
+    replace: bool = False,
+    occurrence: int = 1,
 ) -> str:
     """Extract text between two delimiters.
-    
+
     Args:
         text: Source text
         begin: Starting delimiter
@@ -350,7 +350,7 @@ def find_between(
         alternative: Replacement text if replace=True
         replace: Whether to replace found text
         occurrence: Which occurrence to find
-    
+
     Returns:
         Text between delimiters or modified text if replace=True
     """
@@ -391,10 +391,10 @@ def find_between(
 
 def remove_duplicate_words(string: str) -> str:
     """Remove duplicate words from string.
-    
+
     Args:
         string: Input string
-    
+
     Returns:
         String with unique words only
     """
@@ -409,10 +409,10 @@ def remove_duplicate_words(string: str) -> str:
 
 def remove_brackets_and_numbers(input_string: str) -> str:
     """Remove square brackets and their contents from string.
-    
+
     Args:
         input_string: String with brackets
-    
+
     Returns:
         String without brackets or their contents
     """
@@ -467,19 +467,19 @@ def pretty_name(name: str, show_title=True) -> str:
 
 
 def replace_variables(
-    vartext: str, 
-    filename: Union[str, List[str]], 
-    all_variables: Dict[str, Any], 
-    quotes: bool = False
+    vartext: str,
+    filename: Union[str, List[str]],
+    all_variables: Dict[str, Any],
+    quotes: bool = False,
 ) -> Optional[str]:
     """Replace Terraform variable references with actual values.
-    
+
     Args:
         vartext: Text containing variable references
         filename: Source filename for error messages
         all_variables: Dictionary of variable values
         quotes: Whether to add quotes (unused)
-    
+
     Returns:
         Text with variables replaced
     """
@@ -521,7 +521,7 @@ def replace_variables(
 
 def output_log(tfdata: Dict[str, Any]) -> None:
     """Output parsed Terraform data to console.
-    
+
     Args:
         tfdata: Terraform data dictionary
     """
@@ -636,15 +636,14 @@ def find_shared_security_groups(graphdict: dict) -> list:
 
 
 def find_resource_references(
-    searchdict: Dict[str, List[str]], 
-    target_resource: str
+    searchdict: Dict[str, List[str]], target_resource: str
 ) -> Dict[str, List[str]]:
     """Find all dictionary entries that reference a target resource.
-    
+
     Args:
         searchdict: Dictionary to search
         target_resource: Resource name to find
-    
+
     Returns:
         Dictionary of entries containing the target resource
     """
@@ -658,16 +657,13 @@ def find_resource_references(
     return final_dict
 
 
-def find_resource_containing(
-    search_list: List[str], 
-    keyword: str
-) -> Union[str, bool]:
+def find_resource_containing(search_list: List[str], keyword: str) -> Union[str, bool]:
     """Find first resource in list containing keyword.
-    
+
     Args:
         search_list: List of resource names
         keyword: Keyword to search for
-    
+
     Returns:
         First matching resource name or False
     """
@@ -679,15 +675,14 @@ def find_resource_containing(
 
 
 def find_all_resources_containing(
-    search_list: List[str], 
-    keyword: str
+    search_list: List[str], keyword: str
 ) -> Union[List[str], bool]:
     """Find all resources in list containing keyword.
-    
+
     Args:
         search_list: List of resource names
         keyword: Keyword to search for
-    
+
     Returns:
         List of matching resource names or False
     """
@@ -703,11 +698,11 @@ def find_all_resources_containing(
 
 def append_dictlist(thelist: List[Any], new_item: Any) -> List[Any]:
     """Append item to list and return new list.
-    
+
     Args:
         thelist: Original list
         new_item: Item to append
-    
+
     Returns:
         New list with item appended
     """
@@ -718,10 +713,10 @@ def append_dictlist(thelist: List[Any], new_item: Any) -> List[Any]:
 
 def remove_recursive(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Debug function to print recursive references.
-    
+
     Args:
         graphdict: Graph dictionary
-    
+
     Returns:
         Unchanged graph dictionary
     """
@@ -737,11 +732,11 @@ def remove_recursive(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
 
 def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
     """Check if resource has a variant suffix based on metadata.
-    
+
     Args:
         resource: Resource name
         metadata: Resource metadata
-    
+
     Returns:
         Variant name or False
     """
@@ -759,12 +754,12 @@ def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
 
 def find_replace(find: str, replace: str, string: str) -> str:
     """Replace first occurrence of substring.
-    
+
     Args:
         find: Substring to find
         replace: Replacement string
         string: Source string
-    
+
     Returns:
         Modified string
     """
@@ -774,15 +769,14 @@ def find_replace(find: str, replace: str, string: str) -> str:
 
 
 def list_of_parent_nodes(
-    graphdict: Dict[str, List[str]], 
-    nodelist: List[str]
+    graphdict: Dict[str, List[str]], nodelist: List[str]
 ) -> List[str]:
     """Get list of parent nodes for given node list.
-    
+
     Args:
         graphdict: Graph dictionary
         nodelist: List of nodes to find parents for
-    
+
     Returns:
         List of parent node names without numbered suffixes
     """
@@ -795,16 +789,13 @@ def list_of_parent_nodes(
     return parent_list
 
 
-def list_of_parents(
-    searchdict: Dict[str, Any], 
-    target: str
-) -> List[str]:
+def list_of_parents(searchdict: Dict[str, Any], target: str) -> List[str]:
     """Find all keys that reference the target in their values.
-    
+
     Args:
         searchdict: Dictionary to search
         target: Target value to find
-    
+
     Returns:
         List of keys that reference the target
     """
@@ -837,11 +828,11 @@ def list_of_parents(
 
 def any_parent_has_count(tfdata: Dict[str, Any], target_resource: str) -> bool:
     """Check if any parent resource has count/for_each attribute.
-    
+
     Args:
         tfdata: Terraform data dictionary
         target_resource: Resource to check parents for
-    
+
     Returns:
         True if any parent has count attribute
     """
@@ -865,10 +856,10 @@ def any_parent_has_count(tfdata: Dict[str, Any], target_resource: str) -> bool:
 
 def consolidated_node_check(resource_type: str) -> Union[str, bool]:
     """Check if resource should be consolidated into a standard node.
-    
+
     Args:
         resource_type: Resource type to check
-    
+
     Returns:
         Consolidated node name or False
     """
@@ -881,11 +872,11 @@ def consolidated_node_check(resource_type: str) -> Union[str, bool]:
 
 def remove_all_items(test_list: List[str], item: str) -> List[str]:
     """Remove all occurrences of item from list.
-    
+
     Args:
         test_list: List to filter
         item: Item to remove
-    
+
     Returns:
         Filtered list
     """
@@ -896,15 +887,14 @@ def remove_all_items(test_list: List[str], item: str) -> List[str]:
 
 
 def list_of_dictkeys_containing(
-    searchdict: Dict[str, Any], 
-    target_keyword: str
+    searchdict: Dict[str, Any], target_keyword: str
 ) -> List[str]:
     """Find all dictionary keys containing a keyword.
-    
+
     Args:
         searchdict: Dictionary to search
         target_keyword: Keyword to find in keys
-    
+
     Returns:
         List of matching keys
     """
@@ -917,10 +907,10 @@ def list_of_dictkeys_containing(
 
 def cleanup_curlies(text: str) -> str:
     """Remove curly braces and dollar signs from text.
-    
+
     Args:
         text: Text to clean
-    
+
     Returns:
         Cleaned text
     """
@@ -933,10 +923,10 @@ def cleanup_curlies(text: str) -> str:
 
 def strip_var_curlies(s: str) -> str:
     """Remove Terraform variable syntax ${} from string.
-    
+
     Args:
         s: String with variable syntax
-    
+
     Returns:
         String with variable syntax removed
     """
@@ -965,10 +955,10 @@ def strip_var_curlies(s: str) -> str:
 
 def cleanup(text: str) -> str:
     """Remove special characters from text.
-    
+
     Args:
         text: Text to clean
-    
+
     Returns:
         Cleaned text
     """
@@ -997,10 +987,10 @@ def cleanup(text: str) -> str:
 
 def extract_terraform_resource(text: str) -> List[str]:
     """Extract Terraform resource references from string.
-    
+
     Args:
         text: Text containing resource references
-    
+
     Returns:
         List of resource references found
     """
@@ -1024,12 +1014,12 @@ def extract_terraform_resource(text: str) -> List[str]:
 
 def remove_terraform_functions(text: str) -> str:
     """Remove Terraform functions from ${} expressions.
-    
+
     Keeps only the inner content of function calls.
-    
+
     Args:
         text: Text with Terraform function calls
-    
+
     Returns:
         Text with functions removed
     """
