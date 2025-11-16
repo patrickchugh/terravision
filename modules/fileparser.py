@@ -147,7 +147,7 @@ def find_tf_files(
     if len(paths) == 0:
         click.echo(
             "ERROR: No Terraform .tf files found in current directory or your "
-            "source location. Use --source parameter to specify location or "
+            "source location. Use --source parameter to specify directory or "
             "Github URL of source files"
         )
         exit()
@@ -340,7 +340,7 @@ def read_tfsource(
     # Parse each source location
     for source in source_list:
         tf_file_paths = find_tf_files(source, [], False)
-        tf_mod_dir = os.path.join(source, ".terraform", "modules")
+        tf_mod_dir = os.path.join(Path.home(), ".terraform", "modules")
 
         # Load custom annotation file if provided
         if annotate:

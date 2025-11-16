@@ -68,7 +68,7 @@ def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
     # Search through all output files for matching module
     for file in tfdata["all_output"].keys():
         for i in tfdata["all_output"][file]:
-            if outputname in i.keys() and mod in file:
+            if outputname in i.keys() and f";{mod};" in file:
                 outvalue = i[outputname]["value"]
                 # Handle wildcard ID references
                 if "*.id" in outvalue and "*.id" in eval_string:
@@ -79,7 +79,7 @@ def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
                     index = int(
                         helpers.find_between(eval_string, "[", "]").replace(" ", "")
                     )
-                    outvalue = f"module.{mod}.{helpers.strip_var_curlies(outvalue).replace('.*.id', '').strip()}[{index}]"
+                    outvalue = f"module.{mod}.{helpers.strip_var_curlies(outvalue).replace('.*.id', '').replace('.*', '').strip()}[{index}]"
                     break
     # Replace module variable with resolved value
     stringarray = eval_string.split(".")
@@ -417,7 +417,11 @@ def replace_var_values(
         # Search parent modules for variable
         elif helpers.list_of_parents(tfdata["variable_map"], lookup):
             module_list = helpers.list_of_parents(tfdata["variable_map"], lookup)
-            module_name = module_list[0]
+            module_name = (
+                [m for m in module_list if m == module][0]
+                if [m for m in module_list if m == module]
+                else module_list[0]
+            )
             value = value.replace(
                 varitem, str(tfdata["variable_map"][module_name].get(lookup)), 1
             )
@@ -683,9 +687,9 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Determine default module name
     if not tfdata["all_module"]:
         mod = "main"
-    else:
-        first_module = tfdata["all_module"][next(iter(tfdata["all_module"]))][0]
-        mod = next(iter(first_module))
+    # else:
+    #     first_module = tfdata["all_module"][next(iter(tfdata["all_module"]))][0]
+    #     mod = next(iter(first_module))
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
     # Check if resources exist
     if not tfdata.get("all_resource"):
@@ -731,9 +735,11 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         # Override with source file values
                         omd.update(md)
                         meta_data[resource_node] = omd
-                        meta_data[resource_node]["module"] = mod
+                        if not meta_data[resource_node].get("module"):
+                            meta_data[resource_node]["module"] = mod
                         meta_data[found_node] = omd
-                        meta_data[found_node]["module"] = mod
+                        if not meta_data[found_node].get("module"):
+                            meta_data[found_node]["module"] = mod
                         # Handle resources with count/for_each
                         if "~" in found_node:
                             meta_data = handle_numbered_nodes(
