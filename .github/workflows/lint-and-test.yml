@@ -73,8 +73,10 @@ jobs:
       - name: Mock ssh file
         run :
           mkdir -p ~/.ssh
-          touch ~/.ssh/id_rsa.pub
-          chmod 600 ~/.ssh/id_rsa.pub
+          cd ~/.ssh
+          touch id_rsa.pub
+          chmod 777 ~/.ssh/id_rsa.pub
+          cd -
         
       #----------------------------------------------
       # Run static linters
