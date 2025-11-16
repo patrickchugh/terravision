@@ -429,6 +429,7 @@ def handle_numbered_nodes(resource_node, tfdata, meta_data):
     resource_count = len(all_matching_list)
     for actual_name in all_matching_list:
         import copy
+
         meta_data[actual_name] = copy.deepcopy(meta_data[resource_node])
         meta_data[actual_name]["count"] = resource_count
     return meta_data
@@ -468,7 +469,11 @@ def get_metadata(tfdata):  # -> set
     # Create list of node names that will be created
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
     # Default module is assumed main unless over-ridden
-    mod = "main"
+    if not tfdata["all_module"]:
+        mod = "main"
+    else:
+        first_module = tfdata["all_module"][next(iter(tfdata["all_module"]))][0]
+        mod = next(iter(first_module))
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
     if not tfdata.get("all_resource"):
         click.echo(
