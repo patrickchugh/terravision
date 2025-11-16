@@ -75,8 +75,8 @@ def _load_json_source(source: str):
 def _process_terraform_source(
     source: list, varfile: list, workspace: str, annotate: str, debug: bool
 ):
-    tfdata = tfwrapper.tf_initplan(source, varfile, workspace)
-    tfdata = tfwrapper.tf_makegraph(tfdata)
+    tfdata = tfwrapper.tf_initplan(source, varfile, workspace, debug)
+    tfdata = tfwrapper.tf_makegraph(tfdata, debug)
     codepath = (
         [tfdata["codepath"]]
         if isinstance(tfdata["codepath"], str)

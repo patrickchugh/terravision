@@ -3,6 +3,7 @@
 Handles terraform init, plan, graph generation, and conversion of terraform
 output into internal data structures for diagram generation.
 """
+
 from typing import Dict, List, Tuple, Any
 import os
 import copy
@@ -30,14 +31,17 @@ MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 
 
-def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> Dict[str, Any]:
+def tf_initplan(
+    source: Tuple[str, ...], varfile: List[str], workspace: str, debug: bool = False
+) -> Dict[str, Any]:
     """Initialize Terraform and generate plan and graph data.
-    
+
     Args:
         source: Tuple of source locations (directories or Git URLs)
         varfile: List of variable files to use
         workspace: Terraform workspace name
-        
+        debug: Show subprocess output to console
+
     Returns:
         Dictionary containing terraform plan and graph data
     """
@@ -70,8 +74,12 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
                 )
                 exit()
         # Initialize terraform with providers
-        returncode = os.system(f"terraform init --upgrade -reconfigure")
-        if returncode > 0:
+        result = subprocess.run(
+            ["terraform", "init", "--upgrade", "-reconfigure"],
+            capture_output=not debug,
+            text=True
+        )
+        if result.returncode != 0:
             click.echo(
                 click.style(
                     f"\nERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
@@ -79,7 +87,9 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
                     bold=True,
                 )
             )
-            exit()
+            if not debug and result.stderr:
+                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+            exit(result.returncode)
         # Resolve variable file path
         if varfile:
             vfile = varfile[0]
@@ -92,10 +102,12 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
             )
         )
         # Select or create terraform workspace
-        returncode = os.system(
-            f"terraform workspace select -or-create=True {workspace}"
+        result = subprocess.run(
+            ["terraform", "workspace", "select", "-or-create=True", workspace],
+            capture_output=not debug,
+            text=True
         )
-        if returncode:
+        if result.returncode != 0:
             click.echo(
                 click.style(
                     f"\nERROR: Invalid output from 'terraform workspace select {workspace}' command.",
@@ -103,7 +115,9 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
                     bold=True,
                 )
             )
-            exit()
+            if not debug and result.stderr:
+                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+            exit(result.returncode)
 
         click.echo(
             click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
@@ -124,49 +138,18 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
             os.remove(tfgraph_json_path)
         # Generate terraform plan with or without varfile
         if varfile:
-            returncode = os.system(
-                f"terraform plan -refresh=false -var-file {vfile} -out {tfplan_path}"
+            result = subprocess.run(
+                ["terraform", "plan", "-refresh=false", "-var-file", vfile, "-out", tfplan_path],
+                capture_output=not debug,
+                text=True
             )
         else:
-            returncode = os.system(f"terraform plan -refresh=false -out {tfplan_path}")
-        click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
-        # Convert binary plan to JSON format
-        if (
-            os.path.exists(tfplan_path)
-            and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}")
-            == 0
-        ):
-            click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
-            # Load plan data
-            f = open(tfplan_json_path)
-            plandata = json.load(f)
-            # Generate terraform graph
-            returncode = os.system(f"terraform graph > {tfgraph_path}")
-            tfdata["plandata"] = dict(plandata)
-            click.echo(
-                click.style(
-                    f"\nConverting TF Graph Connections..  (this may take a while)\n",
-                    fg="white",
-                    bold=True,
-                )
+            result = subprocess.run(
+                ["terraform", "plan", "-refresh=false", "-out", tfplan_path],
+                capture_output=not debug,
+                text=True
             )
-            # Convert DOT graph to JSON using Graphviz
-            if os.path.exists(tfgraph_path):
-                returncode = os.system(
-                    f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}"
-                )
-                f = open(tfgraph_json_path)
-                graphdata = json.load(f)
-            else:
-                click.echo(
-                    click.style(
-                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
-                        fg="red",
-                        bold=True,
-                    )
-                )
-                exit()
-        else:
+        if result.returncode != 0:
             click.echo(
                 click.style(
                     f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
@@ -174,21 +157,109 @@ def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> 
                     bold=True,
                 )
             )
-            exit()
+            if not debug and result.stderr:
+                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+            exit(result.returncode)
+        
+        click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
+        # Convert binary plan to JSON format
+        if os.path.exists(tfplan_path):
+            with open(tfplan_json_path, "w") as f:
+                result = subprocess.run(
+                    ["terraform", "show", "-json", tfplan_path],
+                    stdout=f,
+                    stderr=None if debug else subprocess.PIPE,
+                    text=True
+                )
+            if result.returncode == 0:
+                click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+                # Load plan data
+                with open(tfplan_json_path) as f:
+                    plandata = json.load(f)
+                # Generate terraform graph
+                with open(tfgraph_path, "w") as f:
+                    result = subprocess.run(
+                        ["terraform", "graph"],
+                        stdout=f,
+                        stderr=None if debug else subprocess.PIPE,
+                        text=True
+                    )
+                tfdata["plandata"] = dict(plandata)
+                click.echo(
+                    click.style(
+                        f"\nConverting TF Graph Connections..  (this may take a while)\n",
+                        fg="white",
+                        bold=True,
+                    )
+                )
+                # Convert DOT graph to JSON using Graphviz
+                if os.path.exists(tfgraph_path):
+                    result = subprocess.run(
+                        ["dot", "-Txdot_json", "-o", tfgraph_json_path, tfgraph_path],
+                        capture_output=not debug,
+                        text=True
+                    )
+                    if result.returncode != 0:
+                        click.echo(
+                            click.style(
+                                f"\nERROR: Failed to convert graph with Graphviz.",
+                                fg="red",
+                                bold=True,
+                            )
+                        )
+                        if not debug and result.stderr:
+                            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+                        exit(result.returncode)
+                    with open(tfgraph_json_path) as f:
+                        graphdata = json.load(f)
+                else:
+                    click.echo(
+                        click.style(
+                            f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                            fg="red",
+                            bold=True,
+                        )
+                    )
+                    exit(1)
+            else:
+                click.echo(
+                    click.style(
+                        f"\nERROR: Invalid output from 'terraform show' command.",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+                if not debug and result.stderr:
+                    click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+                exit(result.returncode)
+        else:
+            click.echo(
+                click.style(
+                    f"\nERROR: Terraform plan file not found at {tfplan_path}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit(1)
         tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
     os.chdir(start_dir)
     return tfdata
 
 
-def make_tf_data(tfdata: Dict[str, Any], plandata: Dict[str, Any], graphdata: Dict[str, Any], codepath: str) -> Dict[str, Any]:
+def make_tf_data(
+    tfdata: Dict[str, Any],
+    plandata: Dict[str, Any],
+    graphdata: Dict[str, Any],
+    codepath: str,
+) -> Dict[str, Any]:
     """Combine terraform plan and graph data into tfdata structure.
-    
+
     Args:
         tfdata: Terraform data dictionary
         plandata: Parsed terraform plan JSON
         graphdata: Parsed terraform graph JSON
         codepath: Path to terraform source code
-        
+
     Returns:
         Updated tfdata with plan and graph information
     """
@@ -211,10 +282,10 @@ def make_tf_data(tfdata: Dict[str, Any], plandata: Dict[str, Any], graphdata: Di
 
 def setup_graph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Initialize graph data structures from terraform plan.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with initialized graph structures
     """
@@ -261,7 +332,7 @@ def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
     Args:
         node: Resource node name to find
         gvid_table: List of node names from terraform graph
-        
+
     Returns:
         Index of node in gvid_table
     """
@@ -295,12 +366,12 @@ def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
     exit()
 
 
-def tf_makegraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     """Build resource dependency graph from terraform graph output.
-    
+
     Args:
         tfdata: Terraform data dictionary with plan and graph data
-        
+
     Returns:
         Updated tfdata with populated graphdict connections
     """
@@ -379,10 +450,10 @@ def tf_makegraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Add VPC to subnet relationships based on CIDR overlap.
-    
+
     Args:
         tfdata: Terraform data dictionary
-        
+
     Returns:
         Updated tfdata with VPC-subnet connections
     """
