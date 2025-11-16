@@ -33,7 +33,7 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Handle cases where resources have transitive link via sqs policy
     tfdata["graphdict"] = link_sqs_queue_policy(tfdata["graphdict"])
     # Remove connections to services specified in disconnect services
-    for r in tfdata["graphdict"]:
+    for r in sorted(tfdata["graphdict"].keys()):
         for d in DISCONNECT_SERVICES:
             if d in r:
                 tfdata["graphdict"][r] = []
@@ -94,7 +94,7 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         pass
     # Replace subnet references to ASG targets with ASG itself
     for asg in asg_resources:
-        for connection in tfdata["graphdict"][asg]:
+        for connection in sorted(tfdata["graphdict"][asg]):
             asg_target_parents = helpers.list_of_parents(
                 tfdata["graphdict"], connection
             )
@@ -150,10 +150,11 @@ def handle_cloudfront_lbs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with CloudFront-LB connections
     """
     # Find CloudFront distributions and load balancers
-    cf_distros = [s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s]
-    lbs = [s for s in tfdata["graphdict"].keys() if "aws_lb." in s]
+    cf_distros = sorted([s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s])
+    lbs = sorted([s for s in tfdata["graphdict"].keys() if "aws_lb." in s])
     # Connect CloudFront to LBs when node connects to both
-    for node, connections in dict(tfdata["graphdict"]).items():
+    for node in sorted(tfdata["graphdict"].keys()):
+        connections = tfdata["graphdict"][node]
         for cf in cf_distros:
             if cf in connections:
                 for lb in lbs:
@@ -322,7 +323,7 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if fs not in tfdata["graphdict"][target]:
                 tfdata["graphdict"][target].append(fs)
             # Clean up file system connections
-            for fs_connection in list(tfdata["graphdict"][fs]):
+            for fs_connection in sorted(list(tfdata["graphdict"][fs])):
                 if helpers.get_no_module_name(fs_connection).startswith(
                     "aws_efs_mount_target"
                 ):
@@ -333,7 +334,8 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][fs_connection].append(fs)
                     tfdata["graphdict"][fs].remove(fs_connection)
     # Replace EFS file system references with mount target
-    for node, connections in dict(tfdata["graphdict"]).items():
+    for node in sorted(tfdata["graphdict"].keys()):
+        connections = tfdata["graphdict"][node]
         if helpers.consolidated_node_check(node):
             for connection in list(connections):
                 if helpers.get_no_module_name(connection).startswith(
@@ -361,8 +363,8 @@ def handle_indirect_sg_rules(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "aws_security_group."
     )
     # Process each security group
-    for sg in sglist:
-        for sg_connection in list(tfdata["graphdict"][sg]):
+    for sg in sorted(sglist):
+        for sg_connection in sorted(list(tfdata["graphdict"][sg])):
             # Check if connection is a security group rule
             if helpers.get_no_module_name(sg_connection).startswith(
                 "aws_security_group_rule"
@@ -407,7 +409,7 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Reverse SG relationships for non-group nodes
         if target_type not in GROUP_NODES and target_type != "aws_security_group_rule":
             sg_to_purge = list()
-            for connection in list(tfdata["graphdict"][target]):
+            for connection in sorted(list(tfdata["graphdict"][target])):
                 if (
                     helpers.get_no_module_name(connection).startswith(
                         "aws_security_group."
@@ -448,7 +450,7 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Remove Security Group Rules from associations with the security group
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
         if target_type == "aws_security_group_rule":
-            for connection in list(tfdata["graphdict"][target]):
+            for connection in sorted(list(tfdata["graphdict"][target])):
                 if (
                     connection in tfdata["graphdict"].keys()
                     and len(tfdata["graphdict"][connection]) == 0
@@ -458,18 +460,18 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 for p in plist:
                     tfdata["graphdict"][p].remove(connection)
         # Replace any references to nodes within the security group with the security group
-        references = list(helpers.list_of_parents(tfdata["graphdict"], target))
+        references = sorted(list(helpers.list_of_parents(tfdata["graphdict"], target)))
         for purge in sg_to_purge:
             if purge in references:
                 references.remove(purge)
-        replacement_sgs = [
+        replacement_sgs = sorted([
             k
             for k in references
             if helpers.get_no_module_name(k).startswith("aws_security_group")
-        ]
+        ])
         if replacement_sgs:
             for replaced_group in replacement_sgs:
-                for node in list(references):
+                for node in sorted(references):
                     if (
                         target in tfdata["graphdict"][node]
                         and not helpers.get_no_module_name(node).startswith(
@@ -522,8 +524,8 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "aws_security_group."
     )
     for sg in list_of_sgs:
-        for sg_connection in list(tfdata["graphdict"][sg]):
-            parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
+        for sg_connection in sorted(list(tfdata["graphdict"][sg])):
+            parent_list = sorted(helpers.list_of_parents(tfdata["graphdict"], sg_connection))
             # Add SG to parent subnets
             for parent in parent_list:
                 if (
@@ -536,7 +538,7 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["graphdict"][parent].remove(sg_connection)
     # Remove SGs from VPC level (they belong in subnets)
     for sg in list_of_sgs:
-        parent_list = helpers.list_of_parents(tfdata["graphdict"], sg)
+        parent_list = sorted(helpers.list_of_parents(tfdata["graphdict"], sg))
         for parent in parent_list:
             if (
                 helpers.get_no_module_name(parent).startswith("aws_vpc")
@@ -544,7 +546,7 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             ):
                 tfdata["graphdict"][parent].remove(sg)
     # Remove orphan security groups with no connections
-    for sg in list(list_of_sgs):
+    for sg in sorted(list_of_sgs):
         if sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) == 0:
             del tfdata["graphdict"][sg]
     return tfdata
@@ -572,7 +574,7 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"]["aws_group.shared_services"].append(node)
     # Replace consolidated nodes with their consolidated names
     if tfdata["graphdict"].get("aws_group.shared_services"):
-        for service in list(tfdata["graphdict"]["aws_group.shared_services"]):
+        for service in sorted(list(tfdata["graphdict"]["aws_group.shared_services"])):
             if helpers.consolidated_node_check(service) and "cluster" not in service:
                 tfdata["graphdict"]["aws_group.shared_services"] = list(
                     map(
@@ -595,7 +597,7 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with LB variants configured
     """
     # Find all load balancers
-    found_lbs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
+    found_lbs = sorted(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb"))
     for lb in found_lbs:
         # Determine LB type (ALB, NLB, etc.)
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
@@ -603,7 +605,7 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Initialize renamed node metadata
         if not tfdata["meta_data"].get(renamed_node):
             tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
-        for connection in list(tfdata["graphdict"][lb]):
+        for connection in sorted(list(tfdata["graphdict"][lb])):
             if not tfdata["graphdict"].get(renamed_node):
                 tfdata["graphdict"][renamed_node] = list()
             c_type = connection.split(".")[0]
@@ -622,12 +624,12 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["meta_data"][renamed_node]["count"] = int(
                         tfdata["meta_data"][connection]["count"]
                     )
-                    plist = helpers.list_of_parents(tfdata["graphdict"], renamed_node)
+                    plist = sorted(helpers.list_of_parents(tfdata["graphdict"], renamed_node))
                     for p in plist:
                         tfdata["meta_data"][p]["count"] = int(
                             tfdata["meta_data"][connection]["count"]
                         )
-            parents = helpers.list_of_parents(tfdata["graphdict"], lb)
+            parents = sorted(helpers.list_of_parents(tfdata["graphdict"], lb))
             # Replace any parent references to original LB instance to the renamed node with LB type
             for p in parents:
                 p_type = p.split(".")[0]
@@ -668,7 +670,7 @@ def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     if dbsubnet not in tfdata["graphdict"][vpc]:
                         tfdata["graphdict"][vpc].append(dbsubnet)
             # If RDS has security group, use that instead
-            for rds in tfdata["graphdict"][dbsubnet]:
+            for rds in sorted(tfdata["graphdict"][dbsubnet]):
                 rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
                 for check_sg in rds_references:
                     if helpers.get_no_module_name(check_sg).startswith(
