@@ -1,0 +1,229 @@
+{
+    "aws_az.us~west~2a": [
+        "aws_subnet.private~1",
+        "aws_subnet.public~1"
+    ],
+    "aws_az.us~west~2b": [
+        "aws_subnet.private~2",
+        "aws_subnet.public~2"
+    ],
+    "aws_az.us~west~2c": [
+        "aws_subnet.private~3",
+        "aws_subnet.public~3"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_default_network_acl.this~1": [],
+    "aws_default_route_table.default~1": [],
+    "aws_default_security_group.this~1": [],
+    "aws_ec2_tag.cluster_primary_security_group[Blueprint]": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_ec2_tag.cluster_primary_security_group[GithubRepo]": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_ecr_repository.ecr": [],
+    "aws_eip.elastic_ip": [],
+    "aws_eks_node_group.this~1": [
+        "aws_ec2_tag.cluster_primary_security_group",
+        "aws_ecr_repository.ecr",
+        "aws_kms_key.kms",
+        "time_sleep.this~1"
+    ],
+    "aws_eks_node_group.this~2": [
+        "aws_ec2_tag.cluster_primary_security_group",
+        "aws_ecr_repository.ecr",
+        "aws_kms_key.kms",
+        "time_sleep.this~1"
+    ],
+    "aws_eks_node_group.this~3": [
+        "aws_eks_cluster.this~1",
+        "aws_eks_cluster.this~2",
+        "aws_eks_cluster.this~3"
+    ],
+    "aws_eks_service.eks": [
+        "aws_eks_node_group.this~1",
+        "aws_eks_node_group.this~2",
+        "aws_eks_node_group.this~3"
+    ],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_eip.elastic_ip",
+        "aws_kms_key.kms"
+    ],
+    "aws_iam_openid_connect_provider.oidc_provider~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_iam_policy.cluster_encryption~1": [
+        "aws_iam_role_policy_attachment.cluster_encryption~1",
+        "aws_kms_key.kms"
+    ],
+    "aws_iam_policy.this~1": [
+        "aws_iam_role_policy_attachment.this~1"
+    ],
+    "aws_iam_role.this~1": [
+        "aws_eks_node_group.this~1",
+        "aws_eks_node_group.this~2",
+        "aws_eks_node_group.this~3",
+        "aws_iam_role_policy_attachment.cluster_encryption~1",
+        "aws_iam_role_policy_attachment.this[AmazonEKSClusterPolicy]",
+        "aws_iam_role_policy_attachment.this[AmazonEKSVPCResourceController]",
+        "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly]",
+        "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy]",
+        "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy]",
+        "aws_iam_role_policy_attachment.this~1",
+        "helm_release.this~1"
+    ],
+    "aws_iam_role_policy_attachment.cluster_encryption~1": [],
+    "aws_iam_role_policy_attachment.this[AmazonEKSClusterPolicy]": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_iam_role_policy_attachment.this[AmazonEKSVPCResourceController]": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly]": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy]": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_iam_role_policy_attachment.this[arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy]": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_iam_role_policy_attachment.this~1": [
+        "aws_eks_cluster.this~1",
+        "aws_iam_policy.this~1"
+    ],
+    "aws_internet_gateway.igw": [
+        "aws_eip.elastic_ip",
+        "aws_route.public_internet_gateway~1",
+        "tv_aws_internet.internet"
+    ],
+    "aws_kms_key.kms": [],
+    "aws_launch_template.this~1": [
+        "aws_iam_role_policy_attachment.this~1"
+    ],
+    "aws_nat_gateway.this~1": [
+        "aws_internet_gateway.igw",
+        "aws_route.private_nat_gateway~1"
+    ],
+    "aws_route.private_nat_gateway~1": [],
+    "aws_route.public_internet_gateway~1": [],
+    "aws_route_table.private~1": [
+        "aws_route.private_nat_gateway~1",
+        "aws_route_table_association.private~1"
+    ],
+    "aws_route_table.public~1": [
+        "aws_route.public_internet_gateway~1",
+        "aws_route_table_association.public~1"
+    ],
+    "aws_route_table_association.private~1": [
+        "aws_route_table.private~1"
+    ],
+    "aws_route_table_association.private~2": [],
+    "aws_route_table_association.private~3": [],
+    "aws_route_table_association.public~1": [
+        "aws_route_table.public~1"
+    ],
+    "aws_route_table_association.public~2": [],
+    "aws_route_table_association.public~3": [],
+    "aws_security_group.cluster~1": [
+        "aws_eks_service.eks"
+    ],
+    "aws_security_group.node~1": [
+        "aws_eks_node_group.this~1"
+    ],
+    "aws_security_group.node~2": [
+        "aws_eks_node_group.this~2"
+    ],
+    "aws_security_group.node~3": [
+        "aws_eks_node_group.this~3"
+    ],
+    "aws_security_group_rule.cluster[ingress_nodes_443]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[egress_all]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_443]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_4443_webhook]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_6443_webhook]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_8443_webhook]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_9443_webhook]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_cluster_kubelet]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_gameserver_udp]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_gameserver_webhook]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_nodes_ephemeral]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_self_coredns_tcp]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_security_group_rule.node[ingress_self_coredns_udp]~1": [
+        "aws_eks_cluster.this~1"
+    ],
+    "aws_subnet.private~1": [
+        "aws_route_table_association.private~1",
+        "aws_security_group.node~1"
+    ],
+    "aws_subnet.private~2": [
+        "aws_route_table_association.private~2",
+        "aws_security_group.node~2"
+    ],
+    "aws_subnet.private~3": [
+        "aws_route_table_association.private~3",
+        "aws_security_group.node~3"
+    ],
+    "aws_subnet.public~1": [
+        "aws_nat_gateway.this~1",
+        "aws_route_table_association.public~1"
+    ],
+    "aws_subnet.public~2": [
+        "aws_route_table_association.public~2"
+    ],
+    "aws_subnet.public~3": [
+        "aws_route_table_association.public~3"
+    ],
+    "aws_vpc.this~1": [
+        "aws_az.us~west~2a",
+        "aws_az.us~west~2b",
+        "aws_az.us~west~2c",
+        "aws_default_network_acl.this~1",
+        "aws_default_route_table.default~1",
+        "aws_default_security_group.this~1"
+    ],
+    "helm_release.this~1": [],
+    "time_sleep.this~1": [
+        "aws_iam_openid_connect_provider.oidc_provider~1"
+    ],
+    "time_sleep.this~2": [
+        "aws_iam_openid_connect_provider.oidc_provider~1"
+    ],
+    "time_sleep.this~3": [
+        "aws_iam_openid_connect_provider.oidc_provider~1"
+    ],
+    "tv_aws_internet.internet": []
+}
