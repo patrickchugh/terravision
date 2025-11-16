@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 permissions:
   contents: read    # This is required for actions/checkout
 jobs:
