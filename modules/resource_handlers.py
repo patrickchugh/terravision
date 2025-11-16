@@ -463,9 +463,10 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][p].remove(connection)
         # Replace any references to nodes within the security group with the security group
         references = sorted(list(helpers.list_of_parents(tfdata["graphdict"], target)))
-        for purge in sg_to_purge:
-            if purge in references:
-                references.remove(purge)
+        if sg_to_purge:
+            for purge in sg_to_purge:
+                if purge in references:
+                    references.remove(purge)
         replacement_sgs = sorted(
             [
                 k
