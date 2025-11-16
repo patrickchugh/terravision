@@ -8,11 +8,11 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 permissions:
-  id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
 jobs:
   test:
@@ -49,16 +49,6 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      #----------------------------------------------
-      #       Retrieve temporary AWS credentials
-      #----------------------------------------------
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          role-to-assume: arn:aws:iam::166659698090:role/githubactions
-          role-session-name: ghasession
-          aws-region: us-east-1
-        
       #----------------------------------------------
       # install dependencies
       #----------------------------------------------
