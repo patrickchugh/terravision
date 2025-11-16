@@ -21,9 +21,7 @@ PyYAML = "6.0"
 debugpy = "^1.8.0"
 ipaddr = "^2.2.0"
 ollama = "^0.6.0"
-
-[tool.poetry.group.test]
-optional = true
+typing-extensions = "^4.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.1"
