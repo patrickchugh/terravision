@@ -13,7 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 permissions:
-  contents: read    # This is required for actions/checkout
+  contents: read      # This is required for actions/checkout
+  id-token: write     # This is required for OIDC authentication with AWS
 jobs:
   test:
     runs-on: ubuntu-latest
