@@ -6,7 +6,6 @@ description = "Terraform Architecture Visualizer"
 authors = []
 readme = 'README.md'
 exclude = []
-package-mode = false
 
 
 [tool.poetry.dependencies]
