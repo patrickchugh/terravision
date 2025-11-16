@@ -319,7 +319,7 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if fs not in tfdata["graphdict"][target]:
                 tfdata["graphdict"][target].append(fs)
             # Clean up file system connections
-            for fs_connection in tfdata["graphdict"][fs]:
+            for fs_connection in list(tfdata["graphdict"][fs]):
                 if helpers.get_no_module_name(fs_connection).startswith(
                     "aws_efs_mount_target"
                 ):
@@ -332,7 +332,7 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Replace EFS file system references with mount target
     for node, connections in dict(tfdata["graphdict"]).items():
         if helpers.consolidated_node_check(node):
-            for connection in connections:
+            for connection in list(connections):
                 if helpers.get_no_module_name(connection).startswith(
                     "aws_efs_file_system"
                 ):
@@ -359,7 +359,7 @@ def handle_indirect_sg_rules(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
     # Process each security group
     for sg in sglist:
-        for sg_connection in tfdata["graphdict"][sg]:
+        for sg_connection in list(tfdata["graphdict"][sg]):
             # Check if connection is a security group rule
             if helpers.get_no_module_name(sg_connection).startswith(
                 "aws_security_group_rule"
@@ -390,19 +390,19 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     all_sg_parents = helpers.list_of_parents(
         tfdata["graphdict"], "aws_security_group.*"
     )
-    # Filter to non-SG resources
-    bound_nodes = [
+    # Filter to non-SG resources and sort for deterministic order
+    bound_nodes = sorted([
         s
         for s in all_sg_parents
         if not helpers.get_no_module_name(s).startswith("aws_security_group")
-    ]
+    ])
     # Process each resource bound to a security group
     for target in bound_nodes:
         target_type = helpers.get_no_module_name(target).split(".")[0]
         # Reverse SG relationships for non-group nodes
         if target_type not in GROUP_NODES and target_type != "aws_security_group_rule":
             sg_to_purge = list()
-            for connection in tfdata["graphdict"][target]:
+            for connection in list(tfdata["graphdict"][target]):
                 if (
                     helpers.get_no_module_name(connection).startswith(
                         "aws_security_group."
@@ -420,7 +420,6 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         if len(tfdata["graphdict"][connection]) > 0:
                             unique_name = connection + "_" + target.split(".")[-1]
                             tfdata["graphdict"][unique_name] = newlist
-                            tfdata["graphdict"][connection]
                             tfdata["meta_data"][unique_name] = copy.deepcopy(
                                 tfdata["meta_data"][connection]
                             )
@@ -454,7 +453,7 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 for p in plist:
                     tfdata["graphdict"][p].remove(connection)
         # Replace any references to nodes within the security group with the security group
-        references = helpers.list_of_parents(tfdata["graphdict"], target)
+        references = list(helpers.list_of_parents(tfdata["graphdict"], target))
         for purge in sg_to_purge:
             if purge in references:
                 references.remove(purge)
@@ -465,7 +464,7 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         ]
         if replacement_sgs:
             for replaced_group in replacement_sgs:
-                for node in references:
+                for node in list(references):
                     if (
                         target in tfdata["graphdict"][node]
                         and not helpers.get_no_module_name(node).startswith(
@@ -518,7 +517,7 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "aws_security_group."
     )
     for sg in list_of_sgs:
-        for sg_connection in tfdata["graphdict"][sg]:
+        for sg_connection in list(tfdata["graphdict"][sg]):
             parent_list = helpers.list_of_parents(tfdata["graphdict"], sg_connection)
             # Add SG to parent subnets
             for parent in parent_list:
@@ -540,8 +539,8 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             ):
                 tfdata["graphdict"][parent].remove(sg)
     # Remove orphan security groups with no connections
-    for sg in list_of_sgs:
-        if len(tfdata["graphdict"][sg]) == 0:
+    for sg in list(list_of_sgs):
+        if sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) == 0:
             del tfdata["graphdict"][sg]
     return tfdata
 
@@ -555,9 +554,8 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with shared services grouped
     """
-    graphcopy = dict(tfdata["graphdict"])
     # Find all shared services and group them
-    for node in graphcopy:
+    for node in sorted(tfdata["graphdict"].keys()):
         substring_match = [s for s in SHARED_SERVICES if s in node]
         if substring_match:
             # Create shared services group if needed
@@ -730,7 +728,7 @@ def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with random strings removed
     """
     randoms = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "random_string.")
-    for r in randoms:
+    for r in list(randoms):
         del tfdata["graphdict"][r]
     return tfdata
 
@@ -793,21 +791,21 @@ def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[s
     suffix_pattern = r"~(\d+)$"
 
     # Find unnumbered NAT gateways
-    nat_gateways = [
+    nat_gateways = sorted([
         k for k in terraform_data.keys() if "aws_nat_gateway" in k and "~" not in k
-    ]
+    ])
 
     for nat_gw in nat_gateways:
         # Find public subnets that reference this NAT gateway
         subnet_suffixes = set()
-        for resource, deps in terraform_data.items():
+        for resource, deps in sorted(terraform_data.items()):
             if "public_subnets" in resource and "~" in resource:
                 match = re.search(suffix_pattern, resource)
                 if match and nat_gw in deps:
                     subnet_suffixes.add(match.group(1))
 
         # Create numbered NAT gateways
-        for suffix in subnet_suffixes:
+        for suffix in sorted(subnet_suffixes):
             nat_gw_numbered = f"{nat_gw}~{suffix}"
             result[nat_gw_numbered] = list(terraform_data[nat_gw])
 
@@ -816,7 +814,8 @@ def split_nat_gateways(terraform_data: Dict[str, List[str]]) -> Dict[str, List[s
             del result[nat_gw]
 
     # Update subnet references to use numbered NAT gateways
-    for resource, deps in result.items():
+    for resource in sorted(result.keys()):
+        deps = result[resource]
         if "public_subnets" in resource and "~" in resource:
             match = re.search(suffix_pattern, resource)
             if match:
@@ -845,14 +844,14 @@ def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
 
     # Map instance profiles to IAM roles
     profile_to_role = {}
-    for resource, deps in terraform_data.items():
+    for resource, deps in sorted(terraform_data.items()):
         if "aws_iam_role" in resource:
             for dep in deps:
                 if "aws_iam_instance_profile" in dep:
                     profile_to_role[dep] = resource
 
     # Find instance profiles that connect to EC2 instances and add EC2 to IAM role deps
-    for resource, deps in terraform_data.items():
+    for resource, deps in sorted(terraform_data.items()):
         if "aws_iam_instance_profile" in resource and resource in profile_to_role:
             iam_role = profile_to_role[resource]
             for dep in deps:
@@ -875,16 +874,16 @@ def link_sqs_queue_policy(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
 
     # Map queue policies to SQS queues
     policy_to_queue = {}
-    for resource, deps in terraform_data.items():
+    for resource, deps in sorted(terraform_data.items()):
         if "aws_sqs_queue" in resource:
             for dep in deps:
                 if "aws_sqs_queue_policy" in dep:
                     policy_to_queue[dep] = resource
 
     # Find queue policies that connect to resources and add SQS queue to those resource deps
-    for resource, deps in terraform_data.items():
+    for resource, deps in sorted(terraform_data.items()):
         for dep in deps:
-            if "aws_sqs_queue_policy." in dep:
+            if "aws_sqs_queue_policy." in dep and dep in policy_to_queue:
                 sqs_queue = policy_to_queue[dep]
                 if sqs_queue not in result[resource]:
                     result[resource].append(sqs_queue)
@@ -906,11 +905,11 @@ def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
     suffix_pattern = r"~(\d+)$"
 
     # Find all availability zone resources
-    az_resources = [
+    az_resources = sorted([
         key
         for key in terraform_data.keys()
         if key.startswith("aws_az.availability_zone")
-    ]
+    ])
 
     # Match each AZ to subnets with same suffix
     for az in az_resources:
@@ -952,7 +951,7 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
 
     # Group subnets by base name and collect SGs
     subnet_groups = {}
-    for key in terraform_data.keys():
+    for key in sorted(terraform_data.keys()):
         if "aws_subnet" in key.lower():
             # Extract base name without suffix
             base_name = re.sub(r"\[\d+\]~\d+$", "", key)
@@ -967,14 +966,15 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
                     subnet_groups[base_name]["sg_bases"].add(sg_base)
 
     # Ensure all subnets have SGs with matching suffix
-    for base_name, group_data in subnet_groups.items():
+    for base_name in sorted(subnet_groups.keys()):
+        group_data = subnet_groups[base_name]
         for subnet in group_data["subnets"]:
             # Extract subnet suffix
             subnet_match = re.search(suffix_pattern, subnet)
             if subnet_match:
                 subnet_suffix = subnet_match.group(1)
                 # Add all SGs with matching suffix
-                for sg_base in group_data["sg_bases"]:
+                for sg_base in sorted(group_data["sg_bases"]):
                     sg_with_suffix = f"{sg_base}~{subnet_suffix}"
                     if (
                         sg_with_suffix in terraform_data
