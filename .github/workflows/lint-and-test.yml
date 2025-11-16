@@ -75,7 +75,7 @@ jobs:
           mkdir -p ~/.ssh
           cd ~/.ssh
           touch id_rsa.pub
-          chmod 777 ~/.ssh/id_rsa.pub
+          chmod 777 id_rsa.pub
           cd -
         
       #----------------------------------------------
