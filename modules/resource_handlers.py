@@ -408,9 +408,9 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Process each resource bound to a security group
     for target in bound_nodes:
         target_type = helpers.get_no_module_name(target).split(".")[0]
+        sg_to_purge = list()
         # Reverse SG relationships for non-group nodes
         if target_type not in GROUP_NODES and target_type != "aws_security_group_rule":
-            sg_to_purge = list()
             for connection in sorted(list(tfdata["graphdict"][target])):
                 if (
                     helpers.get_no_module_name(connection).startswith(
