@@ -72,7 +72,14 @@ def test_graphdata_output(repo_path: str, expected_file: str, tmp_path: Path) ->
 
     # Execute graphdata command
     result = run_terravision(
-        ["graphdata", "--source", github_repo, "--outfile", output_file.name],
+        [
+            "graphdata",
+            "--source",
+            github_repo,
+            "--outfile",
+            output_file.name,
+            "--debug",
+        ],
         cwd=str(tmp_path),
     )
 
