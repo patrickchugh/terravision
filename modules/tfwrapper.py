@@ -1,3 +1,9 @@
+"""Terraform wrapper for executing terraform commands and parsing output.
+
+Handles terraform init, plan, graph generation, and conversion of terraform
+output into internal data structures for diagram generation.
+"""
+from typing import Dict, List, Tuple, Any
 import os
 import copy
 from pathlib import Path
@@ -24,21 +30,36 @@ MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 
 
-def tf_initplan(source: tuple, varfile: list, workspace: str):
+def tf_initplan(source: Tuple[str, ...], varfile: List[str], workspace: str) -> Dict[str, Any]:
+    """Initialize Terraform and generate plan and graph data.
+    
+    Args:
+        source: Tuple of source locations (directories or Git URLs)
+        varfile: List of variable files to use
+        workspace: Terraform workspace name
+        
+    Returns:
+        Dictionary containing terraform plan and graph data
+    """
     tfdata = dict()
     tfdata["codepath"] = list()
     tfdata["workdir"] = os.getcwd()
+    # Process each source location
     for sourceloc in source:
+        # Handle local directory source
         if os.path.isdir(sourceloc):
             os.chdir(sourceloc)
             codepath = sourceloc
+        # Handle Git repository source
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
             codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
+            # Copy override file to cloned directory
             ovpath = os.path.join(basedir, "override.tf")
             shutil.copy(ovpath, codepath)
             os.chdir(codepath)
             codepath = [codepath]
+            # Verify files were cloned
             if len(os.listdir()) == 0:
                 click.echo(
                     click.style(
@@ -48,6 +69,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                     )
                 )
                 exit()
+        # Initialize terraform with providers
         returncode = os.system(f"terraform init --upgrade -reconfigure")
         if returncode > 0:
             click.echo(
@@ -58,6 +80,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                 )
             )
             exit()
+        # Resolve variable file path
         if varfile:
             vfile = varfile[0]
             if not os.path.isabs(vfile):
@@ -68,7 +91,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                 f"\nInitalising workspace: {workspace}\n", fg="white", bold=True
             )
         )
-        # init workspace
+        # Select or create terraform workspace
         returncode = os.system(
             f"terraform workspace select -or-create=True {workspace}"
         )
@@ -85,7 +108,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
         click.echo(
             click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
         )
-        # Get Temporary directory paths for intermediary files
+        # Setup temporary file paths and clean up old files
         tempdir = os.path.dirname(temp_dir.name)
         tfplan_path = os.path.join(tempdir, "tfplan.bin")
         if os.path.exists(tfplan_path):
@@ -99,6 +122,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
         tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
         if os.path.exists(tfgraph_json_path):
             os.remove(tfgraph_json_path)
+        # Generate terraform plan with or without varfile
         if varfile:
             returncode = os.system(
                 f"terraform plan -refresh=false -var-file {vfile} -out {tfplan_path}"
@@ -106,14 +130,17 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
         else:
             returncode = os.system(f"terraform plan -refresh=false -out {tfplan_path}")
         click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
+        # Convert binary plan to JSON format
         if (
             os.path.exists(tfplan_path)
             and os.system(f"terraform show -json {tfplan_path} > {tfplan_json_path}")
             == 0
         ):
             click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+            # Load plan data
             f = open(tfplan_json_path)
             plandata = json.load(f)
+            # Generate terraform graph
             returncode = os.system(f"terraform graph > {tfgraph_path}")
             tfdata["plandata"] = dict(plandata)
             click.echo(
@@ -123,6 +150,7 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
                     bold=True,
                 )
             )
+            # Convert DOT graph to JSON using Graphviz
             if os.path.exists(tfgraph_path):
                 returncode = os.system(
                     f"dot -Txdot_json -o {tfgraph_json_path} {tfgraph_path}"
@@ -152,8 +180,20 @@ def tf_initplan(source: tuple, varfile: list, workspace: str):
     return tfdata
 
 
-def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -> dict:
+def make_tf_data(tfdata: Dict[str, Any], plandata: Dict[str, Any], graphdata: Dict[str, Any], codepath: str) -> Dict[str, Any]:
+    """Combine terraform plan and graph data into tfdata structure.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        plandata: Parsed terraform plan JSON
+        graphdata: Parsed terraform graph JSON
+        codepath: Path to terraform source code
+        
+    Returns:
+        Updated tfdata with plan and graph information
+    """
     tfdata["codepath"] = codepath
+    # Extract resource changes from plan
     if plandata.get("resource_changes"):
         tfdata["tf_resources_created"] = plandata["resource_changes"]
     else:
@@ -169,70 +209,82 @@ def make_tf_data(tfdata: dict, plandata: dict, graphdata: dict, codepath: str) -
     return tfdata
 
 
-def setup_graph(tfdata: dict):
+def setup_graph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Initialize graph data structures from terraform plan.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        
+    Returns:
+        Updated tfdata with initialized graph structures
+    """
+    # Initialize graph data structures
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
     tfdata["all_output"] = dict()
     tfdata["node_list"] = list()
     tfdata["hidden"] = dict()
     tfdata["annotations"] = dict()
-    # Make an initial dict with resources created and empty connections
+    # Create nodes from resources in plan
     for object in tfdata["tf_resources_created"]:
+        # Only process managed resources (not data sources)
         if object["mode"] == "managed":
-            # Replace multi count notation
-            # node = helpers.get_no_module_name(object["address"])
             node = str(object["address"])
+            # Handle count/for_each indexed resources
             if "index" in object.keys():
-                # node = object["type"] + "." + object["name"]
+                # String index uses brackets, numeric uses tilde
                 if not isinstance(object["index"], int):
                     suffix = "[" + object["index"] + "]"
                 else:
                     suffix = "~" + str(int(object.get("index")) + 1)
                 node = node + suffix
+            # Initialize node with empty connections
             tfdata["graphdict"][node] = list()
             tfdata["node_list"].append(node)
-            # Add metadata
+            # Collect resource metadata from plan
             details = object["change"]["after"]
             details.update(object["change"]["after_unknown"])
             details.update(object["change"]["after_sensitive"])
+            # Add module name if resource is in a module
             if "module." in object["address"]:
                 modname = object["module_address"].split("module.")[1]
                 details["module"] = modname
             tfdata["meta_data"][node] = details
+    # Remove duplicates from node list
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     return tfdata
 
 
-def find_node_in_gvid_table(node: str, gvid_table: list) -> int:
-    """Find node ID in gvid_table by trying different name variations.
+def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
+    """Find node ID in gvid_table by trying name variations.
 
-    Terraform nodes can have various naming formats:
-    - Original: module.vpc.aws_subnet.public[0]
-    - With tilde suffix: aws_instance.web~2
-    - Module prefixed: module.network.aws_vpc.main
-
-    This function tries multiple variations to find a match.
+    Args:
+        node: Resource node name to find
+        gvid_table: List of node names from terraform graph
+        
+    Returns:
+        Index of node in gvid_table
     """
-    # Try 1: Exact match with original node name
+    # Try exact match first
     if node in gvid_table:
         return gvid_table.index(node)
 
-    # Try 2: Remove brackets and numbers (e.g., "resource[0]" -> "resource")
+    # Try without brackets and numbers
     nodename = helpers.remove_brackets_and_numbers(node)
     if nodename in gvid_table:
         return gvid_table.index(nodename)
 
-    # Try 3: Split on brackets and tilde (e.g., "resource[key]" or "resource~1" -> "resource")
+    # Try base name without index suffix
     nodename = node.split("[")[0].split("~")[0]
     if nodename in gvid_table:
         return gvid_table.index(nodename)
 
-    # Try 4: Remove module prefix and numbers (e.g., "module.vpc.aws_subnet.public" -> "aws_subnet.public")
+    # Try without module prefix
     nodename = helpers.get_no_module_no_number_name(node)
     if nodename in gvid_table:
         return gvid_table.index(nodename)
 
-    # No match found - exit with error
+    # No match found
     click.echo(
         click.style(
             f"\nERROR: Cannot map node {node} to graph connections. Exiting.",
@@ -243,27 +295,37 @@ def find_node_in_gvid_table(node: str, gvid_table: list) -> int:
     exit()
 
 
-def tf_makegraph(tfdata: dict):
-    # Setup Initial graphdict
+def tf_makegraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Build resource dependency graph from terraform graph output.
+    
+    Args:
+        tfdata: Terraform data dictionary with plan and graph data
+        
+    Returns:
+        Updated tfdata with populated graphdict connections
+    """
+    # Initialize graph structures
     tfdata = setup_graph(tfdata)
-    # Make a lookup table of gvids mapping resources to ids from terraform graph command output
+    # Build lookup table mapping graph IDs to resource names
     gvid_table = list()
+    # Build gvid lookup table from graph objects
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
         gvid_table.append("")
+        # Use name for modules, label for resources
         if item.get("name").startswith("module."):
             gvid_table[gvid] = str(item.get("name"))
         else:
             gvid_table[gvid] = str(item.get("label"))
-    # Populate connections list for each node in graphdict
+    # Process graph edges to build connections
     for node in dict(tfdata["graphdict"]):
-        # Find the node ID by trying different name variations
+        # Find node ID in graph
         node_id = find_node_in_gvid_table(node, gvid_table)
         if tfdata["tfgraph"].get("edges"):
             for connection in tfdata["tfgraph"]["edges"]:
                 head = connection["head"]
                 tail = connection["tail"]
-                # Check that the connection is part of the nodes that will be created (exists in graphdict)
+                # Check if this edge connects to our node
                 if (
                     node_id == head
                     and len([k for k in tfdata["graphdict"] if gvid_table[tail] in k])
@@ -271,33 +333,38 @@ def tf_makegraph(tfdata: dict):
                 ):
                     conn = gvid_table[tail]
                     conn_type = gvid_table[tail].split(".")[0]
-                    # Find out the actual nodes with ~ suffix where link is not specific to a numbered node
+                    # Find actual numbered nodes if connection is generic
                     matched_connections = [
                         k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
                     ]
                     matched_nodes = [
                         k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
                     ]
-                    if not node in tfdata["graphdict"] and len(matched_nodes) == 1:
+                    # Use matched node if only one exists
+                    if node not in tfdata["graphdict"] and len(matched_nodes) == 1:
                         node = matched_nodes[0]
                     if (
-                        not conn in tfdata["graphdict"]
+                        conn not in tfdata["graphdict"]
                         and len(matched_connections) == 1
                     ):
                         conn = matched_connections[0]
-                    # Ignore multi instance resources for now as tfgraph connections aren't accurate
+                    # Handle reverse arrow resources (connection points to node)
                     if conn_type in REVERSE_ARROW_LIST:
-                        if not conn in tfdata["graphdict"].keys():
+                        if conn not in tfdata["graphdict"].keys():
                             tfdata["graphdict"][conn] = list()
+                        # Skip multi-instance resources
                         if "[" not in conn:
                             tfdata["graphdict"][conn].append(node)
+                    # Normal arrow (node points to connection)
                     else:
                         if "[" not in node:
                             tfdata["graphdict"][node].append(conn)
+    # Add VPC-subnet relationships based on CIDR overlap
     tfdata = add_vpc_implied_relations(tfdata)
+    # Save original graph and metadata for reference
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
-    # TODO: Add a helper function to detect _aws, azurerm and google provider prefixes on resource names
+    # Verify cloud resources exist
     if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0:
         click.echo(
             click.style(
@@ -310,8 +377,16 @@ def tf_makegraph(tfdata: dict):
     return tfdata
 
 
-# Handle VPC / Subnet relationships
-def add_vpc_implied_relations(tfdata: dict):
+def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Add VPC to subnet relationships based on CIDR overlap.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        
+    Returns:
+        Updated tfdata with VPC-subnet connections
+    """
+    # Find all VPC and subnet resources
     vpc_resources = [
         k
         for k, v in tfdata["graphdict"].items()
@@ -322,6 +397,7 @@ def add_vpc_implied_relations(tfdata: dict):
         for k, v in tfdata["graphdict"].items()
         if helpers.get_no_module_name(k).startswith("aws_subnet.")
     ]
+    # Link subnets to VPCs based on CIDR overlap
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:
             vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
@@ -329,6 +405,7 @@ def add_vpc_implied_relations(tfdata: dict):
                 subnet_cidr = ipaddr.IPNetwork(
                     tfdata["meta_data"][subnet]["cidr_block"]
                 )
+                # Add subnet to VPC if CIDR ranges overlap
                 if subnet_cidr.overlaps(vpc_cidr):
                     tfdata["graphdict"][vpc].append(subnet)
     return tfdata

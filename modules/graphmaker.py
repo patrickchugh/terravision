@@ -1,9 +1,19 @@
+"""Graph maker module for TerraVision.
+
+This module constructs the resource dependency graph from parsed Terraform data.
+It handles relationship detection, node consolidation, resource variants, and
+multiple resource instances (count/for_each). The graph structure is used for
+diagram generation.
+"""
+
+import copy
+from typing import Dict, List, Any, Tuple, Generator, Optional
+
 import click
+
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
-import copy
-from typing import Dict, List
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -18,23 +28,38 @@ FORCED_DEST = cloud_config.AWS_FORCED_DEST
 FORCED_ORIGIN = cloud_config.AWS_FORCED_ORIGIN
 
 
-def reverse_relations(tfdata: dict) -> dict:
+def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Reverse connection directions for specific resource types.
+
+    Adjusts arrow directions in the graph based on FORCED_DEST and FORCED_ORIGIN
+    configuration to ensure logical flow in the diagram.
+
+    Args:
+        tfdata: Terraform data dictionary with graphdict
+
+    Returns:
+        Updated tfdata with reversed connections
+    """
     for n, connections in dict(tfdata["graphdict"]).items():
         node = helpers.get_no_module_name(n)
         reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
+
         for c in list(connections):
+            # Reverse if node is a forced destination
             if reverse_dest:
                 if not tfdata["graphdict"].get(c):
                     tfdata["graphdict"][c] = list()
                 tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][n].remove(c)
+
+            # Reverse if connection is a forced origin
             reverse_origin = (
                 len(
                     [
                         s
                         for s in FORCED_ORIGIN
                         if helpers.get_no_module_name(c).startswith(s)
-                        and not node.split(".")[0] in str(AUTO_ANNOTATIONS)
+                        and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
                     ]
                 )
                 > 0
@@ -42,23 +67,37 @@ def reverse_relations(tfdata: dict) -> dict:
             if reverse_origin:
                 tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][node].remove(c)
+
     return tfdata
 
 
-# Function to check whether a particular resource mentions another known resource (relationship)
-# Returns a list containing pairs of related nodes where index i an i+i are related
 def check_relationship(
-    resource_associated_with: str, plist: list, tfdata: dict
-) -> list:
+    resource_associated_with: str, plist: List[Any], tfdata: Dict[str, Any]
+) -> List[str]:
+    """Check if a resource references other known resources.
+
+    Scans resource parameters for references to other Terraform resources,
+    detecting both explicit references and implied connections based on keywords.
+
+    Args:
+        resource_associated_with: Resource name being checked
+        plist: List of parameter values from the resource
+        tfdata: Terraform data dictionary with node_list and hidden nodes
+
+    Returns:
+        List of connection pairs [origin, dest, origin, dest, ...]
+    """
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
-    connection_pairs = list()
-    matching = list()
-    # Check if an existing node name appears in parameters of current resource being checked to reduce search scope
+    connection_pairs: List[str] = list()
+    matching: List[str] = list()
+
+    # Scan each parameter for resource references
     for p in plist:
         param = str(p)
         matching = []
-        # List comprehension of unique nodes referenced in the parameter
+
+        # Handle list references (e.g., resource[0])
         if "[" in param and "[*]" not in param and param != "[]":
             matching = list(
                 {
@@ -68,6 +107,7 @@ def check_relationship(
                 }
             )
         else:
+            # Extract Terraform resource references from parameter
             extracted_resources_list = helpers.extract_terraform_resource(param)
             if extracted_resources_list:
                 for r in extracted_resources_list:
@@ -82,7 +122,7 @@ def check_relationship(
                         )
                     )
 
-        # Check if there are any implied connections based on keywords in the param list
+        # Check for implied connections based on keywords
         found_connection = list(
             {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
         )
@@ -95,19 +135,23 @@ def check_relationship(
                     and n not in matching
                 ):
                     matching.append(n)
+
+        # Process matched resources
         if matching:
             for matched_resource in matching:
                 reverse = False
+                # Skip hidden resources
                 if (
                     matched_resource not in hidden
                     and resource_associated_with not in hidden
                 ):
+                    # Check if arrow direction should be reversed
                     reverse_origin_match = [
                         s for s in REVERSE_ARROW_LIST if s in str(param)
                     ]
                     if len(reverse_origin_match) > 0:
                         reverse = True
-                        # Don't reverse if the reverse relationship will occur twice on both sides
+                        # Prevent double reversal if both sides match
                         reverse_dest_match = [
                             s
                             for s in REVERSE_ARROW_LIST
@@ -118,7 +162,8 @@ def check_relationship(
                                 reverse_dest_match[0]
                             ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
                                 reverse = False
-                    # Make sure numbered nodes are associated with a connection of the same number
+
+                    # Match numbered nodes with same suffix
                     if "~" in matched_resource and "~" in resource_associated_with:
                         matched_resource_no = matched_resource.split("~")[1]
                         resource_associated_with_no = resource_associated_with.split(
@@ -126,8 +171,10 @@ def check_relationship(
                         )[1]
                         if matched_resource_no != resource_associated_with_no:
                             continue
-                    # Reverse match order for certain resources
+
+                    # Add connection pair in appropriate direction
                     if reverse:
+                        # Reversed: matched -> resource
                         if (
                             resource_associated_with
                             not in tfdata["graphdict"][matched_resource]
@@ -137,21 +184,31 @@ def check_relationship(
                             connection_pairs.append(matched_resource)
                             connection_pairs.append(resource_associated_with)
                     else:
+                        # Normal: resource -> matched
                         if (
                             matched_resource
                             not in tfdata["graphdict"][resource_associated_with]
-                            # and resource_associated_with
-                            # not in tfdata["graphdict"][matched_resource]
                             and matched_resource not in connection_pairs
                         ):
                             connection_pairs.append(resource_associated_with)
                             connection_pairs.append(matched_resource)
+
     return connection_pairs
 
 
-# Make final graph structure to be used for drawing
-def add_relations(tfdata: dict):
-    # Start with an independent deepcopy of the connections so in-place edits don't leak
+def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Build final graph structure by detecting resource relationships.
+
+    Scans resource metadata to find references between resources and adds
+    connections to the graph. Handles hidden nodes and security groups specially.
+
+    Args:
+        tfdata: Terraform data dictionary with node_list and meta_data
+
+    Returns:
+        Updated tfdata with complete graphdict including all relationships
+    """
+    # Deep copy to prevent mutation leakage
     graphdict = copy.deepcopy(tfdata["graphdict"])
     created_resources = len(tfdata["node_list"])
     click.echo(
@@ -161,8 +218,10 @@ def add_relations(tfdata: dict):
             bold=True,
         )
     )
-    # Determine relationship between resources and append to graphdict when found
+
+    # Scan each node for relationships
     for node in tfdata["node_list"]:
+        # Determine base node name
         if node not in tfdata["meta_data"].keys():
             nodename = node.split("~")[0]
             if "[" in nodename:
@@ -170,33 +229,41 @@ def add_relations(tfdata: dict):
         else:
             nodename = node
 
+        # Skip certain resource types
         if (
             helpers.get_no_module_name(nodename).startswith("random")
             or helpers.get_no_module_name(node).startswith("aws_security_group")
             or helpers.get_no_module_name(node).startswith("null")
         ):
             continue
+
+        # Get metadata generator for parameter scanning
         if nodename not in tfdata["meta_data"].keys():
             dg = dict_generator(tfdata["original_metadata"][node])
             tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
         else:
             dg = dict_generator(tfdata["meta_data"][nodename])
+
+        # Check each parameter for relationships
         for param_item_list in dg:
             matching_result = check_relationship(
                 node,
                 param_item_list,
                 tfdata,
             )
+            # Process connection pairs
             if matching_result and len(matching_result) >= 2:
                 for i in range(0, len(matching_result), 2):
                     origin = matching_result[i]
                     dest = matching_result[i + 1]
                     c_list = list(graphdict[origin])
-                    if not dest in c_list and not helpers.get_no_module_name(
+                    # Add connection if not exists and not security group
+                    if dest not in c_list and not helpers.get_no_module_name(
                         origin
                     ).startswith("aws_security_group"):
                         click.echo(f"   {origin} --> {dest}")
                         c_list.append(dest)
+                        # Replace unnumbered with numbered version
                         if (
                             "~" in origin
                             and "~" in dest
@@ -204,20 +271,34 @@ def add_relations(tfdata: dict):
                         ):
                             c_list.remove(dest.split("~")[0])
                     graphdict[origin] = c_list
-    # Hide nodes where specified
+
+    # Remove hidden nodes from graph
     for hidden_resource in tfdata["hidden"]:
         del graphdict[hidden_resource]
     for resource in graphdict:
         for hidden_resource in tfdata["hidden"]:
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
+
     tfdata["graphdict"] = graphdict
-    # store an immutable snapshot (deep copy) so future mutations to graphdict don't change the snapshot
+    # Store immutable snapshot for reference
     tfdata["original_graphdict_with_relations"] = copy.deepcopy(graphdict)
+
     return tfdata
 
 
-def consolidate_nodes(tfdata: dict):
+def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Consolidate similar resources into single nodes.
+
+    Merges resources that should be represented as a single node in the diagram
+    based on CONSOLIDATED_NODES configuration.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with consolidated nodes
+    """
     for resource in dict(tfdata["graphdict"]):
         if "null_resource" in resource:
             del tfdata["graphdict"][resource]
@@ -281,7 +362,18 @@ def consolidate_nodes(tfdata: dict):
     return tfdata
 
 
-def handle_variants(tfdata: dict):
+def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Rename nodes based on resource variants.
+
+    Applies variant suffixes to node names based on resource attributes
+    (e.g., Lambda runtime, EC2 instance type) for better diagram clarity.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with variant node names
+    """
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
         node_title = helpers.get_no_module_name(node).split(".")[1]
@@ -341,24 +433,45 @@ def handle_variants(tfdata: dict):
     return tfdata
 
 
-def needs_multiple(resource: str, parent: str, tfdata):
+def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
+    """Determine if resource needs multiple numbered instances.
+
+    Checks if a resource should be duplicated with numbered suffixes based
+    on actual count values in metadata, parent counts, and resource type.
+
+    Args:
+        resource: Resource name to check
+        parent: Parent resource name
+        tfdata: Terraform data dictionary
+
+    Returns:
+        True if resource needs multiple instances
+    """
     target_resource = (
         helpers.consolidated_node_check(resource)
         if helpers.consolidated_node_check(resource)
+        and tfdata["meta_data"].get(resource)
         else resource
     )
     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
-    target_has_count = "~" in target_resource
+    target_has_count = (
+        tfdata["meta_data"][target_resource].get("count")
+        and int(tfdata["meta_data"][target_resource].get("count")) >= 1
+    )
     not_already_multiple = "~" not in target_resource
     no_special_handler = (
         resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
         or resource.split(".")[0] in GROUP_NODES
     )
     not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
-    security_group_with_count = (
-        "~" in parent and resource.split(".")[0] == "aws_security_group"
-    )
+    if helpers.get_no_module_name(resource).split(".")[0] == "aws_security_group":
+        security_group_with_count = (
+            tfdata["original_metadata"][parent].get("count")
+            and int(tfdata["original_metadata"][parent].get("count")) > 1
+        )
+    else:
+        security_group_with_count = False
     has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource])
     not_unique_resource = "aws_route_table." not in resource
     if (
@@ -375,6 +488,59 @@ def needs_multiple(resource: str, parent: str, tfdata):
     ):
         return True
     return False
+
+
+# def needs_multiple(
+#     resource: str,
+#     parent: str,
+#     tfdata: Dict[str, Any]
+# ) -> bool:
+#     """Determine if resource needs multiple numbered instances.
+#
+#     Checks if a resource should be duplicated with numbered suffixes based
+#     on count attributes, parent counts, and resource type.
+#
+#     Args:
+#         resource: Resource name to check
+#         parent: Parent resource name
+#         tfdata: Terraform data dictionary
+#
+#     Returns:
+#         True if resource needs multiple instances
+#     """
+#     target_resource = (
+#         helpers.consolidated_node_check(resource)
+#         if helpers.consolidated_node_check(resource)
+#         else resource
+#     )
+#     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
+#     target_is_group = target_resource.split(".")[0] in GROUP_NODES
+#     target_has_count = "~" in target_resource
+#     not_already_multiple = "~" not in target_resource
+#     no_special_handler = (
+#         resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
+#         or resource.split(".")[0] in GROUP_NODES
+#     )
+#     not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
+#     security_group_with_count = (
+#         "~" in parent and resource.split(".")[0] == "aws_security_group"
+#     )
+#     has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource])
+#     not_unique_resource = "aws_route_table." not in resource
+#     if (
+#         (
+#             (target_is_group and target_has_count)
+#             or security_group_with_count
+#             or (any_parent_has_count and (has_variant or target_has_count))
+#             or (target_has_count and any_parent_has_count)
+#         )
+#         and not_already_multiple
+#         and no_special_handler
+#         and not_shared_service
+#         and not_unique_resource
+#     ):
+#         return True
+#     return False
 
 
 def add_multiples_to_parents(
@@ -453,7 +619,21 @@ def add_multiples_to_parents(
     return tfdata
 
 
-def cleanup_originals(multi_resources: list, tfdata: dict):
+def cleanup_originals(
+    multi_resources: List[str], tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Remove original resource names after creating numbered instances.
+
+    Cleans up base resource names that have been replaced with numbered
+    instances (e.g., removes 'resource' after creating 'resource~1', 'resource~2').
+
+    Args:
+        multi_resources: List of resources with multiple instances
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with original names removed
+    """
     # Now remove the original resource names
     for resource in multi_resources:
         if (
@@ -483,7 +663,18 @@ def cleanup_originals(multi_resources: list, tfdata: dict):
 
 
 # Handle resources which require pre/post-processing before/after being added to graphdict
-def handle_special_resources(tfdata: dict):
+def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply special processing for specific resource types.
+
+    Delegates to resource-specific handlers for resources that need
+    custom processing (e.g., VPCs, subnets, security groups).
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata after special processing
+    """
     resource_types = list(
         {helpers.get_no_module_name(k).split(".")[0] for k in tfdata["node_list"]}
     )
@@ -494,8 +685,21 @@ def handle_special_resources(tfdata: dict):
     return tfdata
 
 
-# Generator function to crawl entire dict and load all dict and list values
-def dict_generator(indict, pre=None):
+def dict_generator(
+    indict: Any, pre: Optional[List[Any]] = None
+) -> Generator[List[Any], None, None]:
+    """Recursively traverse dictionary and yield all paths to leaf values.
+
+    Generator that walks through nested dictionaries and lists, yielding
+    the path to each leaf value as a list.
+
+    Args:
+        indict: Dictionary or value to traverse
+        pre: Accumulated path prefix (used in recursion)
+
+    Yields:
+        List representing path to each leaf value
+    """
     pre = pre[:] if pre else []
     if isinstance(indict, dict):
         for key, value in indict.items():
@@ -513,7 +717,22 @@ def dict_generator(indict, pre=None):
 
 
 # Loop through every connected node that has a count >0 and add suffix ~i where i is the source node suffix
-def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
+def add_number_suffix(
+    i: int, check_multiple_resource: str, tfdata: Dict[str, Any]
+) -> List[str]:
+    """Add numbered suffix to resource connections.
+
+    Creates numbered versions of connections (e.g., resource~1, resource~2)
+    for resources with count > 1.
+
+    Args:
+        i: Suffix number to add
+        check_multiple_resource: Resource name to process
+        tfdata: Terraform data dictionary
+
+    Returns:
+        List of connections with appropriate numbered suffixes
+    """
     if not helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], check_multiple_resource
     ):
@@ -546,51 +765,18 @@ def add_number_suffix(i: int, check_multiple_resource: str, tfdata: dict):
     return new_list
 
 
-def needs_multiple(resource: str, parent: str, tfdata):
-    target_resource = (
-        helpers.consolidated_node_check(resource)
-        if helpers.consolidated_node_check(resource)
-        and tfdata["meta_data"].get(resource)
-        else resource
-    )
-    any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
-    target_is_group = target_resource.split(".")[0] in GROUP_NODES
-    target_has_count = (
-        tfdata["meta_data"][target_resource].get("count")
-        and int(tfdata["meta_data"][target_resource].get("count")) >= 1
-    )
-    not_already_multiple = "~" not in target_resource
-    no_special_handler = (
-        resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
-        or resource.split(".")[0] in GROUP_NODES
-    )
-    not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
-    if helpers.get_no_module_name(resource).split(".")[0] == "aws_security_group":
-        security_group_with_count = (
-            tfdata["original_metadata"][parent].get("count")
-            and int(tfdata["original_metadata"][parent].get("count")) > 1
-        )
-    else:
-        security_group_with_count = False
-    has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource])
-    not_unique_resource = "aws_route_table." not in resource
-    if (
-        (
-            (target_is_group and target_has_count)
-            or security_group_with_count
-            or (any_parent_has_count and (has_variant or target_has_count))
-            or (target_has_count and any_parent_has_count)
-        )
-        and not_already_multiple
-        and no_special_handler
-        and not_shared_service
-        and not_unique_resource
-    ):
-        return True
-    return False
+def extend_sg_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Extend security groups to match numbered resource instances.
 
+    Creates numbered security group instances to match numbered resources
+    they're associated with.
 
-def extend_sg_groups(tfdata: dict) -> dict:
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with extended security groups
+    """
     list_of_sgs = [
         s
         for s in tfdata["graphdict"]
@@ -664,9 +850,24 @@ def add_multiples_to_parents(
     return tfdata
 
 
-def handle_count_resources(multi_resources: list, tfdata: dict):
-    # Loop nodes and for each one, create multiple nodes for the resource and its connections where needed
+def handle_count_resources(
+    multi_resources: List[str], tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Create multiple node instances for resources with count > 1.
+
+    Generates numbered resource instances (resource~1, resource~2, etc.)
+    for resources with count, desired_count, or max_capacity attributes.
+
+    Args:
+        multi_resources: List of resources that need multiple instances
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with numbered resource instances
+    """
+    # Process each resource with count attribute
     for resource in multi_resources:
+        # Determine number of instances to create
         if tfdata["meta_data"][resource].get("count"):
             max_i = int(tfdata["meta_data"][resource].get("count"))
         elif tfdata["meta_data"][resource].get("max_capacity"):
@@ -679,18 +880,22 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
             )
         else:
             max_i = 1
+
+        # Create numbered instances
         for i in range(max_i):
-            # Get connections replaced with numbered suffixes
+            # Get connections with numbered suffixes
             resource_i = add_number_suffix(i + 1, resource, tfdata)
-            not_shared_service = not resource.split(".")[0] in SHARED_SERVICES
+            not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
+
             if not_shared_service:
-                # Create a top level node with number suffix and connect to numbered connections
+                # Create numbered node instance
                 tfdata["graphdict"][resource + "~" + str(i + 1)] = resource_i
                 tfdata["meta_data"][resource + "~" + str(i + 1)] = copy.deepcopy(
                     tfdata["meta_data"][resource]
                 )
                 tfdata = add_multiples_to_parents(i, resource, multi_resources, tfdata)
-                # Check if numbered connection node exists as a top level node in graphdict and create if necessary
+
+                # Create numbered instances for connections if needed
                 for numbered_node in resource_i:
                     original_name = numbered_node.split("~")[0]
                     if (
@@ -701,6 +906,7 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
                         and original_name not in multi_resources
                         and not helpers.consolidated_node_check(original_name)
                     ):
+                        # Handle first instance
                         if i == 0:
                             if (
                                 original_name in tfdata["graphdict"].keys()
@@ -735,8 +941,18 @@ def handle_count_resources(multi_resources: list, tfdata: dict):
     return tfdata
 
 
-# Handle cases where a connection to only one of n numbered node exists
-def handle_singular_references(tfdata: dict) -> dict:
+def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle connections to single instances of numbered resources.
+
+    Ensures numbered nodes connect to appropriately numbered instances
+    of their dependencies.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with corrected singular references
+    """
     for node, connections in dict(tfdata["graphdict"]).items():
         for c in list(connections):
             if "~" in node and not "~" in c:
@@ -757,8 +973,19 @@ def handle_singular_references(tfdata: dict) -> dict:
     return tfdata
 
 
-def create_multiple_resources(tfdata):
-    # Get a list of all potential resources with a count type attribute
+def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Main function to create multiple resource instances.
+
+    Orchestrates the creation of numbered resource instances for all
+    resources with count/for_each attributes.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with all multiple resource instances created
+    """
+    # Identify resources with count/for_each attributes
     multi_resources = [
         n
         for n in tfdata["graphdict"]
@@ -774,27 +1001,34 @@ def create_multiple_resources(tfdata):
             and not helpers.consolidated_node_check(n)
         )
     ]
-    # Create multiple nodes for count resources as necessary
+
+    # Create numbered instances
     tfdata = handle_count_resources(multi_resources, tfdata)
-    # Replace links to single nodes with multi nodes if they exist
+
+    # Fix singular references to numbered nodes
     tfdata = handle_singular_references(tfdata)
-    # Now remove the original resource names
+
+    # Clean up original resource names
     for resource in multi_resources:
+        # Remove original resource if not shared service
         if (
             helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
-            and not resource.split(".")[0] in SHARED_SERVICES
+            and resource.split(".")[0] not in SHARED_SERVICES
         ):
             del tfdata["graphdict"][resource]
+
+        # Remove from parent connections
         parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
         for parent in parents_list:
             if (
                 resource in tfdata["graphdict"][parent]
                 and not parent.startswith("aws_group.shared")
-                and not "~" in parent
+                and "~" not in parent
                 and not tfdata["meta_data"][resource].get("count")
             ):
                 tfdata["graphdict"][parent].remove(resource)
-    # Delete any original security group nodes that have been replaced with numbered suffixes
+
+    # Clean up original security group nodes
     security_group_list = [
         k
         for k in tfdata["graphdict"]
@@ -804,6 +1038,8 @@ def create_multiple_resources(tfdata):
         check_original = security_group.split("~")[0]
         if check_original in tfdata["graphdict"].keys():
             del tfdata["graphdict"][check_original]
-    # Handle creation of multiple sgs where needed
+
+    # Extend security groups for numbered instances
     tfdata = extend_sg_groups(tfdata)
+
     return tfdata

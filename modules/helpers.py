@@ -1,10 +1,20 @@
+"""Helper functions module for TerraVision.
+
+This module provides utility functions for string manipulation, resource name
+processing, variable replacement, graph operations, and Terraform-specific
+data extraction and transformation.
+"""
+
+import json
 import os
 import re
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
+from typing import Dict, List, Any, Tuple, Optional, Union
+
 import click
-import json
+
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 
@@ -42,6 +52,14 @@ def extract_json_from_string(text: str) -> dict:
 
 
 def check_for_domain(string: str) -> bool:
+    """Check if string contains a domain extension.
+    
+    Args:
+        string: String to check for domain extensions
+    
+    Returns:
+        True if domain extension found
+    """
     exts = [".com", ".net", ".org", ".io", ".biz"]
     for dot in exts:
         if dot in string and not string.startswith("."):
@@ -49,8 +67,12 @@ def check_for_domain(string: str) -> bool:
     return False
 
 
-# Export dict to a file called tfdata.json
-def export_tfdata(tfdata: dict):
+def export_tfdata(tfdata: Dict[str, Any]) -> None:
+    """Export Terraform data dictionary to tfdata.json for debugging.
+    
+    Args:
+        tfdata: Terraform data dictionary to export
+    """
     tfdata["tempdir"] = str(tfdata["tempdir"])
     with open("tfdata.json", "w") as file:
         json.dump(tfdata, file, indent=4)
@@ -133,7 +155,15 @@ def find_circular_refs(graph):
     return circular_refs
 
 
-def process_graphdict(relations_graphdict: dict):
+def process_graphdict(relations_graphdict: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove module prefixes from graph dictionary keys and values.
+    
+    Args:
+        relations_graphdict: Graph dictionary with module-prefixed names
+    
+    Returns:
+        Processed dictionary with module prefixes removed
+    """
     processed_dict = {}
     for key, value in relations_graphdict.items():
         processed_dict[get_no_module_name(key)] = relations_graphdict[key]
@@ -144,7 +174,15 @@ def process_graphdict(relations_graphdict: dict):
     return processed_dict
 
 
-def get_no_module_name(node: str):
+def get_no_module_name(node: str) -> Optional[str]:
+    """Remove module prefix from resource name.
+    
+    Args:
+        node: Resource name potentially with module prefix
+    
+    Returns:
+        Resource name without module prefix
+    """
     if not node:
         return
     if "module." in node:
@@ -154,12 +192,16 @@ def get_no_module_name(node: str):
     return no_module_name
 
 
-def extract_subfolder_from_repo(source_url: str):
-    """
-    Extract repo URL and subfolder from a string like 'https://github.com/user/repo.git//code/02-one-server'.
-
+def extract_subfolder_from_repo(source_url: str) -> Tuple[str, str]:
+    """Extract repo URL and subfolder from a string.
+    
+    Handles URLs like 'https://github.com/user/repo.git//code/02-one-server'.
+    
+    Args:
+        source_url: Git repository URL potentially with subfolder
+    
     Returns:
-        tuple: (repo_url, subfolder) - subfolder is empty string if none exists
+        Tuple of (repo_url, subfolder) - subfolder is empty string if none exists
     """
     # Find the subfolder separator // after the protocol
     if source_url.count("//") > 1:
@@ -183,7 +225,15 @@ def extract_subfolder_from_repo(source_url: str):
     return source_url, ""
 
 
-def get_no_module_no_number_name(node: str):
+def get_no_module_no_number_name(node: str) -> Optional[str]:
+    """Remove module prefix and array indices from resource name.
+    
+    Args:
+        node: Resource name with potential module prefix and indices
+    
+    Returns:
+        Cleaned resource name
+    """
     if not node:
         return
     if "module." in node:
@@ -194,7 +244,15 @@ def get_no_module_no_number_name(node: str):
     return no_module_name
 
 
-def check_list_for_dash(connections: list):
+def check_list_for_dash(connections: List[str]) -> bool:
+    """Check if all items in list contain numbered suffix (~).
+    
+    Args:
+        connections: List of connection strings
+    
+    Returns:
+        True if all items have ~ suffix
+    """
     has_dash = True
     for item in connections:
         if not "~" in item:
@@ -202,26 +260,60 @@ def check_list_for_dash(connections: list):
     return has_dash
 
 
-def sort_graphdict(graphdict: dict):
+def sort_graphdict(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """Sort graph dictionary keys and connection lists.
+    
+    Args:
+        graphdict: Graph dictionary to sort
+    
+    Returns:
+        Sorted graph dictionary
+    """
     for key in graphdict:
         graphdict[key].sort()
     return dict(sorted(graphdict.items()))
 
 
 def url(string: str) -> str:
+    """Add https:// protocol if missing from URL.
+    
+    Args:
+        string: URL string
+    
+    Returns:
+        URL with protocol
+    """
     if string.count("://") == 0:
         return "https://" + string
     return string
 
 
-def find_nth(string, substring, n):
+def find_nth(string: str, substring: str, n: int) -> int:
+    """Find nth occurrence of substring in string.
+    
+    Args:
+        string: String to search
+        substring: Substring to find
+        n: Occurrence number (1-indexed)
+    
+    Returns:
+        Index of nth occurrence
+    """
     if n == 1:
         return string.find(substring)
     else:
         return string.find(substring, find_nth(string, substring, n - 1) + 1)
 
 
-def unique_services(nodelist: list) -> list:
+def unique_services(nodelist: List[str]) -> List[str]:
+    """Extract unique service types from node list.
+    
+    Args:
+        nodelist: List of resource names
+    
+    Returns:
+        Sorted list of unique service types
+    """
     service_list = []
     for item in nodelist:
         service = str(item.split(".")[0]).strip()
@@ -230,10 +322,38 @@ def unique_services(nodelist: list) -> list:
 
 
 def remove_numbered_suffix(s: str) -> str:
+    """Remove numbered suffix (~N) from resource name.
+    
+    Args:
+        s: Resource name potentially with suffix
+    
+    Returns:
+        Resource name without suffix
+    """
     return s.split("~")[0] if "~" in s else s
 
 
-def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
+def find_between(
+    text: str, 
+    begin: str, 
+    end: str, 
+    alternative: str = "", 
+    replace: bool = False, 
+    occurrence: int = 1
+) -> str:
+    """Extract text between two delimiters.
+    
+    Args:
+        text: Source text
+        begin: Starting delimiter
+        end: Ending delimiter
+        alternative: Replacement text if replace=True
+        replace: Whether to replace found text
+        occurrence: Which occurrence to find
+    
+    Returns:
+        Text between delimiters or modified text if replace=True
+    """
     if not text:
         return
     # Handle Nested Functions with multiple brackets in parameters
@@ -269,7 +389,15 @@ def find_between(text, begin, end, alternative="", replace=False, occurrence=1):
         return middle
 
 
-def remove_duplicate_words(string):
+def remove_duplicate_words(string: str) -> str:
+    """Remove duplicate words from string.
+    
+    Args:
+        string: Input string
+    
+    Returns:
+        String with unique words only
+    """
     words = string.split()
     unique_words = set(words)
     unique_words_list = list(unique_words)
@@ -279,8 +407,15 @@ def remove_duplicate_words(string):
 # 'aws_lb_target_group_attachment.mytg1["1"][1]'
 
 
-# Function to remove square brackets from string
-def remove_brackets_and_numbers(input_string):
+def remove_brackets_and_numbers(input_string: str) -> str:
+    """Remove square brackets and their contents from string.
+    
+    Args:
+        input_string: String with brackets
+    
+    Returns:
+        String without brackets or their contents
+    """
     output_string = ""
     in_bracket = False
     for char in input_string:
@@ -331,7 +466,24 @@ def pretty_name(name: str, show_title=True) -> str:
         return str(final_label.title())[:21]
 
 
-def replace_variables(vartext, filename, all_variables, quotes=False):
+def replace_variables(
+    vartext: str, 
+    filename: Union[str, List[str]], 
+    all_variables: Dict[str, Any], 
+    quotes: bool = False
+) -> Optional[str]:
+    """Replace Terraform variable references with actual values.
+    
+    Args:
+        vartext: Text containing variable references
+        filename: Source filename for error messages
+        all_variables: Dictionary of variable values
+        quotes: Whether to add quotes (unused)
+    
+    Returns:
+        Text with variables replaced
+    """
+    # Replace Variables found within resource meta data
     # Replace Variables found within resource meta data
     if isinstance(filename, list):
         filename = filename[0]
@@ -367,7 +519,12 @@ def replace_variables(vartext, filename, all_variables, quotes=False):
         return replaced_vartext
 
 
-def output_log(tfdata):
+def output_log(tfdata: Dict[str, Any]) -> None:
+    """Output parsed Terraform data to console.
+    
+    Args:
+        tfdata: Terraform data dictionary
+    """
     for section in output_sections:
         click.echo(f"\n  {section.title()} list :")
         if tfdata.get("all_" + section):
@@ -478,7 +635,19 @@ def find_shared_security_groups(graphdict: dict) -> list:
     return [key for sg, keys in sg_to_keys.items() if len(keys) > 1 for key in keys]
 
 
-def find_resource_references(searchdict: dict, target_resource: str) -> dict:
+def find_resource_references(
+    searchdict: Dict[str, List[str]], 
+    target_resource: str
+) -> Dict[str, List[str]]:
+    """Find all dictionary entries that reference a target resource.
+    
+    Args:
+        searchdict: Dictionary to search
+        target_resource: Resource name to find
+    
+    Returns:
+        Dictionary of entries containing the target resource
+    """
     final_dict = dict()
     for item in searchdict:
         if target_resource in searchdict[item]:
@@ -489,7 +658,19 @@ def find_resource_references(searchdict: dict, target_resource: str) -> dict:
     return final_dict
 
 
-def find_resource_containing(search_list: list, keyword: str):
+def find_resource_containing(
+    search_list: List[str], 
+    keyword: str
+) -> Union[str, bool]:
+    """Find first resource in list containing keyword.
+    
+    Args:
+        search_list: List of resource names
+        keyword: Keyword to search for
+    
+    Returns:
+        First matching resource name or False
+    """
     for actual_name in search_list:
         if keyword in actual_name:
             found = actual_name
@@ -497,7 +678,19 @@ def find_resource_containing(search_list: list, keyword: str):
     return False
 
 
-def find_all_resources_containing(search_list: list, keyword: str):
+def find_all_resources_containing(
+    search_list: List[str], 
+    keyword: str
+) -> Union[List[str], bool]:
+    """Find all resources in list containing keyword.
+    
+    Args:
+        search_list: List of resource names
+        keyword: Keyword to search for
+    
+    Returns:
+        List of matching resource names or False
+    """
     foundlist = list()
     for actual_name in search_list:
         if keyword in actual_name:
@@ -508,13 +701,30 @@ def find_all_resources_containing(search_list: list, keyword: str):
         return False
 
 
-def append_dictlist(thelist: list, new_item: object):
+def append_dictlist(thelist: List[Any], new_item: Any) -> List[Any]:
+    """Append item to list and return new list.
+    
+    Args:
+        thelist: Original list
+        new_item: Item to append
+    
+    Returns:
+        New list with item appended
+    """
     new_list = list(thelist)
     new_list.append(new_item)
     return new_list
 
 
-def remove_recursive(graphdict: dict) -> dict:
+def remove_recursive(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """Debug function to print recursive references.
+    
+    Args:
+        graphdict: Graph dictionary
+    
+    Returns:
+        Unchanged graph dictionary
+    """
     for node, connections in graphdict.items():
         if node in connections:
             print(node)
@@ -525,7 +735,16 @@ def remove_recursive(graphdict: dict) -> dict:
     return graphdict
 
 
-def check_variant(resource: str, metadata: dict) -> str:
+def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
+    """Check if resource has a variant suffix based on metadata.
+    
+    Args:
+        resource: Resource name
+        metadata: Resource metadata
+    
+    Returns:
+        Variant name or False
+    """
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):
             for keyword in NODE_VARIANTS[variant_service]:
@@ -538,13 +757,35 @@ def check_variant(resource: str, metadata: dict) -> str:
     return False
 
 
-def find_replace(find: str, replace: str, string: str):
+def find_replace(find: str, replace: str, string: str) -> str:
+    """Replace first occurrence of substring.
+    
+    Args:
+        find: Substring to find
+        replace: Replacement string
+        string: Source string
+    
+    Returns:
+        Modified string
+    """
     original_string = string
     string = string.replace(find, replace, 1)
     return string
 
 
-def list_of_parent_nodes(graphdict: dict, nodelist: list):
+def list_of_parent_nodes(
+    graphdict: Dict[str, List[str]], 
+    nodelist: List[str]
+) -> List[str]:
+    """Get list of parent nodes for given node list.
+    
+    Args:
+        graphdict: Graph dictionary
+        nodelist: List of nodes to find parents for
+    
+    Returns:
+        List of parent node names without numbered suffixes
+    """
     parent_list = list()
     for node in nodelist:
         parent_nodes = list_of_parents(graphdict, node)
@@ -554,7 +795,19 @@ def list_of_parent_nodes(graphdict: dict, nodelist: list):
     return parent_list
 
 
-def list_of_parents(searchdict: dict, target: str):
+def list_of_parents(
+    searchdict: Dict[str, Any], 
+    target: str
+) -> List[str]:
+    """Find all keys that reference the target in their values.
+    
+    Args:
+        searchdict: Dictionary to search
+        target: Target value to find
+    
+    Returns:
+        List of keys that reference the target
+    """
     final_list = list()
     for key, value in searchdict.items():
         if isinstance(value, str):
@@ -582,7 +835,16 @@ def list_of_parents(searchdict: dict, target: str):
     return final_list
 
 
-def any_parent_has_count(tfdata: dict, target_resource: str):
+def any_parent_has_count(tfdata: Dict[str, Any], target_resource: str) -> bool:
+    """Check if any parent resource has count/for_each attribute.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        target_resource: Resource to check parents for
+    
+    Returns:
+        True if any parent has count attribute
+    """
     parents_list = list_of_parents(tfdata["graphdict"], target_resource)
     any_parent_has_count = False
     # Check if any of the parents of the connections have a count property
@@ -601,8 +863,15 @@ def any_parent_has_count(tfdata: dict, target_resource: str):
     return any_parent_has_count
 
 
-# Takes a resource and returns a standardised consolidated node if matched with the static definitions
-def consolidated_node_check(resource_type: str) -> bool:
+def consolidated_node_check(resource_type: str) -> Union[str, bool]:
+    """Check if resource should be consolidated into a standard node.
+    
+    Args:
+        resource_type: Resource type to check
+    
+    Returns:
+        Consolidated node name or False
+    """
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
         if get_no_module_name(resource_type).startswith(prefix) and resource_type:
@@ -610,13 +879,35 @@ def consolidated_node_check(resource_type: str) -> bool:
     return False
 
 
-def remove_all_items(test_list: list, item: str) -> list:
+def remove_all_items(test_list: List[str], item: str) -> List[str]:
+    """Remove all occurrences of item from list.
+    
+    Args:
+        test_list: List to filter
+        item: Item to remove
+    
+    Returns:
+        Filtered list
+    """
+    # using filter() + __ne__ to perform the task
     # using filter() + __ne__ to perform the task
     res = list(filter((item).__ne__, test_list))
     return res
 
 
-def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
+def list_of_dictkeys_containing(
+    searchdict: Dict[str, Any], 
+    target_keyword: str
+) -> List[str]:
+    """Find all dictionary keys containing a keyword.
+    
+    Args:
+        searchdict: Dictionary to search
+        target_keyword: Keyword to find in keys
+    
+    Returns:
+        List of matching keys
+    """
     final_list = list()
     for item in searchdict:
         if target_keyword in item:
@@ -624,8 +915,15 @@ def list_of_dictkeys_containing(searchdict: dict, target_keyword: str) -> list:
     return final_list
 
 
-# Cleans out special characters
 def cleanup_curlies(text: str) -> str:
+    """Remove curly braces and dollar signs from text.
+    
+    Args:
+        text: Text to clean
+    
+    Returns:
+        Cleaned text
+    """
     text = str(text)
     for ch in ["$", "{", "}"]:
         if ch in text:
@@ -633,8 +931,15 @@ def cleanup_curlies(text: str) -> str:
     return text.strip()
 
 
-# Filter out ${} variable padding from strings
-def strip_var_curlies(s: str):
+def strip_var_curlies(s: str) -> str:
+    """Remove Terraform variable syntax ${} from string.
+    
+    Args:
+        s: String with variable syntax
+    
+    Returns:
+        String with variable syntax removed
+    """
     final_string = ""
     stack = []
     if ".id}" in s:
@@ -658,8 +963,15 @@ def strip_var_curlies(s: str):
     return final_string
 
 
-# Cleans out special characters
 def cleanup(text: str) -> str:
+    """Remove special characters from text.
+    
+    Args:
+        text: Text to clean
+    
+    Returns:
+        Cleaned text
+    """
     text = str(text)
     for ch in [
         "\\",
@@ -683,8 +995,15 @@ def cleanup(text: str) -> str:
     return text.strip()
 
 
-def extract_terraform_resource(text: str) -> list:
-    """Extract terraform resources from string"""
+def extract_terraform_resource(text: str) -> List[str]:
+    """Extract Terraform resource references from string.
+    
+    Args:
+        text: Text containing resource references
+    
+    Returns:
+        List of resource references found
+    """
     import re
 
     results = []
@@ -704,7 +1023,16 @@ def extract_terraform_resource(text: str) -> list:
 
 
 def remove_terraform_functions(text: str) -> str:
-    """Remove Terraform functions from ${} expressions, keeping only the inner content."""
+    """Remove Terraform functions from ${} expressions.
+    
+    Keeps only the inner content of function calls.
+    
+    Args:
+        text: Text with Terraform function calls
+    
+    Returns:
+        Text with functions removed
+    """
     pattern = r"\$\{([^}]+)\}"
 
     def process_expression(match):

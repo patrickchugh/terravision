@@ -1,5 +1,10 @@
-from hmac import new
-from multiprocessing import process
+"""Terraform variable and metadata interpreter.
+
+Handles resolution of Terraform variables, locals, data sources, and module outputs.
+Processes resource metadata and manages variable substitution across modules.
+"""
+
+from typing import Dict, List, Any, Tuple
 import modules.helpers as helpers
 import hcl2
 import click
@@ -15,7 +20,19 @@ DATA_REPLACEMENTS = {
 }
 
 
-def resolve_all_variables(tfdata, debug: bool, already_processed: bool) -> dict:
+def resolve_all_variables(
+    tfdata: Dict[str, Any], debug: bool, already_processed: bool
+) -> Dict[str, Any]:
+    """Resolve all Terraform variables, locals, and module outputs.
+
+    Args:
+        tfdata: Terraform data dictionary containing resources and variables
+        debug: Enable debug output and logging
+        already_processed: Skip variable file processing if already done
+
+    Returns:
+        Updated tfdata with all variables resolved
+    """
     # Load default variable values and user variable values
     tfdata = get_variable_values(tfdata, already_processed)
     # Create view of locals by module
@@ -33,25 +50,38 @@ def resolve_all_variables(tfdata, debug: bool, already_processed: bool) -> dict:
     return tfdata
 
 
-def handle_module_vars(eval_string, tfdata):
+def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
+    """Resolve module output variable references.
+
+    Args:
+        eval_string: String containing module.name.output reference
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with module variable resolved to actual value
+    """
     outvalue = ""
     splitlist = eval_string.split(".")
+    # Extract output name and module name from reference
     outputname = helpers.find_between(eval_string, splitlist[1] + ".", " ")
     mod = helpers.find_between(eval_string, splitlist[0] + ".", ".")
+    # Search through all output files for matching module
     for file in tfdata["all_output"].keys():
         for i in tfdata["all_output"][file]:
             if outputname in i.keys() and mod in file:
                 outvalue = i[outputname]["value"]
+                # Handle wildcard ID references
                 if "*.id" in outvalue and "*.id" in eval_string:
                     outvalue = tfdata["meta_data"][outvalue]["count"]
                     break
+                # Handle specific array index references
                 if "*.id" in outvalue and "[" in eval_string and "]" in eval_string:
-                    # Specific number of array being used
                     index = int(
                         helpers.find_between(eval_string, "[", "]").replace(" ", "")
                     )
                     outvalue = f"module.{mod}.{helpers.strip_var_curlies(outvalue).replace('.*.id', '').strip()}[{index}]"
                     break
+    # Replace module variable with resolved value
     stringarray = eval_string.split(".")
     if len(stringarray) >= 3:
         modulevar = "module" + "." + stringarray[1] + "." + stringarray[2]
@@ -60,14 +90,26 @@ def handle_module_vars(eval_string, tfdata):
     return eval_string
 
 
-def inject_module_variables(tfdata: dict):
+def inject_module_variables(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Inject parent module variables into child modules.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with module variables injected
+    """
+    # Loop through all module definitions
     for file, module_list in tfdata["all_module"].items():
         for module_items in module_list:
             for module, params in module_items.items():
                 module_source = params["source"]
+                # Process each parameter passed to the module
                 for key, value in params.items():
+                    # Resolve module output references
                     if "module." in str(value) and key != "depends_on":
                         value = handle_module_vars(str(value), tfdata)
+                    # Resolve variable references
                     if "var." in str(value):
                         if isinstance(value, list):
                             for i in range(len(value)):
@@ -84,19 +126,26 @@ def inject_module_variables(tfdata: dict):
                                 tfdata["variable_map"]["main"],
                                 False,
                             )
-                    # Add var value to master list of all variables so it can be used downstream
-                    if (
-                        key != "source" and key != "version"
-                    ):  # and key in all_variables.keys():
+                    # Add resolved value to variable map for downstream use
+                    if key != "source" and key != "version":
                         tfdata["variable_map"][module][key] = value
     return tfdata
 
 
-def handle_metadata_vars(tfdata):
+def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Replace variables in resource metadata with actual values.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with resolved metadata variables
+    """
+    # Loop through each resource's metadata attributes
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
-            # TODO: Use Regex to check that preceding character is a space or operand
+            # Iteratively resolve all variable references
             while (
                 (
                     "var." in value
@@ -112,15 +161,31 @@ def handle_metadata_vars(tfdata):
             ):
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
+            # Update metadata with resolved value
             tfdata["meta_data"][resource][key] = value
     return tfdata
 
 
-def replace_data_values(found_list: list, value: str, tfdata: dict):
+def replace_data_values(
+    found_list: List[str], value: str, tfdata: Dict[str, Any]
+) -> str:
+    """Replace Terraform data source references with mock values.
+
+    Args:
+        found_list: List of data source references found in value
+        value: String containing data source references
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with data sources replaced by mock values
+    """
     initial_value = value
+    # Loop through each data source reference
     for d in found_list:
+        # Check against known data source replacements
         for search_string, keyvalue in DATA_REPLACEMENTS.items():
             if search_string in d:
+                # Return list directly if single data reference
                 if (
                     initial_value.startswith("${data.")
                     and len(found_list) == 1
@@ -129,28 +194,42 @@ def replace_data_values(found_list: list, value: str, tfdata: dict):
                     value = keyvalue
                 else:
                     value = str(value.replace(d, str(keyvalue)))
-
+        # Mark as unknown if no replacement found
         if value == initial_value:
             value = str(value.replace(d, '"UNKNOWN"'))
     return value
 
 
-def replace_local_values(found_list: list, value, module, tfdata):
+def replace_local_values(
+    found_list: List[str], value: str, module: str, tfdata: Dict[str, Any]
+) -> str:
+    """Replace local variable references with actual values.
+
+    Args:
+        found_list: List of local variable references
+        value: String containing local references
+        module: Module name for variable lookup
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with local variables resolved
+    """
+    # Loop through each local variable reference
     for localitem in found_list:
         lookup = helpers.cleanup(localitem.split("local.")[1])
         if tfdata["all_locals"]:
+            # Check if local exists in current module
             if (
                 module in tfdata["all_locals"]
                 and lookup in tfdata["all_locals"][module].keys()
             ):
                 replacement_value = tfdata["all_locals"][module].get(lookup)
-                # value = value.replace(localitem, str(replacement_value))
                 value = helpers.find_replace(localitem, str(replacement_value), value)
             else:
+                # Fall back to main module locals
                 if tfdata["all_locals"].get("main"):
                     if lookup in tfdata["all_locals"]["main"].keys():
                         replacement_value = tfdata["all_locals"]["main"].get(lookup)
-                        # value = value.replace(localitem, str(replacement_value))
                         value = helpers.find_replace(
                             localitem, str(replacement_value), value
                         )
@@ -160,14 +239,28 @@ def replace_local_values(found_list: list, value, module, tfdata):
                             f"   WARNING: Cannot resolve {localitem}, assigning empty value in module {module}"
                         )
         else:
-            # value = value.replace(localitem, "None")
+            # No locals defined
             value = helpers.find_replace(localitem, "None", value)
             click.echo(f"    ERROR: Cannot find definition for local var {localitem}")
             exit()
     return value
 
 
-def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict):
+def replace_module_vars(
+    found_list: List[str], value: str, module: str, tfdata: Dict[str, Any]
+) -> str:
+    """Replace module output references with actual values.
+
+    Args:
+        found_list: List of module variable references
+        value: String containing module references
+        module: Current module name
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with module variables resolved
+    """
+    # Loop through each module variable reference
     for module_var in found_list:
         if "module." in value:
             cleantext = module_var
@@ -175,16 +268,17 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
             outputname = helpers.find_between(cleantext, splitlist[1] + ".", " ")
             oldvalue = value
             mod = value.split("module.")[1].split(".")[0]
+            # Search through output files for matching module
             for ofile in tfdata["all_output"].keys():
                 if "modules" and f";{mod};" in ofile:
-                    # We have found the right output file
+                    # Found the right output file for this module
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():
-                            # Resolve module var to output
+                            # Check if this is a module output reference (not a resource)
                             if "module." in module_var and not re.search(
                                 r"module\.[\w-]+\.aws_", module_var
                             ):
-                                # Check if specific index is mentioned
+                                # Handle specific array index references
                                 if (
                                     "[" in module_var
                                     and "[*]" not in module_var
@@ -203,6 +297,7 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                         value.replace(".*.id", f"[{index}]")
                                     ).strip()
                                     continue
+                            # Recursively resolve if output contains other variables
                             if (
                                 (
                                     "module." in i[outputname]["value"]
@@ -213,11 +308,10 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                 or "var." in i[outputname]["value"]
                                 or "local." in i[outputname]["value"]
                             ):
-                                # Output refers to other variables so need to rescursively resolve
-                                i
                                 value = find_replace_values(value, mod, tfdata)
                                 continue
                             else:
+                                # Direct replacement with output value
                                 value = value.replace(
                                     module_var, f"module.{mod}.{module_var}"
                                 )
@@ -228,22 +322,41 @@ def replace_module_vars(found_list: list, value: str, module: str, tfdata: dict)
                                 value = helpers.cleanup_curlies(value).strip()
                 else:
                     continue
+            # Mark as unknown if no resolution found
             if value == oldvalue:
                 value = value.replace(module_var, '"UNKNOWN"')
                 click.echo(
-                    f"   WARNING: Cannot resolve {module_var}, assigning empty value in module {module}"
+                    f"   WARNING: Cannot resolve {module_var}, assigning UNKNOWN value in module {module}"
                 )
-
+            # Clean up wildcard ID references
             if "[" in value and "*.id" in value:
                 value = (value.replace(".*.id", "")).strip()
     return value
 
 
 def replace_var_values(
-    found_list: list, varobject_found_list: list, value: str, module: str, tfdata: dict
-):
+    found_list: List[str],
+    varobject_found_list: List[str],
+    value: str,
+    module: str,
+    tfdata: Dict[str, Any],
+) -> str:
+    """Replace variable references with actual values.
+
+    Args:
+        found_list: List of simple variable references
+        varobject_found_list: List of object-type variable references
+        value: String containing variable references
+        module: Module name for variable lookup
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with variables resolved to actual values
+    """
+    # Loop through each variable reference
     for varitem in found_list:
         varitem_lower = varitem.lower()
+        # Extract variable name from reference
         lookup = (
             varitem_lower.split("var.")[1]
             .lower()
@@ -253,21 +366,24 @@ def replace_var_values(
         )
         if not module:
             module = "main"
+        # Check if variable exists in current module and is resolved
         if (lookup in tfdata["variable_map"][module].keys()) and (
             "var." + lookup not in str(tfdata["variable_map"][module][lookup])
         ):
-            # Possible object type var encountered
+            # Handle object-type variables (e.g., var.config.key)
             obj = ""
             for item in varobject_found_list:
                 if lookup in item:
                     obj = tfdata["variable_map"][module][lookup]
                     varitem = item
+            # Extract key from object variable
             if value.count(lookup) < 2 and obj != "" and isinstance(obj, dict):
                 key = varitem.split(".")[2]
                 if key in obj.keys():
                     keyvalue = obj[key]
                 else:
                     keyvalue = obj
+                # Add quotes to string values
                 if (
                     isinstance(keyvalue, str)
                     and not keyvalue.startswith("[")
@@ -275,7 +391,7 @@ def replace_var_values(
                 ):
                     keyvalue = f'"{keyvalue}"'
                 value = value.replace(varitem, str(keyvalue), 1)
-                # value = helpers.find_replace(varitem, str(keyvalue, value))
+            # Handle simple variable replacement
             elif value.count(lookup) < 2 and obj == "":
                 replacement_value = str(tfdata["variable_map"][module].get(lookup))
                 if (
@@ -285,20 +401,20 @@ def replace_var_values(
                 ):
                     replacement_value = f'"{replacement_value}"'
                 value = value.replace(varitem, replacement_value, 1)
-                # value = helpers.find_replace(varitem, replacement_value, value)
             else:
                 value = value.replace(
                     varitem, str(tfdata["variable_map"][module][lookup]) + " ", 1
                 )
+        # Variable exists but still contains unresolved references
         elif lookup in tfdata["variable_map"][module].keys():
             if "var." in tfdata["variable_map"][module].get(lookup):
-                # value = value.replace(varitem, '"UNKNOWN"',1)
                 value = helpers.find_replace(varitem, '"UNKNOWN"', value)
             else:
                 value = value.replace(
                     varitem, str(tfdata["variable_map"][module].get(lookup), 1)
                 )
             break
+        # Search parent modules for variable
         elif helpers.list_of_parents(tfdata["variable_map"], lookup):
             module_list = helpers.list_of_parents(tfdata["variable_map"], lookup)
             module_name = module_list[0]
@@ -306,6 +422,7 @@ def replace_var_values(
                 varitem, str(tfdata["variable_map"][module_name].get(lookup)), 1
             )
             break
+        # Variable not found anywhere
         else:
             if lookup.lower() in tfdata["variable_list"]:
                 value = tfdata["variable_list"][lookup.lower()]
@@ -324,15 +441,26 @@ def replace_var_values(
     return value
 
 
-def find_replace_values(varstring, module, tfdata):
+def find_replace_values(varstring: str, module: str, tfdata: Dict[str, Any]) -> str:
+    """Find and replace all variable types in a string.
+
+    Args:
+        varstring: String containing variable references
+        module: Module name for variable lookup
+        tfdata: Terraform data dictionary
+
+    Returns:
+        String with all variables resolved
+    """
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
+    # Find all variable types using regex patterns
     var_found_list = re.findall("var\.[A-Za-z0-9_\-]+", value)
     data_found_list = re.findall("data\.[A-Za-z0-9_\-\.\[\]]+", value)
     varobject_found_list = re.findall("var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall("local\.[A-Za-z0-9_\-\.\[\]]+", value)
     modulevar_found_list = re.findall("module\.[A-Za-z0-9_\-\.\[\]]+", value)
-    # Replace found variable strings with variable values
+    # Replace found variable strings with actual values in order
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)
     value = replace_var_values(
@@ -342,17 +470,28 @@ def find_replace_values(varstring, module, tfdata):
     return value
 
 
-def extract_locals(tfdata):
+def extract_locals(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract and organize local variables by module.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with locals organized by module
+    """
     module_locals = dict()
-    # Remove array layer of locals dict structure and copy over to final_locals dict first
+    # Flatten nested locals structure and organize by module
     if not tfdata.get("all_locals"):
         tfdata["all_locals"] = {}
         return tfdata
+    # Process each file's local variables
     for file, localvarlist in tfdata["all_locals"].items():
+        # Extract module name from filename
         if ";" in file:
             modname = file.split(";")[1]
         else:
             modname = "main"
+        # Merge locals for each module
         for local in localvarlist:
             if module_locals.get(modname):
                 module_locals[modname] = {**module_locals[modname], **local}
@@ -362,26 +501,35 @@ def extract_locals(tfdata):
     return tfdata
 
 
-def prefix_module_names(tfdata):
-    # List to hold unique resources that have been processed (needed when modules called more than once)
+def prefix_module_names(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Add module prefix to resource names within modules.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with module-prefixed resource names
+    """
+    # Track processed resources to avoid duplicates when modules called multiple times
     processed_list = []
     # Loop through each resource in tfdata["all_resource"]
     for file, resourcelist in dict(tfdata["all_resource"]).items():
-        # Loop through each module in tfdata["module_source_dict"]
+        # Check if resource belongs to a module
         for module_name, module_path in tfdata["module_source_dict"].items():
             if module_path in file:
-                # We have a resource created within a module, so add the .module prefix to all the resource names
+                # Add module prefix to resource names
                 for index, elementdict in enumerate(resourcelist):
                     for resource_type, value in elementdict.items():
                         for resource_name in value:
                             renamed_resource_name = (
                                 f"module.{module_name}.{resource_type}.{resource_name}"
                             )
+                            # Only rename if not already prefixed and not processed
                             if (
                                 "module." not in resource_name
                                 and renamed_resource_name not in processed_list
                             ):
-
+                                # Create new dict with renamed resource
                                 new_dict = dict(
                                     tfdata["all_resource"][file][index][resource_type]
                                 )
@@ -398,7 +546,21 @@ def prefix_module_names(tfdata):
     return tfdata
 
 
-def show_error(mod, resource, eval_string, exp, tfdata):
+def show_error(
+    mod: str, resource: str, eval_string: str, exp: str, tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Display error message and update metadata with error info.
+
+    Args:
+        mod: Module name
+        resource: Resource name
+        eval_string: Expression that caused error
+        exp: Exception message
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with error information
+    """
     click.echo(
         f"    ERROR: {mod} : {resource} count = 0 (Error in calling function {exp}))"
     )
@@ -407,8 +569,25 @@ def show_error(mod, resource, eval_string, exp, tfdata):
     return tfdata
 
 
-# Adds additional metadata
-def handle_implied_resources(item, resource_type, resource_name, tfdata, meta_data):
+def handle_implied_resources(
+    item: Dict[str, Any],
+    resource_type: str,
+    resource_name: str,
+    tfdata: Dict[str, Any],
+    meta_data: Dict[str, Any],
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Add implied resources based on resource attributes.
+
+    Args:
+        item: Resource item dictionary
+        resource_type: Type of resource
+        resource_name: Name of resource
+        tfdata: Terraform data dictionary
+        meta_data: Resource metadata dictionary
+
+    Returns:
+        Tuple of updated meta_data and tfdata
+    """
     # Check if Cloudwatch is present in policies and create node for Cloudwatch service if found
     if resource_type == "aws_iam_policy":
         if "logs:" in item[resource_type][resource_name]["policy"][0]:
@@ -421,12 +600,25 @@ def handle_implied_resources(item, resource_type, resource_name, tfdata, meta_da
     return meta_data, tfdata
 
 
-def handle_numbered_nodes(resource_node, tfdata, meta_data):
+def handle_numbered_nodes(
+    resource_node: str, tfdata: Dict[str, Any], meta_data: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Handle resources with count/for_each that create numbered nodes.
+
+    Args:
+        resource_node: Resource node name with bracket notation
+        tfdata: Terraform data dictionary
+        meta_data: Resource metadata dictionary
+
+    Returns:
+        Updated meta_data with numbered node information
+    """
     # Determine count by number of objects created by Terraform
     all_matching_list = helpers.find_all_resources_containing(
         tfdata["node_list"], resource_node.split("[")[0] + "["
     )
     resource_count = len(all_matching_list)
+    # Copy metadata to each numbered instance
     for actual_name in all_matching_list:
         import copy
 
@@ -436,20 +628,36 @@ def handle_numbered_nodes(resource_node, tfdata, meta_data):
 
 
 def find_actual_resource(
-    node_list: list, resource: str, resource_type: str, mod: str, tfdata: dict
+    node_list: List[str],
+    resource: str,
+    resource_type: str,
+    mod: str,
+    tfdata: Dict[str, Any],
 ) -> str:
-    # If we have a singleton resource already in the nodelist no need to search further
+    """Find actual resource name in node list.
+
+    Args:
+        node_list: List of all resource nodes
+        resource: Resource name to find
+        resource_type: Type of resource
+        mod: Module name
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Actual resource name or False if not found
+    """
+    # Check if singleton resource exists in node list
     if resource in node_list:
         return resource
     else:
-        # search for possible candidate nodes with number bracket
+        # Search for numbered instances (e.g., resource[0])
         search = f"{resource}["
         all_candidates = helpers.find_all_resources_containing(node_list, search)
         if all_candidates:
             return all_candidates[0]
         else:
-            # possible name mutation so find closest resource
-            if not resource in tfdata["original_metadata"].keys():
+            # Handle name mutations by searching for closest match
+            if resource not in tfdata["original_metadata"].keys():
                 resource = helpers.list_of_dictkeys_containing(
                     tfdata["original_metadata"],
                     f"module.{mod}.{resource_type}.",
@@ -460,21 +668,26 @@ def find_actual_resource(
                     return False
 
 
-def get_metadata(tfdata):  # -> set
-    """
-    Extract resource attributes from resources by looping through each resource in each file.
-    Returns a set with a node_list of unique resources, and dict of resource attributes (metadata)
+def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract resource attributes from Terraform files.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with node_list and meta_data populated
     """
     meta_data = dict()
-    # Create list of node names that will be created
+    # Create unique list of node names from graph
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
-    # Default module is assumed main unless over-ridden
+    # Determine default module name
     if not tfdata["all_module"]:
         mod = "main"
     else:
         first_module = tfdata["all_module"][next(iter(tfdata["all_module"]))][0]
         mod = next(iter(first_module))
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
+    # Check if resources exist
     if not tfdata.get("all_resource"):
         click.echo(
             click.style(
@@ -483,42 +696,45 @@ def get_metadata(tfdata):  # -> set
         )
         tfdata["all_resource"] = dict()
     else:
+        # Process each file's resources
         for filename, resource_list in tfdata["all_resource"].items():
+            # Extract module name from filename if present
             if ";" in filename:
                 mod = filename.split(";")[1]
-            # Source code doesn't have final resource names so we need to match them up to right metadata records
+            # Match source code resource names to actual created resources
             for item in resource_list:
                 for resource_type in item.keys():
                     for resource_name in item[resource_type]:
+                        # Build resource node name
                         if resource_name.startswith("module."):
                             resource_node = resource_name
                         else:
                             resource_node = f"{resource_type}.{resource_name}"
-
+                        # Check for implied resources (e.g., CloudWatch from IAM policies)
                         meta_data, tfdata = handle_implied_resources(
                             item, resource_type, resource_name, tfdata, meta_data
                         )
                     click.echo(f"   {resource_node}")
+                    # Find actual resource in node list
                     found_node = find_actual_resource(
                         tfdata["node_list"], resource_node, resource_type, mod, tfdata
                     )
                     if not found_node:
-                        break  # not a created resource
+                        break  # Resource not created, skip
                     else:
-                        # Store original metadata from tf
+                        # Merge original metadata with source file metadata
                         omd = dict(tfdata["original_metadata"][found_node])
-                        # Get metadata as specified in source files
                         md = item[resource_type][resource_name]
-                        # Capture original count value string
+                        # Preserve original count expression
                         if md.get("count"):
                             md["original_count"] = str(md["count"])
-                        # Over-ride original metadata params where present
+                        # Override with source file values
                         omd.update(md)
                         meta_data[resource_node] = omd
                         meta_data[resource_node]["module"] = mod
                         meta_data[found_node] = omd
                         meta_data[found_node]["module"] = mod
-                        # Check if numbered node exists in metadata
+                        # Handle resources with count/for_each
                         if "~" in found_node:
                             meta_data = handle_numbered_nodes(
                                 found_node, tfdata, meta_data
@@ -527,10 +743,14 @@ def get_metadata(tfdata):  # -> set
     return tfdata
 
 
-def get_metadata_old(tfdata):  # -> set
-    """
-    Extract resource attributes from resources by looping through each resource in each file.
-    Returns a set with a node_list of unique resources, resource attributes (metadata)
+def get_metadata_old(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Legacy metadata extraction function (deprecated).
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with node_list and meta_data populated
     """
     meta_data = dict()
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
@@ -634,8 +854,18 @@ def get_metadata_old(tfdata):  # -> set
     return tfdata
 
 
-def get_variable_values(tfdata, already_processed: bool) -> dict:
-    """Returns a list of all variables from local .tfvar defaults, supplied varfiles and module var values"""
+def get_variable_values(
+    tfdata: Dict[str, Any], already_processed: bool
+) -> Dict[str, Any]:
+    """Load and organize all Terraform variable values.
+
+    Args:
+        tfdata: Terraform data dictionary
+        already_processed: Skip varfile processing if already done
+
+    Returns:
+        Updated tfdata with variable_list and variable_map populated
+    """
     click.echo(
         click.style(
             f"\nProcessing variables..",
@@ -648,13 +878,13 @@ def get_variable_values(tfdata, already_processed: bool) -> dict:
     var_data = dict()
     var_mappings = dict()
     matching = list()
-    # Load default values from all existing files in source locations
+    # Load default values from variable definitions in source files
     for var_source_file, var_list in tfdata["all_variable"].items():
         var_source_dir = str(Path(var_source_file).parent)
         for item in var_list:
             for k in item.keys():
                 var_name = k
-                # Populate dict with default values first
+                # Extract default value if present
                 if "default" in item[k]:
                     var_value = item[k]["default"]
                     if isinstance(var_value, str):
@@ -662,25 +892,27 @@ def get_variable_values(tfdata, already_processed: bool) -> dict:
                 else:
                     var_value = ""
                 var_data[var_name.lower()] = var_value
-                # Also update var mapping dict with modules and matching variables
+                # Map variables to their modules
                 if tfdata.get("module_source_dict"):
                     matching = [
                         m
                         for m in tfdata["module_source_dict"]
                         if tfdata["module_source_dict"][m] in str(var_source_file)
-                    ]  # omit first char of module source in case it is a .
+                    ]
+                # Add to main module if no module match
                 if not matching:
                     if not var_mappings.get("main"):
                         var_mappings["main"] = {}
                         var_mappings["main"] = {"source_dir": var_source_dir}
                     var_mappings["main"][var_name] = var_value
+                # Add to matched modules
                 for mod in matching:
                     if not var_mappings.get(mod):
                         var_mappings[mod] = {}
                         var_mappings[mod]["source_dir"] = var_source_dir
                     var_mappings[mod][var_name.lower()] = var_value
+    # Add module parameters as variables
     if tfdata.get("module_source_dict"):
-        # Insert module parameters as variable names
         for file, modulelist in tfdata["all_module"].items():
             for module in modulelist:
                 for mod, params in module.items():
@@ -689,17 +921,18 @@ def get_variable_values(tfdata, already_processed: bool) -> dict:
                         if not var_mappings.get(mod):
                             var_mappings[mod] = {}
                         var_mappings[mod][variable] = params[variable]
+    # Override defaults with user-supplied varfile values
     if tfdata.get("all_variable") and not already_processed:
-        # Over-write defaults with passed varfile specified values
         for varfile in tfdata["varfile_list"]:
-            # Open supplied varfile for reading
             with click.open_file(varfile, encoding="utf8", mode="r") as f:
                 variable_values = hcl2.load(f)
+            # Apply user-supplied values
             for uservar in variable_values:
                 var_data[uservar.lower()] = variable_values[uservar]
                 if not var_mappings.get("main"):
                     var_mappings["main"] = {}
                 var_mappings["main"][uservar.lower()] = variable_values[uservar]
+    # Store results in tfdata
     tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings
 
