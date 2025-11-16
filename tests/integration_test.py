@@ -110,7 +110,16 @@ def test_draw_command_basic(tmp_path: Path) -> None:
 
     # Execute draw command to generate PNG diagram
     result = run_terravision(
-        ["draw", "--source", github_repo, "--outfile", output_name, "--format", "png"],
+        [
+            "draw",
+            "--source",
+            github_repo,
+            "--outfile",
+            output_name,
+            "--format",
+            "png",
+            "--debug",
+        ],
         cwd=str(tmp_path),
     )
 

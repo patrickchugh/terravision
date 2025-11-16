@@ -72,11 +72,9 @@ jobs:
         uses: ts-graphviz/setup-graphviz@v1
       - name: Mock ssh file
         run :
-          mkdir -p ~/.ssh
-          cd ~/.ssh
           touch id_rsa.pub
           chmod 777 id_rsa.pub
-          cd -
+           
         
       #----------------------------------------------
       # Run static linters
