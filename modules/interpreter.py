@@ -681,7 +681,9 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with node_list and meta_data populated
     """
-    meta_data = dict()
+    # Initialize meta_data with all resources from original_metadata
+    import copy
+    meta_data = copy.deepcopy(tfdata["original_metadata"])
     # Create unique list of node names from graph
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
     # Determine default module name
@@ -702,15 +704,14 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     else:
         # Process each file's resources
         for filename, resource_list in tfdata["all_resource"].items():
-            # Extract module name from filename if present
-            if ";" in filename:
-                mod = filename.split(";")[1]
+            mod = "main"
             # Match source code resource names to actual created resources
             for item in resource_list:
                 for resource_type in item.keys():
                     for resource_name in item[resource_type]:
                         # Build resource node name
                         if resource_name.startswith("module."):
+                            # mod = tfdata["meta_data"][resource_name]["module"]
                             resource_node = resource_name
                         else:
                             resource_node = f"{resource_type}.{resource_name}"
@@ -732,14 +733,16 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         # Preserve original count expression
                         if md.get("count"):
                             md["original_count"] = str(md["count"])
-                        # Override with source file values
-                        omd.update(md)
+                        # Merge the two dictionaries
+                        omd = {**omd, **md}
                         meta_data[resource_node] = omd
                         if not meta_data[resource_node].get("module"):
-                            meta_data[resource_node]["module"] = mod
+                            meta_data[resource_node]["module"] = "main"
+                        else:
+                            meta_data[resource_node]["module"] = meta_data[
+                                resource_node
+                            ]["module"].replace(".", "")
                         meta_data[found_node] = omd
-                        if not meta_data[found_node].get("module"):
-                            meta_data[found_node]["module"] = mod
                         # Handle resources with count/for_each
                         if "~" in found_node:
                             meta_data = handle_numbered_nodes(

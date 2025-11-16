@@ -868,7 +868,10 @@ def handle_count_resources(
     # Process each resource with count attribute
     for resource in multi_resources:
         # Determine number of instances to create
-        if tfdata["meta_data"][resource].get("count"):
+        # TODO: When count is a variable that resolves to a tenary if statement, use postfix parser to interepret it
+        if tfdata["meta_data"][resource].get("count") and isinstance(
+            tfdata["meta_data"][resource].get("count"), int
+        ):
             max_i = int(tfdata["meta_data"][resource].get("count"))
         elif tfdata["meta_data"][resource].get("max_capacity"):
             max_i = int(
