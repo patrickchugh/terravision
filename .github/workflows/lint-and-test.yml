@@ -50,6 +50,16 @@ jobs:
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       #----------------------------------------------
+      #       Retrieve temporary AWS credentials
+      #----------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::166659698090:role/githubactions
+          role-session-name: ghasession
+          aws-region: us-east-1
+
+      #----------------------------------------------
       # install dependencies
       #----------------------------------------------
       - name: Install python dependencies
