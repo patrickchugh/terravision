@@ -24,9 +24,27 @@ typing-extensions = "^4.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.1"
-black = "^23.3.0"
+black = "24.3.0"
 isort = "^5.12.0"
 
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
 
 [tool.isort]
 skip = ["drawing.py"]
