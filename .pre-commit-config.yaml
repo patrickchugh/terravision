@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: pytest
         name: Run pytest
-        entry: poetry run pytest
+        entry: poetry run pytest -m "not slow"
         language: system
         pass_filenames: false
         always_run: true

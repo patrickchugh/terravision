@@ -48,13 +48,13 @@ def test_help() -> None:
 
 
 @pytest.mark.parametrize(
-    "repo_path,expected_file",
+    "json_path,expected_file",
     [
-        ("terraform-examples.git//aws/wordpress_fargate", "expected-wordpress.json"),
-        ("testcase-bastion.git//examples", "bastion-expected.json"),
+        ("wordpress-tfdata.json", "expected-wordpress.json"),
+        ("bastion-tfdata.json", "bastion-expected.json"),
     ],
 )
-def test_graphdata_output(repo_path: str, expected_file: str, tmp_path: Path) -> None:
+def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
     """Test graphdata command generates correct JSON output.
 
     Validates that the graphdata command correctly parses Terraform code
@@ -66,7 +66,7 @@ def test_graphdata_output(repo_path: str, expected_file: str, tmp_path: Path) ->
         tmp_path: Pytest fixture providing temporary directory
     """
     # Construct full GitHub repository URL with subfolder
-    github_repo = f"{BASE_REPO}/{repo_path}"
+    local_json = JSON_DIR / json_path
     expected_path = JSON_DIR / expected_file
     output_file = tmp_path / "output.json"
 
@@ -75,7 +75,7 @@ def test_graphdata_output(repo_path: str, expected_file: str, tmp_path: Path) ->
         [
             "graphdata",
             "--source",
-            github_repo,
+            local_json,
             "--outfile",
             output_file.name,
             "--debug",
@@ -96,7 +96,12 @@ def test_graphdata_output(repo_path: str, expected_file: str, tmp_path: Path) ->
     assert actual == expected, "JSON output doesn't match expected"
 
 
-def test_draw_command_basic(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "repo_path",
+    ["testcase-bastion.git//examples"],
+)
+@pytest.mark.slow
+def test_draw_command_basic(repo_path: str, tmp_path: Path) -> None:
     """Test basic draw command execution.
 
     Validates that the draw command successfully generates a PNG diagram
@@ -105,7 +110,7 @@ def test_draw_command_basic(tmp_path: Path) -> None:
     Args:
         tmp_path: Pytest fixture providing temporary directory
     """
-    github_repo = f"{BASE_REPO}/testcase-bastion.git//examples"
+    github_repo = f"{BASE_REPO}/{repo_path}"
     output_name = "test_arch"
 
     # Execute draw command to generate PNG diagram
