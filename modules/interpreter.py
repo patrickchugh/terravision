@@ -682,180 +682,59 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with node_list and meta_data populated
     """
     meta_data = dict()
-    # Create unique list of node names from graph
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
-    # Determine default module name
-    if not tfdata["all_module"]:
-        mod = "main"
-    # else:
-    #     first_module = tfdata["all_module"][next(iter(tfdata["all_module"]))][0]
-    #     mod = next(iter(first_module))
+
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
-    # Check if resources exist
+
     if not tfdata.get("all_resource"):
         click.echo(
-            click.style(
-                f"\nWARNING: Unable to find any resources ", fg="red", bold=True
-            )
+            click.style("\nWARNING: Unable to find any resources", fg="red", bold=True)
         )
-        tfdata["all_resource"] = dict()
-    else:
-        # Process each file's resources
-        for filename, resource_list in tfdata["all_resource"].items():
-            # Extract module name from filename if present
-            if ";" in filename:
-                mod = filename.split(";")[1]
-            # Match source code resource names to actual created resources
-            for item in resource_list:
-                for resource_type in item.keys():
-                    for resource_name in item[resource_type]:
-                        # Build resource node name
-                        if resource_name.startswith("module."):
-                            resource_node = resource_name
-                        else:
-                            resource_node = f"{resource_type}.{resource_name}"
-                        # Check for implied resources (e.g., CloudWatch from IAM policies)
-                        meta_data, tfdata = handle_implied_resources(
-                            item, resource_type, resource_name, tfdata, meta_data
-                        )
+        tfdata["all_resource"] = {}
+        tfdata["meta_data"] = {}
+        return tfdata
+
+    # Process each file's resources
+    for filename, resource_list in tfdata["all_resource"].items():
+        mod = filename.split(";")[1] if ";" in filename else "main"
+
+        for item in resource_list:
+            for resource_type in item.keys():
+                for resource_name in item[resource_type]:
+                    resource_node = (
+                        resource_name
+                        if resource_name.startswith("module.")
+                        else f"{resource_type}.{resource_name}"
+                    )
+
+                    # Check for implied resources
+                    meta_data, tfdata = handle_implied_resources(
+                        item, resource_type, resource_name, tfdata, meta_data
+                    )
+
                     click.echo(f"   {resource_node}")
-                    # Find actual resource in node list
+
                     found_node = find_actual_resource(
                         tfdata["node_list"], resource_node, resource_type, mod, tfdata
                     )
                     if not found_node:
-                        break  # Resource not created, skip
-                    else:
-                        # Merge original metadata with source file metadata
-                        omd = dict(tfdata["original_metadata"][found_node])
-                        md = item[resource_type][resource_name]
-                        # Preserve original count expression
-                        if md.get("count"):
-                            md["original_count"] = str(md["count"])
-                        # Override with source file values
-                        omd.update(md)
-                        meta_data[resource_node] = omd
-                        if not meta_data[resource_node].get("module"):
-                            meta_data[resource_node]["module"] = mod
+                        break
+
+                    # Merge metadata
+                    omd = dict(tfdata["original_metadata"][found_node])
+                    md = item[resource_type][resource_name]
+                    if md.get("count"):
+                        md["original_count"] = str(md["count"])
+                    omd.update(md)
+                    omd.setdefault("module", mod)
+
+                    meta_data[resource_node] = omd
+                    if found_node != resource_node:
                         meta_data[found_node] = omd
-                        if not meta_data[found_node].get("module"):
-                            meta_data[found_node]["module"] = mod
-                        # Handle resources with count/for_each
-                        if "~" in found_node:
-                            meta_data = handle_numbered_nodes(
-                                found_node, tfdata, meta_data
-                            )
-    tfdata["meta_data"] = meta_data
-    return tfdata
 
+                    if "~" in found_node:
+                        meta_data = handle_numbered_nodes(found_node, tfdata, meta_data)
 
-def get_metadata_old(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Legacy metadata extraction function (deprecated).
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with node_list and meta_data populated
-    """
-    meta_data = dict()
-    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
-    # Default module is assumed main unless over-ridden
-    mod = "main"
-    click.echo(
-        click.style(
-            f"\nProcessing resources..",
-            fg="white",
-            bold=True,
-        )
-    )
-    if not tfdata.get("all_resource"):
-        click.echo(
-            click.style(
-                f"\nWARNING: Unable to find any resources ",
-                fg="red",
-                bold=True,
-            )
-        )
-        tfdata["all_resource"] = dict()
-    for filename, resource_list in tfdata["all_resource"].items():
-        if ";" in filename:
-            mod = filename.split(";")[1]
-        for item in resource_list:
-            for resource_type in item.keys():
-                for resource_name in item[resource_type]:
-                    # Check if Cloudwatch is present in policies and create node for Cloudwatch service if found
-                    if resource_type == "aws_iam_policy":
-                        if "logs:" in item[resource_type][resource_name]["policy"][0]:
-                            if (
-                                not "aws_cloudwatch_log_group.logs"
-                                in tfdata["node_list"]
-                            ):
-                                tfdata["node_list"].append(
-                                    "aws_cloudwatch_log_group.logs"
-                                )
-                            meta_data["aws_cloudwatch_log_group.logs"] = item[
-                                resource_type
-                            ][resource_name]
-                if "module." in resource_name:
-                    mod = resource_name.split(".")[1]
-                    resource_node = resource_name
-                else:
-                    resource_node = f"{resource_type}.{resource_name}"
-                click.echo(f"   {resource_node}")
-                # Check if numbered node exists in metadata
-                if not resource_node in tfdata["original_metadata"].keys():
-                    # TODO: check if there is a count attribute as well here before renaming
-                    if "[0]~1" not in resource_node:
-                        resource_node = f"{resource_node}[0]~1"
-                    # Sometimes resource names get mutated due to dynamic stanzas so just guess the resource name by type
-                    if not resource_node in tfdata["original_metadata"].keys():
-                        resource_node = helpers.list_of_dictkeys_containing(
-                            tfdata["original_metadata"],
-                            f"module.{mod}.{resource_type}.",
-                        )
-                        if not resource_node:
-                            break  # resource would not be created so ignore
-                        else:
-                            resource_node = resource_node[0]
-                omd = dict(tfdata["original_metadata"][resource_node])
-                md = item[resource_type][resource_name]
-                omd.update(md)
-                md = omd
-                # Capture original count value string
-                if md.get("count"):
-                    md["original_count"] = str(md["count"])
-                if helpers.find_resource_containing(tfdata["node_list"], resource_node):
-                    matching_node = helpers.find_resource_containing(
-                        tfdata["node_list"], resource_node
-                    )
-                    meta_data[resource_node] = md
-                    meta_data[resource_node]["module"] = mod
-                    if md.get("count") and tfdata["original_metadata"][
-                        matching_node
-                    ].get("count"):
-                        meta_data[resource_node]["count"] = int(
-                            tfdata["original_metadata"][matching_node]["count"]
-                        )
-                    elif md.get("count"):
-                        meta_data[resource_node]["count"] = 1
-                if (
-                    f"{resource_node}~1" in tfdata["node_list"]
-                    and tfdata["original_metadata"][f"{resource_node}~1"]["count"] > 1
-                ):
-                    for i in range(
-                        1,
-                        tfdata["original_metadata"][f"{resource_node}~1"]["count"] + 1,
-                    ):
-                        meta_data[resource_node] = md
-                        meta_data[f"{resource_node}~{i}"] = md
-                        meta_data[f"{resource_node}~{i}"]["module"] = mod
-                        meta_data[f"{resource_node}~{i}"]["count"] = int(
-                            tfdata["original_metadata"][f"{resource_node}~1"]["count"]
-                        )
-                        meta_data[resource_node]["count"] = int(
-                            tfdata["original_metadata"][f"{resource_node}~1"]["count"]
-                        )
     tfdata["meta_data"] = meta_data
     return tfdata
 
