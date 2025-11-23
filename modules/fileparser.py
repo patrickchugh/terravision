@@ -37,43 +37,6 @@ if not os.path.exists(MODULE_DIR):
 EXTRACT: List[str] = ["module", "output", "variable", "locals", "resource", "data"]
 
 
-def walklevel(some_dir: str, level: int = 1) -> List[str]:
-    """Walk directory tree up to specified depth level.
-
-    Generator function that traverses directory structure and collects
-    Terraform files (.tf) and auto.tfvars files up to a specified depth.
-
-    Args:
-        some_dir: Root directory path to start walking from
-        level: Maximum depth to traverse (default: 1)
-
-    Yields:
-        Tuple of (root, dirs, files) for each directory level
-
-    Returns:
-        List of paths to Terraform files found
-    """
-    paths: List[str] = list()
-    some_dir = some_dir.rstrip(os.path.sep)
-    assert os.path.isdir(some_dir)
-    num_sep = some_dir.count(os.path.sep)
-
-    for root, dirs, files in os.walk(some_dir):
-        # Collect Terraform and variable files
-        for file in files:
-            if file.lower().endswith(".tf") or file.lower().endswith("auto.tfvars"):
-                paths.append(os.path.join(root, file))
-
-        yield root, dirs, files
-
-        # Limit traversal depth
-        num_sep_this = root.count(os.path.sep)
-        if num_sep + level <= num_sep_this:
-            del dirs[:]
-
-    return paths
-
-
 def find_tf_files(
     source: str,
     paths: Optional[List[str]] = None,
