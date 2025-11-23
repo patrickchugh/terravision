@@ -146,6 +146,7 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for key, orig_value in attr_list.items():
             value = str(orig_value)
             # Iteratively resolve all variable references
+            count = 0
             while (
                 (
                     "var." in value
@@ -158,7 +159,9 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 and key != "depends_on"
                 and key != "original_count"
+                and count < 50
             ):
+                count += 1
                 mod = attr_list["module"]
                 value = find_replace_values(value, mod, tfdata)
             # Update metadata with resolved value
