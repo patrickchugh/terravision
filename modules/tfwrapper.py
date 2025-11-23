@@ -328,7 +328,7 @@ def setup_graph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             details.update(object["change"]["after_sensitive"])
             # Add module name if resource is in a module
             if "module." in object["address"]:
-                modname = object["module_address"].split("module.")[1]
+                modname = object["module_address"].split("module.")[1].split(".")[0]
                 details["module"] = modname
             tfdata["meta_data"][node] = details
     # Remove duplicates from node list
