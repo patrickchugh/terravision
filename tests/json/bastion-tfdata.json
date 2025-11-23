@@ -3933,59 +3933,33 @@
         },
         "relevant_attributes": [
             {
-                "resource": "module.private-vpc.aws_internet_gateway.vpc_gw",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.private-vpc.aws_security_group.allow-strict",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.bastion-host.data.template_cloudinit_config.bastion_host",
-                "attribute": [
-                    "rendered"
-                ]
-            },
-            {
-                "resource": "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.private-vpc.aws_eip.nat_eip",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.private-vpc.aws_subnet.public_subnets",
-                "attribute": []
-            },
-            {
-                "resource": "module.ec2-instance.aws_iam_role.ec2_iam_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.private-vpc.aws_vpc_dhcp_options.vpc_dhcp",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
                 "resource": "module.private-vpc.data.aws_availability_zones.available_az",
                 "attribute": [
                     "names"
                 ]
             },
             {
-                "resource": "module.private-vpc.aws_route_table.vpc_public_rt",
+                "resource": "module.private-vpc.aws_internet_gateway.vpc_gw",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.private-vpc.aws_vpc.main_vpc",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.bastion-host.aws_instance.bastion_host",
+                "attribute": []
+            },
+            {
+                "resource": "module.private-vpc.aws_subnet.private_subnets",
+                "attribute": []
+            },
+            {
+                "resource": "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile",
                 "attribute": [
                     "id"
                 ]
@@ -4001,25 +3975,37 @@
                 ]
             },
             {
-                "resource": "module.bastion-host.aws_instance.bastion_host",
-                "attribute": []
-            },
-            {
-                "resource": "module.ec2-instance.data.aws_iam_policy.AmazonSSMManagedInstanceCore",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
                 "resource": "module.private-vpc.data.aws_availability_zones.available_az",
                 "attribute": [
                     "zone_ids"
                 ]
             },
             {
-                "resource": "module.private-vpc.aws_vpc.main_vpc",
+                "resource": "module.private-vpc.aws_route_table.vpc_public_rt",
                 "attribute": [
                     "id"
+                ]
+            },
+            {
+                "resource": "module.private-vpc.aws_vpc_dhcp_options.vpc_dhcp",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.ec2-instance.aws_iam_role.ec2_iam_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.private-vpc.aws_subnet.public_subnets",
+                "attribute": []
+            },
+            {
+                "resource": "module.bastion-host.data.template_cloudinit_config.bastion_host",
+                "attribute": [
+                    "rendered"
                 ]
             },
             {
@@ -4029,11 +4015,25 @@
                 ]
             },
             {
-                "resource": "module.private-vpc.aws_subnet.private_subnets",
-                "attribute": []
+                "resource": "module.private-vpc.aws_security_group.allow-strict",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.ec2-instance.data.aws_iam_policy.AmazonSSMManagedInstanceCore",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.private-vpc.aws_eip.nat_eip",
+                "attribute": [
+                    "id"
+                ]
             }
         ],
-        "timestamp": "2025-11-22T09:22:31Z",
+        "timestamp": "2025-11-23T12:17:06Z",
         "applyable": true,
         "complete": true,
         "errored": false
@@ -8139,5 +8139,5 @@
         "/Users/patrick/.terravision/module_cache/https___github.com_patrickchugh_testcase-bastion.git__examples;main;/bastion-host/vars.tf",
         "/Users/patrick/.terravision/module_cache/https___github.com_patrickchugh_testcase-bastion.git__examples;main;/ec2-instance/vars.tf"
     ],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpqujsgokg'>"
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpse71ljsu'>"
 }

@@ -38,7 +38,7 @@ def resolve_all_variables(
     # Create view of locals by module
     tfdata = extract_locals(tfdata)
     # Create metadata view from nested TF file resource attributes
-    tfdata = get_metadata(tfdata)
+    tfdata = merge_metadata(tfdata)
     # Replace metadata (resource attributes) variables and locals with actual values
     tfdata = handle_metadata_vars(tfdata)
     # Inject parent module variables that are referenced downstream in sub modules
@@ -631,58 +631,43 @@ def handle_numbered_nodes(
     return meta_data
 
 
-def find_actual_resource(
-    node_list: List[str],
-    resource: str,
-    resource_type: str,
-    mod: str,
-    tfdata: Dict[str, Any],
-) -> str:
-    """Find actual resource name in node list.
-
-    Args:
-        node_list: List of all resource nodes
-        resource: Resource name to find
-        resource_type: Type of resource
-        mod: Module name
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Actual resource name or False if not found
-    """
-    # Check if singleton resource exists in node list
-    if resource in node_list:
-        return resource
+def parse_resource_node(resource_node: str) -> Tuple[str, str]:
+    """Parse resource node into type and name."""
+    if resource_node.startswith("module."):
+        parts = resource_node.split(".")
+        resource_type = parts[2] if len(parts) > 2 else ""
+        resource_name = ".".join(parts[3:]) if len(parts) > 3 else ""
     else:
-        # Search for numbered instances (e.g., resource[0])
-        search = f"{resource}["
-        all_candidates = helpers.find_all_resources_containing(node_list, search)
-        if all_candidates:
-            return all_candidates[0]
-        else:
-            # Handle name mutations by searching for closest match
-            if resource not in tfdata["original_metadata"].keys():
-                resource = helpers.list_of_dictkeys_containing(
-                    tfdata["original_metadata"],
-                    f"module.{mod}.{resource_type}.",
-                )
-                if resource:
-                    return resource[0]
-                else:
-                    return False
+        parts = resource_node.split(".", 1)
+        resource_type = parts[0]
+        resource_name = parts[1] if len(parts) > 1 else ""
+    return resource_type, resource_name
 
 
-def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract resource attributes from Terraform files.
+def find_resource_in_all_resource(
+    resource_type: str, base_name: str, resource_node: str, tfdata: Dict[str, Any]
+) -> Tuple[Dict[str, Any], str]:
+    """Find matching resource item and key in all_resource."""
+    for resource_list in tfdata["all_resource"].values():
+        for item in resource_list:
+            if resource_type in item:
+                if base_name in item[resource_type]:
+                    return item, base_name
+                if resource_node in item[resource_type]:
+                    return item, resource_node
+    return None, None
+
+
+def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract resource attributes from Terraform source and plan data and merge to create metadata.
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with node_list and meta_data keys populated
+        Updated tfdata with meta_data keys populated
     """
     meta_data = dict()
-    tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
     if not tfdata.get("all_resource"):
         click.echo(
@@ -691,45 +676,26 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["all_resource"] = {}
         tfdata["meta_data"] = {}
         return tfdata
-    # Process each file's resources
-    for filename, resource_list in tfdata["all_resource"].items():
-        mod = filename.split(";")[1] if ";" in filename else "main"
-        for item in resource_list:
-            for resource_type in item.keys():
-                for resource_name in item[resource_type]:
-                    resource_node = (
-                        resource_name
-                        if resource_name.startswith("module.")
-                        else f"{resource_type}.{resource_name}"
-                    )
 
-                    # Check for implied resources
-                    meta_data, tfdata = handle_implied_resources(
-                        item, resource_type, resource_name, tfdata, meta_data
-                    )
-
-                    click.echo(f"   {resource_node}")
-
-                    found_node = find_actual_resource(
-                        tfdata["node_list"], resource_node, resource_type, mod, tfdata
-                    )
-                    if not found_node:
-                        break
-
-                    # Merge metadata
-                    omd = dict(tfdata["original_metadata"][found_node])
-                    md = item[resource_type][resource_name]
-                    if md.get("count"):
-                        md["original_count"] = str(md["count"])
-                    omd.update(md)
-                    omd.setdefault("module", mod)
-
-                    meta_data[resource_node] = omd
-                    if found_node != resource_node:
-                        meta_data[found_node] = omd
-
-                    if "~" in found_node:
-                        meta_data = handle_numbered_nodes(found_node, tfdata, meta_data)
+    for resource_node in tfdata["node_list"]:
+        click.echo(f"   {resource_node}")
+        resource_type, resource_name = parse_resource_node(resource_node)
+        base_name = resource_name.split("[")[0] if resource_name else ""
+        item, actual_key = find_resource_in_all_resource(
+            resource_type, base_name, resource_node, tfdata
+        )
+        if item:
+            meta_data, tfdata = handle_implied_resources(
+                item, resource_type, actual_key, tfdata, meta_data
+            )
+            omd = dict(tfdata["original_metadata"][resource_node])
+            md = item[resource_type][actual_key]
+            if md.get("count"):
+                md["original_count"] = str(md["count"])
+            omd.update(md)
+            meta_data[resource_node] = omd
+            if "~" in resource_node:
+                meta_data = handle_numbered_nodes(resource_node, tfdata, meta_data)
 
     tfdata["meta_data"] = meta_data
     return tfdata

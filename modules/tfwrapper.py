@@ -290,8 +290,8 @@ def make_tf_data(
     return tfdata
 
 
-def setup_graph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Initialize graph data structures from terraform plan.
+def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Initialize tfdata data structures from terraform plan.
 
     Args:
         tfdata: Terraform data dictionary
@@ -328,8 +328,10 @@ def setup_graph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             details.update(object["change"]["after_sensitive"])
             # Add module name if resource is in a module
             if "module." in object["address"]:
-                modname = object["module_address"].split("module.")[1].split(".")[0]
+                modname = object["module_address"].split("module.")[-1].split(".")[0]
                 details["module"] = modname
+            else:
+                details["module"] = "main"
             tfdata["meta_data"][node] = details
     # Remove duplicates from node list
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
@@ -386,7 +388,7 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
         Updated tfdata with populated graphdict connections
     """
     # Initialize graph structures
-    tfdata = setup_graph(tfdata)
+    tfdata = setup_tfdata(tfdata)
     # Build lookup table mapping graph IDs to resource names
     gvid_table = list()
     # Build gvid lookup table from graph objects

@@ -17,7 +17,6 @@
     ],
     "aws_internet_gateway.igw": [
         "aws_eip.elastic_ip",
-        "module.private-vpc.aws_route.public_internet_gateway",
         "tv_aws_internet.internet"
     ],
     "module.bastion-host.aws_instance.bastion_host": [],
@@ -50,12 +49,14 @@
     "module.private-vpc.aws_route.private_nat_gateway": [
         "module.private-vpc.aws_route_table.vpc_private_rt"
     ],
-    "module.private-vpc.aws_route.public_internet_gateway": [],
+    "module.private-vpc.aws_route.public_internet_gateway": [
+        "aws_internet_gateway.igw",
+        "module.private-vpc.aws_route_table.vpc_public_rt"
+    ],
     "module.private-vpc.aws_route_table.vpc_private_rt": [
         "module.private-vpc.aws_route_table_association.private"
     ],
     "module.private-vpc.aws_route_table.vpc_public_rt": [
-        "module.private-vpc.aws_route.public_internet_gateway",
         "module.private-vpc.aws_route_table_association.public"
     ],
     "module.private-vpc.aws_route_table_association.private[0]~1": [

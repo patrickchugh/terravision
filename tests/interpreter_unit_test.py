@@ -11,7 +11,6 @@ from modules.interpreter import (
     replace_local_values,
     handle_implied_resources,
     handle_numbered_nodes,
-    find_actual_resource,
 )
 
 
@@ -57,7 +56,9 @@ class TestReplaceDataValues(unittest.TestCase):
     def test_replace_data_values_with_match(self):
         tfdata = {}
         result = replace_data_values(
-            ["data.aws_availability_zones_names"], "${data.aws_availability_zones_names}", tfdata
+            ["data.aws_availability_zones_names"],
+            "${data.aws_availability_zones_names}",
+            tfdata,
         )
         self.assertIsInstance(result, (str, list))
 
@@ -72,7 +73,9 @@ class TestReplaceLocalValues(unittest.TestCase):
     @patch("modules.interpreter.click.echo")
     def test_replace_local_values_not_found(self, mock_echo):
         tfdata = {"all_locals": {"main": {}}}
-        result = replace_local_values(["local.missing"], "local.missing", "main", tfdata)
+        result = replace_local_values(
+            ["local.missing"], "local.missing", "main", tfdata
+        )
         self.assertIsInstance(result, str)
 
 
@@ -109,29 +112,6 @@ class TestHandleNumberedNodes(unittest.TestCase):
         meta_data = {"resource[0]": {"attr": "value"}}
         result = handle_numbered_nodes("resource[0]", tfdata, meta_data)
         self.assertEqual(result["resource[0]"]["count"], 1)
-
-
-class TestFindActualResource(unittest.TestCase):
-    def test_find_actual_resource_exact_match(self):
-        node_list = ["aws_s3_bucket.test"]
-        result = find_actual_resource(
-            node_list, "aws_s3_bucket.test", "aws_s3_bucket", "main", {"original_metadata": {}}
-        )
-        self.assertEqual(result, "aws_s3_bucket.test")
-
-    def test_find_actual_resource_with_bracket(self):
-        node_list = ["aws_s3_bucket.test[0]", "aws_s3_bucket.test[1]"]
-        result = find_actual_resource(
-            node_list, "aws_s3_bucket.test", "aws_s3_bucket", "main", {"original_metadata": {}}
-        )
-        self.assertEqual(result, "aws_s3_bucket.test[0]")
-
-    def test_find_actual_resource_not_found(self):
-        node_list = ["aws_s3_bucket.other"]
-        result = find_actual_resource(
-            node_list, "aws_s3_bucket.test", "aws_s3_bucket", "main", {"original_metadata": {}}
-        )
-        self.assertFalse(result)
 
 
 if __name__ == "__main__":

@@ -3269,7 +3269,8 @@
                         "target_tracking_scaling_policy_configuration": [],
                         "alarm_arns": [],
                         "arn": true,
-                        "id": true
+                        "id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alarm_arns": true,
@@ -3329,7 +3330,8 @@
                         "target_tracking_scaling_policy_configuration": [],
                         "alarm_arns": [],
                         "arn": true,
-                        "id": true
+                        "id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alarm_arns": true,
@@ -3383,7 +3385,8 @@
                         "id": true,
                         "role_arn": true,
                         "suspended_state": [],
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -3574,7 +3577,8 @@
                         "status": true,
                         "tags_all": {},
                         "trusted_key_groups": [],
-                        "trusted_signers": []
+                        "trusted_signers": [],
+                        "module": "main"
                     },
                     "after_unknown": {
                         "aliases": [
@@ -3901,7 +3905,8 @@
                         "id": true,
                         "log_group_class": true,
                         "name_prefix": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -3958,7 +3963,8 @@
                         "arn": true,
                         "evaluate_low_sample_count_percentiles": true,
                         "id": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alarm_actions": true,
@@ -4020,7 +4026,8 @@
                         "arn": true,
                         "evaluate_low_sample_count_percentiles": true,
                         "id": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alarm_actions": true,
@@ -4067,7 +4074,8 @@
                         "subnet_ids": [],
                         "supported_network_types": [],
                         "tags_all": {},
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4106,7 +4114,8 @@
                         "arn": true,
                         "id": true,
                         "setting": [],
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4184,7 +4193,8 @@
                         "id": true,
                         "tags_all": {},
                         "task_definition": true,
-                        "triggers": {}
+                        "triggers": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alarms": [],
@@ -4296,7 +4306,8 @@
                         "id": true,
                         "revision": true,
                         "tags_all": {},
-                        "task_role_arn": true
+                        "task_role_arn": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4384,7 +4395,8 @@
                         "performance_mode": true,
                         "protection": [],
                         "size_in_bytes": [],
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4440,7 +4452,8 @@
                         "network_interface_id": true,
                         "owner_id": true,
                         "security_groups": [],
-                        "subnet_id": true
+                        "subnet_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "availability_zone_id": true,
@@ -4492,7 +4505,8 @@
                         "network_interface_id": true,
                         "owner_id": true,
                         "security_groups": [],
-                        "subnet_id": true
+                        "subnet_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "availability_zone_id": true,
@@ -4544,7 +4558,8 @@
                         "network_interface_id": true,
                         "owner_id": true,
                         "security_groups": [],
-                        "subnet_id": true
+                        "subnet_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "availability_zone_id": true,
@@ -4590,7 +4605,8 @@
                         "name": true,
                         "name_prefix": true,
                         "policy_id": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4632,7 +4648,8 @@
                         "name": true,
                         "name_prefix": true,
                         "policy_id": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4679,7 +4696,8 @@
                         "managed_policy_arns": [],
                         "name_prefix": true,
                         "tags_all": {},
-                        "unique_id": true
+                        "unique_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4730,7 +4748,8 @@
                         "managed_policy_arns": [],
                         "name_prefix": true,
                         "tags_all": {},
-                        "unique_id": true
+                        "unique_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -4768,7 +4787,8 @@
                     "after": {
                         "role": "wordpress-task-execution-role-dev",
                         "id": true,
-                        "policy_arn": true
+                        "policy_arn": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "id": true,
@@ -4797,7 +4817,8 @@
                     "after": {
                         "role": "wordpress-task-role-dev",
                         "id": true,
-                        "policy_arn": true
+                        "policy_arn": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "id": true,
@@ -4859,7 +4880,8 @@
                         "arn": true,
                         "id": true,
                         "listener_arn": true,
-                        "tags_all": {}
+                        "tags_all": {},
+                        "module": "main"
                     },
                     "after_unknown": {
                         "action": [
@@ -4978,7 +5000,8 @@
                         "target_failover": [],
                         "target_group_health": [],
                         "target_health_state": [],
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5118,7 +5141,8 @@
                         "storage_encrypted": true,
                         "storage_type": true,
                         "tags_all": {},
-                        "vpc_security_group_ids": []
+                        "vpc_security_group_ids": [],
+                        "module": "main"
                     },
                     "after_unknown": {
                         "allocated_storage": true,
@@ -5228,7 +5252,8 @@
                         "zone_id": "Z1017156O279JAVBAIZ3",
                         "allow_overwrite": true,
                         "fqdn": true,
-                        "id": true
+                        "id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alias": [
@@ -5300,7 +5325,8 @@
                         "zone_id": "Z1017156O279JAVBAIZ3",
                         "allow_overwrite": true,
                         "fqdn": true,
-                        "id": true
+                        "id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alias": [
@@ -5372,7 +5398,8 @@
                         "zone_id": "Z1017156O279JAVBAIZ3",
                         "allow_overwrite": true,
                         "fqdn": true,
-                        "id": true
+                        "id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "alias": [
@@ -5461,7 +5488,8 @@
                         "name_prefix": true,
                         "owner_id": true,
                         "tags_all": {},
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5575,7 +5603,8 @@
                         "name_prefix": true,
                         "owner_id": true,
                         "tags_all": {},
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5673,7 +5702,8 @@
                         "name_prefix": true,
                         "owner_id": true,
                         "tags_all": {},
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5771,7 +5801,8 @@
                         "name_prefix": true,
                         "owner_id": true,
                         "tags_all": {},
-                        "vpc_id": true
+                        "vpc_id": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5858,7 +5889,8 @@
                         "key_id": true,
                         "tags_all": {},
                         "tier": true,
-                        "version": true
+                        "version": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5914,7 +5946,8 @@
                         "key_id": true,
                         "tags_all": {},
                         "tier": true,
-                        "version": true
+                        "version": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "arn": true,
@@ -5965,7 +5998,8 @@
                         "special": false,
                         "upper": true,
                         "id": true,
-                        "result": true
+                        "result": true,
+                        "module": "main"
                     },
                     "after_unknown": {
                         "id": true,
@@ -17465,205 +17499,21 @@
         },
         "relevant_attributes": [
             {
-                "resource": "module.alb.aws_lb.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_eip.nat",
-                "attribute": []
-            },
-            {
-                "resource": "module.alb.aws_lb_listener.frontend_https",
-                "attribute": []
-            },
-            {
-                "resource": "module.alb.aws_lb_target_group_attachment.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route.private_nat_gateway",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_cloudfront_distribution.this",
                 "attribute": [
-                    "default_route_table_id"
+                    "domain_name"
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "instance_tenancy"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_policy.scale_up",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "service_namespace"
-                ]
-            },
-            {
-                "resource": "aws_cloudwatch_log_group.wordpress",
+                "resource": "aws_db_subnet_group.this",
                 "attribute": [
                     "name"
                 ]
             },
             {
-                "resource": "module.vpc.aws_subnet.database",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
+                "resource": "aws_cloudfront_distribution.this",
                 "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "data.aws_availability_zones.this",
-                "attribute": [
-                    "names"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_nat_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_execution_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_target_group.main",
-                "attribute": []
-            },
-            {
-                "resource": "aws_appautoscaling_target.this",
-                "attribute": [
-                    "scalable_dimension"
-                ]
-            },
-            {
-                "resource": "aws_lb_target_group.this",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_security_group.db",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "ipv6_association_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "domain_validation_options"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route.private_ipv6_egress",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_cloudwatch_log_group.flow_log[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "main_route_table_id"
-                ]
-            },
-            {
-                "resource": "aws_efs_file_system.this",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_security_group.alb",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table.public[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "domain_validation_options"
-                ]
-            },
-            {
-                "resource": "module.acm_alb.aws_acm_certificate.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "owner_id"
-                ]
-            },
-            {
-                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate_validation.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.outpost",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_role",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "data.aws_route53_zone.this",
-                "attribute": [
-                    "zone_id"
+                    "hosted_zone_id"
                 ]
             },
             {
@@ -17679,121 +17529,113 @@
                 ]
             },
             {
-                "resource": "module.alb.aws_lb.this[0]",
+                "resource": "module.vpc.aws_subnet.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate_validation.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_appautoscaling_target.this",
                 "attribute": [
-                    "arn"
+                    "scalable_dimension"
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table.private",
-                "attribute": []
+                "resource": "aws_appautoscaling_target.this",
+                "attribute": [
+                    "service_namespace"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "default_security_group_id"
+                ]
             },
             {
                 "resource": "module.vpc.aws_route_table.public",
                 "attribute": []
             },
             {
-                "resource": "module.acm.aws_route53_record.validation",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_role.task_role",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]",
+                "resource": "aws_ecs_task_definition.this",
                 "attribute": [
                     "arn"
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table_association.private",
+                "resource": "aws_iam_policy.task_execution_policy",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "cidr_block"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_route53_record.validation",
                 "attribute": []
             },
             {
-                "resource": "module.acm_alb.aws_route53_record.validation",
+                "resource": "module.acm.aws_acm_certificate_validation.this",
                 "attribute": []
             },
             {
-                "resource": "aws_security_group.efs",
+                "resource": "module.vpc.aws_internet_gateway.this[0]",
                 "attribute": [
                     "id"
                 ]
             },
             {
-                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table.redshift",
-                "attribute": []
-            },
-            {
                 "resource": "aws_ecs_cluster.this",
                 "attribute": [
-                    "name"
+                    "id"
                 ]
             },
             {
-                "resource": "random_string.snapshot_suffix",
+                "resource": "aws_iam_role.task_execution_role",
                 "attribute": [
-                    "result"
+                    "arn"
                 ]
             },
             {
-                "resource": "aws_rds_cluster.this",
+                "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "endpoint"
+                    "default_network_acl_id"
                 ]
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "data.aws_availability_zones.this",
+                "attribute": [
+                    "names"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_customer_gateway.this",
+                "attribute": []
             },
             {
                 "resource": "module.vpc.aws_subnet.public",
                 "attribute": []
             },
             {
-                "resource": "aws_iam_policy.task_policy",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route.database_nat_gateway",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_cloudfront_distribution.this",
-                "attribute": [
-                    "hosted_zone_id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_internet_gateway.this[0]",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table.intra",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.redshift",
-                "attribute": []
-            },
-            {
-                "resource": "aws_appautoscaling_policy.scale_down",
+                "resource": "aws_appautoscaling_policy.scale_up",
                 "attribute": [
                     "arn"
                 ]
@@ -17805,9 +17647,119 @@
                 ]
             },
             {
-                "resource": "aws_db_subnet_group.this",
+                "resource": "aws_ecs_service.this",
                 "attribute": [
                     "name"
+                ]
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "domain_validation_options"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group.main",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.intra",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "owner_id"
+                ]
+            },
+            {
+                "resource": "aws_security_group.alb",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.intra",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "aws_appautoscaling_policy.scale_down",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_nat_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "aws_cloudwatch_log_group.wordpress",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.public",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.outpost",
+                "attribute": []
+            },
+            {
+                "resource": "random_string.snapshot_suffix",
+                "attribute": [
+                    "result"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_internet_gateway.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route.private_ipv6_egress",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "main_route_table_id"
+                ]
+            },
+            {
+                "resource": "aws_ecs_cluster.this",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_rds_cluster.this",
+                "attribute": [
+                    "endpoint"
                 ]
             },
             {
@@ -17817,85 +17769,21 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table_association.database",
-                "attribute": []
+                "resource": "aws_iam_role.task_role",
+                "attribute": [
+                    "arn"
+                ]
             },
             {
-                "resource": "module.acm_alb.aws_acm_certificate_validation.this",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.public",
-                "attribute": []
-            },
-            {
-                "resource": "aws_ecs_cluster.this",
+                "resource": "aws_security_group.efs",
                 "attribute": [
                     "id"
                 ]
-            },
-            {
-                "resource": "aws_ecs_task_definition.this",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "aws_iam_role.task_execution_role",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "data.aws_region.current",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_internet_gateway.this[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_lb_target_group.this",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_customer_gateway.this",
-                "attribute": []
             },
             {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "default_security_group_id"
-                ]
-            },
-            {
-                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_route.public_internet_gateway[0]",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.redshift_public",
-                "attribute": []
-            },
-            {
-                "resource": "module.vpc.aws_subnet.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "module.acm.aws_acm_certificate.this[0]",
-                "attribute": [
-                    "arn"
+                    "default_route_table_id"
                 ]
             },
             {
@@ -17905,13 +17793,187 @@
                 ]
             },
             {
+                "resource": "aws_efs_file_system.this",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route.database_nat_gateway",
+                "attribute": []
+            },
+            {
+                "resource": "data.aws_region.current",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route.public_internet_gateway[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.acm.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "domain_validation_options"
+                ]
+            },
+            {
+                "resource": "module.alb.aws_lb_target_group_attachment.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.acm_alb.aws_acm_certificate.this[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_lb_target_group.this",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.acm_alb.aws_route53_record.validation",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.redshift",
+                "attribute": []
+            },
+            {
+                "resource": "data.aws_route53_zone.this",
+                "attribute": [
+                    "zone_id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.private",
+                "attribute": []
+            },
+            {
+                "resource": "module.alb.aws_lb.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.alb.aws_lb_listener.frontend_https",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_role.task_execution_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_cloudwatch_log_group.flow_log[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.database",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.elasticache",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.redshift_public",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table.database",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_eip.nat",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_subnet.database",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_vpc_ipv4_cidr_block_association.this",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_policy.task_policy",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_egress_only_internet_gateway.this",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route.private_nat_gateway",
+                "attribute": []
+            },
+            {
+                "resource": "aws_lb_target_group.this",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_security_group.db",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_route_table.public[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_iam_role.vpc_flow_log_cloudwatch[0]",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_subnet.intra",
+                "attribute": []
+            },
+            {
+                "resource": "aws_iam_role.task_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "module.vpc.aws_vpc.this[0]",
+                "attribute": [
+                    "ipv6_association_id"
+                ]
+            },
+            {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
                     "enable_dns_hostnames"
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table.database",
+                "resource": "module.acm_alb.aws_acm_certificate.this",
                 "attribute": []
             },
             {
@@ -17921,49 +17983,21 @@
                 ]
             },
             {
-                "resource": "module.vpc.aws_route_table.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "aws_cloudfront_distribution.this",
-                "attribute": [
-                    "domain_name"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_route_table_association.elasticache",
-                "attribute": []
-            },
-            {
-                "resource": "aws_iam_policy.task_execution_policy",
-                "attribute": [
-                    "arn"
-                ]
-            },
-            {
-                "resource": "module.vpc.aws_subnet.private",
-                "attribute": []
-            },
-            {
-                "resource": "aws_ecs_service.this",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
                 "resource": "module.vpc.aws_vpc.this[0]",
                 "attribute": [
-                    "default_network_acl_id"
+                    "instance_tenancy"
                 ]
             },
             {
-                "resource": "module.vpc.aws_vpc.this[0]",
-                "attribute": [
-                    "cidr_block"
-                ]
+                "resource": "module.alb.aws_lb_listener.frontend_http_tcp",
+                "attribute": []
+            },
+            {
+                "resource": "module.vpc.aws_route_table_association.redshift",
+                "attribute": []
             }
         ],
-        "timestamp": "2025-11-22T09:20:01Z",
+        "timestamp": "2025-11-23T12:15:15Z",
         "applyable": true,
         "complete": true,
         "errored": false
@@ -17998,7 +18032,8 @@
                     "target_tracking_scaling_policy_configuration": [],
                     "alarm_arns": [],
                     "arn": true,
-                    "id": true
+                    "id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alarm_arns": true,
@@ -18058,7 +18093,8 @@
                     "target_tracking_scaling_policy_configuration": [],
                     "alarm_arns": [],
                     "arn": true,
-                    "id": true
+                    "id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alarm_arns": true,
@@ -18112,7 +18148,8 @@
                     "id": true,
                     "role_arn": true,
                     "suspended_state": [],
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -18303,7 +18340,8 @@
                     "status": true,
                     "tags_all": {},
                     "trusted_key_groups": [],
-                    "trusted_signers": []
+                    "trusted_signers": [],
+                    "module": "main"
                 },
                 "after_unknown": {
                     "aliases": [
@@ -18630,7 +18668,8 @@
                     "id": true,
                     "log_group_class": true,
                     "name_prefix": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -18687,7 +18726,8 @@
                     "arn": true,
                     "evaluate_low_sample_count_percentiles": true,
                     "id": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alarm_actions": true,
@@ -18749,7 +18789,8 @@
                     "arn": true,
                     "evaluate_low_sample_count_percentiles": true,
                     "id": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alarm_actions": true,
@@ -18796,7 +18837,8 @@
                     "subnet_ids": [],
                     "supported_network_types": [],
                     "tags_all": {},
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -18835,7 +18877,8 @@
                     "arn": true,
                     "id": true,
                     "setting": [],
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -18913,7 +18956,8 @@
                     "id": true,
                     "tags_all": {},
                     "task_definition": true,
-                    "triggers": {}
+                    "triggers": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alarms": [],
@@ -19025,7 +19069,8 @@
                     "id": true,
                     "revision": true,
                     "tags_all": {},
-                    "task_role_arn": true
+                    "task_role_arn": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19113,7 +19158,8 @@
                     "performance_mode": true,
                     "protection": [],
                     "size_in_bytes": [],
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19169,7 +19215,8 @@
                     "network_interface_id": true,
                     "owner_id": true,
                     "security_groups": [],
-                    "subnet_id": true
+                    "subnet_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "availability_zone_id": true,
@@ -19221,7 +19268,8 @@
                     "network_interface_id": true,
                     "owner_id": true,
                     "security_groups": [],
-                    "subnet_id": true
+                    "subnet_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "availability_zone_id": true,
@@ -19273,7 +19321,8 @@
                     "network_interface_id": true,
                     "owner_id": true,
                     "security_groups": [],
-                    "subnet_id": true
+                    "subnet_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "availability_zone_id": true,
@@ -19319,7 +19368,8 @@
                     "name": true,
                     "name_prefix": true,
                     "policy_id": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19361,7 +19411,8 @@
                     "name": true,
                     "name_prefix": true,
                     "policy_id": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19408,7 +19459,8 @@
                     "managed_policy_arns": [],
                     "name_prefix": true,
                     "tags_all": {},
-                    "unique_id": true
+                    "unique_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19459,7 +19511,8 @@
                     "managed_policy_arns": [],
                     "name_prefix": true,
                     "tags_all": {},
-                    "unique_id": true
+                    "unique_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19497,7 +19550,8 @@
                 "after": {
                     "role": "wordpress-task-execution-role-dev",
                     "id": true,
-                    "policy_arn": true
+                    "policy_arn": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "id": true,
@@ -19526,7 +19580,8 @@
                 "after": {
                     "role": "wordpress-task-role-dev",
                     "id": true,
-                    "policy_arn": true
+                    "policy_arn": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "id": true,
@@ -19588,7 +19643,8 @@
                     "arn": true,
                     "id": true,
                     "listener_arn": true,
-                    "tags_all": {}
+                    "tags_all": {},
+                    "module": "main"
                 },
                 "after_unknown": {
                     "action": [
@@ -19707,7 +19763,8 @@
                     "target_failover": [],
                     "target_group_health": [],
                     "target_health_state": [],
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -19847,7 +19904,8 @@
                     "storage_encrypted": true,
                     "storage_type": true,
                     "tags_all": {},
-                    "vpc_security_group_ids": []
+                    "vpc_security_group_ids": [],
+                    "module": "main"
                 },
                 "after_unknown": {
                     "allocated_storage": true,
@@ -19957,7 +20015,8 @@
                     "zone_id": "Z1017156O279JAVBAIZ3",
                     "allow_overwrite": true,
                     "fqdn": true,
-                    "id": true
+                    "id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alias": [
@@ -20029,7 +20088,8 @@
                     "zone_id": "Z1017156O279JAVBAIZ3",
                     "allow_overwrite": true,
                     "fqdn": true,
-                    "id": true
+                    "id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alias": [
@@ -20101,7 +20161,8 @@
                     "zone_id": "Z1017156O279JAVBAIZ3",
                     "allow_overwrite": true,
                     "fqdn": true,
-                    "id": true
+                    "id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "alias": [
@@ -20190,7 +20251,8 @@
                     "name_prefix": true,
                     "owner_id": true,
                     "tags_all": {},
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20304,7 +20366,8 @@
                     "name_prefix": true,
                     "owner_id": true,
                     "tags_all": {},
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20402,7 +20465,8 @@
                     "name_prefix": true,
                     "owner_id": true,
                     "tags_all": {},
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20500,7 +20564,8 @@
                     "name_prefix": true,
                     "owner_id": true,
                     "tags_all": {},
-                    "vpc_id": true
+                    "vpc_id": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20587,7 +20652,8 @@
                     "key_id": true,
                     "tags_all": {},
                     "tier": true,
-                    "version": true
+                    "version": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20643,7 +20709,8 @@
                     "key_id": true,
                     "tags_all": {},
                     "tier": true,
-                    "version": true
+                    "version": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "arn": true,
@@ -20694,7 +20761,8 @@
                     "special": false,
                     "upper": true,
                     "id": true,
-                    "result": true
+                    "result": true,
+                    "module": "main"
                 },
                 "after_unknown": {
                     "id": true,
@@ -25216,7 +25284,8 @@
             "target_tracking_scaling_policy_configuration": [],
             "alarm_arns": [],
             "arn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_appautoscaling_policy.scale_up": {
             "name": "wordpress-ecs-scale-up-dev",
@@ -25236,7 +25305,8 @@
             "target_tracking_scaling_policy_configuration": [],
             "alarm_arns": [],
             "arn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_appautoscaling_target.this": {
             "max_capacity": 2,
@@ -25250,7 +25320,8 @@
             "id": true,
             "role_arn": true,
             "suspended_state": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudfront_distribution.this": {
             "aliases": [
@@ -25416,7 +25487,8 @@
             "status": true,
             "tags_all": {},
             "trusted_key_groups": [],
-            "trusted_signers": []
+            "trusted_signers": [],
+            "module": "main"
         },
         "aws_cloudwatch_log_group.wordpress": {
             "kms_key_id": null,
@@ -25429,7 +25501,8 @@
             "id": true,
             "log_group_class": true,
             "name_prefix": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudwatch_metric_alarm.cpu_utilization_high": {
             "actions_enabled": true,
@@ -25457,7 +25530,8 @@
             "arn": true,
             "evaluate_low_sample_count_percentiles": true,
             "id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudwatch_metric_alarm.cpu_utilization_low": {
             "actions_enabled": true,
@@ -25485,7 +25559,8 @@
             "arn": true,
             "evaluate_low_sample_count_percentiles": true,
             "id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_db_subnet_group.this": {
             "description": "Managed by Terraform",
@@ -25498,7 +25573,8 @@
             "subnet_ids": [],
             "supported_network_types": [],
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_ecs_cluster.this": {
             "configuration": [],
@@ -25509,7 +25585,8 @@
             "arn": true,
             "id": true,
             "setting": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_ecs_service.this": {
             "alarms": [],
@@ -25559,7 +25636,8 @@
             "id": true,
             "tags_all": {},
             "task_definition": true,
-            "triggers": {}
+            "triggers": {},
+            "module": "main"
         },
         "aws_ecs_task_definition.this": {
             "cpu": "1024",
@@ -25598,7 +25676,8 @@
             "id": true,
             "revision": true,
             "tags_all": {},
-            "task_role_arn": true
+            "task_role_arn": true,
+            "module": "main"
         },
         "aws_efs_file_system.this": {
             "creation_token": "wordpress-dev",
@@ -25620,7 +25699,8 @@
             "performance_mode": true,
             "protection": [],
             "size_in_bytes": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_efs_mount_target.this[0]~1": {
             "region": "us-east-1",
@@ -25638,7 +25718,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_efs_mount_target.this[1]~2": {
             "region": "us-east-1",
@@ -25656,7 +25737,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_efs_mount_target.this[2]~3": {
             "region": "us-east-1",
@@ -25674,7 +25756,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_iam_policy.task_execution_policy": {
             "description": null,
@@ -25687,7 +25770,8 @@
             "name": true,
             "name_prefix": true,
             "policy_id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_iam_policy.task_policy": {
             "description": null,
@@ -25700,7 +25784,8 @@
             "name": true,
             "name_prefix": true,
             "policy_id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_iam_role.task_execution_role": {
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ecs-tasks.amazonaws.com\"]}}],\"Version\":\"2012-10-17\"}",
@@ -25718,7 +25803,8 @@
             "managed_policy_arns": [],
             "name_prefix": true,
             "tags_all": {},
-            "unique_id": true
+            "unique_id": true,
+            "module": "main"
         },
         "aws_iam_role.task_role": {
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ecs-tasks.amazonaws.com\"]}}],\"Version\":\"2012-10-17\"}",
@@ -25736,17 +25822,20 @@
             "managed_policy_arns": [],
             "name_prefix": true,
             "tags_all": {},
-            "unique_id": true
+            "unique_id": true,
+            "module": "main"
         },
         "aws_iam_role_policy_attachment.task_execution_policy_attach": {
             "role": "wordpress-task-execution-role-dev",
             "id": true,
-            "policy_arn": true
+            "policy_arn": true,
+            "module": "main"
         },
         "aws_iam_role_policy_attachment.task_policy_attach": {
             "role": "wordpress-task-role-dev",
             "id": true,
-            "policy_arn": true
+            "policy_arn": true,
+            "module": "main"
         },
         "aws_lb_listener_rule.wordpress": {
             "action": [
@@ -25784,7 +25873,8 @@
             "arn": true,
             "id": true,
             "listener_arn": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_lb_target_group.this": {
             "deregistration_delay": "300",
@@ -25817,7 +25907,8 @@
             "target_failover": [],
             "target_group_health": [],
             "target_health_state": [],
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_rds_cluster.this": {
             "allow_major_version_upgrade": null,
@@ -25904,7 +25995,8 @@
             "storage_encrypted": true,
             "storage_type": true,
             "tags_all": {},
-            "vpc_security_group_ids": []
+            "vpc_security_group_ids": [],
+            "module": "main"
         },
         "aws_route53_record.ipv4": {
             "alias": [
@@ -25927,7 +26019,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_route53_record.ipv6": {
             "alias": [
@@ -25950,7 +26043,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_route53_record.wordpress": {
             "alias": [
@@ -25973,7 +26067,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_security_group.alb": {
             "description": "Allow HTTPS inbound traffc",
@@ -26013,7 +26108,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.db": {
             "description": "Managed by Terraform",
@@ -26045,7 +26141,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.efs": {
             "description": "Allow traffic ffrom self",
@@ -26077,7 +26174,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.wordpress": {
             "description": "Fargate wordpress",
@@ -26109,7 +26207,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_ssm_parameter.db_master_password": {
             "allowed_pattern": null,
@@ -26130,7 +26229,8 @@
             "key_id": true,
             "tags_all": {},
             "tier": true,
-            "version": true
+            "version": true,
+            "module": "main"
         },
         "aws_ssm_parameter.db_master_user": {
             "allowed_pattern": null,
@@ -26151,7 +26251,8 @@
             "key_id": true,
             "tags_all": {},
             "tier": true,
-            "version": true
+            "version": true,
+            "module": "main"
         },
         "random_string.snapshot_suffix": {
             "keepers": null,
@@ -26167,7 +26268,8 @@
             "special": false,
             "upper": true,
             "id": true,
-            "result": true
+            "result": true,
+            "module": "main"
         },
         "module.acm.aws_acm_certificate.this[0]~1": {
             "certificate_authority_arn": null,
@@ -28114,7 +28216,8 @@
             "target_tracking_scaling_policy_configuration": [],
             "alarm_arns": [],
             "arn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_appautoscaling_policy.scale_up": {
             "name": "wordpress-ecs-scale-up-dev",
@@ -28134,7 +28237,8 @@
             "target_tracking_scaling_policy_configuration": [],
             "alarm_arns": [],
             "arn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_appautoscaling_target.this": {
             "max_capacity": 2,
@@ -28148,7 +28252,8 @@
             "id": true,
             "role_arn": true,
             "suspended_state": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudfront_distribution.this": {
             "aliases": [
@@ -28314,7 +28419,8 @@
             "status": true,
             "tags_all": {},
             "trusted_key_groups": [],
-            "trusted_signers": []
+            "trusted_signers": [],
+            "module": "main"
         },
         "aws_cloudwatch_log_group.wordpress": {
             "kms_key_id": null,
@@ -28327,7 +28433,8 @@
             "id": true,
             "log_group_class": true,
             "name_prefix": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudwatch_metric_alarm.cpu_utilization_high": {
             "actions_enabled": true,
@@ -28355,7 +28462,8 @@
             "arn": true,
             "evaluate_low_sample_count_percentiles": true,
             "id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_cloudwatch_metric_alarm.cpu_utilization_low": {
             "actions_enabled": true,
@@ -28383,7 +28491,8 @@
             "arn": true,
             "evaluate_low_sample_count_percentiles": true,
             "id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_db_subnet_group.this": {
             "description": "Managed by Terraform",
@@ -28396,7 +28505,8 @@
             "subnet_ids": [],
             "supported_network_types": [],
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_ecs_cluster.this": {
             "configuration": [],
@@ -28407,7 +28517,8 @@
             "arn": true,
             "id": true,
             "setting": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_ecs_service.this": {
             "alarms": [],
@@ -28457,7 +28568,8 @@
             "id": true,
             "tags_all": {},
             "task_definition": true,
-            "triggers": {}
+            "triggers": {},
+            "module": "main"
         },
         "aws_ecs_task_definition.this": {
             "cpu": "1024",
@@ -28496,7 +28608,8 @@
             "id": true,
             "revision": true,
             "tags_all": {},
-            "task_role_arn": true
+            "task_role_arn": true,
+            "module": "main"
         },
         "aws_efs_file_system.this": {
             "creation_token": "wordpress-dev",
@@ -28518,7 +28631,8 @@
             "performance_mode": true,
             "protection": [],
             "size_in_bytes": [],
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_efs_mount_target.this[0]~1": {
             "region": "us-east-1",
@@ -28536,7 +28650,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_efs_mount_target.this[1]~2": {
             "region": "us-east-1",
@@ -28554,7 +28669,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_efs_mount_target.this[2]~3": {
             "region": "us-east-1",
@@ -28572,7 +28688,8 @@
             "network_interface_id": true,
             "owner_id": true,
             "security_groups": [],
-            "subnet_id": true
+            "subnet_id": true,
+            "module": "main"
         },
         "aws_iam_policy.task_execution_policy": {
             "description": null,
@@ -28585,7 +28702,8 @@
             "name": true,
             "name_prefix": true,
             "policy_id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_iam_policy.task_policy": {
             "description": null,
@@ -28598,7 +28716,8 @@
             "name": true,
             "name_prefix": true,
             "policy_id": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_iam_role.task_execution_role": {
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ecs-tasks.amazonaws.com\"]}}],\"Version\":\"2012-10-17\"}",
@@ -28616,7 +28735,8 @@
             "managed_policy_arns": [],
             "name_prefix": true,
             "tags_all": {},
-            "unique_id": true
+            "unique_id": true,
+            "module": "main"
         },
         "aws_iam_role.task_role": {
             "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ecs-tasks.amazonaws.com\"]}}],\"Version\":\"2012-10-17\"}",
@@ -28634,17 +28754,20 @@
             "managed_policy_arns": [],
             "name_prefix": true,
             "tags_all": {},
-            "unique_id": true
+            "unique_id": true,
+            "module": "main"
         },
         "aws_iam_role_policy_attachment.task_execution_policy_attach": {
             "role": "wordpress-task-execution-role-dev",
             "id": true,
-            "policy_arn": true
+            "policy_arn": true,
+            "module": "main"
         },
         "aws_iam_role_policy_attachment.task_policy_attach": {
             "role": "wordpress-task-role-dev",
             "id": true,
-            "policy_arn": true
+            "policy_arn": true,
+            "module": "main"
         },
         "aws_lb_listener_rule.wordpress": {
             "action": [
@@ -28682,7 +28805,8 @@
             "arn": true,
             "id": true,
             "listener_arn": true,
-            "tags_all": {}
+            "tags_all": {},
+            "module": "main"
         },
         "aws_lb_target_group.this": {
             "deregistration_delay": "300",
@@ -28715,7 +28839,8 @@
             "target_failover": [],
             "target_group_health": [],
             "target_health_state": [],
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_rds_cluster.this": {
             "allow_major_version_upgrade": null,
@@ -28802,7 +28927,8 @@
             "storage_encrypted": true,
             "storage_type": true,
             "tags_all": {},
-            "vpc_security_group_ids": []
+            "vpc_security_group_ids": [],
+            "module": "main"
         },
         "aws_route53_record.ipv4": {
             "alias": [
@@ -28825,7 +28951,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_route53_record.ipv6": {
             "alias": [
@@ -28848,7 +28975,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_route53_record.wordpress": {
             "alias": [
@@ -28871,7 +28999,8 @@
             "zone_id": "Z1017156O279JAVBAIZ3",
             "allow_overwrite": true,
             "fqdn": true,
-            "id": true
+            "id": true,
+            "module": "main"
         },
         "aws_security_group.alb": {
             "description": "Allow HTTPS inbound traffc",
@@ -28911,7 +29040,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.db": {
             "description": "Managed by Terraform",
@@ -28943,7 +29073,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.efs": {
             "description": "Allow traffic ffrom self",
@@ -28975,7 +29106,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_security_group.wordpress": {
             "description": "Fargate wordpress",
@@ -29007,7 +29139,8 @@
             "name_prefix": true,
             "owner_id": true,
             "tags_all": {},
-            "vpc_id": true
+            "vpc_id": true,
+            "module": "main"
         },
         "aws_ssm_parameter.db_master_password": {
             "allowed_pattern": null,
@@ -29028,7 +29161,8 @@
             "key_id": true,
             "tags_all": {},
             "tier": true,
-            "version": true
+            "version": true,
+            "module": "main"
         },
         "aws_ssm_parameter.db_master_user": {
             "allowed_pattern": null,
@@ -29049,7 +29183,8 @@
             "key_id": true,
             "tags_all": {},
             "tier": true,
-            "version": true
+            "version": true,
+            "module": "main"
         },
         "random_string.snapshot_suffix": {
             "keepers": null,
@@ -29065,7 +29200,8 @@
             "special": false,
             "upper": true,
             "id": true,
-            "result": true
+            "result": true,
+            "module": "main"
         },
         "module.acm.aws_acm_certificate.this[0]~1": {
             "certificate_authority_arn": null,
@@ -35912,5 +36048,5 @@
     "varfile_list": [
         "/Users/patrick/.terravision/module_cache/https___github.com_patrickchugh_terraform-examples.git__aws_wordpress_fargate;main;/aws/wordpress_fargate/terraform.tfvars"
     ],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmplwfss49z'>"
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp5hizr2ij'>"
 }

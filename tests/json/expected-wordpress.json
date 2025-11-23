@@ -230,15 +230,18 @@
     "module.vpc.aws_route_table_association.public[2]~3": [],
     "module.vpc.aws_subnet.private[0]~1": [
         "aws_appautoscaling_target.this~1",
-        "aws_security_group.efs~1"
+        "aws_security_group.efs~1",
+        "module.vpc.aws_route_table_association.private[0]~1"
     ],
     "module.vpc.aws_subnet.private[1]~2": [
         "aws_appautoscaling_target.this~2",
-        "aws_security_group.efs~2"
+        "aws_security_group.efs~2",
+        "module.vpc.aws_route_table_association.private[1]~2"
     ],
     "module.vpc.aws_subnet.private[2]~3": [
         "aws_appautoscaling_target.this~3",
-        "aws_security_group.efs~3"
+        "aws_security_group.efs~3",
+        "module.vpc.aws_route_table_association.private[2]~3"
     ],
     "module.vpc.aws_subnet.public[0]~1": [
         "aws_security_group.alb_elb~1",
