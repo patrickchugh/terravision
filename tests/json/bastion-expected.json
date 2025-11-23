@@ -83,9 +83,6 @@
     "module.private-vpc.aws_security_group.allow-strict_ec2_instance": [
         "module.ec2-instance.aws_instance.ec2_instance"
     ],
-    "module.private-vpc.aws_security_group.allow-strict~1": [
-        "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1"
-    ],
     "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1": [],
     "module.private-vpc.aws_subnet.private_subnets[0]~1": [
         "module.private-vpc.aws_route_table_association.private[0]~1",

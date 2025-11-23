@@ -789,7 +789,9 @@ def list_of_parent_nodes(
     return parent_list
 
 
-def list_of_parents(searchdict: Dict[str, Any], target: str) -> List[str]:
+def list_of_parents(
+    searchdict: Dict[str, Any], target: str, exactmatch=False
+) -> List[str]:
     """Find all keys that reference the target in their values.
 
     Args:
@@ -817,12 +819,21 @@ def list_of_parents(searchdict: Dict[str, Any], target: str) -> List[str]:
                 if not item:
                     continue
                 if (
-                    helpers.get_no_module_name(item).startswith(
+                    not exactmatch
+                    and helpers.get_no_module_name(item).startswith(
                         helpers.get_no_module_name(target)
                     )
                     and key not in final_list
                 ):
                     final_list.append(key)
+                if (
+                    exactmatch
+                    and helpers.get_no_module_name(item)
+                    == helpers.get_no_module_name(target)
+                    and key not in final_list
+                ):
+                    final_list.append(key)
+
     return final_list
 
 

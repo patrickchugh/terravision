@@ -552,9 +552,14 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 and sg in tfdata["graphdict"][parent]
             ):
                 tfdata["graphdict"][parent].remove(sg)
-    # Remove orphan security groups with no connections
+    # Remove orphan security groups with no connections or parents
     for sg in sorted(list_of_sgs):
         if sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) == 0:
+            del tfdata["graphdict"][sg]
+        if (
+            helpers.list_of_parents(tfdata["graphdict"], sg, True) == []
+            and sg in tfdata["graphdict"]
+        ):
             del tfdata["graphdict"][sg]
     return tfdata
 

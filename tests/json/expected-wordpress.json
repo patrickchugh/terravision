@@ -147,27 +147,6 @@
     "aws_security_group.alb_elb~3": [
         "aws_alb.elb~3"
     ],
-    "aws_security_group.alb~1": [
-        "aws_alb.elb~1",
-        "aws_fargate.ecs~1",
-        "aws_security_group.wordpress"
-    ],
-    "aws_security_group.alb~2": [
-        "aws_alb.elb~2",
-        "aws_fargate.ecs~2",
-        "aws_security_group.wordpress"
-    ],
-    "aws_security_group.alb~3": [
-        "aws_alb.elb~3",
-        "aws_fargate.ecs~3",
-        "aws_security_group.wordpress"
-    ],
-    "aws_security_group.db": [
-        "aws_rds_aurora.this"
-    ],
-    "aws_security_group.db_this": [
-        "aws_rds_aurora.this"
-    ],
     "aws_security_group.efs~1": [
         "aws_efs_mount_target.this[0]~1"
     ],
