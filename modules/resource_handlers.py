@@ -741,6 +741,25 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle EKS service configurations.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with ECS configured
+    """
+    eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
+    pass
+    # for ecs in ecs_nodes:
+    #     tfdata["meta_data"][ecs]["count"] = 3
+    # ecs_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_ek_cluster")
+    # for eks in eks_nodes:
+    #     del tfdata["graphdict"][eks]
+    return tfdata
+
+
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Remove random string resources from graph.
 
