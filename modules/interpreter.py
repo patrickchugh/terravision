@@ -651,10 +651,19 @@ def find_resource_in_all_resource(
     for resource_list in tfdata["all_resource"].values():
         for item in resource_list:
             if resource_type in item:
+
                 if base_name in item[resource_type]:
                     return item, base_name
                 if resource_node in item[resource_type]:
                     return item, resource_node
+                # Check if resource_node matches first key
+                first_key = next(iter(item[resource_type]), None)
+                if first_key in resource_node:
+                    return item, first_key
+                # Check if first_key is the same module, resource_type but different name
+                no_resource_name = resource_node.rsplit(".", 1)[0]
+                if no_resource_name in first_key:
+                    return item, first_key
     return None, None
 
 
@@ -694,7 +703,7 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 md["original_count"] = str(md["count"])
             omd.update(md)
             meta_data[resource_node] = omd
-            if "~" in resource_node:
+            if "~" in resource_node or meta_data[resource_node].get("count"):
                 meta_data = handle_numbered_nodes(resource_node, tfdata, meta_data)
 
     tfdata["meta_data"] = meta_data

@@ -311,8 +311,10 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             res = res.split("[")[0]
         if tfdata["meta_data"].get(res):
             resdata = copy.deepcopy(tfdata["meta_data"].get(res))
-        else:
+        elif tfdata["meta_data"].get(resource):
             resdata = copy.deepcopy(tfdata["meta_data"][resource])
+        else:
+            continue
         consolidated_name = helpers.consolidated_node_check(resource)
         if consolidated_name:
             if not tfdata["meta_data"].get(consolidated_name):
