@@ -679,13 +679,11 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with node_list and meta_data populated
+        Updated tfdata with node_list and meta_data keys populated
     """
     meta_data = dict()
     tfdata["node_list"] = list(dict.fromkeys(tfdata["graphdict"]))
-
     click.echo(click.style(f"\nProcessing resources..", fg="white", bold=True))
-
     if not tfdata.get("all_resource"):
         click.echo(
             click.style("\nWARNING: Unable to find any resources", fg="red", bold=True)
@@ -693,11 +691,9 @@ def get_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["all_resource"] = {}
         tfdata["meta_data"] = {}
         return tfdata
-
     # Process each file's resources
     for filename, resource_list in tfdata["all_resource"].items():
         mod = filename.split(";")[1] if ";" in filename else "main"
-
         for item in resource_list:
             for resource_type in item.keys():
                 for resource_name in item[resource_type]:
