@@ -13,7 +13,7 @@ from pathlib import Path
 from sys import exit
 from typing import Dict, List, Tuple, Any, Optional
 from urllib.parse import urlparse
-
+import stat
 import click
 import git
 import requests
@@ -448,11 +448,16 @@ def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) ->
     if not helpers.check_for_domain(githubURL):
         githubURL, subfolder, tag = get_clone_url(githubURL)
 
+    # Helper function for Windows read-only file removal
+    def remove_readonly(func, path, exc_info):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
     # Clean existing directory or create new one
     if os.path.exists(codepath):
-        shutil.rmtree(codepath)
-    else:
-        os.makedirs(codepath)
+        shutil.rmtree(codepath, onerror=remove_readonly)
+    os.makedirs(codepath, exist_ok=True)
+
 
     # Configure clone options
     options: List[str] = []
