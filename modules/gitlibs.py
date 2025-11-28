@@ -79,7 +79,7 @@ def handle_readme_source(resp: requests.Response) -> str:
     githubURL = "ssh://git@" + find_between(readme, "(https://", ")")
 
     # Convert domain format for SSH
-    found = re.findall("\.........\.net", githubURL)
+    found = re.findall(r"\.........\.net", githubURL)
     for site in found:
         githubURL = githubURL.replace(site, "-ssh" + site)
 
