@@ -1,0 +1,312 @@
+{
+    "tv_aws_internet.internet": [],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_eip.elastic_ip",
+        "aws_kms_key.kms"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_ecr_repository.ecr": [],
+    "aws_eip.elastic_ip": [],
+    "aws_kms_key.kms": [],
+    "module.vpc.aws_vpc.this[0]~1": [
+        "aws_az.availability_zone_eu_west_1a~1",
+        "aws_az.availability_zone_eu_west_1b~2",
+        "aws_az.availability_zone_eu_west_1c~3",
+        "aws_internet_gateway.igw",
+        "module.vpc.aws_default_network_acl.this[0]~1",
+        "module.vpc.aws_default_route_table.default[0]~1",
+        "module.vpc.aws_default_security_group.this[0]~1",
+        "module.vpc.aws_route_table.intra[0]~1",
+        "module.vpc.aws_route_table.private[0]~1",
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
+    "module.vpc.aws_default_network_acl.this[0]~1": [],
+    "module.vpc.aws_default_route_table.default[0]~1": [],
+    "module.vpc.aws_default_security_group.this[0]~1": [],
+    "aws_internet_gateway.igw": [
+        "tv_aws_internet.internet"
+    ],
+    "module.vpc.aws_route_table.public[0]~1": [
+        "module.vpc.aws_route.public_internet_gateway[0]~1"
+    ],
+    "module.vpc.aws_route.public_internet_gateway[0]~1": [
+        "aws_internet_gateway.igw"
+    ],
+    "module.vpc.aws_route_table.private[0]~1": [
+        "module.vpc.aws_route.private_nat_gateway[0]~1"
+    ],
+    "module.vpc.aws_route.private_nat_gateway[0]~1": [
+        "module.vpc.aws_nat_gateway.this[0]~1"
+    ],
+    "module.vpc.aws_route_table.intra[0]~1": [],
+    "aws_az.availability_zone_eu_west_1a~1": [
+        "module.vpc.aws_subnet.public[0]~1",
+        "module.vpc.aws_subnet.private[0]~1",
+        "module.vpc.aws_subnet.intra[0]~1"
+    ],
+    "aws_az.availability_zone_eu_west_1b~2": [
+        "module.vpc.aws_subnet.public[1]~2",
+        "module.vpc.aws_subnet.private[1]~2",
+        "module.vpc.aws_subnet.intra[1]~2"
+    ],
+    "aws_az.availability_zone_eu_west_1c~3": [
+        "module.vpc.aws_subnet.public[2]~3",
+        "module.vpc.aws_subnet.private[2]~3",
+        "module.vpc.aws_subnet.intra[2]~3"
+    ],
+    "module.vpc.aws_subnet.public[0]~1": [
+        "module.vpc.aws_route_table_association.public[0]~1",
+        "module.vpc.aws_nat_gateway.this[0]~1"
+    ],
+    "module.vpc.aws_subnet.public[1]~2": [
+        "module.vpc.aws_route_table_association.public[1]~2"
+    ],
+    "module.vpc.aws_subnet.public[2]~3": [
+        "module.vpc.aws_route_table_association.public[2]~3"
+    ],
+    "module.vpc.aws_route_table_association.public[0]~1": [
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.public[1]~2": [
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.public[2]~3": [
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
+    "module.vpc.aws_nat_gateway.this[0]~1": [
+        "aws_eip.elastic_ip",
+        "aws_internet_gateway.igw"
+    ],
+    "module.vpc.aws_subnet.private[0]~1": [
+        "module.vpc.aws_route_table_association.private[0]~1",
+        "module.eks_al2023.aws_eks_cluster.this[0]~1",
+        "module.eks_bottlerocket.aws_eks_cluster.this[0]~1",
+        "aws_group.eks_al2023_node_group~1",
+        "aws_group.eks_bottlerocket_node_group~1"
+    ],
+    "module.vpc.aws_subnet.private[1]~2": [
+        "module.vpc.aws_route_table_association.private[1]~2",
+        "aws_group.eks_al2023_node_group~2",
+        "aws_group.eks_bottlerocket_node_group~2"
+    ],
+    "module.vpc.aws_subnet.private[2]~3": [
+        "module.vpc.aws_route_table_association.private[2]~3",
+        "aws_group.eks_al2023_node_group~3",
+        "aws_group.eks_bottlerocket_node_group~3"
+    ],
+    "module.vpc.aws_route_table_association.private[0]~1": [
+        "module.vpc.aws_route_table.private[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.private[1]~2": [
+        "module.vpc.aws_route_table.private[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.private[2]~3": [
+        "module.vpc.aws_route_table.private[0]~1"
+    ],
+    "module.vpc.aws_subnet.intra[0]~1": [
+        "module.vpc.aws_route_table_association.intra[0]~1"
+    ],
+    "module.vpc.aws_subnet.intra[1]~2": [
+        "module.vpc.aws_route_table_association.intra[1]~2"
+    ],
+    "module.vpc.aws_subnet.intra[2]~3": [
+        "module.vpc.aws_route_table_association.intra[2]~3"
+    ],
+    "module.vpc.aws_route_table_association.intra[0]~1": [
+        "module.vpc.aws_route_table.intra[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.intra[1]~2": [
+        "module.vpc.aws_route_table.intra[0]~1"
+    ],
+    "module.vpc.aws_route_table_association.intra[2]~3": [
+        "module.vpc.aws_route_table.intra[0]~1"
+    ],
+    "aws_eks_service.eks": [
+        "module.eks_al2023.aws_eks_cluster.this[0]~1",
+        "module.eks_bottlerocket.aws_eks_cluster.this[0]~1"
+    ],
+    "module.eks_al2023.aws_eks_cluster.this[0]~1": [
+        "aws_ecr_repository.ecr",
+        "aws_kms_key.kms",
+        "module.eks_al2023.aws_iam_role.this[0]~1",
+        "module.eks_al2023.time_sleep.this[0]~1",
+        "module.eks_al2023.aws_iam_openid_connect_provider.oidc_provider[0]~1",
+        "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"Example\"][Example]~1",
+        "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"GithubOrg\"][GithubOrg]~1",
+        "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"GithubRepo\"][GithubRepo]~1",
+        "module.eks_al2023.aws_security_group_rule.cluster[\"ingress_nodes_443\"][ingress_nodes_443]~1"
+    ],
+    "module.eks_al2023.aws_iam_role.this[0]~1": [
+        "module.eks_al2023.aws_iam_role_policy_attachment.this[\"AmazonEKSClusterPolicy\"][AmazonEKSClusterPolicy]~1",
+        "module.eks_al2023.aws_iam_role_policy_attachment.cluster_encryption[0]~1"
+    ],
+    "module.eks_al2023.aws_iam_role_policy_attachment.this[\"AmazonEKSClusterPolicy\"][AmazonEKSClusterPolicy]~1": [],
+    "module.eks_al2023.aws_iam_role_policy_attachment.cluster_encryption[0]~1": [
+        "module.eks_al2023.aws_iam_policy.cluster_encryption[0]~1"
+    ],
+    "module.eks_al2023.aws_iam_policy.cluster_encryption[0]~1": [],
+    "module.eks_al2023.aws_iam_openid_connect_provider.oidc_provider[0]~1": [],
+    "module.eks_al2023.time_sleep.this[0]~1": [
+        "module.eks_al2023.aws_eks_addon.before_compute[\"eks-pod-identity-agent\"][eks-pod-identity-agent]~1",
+        "module.eks_al2023.aws_eks_addon.before_compute[\"vpc-cni\"][vpc-cni]~1",
+        "module.eks_al2023.aws_eks_addon.this[\"coredns\"][coredns]~1",
+        "module.eks_al2023.aws_eks_addon.this[\"kube-proxy\"][kube-proxy]~1"
+    ],
+    "module.eks_al2023.aws_eks_addon.before_compute[\"eks-pod-identity-agent\"][eks-pod-identity-agent]~1": [],
+    "module.eks_al2023.aws_eks_addon.before_compute[\"vpc-cni\"][vpc-cni]~1": [],
+    "module.eks_al2023.aws_eks_addon.this[\"coredns\"][coredns]~1": [],
+    "module.eks_al2023.aws_eks_addon.this[\"kube-proxy\"][kube-proxy]~1": [],
+    "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"Example\"][Example]~1": [],
+    "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"GithubOrg\"][GithubOrg]~1": [],
+    "module.eks_al2023.aws_ec2_tag.cluster_primary_security_group[\"GithubRepo\"][GithubRepo]~1": [],
+    "module.eks_al2023.aws_security_group_rule.cluster[\"ingress_nodes_443\"][ingress_nodes_443]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"egress_all\"][egress_all]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_443\"][ingress_cluster_443]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_kubelet\"][ingress_cluster_kubelet]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_10251_webhook\"][ingress_cluster_10251_webhook]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_4443_webhook\"][ingress_cluster_4443_webhook]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_6443_webhook\"][ingress_cluster_6443_webhook]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_8443_webhook\"][ingress_cluster_8443_webhook]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_9443_webhook\"][ingress_cluster_9443_webhook]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_nodes_ephemeral\"][ingress_nodes_ephemeral]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_self_coredns_tcp\"][ingress_self_coredns_tcp]~1": [],
+    "module.eks_al2023.aws_security_group_rule.node[\"ingress_self_coredns_udp\"][ingress_self_coredns_udp]~1": [],
+    "aws_group.eks_al2023_node_group~1": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "aws_group.eks_al2023_node_group~2": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "aws_group.eks_al2023_node_group~3": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_autoscaling_group.this[0]~1": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1",
+        "aws_group.eks_al2023_node_group~1",
+        "aws_group.eks_al2023_node_group~2",
+        "aws_group.eks_al2023_node_group~3"
+    ],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_instance_profile.this[0]~1",
+        "module.eks_al2023.aws_eks_cluster.this[0]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"egress_all\"][egress_all]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_443\"][ingress_cluster_443]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_kubelet\"][ingress_cluster_kubelet]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_10251_webhook\"][ingress_cluster_10251_webhook]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_4443_webhook\"][ingress_cluster_4443_webhook]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_6443_webhook\"][ingress_cluster_6443_webhook]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_8443_webhook\"][ingress_cluster_8443_webhook]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_cluster_9443_webhook\"][ingress_cluster_9443_webhook]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_nodes_ephemeral\"][ingress_nodes_ephemeral]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_self_coredns_tcp\"][ingress_self_coredns_tcp]~1",
+        "module.eks_al2023.aws_security_group_rule.node[\"ingress_self_coredns_udp\"][ingress_self_coredns_udp]~1"
+    ],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_instance_profile.this[0]~1": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1"
+    ],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1": [
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKSWorkerNodePolicy\"][AmazonEKSWorkerNodePolicy]",
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKS_CNI_Policy\"][AmazonEKS_CNI_Policy]",
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEC2ContainerRegistryReadOnly\"][AmazonEC2ContainerRegistryReadOnly]"
+    ],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKSWorkerNodePolicy\"][AmazonEKSWorkerNodePolicy]": [],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKS_CNI_Policy\"][AmazonEKS_CNI_Policy]": [],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEC2ContainerRegistryReadOnly\"][AmazonEC2ContainerRegistryReadOnly]": [],
+    "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_eks_access_entry.this[0]~1": [
+        "module.eks_al2023.aws_eks_cluster.this[0]~1",
+        "module.eks_al2023.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1"
+    ],
+    "module.eks_bottlerocket.aws_eks_cluster.this[0]~1": [
+        "aws_ecr_repository.ecr",
+        "aws_kms_key.kms",
+        "module.eks_bottlerocket.aws_iam_role.this[0]~1",
+        "module.eks_bottlerocket.time_sleep.this[0]~1",
+        "module.eks_bottlerocket.aws_iam_openid_connect_provider.oidc_provider[0]~1",
+        "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"Example\"][Example]~1",
+        "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"GithubOrg\"][GithubOrg]~1",
+        "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"GithubRepo\"][GithubRepo]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.cluster[\"ingress_nodes_443\"][ingress_nodes_443]~1"
+    ],
+    "module.eks_bottlerocket.aws_iam_role.this[0]~1": [
+        "module.eks_bottlerocket.aws_iam_role_policy_attachment.this[\"AmazonEKSClusterPolicy\"][AmazonEKSClusterPolicy]~1",
+        "module.eks_bottlerocket.aws_iam_role_policy_attachment.cluster_encryption[0]~1"
+    ],
+    "module.eks_bottlerocket.aws_iam_role_policy_attachment.this[\"AmazonEKSClusterPolicy\"][AmazonEKSClusterPolicy]~1": [],
+    "module.eks_bottlerocket.aws_iam_role_policy_attachment.cluster_encryption[0]~1": [
+        "module.eks_bottlerocket.aws_iam_policy.cluster_encryption[0]~1"
+    ],
+    "module.eks_bottlerocket.aws_iam_policy.cluster_encryption[0]~1": [],
+    "module.eks_bottlerocket.aws_iam_openid_connect_provider.oidc_provider[0]~1": [],
+    "module.eks_bottlerocket.time_sleep.this[0]~1": [
+        "module.eks_bottlerocket.aws_eks_addon.before_compute[\"eks-pod-identity-agent\"][eks-pod-identity-agent]~1",
+        "module.eks_bottlerocket.aws_eks_addon.before_compute[\"vpc-cni\"][vpc-cni]~1",
+        "module.eks_bottlerocket.aws_eks_addon.this[\"coredns\"][coredns]~1",
+        "module.eks_bottlerocket.aws_eks_addon.this[\"kube-proxy\"][kube-proxy]~1"
+    ],
+    "module.eks_bottlerocket.aws_eks_addon.before_compute[\"eks-pod-identity-agent\"][eks-pod-identity-agent]~1": [],
+    "module.eks_bottlerocket.aws_eks_addon.before_compute[\"vpc-cni\"][vpc-cni]~1": [],
+    "module.eks_bottlerocket.aws_eks_addon.this[\"coredns\"][coredns]~1": [],
+    "module.eks_bottlerocket.aws_eks_addon.this[\"kube-proxy\"][kube-proxy]~1": [],
+    "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"Example\"][Example]~1": [],
+    "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"GithubOrg\"][GithubOrg]~1": [],
+    "module.eks_bottlerocket.aws_ec2_tag.cluster_primary_security_group[\"GithubRepo\"][GithubRepo]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.cluster[\"ingress_nodes_443\"][ingress_nodes_443]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"egress_all\"][egress_all]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_443\"][ingress_cluster_443]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_kubelet\"][ingress_cluster_kubelet]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_10251_webhook\"][ingress_cluster_10251_webhook]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_4443_webhook\"][ingress_cluster_4443_webhook]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_6443_webhook\"][ingress_cluster_6443_webhook]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_8443_webhook\"][ingress_cluster_8443_webhook]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_9443_webhook\"][ingress_cluster_9443_webhook]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_nodes_ephemeral\"][ingress_nodes_ephemeral]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_self_coredns_tcp\"][ingress_self_coredns_tcp]~1": [],
+    "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_self_coredns_udp\"][ingress_self_coredns_udp]~1": [],
+    "aws_group.eks_bottlerocket_node_group~1": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "aws_group.eks_bottlerocket_node_group~2": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "aws_group.eks_bottlerocket_node_group~3": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1"
+    ],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_autoscaling_group.this[0]~1": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1",
+        "aws_group.eks_bottlerocket_node_group~1",
+        "aws_group.eks_bottlerocket_node_group~2",
+        "aws_group.eks_bottlerocket_node_group~3"
+    ],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_launch_template.this[0]~1": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_instance_profile.this[0]~1",
+        "module.eks_bottlerocket.aws_eks_cluster.this[0]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"egress_all\"][egress_all]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_443\"][ingress_cluster_443]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_kubelet\"][ingress_cluster_kubelet]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_10251_webhook\"][ingress_cluster_10251_webhook]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_4443_webhook\"][ingress_cluster_4443_webhook]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_6443_webhook\"][ingress_cluster_6443_webhook]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_8443_webhook\"][ingress_cluster_8443_webhook]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_cluster_9443_webhook\"][ingress_cluster_9443_webhook]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_nodes_ephemeral\"][ingress_nodes_ephemeral]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_self_coredns_tcp\"][ingress_self_coredns_tcp]~1",
+        "module.eks_bottlerocket.aws_security_group_rule.node[\"ingress_self_coredns_udp\"][ingress_self_coredns_udp]~1"
+    ],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_instance_profile.this[0]~1": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1"
+    ],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1": [
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKSWorkerNodePolicy\"][AmazonEKSWorkerNodePolicy]",
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKS_CNI_Policy\"][AmazonEKS_CNI_Policy]",
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEC2ContainerRegistryReadOnly\"][AmazonEC2ContainerRegistryReadOnly]"
+    ],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKSWorkerNodePolicy\"][AmazonEKSWorkerNodePolicy]": [],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEKS_CNI_Policy\"][AmazonEKS_CNI_Policy]": [],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role_policy_attachment.this[\"AmazonEC2ContainerRegistryReadOnly\"][AmazonEC2ContainerRegistryReadOnly]": [],
+    "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_eks_access_entry.this[0]~1": [
+        "module.eks_bottlerocket.aws_eks_cluster.this[0]~1",
+        "module.eks_bottlerocket.module.self_managed_node_group[\"example\"].aws_iam_role.this[0]~1"
+    ]
+}

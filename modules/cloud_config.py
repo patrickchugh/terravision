@@ -196,6 +196,8 @@ AWS_SPECIAL_RESOURCES = {
     "aws_security_group": "aws_handle_sg",  # place after db_subnet handler
     "aws_lb": "aws_handle_lb",
     "aws_vpc_endpoint": "aws_handle_vpcendpoints",
+    "aws_ecs": "aws_handle_ecs",
+    "aws_eks": "aws_handle_eks",
     "aws_": "aws_handle_sharedgroup",
     "random_string": "random_string_handler",
 }

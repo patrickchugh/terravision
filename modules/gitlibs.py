@@ -417,6 +417,8 @@ def _handle_cached_module(
     # Determine correct module path
     if f";{module};" in codepath and module != "main":
         codepath_module = os.path.join(codepath, module)
+        if not os.path.exists(codepath_module):
+            codepath_module = codepath
     else:
         codepath_module = codepath
 

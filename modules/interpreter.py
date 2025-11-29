@@ -159,7 +159,6 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 and key != "depends_on"
                 and key != "original_count"
-                and count < 50
             ):
                 count += 1
                 mod = attr_list["module"]
@@ -315,9 +314,13 @@ def replace_module_vars(
                                 continue
                             else:
                                 # Direct replacement with output value
-                                value = value.replace(
-                                    module_var, f"module.{mod}.{module_var}"
-                                )
+                                if (
+                                    not f"module.{mod}.{module_var}" in value
+                                    and f"module.{mod}.{module_var}" not in module_var
+                                ):
+                                    value = value.replace(
+                                        module_var, f"module.{mod}.{module_var}"
+                                    )
                                 value = value.replace(
                                     module_var, i[outputname]["value"]
                                 )
@@ -326,7 +329,7 @@ def replace_module_vars(
                 else:
                     continue
             # Mark as unknown if no resolution found
-            if value == oldvalue:
+            if value == oldvalue and not re.search(r"module\.[\w-]+\.aws_", module_var):
                 value = value.replace(module_var, '"UNKNOWN"')
                 click.echo(
                     f"   WARNING: Cannot resolve {module_var}, assigning UNKNOWN value in module {module}"
@@ -466,7 +469,9 @@ def find_replace_values(varstring: str, module: str, tfdata: Dict[str, Any]) -> 
     data_found_list = re.findall(r"data\.[A-Za-z0-9_\-\.\[\]]+", value)
     varobject_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
     local_found_list = re.findall(r"local\.[A-Za-z0-9_\-\.\[\]]+", value)
-    modulevar_found_list = re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
+    modulevar_found_list = [
+        m.rstrip("[") for m in re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
+    ]
     # Replace found variable strings with actual values in order
     value = replace_data_values(data_found_list, value, tfdata)
     value = replace_module_vars(modulevar_found_list, value, module, tfdata)
