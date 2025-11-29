@@ -54,3 +54,8 @@ modules/__pycache__/*
 tfdata.json
 architecture.dot.png
 tests/json/wrecked.json
+ai-backend-terraform/.terraform.lock.hcl
+ai-backend-terraform/lambda_function.zip
+ai-backend-terraform/terraform.tfstate
+ai-backend-terraform/terraform.tfstate.backup
+ai-backend-terraform/.terraform/*

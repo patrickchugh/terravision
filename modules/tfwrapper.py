@@ -32,7 +32,7 @@ REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(
-    source: Tuple[str, ...], varfile: List[str], workspace: str, debug: bool = False
+    source: Tuple[str, ...], varfile: List[str], workspace: str, debug: bool = True
 ) -> Dict[str, Any]:
     """Initialize Terraform and generate plan and graph data.
 
@@ -45,6 +45,7 @@ def tf_initplan(
     Returns:
         Dictionary containing terraform plan and graph data
     """
+    debug = True
     tfdata = dict()
     tfdata["codepath"] = list()
     tfdata["workdir"] = os.getcwd()
@@ -73,6 +74,7 @@ def tf_initplan(
                     )
                 )
                 exit()
+        click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
         # Initialize terraform with providers
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],

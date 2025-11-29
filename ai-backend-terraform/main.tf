@@ -1,7 +1,7 @@
 # terraform/main.tf
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -50,9 +50,9 @@ variable "cost_alert_threshold" {
 
 # DynamoDB Table for Rate Limiting
 resource "aws_dynamodb_table" "api_usage" {
-  name           = "${var.project_name}-api-usage"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "client_id"
+  name         = "${var.project_name}-api-usage"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "client_id"
 
   attribute {
     name = "client_id"
@@ -128,7 +128,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 # Create Lambda deployment package
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../lambda"
+  source_dir  = "${path.module}/lambda"
   output_path = "${path.module}/lambda_function.zip"
 }
 
@@ -136,18 +136,18 @@ data "archive_file" "lambda_zip" {
 resource "aws_lambda_function" "bedrock_proxy" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.project_name}-bedrock-proxy"
-  role            = aws_iam_role.lambda_role.arn
-  handler         = "handler.proxy_bedrock"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "handler.proxy_bedrock"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  runtime         = "python3.11"
-  timeout         = 60
-  memory_size     = 256
+  runtime          = "python3.11"
+  timeout          = 60
+  memory_size      = 256
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID     = var.bedrock_model_id
-      DYNAMODB_TABLE       = aws_dynamodb_table.api_usage.name
-      RATE_LIMIT_PER_HOUR  = var.rate_limit_per_hour
+      BEDROCK_MODEL_ID    = var.bedrock_model_id
+      DYNAMODB_TABLE      = aws_dynamodb_table.api_usage.name
+      RATE_LIMIT_PER_HOUR = var.rate_limit_per_hour
     }
   }
 
