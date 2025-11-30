@@ -68,6 +68,11 @@ resource "aws_dynamodb_table" "api_usage" {
     Name        = "${var.project_name}-api-usage"
     Environment = "production"
   }
+
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = [tags]
+  }
 }
 
 # IAM Role for Lambda
@@ -86,6 +91,10 @@ resource "aws_iam_role" "lambda_role" {
       }
     ]
   })
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 # IAM Policy for Lambda
@@ -108,7 +117,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
       {
         Effect = "Allow"
         Action = [
-          "bedrock:InvokeModel"
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
         ]
         Resource = "*"
       },
@@ -132,16 +142,16 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda_function.zip"
 }
 
-# Lambda Function
+# Lambda Function with Response Streaming
 resource "aws_lambda_function" "bedrock_proxy" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.project_name}-bedrock-proxy"
   role             = aws_iam_role.lambda_role.arn
-  handler          = "handler.proxy_bedrock"
+  handler          = "index.handler"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  runtime          = "python3.11"
-  timeout          = 60
-  memory_size      = 256
+  runtime          = "nodejs20.x"
+  timeout          = 300
+  memory_size      = 512
 
   environment {
     variables = {
@@ -156,6 +166,29 @@ resource "aws_lambda_function" "bedrock_proxy" {
   }
 }
 
+# Lambda Function URL for Streaming
+resource "aws_lambda_function_url" "bedrock_proxy_url" {
+  function_name      = aws_lambda_function.bedrock_proxy.function_name
+  authorization_type = "NONE"
+  invoke_mode        = "RESPONSE_STREAM"
+
+  cors {
+    allow_origins = ["*"]
+    allow_methods = ["*"]
+    allow_headers = ["*"]
+    max_age       = 86400
+  }
+}
+
+# Lambda Permission for Function URL
+resource "aws_lambda_permission" "function_url" {
+  statement_id           = "AllowFunctionURLInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.bedrock_proxy.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.bedrock_proxy.function_name}"
@@ -166,148 +199,55 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   }
 }
 
-# API Gateway REST API
+# REST API Gateway with streaming support
 resource "aws_api_gateway_rest_api" "api" {
-  name        = "${var.project_name}-api"
-  description = "LLM App API Gateway"
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
+  name        = "${var.project_name}-rest-api"
+  description = "REST API with Lambda streaming"
 }
 
-# API Gateway Resource
 resource "aws_api_gateway_resource" "chat" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   path_part   = "chat"
 }
 
-# API Gateway Method
 resource "aws_api_gateway_method" "post_chat" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.chat.id
   http_method   = "POST"
   authorization = "NONE"
-
-  request_validator_id = aws_api_gateway_request_validator.validator.id
-
-  request_models = {
-    "application/json" = aws_api_gateway_model.request_model.name
-  }
 }
 
-# Request Validator
-resource "aws_api_gateway_request_validator" "validator" {
-  name                        = "${var.project_name}-validator"
-  rest_api_id                 = aws_api_gateway_rest_api.api.id
-  validate_request_body       = true
-  validate_request_parameters = false
-}
-
-# API Gateway Model for JSON Schema Validation
-resource "aws_api_gateway_model" "request_model" {
-  rest_api_id  = aws_api_gateway_rest_api.api.id
-  name         = "ChatRequest"
-  description  = "JSON schema for chat requests"
-  content_type = "application/json"
-
-  schema = jsonencode({
-    "$schema" = "http://json-schema.org/draft-04/schema#"
-    title     = "ChatRequest"
-    type      = "object"
-    required  = ["messages"]
-    properties = {
-      messages = {
-        type     = "array"
-        maxItems = 10
-        items = {
-          type     = "object"
-          required = ["role", "content"]
-          properties = {
-            role = {
-              type = "string"
-              enum = ["user", "assistant"]
-            }
-            content = {
-              type      = "string"
-              maxLength = 4000
-            }
-          }
-        }
-      }
-      max_tokens = {
-        type    = "integer"
-        minimum = 1
-        maximum = 1024
-      }
-    }
-    additionalProperties = false
-  })
-}
-
-# API Gateway Integration
-resource "aws_api_gateway_integration" "lambda_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.api.id
-  resource_id             = aws_api_gateway_resource.chat.id
-  http_method             = aws_api_gateway_method.post_chat.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.bedrock_proxy.invoke_arn
-}
-
-# CORS - OPTIONS Method
-resource "aws_api_gateway_method" "options_chat" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.chat.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "options_integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.chat.id
-  http_method = aws_api_gateway_method.options_chat.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
-  }
-}
-
-resource "aws_api_gateway_method_response" "options_response" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.chat.id
-  http_method = aws_api_gateway_method.options_chat.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
+# Create integration with streaming using AWS CLI
+resource "null_resource" "lambda_integration" {
+  triggers = {
+    method_id  = aws_api_gateway_method.post_chat.id
+    lambda_arn = aws_lambda_function.bedrock_proxy.arn
   }
 
-  response_models = {
-    "application/json" = "Empty"
-  }
-}
-
-resource "aws_api_gateway_integration_response" "options_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.chat.id
-  http_method = aws_api_gateway_method.options_chat.http_method
-  status_code = aws_api_gateway_method_response.options_response.status_code
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws apigateway put-integration \
+        --rest-api-id ${aws_api_gateway_rest_api.api.id} \
+        --resource-id ${aws_api_gateway_resource.chat.id} \
+        --http-method POST \
+        --type AWS_PROXY \
+        --integration-http-method POST \
+        --uri "arn:aws:apigateway:${var.aws_region}:lambda:path/2021-11-15/functions/${aws_lambda_function.bedrock_proxy.arn}/response-streaming-invocations" \
+        --timeout-in-millis 300000 \
+        --response-transfer-mode STREAM \
+        --region ${var.aws_region}
+    EOT
   }
 
-  depends_on = [aws_api_gateway_integration.options_integration]
+  provisioner "local-exec" {
+    when    = destroy
+    command = "echo 'Integration will be deleted with API Gateway resource'"
+  }
+
+  depends_on = [aws_api_gateway_method.post_chat]
 }
 
-# API Gateway Deployment
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
@@ -315,9 +255,7 @@ resource "aws_api_gateway_deployment" "deployment" {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.chat.id,
       aws_api_gateway_method.post_chat.id,
-      aws_api_gateway_integration.lambda_integration.id,
-      aws_api_gateway_method.options_chat.id,
-      aws_api_gateway_integration.options_integration.id,
+      null_resource.lambda_integration.id,
     ]))
   }
 
@@ -325,28 +263,19 @@ resource "aws_api_gateway_deployment" "deployment" {
     create_before_destroy = true
   }
 
-  depends_on = [
-    aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.options_integration
-  ]
+  depends_on = [null_resource.lambda_integration]
 }
 
-# API Gateway Stage
 resource "aws_api_gateway_stage" "prod" {
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "prod"
-
-  tags = {
-    Name = "${var.project_name}-prod"
-  }
 }
 
-# API Gateway Method Settings for Throttling
-resource "aws_api_gateway_method_settings" "all" {
+resource "aws_api_gateway_method_settings" "streaming" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = aws_api_gateway_stage.prod.stage_name
-  method_path = "*/*"
+  method_path = "chat/POST"
 
   settings {
     throttling_burst_limit = 50
@@ -354,7 +283,8 @@ resource "aws_api_gateway_method_settings" "all" {
   }
 }
 
-# Lambda Permission for API Gateway
+
+
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -400,12 +330,17 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
 
 # Outputs
 output "api_endpoint" {
-  description = "API Gateway endpoint URL"
+  description = "REST API Gateway endpoint URL"
   value       = "${aws_api_gateway_stage.prod.invoke_url}/chat"
 }
 
+output "function_url" {
+  description = "Lambda Function URL (direct streaming)"
+  value       = aws_lambda_function_url.bedrock_proxy_url.function_url
+}
+
 output "api_id" {
-  description = "API Gateway ID"
+  description = "REST API Gateway ID"
   value       = aws_api_gateway_rest_api.api.id
 }
 

@@ -60,6 +60,7 @@ into this...
 - **Terraform 1.x**   
 - **Git**  
 - **Graphviz**
+- **Ollama** (Optional - only required if using `--aibackend ollama`)
 
 ## 1. Install External Dependencies
 
@@ -177,6 +178,10 @@ terravision draw --source ~/src/my-terraform-code --format pdf
 
 # Show diagram after generation
 terravision draw --source ~/src/my-terraform-code --show
+
+# Use AI backend for diagram refinement (default: bedrock)
+terravision draw --source ~/src/my-terraform-code --aibackend bedrock
+terravision draw --source ~/src/my-terraform-code --aibackend ollama
 ```
 
 ### Remote Git Repository Support
@@ -205,12 +210,15 @@ terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.js
 
 ## Advanced Features
 
+
+### Use with annotations
+```bash
+# Add your own custom annotations such as labels, resources or new connections
+terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
+```
+
 ### Working with Pre-generated JSON from previous terravision run (faster)
 ```bash
-
-# Use with annotations
-terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
-
 # Export and reuse graph data
 terravision graphdata --source ~/src/terraform --outfile graph.json
 
@@ -229,11 +237,112 @@ terravision draw --source tfdata.json
 terravision draw --source ~/src/my-terraform-code --debug
 ```
 
-### Simplified Diagrams
+## AI-Powered Diagram Refinement
+
+TerraVision can use AI models to automatically refine and improve your architecture diagrams by fixing resource groupings, adding missing connections, and ensuring proper AWS architectural conventions.
+
+### Supported AI Backends
+
+#### AWS Bedrock (Default)
+Uses AWS Bedrock API via API Gateway for cloud-based AI refinement.
+
 ```bash
-# Generate high-level service overview
-terravision draw --source ~/src/my-terraform-code --simplified
+# Use Bedrock backend (default)
+terravision draw --source ~/src/my-terraform-code --aibackend bedrock
 ```
+
+**Configuration:**
+Edit `modules/cloud_config.py` to set your Bedrock API endpoint:
+```python
+BEDROCK_API_ENDPOINT = "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat"
+```
+
+#### Ollama (Local)
+Uses a local Ollama server for privacy-focused, offline AI refinement.
+
+```bash
+# Use Ollama backend
+terravision draw --source ~/src/my-terraform-code --aibackend ollama
+```
+
+**Setup:**
+1. Install Ollama from https://ollama.ai/download
+2. Start Ollama server and pull a model:
+   ```bash
+   # Start Ollama (runs automatically on macOS/Linux after install)
+   ollama serve
+   
+   # Pull the llama3 model
+   ollama pull llama3
+   
+   # Set model to stay loaded longer (optional, prevents premature unloading)
+   # Default timeout is 5 minutes, extend to 1 hour:
+   export OLLAMA_KEEP_ALIVE=1h
+   ```
+3. Edit `modules/cloud_config.py` to set your Ollama server (default is localhost):
+   ```python
+   OLLAMA_HOST = "http://localhost:11434"
+   ```
+
+### AI Refinement Prompts
+
+The AI models use specialized prompts defined in `modules/cloud_config.py`:
+
+- **AWS_REFINEMENT_PROMPT**: Guides the AI to fix resource groupings, connections, and ensure AWS best practices
+- **AWS_DOCUMENTATION_PROMPT**: Generates architecture summaries and documentation
+
+### Setting Up AWS Bedrock Backend
+
+TerraVision includes Terraform code to deploy a serverless AWS Bedrock proxy with API Gateway:
+
+```bash
+# Navigate to the Terraform directory
+cd ai-backend-terraform
+
+# Configure your settings
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your settings
+
+# Deploy the infrastructure
+terraform init
+terraform apply
+
+# Get your API endpoint
+terraform output api_endpoint
+```
+
+**Infrastructure Components:**
+- **API Gateway**: REST API with streaming support for real-time responses
+- **Lambda Function**: Node.js 20.x function with response streaming
+- **DynamoDB**: Rate limiting and usage tracking
+- **CloudWatch**: Monitoring, logging, and cost alerts
+- **IAM Roles**: Least-privilege access for Lambda to invoke Bedrock
+
+**Terraform Variables:**
+```hcl
+variable "bedrock_model_id" {
+  description = "Bedrock model ID"
+  type        = string
+}
+
+variable "rate_limit_per_hour" {
+  description = "Maximum requests per client per hour"
+  type        = number
+  default     = 100
+}
+
+variable "cost_alert_threshold" {
+  description = "Cost alert threshold in USD"
+  type        = number
+  default     = 50
+}
+```
+
+After deployment, update `modules/cloud_config.py` with the output endpoint:
+```python
+BEDROCK_API_ENDPOINT = "<your-api-endpoint-from-terraform-output>"
+```
+ 
 
 # Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include a `terravision.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
@@ -298,6 +407,7 @@ Generates architecture diagrams from Terraform code.
 - `--show` - Automatically open diagram after generation
 - `--simplified` - Generate simplified high-level diagram
 - `--annotate` - Path to custom annotations YAML file
+- `--aibackend` - AI backend for diagram refinement: bedrock, ollama (default: bedrock)
 - `--debug` - Enable debug output
 
 #### `terravision graphdata`
@@ -310,6 +420,7 @@ Exports resource relationships and metadata as JSON.
 - `--outfile` - Output JSON filename (default: "architecture.json")
 - `--show_services` - Show only unique services list
 - `--annotate` - Path to custom annotations YAML file
+- `--aibackend` - AI backend for diagram refinement: bedrock, ollama
 - `--debug` - Enable debug output
 
 ### Global Options
@@ -358,6 +469,15 @@ Exports resource relationships and metadata as JSON.
    - Ensure your Terraform code is valid
    - Run `terraform plan` to verify configuration
    - Check that source path contains `.tf` files
+
+5. **"Cannot reach Ollama server"**
+   - Verify Ollama is running: `curl http://localhost:11434/api/tags`
+   - If server is unresponsive, kill existing processes:
+     ```bash
+     lsof -ti:11434 | xargs kill -9
+     ollama serve
+     ```
+   - Ensure llama3 model is installed: `ollama pull llama3`
 
 
 
