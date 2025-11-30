@@ -414,8 +414,8 @@ def cli():
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
     "--aibackend",
-    default="bedrock",
-    type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
+    default="",
+    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
     help="AI backend to use (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
