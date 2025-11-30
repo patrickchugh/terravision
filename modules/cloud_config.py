@@ -272,3 +272,42 @@ AWS_NAME_REPLACEMENTS = {
     "iam_policy": "policy",
     "this": "",
 }
+
+
+AWS_REFINEMENT_PROMPT = """
+You are an expert AWS Solutions Architect. I have a JSON representation of an AWS architecture diagram generated from Terraform code. The diagram may have incorrect resource groupings, missing connections, or layout issues.
+INPUT JSON FORMAT: Each key is a Terraform resource ID, and its value is a list of resource IDs it connects to.
+SPECIAL CONVENTIONS:
+- Resources starting with "tv_" are visual helper nodes (e.g., "tv_aws_internet.internet" represents the public internet)
+- Groups like VPCs, Subnets are associated with resources within those groups and the resources should have no connections back to the group nodes
+- "aws_az.availability_zone_*" groups represent availability zone boundaries
+- Resources ending with ~1, ~2, ~3 (instance number) indicate they're either multiple instances of the same resource, or one resource duplicated for clarity when a resource is deployed in multiple availability zones and subnets
+Please refine this diagram following AWS conventions and industry best practices:
+1. Fix resource groupings (VPCs, subnets, availability zones, security groups) where necessary
+2. Add missing logical connections between resources
+3. Remove incorrect connections
+4. Ensure proper hierarchy (Region > VPC > AZ > Subnet > Resources)
+5. Group related resources (e.g., EC2 with its EBS, ALB with target groups, Autoscaling resources in an AutoScaling Group)
+6. Ensure groups are always the parent and other resources are child e.g. VPC is a group type resource and can connect to a route_table but not the other way round
+7. Add implied connections (e.g., Lambda in VPC needs ENI connection, ECS or EKS will need an ECR repository node)
+8. Autoscaling targets should appear as group type nodes within their relevant subnet with the same instance number
+
+"""
+
+
+AWS_DOCUMENTATION_PROMPT = """\
+You are an AWS architect that needs to summarise this JSON of Terraform AWS resources and their associations concisely in paragraph form using as few bullet points as possible. Follow these instructions:
+1. If you see ~1, ~2, ~3 etc at the end of the resource name it means multiple instances of the same resource are created. Include how many of each resource type are created in the summary. 
+2. Use only AWS resource names in the text which can be inferred from terraform resource type names. e.g. instead of aws_ec2_instance.XXX just say an EC2 Instance named XXX
+3. Mention which resources are associated with each respective subnet and availability zone if any. 
+4. Provide an overall summary of the architecture and what the system does
+
+"""
+
+# Replace with your OLLAMA server IP and port number
+OLLAMA_HOST = "http://localhost:11434"
+
+# Replace with your actual API Gateway endpoint from: terraform output api_endpoint
+BEDROCK_API_ENDPOINT = (
+    "https://gu49cbyjdd.execute-api.us-east-1.amazonaws.com/prod/chat"
+)

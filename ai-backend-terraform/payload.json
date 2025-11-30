@@ -1,1 +1,0 @@
-{"body":"{\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}],\"max_tokens\":50}","headers":{"Content-Type":"application/json"},"requestContext":{"identity":{"sourceIp":"1.1.1.1"}}}
