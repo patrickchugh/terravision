@@ -479,7 +479,12 @@ Exports resource relationships and metadata as JSON.
      ```
    - Ensure llama3 model is installed: `ollama pull llama3`
 
-
+6. **"Stale or cached module issues"**
+   - Clear the terravision cache folder:
+     ```bash
+     rm -rf ~/.terravision
+     ```
+   - This removes all cached modules and temporary files
 
 ### Debug Mode
 Use `--debug` flag for detailed troubleshooting information:
