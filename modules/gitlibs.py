@@ -460,7 +460,6 @@ def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) ->
         shutil.rmtree(codepath, onerror=remove_readonly)
     os.makedirs(codepath, exist_ok=True)
 
-
     # Configure clone options
     options: List[str] = []
     if tag:

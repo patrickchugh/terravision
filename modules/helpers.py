@@ -41,7 +41,7 @@ def extract_json_from_string(text: str) -> dict:
             return json.loads(match.group(1))
         except json.JSONDecodeError:
             pass
-    
+
     # Try code block without marker
     match = re.search(r"```\s*(\{.*\})\s*```", text, re.DOTALL)
     if match:
