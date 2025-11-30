@@ -34,19 +34,29 @@ output_sections = ["locals", "module", "resource", "data", "output"]
 
 def extract_json_from_string(text: str) -> dict:
     """Extract JSON object from text, handling code blocks and raw JSON."""
-    # Try code block with optional json/JSON marker
-    match = re.search(
-        r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL | re.IGNORECASE
-    )
+    # Try code block with json marker
+    match = re.search(r"```json\s*(\{.*\})\s*```", text, re.DOTALL)
     if match:
-        with suppress(json.JSONDecodeError):
+        try:
             return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
+    
+    # Try code block without marker
+    match = re.search(r"```\s*(\{.*\})\s*```", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
 
     # Try finding raw JSON object
     match = re.search(r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})", text, re.DOTALL)
     if match:
-        with suppress(json.JSONDecodeError):
+        try:
             return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            pass
 
     return {}
 

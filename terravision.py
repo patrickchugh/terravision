@@ -263,17 +263,29 @@ def _stream_ollama_llm_response(client, graphdict: dict, debug: bool) -> str:
 
 def _stream_bedrock_response(graphdict: dict, debug: bool) -> str:
     """Stream Bedrock API response and return complete output."""
+
     payload = {
-        "prompt": cloud_config.AWS_REFINEMENT_PROMPT
-        + (
-            "Explain why you made every change after outputting the refined JSON\n"
-            if debug
-            else "Return ONLY the corrected JSON in the same format, with no additional explanation."
-        )
-        + str(graphdict)
+        "messages": [
+            {
+                "role": "user",
+                "content": cloud_config.AWS_REFINEMENT_PROMPT
+                + (
+                    "Explain why you made every change after outputting the refined JSON\n"
+                    if debug
+                    else "Return ONLY the corrected JSON in the same format, with no additional explanation."
+                )
+                + str(graphdict),
+            }
+        ],
+        "max_tokens": 10000,
     }
+
     response = requests.post(
-        cloud_config.BEDROCK_API_ENDPOINT, json=payload, stream=True, timeout=300
+        cloud_config.BEDROCK_API_ENDPOINT,
+        json=payload,
+        headers={"Content-Type": "application/json"},
+        stream=True,
+        timeout=300,
     )
     full_response = ""
     for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
@@ -402,6 +414,7 @@ def cli():
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
     "--aibackend",
+    default="bedrock",
     type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
     help="AI backend to use (bedrock or ollama)",
 )
@@ -462,7 +475,7 @@ def draw(
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
     "--aibackend",
-    type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
+    # type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
     help="AI backend to use (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
