@@ -210,12 +210,15 @@ terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.js
 
 ## Advanced Features
 
+
+### Use with annotations
+```bash
+# Add your own custom annotations such as labels, resources or new connections
+terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
+```
+
 ### Working with Pre-generated JSON from previous terravision run (faster)
 ```bash
-
-# Use with annotations
-terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
-
 # Export and reuse graph data
 terravision graphdata --source ~/src/terraform --outfile graph.json
 
@@ -339,12 +342,7 @@ After deployment, update `modules/cloud_config.py` with the output endpoint:
 ```python
 BEDROCK_API_ENDPOINT = "<your-api-endpoint-from-terraform-output>"
 ```
-
-### Simplified Diagrams
-```bash
-# Generate high-level service overview
-terravision draw --source ~/src/my-terraform-code --simplified
-```
+ 
 
 # Annotating generated diagrams
 No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include a `terravision.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
