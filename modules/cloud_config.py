@@ -287,7 +287,7 @@ Please refine this diagram following AWS conventions and industry best practices
 2. Add missing logical connections between resources
 3. Remove incorrect connections
 4. Ensure proper hierarchy (Region > VPC > AZ > Subnet > Resources)
-5. Group related resources (e.g., EC2 with its EBS, ALB with target groups, Autoscaling resources in an AutoScaling Group)
+5. Group related resources (e.g., ALB with target groups, Autoscaling resources in an AutoScaling Group, EKS nodes within a subnet)
 6. Ensure groups are always the parent and other resources are child e.g. VPC is a group type resource and can connect to a route_table but not the other way round
 7. Add implied connections (e.g., Lambda in VPC needs ENI connection, ECS or EKS will need an ECR repository node)
 8. Autoscaling targets should appear as group type nodes within their relevant subnet with the same instance number

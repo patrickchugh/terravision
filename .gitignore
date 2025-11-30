@@ -59,3 +59,4 @@ ai-backend-terraform/lambda_function.zip
 ai-backend-terraform/terraform.tfstate
 ai-backend-terraform/terraform.tfstate.backup
 ai-backend-terraform/.terraform/*
+ai-backend-terraform/lambda/node_modules/*

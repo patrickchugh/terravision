@@ -147,9 +147,9 @@ resource "aws_lambda_function" "bedrock_proxy" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.project_name}-bedrock-proxy"
   role             = aws_iam_role.lambda_role.arn
-  handler          = "handler.stream_handler"
+  handler          = "index.handler"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  runtime          = "python3.11"
+  runtime          = "nodejs20.x"
   timeout          = 300
   memory_size      = 512
 
@@ -174,10 +174,19 @@ resource "aws_lambda_function_url" "bedrock_proxy_url" {
 
   cors {
     allow_origins = ["*"]
-    allow_methods = ["POST"]
-    allow_headers = ["content-type"]
+    allow_methods = ["*"]
+    allow_headers = ["*"]
     max_age       = 86400
   }
+}
+
+# Lambda Permission for Function URL
+resource "aws_lambda_permission" "function_url" {
+  statement_id           = "AllowFunctionURLInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.bedrock_proxy.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
 }
 
 # CloudWatch Log Group
@@ -190,55 +199,98 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   }
 }
 
-# HTTP API Gateway v2 (supports streaming)
-resource "aws_apigatewayv2_api" "http_api" {
-  name          = "${var.project_name}-http-api"
-  protocol_type = "HTTP"
-  description   = "HTTP API for streaming Lambda responses"
+# REST API Gateway with streaming support
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "${var.project_name}-rest-api"
+  description = "REST API with Lambda streaming"
+}
 
-  cors_configuration {
-    allow_origins = ["*"]
-    allow_methods = ["POST", "OPTIONS"]
-    allow_headers = ["content-type"]
-    max_age       = 86400
+resource "aws_api_gateway_resource" "chat" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "chat"
+}
+
+resource "aws_api_gateway_method" "post_chat" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.chat.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# Create integration with streaming using AWS CLI
+resource "null_resource" "lambda_integration" {
+  triggers = {
+    method_id  = aws_api_gateway_method.post_chat.id
+    lambda_arn = aws_lambda_function.bedrock_proxy.arn
   }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws apigateway put-integration \
+        --rest-api-id ${aws_api_gateway_rest_api.api.id} \
+        --resource-id ${aws_api_gateway_resource.chat.id} \
+        --http-method POST \
+        --type AWS_PROXY \
+        --integration-http-method POST \
+        --uri "arn:aws:apigateway:${var.aws_region}:lambda:path/2021-11-15/functions/${aws_lambda_function.bedrock_proxy.arn}/response-streaming-invocations" \
+        --timeout-in-millis 300000 \
+        --response-transfer-mode STREAM \
+        --region ${var.aws_region}
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "echo 'Integration will be deleted with API Gateway resource'"
+  }
+
+  depends_on = [aws_api_gateway_method.post_chat]
 }
 
-# HTTP API Integration with Lambda
-resource "aws_apigatewayv2_integration" "lambda" {
-  api_id                 = aws_apigatewayv2_api.http_api.id
-  integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.bedrock_proxy.invoke_arn
-  payload_format_version = "2.0"
-  timeout_milliseconds   = 30000
+resource "aws_api_gateway_deployment" "deployment" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.chat.id,
+      aws_api_gateway_method.post_chat.id,
+      null_resource.lambda_integration.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  depends_on = [null_resource.lambda_integration]
 }
 
-# HTTP API Route
-resource "aws_apigatewayv2_route" "chat" {
-  api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "POST /chat"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+resource "aws_api_gateway_stage" "prod" {
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = "prod"
 }
 
-# HTTP API Stage
-resource "aws_apigatewayv2_stage" "prod" {
-  api_id      = aws_apigatewayv2_api.http_api.id
-  name        = "prod"
-  auto_deploy = true
+resource "aws_api_gateway_method_settings" "streaming" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = aws_api_gateway_stage.prod.stage_name
+  method_path = "chat/POST"
 
-  default_route_settings {
+  settings {
     throttling_burst_limit = 50
     throttling_rate_limit  = 100
   }
 }
 
-# Lambda Permission for HTTP API
+
+
 resource "aws_lambda_permission" "api_gateway" {
-  statement_id  = "AllowHTTPAPIInvoke"
-  action        = "lambda:InvokeFunctionUrl"
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.bedrock_proxy.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
 # CloudWatch Alarm for Costs
@@ -278,8 +330,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
 
 # Outputs
 output "api_endpoint" {
-  description = "HTTP API Gateway endpoint URL"
-  value       = "${aws_apigatewayv2_stage.prod.invoke_url}/chat"
+  description = "REST API Gateway endpoint URL"
+  value       = "${aws_api_gateway_stage.prod.invoke_url}/chat"
 }
 
 output "function_url" {
@@ -288,8 +340,8 @@ output "function_url" {
 }
 
 output "api_id" {
-  description = "HTTP API Gateway ID"
-  value       = aws_apigatewayv2_api.http_api.id
+  description = "REST API Gateway ID"
+  value       = aws_api_gateway_rest_api.api.id
 }
 
 output "lambda_function_name" {

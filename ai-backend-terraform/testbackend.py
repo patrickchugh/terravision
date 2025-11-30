@@ -3,17 +3,19 @@ import requests
 import json
 
 # Replace with your actual API endpoint from: terraform output api_endpoint
-API_ENDPOINT = "https://y1hn4hs33g.execute-api.us-east-1.amazonaws.com/prod/chat"
+
+
+API_ENDPOINT = "https://yirz70b5mc.execute-api.us-east-1.amazonaws.com/prod/chat"
 
 
 def test_api():
-    """Simple test of the API"""
+    """Simple test of the streaming API"""
 
     payload = {
         "messages": [
             {"role": "user", "content": "Explain quantum physics in simple terms"}
         ],
-        "max_tokens": 100,
+        "max_tokens": 1000,
     }
 
     print("Sending request to API...")
@@ -25,18 +27,22 @@ def test_api():
             API_ENDPOINT,
             json=payload,
             headers={"Content-Type": "application/json"},
+            stream=True,
             timeout=60,
         )
 
-        print(f"Status Code: {response.status_code}")
+        print(f"Status Code: {response.status_code}\n")
 
         if response.status_code == 200:
-            data = response.json()
-            print(f"\n✅ Success!\n")
-            print(f"Response: {data['content'][0]['text']}")
-            print(
-                f"\nTokens - Input: {data['usage']['input_tokens']}, Output: {data['usage']['output_tokens']}"
-            )
+            print("✅ Streaming response:\n")
+            full_response = ""
+            for chunk in response.iter_content(chunk_size=1, decode_unicode=False):
+                if chunk:
+                    text = chunk.decode("utf-8", errors="ignore")
+                    print(text, end="", flush=True)
+                    full_response += text
+            print("\n\n✅ Stream complete!")
+            print(f"Total characters received: {len(full_response)}")
         else:
             print(f"\n❌ Error: {response.text}")
 
