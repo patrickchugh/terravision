@@ -51,7 +51,7 @@ into this...
 	- Don't need to give access to your AWS account, credentials or CLI to draw diagram
 	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
   	- All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
-   - Only metatdata is saved in memory or external files not any sensitive code or runtime environment values
+   - Only metatdata is sent to LLM models with only minimal aggregate data saved in external files, not any sensitive code or runtime environment values
 
 # Installation and Usage
 
