@@ -6,21 +6,9 @@ Initial minimal viable configuration for Phase 1.
 """
 
 # Consolidated nodes for GCP services
+# Resources with multiple sub-types that should be consolidated to a single icon
 CONSOLIDATED_NODES = [
-    {
-        "google_compute_firewall": {
-            "resource_name": "google_compute_firewall.firewall",
-            "import_location": "resource_classes.gcp.security",
-            "vpc": True,
-        }
-    },
-    {
-        "google_compute_backend_service": {
-            "resource_name": "google_compute_backend_service.lb",
-            "import_location": "resource_classes.gcp.network",
-            "vpc": True,
-        }
-    },
+    # Cloud DNS consolidation (zones, records, policies)
     {
         "google_dns_managed_zone": {
             "resource_name": "google_dns_managed_zone.dns",
@@ -29,16 +17,90 @@ CONSOLIDATED_NODES = [
             "edge_service": True,
         }
     },
+    # Firewall consolidation (rules grouped)
     {
-        "google_kms_key_ring": {
+        "google_compute_firewall": {
+            "resource_name": "google_compute_firewall.firewall",
+            "import_location": "resource_classes.gcp.security",
+            "vpc": True,
+        }
+    },
+    # Load Balancer consolidation (backend service + forwarding rules + url maps)
+    {
+        "google_compute_backend_service": {
+            "resource_name": "google_compute_backend_service.lb",
+            "import_location": "resource_classes.gcp.network",
+            "vpc": True,
+        }
+    },
+    # KMS consolidation (key ring + crypto keys)
+    {
+        "google_kms": {
             "resource_name": "google_kms_key_ring.kms",
             "import_location": "resource_classes.gcp.security",
             "vpc": False,
         }
     },
+    # Cloud Logging consolidation (sinks + exclusions)
     {
         "google_logging": {
             "resource_name": "google_logging_project_sink.logging",
+            "import_location": "resource_classes.gcp.management",
+            "vpc": False,
+        }
+    },
+    # Cloud Storage consolidation (buckets + objects)
+    {
+        "google_storage": {
+            "resource_name": "google_storage_bucket.storage",
+            "import_location": "resource_classes.gcp.storage",
+            "vpc": False,
+        }
+    },
+    # GKE consolidation (cluster + node pools)
+    {
+        "google_container": {
+            "resource_name": "google_container_cluster.gke",
+            "import_location": "resource_classes.gcp.compute",
+            "vpc": True,
+        }
+    },
+    # Cloud SQL consolidation (instance + databases + users)
+    {
+        "google_sql": {
+            "resource_name": "google_sql_database_instance.sql",
+            "import_location": "resource_classes.gcp.database",
+            "vpc": True,
+        }
+    },
+    # Cloud Functions consolidation (function + triggers)
+    {
+        "google_cloudfunctions": {
+            "resource_name": "google_cloudfunctions_function.function",
+            "import_location": "resource_classes.gcp.compute",
+            "vpc": False,
+        }
+    },
+    # Cloud Run consolidation (service + revisions)
+    {
+        "google_cloud_run": {
+            "resource_name": "google_cloud_run_service.run",
+            "import_location": "resource_classes.gcp.compute",
+            "vpc": False,
+        }
+    },
+    # IAM consolidation (bindings + members + service accounts)
+    {
+        "google_project_iam": {
+            "resource_name": "google_project_iam_binding.iam",
+            "import_location": "resource_classes.gcp.security",
+            "vpc": False,
+        }
+    },
+    # Cloud Monitoring consolidation (alert policies + notification channels)
+    {
+        "google_monitoring": {
+            "resource_name": "google_monitoring_alert_policy.monitoring",
             "import_location": "resource_classes.gcp.management",
             "vpc": False,
         }
@@ -72,16 +134,60 @@ DRAW_ORDER = [
 ]
 
 # Auto-annotations for GCP
+# Automatically creates connections and annotations for common patterns
 AUTO_ANNOTATIONS = [
-    {"google_dns_managed_zone": {"link": ["tv_gcp_users.users"], "arrow": "reverse"}},
+    # Cloud DNS connected to external users
+    {
+        "google_dns_managed_zone": {
+            "link": ["tv_gcp_users.users"],
+            "arrow": "reverse",
+        }
+    },
+    # External IP addresses connected to internet
     {
         "google_compute_address": {
             "link": ["tv_gcp_internet.internet"],
             "arrow": "forward",
         }
     },
+    # Global forwarding rules (load balancers) connected to internet
     {
         "google_compute_global_forwarding_rule": {
+            "link": ["tv_gcp_internet.internet"],
+            "arrow": "reverse",
+        }
+    },
+    # GKE clusters create implicit service connection
+    {
+        "google_container_cluster": {
+            "link": ["google_container_service.gke"],
+            "arrow": "reverse",
+        }
+    },
+    # NAT gateway connections
+    {
+        "google_compute_router_nat": {
+            "link": ["tv_gcp_internet.internet"],
+            "arrow": "forward",
+        }
+    },
+    # Cloud CDN connections
+    {
+        "google_compute_backend_bucket": {
+            "link": ["tv_gcp_internet.internet"],
+            "arrow": "reverse",
+        }
+    },
+    # Cloud Armor (security policies)
+    {
+        "google_compute_security_policy": {
+            "link": ["google_compute_backend_service.*"],
+            "arrow": "forward",
+        }
+    },
+    # Cloud Run services exposed externally
+    {
+        "google_cloud_run_service": {
             "link": ["tv_gcp_internet.internet"],
             "arrow": "reverse",
         }
@@ -89,11 +195,68 @@ AUTO_ANNOTATIONS = [
 ]
 
 # GCP resource variants
+# Maps resource types to different variants based on metadata keywords
 NODE_VARIANTS = {
-    "google_compute_instance": {"Standard": "google_compute_instance"},
+    # Compute Instance variants based on machine type
+    "google_compute_instance": {
+        "n1-standard": "google_compute_instance_standard",
+        "n1-highmem": "google_compute_instance_memory",
+        "n1-highcpu": "google_compute_instance_cpu",
+        "e2-": "google_compute_instance_e2",
+        "n2-": "google_compute_instance_n2",
+        "c2-": "google_compute_instance_c2",
+        "m1-": "google_compute_instance_memory",
+    },
+    # Storage Bucket variants based on storage class
+    "google_storage_bucket": {
+        "STANDARD": "google_storage_standard",
+        "NEARLINE": "google_storage_nearline",
+        "COLDLINE": "google_storage_coldline",
+        "ARCHIVE": "google_storage_archive",
+    },
+    # Cloud SQL variants based on tier and database type
     "google_sql_database_instance": {
-        "MYSQL": "google_sql_mysql",
         "POSTGRES": "google_sql_postgres",
+        "MYSQL": "google_sql_mysql",
+        "SQLSERVER": "google_sql_sqlserver",
+        "db-f1-micro": "google_sql_micro",
+        "db-n1-standard": "google_sql_standard",
+        "db-n1-highmem": "google_sql_highmem",
+    },
+    # GKE variants based on release channel
+    "google_container_cluster": {
+        "RAPID": "google_gke_rapid",
+        "REGULAR": "google_gke_regular",
+        "STABLE": "google_gke_stable",
+        "UNSPECIFIED": "google_gke_unspecified",
+    },
+    # Load Balancer variants
+    "google_compute_backend_service": {
+        "EXTERNAL": "google_lb_external",
+        "INTERNAL": "google_lb_internal",
+        "INTERNAL_MANAGED": "google_lb_internal_managed",
+    },
+    # Cloud Function variants based on runtime
+    "google_cloudfunctions_function": {
+        "python": "google_function_python",
+        "nodejs": "google_function_nodejs",
+        "go": "google_function_go",
+        "java": "google_function_java",
+    },
+    # Cloud Run variants
+    "google_cloud_run_service": {
+        "cpu-boost": "google_run_boosted",
+        "cloudsql": "google_run_sql",
+    },
+    # Firewall variants based on direction
+    "google_compute_firewall": {
+        "INGRESS": "google_firewall_ingress",
+        "EGRESS": "google_firewall_egress",
+    },
+    # Redis variants based on tier
+    "google_redis_instance": {
+        "BASIC": "google_redis_basic",
+        "STANDARD_HA": "google_redis_ha",
     },
 }
 
