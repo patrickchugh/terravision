@@ -69,25 +69,37 @@
                             "allow": [
                                 {
                                     "protocol": "tcp",
-                                    "ports": ["22"]
+                                    "ports": [
+                                        "22"
+                                    ]
                                 }
                             ],
-                            "source_ranges": ["0.0.0.0/0"],
-                            "target_tags": ["ssh"]
+                            "source_ranges": [
+                                "0.0.0.0/0"
+                            ],
+                            "target_tags": [
+                                "ssh"
+                            ]
                         },
                         "sensitive_values": {
                             "allow": [
                                 {
-                                    "ports": [false]
+                                    "ports": [
+                                        false
+                                    ]
                                 }
                             ],
                             "deny": [],
                             "destination_ranges": [],
-                            "source_ranges": [false],
+                            "source_ranges": [
+                                false
+                            ],
                             "source_service_accounts": [],
                             "source_tags": [],
                             "target_service_accounts": [],
-                            "target_tags": [false]
+                            "target_tags": [
+                                false
+                            ]
                         }
                     },
                     {
@@ -124,7 +136,10 @@
                                     ]
                                 }
                             ],
-                            "tags": ["ssh", "web"],
+                            "tags": [
+                                "ssh",
+                                "web"
+                            ],
                             "metadata": {
                                 "environment": "dev",
                                 "managed-by": "terraform"
@@ -163,7 +178,10 @@
                             "scratch_disk": [],
                             "service_account": [],
                             "shielded_instance_config": [],
-                            "tags": [false, false]
+                            "tags": [
+                                false,
+                                false
+                            ]
                         }
                     },
                     {
@@ -283,9 +301,16 @@
     "tempdir": "/tmp/terravision-test",
     "graphdict": {
         "google_compute_network.main": [],
-        "google_compute_subnetwork.main": ["google_compute_network.main"],
-        "google_compute_firewall.allow_ssh": ["google_compute_network.main"],
-        "google_compute_instance.main": ["google_compute_subnetwork.main", "google_compute_firewall.allow_ssh"],
+        "google_compute_subnetwork.main": [
+            "google_compute_network.main"
+        ],
+        "google_compute_firewall.allow_ssh": [
+            "google_compute_network.main"
+        ],
+        "google_compute_instance.main": [
+            "google_compute_subnetwork.main",
+            "google_compute_firewall.allow_ssh"
+        ],
         "google_storage_bucket.main": [],
         "google_sql_database_instance.main": []
     },
@@ -381,5 +406,53 @@
         "google_compute_instance.main",
         "google_storage_bucket.main",
         "google_sql_database_instance.main"
-    ]
+    ],
+    "original_graphdict": {
+        "google_compute_network.main": [],
+        "google_compute_subnetwork.main": [
+            "google_compute_network.main"
+        ],
+        "google_compute_firewall.allow_ssh": [
+            "google_compute_network.main"
+        ],
+        "google_compute_instance.main": [
+            "google_compute_subnetwork.main",
+            "google_compute_firewall.allow_ssh"
+        ],
+        "google_storage_bucket.main": [],
+        "google_sql_database_instance.main": []
+    },
+    "original_metadata": {
+        "google_compute_network.main": {
+            "name": "vpc-test-dev"
+        },
+        "google_compute_subnetwork.main": {
+            "name": "subnet-test-dev",
+            "ip_cidr_range": "10.0.1.0/24"
+        },
+        "google_compute_firewall.allow_ssh": {
+            "name": "allow-ssh"
+        },
+        "google_compute_instance.main": {
+            "name": "vm-test-dev",
+            "machine_type": "n1-standard-1"
+        },
+        "google_storage_bucket.main": {
+            "name": "bucket-test-dev-001"
+        },
+        "google_sql_database_instance.main": {
+            "name": "db-test-dev",
+            "database_version": "POSTGRES_14"
+        }
+    },
+    "module_source_dict": {},
+    "all_data": {},
+    "all_locals": {},
+    "all_module": {},
+    "all_output": {},
+    "all_variable": {},
+    "hidden": [],
+    "tf_resources_created": {},
+    "tfgraph": {},
+    "varfile_list": []
 }

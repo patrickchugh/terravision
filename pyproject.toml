@@ -7,6 +7,9 @@ authors = []
 readme = 'README.md'
 exclude = []
 
+[tool.poetry.scripts]
+terravision = "terravision:cli"
+
 
 [tool.poetry.dependencies]
 click = "8.1.3"

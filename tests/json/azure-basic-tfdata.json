@@ -238,11 +238,21 @@
     "tempdir": "/tmp/terravision-test",
     "graphdict": {
         "azurerm_resource_group.main": [],
-        "azurerm_virtual_network.main": ["azurerm_resource_group.main"],
-        "azurerm_subnet.internal": ["azurerm_virtual_network.main"],
-        "azurerm_network_interface.main": ["azurerm_subnet.internal"],
-        "azurerm_linux_virtual_machine.main": ["azurerm_network_interface.main"],
-        "azurerm_storage_account.main": ["azurerm_resource_group.main"]
+        "azurerm_virtual_network.main": [
+            "azurerm_resource_group.main"
+        ],
+        "azurerm_subnet.internal": [
+            "azurerm_virtual_network.main"
+        ],
+        "azurerm_network_interface.main": [
+            "azurerm_subnet.internal"
+        ],
+        "azurerm_linux_virtual_machine.main": [
+            "azurerm_network_interface.main"
+        ],
+        "azurerm_storage_account.main": [
+            "azurerm_resource_group.main"
+        ]
     },
     "all_resource": {
         "azurerm_resource_group.main": {
@@ -262,7 +272,9 @@
             "provider_name": "registry.terraform.io/hashicorp/azurerm",
             "values": {
                 "name": "vnet-test-dev",
-                "address_space": ["10.0.0.0/16"]
+                "address_space": [
+                    "10.0.0.0/16"
+                ]
             }
         },
         "azurerm_subnet.internal": {
@@ -272,7 +284,9 @@
             "provider_name": "registry.terraform.io/hashicorp/azurerm",
             "values": {
                 "name": "subnet-internal",
-                "address_prefixes": ["10.0.1.0/24"]
+                "address_prefixes": [
+                    "10.0.1.0/24"
+                ]
             }
         },
         "azurerm_network_interface.main": {
@@ -308,7 +322,9 @@
         },
         "azurerm_virtual_network.main": {
             "name": "vnet-test-dev",
-            "address_space": ["10.0.0.0/16"]
+            "address_space": [
+                "10.0.0.0/16"
+            ]
         },
         "azurerm_subnet.internal": {
             "name": "subnet-internal"
@@ -332,5 +348,58 @@
         "azurerm_network_interface.main",
         "azurerm_linux_virtual_machine.main",
         "azurerm_storage_account.main"
-    ]
+    ],
+    "original_graphdict": {
+        "azurerm_resource_group.main": [],
+        "azurerm_virtual_network.main": [
+            "azurerm_resource_group.main"
+        ],
+        "azurerm_subnet.internal": [
+            "azurerm_virtual_network.main"
+        ],
+        "azurerm_network_interface.main": [
+            "azurerm_subnet.internal"
+        ],
+        "azurerm_linux_virtual_machine.main": [
+            "azurerm_network_interface.main"
+        ],
+        "azurerm_storage_account.main": [
+            "azurerm_resource_group.main"
+        ]
+    },
+    "original_metadata": {
+        "azurerm_resource_group.main": {
+            "name": "rg-test-dev",
+            "location": "eastus"
+        },
+        "azurerm_virtual_network.main": {
+            "name": "vnet-test-dev",
+            "address_space": [
+                "10.0.0.0/16"
+            ]
+        },
+        "azurerm_subnet.internal": {
+            "name": "subnet-internal"
+        },
+        "azurerm_network_interface.main": {
+            "name": "nic-test-dev"
+        },
+        "azurerm_linux_virtual_machine.main": {
+            "name": "vm-test-dev",
+            "size": "Standard_D2s_v3"
+        },
+        "azurerm_storage_account.main": {
+            "name": "sttestdev001"
+        }
+    },
+    "module_source_dict": {},
+    "all_data": {},
+    "all_locals": {},
+    "all_module": {},
+    "all_output": {},
+    "all_variable": {},
+    "hidden": [],
+    "tf_resources_created": {},
+    "tfgraph": {},
+    "varfile_list": []
 }
