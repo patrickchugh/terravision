@@ -15,6 +15,8 @@ import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 
+# Module-level constants - currently AWS-specific for backwards compatibility
+# TODO: Migrate to provider-aware lookups using ProviderRegistry.get_context()
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 GROUP_NODES = cloud_config.AWS_GROUP_NODES
@@ -345,9 +347,9 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         in tfdata["graphdict"][connected_resource]
                         and connected_resource not in consolidated_connection
                     ):
-                        tfdata["graphdict"][connected_resource][
-                            index
-                        ] = consolidated_connection
+                        tfdata["graphdict"][connected_resource][index] = (
+                            consolidated_connection
+                        )
                     elif (
                         connected_resource in consolidated_connection
                         or consolidated_connection

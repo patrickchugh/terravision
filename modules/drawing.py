@@ -15,6 +15,10 @@ import click
 
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
+from modules.node_factory import NodeFactory
+
+# Initialize NodeFactory for dynamic class resolution
+node_factory = NodeFactory()
 
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
@@ -155,11 +159,11 @@ def handle_nodes(
     if resource in drawn_resources:
         newNode = tfdata["meta_data"][resource]["node"]
     else:
-        # Create new node and add to appropriate group
+        # Create new node and add to appropriate group using NodeFactory
         targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
         node_label = helpers.pretty_name(resource)
         setcluster(targetGroup)
-        nodeClass = getattr(sys.modules[__name__], resource_type)
+        nodeClass = node_factory.resolve_class(resource_type)
         newNode = nodeClass(label=node_label, tf_resource_name=resource)
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
@@ -200,8 +204,8 @@ def handle_nodes(
                             drawn_resources,
                         )
                     elif node_connection not in drawn_resources:
-                        # Draw circular reference node without recursion
-                        nodeClass = getattr(sys.modules[__name__], node_type)
+                        # Draw circular reference node without recursion using NodeFactory
+                        nodeClass = node_factory.resolve_class(node_type)
                         connectedNode = nodeClass(
                             label=helpers.pretty_name(node_connection),
                             tf_resource_name=node_connection,
@@ -326,8 +330,8 @@ def handle_group(
     if resource_type not in avl_classes:
         return
 
-    # Create new group/cluster
-    newGroup = getattr(sys.modules[__name__], resource_type)(
+    # Create new group/cluster using NodeFactory
+    newGroup = node_factory.resolve_class(resource_type)(
         label=helpers.pretty_name(resource)
     )
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
@@ -509,7 +513,8 @@ def render_diagram(
         "fontsize": "18",
         "label": f"Machine generated using terravision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
     }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
+    # Use NodeFactory to resolve Node class
+    node_factory.resolve_class("Node")(**footer_style)
 
     # Add cloud group to main canvas
     myDiagram.subgraph(cloudGroup.dot)

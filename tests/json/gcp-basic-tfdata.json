@@ -1,0 +1,385 @@
+{
+    "codepath": [
+        "/test/gcp-basic"
+    ],
+    "workdir": "/test",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.5.0",
+        "variables": {
+            "project_id": {
+                "value": "my-test-project"
+            },
+            "region": {
+                "value": "us-central1"
+            },
+            "environment": {
+                "value": "dev"
+            }
+        },
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "google_compute_network.main",
+                        "mode": "managed",
+                        "type": "google_compute_network",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "vpc-test-dev",
+                            "project": "my-test-project",
+                            "auto_create_subnetworks": false,
+                            "routing_mode": "REGIONAL",
+                            "description": "Test VPC network"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "google_compute_subnetwork.main",
+                        "mode": "managed",
+                        "type": "google_compute_subnetwork",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "subnet-test-dev",
+                            "ip_cidr_range": "10.0.1.0/24",
+                            "region": "us-central1",
+                            "network": "vpc-test-dev",
+                            "project": "my-test-project"
+                        },
+                        "sensitive_values": {
+                            "log_config": [],
+                            "secondary_ip_range": []
+                        }
+                    },
+                    {
+                        "address": "google_compute_firewall.allow_ssh",
+                        "mode": "managed",
+                        "type": "google_compute_firewall",
+                        "name": "allow_ssh",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 1,
+                        "values": {
+                            "name": "allow-ssh",
+                            "network": "vpc-test-dev",
+                            "project": "my-test-project",
+                            "allow": [
+                                {
+                                    "protocol": "tcp",
+                                    "ports": ["22"]
+                                }
+                            ],
+                            "source_ranges": ["0.0.0.0/0"],
+                            "target_tags": ["ssh"]
+                        },
+                        "sensitive_values": {
+                            "allow": [
+                                {
+                                    "ports": [false]
+                                }
+                            ],
+                            "deny": [],
+                            "destination_ranges": [],
+                            "source_ranges": [false],
+                            "source_service_accounts": [],
+                            "source_tags": [],
+                            "target_service_accounts": [],
+                            "target_tags": [false]
+                        }
+                    },
+                    {
+                        "address": "google_compute_instance.main",
+                        "mode": "managed",
+                        "type": "google_compute_instance",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 6,
+                        "values": {
+                            "name": "vm-test-dev",
+                            "machine_type": "n1-standard-1",
+                            "zone": "us-central1-a",
+                            "project": "my-test-project",
+                            "boot_disk": [
+                                {
+                                    "initialize_params": [
+                                        {
+                                            "image": "debian-cloud/debian-11",
+                                            "size": 10,
+                                            "type": "pd-standard"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "network_interface": [
+                                {
+                                    "network": "vpc-test-dev",
+                                    "subnetwork": "subnet-test-dev",
+                                    "access_config": [
+                                        {
+                                            "network_tier": "PREMIUM"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "tags": ["ssh", "web"],
+                            "metadata": {
+                                "environment": "dev",
+                                "managed-by": "terraform"
+                            }
+                        },
+                        "sensitive_values": {
+                            "attached_disk": [],
+                            "boot_disk": [
+                                {
+                                    "disk_encryption_key_raw": null,
+                                    "initialize_params": [
+                                        {
+                                            "labels": {},
+                                            "resource_manager_tags": {}
+                                        }
+                                    ],
+                                    "kms_key_self_link": null
+                                }
+                            ],
+                            "confidential_instance_config": [],
+                            "guest_accelerator": [],
+                            "metadata": {},
+                            "network_interface": [
+                                {
+                                    "access_config": [
+                                        {}
+                                    ],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": []
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "params": [],
+                            "reservation_affinity": [],
+                            "scheduling": [],
+                            "scratch_disk": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [false, false]
+                        }
+                    },
+                    {
+                        "address": "google_storage_bucket.main",
+                        "mode": "managed",
+                        "type": "google_storage_bucket",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "bucket-test-dev-001",
+                            "location": "US",
+                            "project": "my-test-project",
+                            "storage_class": "STANDARD",
+                            "uniform_bucket_level_access": true,
+                            "labels": {
+                                "environment": "dev",
+                                "managed_by": "terraform"
+                            }
+                        },
+                        "sensitive_values": {
+                            "autoclass": [],
+                            "cors": [],
+                            "custom_placement_config": [],
+                            "encryption": [],
+                            "labels": {},
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "retention_policy": [],
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "google_sql_database_instance.main",
+                        "mode": "managed",
+                        "type": "google_sql_database_instance",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "db-test-dev",
+                            "database_version": "POSTGRES_14",
+                            "region": "us-central1",
+                            "project": "my-test-project",
+                            "settings": [
+                                {
+                                    "tier": "db-f1-micro",
+                                    "disk_size": 10,
+                                    "disk_type": "PD_SSD",
+                                    "availability_type": "ZONAL",
+                                    "backup_configuration": [
+                                        {
+                                            "enabled": true,
+                                            "start_time": "03:00"
+                                        }
+                                    ],
+                                    "ip_configuration": [
+                                        {
+                                            "ipv4_enabled": true,
+                                            "authorized_networks": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "clone": [],
+                            "replica_configuration": [],
+                            "restore_backup_context": [],
+                            "settings": [
+                                {
+                                    "active_directory_config": [],
+                                    "advanced_machine_features": [],
+                                    "backup_configuration": [
+                                        {
+                                            "backup_retention_settings": []
+                                        }
+                                    ],
+                                    "database_flags": [],
+                                    "data_cache_config": [],
+                                    "deny_maintenance_period": [],
+                                    "insights_config": [],
+                                    "ip_configuration": [
+                                        {
+                                            "authorized_networks": [],
+                                            "psc_config": [],
+                                            "ssl_mode": null
+                                        }
+                                    ],
+                                    "location_preference": [],
+                                    "maintenance_window": [],
+                                    "password_validation_policy": [],
+                                    "sql_server_audit_config": [],
+                                    "user_labels": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [],
+        "configuration": {
+            "provider_config": {
+                "google": {
+                    "name": "google",
+                    "full_name": "registry.terraform.io/hashicorp/google",
+                    "version_constraint": "~> 5.0"
+                }
+            },
+            "root_module": {
+                "resources": []
+            }
+        }
+    },
+    "tempdir": "/tmp/terravision-test",
+    "graphdict": {
+        "google_compute_network.main": [],
+        "google_compute_subnetwork.main": ["google_compute_network.main"],
+        "google_compute_firewall.allow_ssh": ["google_compute_network.main"],
+        "google_compute_instance.main": ["google_compute_subnetwork.main", "google_compute_firewall.allow_ssh"],
+        "google_storage_bucket.main": [],
+        "google_sql_database_instance.main": []
+    },
+    "all_resource": {
+        "google_compute_network.main": {
+            "address": "google_compute_network.main",
+            "type": "google_compute_network",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "name": "vpc-test-dev",
+                "auto_create_subnetworks": false
+            }
+        },
+        "google_compute_subnetwork.main": {
+            "address": "google_compute_subnetwork.main",
+            "type": "google_compute_subnetwork",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "name": "subnet-test-dev",
+                "ip_cidr_range": "10.0.1.0/24"
+            }
+        },
+        "google_compute_firewall.allow_ssh": {
+            "address": "google_compute_firewall.allow_ssh",
+            "type": "google_compute_firewall",
+            "name": "allow_ssh",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "name": "allow-ssh"
+            }
+        },
+        "google_compute_instance.main": {
+            "address": "google_compute_instance.main",
+            "type": "google_compute_instance",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "machine_type": "n1-standard-1",
+                "name": "vm-test-dev"
+            }
+        },
+        "google_storage_bucket.main": {
+            "address": "google_storage_bucket.main",
+            "type": "google_storage_bucket",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "name": "bucket-test-dev-001",
+                "storage_class": "STANDARD"
+            }
+        },
+        "google_sql_database_instance.main": {
+            "address": "google_sql_database_instance.main",
+            "type": "google_sql_database_instance",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "values": {
+                "database_version": "POSTGRES_14",
+                "name": "db-test-dev"
+            }
+        }
+    },
+    "metadata": {
+        "google_compute_network.main": {
+            "name": "vpc-test-dev"
+        },
+        "google_compute_subnetwork.main": {
+            "name": "subnet-test-dev",
+            "ip_cidr_range": "10.0.1.0/24"
+        },
+        "google_compute_firewall.allow_ssh": {
+            "name": "allow-ssh"
+        },
+        "google_compute_instance.main": {
+            "name": "vm-test-dev",
+            "machine_type": "n1-standard-1"
+        },
+        "google_storage_bucket.main": {
+            "name": "bucket-test-dev-001"
+        },
+        "google_sql_database_instance.main": {
+            "name": "db-test-dev",
+            "database_version": "POSTGRES_14"
+        }
+    },
+    "annotations": {},
+    "node_list": [
+        "google_compute_network.main",
+        "google_compute_subnetwork.main",
+        "google_compute_firewall.allow_ssh",
+        "google_compute_instance.main",
+        "google_storage_bucket.main",
+        "google_sql_database_instance.main"
+    ]
+}

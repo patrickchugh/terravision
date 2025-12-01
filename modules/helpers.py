@@ -16,9 +16,12 @@ from typing import Dict, List, Any, Tuple, Optional, Union
 import click
 
 import modules.cloud_config as cloud_config
+from modules.cloud_config import ProviderRegistry
 import modules.helpers as helpers
 
 
+# Backwards compatibility: module-level constants for AWS
+# These will be deprecated in future versions - use provider-aware functions instead
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 GROUP_NODES = cloud_config.AWS_GROUP_NODES
@@ -27,6 +30,22 @@ NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
 NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
+
+
+def _detect_provider_from_resource(resource: str) -> str:
+    """Detect provider from resource name.
+
+    Args:
+        resource: Resource name (e.g., 'aws_instance.web', 'azurerm_virtual_machine.vm')
+
+    Returns:
+        Provider ID (defaults to 'aws' if not detected)
+    """
+    # Create a default context to detect provider
+    ctx = ProviderRegistry.get_context("aws")
+    provider_id = ctx.detect_provider_for_node(resource)
+    return provider_id if provider_id else "aws"
+
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data", "output"]
@@ -743,6 +762,9 @@ def remove_recursive(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
 def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
     """Check if resource has a variant suffix based on metadata.
 
+    Provider-aware version: detects provider from resource name and uses
+    appropriate NODE_VARIANTS configuration.
+
     Args:
         resource: Resource name
         metadata: Resource metadata
@@ -750,14 +772,21 @@ def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
     Returns:
         Variant name or False
     """
-    for variant_service in NODE_VARIANTS:
+    # Detect provider and get its configuration
+    provider_id = _detect_provider_from_resource(resource)
+    ctx = ProviderRegistry.get_context(provider_id)
+    config = ctx.get_config(provider_id)
+    node_variants = getattr(config, "NODE_VARIANTS", {})
+
+    # Check for variants using provider-specific config
+    for variant_service in node_variants:
         if resource.startswith(variant_service):
-            for keyword in NODE_VARIANTS[variant_service]:
+            for keyword in node_variants[variant_service]:
                 if (
                     keyword in str(metadata)
-                    and NODE_VARIANTS[variant_service] != resource
+                    and node_variants[variant_service] != resource
                 ):
-                    return NODE_VARIANTS[variant_service][keyword]
+                    return node_variants[variant_service][keyword]
             return False
     return False
 
@@ -878,13 +907,23 @@ def any_parent_has_count(tfdata: Dict[str, Any], target_resource: str) -> bool:
 def consolidated_node_check(resource_type: str) -> Union[str, bool]:
     """Check if resource should be consolidated into a standard node.
 
+    Provider-aware version: detects provider from resource name and uses
+    appropriate CONSOLIDATED_NODES configuration.
+
     Args:
         resource_type: Resource type to check
 
     Returns:
         Consolidated node name or False
     """
-    for checknode in CONSOLIDATED_NODES:
+    # Detect provider and get its configuration
+    provider_id = _detect_provider_from_resource(resource_type)
+    ctx = ProviderRegistry.get_context(provider_id)
+    config = ctx.get_config(provider_id)
+    consolidated_nodes = getattr(config, "CONSOLIDATED_NODES", [])
+
+    # Check for consolidation using provider-specific config
+    for checknode in consolidated_nodes:
         prefix = str(list(checknode.keys())[0])
         if get_no_module_name(resource_type).startswith(prefix) and resource_type:
             return checknode[prefix]["resource_name"]

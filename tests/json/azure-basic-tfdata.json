@@ -1,0 +1,336 @@
+{
+    "codepath": [
+        "/test/azure-basic"
+    ],
+    "workdir": "/test",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.5.0",
+        "variables": {
+            "location": {
+                "value": "East US"
+            },
+            "environment": {
+                "value": "dev"
+            }
+        },
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "azurerm_resource_group.main",
+                        "mode": "managed",
+                        "type": "azurerm_resource_group",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "rg-test-dev",
+                            "location": "eastus",
+                            "tags": {
+                                "environment": "dev",
+                                "managed_by": "terraform"
+                            }
+                        },
+                        "sensitive_values": {
+                            "tags": {}
+                        }
+                    },
+                    {
+                        "address": "azurerm_virtual_network.main",
+                        "mode": "managed",
+                        "type": "azurerm_virtual_network",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "vnet-test-dev",
+                            "location": "eastus",
+                            "resource_group_name": "rg-test-dev",
+                            "address_space": [
+                                "10.0.0.0/16"
+                            ],
+                            "tags": {
+                                "environment": "dev"
+                            }
+                        },
+                        "sensitive_values": {
+                            "address_space": [
+                                false
+                            ],
+                            "ddos_protection_plan": [],
+                            "dns_servers": [],
+                            "subnet": [],
+                            "tags": {}
+                        }
+                    },
+                    {
+                        "address": "azurerm_subnet.internal",
+                        "mode": "managed",
+                        "type": "azurerm_subnet",
+                        "name": "internal",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "subnet-internal",
+                            "resource_group_name": "rg-test-dev",
+                            "virtual_network_name": "vnet-test-dev",
+                            "address_prefixes": [
+                                "10.0.1.0/24"
+                            ]
+                        },
+                        "sensitive_values": {
+                            "address_prefixes": [
+                                false
+                            ],
+                            "delegation": [],
+                            "service_endpoint_policy_ids": [],
+                            "service_endpoints": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_network_interface.main",
+                        "mode": "managed",
+                        "type": "azurerm_network_interface",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "nic-test-dev",
+                            "location": "eastus",
+                            "resource_group_name": "rg-test-dev",
+                            "ip_configuration": [
+                                {
+                                    "name": "internal",
+                                    "subnet_id": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-test-dev/providers/Microsoft.Network/virtualNetworks/vnet-test-dev/subnets/subnet-internal",
+                                    "private_ip_address_allocation": "Dynamic"
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "applied_dns_servers": [],
+                            "dns_servers": [],
+                            "ip_configuration": [
+                                {
+                                    "gateway_load_balancer_frontend_ip_configuration_id": null
+                                }
+                            ],
+                            "private_ip_addresses": [],
+                            "tags": {}
+                        }
+                    },
+                    {
+                        "address": "azurerm_linux_virtual_machine.main",
+                        "mode": "managed",
+                        "type": "azurerm_linux_virtual_machine",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "vm-test-dev",
+                            "location": "eastus",
+                            "resource_group_name": "rg-test-dev",
+                            "size": "Standard_D2s_v3",
+                            "admin_username": "azureuser",
+                            "network_interface_ids": [
+                                "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-test-dev/providers/Microsoft.Network/networkInterfaces/nic-test-dev"
+                            ],
+                            "os_disk": [
+                                {
+                                    "caching": "ReadWrite",
+                                    "storage_account_type": "Standard_LRS"
+                                }
+                            ],
+                            "source_image_reference": [
+                                {
+                                    "publisher": "Canonical",
+                                    "offer": "UbuntuServer",
+                                    "sku": "18.04-LTS",
+                                    "version": "latest"
+                                }
+                            ],
+                            "admin_ssh_key": [
+                                {
+                                    "username": "azureuser",
+                                    "public_key": "ssh-rsa AAAAB3NzaC1yc2E..."
+                                }
+                            ],
+                            "disable_password_authentication": true
+                        },
+                        "sensitive_values": {
+                            "additional_capabilities": [],
+                            "admin_password": null,
+                            "admin_ssh_key": [
+                                {}
+                            ],
+                            "boot_diagnostics": [],
+                            "custom_data": null,
+                            "identity": [],
+                            "network_interface_ids": [
+                                false
+                            ],
+                            "os_disk": [
+                                {
+                                    "diff_disk_settings": []
+                                }
+                            ],
+                            "plan": [],
+                            "private_ip_addresses": [],
+                            "public_ip_addresses": [],
+                            "secret": [],
+                            "source_image_reference": [
+                                {}
+                            ],
+                            "tags": {},
+                            "termination_notification": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_storage_account.main",
+                        "mode": "managed",
+                        "type": "azurerm_storage_account",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 3,
+                        "values": {
+                            "name": "sttestdev001",
+                            "resource_group_name": "rg-test-dev",
+                            "location": "eastus",
+                            "account_tier": "Standard",
+                            "account_replication_type": "LRS",
+                            "tags": {
+                                "environment": "dev"
+                            }
+                        },
+                        "sensitive_values": {
+                            "azure_files_authentication": [],
+                            "blob_properties": [],
+                            "custom_domain": [],
+                            "customer_managed_key": [],
+                            "identity": [],
+                            "immutability_policy": [],
+                            "network_rules": [],
+                            "queue_properties": [],
+                            "routing": [],
+                            "sas_policy": [],
+                            "share_properties": [],
+                            "static_website": [],
+                            "tags": {}
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [],
+        "configuration": {
+            "provider_config": {
+                "azurerm": {
+                    "name": "azurerm",
+                    "full_name": "registry.terraform.io/hashicorp/azurerm",
+                    "version_constraint": "~> 3.0"
+                }
+            },
+            "root_module": {
+                "resources": []
+            }
+        }
+    },
+    "tempdir": "/tmp/terravision-test",
+    "graphdict": {
+        "azurerm_resource_group.main": [],
+        "azurerm_virtual_network.main": ["azurerm_resource_group.main"],
+        "azurerm_subnet.internal": ["azurerm_virtual_network.main"],
+        "azurerm_network_interface.main": ["azurerm_subnet.internal"],
+        "azurerm_linux_virtual_machine.main": ["azurerm_network_interface.main"],
+        "azurerm_storage_account.main": ["azurerm_resource_group.main"]
+    },
+    "all_resource": {
+        "azurerm_resource_group.main": {
+            "address": "azurerm_resource_group.main",
+            "type": "azurerm_resource_group",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "values": {
+                "name": "rg-test-dev",
+                "location": "eastus"
+            }
+        },
+        "azurerm_virtual_network.main": {
+            "address": "azurerm_virtual_network.main",
+            "type": "azurerm_virtual_network",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "values": {
+                "name": "vnet-test-dev",
+                "address_space": ["10.0.0.0/16"]
+            }
+        },
+        "azurerm_subnet.internal": {
+            "address": "azurerm_subnet.internal",
+            "type": "azurerm_subnet",
+            "name": "internal",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "values": {
+                "name": "subnet-internal",
+                "address_prefixes": ["10.0.1.0/24"]
+            }
+        },
+        "azurerm_network_interface.main": {
+            "address": "azurerm_network_interface.main",
+            "type": "azurerm_network_interface",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm"
+        },
+        "azurerm_linux_virtual_machine.main": {
+            "address": "azurerm_linux_virtual_machine.main",
+            "type": "azurerm_linux_virtual_machine",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "values": {
+                "size": "Standard_D2s_v3"
+            }
+        },
+        "azurerm_storage_account.main": {
+            "address": "azurerm_storage_account.main",
+            "type": "azurerm_storage_account",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "values": {
+                "account_tier": "Standard",
+                "account_replication_type": "LRS"
+            }
+        }
+    },
+    "metadata": {
+        "azurerm_resource_group.main": {
+            "name": "rg-test-dev",
+            "location": "eastus"
+        },
+        "azurerm_virtual_network.main": {
+            "name": "vnet-test-dev",
+            "address_space": ["10.0.0.0/16"]
+        },
+        "azurerm_subnet.internal": {
+            "name": "subnet-internal"
+        },
+        "azurerm_network_interface.main": {
+            "name": "nic-test-dev"
+        },
+        "azurerm_linux_virtual_machine.main": {
+            "name": "vm-test-dev",
+            "size": "Standard_D2s_v3"
+        },
+        "azurerm_storage_account.main": {
+            "name": "sttestdev001"
+        }
+    },
+    "annotations": {},
+    "node_list": [
+        "azurerm_resource_group.main",
+        "azurerm_virtual_network.main",
+        "azurerm_subnet.internal",
+        "azurerm_network_interface.main",
+        "azurerm_linux_virtual_machine.main",
+        "azurerm_storage_account.main"
+    ]
+}
