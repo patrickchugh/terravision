@@ -57,7 +57,18 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    # AWS handlers (backward compatibility)
     "handle_special_cases",
     "match_resources",
     "random_string_handler",
+    # Azure handlers
+    "azure_handle_vnet_subnets",
+    "azure_handle_nsg",
+    "azure_handle_lb",
+    "azure_handle_app_gateway",
+    # GCP handlers
+    "gcp_handle_network_subnets",
+    "gcp_handle_firewall",
+    "gcp_handle_lb",
+    "gcp_handle_cloud_dns",
 ]

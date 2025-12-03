@@ -213,6 +213,51 @@ class NodeFactory:
         return "".join(word.capitalize() for word in words)
 
     @staticmethod
+    def resolve_class(
+        resource_type: str,
+        provider: Optional[str] = None,
+        module_namespace: Optional[dict] = None,
+    ) -> Any:
+        """
+        Convenience method for resolving resource class from just the resource type.
+
+        This method provides backward compatibility with the old API and auto-detects
+        the provider from the resource_type prefix. If a module_namespace is provided,
+        it first checks for classes in that namespace (for groups/clusters), then falls
+        back to the standard NodeFactory resolution.
+
+        Args:
+            resource_type: Terraform type (e.g., 'aws_instance', 'azurerm_virtual_machine') or class name (e.g., 'VPCgroup', 'SecurityGroup')
+            provider: Optional provider override (e.g., 'aws', 'azure', 'gcp')
+            module_namespace: Optional module namespace dict (from sys.modules[__name__].__dict__)
+
+        Returns:
+            Diagrams resource class (either a Node or Cluster class)
+        """
+        # First, check if the class exists in the provided module namespace (for groups/special classes)
+        if module_namespace and resource_type in module_namespace:
+            cls = module_namespace[resource_type]
+            if isinstance(cls, type):  # Ensure it's actually a class
+                return cls
+
+        # Auto-detect provider from resource type if not specified
+        if provider is None:
+            if resource_type.startswith("aws_"):
+                provider = "aws"
+            elif resource_type.startswith("azurerm_") or resource_type.startswith(
+                "azuread_"
+            ):
+                provider = "azure"
+            elif resource_type.startswith("google_"):
+                provider = "gcp"
+            elif resource_type == "Node":  # Special case for generic Node
+                provider = "generic"
+            else:
+                provider = "generic"
+
+        return NodeFactory.resolve(provider, resource_type)
+
+    @staticmethod
     def clear_cache():
         """Clear the LRU cache (useful for testing)"""
         NodeFactory.resolve.cache_clear()

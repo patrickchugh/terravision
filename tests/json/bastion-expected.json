@@ -26,8 +26,7 @@
     ],
     "module.ec2-instance.aws_iam_role.ec2_iam_role": [
         "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile",
-        "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy",
-        "module.ec2-instance.aws_instance.ec2_instance"
+        "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy"
     ],
     "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy": [],
     "module.ec2-instance.aws_instance.ec2_instance": [],
@@ -82,6 +81,9 @@
     ],
     "module.private-vpc.aws_security_group.allow-strict_ec2_instance": [
         "module.ec2-instance.aws_instance.ec2_instance"
+    ],
+    "module.private-vpc.aws_security_group.allow-strict~1": [
+        "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1"
     ],
     "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1": [],
     "module.private-vpc.aws_subnet.private_subnets[0]~1": [

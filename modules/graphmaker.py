@@ -673,19 +673,88 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Delegates to resource-specific handlers for resources that need
     custom processing (e.g., VPCs, subnets, security groups).
 
+    Now provider-aware: detects providers and uses their SPECIAL_RESOURCES
+    configuration for handler dispatch.
+
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
         Updated tfdata after special processing
     """
+    from modules.utils.provider_utils import detect_provider
+
+    # Get all resource types in the configuration
     resource_types = list(
         {helpers.get_no_module_name(k).split(".")[0] for k in tfdata["node_list"]}
     )
-    for resource_prefix, handler in SPECIAL_RESOURCES.items():
+
+    # Detect provider(s) from resource types
+    try:
+        detected_provider = detect_provider(resource_types)
+    except Exception as e:
+        # Fallback to AWS for backward compatibility
+        click.echo(
+            click.style(
+                f"WARNING: Provider detection failed ({str(e)}), defaulting to AWS",
+                fg="yellow",
+            )
+        )
+        detected_provider = "aws"
+
+    # Get provider-specific SPECIAL_RESOURCES configuration
+    special_resources = {}
+
+    if detected_provider == "aws":
+        special_resources = cloud_config.AWS_SPECIAL_RESOURCES
+    elif detected_provider == "azurerm":
+        # Import Azure config
+        try:
+            from modules.cloud_config import azure
+
+            special_resources = azure.SPECIAL_RESOURCES
+        except (ImportError, AttributeError) as e:
+            click.echo(
+                click.style(
+                    f"WARNING: Could not load Azure handlers: {str(e)}", fg="yellow"
+                )
+            )
+    elif detected_provider == "google":
+        # Import GCP config
+        try:
+            from modules.cloud_config import gcp
+
+            special_resources = gcp.SPECIAL_RESOURCES
+        except (ImportError, AttributeError) as e:
+            click.echo(
+                click.style(
+                    f"WARNING: Could not load GCP handlers: {str(e)}", fg="yellow"
+                )
+            )
+
+    # Execute handlers for matching resource types
+    for resource_prefix, handler in special_resources.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
         if resource_prefix in resource_types or matching_substring:
-            tfdata = getattr(resource_handlers, handler)(tfdata)
+            try:
+                tfdata = getattr(resource_handlers, handler)(tfdata)
+            except AttributeError as e:
+                click.echo(
+                    click.style(
+                        f"ERROR: Handler {handler} not found for {resource_prefix}: {str(e)}",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+            except Exception as e:
+                click.echo(
+                    click.style(
+                        f"ERROR: Handler {handler} failed for {resource_prefix}: {str(e)}",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+
     return tfdata
 
 

@@ -5,8 +5,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-import requests
-import ollama
+
 import click
 
 import modules.annotations as annotations
@@ -42,15 +41,25 @@ def _show_banner():
 
 
 def _validate_source(source: list):
-    if source[0].endswith(".tf"):
-        click.echo(
-            click.style(
-                "\nERROR: You have passed a .tf file as source. Please pass a folder containing .tf files or a git URL.\n",
-                fg="red",
-                bold=True,
+    """Validate that source entries are not individual .tf files.
+
+    Args:
+        source: List of source paths (directories or URLs)
+
+    Raises:
+        SystemExit: If any source is an individual .tf file
+    """
+    for src in source:
+        if src.endswith(".tf"):
+            click.echo(
+                click.style(
+                    f"\nERROR: You have passed a .tf file as source: {src}\n"
+                    "Please pass a folder containing .tf files or a git URL.\n",
+                    fg="red",
+                    bold=True,
+                )
             )
-        )
-        sys.exit()
+            sys.exit()
 
 
 def _load_json_source(source: str):
@@ -199,165 +208,11 @@ def _check_terraform_version() -> None:
         sys.exit()
 
 
-def _check_ollama_server() -> None:
-    """Check if Ollama server is reachable."""
-    click.echo("  checking Ollama server..")
-    try:
-        response = requests.get(f"{cloud_config.OLLAMA_HOST}/api/tags", timeout=5)
-        if response.status_code == 200:
-            click.echo(f"  Ollama server reachable at: {cloud_config.OLLAMA_HOST}")
-        else:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: Ollama server returned status {response.status_code}",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            sys.exit()
-    except requests.exceptions.RequestException as e:
-        click.echo(
-            click.style(
-                f"\n  ERROR: Cannot reach Ollama server at {cloud_config.OLLAMA_HOST}: {e}",
-                fg="red",
-                bold=True,
-            )
-        )
-        sys.exit()
-
-
-def _create_ollama_client():
-    """Create and return Ollama LLM client."""
-    return ollama.Client(
-        host=cloud_config.OLLAMA_HOST, headers={"x-some-header": "some-value"}
-    )
-
-
-def _stream_ollama_llm_response(client, graphdict: dict, debug: bool) -> str:
-    """Stream LLM response and return complete output."""
-    stream = client.chat(
-        model="llama3",
-        keep_alive=-1,
-        messages=[
-            {
-                "role": "user",
-                "content": cloud_config.AWS_REFINEMENT_PROMPT
-                + (
-                    "Explain why you made every change after outputting the refined JSON\n"
-                    if debug
-                    else "Return ONLY the corrected JSON in the same format, with no additional explanation."
-                )
-                + str(graphdict),
-            }
-        ],
-        options={"temperature": 0, "seed": 42, "top_p": 1.0, "top_k": 1},
-        stream=True,
-    )
-    full_response = ""
-    for chunk in stream:
-        content = chunk["message"]["content"]
-        print(content, end="", flush=True)
-        full_response += content
-    return full_response
-
-
-def _stream_bedrock_response(graphdict: dict, debug: bool) -> str:
-    """Stream Bedrock API response and return complete output."""
-
-    payload = {
-        "messages": [
-            {
-                "role": "user",
-                "content": cloud_config.AWS_REFINEMENT_PROMPT
-                + (
-                    "Explain why you made every change after outputting the refined JSON\n"
-                    if debug
-                    else "Return ONLY the corrected JSON in the same format, with no additional explanation."
-                )
-                + str(graphdict),
-            }
-        ],
-        "max_tokens": 10000,
-    }
-
-    response = requests.post(
-        cloud_config.BEDROCK_API_ENDPOINT,
-        json=payload,
-        headers={"Content-Type": "application/json"},
-        stream=True,
-        timeout=300,
-    )
-    full_response = ""
-    for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
-        if chunk:
-            print(chunk, end="", flush=True)
-            full_response += chunk
-    return full_response
-
-
-def _refine_with_llm(tfdata: dict, aibackend: str, debug: bool) -> dict:
-    """Refine graph dictionary using LLM and return updated tfdata."""
-    click.echo(
-        click.style(
-            f"\nCalling {aibackend.capitalize()} AI Model for JSON refinement..\n",
-            fg="white",
-            bold=True,
-        )
-    )
-    if aibackend.lower() == "ollama":
-        client = _create_ollama_client(aibackend)
-        full_response = _stream_ollama_llm_response(client, tfdata["graphdict"], debug)
-    elif aibackend.lower() == "bedrock":
-        full_response = _stream_bedrock_response(tfdata["graphdict"], debug)
-    refined_json = helpers.extract_json_from_string(full_response)
-    _print_graph_debug(refined_json, "Final LLM Refined JSON")
-    tfdata["graphdict"] = refined_json
-    return tfdata
-
-
-def _check_bedrock_endpoint() -> None:
-    """Check if AWS Bedrock API endpoint is reachable."""
-    click.echo("  checking AWS Bedrock API Gateway endpoint..")
-    try:
-        response = requests.get(
-            cloud_config.BEDROCK_API_ENDPOINT, timeout=5, stream=True
-        )
-        if response.status_code in [200, 403, 404]:
-            click.echo(
-                f"  AWS Bedrock API Gateway reachable at: {cloud_config.BEDROCK_API_ENDPOINT}"
-            )
-            if response.status_code == 200:
-                response.close()
-        else:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: AWS Bedrock API Gateway returned status {response.status_code}",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            sys.exit()
-    except requests.exceptions.RequestException as e:
-        click.echo(
-            click.style(
-                f"\n  ERROR: Cannot reach AWS Bedrock API Gateway endpoint at {cloud_config.BEDROCK_API_ENDPOINT}: {e}",
-                fg="red",
-                bold=True,
-            )
-        )
-        sys.exit()
-
-
-def preflight_check(aibackend: str = None) -> None:
+def preflight_check() -> None:
     """Check required dependencies and Terraform version compatibility."""
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     _check_dependencies()
     _check_terraform_version()
-    if aibackend:
-        if aibackend.lower() == "ollama":
-            _check_ollama_server()
-        elif aibackend.lower() == "bedrock":
-            _check_bedrock_endpoint()
     click.echo("\n")
 
 
@@ -412,12 +267,6 @@ def cli():
     help="Simplified high level services shown only",
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
-@click.option(
-    "--aibackend",
-    default="",
-    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
-    help="AI backend to use (bedrock or ollama)",
-)
 @click.option("--avl_classes", hidden=True)
 def draw(
     debug,
@@ -429,19 +278,88 @@ def draw(
     show,
     simplified,
     annotate,
-    aibackend,
     avl_classes,
 ):
     """Draws Architecture Diagram"""
-    if not debug:
+    if debug:
+        # When debug is True, keep default exception hook for full tracebacks
+        pass
+    else:
+        # When debug is False, use simplified exception hook
         sys.excepthook = my_excepthook
-    _show_banner()
-    preflight_check(aibackend)
-    tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
-    # Pass to LLM if this is not a pregraphed JSON
-    if "all_resource" in tfdata and aibackend:
-        tfdata = _refine_with_llm(tfdata, aibackend, debug)
-    drawing.render_diagram(tfdata, show, simplified, outfile, format, source)
+
+    try:
+        _show_banner()
+        preflight_check()
+        tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
+        drawing.render_diagram(tfdata, show, simplified, outfile, format, source)
+    except Exception as e:
+        # Import custom exceptions
+        from modules.exceptions import (
+            TerraVisionError,
+            MissingResourceError,
+            ProviderDetectionError,
+            MetadataInconsistencyError,
+            TerraformParsingError,
+        )
+
+        # Handle custom exceptions with appropriate styling
+        if isinstance(e, MissingResourceError):
+            click.echo(
+                click.style(
+                    f"\nERROR: Missing required resource\n{e.message}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            if e.context:
+                click.echo(click.style(f"Context: {e.context}", fg="yellow"))
+            sys.exit(1)
+        elif isinstance(e, ProviderDetectionError):
+            click.echo(
+                click.style(
+                    f"\nERROR: Provider detection failed\n{e.message}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            if e.context:
+                click.echo(click.style(f"Context: {e.context}", fg="yellow"))
+            sys.exit(1)
+        elif isinstance(e, MetadataInconsistencyError):
+            click.echo(
+                click.style(
+                    f"\nWARNING: Metadata validation issue\n{e.message}",
+                    fg="yellow",
+                    bold=True,
+                )
+            )
+            if e.context:
+                click.echo(click.style(f"Context: {e.context}", fg="yellow"))
+        elif isinstance(e, TerraformParsingError):
+            click.echo(
+                click.style(
+                    f"\nERROR: Failed to parse Terraform configuration\n{e.message}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            if e.context:
+                click.echo(click.style(f"Context: {e.context}", fg="yellow"))
+            sys.exit(1)
+        elif isinstance(e, TerraVisionError):
+            # Generic TerraVision error
+            click.echo(
+                click.style(
+                    f"\nINFO: {e.message}",
+                    fg="yellow",
+                )
+            )
+            if e.context:
+                click.echo(click.style(f"Context: {e.context}", fg="yellow"))
+        else:
+            # Re-raise non-TerraVision exceptions
+            raise
 
 
 @cli.command()
@@ -473,11 +391,6 @@ def draw(
     help="Filename for output list (default architecture.json)",
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
-@click.option(
-    "--aibackend",
-    # type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
-    help="AI backend to use (bedrock or ollama)",
-)
 @click.option("--avl_classes", hidden=True)
 def graphdata(
     debug,
@@ -486,7 +399,6 @@ def graphdata(
     workspace,
     show_services,
     annotate,
-    aibackend,
     avl_classes,
     outfile="graphdata.json",
 ):
@@ -494,12 +406,9 @@ def graphdata(
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
-    preflight_check(aibackend)
+    preflight_check()
     tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
-    # Pass to LLM if this is not a pregraphed JSON
-    if "all_resource" in tfdata and aibackend and (not show_services):
-        tfdata = _refine_with_llm(tfdata, aibackend, debug)
-    click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))
+    click.echo(click.style("\nOutput JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
     click.echo(
         json.dumps(
@@ -525,6 +434,5 @@ if __name__ == "__main__":
     cli(
         default_map={
             "draw": {"avl_classes": dir()},
-            "graphlist": {"avl_classes": dir()},
         }
     )

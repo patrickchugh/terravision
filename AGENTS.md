@@ -24,6 +24,8 @@
 ## Active Technologies
 - Python 3.9-3.11 (enforced by pyproject.toml; constitution requirement) + click 8.1.3, GitPython 3.1.31, graphviz 0.20.1, python-hcl2 4.3.0, PyYAML 6.0 (001-provider-abstraction-layer)
 - N/A (no persistent storage; outputs to local files only) (001-provider-abstraction-layer)
+- Python 3.9-3.11 (strictly enforced by pyproject.toml) + click 8.1.3 (CLI framework), graphviz 0.20.1 (diagram rendering), python-hcl2 4.3.0 (Terraform parsing), GitPython 3.1.31 (module fetching), PyYAML 6.0 (annotations) (002-code-quality-fixes)
+- Local files only (Terraform .tf files, JSON graph exports, .tfvars, YAML annotations); no cloud/database storage (002-code-quality-fixes)
 
 ## Recent Changes
 - 001-provider-abstraction-layer: Added Python 3.9-3.11 (enforced by pyproject.toml; constitution requirement) + click 8.1.3, GitPython 3.1.31, graphviz 0.20.1, python-hcl2 4.3.0, PyYAML 6.0

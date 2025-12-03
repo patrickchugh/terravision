@@ -4,12 +4,15 @@ Handles special cases for AWS resources including security groups, load balancer
 EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 """
 
-from typing import Dict, List, Any
+import copy
+import re
+from ast import literal_eval
+from typing import Any, Dict, List
+
+import click
+
 import modules.cloud_config as cloud_config
 import modules.helpers as helpers
-from ast import literal_eval
-import re
-import copy
 
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
@@ -49,6 +52,20 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with autoscaling relationships configured
     """
+    import click
+
+    # Get all autoscaling resources first
+    asg_resources = [
+        r
+        for r in tfdata["graphdict"]
+        if helpers.get_no_module_name(r)
+        and helpers.get_no_module_name(r).startswith("aws_appautoscaling_target")
+    ]
+
+    # If no autoscaling resources, nothing to do
+    if not asg_resources:
+        return tfdata
+
     try:
         # Find autoscaling target connections
         scaler_links = next(
@@ -56,12 +73,6 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for k, v in tfdata["graphdict"].items()
             if "aws_appautoscaling_target" in k
         )
-        # Get all autoscaling resources
-        asg_resources = [
-            r
-            for r in tfdata["graphdict"]
-            if helpers.get_no_module_name(r).startswith("aws_appautoscaling_target")
-        ]
         # Process each autoscaling group
         for asg in asg_resources:
             new_list = list()
@@ -70,7 +81,8 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 possible_subnets = [
                     k
                     for k in tfdata["graphdict"]
-                    if helpers.get_no_module_name(k).startswith("aws_subnet")
+                    if helpers.get_no_module_name(k)
+                    and helpers.get_no_module_name(k).startswith("aws_subnet")
                 ]
                 # Check if service is in subnet (part of ASG)
                 for sub in possible_subnets:
@@ -90,8 +102,25 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             if isinstance(count_value, (int, str))
                             else count_value
                         )
-    except:
-        pass
+    except StopIteration:
+        # No autoscaling targets found - this is expected in many configs
+        click.echo(
+            click.style(
+                "INFO: No autoscaling targets found; skipping autoscaling handling",
+                fg="yellow",
+            )
+        )
+        return tfdata
+    except (KeyError, TypeError) as e:
+        # Metadata missing or invalid structure
+        click.echo(
+            click.style(
+                f"WARNING: Skipping autoscaling handling due to invalid metadata: {e}",
+                fg="yellow",
+                bold=True,
+            )
+        )
+        return tfdata
     # Replace subnet references to ASG targets with ASG itself
     for asg in asg_resources:
         for connection in sorted(tfdata["graphdict"][asg]):
@@ -262,14 +291,31 @@ def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         Updated tfdata with AZ nodes created
     """
     # Find all subnet resources (excluding hidden)
+    hidden_resources = tfdata.get("hidden", {})
     subnet_resources = [
         k
         for k in tfdata["graphdict"]
         if helpers.get_no_module_name(k).startswith("aws_subnet")
-        and k not in tfdata["hidden"]
+        and k not in hidden_resources
     ]
     # Process each subnet to create AZ nodes
+    # Use original_metadata if available, otherwise fall back to meta_data
+    metadata_source = tfdata.get("original_metadata", tfdata["meta_data"])
+
     for subnet in subnet_resources:
+        # Add AZ suffix to subnet name in metadata (do this first, for all subnets)
+        availability_zone = metadata_source[subnet].get("availability_zone")
+        if availability_zone and "name" in tfdata["meta_data"][subnet]:
+            # Extract the AZ suffix (e.g., "1a" from "us-east-1a")
+            az_suffix = (
+                availability_zone.split("-")[-1] if "-" in availability_zone else ""
+            )
+            current_name = tfdata["meta_data"][subnet]["name"]
+            # Only add suffix if not already present
+            if az_suffix and az_suffix not in current_name:
+                tfdata["meta_data"][subnet]["name"] = f"{current_name}-{az_suffix}"
+
+        # Now handle parent relationships
         parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
         for parent in parents_list:
             # Remove direct subnet reference from parent
@@ -277,10 +323,10 @@ def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][parent].remove(subnet)
             # Build AZ node name from subnet metadata
             az = "aws_az.availability_zone_" + str(
-                tfdata["original_metadata"][subnet].get("availability_zone")
+                metadata_source[subnet].get("availability_zone")
             )
             az = az.replace("-", "_")
-            region = tfdata["original_metadata"][subnet].get("region")
+            region = metadata_source[subnet].get("region")
             # Replace placeholder with actual region
             if region:
                 az = az.replace("True", region)
@@ -319,35 +365,25 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     efs_mount_targets = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_efs_mount_target"
     )
-    # Link mount targets to file systems
+
+    # Group mount targets under their file systems
     for target in efs_mount_targets:
-        for fs in efs_systems:
-            if fs not in tfdata["graphdict"][target]:
-                tfdata["graphdict"][target].append(fs)
-            # Clean up file system connections
-            for fs_connection in sorted(list(tfdata["graphdict"][fs])):
-                if helpers.get_no_module_name(fs_connection).startswith(
-                    "aws_efs_mount_target"
-                ):
-                    # Remove mount target from file system
-                    tfdata["graphdict"][fs].remove(fs_connection)
-                else:
-                    # Move other connections to file system
-                    tfdata["graphdict"][fs_connection].append(fs)
-                    tfdata["graphdict"][fs].remove(fs_connection)
-    # Replace EFS file system references with mount target
-    for node in sorted(tfdata["graphdict"].keys()):
-        connections = tfdata["graphdict"][node]
-        if helpers.consolidated_node_check(node):
-            for connection in list(connections):
-                if helpers.get_no_module_name(connection).startswith(
-                    "aws_efs_file_system"
-                ):
-                    # Use first mount target as replacement
-                    target = efs_mount_targets[0].split("~")[0]
-                    target = helpers.remove_brackets_and_numbers(target)
-                    tfdata["graphdict"][node].remove(connection)
-                    tfdata["graphdict"][node].append(target)
+        # Find which file system this mount target references
+        for connection in list(tfdata["graphdict"][target]):
+            if helpers.get_no_module_name(connection).startswith("aws_efs_file_system"):
+                # Move mount target under file system
+                if connection not in tfdata["graphdict"]:
+                    tfdata["graphdict"][connection] = []
+                if target not in tfdata["graphdict"][connection]:
+                    tfdata["graphdict"][connection].append(target)
+                # Remove the reverse reference (target -> filesystem)
+                tfdata["graphdict"][target].remove(connection)
+
+    # Ensure all file systems have metadata entries
+    for fs in efs_systems:
+        if fs not in tfdata["meta_data"]:
+            tfdata["meta_data"][fs] = {"count": 1}
+
     return tfdata
 
 
@@ -552,14 +588,14 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 and sg in tfdata["graphdict"][parent]
             ):
                 tfdata["graphdict"][parent].remove(sg)
-    # Remove orphan security groups with no connections or parents
+    # Remove orphan security groups with no connections AND no parents
     for sg in sorted(list_of_sgs):
-        if sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) == 0:
-            del tfdata["graphdict"][sg]
-        if (
-            helpers.list_of_parents(tfdata["graphdict"], sg, True) == []
-            and sg in tfdata["graphdict"]
-        ):
+        # Only delete if SG has no connections (children) AND no parents
+        has_connections = sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) > 0
+        has_parents = len(helpers.list_of_parents(tfdata["graphdict"], sg, True)) > 0
+
+        # Delete only if it's truly orphaned (no connections and no parents)
+        if sg in tfdata["graphdict"] and not has_connections and not has_parents:
             del tfdata["graphdict"][sg]
     return tfdata
 
@@ -608,13 +644,24 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with LB variants configured
     """
-    # Find all load balancers
+    # Find all modern load balancers (aws_lb)
     found_lbs = sorted(
         helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
     )
+    # Find all classic load balancers (aws_elb)
+    found_classic_lbs = sorted(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_elb")
+    )
+
+    # Process modern load balancers (aws_lb.*)
     for lb in found_lbs:
         # Determine LB type (ALB, NLB, etc.)
-        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
+        lb_type_result = helpers.check_variant(lb, tfdata["meta_data"][lb])
+        # Default to "aws_lb" if no specific variant found (check_variant returns False)
+        if isinstance(lb_type_result, str):
+            lb_type = lb_type_result
+        else:
+            lb_type = "aws_lb"
         renamed_node = lb_type + "." + "elb"
         # Initialize renamed node metadata
         if not tfdata["meta_data"].get(renamed_node):
@@ -657,6 +704,52 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
         tfdata["graphdict"][lb].append(renamed_node)
+
+    # Process classic load balancers (aws_elb.*) - same logic but always use "aws_elb" prefix
+    for lb in found_classic_lbs:
+        renamed_node = "aws_elb.elb"
+        # Initialize renamed node metadata
+        if not tfdata["meta_data"].get(renamed_node):
+            tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
+        for connection in sorted(list(tfdata["graphdict"][lb])):
+            if not tfdata["graphdict"].get(renamed_node):
+                tfdata["graphdict"][renamed_node] = list()
+            c_type = connection.split(".")[0]
+            if c_type not in SHARED_SERVICES:
+                tfdata["graphdict"][renamed_node].append(connection)
+                tfdata["graphdict"][lb].remove(connection)
+            if (
+                tfdata["meta_data"].get(connection)
+                and tfdata["meta_data"][connection].get("count")
+                or tfdata["meta_data"][connection].get("desired_count")
+            ) and connection.split(".")[0] not in SHARED_SERVICES:
+                # Sets LB count to the max of the count of any dependencies
+                if int(tfdata["meta_data"][connection]["count"]) > int(
+                    tfdata["meta_data"][renamed_node]["count"]
+                ):
+                    tfdata["meta_data"][renamed_node]["count"] = int(
+                        tfdata["meta_data"][connection]["count"]
+                    )
+                    plist = sorted(
+                        helpers.list_of_parents(tfdata["graphdict"], renamed_node)
+                    )
+                    for p in plist:
+                        tfdata["meta_data"][p]["count"] = int(
+                            tfdata["meta_data"][connection]["count"]
+                        )
+            parents = sorted(helpers.list_of_parents(tfdata["graphdict"], lb))
+            # Replace any parent references to original LB instance to the renamed node
+            for p in parents:
+                p_type = p.split(".")[0]
+                if (
+                    p_type in GROUP_NODES
+                    and p_type not in SHARED_SERVICES
+                    and p_type != "aws_vpc"
+                ):
+                    tfdata["graphdict"][p].append(renamed_node)
+                    tfdata["graphdict"][p].remove(lb)
+        tfdata["graphdict"][lb].append(renamed_node)
+
     return tfdata
 
 
@@ -706,17 +799,42 @@ def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Updated tfdata with VPC endpoints moved
+
+    Raises:
+        MissingResourceError: If VPC endpoints exist but no VPC is found
     """
+    from modules.exceptions import MissingResourceError
+
     # Find all VPC endpoints
     vpc_endpoints = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_vpc_endpoint"
     )
-    # Get the VPC node
-    vpc = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_vpc.")[0]
+
+    # If no VPC endpoints, nothing to do
+    if not vpc_endpoints:
+        return tfdata
+
+    # Get the VPC nodes
+    vpcs = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_vpc.")
+
+    if not vpcs:
+        raise MissingResourceError(
+            "No VPC found; cannot process VPC endpoints",
+            context={
+                "resource_type": "aws_vpc",
+                "required_by": "aws_handle_vpcendpoints",
+                "endpoint_count": len(vpc_endpoints),
+            },
+        )
+
+    # Use the first VPC found
+    vpc = vpcs[0]
+
     # Move endpoints into VPC and remove as separate nodes
     for vpc_endpoint in vpc_endpoints:
         tfdata["graphdict"][vpc].append(vpc_endpoint)
         del tfdata["graphdict"][vpc_endpoint]
+
     return tfdata
 
 
@@ -728,16 +846,10 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Updated tfdata with ECS configured
+
+    Note:
+        This function is currently a placeholder for future ECS handling logic.
     """
-    # eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
-    ecs_nodes = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_ecs_service"
-    )
-    # for ecs in ecs_nodes:
-    #     tfdata["meta_data"][ecs]["count"] = 3
-    # ecs_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_ek_cluster")
-    # for eks in eks_nodes:
-    #     del tfdata["graphdict"][eks]
     return tfdata
 
 
@@ -887,20 +999,23 @@ def link_ec2_to_iam_roles(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
     result = dict(terraform_data)
 
     # Map instance profiles to IAM roles
+    # profile -> role (profile points to its role)
     profile_to_role = {}
     for resource, deps in sorted(terraform_data.items()):
-        if "aws_iam_role" in resource:
+        if "aws_iam_instance_profile" in resource:
             for dep in deps:
-                if "aws_iam_instance_profile" in dep:
-                    profile_to_role[dep] = resource
+                if "aws_iam_role" in dep and "policy" not in dep:
+                    profile_to_role[resource] = dep
 
-    # Find instance profiles that connect to EC2 instances and add EC2 to IAM role deps
+    # Find EC2 instances that connect to instance profiles and add transitive IAM role link
+    # E.g., EC2 -> profile -> role, so EC2 should also -> role
     for resource, deps in sorted(terraform_data.items()):
-        if "aws_iam_instance_profile" in resource and resource in profile_to_role:
-            iam_role = profile_to_role[resource]
+        if "aws_instance" in resource:
             for dep in deps:
-                if "aws_instance" in dep and dep not in result[iam_role]:
-                    result[iam_role].append(dep)
+                if "aws_iam_instance_profile" in dep and dep in profile_to_role:
+                    iam_role = profile_to_role[dep]
+                    if iam_role not in result[resource]:
+                        result[resource].append(iam_role)
 
     return result
 
@@ -917,17 +1032,20 @@ def link_sqs_queue_policy(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
     result = dict(terraform_data)
 
     # Map queue policies to SQS queues
+    # A policy points to its queue: aws_sqs_queue_policy.main -> aws_sqs_queue.main
     policy_to_queue = {}
     for resource, deps in sorted(terraform_data.items()):
-        if "aws_sqs_queue" in resource:
+        if "aws_sqs_queue_policy" in resource:
+            # Find the queue this policy references
             for dep in deps:
-                if "aws_sqs_queue_policy" in dep:
-                    policy_to_queue[dep] = resource
+                if "aws_sqs_queue" in dep and "policy" not in dep:
+                    policy_to_queue[resource] = dep
 
-    # Find queue policies that connect to resources and add SQS queue to those resource deps
+    # Find resources that connect to queue policies and add transitive SQS queue link
+    # E.g., lambda -> policy, so lambda should also -> queue
     for resource, deps in sorted(terraform_data.items()):
         for dep in deps:
-            if "aws_sqs_queue_policy." in dep and dep in policy_to_queue:
+            if "aws_sqs_queue_policy" in dep and dep in policy_to_queue:
                 sqs_queue = policy_to_queue[dep]
                 if sqs_queue not in result[resource]:
                     result[resource].append(sqs_queue)

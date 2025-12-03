@@ -7,6 +7,7 @@ including nodes, clusters, connections, and edge labels.
 
 import datetime
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
@@ -59,7 +60,6 @@ DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 OUTER_NODES = cloud_config.AWS_OUTER_NODES
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
-OUTER_NODES = cloud_config.AWS_OUTER_NODES
 EDGE_NODES = cloud_config.AWS_EDGE_NODES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
@@ -134,7 +134,7 @@ def handle_nodes(
     diagramCanvas: Canvas,
     tfdata: Dict[str, Any],
     drawn_resources: List[str],
-) -> Tuple[Node, List[str]]:
+) -> Tuple[Optional[Node], List[str]]:
     """Recursively draw nodes and their connections in the diagram.
 
     Creates visual nodes for Terraform resources and establishes connections
@@ -149,11 +149,11 @@ def handle_nodes(
         drawn_resources: List of already drawn resource names
 
     Returns:
-        Tuple of (created Node object, updated drawn_resources list)
+        Tuple of (created Node object or None if unavailable, updated drawn_resources list)
     """
     resource_type = helpers.get_no_module_name(resource).split(".")[0]
     if resource_type not in avl_classes:
-        return
+        return None, drawn_resources
 
     # Reuse existing node if already drawn
     if resource in drawn_resources:
@@ -203,6 +203,9 @@ def handle_nodes(
                             tfdata,
                             drawn_resources,
                         )
+                        # Skip if node creation failed
+                        if connectedNode is None:
+                            continue
                     elif node_connection not in drawn_resources:
                         # Draw circular reference node without recursion using NodeFactory
                         nodeClass = node_factory.resolve_class(node_type)
@@ -331,9 +334,9 @@ def handle_group(
         return
 
     # Create new group/cluster using NodeFactory
-    newGroup = node_factory.resolve_class(resource_type)(
-        label=helpers.pretty_name(resource)
-    )
+    newGroup = node_factory.resolve_class(
+        resource_type, module_namespace=sys.modules[__name__].__dict__
+    )(label=helpers.pretty_name(resource))
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
@@ -371,9 +374,11 @@ def handle_group(
                     tfdata,
                     drawn_resources,
                 )
-                newGroup.add_node(
-                    newNode._id, label=helpers.pretty_name(node_connection)
-                )
+                # Add node to group only if creation succeeded
+                if newNode is not None:
+                    newGroup.add_node(
+                        newNode._id, label=helpers.pretty_name(node_connection)
+                    )
 
     return newGroup, drawn_resources
 
@@ -514,7 +519,9 @@ def render_diagram(
         "label": f"Machine generated using terravision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
     }
     # Use NodeFactory to resolve Node class
-    node_factory.resolve_class("Node")(**footer_style)
+    node_factory.resolve_class("Node", module_namespace=sys.modules[__name__].__dict__)(
+        **footer_style
+    )
 
     # Add cloud group to main canvas
     myDiagram.subgraph(cloudGroup.dot)
@@ -529,7 +536,21 @@ def render_diagram(
     bundle_dir = Path(__file__).parent.parent
     path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
     path_to_postdot = Path.cwd() / f"{outfile}.dot"
-    os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
+    subprocess.run(
+        [
+            "gvpr",
+            "-c",
+            "-q",
+            "-f",
+            str(path_to_script),
+            str(path_to_predot),
+            "-o",
+            str(path_to_postdot),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
     # Generate final output file
     click.echo(f"  Output file: {myDiagram.render()}")

@@ -233,7 +233,11 @@ ALWAYS_DRAW_LINE = [
 
 NEVER_DRAW_LINE = ["aws_iam_role_policy"]
 
-DISCONNECT_LIST = ["aws_iam_role_policy"]
+# Resources that should have all their connections removed
+# Used by handle_special_cases() to prevent specific resources from cluttering diagrams
+DISCONNECT_LIST = [
+    "aws_iam_role_policy",  # Inline IAM policies clutter IAM role diagrams
+]
 
 ACRONYMS_LIST = [
     "acm",
