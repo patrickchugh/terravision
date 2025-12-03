@@ -308,11 +308,22 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["node_list"] = list()
     tfdata["hidden"] = dict()
     tfdata["annotations"] = dict()
+    tfdata["all_resource"] = dict()  # For provider detection
+
     # Create nodes from resources in plan
     for object in tfdata["tf_resources_created"]:
         # Only process managed resources (not data sources)
         if object["mode"] == "managed":
             node = str(object["address"])
+            resource_type = object.get("type", "")
+
+            # Store resource for provider detection
+            tfdata["all_resource"][resource_type] = {
+                "type": resource_type,
+                "provider_name": object.get("provider_name", ""),
+                "address": node,
+            }
+
             # Handle count/for_each indexed resources
             if "index" in object.keys():
                 # String index uses brackets, numeric uses tilde
@@ -337,6 +348,13 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             tfdata["meta_data"][node] = details
     # Remove duplicates from node list
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
+
+    # Detect providers from tfdata
+    from modules.cloud_config import ProviderRegistry
+
+    detected_providers = ProviderRegistry.detect_providers(tfdata)
+    tfdata["providers"] = list(detected_providers)
+
     return tfdata
 
 
