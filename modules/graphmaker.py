@@ -492,59 +492,6 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     return False
 
 
-# def needs_multiple(
-#     resource: str,
-#     parent: str,
-#     tfdata: Dict[str, Any]
-# ) -> bool:
-#     """Determine if resource needs multiple numbered instances.
-#
-#     Checks if a resource should be duplicated with numbered suffixes based
-#     on count attributes, parent counts, and resource type.
-#
-#     Args:
-#         resource: Resource name to check
-#         parent: Parent resource name
-#         tfdata: Terraform data dictionary
-#
-#     Returns:
-#         True if resource needs multiple instances
-#     """
-#     target_resource = (
-#         helpers.consolidated_node_check(resource)
-#         if helpers.consolidated_node_check(resource)
-#         else resource
-#     )
-#     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
-#     target_is_group = target_resource.split(".")[0] in GROUP_NODES
-#     target_has_count = "~" in target_resource
-#     not_already_multiple = "~" not in target_resource
-#     no_special_handler = (
-#         resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
-#         or resource.split(".")[0] in GROUP_NODES
-#     )
-#     not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
-#     security_group_with_count = (
-#         "~" in parent and resource.split(".")[0] == "aws_security_group"
-#     )
-#     has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource])
-#     not_unique_resource = "aws_route_table." not in resource
-#     if (
-#         (
-#             (target_is_group and target_has_count)
-#             or security_group_with_count
-#             or (any_parent_has_count and (has_variant or target_has_count))
-#             or (target_has_count and any_parent_has_count)
-#         )
-#         and not_already_multiple
-#         and no_special_handler
-#         and not_shared_service
-#         and not_unique_resource
-#     ):
-#         return True
-#     return False
-
-
 def add_multiples_to_parents(
     i: int, resource: str, multi_resources: list, tfdata: dict
 ):
