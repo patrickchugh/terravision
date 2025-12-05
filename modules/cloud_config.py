@@ -283,6 +283,7 @@ SPECIAL CONVENTIONS:
 - "aws_az.availability_zone_*" groups represent availability zone boundaries
 - Security Groups should always be a group containing EC2 instances or other resources within a subnet
 - Resources ending with ~1, ~2, ~3 (instance number) indicate they're either multiple instances of the same resource, or one resource duplicated for clarity when a resource is deployed in multiple availability zones and subnets
+- aws_group.shared_services is used to group common shared resources which are accessed by multiple resources such as CloudWatch, ECR, KMS and do not have any incoming or outgoing connections 
 Please refine this diagram following AWS conventions and industry best practices:
 1. Fix resource groupings (VPCs, subnets, availability zones, security groups) where necessary
 2. Add missing logical connections between resources
