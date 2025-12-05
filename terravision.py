@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from typing import Any, Dict, List, Optional
 import json
 import os
 import shutil
@@ -23,11 +24,19 @@ import modules.resource_handlers as resource_handlers
 __version__ = "0.8"
 
 
-def my_excepthook(exc_type, exc_value, exc_traceback):
+def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) -> None:
+    """Custom exception hook for unhandled errors.
+    
+    Args:
+        exc_type: Exception type
+        exc_value: Exception instance
+        exc_traceback: Traceback object
+    """
     print(f"Unhandled error: {exc_type}, {exc_value}, {exc_traceback}")
 
 
-def _show_banner():
+def _show_banner() -> None:
+    """Display TerraVision ASCII banner."""
     banner = (
         "\n\n\n"
         " _____                          _     _             \n"
@@ -41,7 +50,15 @@ def _show_banner():
     print(banner)
 
 
-def _validate_source(source: list):
+def _validate_source(source: List[str]) -> None:
+    """Validate source input is not a .tf file.
+    
+    Args:
+        source: List of source paths
+        
+    Raises:
+        SystemExit: If source is a .tf file
+    """
     if source[0].endswith(".tf"):
         click.echo(
             click.style(
@@ -53,7 +70,15 @@ def _validate_source(source: list):
         sys.exit()
 
 
-def _load_json_source(source: str):
+def _load_json_source(source: str) -> Dict[str, Any]:
+    """Load and parse JSON source file.
+    
+    Args:
+        source: Path to JSON file
+        
+    Returns:
+        Dictionary containing tfdata with graphdict and metadata
+    """
     with open(source, "r") as file:
         jsondata = json.load(file)
     tfdata = {"annotations": {}, "meta_data": {}}
@@ -73,8 +98,20 @@ def _load_json_source(source: str):
 
 
 def _process_terraform_source(
-    source: list, varfile: list, workspace: str, annotate: str, debug: bool
-):
+    source: List[str], varfile: List[str], workspace: str, annotate: str, debug: bool
+) -> Dict[str, Any]:
+    """Process Terraform source files and generate initial tfdata.
+    
+    Args:
+        source: List of source paths
+        varfile: List of variable file paths
+        workspace: Terraform workspace name
+        annotate: Path to annotations file
+        debug: Enable debug mode
+        
+    Returns:
+        Dictionary containing parsed Terraform data
+    """
     tfdata = tfwrapper.tf_initplan(source, varfile, workspace, debug)
     tfdata = tfwrapper.tf_makegraph(tfdata, debug)
     codepath = (
@@ -88,7 +125,17 @@ def _process_terraform_source(
     return tfdata
 
 
-def _enrich_graph_data(tfdata: dict, debug: bool, already_processed: bool) -> dict:
+def _enrich_graph_data(tfdata: Dict[str, Any], debug: bool, already_processed: bool) -> Dict[str, Any]:
+    """Enrich graph data with relationships and transformations.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        debug: Enable debug mode
+        already_processed: Whether data was already processed
+        
+    Returns:
+        Enriched tfdata dictionary
+    """
     tfdata = interpreter.prefix_module_names(tfdata)
     tfdata = interpreter.resolve_all_variables(tfdata, debug, already_processed)
     tfdata = resource_handlers.handle_special_cases(tfdata)
@@ -105,14 +152,20 @@ def _enrich_graph_data(tfdata: dict, debug: bool, already_processed: bool) -> di
     return tfdata
 
 
-def _print_graph_debug(outputdict: dict, title: str):
+def _print_graph_debug(outputdict: Dict[str, Any], title: str) -> None:
+    """Print formatted graph dictionary for debugging.
+    
+    Args:
+        outputdict: Dictionary to print
+        title: Title to display
+    """
     click.echo(click.style(f"\n{title}:\n", fg="white", bold=True))
     click.echo(json.dumps(outputdict, indent=4, sort_keys=True))
 
 
 def compile_tfdata(
-    source: list, varfile: list, workspace: str, debug: bool, annotate=""
-):
+    source: List[str], varfile: List[str], workspace: str, debug: bool, annotate: str = ""
+) -> Dict[str, Any]:
     """Compile Terraform data from source files into enriched graph dictionary.
 
     Args:
@@ -123,7 +176,7 @@ def compile_tfdata(
         annotate: Path to custom annotations YAML file
 
     Returns:
-        dict: Enriched tfdata dictionary with graphdict and metadata
+        Enriched tfdata dictionary with graphdict and metadata
     """
     _validate_source(source)
     already_processed = False
@@ -224,15 +277,28 @@ def _check_ollama_server() -> None:
         sys.exit()
 
 
-def _create_ollama_client():
-    """Create and return Ollama LLM client."""
+def _create_ollama_client() -> ollama.Client:
+    """Create and return Ollama LLM client.
+    
+    Returns:
+        Configured Ollama client instance
+    """
     return ollama.Client(
         host=cloud_config.OLLAMA_HOST, headers={"x-some-header": "some-value"}
     )
 
 
-def _stream_ollama_llm_response(client, graphdict: dict, debug: bool) -> str:
-    """Stream LLM response and return complete output."""
+def _stream_ollama_llm_response(client: ollama.Client, graphdict: Dict[str, Any], debug: bool) -> str:
+    """Stream LLM response and return complete output.
+    
+    Args:
+        client: Ollama client instance
+        graphdict: Graph dictionary to refine
+        debug: Enable debug explanations
+        
+    Returns:
+        Complete LLM response string
+    """
     stream = client.chat(
         model="llama3",
         keep_alive=-1,
@@ -259,8 +325,16 @@ def _stream_ollama_llm_response(client, graphdict: dict, debug: bool) -> str:
     return full_response
 
 
-def _stream_bedrock_response(graphdict: dict, debug: bool) -> str:
-    """Stream Bedrock API response and return complete output."""
+def _stream_bedrock_response(graphdict: Dict[str, Any], debug: bool) -> str:
+    """Stream Bedrock API response and return complete output.
+    
+    Args:
+        graphdict: Graph dictionary to refine
+        debug: Enable debug explanations
+        
+    Returns:
+        Complete Bedrock API response string
+    """
 
     payload = {
         "messages": [
@@ -293,8 +367,17 @@ def _stream_bedrock_response(graphdict: dict, debug: bool) -> str:
     return full_response
 
 
-def _refine_with_llm(tfdata: dict, aibackend: str, debug: bool) -> dict:
-    """Refine graph dictionary using LLM and return updated tfdata."""
+def _refine_with_llm(tfdata: Dict[str, Any], aibackend: str, debug: bool) -> Dict[str, Any]:
+    """Refine graph dictionary using LLM and return updated tfdata.
+    
+    Args:
+        tfdata: Terraform data dictionary
+        aibackend: AI backend to use ('ollama' or 'bedrock')
+        debug: Enable debug mode
+        
+    Returns:
+        Updated tfdata with refined graphdict
+    """
     click.echo(
         click.style(
             f"\nCalling {aibackend.capitalize()} AI Model for JSON refinement..\n",
@@ -346,8 +429,12 @@ def _check_bedrock_endpoint() -> None:
         sys.exit()
 
 
-def preflight_check(aibackend: str = None) -> None:
-    """Check required dependencies and Terraform version compatibility."""
+def preflight_check(aibackend: Optional[str] = None) -> None:
+    """Check required dependencies and Terraform version compatibility.
+    
+    Args:
+        aibackend: AI backend to validate ('ollama' or 'bedrock')
+    """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     _check_dependencies()
     _check_terraform_version()
@@ -361,14 +448,11 @@ def preflight_check(aibackend: str = None) -> None:
 
 @click.version_option(version=__version__, prog_name="terravision")
 @click.group()
-def cli():
-    """
-    TerraVision generates cloud architecture diagrams and documentation from Terraform scripts
+def cli() -> None:
+    """TerraVision generates cloud architecture diagrams and documentation from Terraform scripts.
 
     For help with a specific command type:
-
     terravision [COMMAND] --help
-
     """
     pass
 
@@ -417,19 +501,33 @@ def cli():
 )
 @click.option("--avl_classes", hidden=True)
 def draw(
-    debug,
-    source,
-    workspace,
-    varfile,
-    outfile,
-    format,
-    show,
-    simplified,
-    annotate,
-    aibackend,
-    avl_classes,
-):
-    """Draws Architecture Diagram"""
+    debug: bool,
+    source: tuple,
+    workspace: str,
+    varfile: tuple,
+    outfile: str,
+    format: str,
+    show: bool,
+    simplified: bool,
+    annotate: str,
+    aibackend: str,
+    avl_classes: Any,
+) -> None:
+    """Draw architecture diagram from Terraform code.
+    
+    Args:
+        debug: Enable debug mode
+        source: Source paths tuple
+        workspace: Terraform workspace
+        varfile: Variable files tuple
+        outfile: Output filename
+        format: Output format (png/pdf/svg/bmp)
+        show: Show diagram after generation
+        simplified: Generate simplified diagram
+        annotate: Path to annotations file
+        aibackend: AI backend to use
+        avl_classes: Available classes (hidden)
+    """
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
@@ -477,17 +575,29 @@ def draw(
 )
 @click.option("--avl_classes", hidden=True)
 def graphdata(
-    debug,
-    source,
-    varfile,
-    workspace,
-    show_services,
-    annotate,
-    aibackend,
-    avl_classes,
-    outfile="graphdata.json",
-):
-    """List Cloud Resources and Relations as JSON"""
+    debug: bool,
+    source: tuple,
+    varfile: tuple,
+    workspace: str,
+    show_services: bool,
+    annotate: str,
+    aibackend: str,
+    avl_classes: Any,
+    outfile: str = "graphdata.json",
+) -> None:
+    """List cloud resources and relations as JSON.
+    
+    Args:
+        debug: Enable debug mode
+        source: Source paths tuple
+        varfile: Variable files tuple
+        workspace: Terraform workspace
+        show_services: Show only unique services
+        annotate: Path to annotations file
+        aibackend: AI backend to use
+        avl_classes: Available classes (hidden)
+        outfile: Output JSON filename
+    """
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
