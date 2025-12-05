@@ -156,10 +156,8 @@ def _check_dependencies() -> None:
                 click.style(
                     f"\n  ERROR: {exe} command executable not detected in path. Please ensure you have installed all required dependencies first",
                     fg="red",
-                    # amazonq-ignore-next-line
                     bold=True,
                 )
-                # amazonq-ignore-next-line
             )
             sys.exit()
 
@@ -390,7 +388,6 @@ def cli():
     help="The Terraform workspace to initialise",
 )
 @click.option(
-    # amazonq-ignore-next-line
     "--varfile",
     multiple=True,
     default=[],
