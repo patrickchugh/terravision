@@ -17,4 +17,8 @@ class QuantumLedgerDatabaseQldb(_Blockchain):
 # Aliases
 
 QLDB = QuantumLedgerDatabaseQldb
+
+# Terraform aliases
+aws_managed_blockchain_network = ManagedBlockchain
+aws_managed_blockchain_node = ManagedBlockchain
 aws_qldb_ledger = QuantumLedgerDatabaseQldb

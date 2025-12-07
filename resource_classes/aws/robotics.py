@@ -19,3 +19,8 @@ class Robotics(_Robotics):
 
 
 # Aliases
+
+# Terraform aliases
+aws_robomaker_robot_application = Robomaker
+aws_robomaker_simulation_application = RobomakerSimulator
+aws_robomaker_simulation_job = RobomakerSimulator

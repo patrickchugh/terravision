@@ -7,10 +7,8 @@ from resource_classes import Cluster
 defaultdir = "LR"
 try:
     base_path = sys._MEIPASS
-except:
+except AttributeError:
     base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
-    default_dir = base_path
-    pass
 
 
 class VPCgroup(Cluster):

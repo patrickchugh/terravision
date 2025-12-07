@@ -23,3 +23,11 @@ class Workspaces(_Enduser):
 
 
 # Aliases
+
+# Terraform aliases
+aws_appstream_fleet = Appstream20
+aws_appstream_stack = Appstream20
+aws_workdocs_user = Workdocs
+aws_worklink_fleet = Worklink
+aws_workspaces_directory = Workspaces
+aws_workspaces_workspace = Workspaces

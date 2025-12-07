@@ -78,13 +78,23 @@ EFS = ElasticFileSystemEFS
 FSx = Fsx
 S3 = SimpleStorageServiceS3
 
-# Terraform Resource Mappings
+# Terraform aliases
 aws_backup_plan = Backup
-aws_efs_file_system = ElasticFileSystemEFS
+aws_backup_vault = Backup
+aws_backup_selection = Backup
+aws_ebs_snapshot = ElasticBlockStoreEBS
 aws_ebs_volume = ElasticBlockStoreEBS
+aws_efs_access_point = ElasticFileSystemEFS
+aws_efs_file_system = ElasticFileSystemEFS
 aws_efs = ElasticFileSystemEFS
 aws_fsx_lustre_file_system = FsxForLustre
+aws_fsx_ontap_file_system = Fsx
+aws_fsx_openzfs_file_system = Fsx
 aws_fsx_windows_file_system = FsxForWindowsFileServer
 aws_glacier_vault = S3Glacier
 aws_s3_bucket = SimpleStorageServiceS3
+aws_s3_bucket_object = SimpleStorageServiceS3
+aws_s3_object = SimpleStorageServiceS3
 aws_storagegateway_gateway = StorageGateway
+aws_storagegateway_smb_file_share = StorageGateway
+aws_storagegateway_nfs_file_share = StorageGateway

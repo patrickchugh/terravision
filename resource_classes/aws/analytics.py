@@ -101,3 +101,26 @@ class Redshift(_Analytics):
 # Aliases
 
 ES = ElasticsearchService
+
+# Terraform aliases
+aws_athena_database = Athena
+aws_athena_workgroup = Athena
+aws_cloudsearch_domain = Cloudsearch
+aws_datapipeline_pipeline = DataPipeline
+aws_elasticsearch_domain = ElasticsearchService
+aws_emr_cluster = EMR
+aws_glue_crawler = GlueCrawlers
+aws_glue_catalog_database = GlueDataCatalog
+aws_glue_catalog_table = GlueDataCatalog
+aws_glue_job = Glue
+aws_kinesis_analytics_application = KinesisDataAnalytics
+aws_kinesisanalyticsv2_application = KinesisDataAnalytics
+aws_kinesis_firehose_delivery_stream = KinesisDataFirehose
+aws_kinesis_stream = KinesisDataStreams
+aws_kinesis_video_stream = KinesisVideoStreams
+aws_lakeformation_permissions = LakeFormation
+aws_lakeformation_resource = LakeFormation
+aws_msk_cluster = ManagedStreamingForKafka
+aws_quicksight_data_source = Quicksight
+aws_quicksight_user = Quicksight
+aws_redshift_cluster = Redshift

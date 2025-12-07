@@ -2,7 +2,7 @@
 Azure provides a set of services for Microsoft Azure provider.
 """
 
-from diagrams import Node
+from resource_classes import Node
 
 
 class _Azure(Node):

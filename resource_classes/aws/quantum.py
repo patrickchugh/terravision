@@ -11,4 +11,6 @@ class Braket(_Quantum):
 
 
 # Aliases
-aws_qldb_ledger = Braket
+
+# Terraform aliases
+aws_braket_job = Braket

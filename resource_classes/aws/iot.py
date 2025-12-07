@@ -127,8 +127,14 @@ class IotTopic(_Iot):
 FreeRTOS = Freertos
 IotBoard = IotHardwareBoard
 
-# Terraform Resource Mappings
+# Terraform aliases
 aws_iot_thing = InternetOfThings
+aws_iot_thing_type = InternetOfThings
 aws_iot_policy = IotPolicy
 aws_iot_topic_rule = IotTopic
 aws_iot_certificate = IotCertificate
+aws_iot_analytics_channel = IotAnalytics
+aws_iot_analytics_dataset = IotAnalytics
+aws_iotevents_detector_model = IotEvents
+aws_greengrass_group = IotGreengrass
+aws_greengrass_core_definition = IotGreengrass

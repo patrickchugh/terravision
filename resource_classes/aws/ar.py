@@ -11,3 +11,6 @@ class Sumerian(_Ar):
 
 
 # Aliases
+
+# Terraform aliases
+aws_sumerian_scene = Sumerian

@@ -32,5 +32,13 @@ class Pinpoint(_Mobile):
 
 
 # Aliases
+
+# Terraform aliases
+aws_amplify_app = Amplify
+aws_amplify_branch = Amplify
+aws_api_gateway_rest_api = APIGatewayRed
+aws_apigatewayv2_api = APIGatewayRed
+aws_appsync_graphql_api = Appsync
 aws_appsync_function = Appsync
 aws_devicefarm_project = DeviceFarm
+aws_pinpoint_app = Pinpoint

@@ -58,6 +58,13 @@ DMS = DatabaseMigrationService
 MAT = MigrationAndTransfer
 SMS = ServerMigrationService
 
+# Terraform aliases
+aws_dms_endpoint = DatabaseMigrationService
 aws_dms_replication_instance = DatabaseMigrationService
+aws_dms_replication_task = DatabaseMigrationService
+aws_datasync_agent = Datasync
+aws_datasync_location_s3 = Datasync
 aws_datasync_task = Datasync
+aws_storagegateway_gateway = MigrationAndTransfer
 aws_transfer_server = TransferForSftp
+aws_transfer_user = TransferForSftp

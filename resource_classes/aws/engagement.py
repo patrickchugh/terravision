@@ -22,6 +22,9 @@ class SimpleEmailServiceSes(_Engagement):
 
 SES = SimpleEmailServiceSes
 
-# Terraform Resource Mappings
-
+# Terraform aliases
+aws_connect_instance = Connect
+aws_pinpoint_app = Pinpoint
 aws_ses_configuration_set = SimpleEmailServiceSes
+aws_ses_domain_identity = SimpleEmailServiceSes
+aws_ses_email_identity = SimpleEmailServiceSes

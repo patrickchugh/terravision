@@ -98,16 +98,6 @@ class ThinkboxXmesh(_Compute):
 class VmwareCloudOnAWS(_Compute):
     _icon = "vmware-cloud-on-aws.png"
 
-
-# Aliases
-AutoScaling = ApplicationAutoScaling
-EB = ElasticBeanstalk
-ECR = ElasticContainerRegistry
-ECS = ElasticContainerService
-EKS = ElasticKubernetesService
-SAR = ServerlessApplicationRepository
-EIP = ElasticIP
-
 # Terraform aliases
 aws_batch_compute_environment = Batch
 aws_ecr_repository = ElasticContainerRegistry

@@ -11,3 +11,7 @@ class GroundStation(_Satellite):
 
 
 # Aliases
+
+# Terraform aliases
+aws_groundstation_config = GroundStation
+aws_groundstation_mission_profile = GroundStation

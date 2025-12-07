@@ -325,6 +325,8 @@ class Node:
             "tf_resource_name" : "unknown",
             "height": str(self._height + padding),
             "image": self._load_icon(),
+            "nodesep": "1.0",    # Horizontal spacing between nodes/clusters (in inches)
+            "ranksep": "1.5",    # Vertical spacing between ranks/clusters (in inches)
             "labelloc": "b"
         } if self._icon else {}
 

@@ -44,11 +44,15 @@ SNS = SimpleNotificationServiceSns
 SQS = SimpleQueueServiceSqs
 SF = StepFunctions
 
-# Terraform Resource Mappings
-
+# Terraform aliases
+aws_appsync_graphql_api = Appsync
 aws_appsync_function = Appsync
+aws_appsync_datasource = Appsync
 aws_cloudwatch_event_rule = Eventbridge
+aws_cloudwatch_event_target = Eventbridge
+aws_cloudwatch_event_bus = Eventbridge
 aws_cloudwatch_event = Eventbridge
+aws_scheduler_schedule = Eventbridge
 aws_scheduler_schedule_group = Eventbridge
 aws_mq_broker = MQ
 aws_mq_configuration = MQ
@@ -57,3 +61,4 @@ aws_sns_topic_subscription = SimpleNotificationServiceSns
 aws_sns_platform_application = SimpleNotificationServiceSns
 aws_sqs_queue = SimpleQueueServiceSqs
 aws_sfn_state_machine = StepFunctions
+aws_sfn_activity = StepFunctions

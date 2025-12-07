@@ -11,4 +11,8 @@ class Gamelift(_Game):
 
 
 # Aliases
+
+# Terraform aliases
 aws_gamelift_build = Gamelift
+aws_gamelift_fleet = Gamelift
+aws_gamelift_alias = Gamelift

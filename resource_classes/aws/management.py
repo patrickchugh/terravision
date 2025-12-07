@@ -84,7 +84,8 @@ class WellArchitectedTool(_Management):
 SSM = SystemsManager
 ParameterStore = SystemsManagerParameterStore
 
-# Terraform resource mappings
+# Terraform aliases
+aws_autoscaling_group = AutoScaling
 aws_cloudformation_stack = Cloudformation
 aws_cloudformation_stack_set = Cloudformation
 aws_cloudtrail = Cloudtrail
@@ -102,10 +103,18 @@ aws_cloudwatch_log_subscription_filter = Cloudwatch
 aws_cloudwatch_metric_alarm = Cloudwatch
 aws_cloudwatch_query_definition = Cloudwatch
 aws_config_configuration_recorder = Config
+aws_config_config_rule = Config
+aws_controltower_control = ControlTower
+aws_licensemanager_license_configuration = LicenseManager
+aws_opsworks_stack = Opsworks
 aws_opsworks_application = Opsworks
 aws_organizations_organization = Organizations
 aws_organizations_account = Organizations
+aws_organizations_organizational_unit = Organizations
 aws_servicecatalog_portfolio = ServiceCatalog
+aws_servicecatalog_product = ServiceCatalog
 aws_ssm_document = SystemsManager
 aws_ssm_patch_baseline = SystemsManager
+aws_ssm_maintenance_window = SystemsManager
+aws_ssm_association = SystemsManager
 aws_ssm_parameter = SystemsManagerParameterStore

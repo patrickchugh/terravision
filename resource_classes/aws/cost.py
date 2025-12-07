@@ -27,3 +27,8 @@ class SavingsPlans(_Cost):
 
 
 # Aliases
+
+# Terraform aliases
+aws_budgets_budget = Budgets
+aws_cur_report_definition = CostAndUsageReport
+aws_ce_cost_category = CostExplorer

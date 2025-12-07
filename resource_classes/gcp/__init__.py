@@ -2,7 +2,7 @@
 GCP provides a set of services for Google Cloud Platform provider.
 """
 
-from diagrams import Node
+from resource_classes import Node
 
 
 class _GCP(Node):

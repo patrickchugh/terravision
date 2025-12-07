@@ -99,7 +99,17 @@ class Translate(_ML):
 DLC = DeepLearningContainers
 
 
+# Terraform aliases
+aws_comprehend_document_classifier = Comprehend
+aws_forecast_dataset = Forecast
 aws_lex_bot = Lex
+aws_lex_intent = Lex
+aws_personalize_dataset = Personalize
+aws_personalize_solution = Personalize
+aws_rekognition_collection = Rekognition
 aws_sagemaker_app = Sagemaker
+aws_sagemaker_domain = Sagemaker
+aws_sagemaker_endpoint = Sagemaker
 aws_sagemaker_notebook_instance = SagemakerNotebook
 aws_sagemaker_model = SagemakerModel
+aws_transcribe_vocabulary = Transcribe
