@@ -53,6 +53,27 @@ into this...
   	- All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
    - Only metatdata is sent to LLM models with only minimal aggregate data saved in external files, not any sensitive code or runtime environment values
 
+# CI/CD Pipeline Integration
+
+TerraVision seamlessly integrates into your CI/CD pipeline to automatically keep architecture diagrams synchronized with your infrastructure code:
+
+```mermaid
+graph LR
+    A[Developer Commits<br/>Terraform Code] --> B[Git Push]
+    B --> C[CI/CD Pipeline<br/>Triggered]
+    C --> D[Build Stage]
+    D --> E[Test Stage]
+    E --> F[Terraform Plan]
+    F --> G[🎨 TerraVision<br/>Generate Diagrams]
+    G --> H[Deploy Stage]
+    H --> I[Update Docs]
+    I --> J[Publish to<br/>Confluence/ReadTheDocs]
+    
+    style G fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#fff
+    style A fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
+    style J fill:#36b37e,stroke:#1f7a54,stroke-width:2px,color:#fff
+``` 
+
 # Installation and Usage
 
 ## System Requirements
@@ -389,6 +410,64 @@ update:
   aws_ecs_service.this :
    label: "My Custom Label"
 
+```
+
+# Example Pipeline Configuration
+
+```yaml
+# .github/workflows/infrastructure-docs.yml
+name: Update Architecture Diagrams
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+
+jobs:
+  update-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
+        
+      - name: Install TerraVision
+        run: |
+          git clone https://github.com/patrickchugh/terravision.git
+          cd terravision
+          pip install -r requirements.txt
+          
+      - name: Generate Architecture Diagrams
+        run: |
+          terravision draw --source ./terraform --format svg --outfile architecture-${{ github.sha }}
+          terravision draw --source ./terraform --format png --outfile architecture-${{ github.sha }}
+          
+      - name: Update Documentation Site
+        run: |
+          cp architecture-*.svg docs/images/
+          cp architecture-*.png docs/images/
+          # Update your docs (ReadTheDocs, MkDocs, etc.)
+          
+      - name: Publish to Confluence
+        env:
+          CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
+        run: |
+          # Upload diagrams to Confluence page
+          curl -X PUT "https://your-domain.atlassian.net/wiki/rest/api/content/$PAGE_ID" \
+            -H "Authorization: Bearer $CONFLUENCE_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @confluence-update.json
 ```
 
 ## Command Reference
