@@ -58,7 +58,7 @@ into this...
 TerraVision seamlessly integrates into your CI/CD pipeline to automatically keep architecture diagrams synchronized with your infrastructure code:
 
 ```mermaid
-graph LR
+graph TD
     A[Developer Commits<br/>Terraform Code] --> B[Git Push]
     B --> C[CI/CD Pipeline<br/>Triggered]
     C --> D[Build Stage]
