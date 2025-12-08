@@ -11,7 +11,7 @@ from typing import Dict, List, Any, Tuple, Generator, Optional
 
 import click
 
-import modules.cloud_config as cloud_config
+import modules.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 

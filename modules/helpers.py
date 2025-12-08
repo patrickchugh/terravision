@@ -15,10 +15,12 @@ from typing import Dict, List, Any, Tuple, Optional, Union
 
 import click
 
-import modules.cloud_config as cloud_config
+import modules.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 
 
+# NOTE: These constants are AWS-specific for backward compatibility
+# In Phase 3+, these will be loaded dynamically based on provider
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 GROUP_NODES = cloud_config.AWS_GROUP_NODES

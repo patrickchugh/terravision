@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-import requests
 import ollama
 import click
 
@@ -17,11 +16,25 @@ import modules.graphmaker as graphmaker
 import modules.helpers as helpers
 import modules.interpreter as interpreter
 import modules.tfwrapper as tfwrapper
-import modules.cloud_config as cloud_config
 import modules.resource_handlers as resource_handlers
+from modules.config_loader import load_config
+from modules.provider_detector import detect_providers, get_primary_provider_or_default
 
 
 __version__ = "0.8"
+
+
+def _get_provider_config(tfdata: Dict[str, Any]) -> Any:
+    """Get provider-specific configuration from tfdata.
+
+    Args:
+        tfdata: Terraform data dictionary (may contain provider_detection)
+
+    Returns:
+        Provider-specific configuration module
+    """
+    provider = get_primary_provider_or_default(tfdata)
+    return load_config(provider)
 
 
 def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) -> None:
@@ -187,6 +200,24 @@ def compile_tfdata(
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:
         tfdata = _process_terraform_source(source, varfile, workspace, annotate, debug)
+
+    # Detect cloud provider and store in tfdata (multi-cloud support)
+    if "all_resource" in tfdata and "provider_detection" not in tfdata:
+        try:
+            provider_detection = detect_providers(tfdata)
+            tfdata["provider_detection"] = provider_detection
+            click.echo(
+                click.style(
+                    f"\nDetected cloud provider: {provider_detection['primary_provider'].upper()} "
+                    f"({provider_detection['resource_counts'][provider_detection['primary_provider']]} resources)\n",
+                    fg="cyan",
+                    bold=True,
+                )
+            )
+        except Exception as e:
+            # If detection fails, default to AWS (backward compatibility)
+            click.echo(f"Warning: Provider detection failed ({e}), defaulting to AWS")
+
     if "all_resource" in tfdata:
         _print_graph_debug(tfdata["graphdict"], "Terraform JSON graph dictionary")
         tfdata = _enrich_graph_data(tfdata, debug, already_processed)
@@ -250,13 +281,17 @@ def _check_terraform_version() -> None:
         sys.exit()
 
 
-def _check_ollama_server() -> None:
-    """Check if Ollama server is reachable."""
+def _check_ollama_server(ollama_host: str) -> None:
+    """Check if Ollama server is reachable.
+
+    Args:
+        ollama_host: Ollama server host URL
+    """
     click.echo("  checking Ollama server..")
     try:
-        response = requests.get(f"{cloud_config.OLLAMA_HOST}/api/tags", timeout=5)
+        response = requests.get(f"{ollama_host}/api/tags", timeout=5)
         if response.status_code == 200:
-            click.echo(f"  Ollama server reachable at: {cloud_config.OLLAMA_HOST}")
+            click.echo(f"  Ollama server reachable at: {ollama_host}")
         else:
             click.echo(
                 click.style(
@@ -269,7 +304,7 @@ def _check_ollama_server() -> None:
     except requests.exceptions.RequestException as e:
         click.echo(
             click.style(
-                f"\n  ERROR: Cannot reach Ollama server at {cloud_config.OLLAMA_HOST}: {e}",
+                f"\n  ERROR: Cannot reach Ollama server at {ollama_host}: {e}",
                 fg="red",
                 bold=True,
             )
@@ -277,25 +312,31 @@ def _check_ollama_server() -> None:
         sys.exit()
 
 
-def _create_ollama_client() -> ollama.Client:
+def _create_ollama_client(ollama_host: str) -> ollama.Client:
     """Create and return Ollama LLM client.
-    
+
+    Args:
+        ollama_host: Ollama server host URL
+
     Returns:
         Configured Ollama client instance
     """
     return ollama.Client(
-        host=cloud_config.OLLAMA_HOST, headers={"x-some-header": "some-value"}
+        host=ollama_host, headers={"x-some-header": "some-value"}
     )
 
 
-def _stream_ollama_llm_response(client: ollama.Client, graphdict: Dict[str, Any], debug: bool) -> str:
+def _stream_ollama_llm_response(
+    client: ollama.Client, graphdict: Dict[str, Any], refinement_prompt: str, debug: bool
+) -> str:
     """Stream LLM response and return complete output.
-    
+
     Args:
         client: Ollama client instance
         graphdict: Graph dictionary to refine
+        refinement_prompt: Provider-specific refinement prompt
         debug: Enable debug explanations
-        
+
     Returns:
         Complete LLM response string
     """
@@ -305,7 +346,7 @@ def _stream_ollama_llm_response(client: ollama.Client, graphdict: Dict[str, Any]
         messages=[
             {
                 "role": "user",
-                "content": cloud_config.AWS_REFINEMENT_PROMPT
+                "content": refinement_prompt
                 + (
                     "Explain why you made every change after outputting the refined JSON\n"
                     if debug
@@ -325,13 +366,17 @@ def _stream_ollama_llm_response(client: ollama.Client, graphdict: Dict[str, Any]
     return full_response
 
 
-def _stream_bedrock_response(graphdict: Dict[str, Any], debug: bool) -> str:
+def _stream_bedrock_response(
+    graphdict: Dict[str, Any], refinement_prompt: str, bedrock_endpoint: str, debug: bool
+) -> str:
     """Stream Bedrock API response and return complete output.
-    
+
     Args:
         graphdict: Graph dictionary to refine
+        refinement_prompt: Provider-specific refinement prompt
+        bedrock_endpoint: Bedrock API Gateway endpoint URL
         debug: Enable debug explanations
-        
+
     Returns:
         Complete Bedrock API response string
     """
@@ -340,7 +385,7 @@ def _stream_bedrock_response(graphdict: Dict[str, Any], debug: bool) -> str:
         "messages": [
             {
                 "role": "user",
-                "content": cloud_config.AWS_REFINEMENT_PROMPT
+                "content": refinement_prompt
                 + (
                     "Explain why you made every change after outputting the refined JSON\n"
                     if debug
@@ -353,7 +398,7 @@ def _stream_bedrock_response(graphdict: Dict[str, Any], debug: bool) -> str:
     }
 
     response = requests.post(
-        cloud_config.BEDROCK_API_ENDPOINT,
+        bedrock_endpoint,
         json=payload,
         headers={"Content-Type": "application/json"},
         stream=True,
@@ -369,50 +414,68 @@ def _stream_bedrock_response(graphdict: Dict[str, Any], debug: bool) -> str:
 
 def _refine_with_llm(tfdata: Dict[str, Any], aibackend: str, debug: bool) -> Dict[str, Any]:
     """Refine graph dictionary using LLM and return updated tfdata.
-    
+
     Args:
         tfdata: Terraform data dictionary
         aibackend: AI backend to use ('ollama' or 'bedrock')
         debug: Enable debug mode
-        
+
     Returns:
         Updated tfdata with refined graphdict
     """
+    # Get provider-specific configuration
+    config = _get_provider_config(tfdata)
+    provider = get_primary_provider_or_default(tfdata)
+
+    # Get provider-specific refinement prompt
+    refinement_prompt_attr = f"{provider.upper()}_REFINEMENT_PROMPT"
+    refinement_prompt = getattr(config, refinement_prompt_attr, config.AWS_REFINEMENT_PROMPT)
+
     click.echo(
         click.style(
-            f"\nCalling {aibackend.capitalize()} AI Model for JSON refinement..\n",
+            f"\nCalling {aibackend.capitalize()} AI Model for {provider.upper()} diagram refinement..\n",
             fg="white",
             bold=True,
         )
     )
+
     if aibackend.lower() == "ollama":
-        client = _create_ollama_client(aibackend)
-        full_response = _stream_ollama_llm_response(client, tfdata["graphdict"], debug)
+        client = _create_ollama_client(config.OLLAMA_HOST)
+        full_response = _stream_ollama_llm_response(
+            client, tfdata["graphdict"], refinement_prompt, debug
+        )
     elif aibackend.lower() == "bedrock":
-        full_response = _stream_bedrock_response(tfdata["graphdict"], debug)
+        full_response = _stream_bedrock_response(
+            tfdata["graphdict"], refinement_prompt, config.BEDROCK_API_ENDPOINT, debug
+        )
+
     refined_json = helpers.extract_json_from_string(full_response)
     _print_graph_debug(refined_json, "Final LLM Refined JSON")
     tfdata["graphdict"] = refined_json
     return tfdata
 
 
-def _check_bedrock_endpoint() -> None:
-    """Check if AWS Bedrock API endpoint is reachable."""
-    click.echo("  checking AWS Bedrock API Gateway endpoint..")
+def _check_bedrock_endpoint(bedrock_endpoint: str) -> None:
+    """Check if Bedrock API endpoint is reachable.
+
+    Args:
+        bedrock_endpoint: Bedrock API Gateway endpoint URL
+    """
+    click.echo("  checking Bedrock API Gateway endpoint..")
     try:
         response = requests.get(
-            cloud_config.BEDROCK_API_ENDPOINT, timeout=5, stream=True
+            bedrock_endpoint, timeout=5, stream=True
         )
         if response.status_code in [200, 403, 404]:
             click.echo(
-                f"  AWS Bedrock API Gateway reachable at: {cloud_config.BEDROCK_API_ENDPOINT}"
+                f"  Bedrock API Gateway reachable at: {bedrock_endpoint}"
             )
             if response.status_code == 200:
                 response.close()
         else:
             click.echo(
                 click.style(
-                    f"\n  ERROR: AWS Bedrock API Gateway returned status {response.status_code}",
+                    f"\n  ERROR: Bedrock API Gateway returned status {response.status_code}",
                     fg="red",
                     bold=True,
                 )
@@ -421,7 +484,7 @@ def _check_bedrock_endpoint() -> None:
     except requests.exceptions.RequestException as e:
         click.echo(
             click.style(
-                f"\n  ERROR: Cannot reach AWS Bedrock API Gateway endpoint at {cloud_config.BEDROCK_API_ENDPOINT}: {e}",
+                f"\n  ERROR: Cannot reach Bedrock API Gateway endpoint at {bedrock_endpoint}: {e}",
                 fg="red",
                 bold=True,
             )
@@ -431,18 +494,23 @@ def _check_bedrock_endpoint() -> None:
 
 def preflight_check(aibackend: Optional[str] = None) -> None:
     """Check required dependencies and Terraform version compatibility.
-    
+
     Args:
         aibackend: AI backend to validate ('ollama' or 'bedrock')
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     _check_dependencies()
     _check_terraform_version()
+
     if aibackend:
+        # Load default AWS config for preflight (endpoints are the same across providers)
+        default_config = load_config('aws')
+
         if aibackend.lower() == "ollama":
-            _check_ollama_server()
+            _check_ollama_server(default_config.OLLAMA_HOST)
         elif aibackend.lower() == "bedrock":
-            _check_bedrock_endpoint()
+            _check_bedrock_endpoint(default_config.BEDROCK_API_ENDPOINT)
+
     click.echo("\n")
 
 

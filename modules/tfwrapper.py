@@ -16,7 +16,7 @@ import tempfile
 import shutil
 import json
 import ipaddr
-import modules.cloud_config as cloud_config
+import modules.cloud_config_aws as cloud_config
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()

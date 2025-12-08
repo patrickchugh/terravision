@@ -7,7 +7,7 @@ It processes annotation rules to add, remove, connect, and modify nodes in the g
 import sys
 from typing import Dict, List, Any
 import click
-import modules.cloud_config as cloud_config
+import modules.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 
 AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS

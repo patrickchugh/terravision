@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Any, Optional
 
 import click
 
-import modules.cloud_config as cloud_config
+import modules.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 
 # pylint: disable=unused-wildcard-import
