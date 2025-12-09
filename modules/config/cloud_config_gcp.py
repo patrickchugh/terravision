@@ -7,11 +7,6 @@ PROVIDER_NAME = "GCP"
 PROVIDER_PREFIX = ["google_"]
 ICON_LIBRARY = "gcp"
 
-# Resource type to icon mappings (GCP uses resource_classes directly like AWS)
-# This is maintained for validation consistency across providers
-# Resource classes located in resource_classes/gcp/ (compute.py, network.py, etc.)
-RESOURCE_MAPPINGS = {}  # GCP uses dynamic resource class loading
-
 # Any resource names with certain prefixes are consolidated into one node
 GCP_CONSOLIDATED_NODES = [
     {

@@ -7,10 +7,6 @@ PROVIDER_NAME = "AWS"
 PROVIDER_PREFIX = ["aws_"]
 ICON_LIBRARY = "aws"
 
-# Resource type to icon mappings (AWS uses resource_classes directly)
-# This is maintained for validation consistency across providers
-RESOURCE_MAPPINGS = {}  # AWS uses dynamic resource class loading
-
 # Any resource names with certain prefixes are consolidated into one node
 AWS_CONSOLIDATED_NODES = [
     {

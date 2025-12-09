@@ -7,11 +7,6 @@ PROVIDER_NAME = "Azure"
 PROVIDER_PREFIX = ["azurerm_", "azuread_", "azurestack_", "azapi_"]
 ICON_LIBRARY = "azure"
 
-# Resource type to icon mappings (Azure uses resource_classes directly like AWS)
-# This is maintained for validation consistency across providers
-# Resource classes located in resource_classes/azure/ (compute.py, network.py, etc.)
-RESOURCE_MAPPINGS = {}  # Azure uses dynamic resource class loading
-
 # Any resource names with certain prefixes are consolidated into one node
 AZURE_CONSOLIDATED_NODES = [
     {
