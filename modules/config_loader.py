@@ -182,11 +182,7 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
         >>> validate_config_module(config, 'aws')
         True
     """
-    required_attrs = [
-        "PROVIDER_NAME",
-        "PROVIDER_PREFIX",
-        "ICON_LIBRARY"
-    ]
+    required_attrs = ["PROVIDER_NAME", "PROVIDER_PREFIX", "ICON_LIBRARY"]
 
     missing_attrs = []
     for attr in required_attrs:
