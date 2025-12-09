@@ -78,9 +78,19 @@ from resource_classes.azure.security import *
 from resource_classes.azure.storage import *
 from resource_classes.azure.web import *
 from resource_classes.generic.blank import Blank
+# Import group classes (must come after resource class imports to override)
+from resource_classes.aws.groups import AWSgroup
+from resource_classes.azure.groups import (
+    Azuregroup,
+    azurerm_resource_group,
+    azurerm_virtual_network,
+    azurerm_subnet,
+    azurerm_network_security_group,
+)
 
 avl_classes = dir()
 
+# Default to AWS configuration (will be overridden based on provider detection)
 CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 GROUP_NODES = cloud_config.AWS_GROUP_NODES
 DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
@@ -92,6 +102,55 @@ EDGE_NODES = cloud_config.AWS_EDGE_NODES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
 ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
 NEVER_DRAW_LINE = cloud_config.AWS_NEVER_DRAW_LINE
+
+
+def set_provider_config(provider: str) -> None:
+    """Set global configuration based on detected cloud provider.
+
+    Args:
+        provider: Cloud provider name ('aws', 'azure', or 'gcp')
+    """
+    global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
+
+    if provider == "azure":
+        CONSOLIDATED_NODES = cloud_config.AZURE_CONSOLIDATED_NODES
+        GROUP_NODES = cloud_config.AZURE_GROUP_NODES
+        DRAW_ORDER = cloud_config.AZURE_DRAW_ORDER
+        NODE_VARIANTS = cloud_config.AZURE_NODE_VARIANTS
+        OUTER_NODES = cloud_config.AZURE_OUTER_NODES
+        AUTO_ANNOTATIONS = cloud_config.AZURE_AUTO_ANNOTATIONS
+        EDGE_NODES = cloud_config.AZURE_EDGE_NODES
+        SHARED_SERVICES = cloud_config.AZURE_SHARED_SERVICES
+        ALWAYS_DRAW_LINE = cloud_config.AZURE_ALWAYS_DRAW_LINE
+        NEVER_DRAW_LINE = cloud_config.AZURE_NEVER_DRAW_LINE
+    else:  # Default to AWS
+        CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
+        GROUP_NODES = cloud_config.AWS_GROUP_NODES
+        DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
+        NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
+        OUTER_NODES = cloud_config.AWS_OUTER_NODES
+        AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
+        EDGE_NODES = cloud_config.AWS_EDGE_NODES
+        SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
+        ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
+        NEVER_DRAW_LINE = cloud_config.AWS_NEVER_DRAW_LINE
+
+
+def get_cloud_group(provider: str):
+    """Get the appropriate cloud group class based on provider.
+
+    Args:
+        provider: Cloud provider name ('aws', 'azure', or 'gcp')
+
+    Returns:
+        Cloud group instance (AWSgroup or Azuregroup)
+    """
+    if provider == "azure":
+        return Azuregroup()
+    else:  # Default to AWS
+        return AWSgroup()
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> str:
@@ -499,6 +558,11 @@ def render_diagram(
     Returns:
         None (generates diagram file as side effect)
     """
+    # Get provider from tfdata and configure accordingly
+    provider = tfdata.get("provider", "aws")
+    set_provider_config(provider)
+    click.echo(f"Using {provider.upper()} configuration for diagram rendering")
+
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()
 
@@ -513,8 +577,8 @@ def render_diagram(
     )
     setdiagram(myDiagram)
 
-    # Create main cloud provider boundary
-    cloudGroup = AWSgroup()
+    # Create main cloud provider boundary with correct provider group
+    cloudGroup = get_cloud_group(provider)
     setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
 
