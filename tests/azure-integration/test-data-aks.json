@@ -1,0 +1,14 @@
+{
+  "azurerm_resource_group.prod": [],
+  "azurerm_virtual_network.main": ["azurerm_resource_group.prod"],
+  "azurerm_subnet.web": ["azurerm_virtual_network.main"],
+  "azurerm_subnet.data": ["azurerm_virtual_network.main"],
+  "azurerm_network_security_group.web_nsg": ["azurerm_subnet.web"],
+  "azurerm_kubernetes_cluster.aks": ["azurerm_subnet.web"],
+  "azurerm_container_registry.acr": ["azurerm_resource_group.prod"],
+  "azurerm_mssql_server.sqlserver": ["azurerm_subnet.data"],
+  "azurerm_mssql_database.db": ["azurerm_mssql_server.sqlserver"],
+  "azurerm_storage_account.storage": ["azurerm_resource_group.prod"],
+  "azurerm_key_vault.keyvault": ["azurerm_resource_group.prod"],
+  "azurerm_log_analytics_workspace.logs": ["azurerm_resource_group.prod"]
+}

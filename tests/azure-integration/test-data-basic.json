@@ -1,0 +1,38 @@
+{
+  "azurerm_resource_group.main": [],
+  "azurerm_virtual_network.main": [
+    "azurerm_resource_group.main"
+  ],
+  "azurerm_subnet.web": [
+    "azurerm_virtual_network.main"
+  ],
+  "azurerm_subnet.data": [
+    "azurerm_virtual_network.main"
+  ],
+  "azurerm_network_security_group.web": [
+    "azurerm_subnet.web"
+  ],
+  "azurerm_service_plan.main": [
+    "azurerm_resource_group.main"
+  ],
+  "azurerm_linux_web_app.main": [
+    "azurerm_service_plan.main",
+    "azurerm_subnet.web",
+    "azurerm_mssql_server.main"
+  ],
+  "azurerm_mssql_server.main": [
+    "azurerm_subnet.data"
+  ],
+  "azurerm_mssql_database.main": [
+    "azurerm_mssql_server.main"
+  ],
+  "azurerm_storage_account.main": [
+    "azurerm_resource_group.main"
+  ],
+  "azurerm_key_vault.main": [
+    "azurerm_resource_group.main"
+  ],
+  "azurerm_log_analytics_workspace.main": [
+    "azurerm_resource_group.main"
+  ]
+}
