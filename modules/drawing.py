@@ -6,7 +6,9 @@ including nodes, clusters, connections, and edge labels.
 """
 
 import datetime
+import importlib
 import os
+import pkgutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
@@ -17,86 +19,76 @@ import modules.config_loader as config_loader
 import modules.helpers as helpers
 from modules.provider_detector import get_primary_provider_or_default
 
-# Import all provider resource classes
+# Import base resource classes
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
 
-# AWS resource classes
-from resource_classes.aws.analytics import *
-from resource_classes.aws.ar import *
-from resource_classes.aws.blockchain import *
-from resource_classes.aws.business import *
-from resource_classes.aws.compute import *
-from resource_classes.aws.cost import *
-from resource_classes.aws.database import *
-from resource_classes.aws.devtools import *
-from resource_classes.aws.enablement import *
-from resource_classes.aws.enduser import *
-from resource_classes.aws.engagement import *
-from resource_classes.aws.game import *
-from resource_classes.aws.general import *
-from resource_classes.aws.groups import *
-from resource_classes.aws.integration import *
-from resource_classes.aws.iot import *
-from resource_classes.aws.management import *
-from resource_classes.aws.media import *
-from resource_classes.aws.migration import *
-from resource_classes.aws.ml import *
-from resource_classes.aws.mobile import *
-from resource_classes.aws.network import *
-from resource_classes.aws.quantum import *
-from resource_classes.aws.robotics import *
-from resource_classes.aws.satellite import *
-from resource_classes.aws.security import *
-from resource_classes.aws.storage import *
-
-# Azure resource classes
-from resource_classes.azure.aimachinelearning import *
-from resource_classes.azure.analytics import *
-from resource_classes.azure.appservices import *
-from resource_classes.azure.azureecosystem import *
-from resource_classes.azure.azurestack import *
-from resource_classes.azure.blockchain import *
-from resource_classes.azure.compute import *
-from resource_classes.azure.containers import *
-from resource_classes.azure.database import *
-from resource_classes.azure.databases import *
-from resource_classes.azure.devops import *
-from resource_classes.azure.general import *
-from resource_classes.azure.hybridmulticloud import *
-from resource_classes.azure.identity import *
-from resource_classes.azure.integration import *
-from resource_classes.azure.intune import *
-from resource_classes.azure.iot import *
-from resource_classes.azure.managementgovernance import *
-from resource_classes.azure.migrate import *
-from resource_classes.azure.migration import *
-from resource_classes.azure.ml import *
-from resource_classes.azure.mobile import *
-from resource_classes.azure.monitor import *
-from resource_classes.azure.network import *
-from resource_classes.azure.networking import *
-from resource_classes.azure.security import *
-from resource_classes.azure.storage import *
-from resource_classes.azure.web import *
-
-# GCP resource classes
-from resource_classes.gcp.analytics import *
-from resource_classes.gcp.api import *
-from resource_classes.gcp.compute import *
-from resource_classes.gcp.database import *
-from resource_classes.gcp.devtools import *
-from resource_classes.gcp.iot import *
-from resource_classes.gcp.ml import *
-from resource_classes.gcp.network import *
-from resource_classes.gcp.operations import *
-from resource_classes.gcp.security import *
-from resource_classes.gcp.storage import *
-
-# Generic resources
+# Generic resources (always needed)
 from resource_classes.generic.blank import Blank
 
-avl_classes = dir()
+# Track available classes - will be populated dynamically per provider
+avl_classes = []
+_loaded_provider = None
+
+
+def _load_provider_resources(provider: str) -> None:
+    """Dynamically load resource classes for the specified cloud provider.
+
+    Args:
+        provider: Cloud provider name ('aws', 'azure', 'gcp')
+    """
+    global avl_classes, _loaded_provider
+
+    # Skip if already loaded for this provider
+    if _loaded_provider == provider:
+        return
+
+    # Map provider names to package names
+    provider_packages = {
+        'aws': 'resource_classes.aws',
+        'azure': 'resource_classes.azure',
+        'gcp': 'resource_classes.gcp',
+    }
+
+    package_name = provider_packages.get(provider)
+    if not package_name:
+        click.echo(
+            click.style(
+                f"\nERROR: Unknown provider '{provider}'. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+
+    # Import all submodules from the provider package
+    try:
+        package = importlib.import_module(package_name)
+        package_path = Path(package.__file__).parent
+
+        for _, module_name, _ in pkgutil.iter_modules([str(package_path)]):
+            full_module_name = f"{package_name}.{module_name}"
+            module = importlib.import_module(full_module_name)
+
+            # Import all public names from the module into this module's namespace
+            for name in dir(module):
+                if not name.startswith('_'):
+                    obj = getattr(module, name)
+                    globals()[name] = obj
+
+        # Update available classes list
+        avl_classes = list(globals().keys())
+        _loaded_provider = provider
+
+    except ImportError as e:
+        click.echo(
+            click.style(
+                f"\nERROR: Failed to load resource classes for provider '{provider}': {e}. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
 
 # Module-level constants that get set per-provider in render_diagram
 # Initialize with empty defaults
@@ -563,6 +555,10 @@ def render_diagram(
     global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
 
     provider = get_primary_provider_or_default(tfdata)
+
+    # Dynamically load resource classes for the detected provider
+    _load_provider_resources(provider)
+
     constants = _load_provider_constants(tfdata)
     CONSOLIDATED_NODES = constants['CONSOLIDATED_NODES']
     GROUP_NODES = constants['GROUP_NODES']
@@ -590,13 +586,19 @@ def render_diagram(
     setdiagram(myDiagram)
 
     # Create main cloud provider boundary
-    # Select appropriate cloud group class based on provider
-    if provider == 'azure':
-        cloudGroup = Azure()
-    elif provider == 'gcp':
-        cloudGroup = GCP()
-    else:  # aws (default)
-        cloudGroup = AWSgroup()
+    # Dynamically select cloud group class based on provider (e.g., 'aws' -> 'AWSGroup', 'azure' -> 'AZUREGroup')
+    provider_group_name = provider.upper() + "Group"
+    cloud_group_class = globals().get(provider_group_name)
+    if cloud_group_class is None:
+        click.echo(
+            click.style(
+                f"\nERROR: No group class '{provider_group_name}' found for provider '{provider}'. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+    cloudGroup = cloud_group_class()
     setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
 

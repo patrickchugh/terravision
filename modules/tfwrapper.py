@@ -450,8 +450,13 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     # Save original graph and metadata for reference
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
-    # Verify cloud resources exist
-    if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0:
+    # Verify cloud resources exist (check all supported provider prefixes)
+    from modules.provider_detector import PROVIDER_PREFIXES
+    has_cloud_resources = any(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], prefix)
+        for prefix in PROVIDER_PREFIXES.keys()
+    )
+    if not has_cloud_resources:
         click.echo(
             click.style(
                 f"\nERROR: No AWS, Azure or Google resources will be created with current plan. Exiting.",

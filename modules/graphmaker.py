@@ -697,13 +697,16 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     constants = _load_config_constants(tfdata)
     SPECIAL_RESOURCES = constants['SPECIAL_RESOURCES']
 
+    # Get the provider-specific handler module
+    handler_module = resource_handlers.get_handler_module(tfdata)
+
     resource_types = list(
         {helpers.get_no_module_name(k).split(".")[0] for k in tfdata["node_list"]}
     )
     for resource_prefix, handler in SPECIAL_RESOURCES.items():
         matching_substring = [s for s in resource_types if resource_prefix in s]
         if resource_prefix in resource_types or matching_substring:
-            tfdata = getattr(resource_handlers, handler)(tfdata)
+            tfdata = getattr(handler_module, handler)(tfdata)
     return tfdata
 
 

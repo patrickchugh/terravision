@@ -137,15 +137,15 @@ azurerm_frontdoor = FrontDoors
 azurerm_lb = LoadBalancers
 azurerm_local_network_gateway = LocalNetworkGateways
 azurerm_network_interface = NetworkInterfaces
-azurerm_network_security_group = NetworkSecurityGroupsClassic
+# Note: azurerm_network_security_group alias is defined in groups.py as a Cluster class
 azurerm_network_watcher = NetworkWatcher
 azurerm_private_endpoint = PrivateEndpoint
 azurerm_public_ip = PublicIpAddresses
 azurerm_route_table = RouteTables
 azurerm_route = RouteTables
-azurerm_subnet = Subnets
+# Note: azurerm_subnet alias is defined in groups.py as a Cluster class
 azurerm_traffic_manager_profile = TrafficManagerProfiles
 azurerm_virtual_network_gateway = VirtualNetworkGateways
-azurerm_virtual_network = VirtualNetworks
+# Note: azurerm_virtual_network alias is defined in groups.py as a Cluster class
 azurerm_virtual_wan = VirtualWans
 azurerm_vpn_gateway = VirtualNetworkGateways
