@@ -315,3 +315,114 @@ OLLAMA_HOST = "http://localhost:11434"
 BEDROCK_API_ENDPOINT = (
     "https://yirz70b5mc.execute-api.us-east-1.amazonaws.com/prod/chat"
 )
+
+
+# ============================================================================
+# AZURE CONFIGURATION
+# ============================================================================
+
+# Basic Azure configuration - can be expanded as Azure support matures
+AZURE_CONSOLIDATED_NODES = [
+    {
+        "azurerm_resource_group": {
+            "resource_name": "azurerm_resource_group.rg",
+            "import_location": "resource_classes.azure.general",
+            "vpc": False,
+        }
+    },
+]
+
+# List of Group type nodes for Azure
+AZURE_GROUP_NODES = [
+    "azurerm_resource_group",
+    "azurerm_virtual_network",
+    "azurerm_subnet",
+    "azurerm_network_security_group",
+]
+
+# Nodes to be drawn first for Azure
+AZURE_EDGE_NODES = [
+    "azurerm_dns_zone",
+    "azurerm_cdn_profile",
+    "azurerm_application_gateway",
+]
+
+# Nodes outside Cloud boundary for Azure
+AZURE_OUTER_NODES = ["tv_azure_users", "tv_azure_internet"]
+
+# Order to draw nodes for Azure
+AZURE_DRAW_ORDER = [
+    AZURE_OUTER_NODES,
+    AZURE_EDGE_NODES,
+    AZURE_GROUP_NODES,
+    AZURE_CONSOLIDATED_NODES,
+    [""],
+]
+
+# Auto annotations for Azure (minimal for now)
+AZURE_AUTO_ANNOTATIONS = []
+
+# Variant icons for Azure services
+AZURE_NODE_VARIANTS = {}
+
+# Reverse arrow direction for these Azure resources
+AZURE_REVERSE_ARROW_LIST = [
+    "azurerm_resource_group",
+    "azurerm_virtual_network",
+    "azurerm_subnet",
+]
+
+# Forced destination connections for Azure
+AZURE_FORCED_DEST = ["azurerm_mssql_database", "azurerm_virtual_machine"]
+
+# Forced origin connections for Azure
+AZURE_FORCED_ORIGIN = ["azurerm_dns_zone", "azurerm_cdn_profile"]
+
+# Implied connections for Azure
+AZURE_IMPLIED_CONNECTIONS = {}
+
+# Special resources and handler functions for Azure (to be implemented)
+AZURE_SPECIAL_RESOURCES = {}
+
+# Shared services for Azure
+AZURE_SHARED_SERVICES = [
+    "azurerm_storage_account",
+    "azurerm_key_vault",
+    "azurerm_log_analytics_workspace",
+]
+
+# Always draw line for Azure
+AZURE_ALWAYS_DRAW_LINE = [
+    "azurerm_lb",
+    "azurerm_application_gateway",
+]
+
+# Never draw line for Azure
+AZURE_NEVER_DRAW_LINE = ["azurerm_role_assignment"]
+
+# Disconnect list for Azure
+AZURE_DISCONNECT_LIST = ["azurerm_role_assignment"]
+
+# Azure acronyms
+AZURE_ACRONYMS_LIST = [
+    "vm",
+    "vnet",
+    "nsg",
+    "aks",
+    "acr",
+    "kv",
+    "sql",
+    "rg",
+    "lb",
+]
+
+# Azure name replacements
+AZURE_NAME_REPLACEMENTS = {
+    "rg": "Resource Group",
+    "vm": "Virtual Machine",
+    "vnet": "Virtual Network",
+    "nsg": "Network Security Group",
+    "aks": "AKS Cluster",
+    "acr": "Container Registry",
+    "kv": "Key Vault",
+}

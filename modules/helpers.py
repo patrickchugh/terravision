@@ -19,6 +19,76 @@ import modules.cloud_config as cloud_config
 import modules.helpers as helpers
 
 
+def detect_cloud_provider(tfdata: Dict[str, Any]) -> str:
+    """Detect cloud provider based on resource prefixes in terraform data.
+
+    Args:
+        tfdata: Terraform data dictionary containing graphdict
+
+    Returns:
+        Provider name: 'aws', 'azure', or 'gcp'
+    """
+    if not tfdata.get("graphdict"):
+        return "aws"  # Default to AWS
+
+    resources = tfdata["graphdict"].keys()
+
+    # Count resource prefixes
+    azure_count = sum(1 for r in resources if "azurerm_" in r)
+    aws_count = sum(1 for r in resources if "aws_" in r)
+    gcp_count = sum(1 for r in resources if "google_" in r)
+
+    # Return provider with most resources
+    if azure_count > aws_count and azure_count > gcp_count:
+        return "azure"
+    elif gcp_count > aws_count and gcp_count > azure_count:
+        return "gcp"
+    else:
+        return "aws"
+
+
+def get_provider_config(provider: str) -> Dict[str, Any]:
+    """Get configuration constants for specified cloud provider.
+
+    Args:
+        provider: Cloud provider name ('aws', 'azure', or 'gcp')
+
+    Returns:
+        Dictionary containing provider-specific configuration constants
+    """
+    if provider == "azure":
+        return {
+            "REVERSE_ARROW_LIST": cloud_config.AZURE_REVERSE_ARROW_LIST,
+            "IMPLIED_CONNECTIONS": cloud_config.AZURE_IMPLIED_CONNECTIONS,
+            "GROUP_NODES": cloud_config.AZURE_GROUP_NODES,
+            "CONSOLIDATED_NODES": cloud_config.AZURE_CONSOLIDATED_NODES,
+            "NODE_VARIANTS": cloud_config.AZURE_NODE_VARIANTS,
+            "SPECIAL_RESOURCES": cloud_config.AZURE_SPECIAL_RESOURCES,
+            "ACRONYMS_LIST": cloud_config.AZURE_ACRONYMS_LIST,
+            "NAME_REPLACEMENTS": cloud_config.AZURE_NAME_REPLACEMENTS,
+            "SHARED_SERVICES": cloud_config.AZURE_SHARED_SERVICES,
+            "DISCONNECT_LIST": cloud_config.AZURE_DISCONNECT_LIST,
+            "ALWAYS_DRAW_LINE": cloud_config.AZURE_ALWAYS_DRAW_LINE,
+            "NEVER_DRAW_LINE": cloud_config.AZURE_NEVER_DRAW_LINE,
+        }
+    else:  # Default to AWS
+        return {
+            "REVERSE_ARROW_LIST": cloud_config.AWS_REVERSE_ARROW_LIST,
+            "IMPLIED_CONNECTIONS": cloud_config.AWS_IMPLIED_CONNECTIONS,
+            "GROUP_NODES": cloud_config.AWS_GROUP_NODES,
+            "CONSOLIDATED_NODES": cloud_config.AWS_CONSOLIDATED_NODES,
+            "NODE_VARIANTS": cloud_config.AWS_NODE_VARIANTS,
+            "SPECIAL_RESOURCES": cloud_config.AWS_SPECIAL_RESOURCES,
+            "ACRONYMS_LIST": cloud_config.AWS_ACRONYMS_LIST,
+            "NAME_REPLACEMENTS": cloud_config.AWS_NAME_REPLACEMENTS,
+            "SHARED_SERVICES": cloud_config.AWS_SHARED_SERVICES,
+            "DISCONNECT_LIST": cloud_config.AWS_DISCONNECT_LIST,
+            "ALWAYS_DRAW_LINE": cloud_config.AWS_ALWAYS_DRAW_LINE,
+            "NEVER_DRAW_LINE": cloud_config.AWS_NEVER_DRAW_LINE,
+        }
+
+
+# Default to AWS configuration (will be overridden at runtime based on detected provider)
 REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
 IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
 GROUP_NODES = cloud_config.AWS_GROUP_NODES

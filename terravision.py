@@ -127,15 +127,20 @@ def _process_terraform_source(
 
 def _enrich_graph_data(tfdata: Dict[str, Any], debug: bool, already_processed: bool) -> Dict[str, Any]:
     """Enrich graph data with relationships and transformations.
-    
+
     Args:
         tfdata: Terraform data dictionary
         debug: Enable debug mode
         already_processed: Whether data was already processed
-        
+
     Returns:
         Enriched tfdata dictionary
     """
+    # Detect cloud provider and store in tfdata
+    provider = helpers.detect_cloud_provider(tfdata)
+    tfdata["provider"] = provider
+    click.echo(f"Detected cloud provider: {provider.upper()}")
+
     tfdata = interpreter.prefix_module_names(tfdata)
     tfdata = interpreter.resolve_all_variables(tfdata, debug, already_processed)
     tfdata = resource_handlers.handle_special_cases(tfdata)

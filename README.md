@@ -15,8 +15,8 @@ TerraVision securely runs 100% Client Side without any dependency or access to y
 
 ## Supported Cloud Providers
 - ✅ **AWS** (Full support with 200+ services)
+- ✅ **Microsoft Azure** (Beta support with 100+ services)
 - 🔄 **Google Cloud Platform** (Coming soon)
-- 🔄 **Microsoft Azure** (Coming soon)
 - ✅ **On-Premises** (Generic infrastructure components)
 
 Turn this... 
@@ -204,6 +204,27 @@ terravision draw --source ~/src/my-terraform-code --show
 terravision draw --source ~/src/my-terraform-code --aibackend bedrock
 terravision draw --source ~/src/my-terraform-code --aibackend ollama
 ```
+
+### Azure Support
+TerraVision now supports Microsoft Azure infrastructure diagrams! The tool automatically detects Azure resources (prefixed with `azurerm_`) and generates appropriate diagrams.
+
+```bash
+# Generate diagram for Azure Terraform code
+terravision draw --source ~/src/azure-terraform-code
+
+# Example Azure resources supported:
+# - azurerm_resource_group (Resource Groups)
+# - azurerm_virtual_network (Virtual Networks)
+# - azurerm_subnet (Subnets)
+# - azurerm_virtual_machine (Virtual Machines)
+# - azurerm_kubernetes_cluster (AKS Clusters)
+# - azurerm_storage_account (Storage Accounts)
+# - azurerm_mssql_server (SQL Servers)
+# - azurerm_app_service (App Services)
+# - And 100+ more Azure services
+```
+
+**Note:** Azure support is currently in beta. Advanced features like AI refinement prompts and complex resource relationship handling are optimized for AWS and will be enhanced for Azure in future releases.
 
 ### Remote Git Repository Support
 ```bash
