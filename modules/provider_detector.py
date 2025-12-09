@@ -18,20 +18,21 @@ logger = logging.getLogger(__name__)
 
 # Constants
 PROVIDER_PREFIXES = {
-    'aws_': 'aws',
-    'azurerm_': 'azure',
-    'azuread_': 'azure',      # Azure Active Directory
-    'azurestack_': 'azure',
-    'azapi_': 'azure',        # Azure API provider
-    'google_': 'gcp',
+    "aws_": "aws",
+    "azurerm_": "azure",
+    "azuread_": "azure",  # Azure Active Directory
+    "azurestack_": "azure",
+    "azapi_": "azure",  # Azure API provider
+    "google_": "gcp",
 }
 
-SUPPORTED_PROVIDERS = ['aws', 'azure', 'gcp']
+SUPPORTED_PROVIDERS = ["aws", "azure", "gcp"]
 
 
 # Error Classes
 class ProviderDetectionError(Exception):
     """Raised when no cloud providers can be detected in Terraform project."""
+
     pass
 
 
@@ -99,7 +100,7 @@ def get_provider_for_resource(resource_name: str) -> str:
         if resource_name.startswith(prefix):
             return provider
 
-    return 'unknown'
+    return "unknown"
 
 
 def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -152,7 +153,7 @@ def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             "primary_provider": "aws",
             "resource_counts": {"aws": 0},
             "detection_method": "default",
-            "confidence": 0.3
+            "confidence": 0.3,
         }
 
     # Count resources per provider
@@ -164,22 +165,22 @@ def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Extract known providers (exclude 'unknown')
     known_providers = [
-        provider for provider in resource_counts.keys()
+        provider
+        for provider in resource_counts.keys()
         if provider in SUPPORTED_PROVIDERS
     ]
 
     if not known_providers:
-        logger.error(f"No supported providers detected in {len(all_resources)} resources")
+        logger.error(
+            f"No supported providers detected in {len(all_resources)} resources"
+        )
         raise ProviderDetectionError(
             f"Could not detect any supported cloud providers in Terraform project. "
             f"Found {len(all_resources)} resources but none matched known provider prefixes."
         )
 
     # Determine primary provider (most resources)
-    primary_provider = max(
-        known_providers,
-        key=lambda p: resource_counts.get(p, 0)
-    )
+    primary_provider = max(known_providers, key=lambda p: resource_counts.get(p, 0))
 
     # Calculate confidence score
     confidence = _calculate_confidence(resource_counts, len(all_resources))
@@ -196,7 +197,7 @@ def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         "primary_provider": primary_provider,
         "resource_counts": filtered_counts,
         "detection_method": "resource_prefix",
-        "confidence": confidence
+        "confidence": confidence,
     }
 
     logger.info(
@@ -207,7 +208,9 @@ def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def _calculate_confidence(resource_counts: Dict[str, int], total_resources: int) -> float:
+def _calculate_confidence(
+    resource_counts: Dict[str, int], total_resources: int
+) -> float:
     """
     Calculate confidence score for provider detection.
 
@@ -227,7 +230,7 @@ def _calculate_confidence(resource_counts: Dict[str, int], total_resources: int)
     if total_resources == 0:
         return 0.3  # Default low confidence
 
-    unknown_count = resource_counts.get('unknown', 0)
+    unknown_count = resource_counts.get("unknown", 0)
     known_count = total_resources - unknown_count
     known_ratio = known_count / total_resources
 
@@ -245,10 +248,7 @@ def _calculate_confidence(resource_counts: Dict[str, int], total_resources: int)
         return 0.4
 
 
-def validate_provider_detection(
-    result: Dict[str, Any],
-    tfdata: Dict[str, Any]
-) -> bool:
+def validate_provider_detection(result: Dict[str, Any], tfdata: Dict[str, Any]) -> bool:
     """
     Validate provider detection result against actual resources.
 
@@ -322,7 +322,7 @@ def validate_provider_detection(
         # Count unknown resources separately
         unknown_count = 0
         for resource_name in resource_names:
-            if get_provider_for_resource(resource_name) == 'unknown':
+            if get_provider_for_resource(resource_name) == "unknown":
                 unknown_count += 1
 
         expected_detected = total_actual - unknown_count
@@ -344,6 +344,7 @@ def validate_provider_detection(
 
 
 # Utility functions for integration
+
 
 def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
     """
@@ -368,5 +369,3 @@ def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
     except (ValueError, ProviderDetectionError):
         logger.warning("Could not detect provider, defaulting to AWS")
         return "aws"
-
-

@@ -44,17 +44,23 @@ def _load_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     provider_upper = provider.upper()
 
     return {
-        'REVERSE_ARROW_LIST': getattr(config, f'{provider_upper}_REVERSE_ARROW_LIST', []),
-        'IMPLIED_CONNECTIONS': getattr(config, f'{provider_upper}_IMPLIED_CONNECTIONS', {}),
-        'GROUP_NODES': getattr(config, f'{provider_upper}_GROUP_NODES', []),
-        'CONSOLIDATED_NODES': getattr(config, f'{provider_upper}_CONSOLIDATED_NODES', []),
-        'NODE_VARIANTS': getattr(config, f'{provider_upper}_NODE_VARIANTS', []),
-        'SPECIAL_RESOURCES': getattr(config, f'{provider_upper}_SPECIAL_RESOURCES', {}),
-        'SHARED_SERVICES': getattr(config, f'{provider_upper}_SHARED_SERVICES', []),
-        'AUTO_ANNOTATIONS': getattr(config, f'{provider_upper}_AUTO_ANNOTATIONS', []),
-        'EDGE_NODES': getattr(config, f'{provider_upper}_EDGE_NODES', []),
-        'FORCED_DEST': getattr(config, f'{provider_upper}_FORCED_DEST', []),
-        'FORCED_ORIGIN': getattr(config, f'{provider_upper}_FORCED_ORIGIN', []),
+        "REVERSE_ARROW_LIST": getattr(
+            config, f"{provider_upper}_REVERSE_ARROW_LIST", []
+        ),
+        "IMPLIED_CONNECTIONS": getattr(
+            config, f"{provider_upper}_IMPLIED_CONNECTIONS", {}
+        ),
+        "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "CONSOLIDATED_NODES": getattr(
+            config, f"{provider_upper}_CONSOLIDATED_NODES", []
+        ),
+        "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", []),
+        "SPECIAL_RESOURCES": getattr(config, f"{provider_upper}_SPECIAL_RESOURCES", {}),
+        "SHARED_SERVICES": getattr(config, f"{provider_upper}_SHARED_SERVICES", []),
+        "AUTO_ANNOTATIONS": getattr(config, f"{provider_upper}_AUTO_ANNOTATIONS", []),
+        "EDGE_NODES": getattr(config, f"{provider_upper}_EDGE_NODES", []),
+        "FORCED_DEST": getattr(config, f"{provider_upper}_FORCED_DEST", []),
+        "FORCED_ORIGIN": getattr(config, f"{provider_upper}_FORCED_ORIGIN", []),
     }
 
 
@@ -72,9 +78,9 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    FORCED_DEST = constants['FORCED_DEST']
-    FORCED_ORIGIN = constants['FORCED_ORIGIN']
-    AUTO_ANNOTATIONS = constants['AUTO_ANNOTATIONS']
+    FORCED_DEST = constants["FORCED_DEST"]
+    FORCED_ORIGIN = constants["FORCED_ORIGIN"]
+    AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
 
     for n, connections in dict(tfdata["graphdict"]).items():
         node = helpers.get_no_module_name(n)
@@ -125,8 +131,8 @@ def check_relationship(
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    IMPLIED_CONNECTIONS = constants['IMPLIED_CONNECTIONS']
-    REVERSE_ARROW_LIST = constants['REVERSE_ARROW_LIST']
+    IMPLIED_CONNECTIONS = constants["IMPLIED_CONNECTIONS"]
+    REVERSE_ARROW_LIST = constants["REVERSE_ARROW_LIST"]
 
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
@@ -419,12 +425,14 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    SPECIAL_RESOURCES = constants['SPECIAL_RESOURCES']
+    SPECIAL_RESOURCES = constants["SPECIAL_RESOURCES"]
 
     # Get provider config and prefixes
     provider = get_primary_provider_or_default(tfdata)
     config = _get_provider_config(tfdata)
-    provider_prefixes = config.PROVIDER_PREFIX  # List of prefixes (e.g., ["azurerm_", "azuread_"])
+    provider_prefixes = (
+        config.PROVIDER_PREFIX
+    )  # List of prefixes (e.g., ["azurerm_", "azuread_"])
 
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
@@ -435,7 +443,9 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             node_name = node
         # Check if resource belongs to current provider
         resource_name = helpers.get_no_module_name(node_name)
-        is_provider_resource = any(resource_name.startswith(prefix) for prefix in provider_prefixes)
+        is_provider_resource = any(
+            resource_name.startswith(prefix) for prefix in provider_prefixes
+        )
         if is_provider_resource:
             renamed_node = helpers.check_variant(
                 node, tfdata["meta_data"].get(node_name)
@@ -462,7 +472,9 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 connection_resource_name = resource
             # Check if connection resource belongs to current provider
             connection_name = helpers.get_no_module_name(connection_resource_name)
-            is_provider_connection = any(connection_name.startswith(prefix) for prefix in provider_prefixes)
+            is_provider_connection = any(
+                connection_name.startswith(prefix) for prefix in provider_prefixes
+            )
             if is_provider_connection:
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"].get(connection_resource_name)
@@ -510,9 +522,9 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    GROUP_NODES = constants['GROUP_NODES']
-    SPECIAL_RESOURCES = constants['SPECIAL_RESOURCES']
-    SHARED_SERVICES = constants['SHARED_SERVICES']
+    GROUP_NODES = constants["GROUP_NODES"]
+    SPECIAL_RESOURCES = constants["SPECIAL_RESOURCES"]
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     target_resource = (
         helpers.consolidated_node_check(resource)
@@ -650,7 +662,7 @@ def cleanup_originals(
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    SHARED_SERVICES = constants['SHARED_SERVICES']
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     # Now remove the original resource names
     for resource in multi_resources:
@@ -695,7 +707,7 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    SPECIAL_RESOURCES = constants['SPECIAL_RESOURCES']
+    SPECIAL_RESOURCES = constants["SPECIAL_RESOURCES"]
 
     # Get the provider-specific handler module
     handler_module = resource_handlers.get_handler_module(tfdata)
@@ -892,7 +904,7 @@ def handle_count_resources(
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    SHARED_SERVICES = constants['SHARED_SERVICES']
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     # Process each resource with count attribute
     for resource in multi_resources:
@@ -1016,7 +1028,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
-    SHARED_SERVICES = constants['SHARED_SERVICES']
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     # Identify resources with count/for_each attributes
     multi_resources = [

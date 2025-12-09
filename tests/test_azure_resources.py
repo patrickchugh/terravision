@@ -21,7 +21,7 @@ from modules.resource_handlers_azure import (
     match_resources,
     match_nsg_to_subnets,
     match_nic_to_vm,
-    remove_empty_groups
+    remove_empty_groups,
 )
 from modules.provider_detector import detect_providers, get_provider_for_resource
 
@@ -37,7 +37,7 @@ class TestAzureProviderDetection:
                 "azurerm_virtual_network.test",
                 "azurerm_subnet.test",
                 "azurerm_storage_account.test",
-                "azurerm_network_security_group.test"
+                "azurerm_network_security_group.test",
             ]
         }
 
@@ -54,7 +54,7 @@ class TestAzureProviderDetection:
             "all_resource": [
                 "azuread_user.admin",
                 "azuread_group.developers",
-                "azuread_application.app"
+                "azuread_application.app",
             ]
         }
 
@@ -68,7 +68,7 @@ class TestAzureProviderDetection:
         tfdata = {
             "all_resource": [
                 "azurestack_virtual_network.vnet",
-                "azurestack_virtual_machine.vm"
+                "azurestack_virtual_machine.vm",
             ]
         }
 
@@ -80,10 +80,7 @@ class TestAzureProviderDetection:
     def test_detect_azapi_resources(self):
         """Test that AzAPI resources are detected as Azure."""
         tfdata = {
-            "all_resource": [
-                "azapi_resource.custom",
-                "azapi_update_resource.update"
-            ]
+            "all_resource": ["azapi_resource.custom", "azapi_update_resource.update"]
         }
 
         result = detect_providers(tfdata)
@@ -106,7 +103,7 @@ class TestAzureProviderDetection:
                 "azurerm_virtual_machine.vm1",
                 "azurerm_virtual_machine.vm2",
                 "aws_instance.web",
-                "random_string.id"
+                "random_string.id",
             ]
         }
 
@@ -127,7 +124,7 @@ class TestAzureResourceGrouping:
             "graphdict": {
                 "azurerm_resource_group.main": [],
                 "azurerm_virtual_network.vnet": [],
-                "azurerm_storage_account.storage": []
+                "azurerm_storage_account.storage": [],
             },
             "meta_data": {
                 "azurerm_resource_group.main": {},
@@ -136,14 +133,17 @@ class TestAzureResourceGrouping:
                 },
                 "azurerm_storage_account.storage": {
                     "resource_group_name": "azurerm_resource_group.main"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_resource_group(tfdata)
 
         # VNet should be under resource group
-        assert "azurerm_virtual_network.vnet" in result["graphdict"]["azurerm_resource_group.main"]
+        assert (
+            "azurerm_virtual_network.vnet"
+            in result["graphdict"]["azurerm_resource_group.main"]
+        )
 
     def test_vnet_subnet_hierarchy(self):
         """Test VNet-Subnet hierarchy."""
@@ -151,7 +151,7 @@ class TestAzureResourceGrouping:
             "graphdict": {
                 "azurerm_virtual_network.vnet": [],
                 "azurerm_subnet.subnet1": [],
-                "azurerm_subnet.subnet2": []
+                "azurerm_subnet.subnet2": [],
             },
             "meta_data": {
                 "azurerm_virtual_network.vnet": {},
@@ -160,15 +160,21 @@ class TestAzureResourceGrouping:
                 },
                 "azurerm_subnet.subnet2": {
                     "virtual_network_name": "azurerm_virtual_network.vnet"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_vnet(tfdata)
 
         # Both subnets should be under VNet
-        assert "azurerm_subnet.subnet1" in result["graphdict"]["azurerm_virtual_network.vnet"]
-        assert "azurerm_subnet.subnet2" in result["graphdict"]["azurerm_virtual_network.vnet"]
+        assert (
+            "azurerm_subnet.subnet1"
+            in result["graphdict"]["azurerm_virtual_network.vnet"]
+        )
+        assert (
+            "azurerm_subnet.subnet2"
+            in result["graphdict"]["azurerm_virtual_network.vnet"]
+        )
 
     def test_nsg_subnet_association(self):
         """Test NSG-Subnet association handling."""
@@ -176,24 +182,30 @@ class TestAzureResourceGrouping:
             "graphdict": {
                 "azurerm_subnet.test": [],
                 "azurerm_network_security_group.nsg": [],
-                "azurerm_subnet_network_security_group_association.assoc": []
+                "azurerm_subnet_network_security_group_association.assoc": [],
             },
             "meta_data": {
                 "azurerm_subnet.test": {},
                 "azurerm_network_security_group.nsg": {},
                 "azurerm_subnet_network_security_group_association.assoc": {
                     "subnet_id": "azurerm_subnet.test",
-                    "network_security_group_id": "azurerm_network_security_group.nsg"
-                }
-            }
+                    "network_security_group_id": "azurerm_network_security_group.nsg",
+                },
+            },
         }
 
         result = azure_handle_nsg(tfdata)
 
         # NSG should be under subnet
-        assert "azurerm_network_security_group.nsg" in result["graphdict"]["azurerm_subnet.test"]
+        assert (
+            "azurerm_network_security_group.nsg"
+            in result["graphdict"]["azurerm_subnet.test"]
+        )
         # Association should be removed
-        assert "azurerm_subnet_network_security_group_association.assoc" not in result["graphdict"]
+        assert (
+            "azurerm_subnet_network_security_group_association.assoc"
+            not in result["graphdict"]
+        )
 
 
 class TestAzureResourceHandlers:
@@ -204,9 +216,9 @@ class TestAzureResourceHandlers:
         tfdata = {
             "graphdict": {
                 "azurerm_role_assignment.reader": ["azurerm_storage_account.storage"],
-                "azurerm_storage_account.storage": []
+                "azurerm_storage_account.storage": [],
             },
-            "meta_data": {}
+            "meta_data": {},
         }
 
         result = handle_special_cases(tfdata)
@@ -219,38 +231,44 @@ class TestAzureResourceHandlers:
         tfdata = {
             "graphdict": {
                 "azurerm_subnet.app_subnet": [],
-                "azurerm_virtual_machine_scale_set.vmss": []
+                "azurerm_virtual_machine_scale_set.vmss": [],
             },
             "meta_data": {
                 "azurerm_subnet.app_subnet": {},
                 "azurerm_virtual_machine_scale_set.vmss": {
                     "network_profile": "subnet_id = azurerm_subnet.app_subnet.id"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_vmss(tfdata)
 
-        assert "azurerm_virtual_machine_scale_set.vmss" in result["graphdict"]["azurerm_subnet.app_subnet"]
+        assert (
+            "azurerm_virtual_machine_scale_set.vmss"
+            in result["graphdict"]["azurerm_subnet.app_subnet"]
+        )
 
     def test_azure_handle_appgw(self):
         """Test Application Gateway handler links to subnet."""
         tfdata = {
             "graphdict": {
                 "azurerm_subnet.appgw_subnet": [],
-                "azurerm_application_gateway.appgw": []
+                "azurerm_application_gateway.appgw": [],
             },
             "meta_data": {
                 "azurerm_subnet.appgw_subnet": {},
                 "azurerm_application_gateway.appgw": {
                     "gateway_ip_configuration": "subnet_id = azurerm_subnet.appgw_subnet.id"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_appgw(tfdata)
 
-        assert "azurerm_application_gateway.appgw" in result["graphdict"]["azurerm_subnet.appgw_subnet"]
+        assert (
+            "azurerm_application_gateway.appgw"
+            in result["graphdict"]["azurerm_subnet.appgw_subnet"]
+        )
 
     def test_azure_handle_sharedgroup(self):
         """Test shared services grouping."""
@@ -258,13 +276,13 @@ class TestAzureResourceHandlers:
             "graphdict": {
                 "azurerm_key_vault.vault": [],
                 "azurerm_storage_account.storage": [],
-                "azurerm_container_registry.acr": []
+                "azurerm_container_registry.acr": [],
             },
             "meta_data": {
                 "azurerm_key_vault.vault": {},
                 "azurerm_storage_account.storage": {},
-                "azurerm_container_registry.acr": {}
-            }
+                "azurerm_container_registry.acr": {},
+            },
         }
 
         result = azure_handle_sharedgroup(tfdata)
@@ -272,7 +290,10 @@ class TestAzureResourceHandlers:
         # Shared services group should be created
         assert "azurerm_group.shared_services" in result["graphdict"]
         # Key vault should be in shared services
-        assert "azurerm_key_vault.vault" in result["graphdict"]["azurerm_group.shared_services"]
+        assert (
+            "azurerm_key_vault.vault"
+            in result["graphdict"]["azurerm_group.shared_services"]
+        )
 
 
 class TestMatchResources:
@@ -284,7 +305,7 @@ class TestMatchResources:
             "azurerm_subnet.app~1": ["azurerm_network_security_group.nsg~1"],
             "azurerm_subnet.app~2": [],
             "azurerm_network_security_group.nsg~1": [],
-            "azurerm_network_security_group.nsg~2": []
+            "azurerm_network_security_group.nsg~2": [],
         }
 
         result = match_nsg_to_subnets(graphdict)
@@ -296,7 +317,7 @@ class TestMatchResources:
         """Test NIC-VM matching."""
         graphdict = {
             "azurerm_network_interface.nic": [],
-            "azurerm_virtual_machine.vm": []
+            "azurerm_virtual_machine.vm": [],
         }
         meta_data = {
             "azurerm_virtual_machine.vm": {
@@ -313,7 +334,7 @@ class TestMatchResources:
         graphdict = {
             "azurerm_resource_group.empty": [],
             "azurerm_virtual_network.empty": [],
-            "azurerm_storage_account.storage": []
+            "azurerm_storage_account.storage": [],
         }
 
         result = remove_empty_groups(graphdict)
@@ -334,19 +355,22 @@ class TestAzureSubnetHandling:
         tfdata = {
             "graphdict": {
                 "azurerm_subnet.web": [],
-                "azurerm_network_interface.web_nic": []
+                "azurerm_network_interface.web_nic": [],
             },
             "meta_data": {
                 "azurerm_subnet.web": {},
                 "azurerm_network_interface.web_nic": {
                     "ip_configuration": "subnet_id = azurerm_subnet.web.id"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_subnet(tfdata)
 
-        assert "azurerm_network_interface.web_nic" in result["graphdict"]["azurerm_subnet.web"]
+        assert (
+            "azurerm_network_interface.web_nic"
+            in result["graphdict"]["azurerm_subnet.web"]
+        )
 
     def test_vm_linking_through_nic(self):
         """Test VM linking to subnet through NIC."""
@@ -354,7 +378,7 @@ class TestAzureSubnetHandling:
             "graphdict": {
                 "azurerm_subnet.web": ["azurerm_network_interface.nic"],
                 "azurerm_network_interface.nic": ["azurerm_virtual_machine.vm"],
-                "azurerm_virtual_machine.vm": []
+                "azurerm_virtual_machine.vm": [],
             },
             "meta_data": {
                 "azurerm_subnet.web": {},
@@ -363,8 +387,8 @@ class TestAzureSubnetHandling:
                 },
                 "azurerm_virtual_machine.vm": {
                     "network_interface_ids": "azurerm_network_interface.nic.id"
-                }
-            }
+                },
+            },
         }
 
         result = azure_handle_subnet(tfdata)

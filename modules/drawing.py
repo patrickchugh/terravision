@@ -45,9 +45,9 @@ def _load_provider_resources(provider: str) -> None:
 
     # Map provider names to package names
     provider_packages = {
-        'aws': 'resource_classes.aws',
-        'azure': 'resource_classes.azure',
-        'gcp': 'resource_classes.gcp',
+        "aws": "resource_classes.aws",
+        "azure": "resource_classes.azure",
+        "gcp": "resource_classes.gcp",
     }
 
     package_name = provider_packages.get(provider)
@@ -72,7 +72,7 @@ def _load_provider_resources(provider: str) -> None:
 
             # Import all public names from the module into this module's namespace
             for name in dir(module):
-                if not name.startswith('_'):
+                if not name.startswith("_"):
                     obj = getattr(module, name)
                     globals()[name] = obj
 
@@ -89,6 +89,7 @@ def _load_provider_resources(provider: str) -> None:
             )
         )
         exit()
+
 
 # Module-level constants that get set per-provider in render_diagram
 # Initialize with empty defaults
@@ -131,16 +132,18 @@ def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     provider_upper = provider.upper()
 
     return {
-        'CONSOLIDATED_NODES': getattr(config, f'{provider_upper}_CONSOLIDATED_NODES', []),
-        'GROUP_NODES': getattr(config, f'{provider_upper}_GROUP_NODES', []),
-        'DRAW_ORDER': getattr(config, f'{provider_upper}_DRAW_ORDER', []),
-        'NODE_VARIANTS': getattr(config, f'{provider_upper}_NODE_VARIANTS', {}),
-        'OUTER_NODES': getattr(config, f'{provider_upper}_OUTER_NODES', []),
-        'AUTO_ANNOTATIONS': getattr(config, f'{provider_upper}_AUTO_ANNOTATIONS', []),
-        'EDGE_NODES': getattr(config, f'{provider_upper}_EDGE_NODES', []),
-        'SHARED_SERVICES': getattr(config, f'{provider_upper}_SHARED_SERVICES', []),
-        'ALWAYS_DRAW_LINE': getattr(config, f'{provider_upper}_ALWAYS_DRAW_LINE', []),
-        'NEVER_DRAW_LINE': getattr(config, f'{provider_upper}_NEVER_DRAW_LINE', []),
+        "CONSOLIDATED_NODES": getattr(
+            config, f"{provider_upper}_CONSOLIDATED_NODES", []
+        ),
+        "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "DRAW_ORDER": getattr(config, f"{provider_upper}_DRAW_ORDER", []),
+        "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", {}),
+        "OUTER_NODES": getattr(config, f"{provider_upper}_OUTER_NODES", []),
+        "AUTO_ANNOTATIONS": getattr(config, f"{provider_upper}_AUTO_ANNOTATIONS", []),
+        "EDGE_NODES": getattr(config, f"{provider_upper}_EDGE_NODES", []),
+        "SHARED_SERVICES": getattr(config, f"{provider_upper}_SHARED_SERVICES", []),
+        "ALWAYS_DRAW_LINE": getattr(config, f"{provider_upper}_ALWAYS_DRAW_LINE", []),
+        "NEVER_DRAW_LINE": getattr(config, f"{provider_upper}_NEVER_DRAW_LINE", []),
     }
 
 
@@ -560,16 +563,16 @@ def render_diagram(
     _load_provider_resources(provider)
 
     constants = _load_provider_constants(tfdata)
-    CONSOLIDATED_NODES = constants['CONSOLIDATED_NODES']
-    GROUP_NODES = constants['GROUP_NODES']
-    DRAW_ORDER = constants['DRAW_ORDER']
-    NODE_VARIANTS = constants['NODE_VARIANTS']
-    OUTER_NODES = constants['OUTER_NODES']
-    AUTO_ANNOTATIONS = constants['AUTO_ANNOTATIONS']
-    EDGE_NODES = constants['EDGE_NODES']
-    SHARED_SERVICES = constants['SHARED_SERVICES']
-    ALWAYS_DRAW_LINE = constants['ALWAYS_DRAW_LINE']
-    NEVER_DRAW_LINE = constants['NEVER_DRAW_LINE']
+    CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
+    GROUP_NODES = constants["GROUP_NODES"]
+    DRAW_ORDER = constants["DRAW_ORDER"]
+    NODE_VARIANTS = constants["NODE_VARIANTS"]
+    OUTER_NODES = constants["OUTER_NODES"]
+    AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
+    EDGE_NODES = constants["EDGE_NODES"]
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
+    ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
+    NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
 
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()

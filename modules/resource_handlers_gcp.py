@@ -180,7 +180,9 @@ def gcp_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Replace consolidated nodes with their consolidated names
     if tfdata["graphdict"].get("google_group.shared_services"):
-        for service in sorted(list(tfdata["graphdict"]["google_group.shared_services"])):
+        for service in sorted(
+            list(tfdata["graphdict"]["google_group.shared_services"])
+        ):
             if helpers.consolidated_node_check(service):
                 tfdata["graphdict"]["google_group.shared_services"] = list(
                     map(

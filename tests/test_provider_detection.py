@@ -15,7 +15,7 @@ from modules.provider_detector import (
     get_primary_provider_or_default,
     ProviderDetectionError,
     PROVIDER_PREFIXES,
-    SUPPORTED_PROVIDERS
+    SUPPORTED_PROVIDERS,
 )
 
 
@@ -58,13 +58,24 @@ class TestGetProviderForResource:
 
     def test_module_prefixed_azure_resource(self):
         """Test detection from Azure resources with module prefix."""
-        assert get_provider_for_resource("module.compute.azurerm_virtual_machine.app") == "azure"
-        assert get_provider_for_resource("module.identity.azuread_user.admin") == "azure"
+        assert (
+            get_provider_for_resource("module.compute.azurerm_virtual_machine.app")
+            == "azure"
+        )
+        assert (
+            get_provider_for_resource("module.identity.azuread_user.admin") == "azure"
+        )
 
     def test_module_prefixed_gcp_resource(self):
         """Test detection from GCP resources with module prefix."""
-        assert get_provider_for_resource("module.compute.google_compute_instance.vm") == "gcp"
-        assert get_provider_for_resource("module.storage.google_storage_bucket.data") == "gcp"
+        assert (
+            get_provider_for_resource("module.compute.google_compute_instance.vm")
+            == "gcp"
+        )
+        assert (
+            get_provider_for_resource("module.storage.google_storage_bucket.data")
+            == "gcp"
+        )
 
 
 class TestDetectProviders:
@@ -73,13 +84,9 @@ class TestDetectProviders:
     def test_detect_aws_only(self):
         """Test detection of AWS-only project."""
         tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "aws_vpc.main"
-            ],
+            "all_resource": ["aws_instance.web", "aws_s3_bucket.data", "aws_vpc.main"],
             "graphdict": {},
-            "meta_data": {}
+            "meta_data": {},
         }
 
         result = detect_providers(tfdata)
@@ -97,7 +104,7 @@ class TestDetectProviders:
                 "azurerm_resource_group.main",
                 "azurerm_virtual_machine.app",
                 "azurerm_storage_account.logs",
-                "azuread_user.admin"
+                "azuread_user.admin",
             ]
         }
 
@@ -114,7 +121,7 @@ class TestDetectProviders:
             "all_resource": [
                 "google_compute_instance.vm1",
                 "google_storage_bucket.data",
-                "google_sql_database_instance.db"
+                "google_sql_database_instance.db",
             ]
         }
 
@@ -133,7 +140,7 @@ class TestDetectProviders:
                 "aws_s3_bucket.data",
                 "aws_vpc.main",
                 "aws_subnet.private",
-                "random_string.id"  # 1 unknown out of 5 = 80% known
+                "random_string.id",  # 1 unknown out of 5 = 80% known
             ]
         }
 
@@ -152,7 +159,7 @@ class TestDetectProviders:
                 "random_string.id1",
                 "random_string.id2",
                 "null_resource.trigger1",
-                "null_resource.trigger2"
+                "null_resource.trigger2",
             ]
         }
 
@@ -180,7 +187,7 @@ class TestDetectProviders:
             "all_resource": [
                 "random_string.id",
                 "null_resource.trigger",
-                "local_file.config"
+                "local_file.config",
             ]
         }
 
@@ -208,7 +215,7 @@ class TestDetectProviders:
                 "aws_instance.web2",
                 "aws_s3_bucket.data",
                 "azurerm_virtual_machine.app",
-                "google_compute_instance.vm"
+                "google_compute_instance.vm",
             ]
         }
 
@@ -230,14 +237,10 @@ class TestValidateProviderDetection:
             "primary_provider": "aws",
             "resource_counts": {"aws": 3},
             "detection_method": "resource_prefix",
-            "confidence": 1.0
+            "confidence": 1.0,
         }
         tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "aws_vpc.main"
-            ]
+            "all_resource": ["aws_instance.web", "aws_s3_bucket.data", "aws_vpc.main"]
         }
 
         assert validate_provider_detection(result, tfdata) is True
@@ -249,13 +252,13 @@ class TestValidateProviderDetection:
             "primary_provider": "aws",
             "resource_counts": {"aws": 2},
             "detection_method": "resource_prefix",
-            "confidence": 0.7
+            "confidence": 0.7,
         }
         tfdata = {
             "all_resource": [
                 "aws_instance.web",
                 "aws_s3_bucket.data",
-                "random_string.id"  # Unknown resource
+                "random_string.id",  # Unknown resource
             ]
         }
 
@@ -268,7 +271,7 @@ class TestValidateProviderDetection:
             "primary_provider": "invalid_cloud",
             "resource_counts": {"invalid_cloud": 2},
             "detection_method": "resource_prefix",
-            "confidence": 1.0
+            "confidence": 1.0,
         }
         tfdata = {"all_resource": ["resource1", "resource2"]}
 
@@ -281,7 +284,7 @@ class TestValidateProviderDetection:
             "primary_provider": "azure",  # Not in providers list!
             "resource_counts": {"aws": 2},
             "detection_method": "resource_prefix",
-            "confidence": 1.0
+            "confidence": 1.0,
         }
         tfdata = {"all_resource": ["aws_instance.web", "aws_s3_bucket.data"]}
 
@@ -294,7 +297,7 @@ class TestValidateProviderDetection:
             "primary_provider": None,
             "resource_counts": {},
             "detection_method": "resource_prefix",
-            "confidence": 0.0
+            "confidence": 0.0,
         }
         tfdata = {"all_resource": []}
 
@@ -307,14 +310,10 @@ class TestValidateProviderDetection:
             "primary_provider": "aws",
             "resource_counts": {"aws": 5},  # Claims 5 but only 3 exist
             "detection_method": "resource_prefix",
-            "confidence": 1.0
+            "confidence": 1.0,
         }
         tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "aws_vpc.main"
-            ]
+            "all_resource": ["aws_instance.web", "aws_s3_bucket.data", "aws_vpc.main"]
         }
 
         assert validate_provider_detection(result, tfdata) is False
@@ -326,7 +325,7 @@ class TestValidateProviderDetection:
             "primary_provider": "aws",
             "resource_counts": {"aws": 2},
             "detection_method": "resource_prefix",
-            "confidence": 1.5  # Invalid: > 1.0
+            "confidence": 1.5,  # Invalid: > 1.0
         }
         tfdata = {"all_resource": ["aws_instance.web", "aws_s3_bucket.data"]}
 
@@ -343,19 +342,14 @@ class TestHelperFunctions:
     def test_get_primary_provider_or_default_with_detection(self):
         """Test getting primary provider from existing detection result."""
         tfdata = {
-            "provider_detection": {
-                "providers": ["azure"],
-                "primary_provider": "azure"
-            }
+            "provider_detection": {"providers": ["azure"], "primary_provider": "azure"}
         }
 
         assert get_primary_provider_or_default(tfdata) == "azure"
 
     def test_get_primary_provider_or_default_without_detection(self):
         """Test getting primary provider with auto-detection."""
-        tfdata = {
-            "all_resource": ["azurerm_virtual_machine.app"]
-        }
+        tfdata = {"all_resource": ["azurerm_virtual_machine.app"]}
 
         assert get_primary_provider_or_default(tfdata) == "azure"
 
@@ -371,14 +365,14 @@ class TestConstants:
 
     def test_provider_prefixes_complete(self):
         """Test that PROVIDER_PREFIXES contains expected entries."""
-        assert PROVIDER_PREFIXES['aws_'] == 'aws'
-        assert PROVIDER_PREFIXES['azurerm_'] == 'azure'
-        assert PROVIDER_PREFIXES['azuread_'] == 'azure'
-        assert PROVIDER_PREFIXES['azurestack_'] == 'azure'
-        assert PROVIDER_PREFIXES['azapi_'] == 'azure'
-        assert PROVIDER_PREFIXES['google_'] == 'gcp'
+        assert PROVIDER_PREFIXES["aws_"] == "aws"
+        assert PROVIDER_PREFIXES["azurerm_"] == "azure"
+        assert PROVIDER_PREFIXES["azuread_"] == "azure"
+        assert PROVIDER_PREFIXES["azurestack_"] == "azure"
+        assert PROVIDER_PREFIXES["azapi_"] == "azure"
+        assert PROVIDER_PREFIXES["google_"] == "gcp"
 
     def test_supported_providers_complete(self):
         """Test that SUPPORTED_PROVIDERS contains expected entries."""
-        assert set(SUPPORTED_PROVIDERS) == {'aws', 'azure', 'gcp'}
+        assert set(SUPPORTED_PROVIDERS) == {"aws", "azure", "gcp"}
         assert len(SUPPORTED_PROVIDERS) == 3

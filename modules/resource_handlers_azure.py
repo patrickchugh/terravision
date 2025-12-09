@@ -75,7 +75,10 @@ def azure_handle_resource_group(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 continue
 
             # Skip group nodes that are not VNets (VNets go directly under RG)
-            if resource_type in GROUP_NODES and resource_type != "azurerm_virtual_network":
+            if (
+                resource_type in GROUP_NODES
+                and resource_type != "azurerm_virtual_network"
+            ):
                 continue
 
             # Check metadata for resource_group_name reference
@@ -90,7 +93,9 @@ def azure_handle_resource_group(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     # For non-VNet, non-group resources that aren't in a subnet yet
                     elif resource_type not in GROUP_NODES:
                         # Check if resource is already placed in a subnet or VNet
-                        parent_list = helpers.list_of_parents(tfdata["graphdict"], resource)
+                        parent_list = helpers.list_of_parents(
+                            tfdata["graphdict"], resource
+                        )
                         in_hierarchy = any(
                             helpers.get_no_module_name(p).split(".")[0] in GROUP_NODES
                             for p in parent_list
@@ -122,9 +127,7 @@ def azure_handle_vnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         return tfdata
 
     # Find all subnets and link them to their VNets
-    subnets = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "azurerm_subnet"
-    )
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
 
     for vnet in vnets:
         vnet_name = helpers.get_no_module_name(vnet).split(".")[-1]
@@ -164,7 +167,10 @@ def azure_handle_subnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Find all subnets (excluding association resources)
     subnets = [
-        s for s in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
+        s
+        for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
         if "association" not in s
     ]
 
@@ -191,16 +197,22 @@ def azure_handle_subnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         vms = helpers.list_of_dictkeys_containing(
             tfdata["graphdict"], "azurerm_virtual_machine"
         )
-        vms.extend(helpers.list_of_dictkeys_containing(
-            tfdata["graphdict"], "azurerm_linux_virtual_machine"
-        ))
-        vms.extend(helpers.list_of_dictkeys_containing(
-            tfdata["graphdict"], "azurerm_windows_virtual_machine"
-        ))
+        vms.extend(
+            helpers.list_of_dictkeys_containing(
+                tfdata["graphdict"], "azurerm_linux_virtual_machine"
+            )
+        )
+        vms.extend(
+            helpers.list_of_dictkeys_containing(
+                tfdata["graphdict"], "azurerm_windows_virtual_machine"
+            )
+        )
 
         for vm in vms:
             # Check if VM is connected to a NIC that's in this subnet
-            vm_nic_refs = tfdata["meta_data"].get(vm, {}).get("network_interface_ids", "")
+            vm_nic_refs = (
+                tfdata["meta_data"].get(vm, {}).get("network_interface_ids", "")
+            )
             for nic in nics:
                 if nic in str(vm_nic_refs) or nic.split(".")[-1] in str(vm_nic_refs):
                     # If this NIC is in our subnet, put VM under the subnet
@@ -258,7 +270,9 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         target_subnet = None
         target_nsg = None
 
-        for subnet in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet"):
+        for subnet in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        ):
             if "association" in subnet:
                 continue
             if subnet in str(subnet_id) or subnet.split(".")[-1] in str(subnet_id):
@@ -306,7 +320,9 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         target_nic = None
         target_nsg = None
 
-        for nic in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_network_interface"):
+        for nic in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_network_interface"
+        ):
             if nic in str(nic_id) or nic.split(".")[-1] in str(nic_id):
                 target_nic = nic
                 break
@@ -347,7 +363,10 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Find subnets and load balancers
     subnets = [
-        s for s in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
+        s
+        for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
         if "association" not in s
     ]
     load_balancers = helpers.list_of_dictkeys_containing(
@@ -370,7 +389,9 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 break
 
         # Check for load balancer backend pool associations
-        lb_backend = tfdata["meta_data"][vmss].get("load_balancer_backend_address_pool_ids", "")
+        lb_backend = tfdata["meta_data"][vmss].get(
+            "load_balancer_backend_address_pool_ids", ""
+        )
         for lb in load_balancers:
             lb_name = lb.split(".")[-1]
             if lb in str(lb_backend) or lb_name in str(lb_backend):
@@ -400,7 +421,10 @@ def azure_handle_appgw(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Find subnets
     subnets = [
-        s for s in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
+        s
+        for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
         if "association" not in s
     ]
 
@@ -409,12 +433,16 @@ def azure_handle_appgw(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             continue
 
         # Check gateway_ip_configuration for subnet references
-        gateway_ip_config = tfdata["meta_data"][appgw].get("gateway_ip_configuration", "")
+        gateway_ip_config = tfdata["meta_data"][appgw].get(
+            "gateway_ip_configuration", ""
+        )
 
         # Link App Gateway to subnet
         for subnet in subnets:
             subnet_name = subnet.split(".")[-1]
-            if subnet in str(gateway_ip_config) or subnet_name in str(gateway_ip_config):
+            if subnet in str(gateway_ip_config) or subnet_name in str(
+                gateway_ip_config
+            ):
                 # App Gateway typically goes in its own subnet, add it under subnet
                 if appgw not in tfdata["graphdict"].get(subnet, []):
                     tfdata["graphdict"][subnet].append(appgw)
@@ -473,7 +501,9 @@ def azure_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Replace consolidated nodes with their consolidated names
     if tfdata["graphdict"].get("azurerm_group.shared_services"):
-        for service in sorted(list(tfdata["graphdict"]["azurerm_group.shared_services"])):
+        for service in sorted(
+            list(tfdata["graphdict"]["azurerm_group.shared_services"])
+        ):
             if helpers.consolidated_node_check(service):
                 tfdata["graphdict"]["azurerm_group.shared_services"] = list(
                     map(
@@ -514,7 +544,9 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["graphdict"] = match_nsg_to_subnets(tfdata["graphdict"])
 
     # Match NICs to VMs
-    tfdata["graphdict"] = match_nic_to_vm(tfdata["graphdict"], tfdata.get("meta_data", {}))
+    tfdata["graphdict"] = match_nic_to_vm(
+        tfdata["graphdict"], tfdata.get("meta_data", {})
+    )
 
     # Clean up orphaned resources
     tfdata["graphdict"] = remove_empty_groups(tfdata["graphdict"])
@@ -535,8 +567,14 @@ def match_nsg_to_subnets(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]
     suffix_pattern = r"~(\d+)$"
 
     # Find NSGs and subnets with numbered suffixes
-    nsgs = [k for k in graphdict.keys() if "azurerm_network_security_group" in k and "association" not in k]
-    subnets = [k for k in graphdict.keys() if "azurerm_subnet" in k and "association" not in k]
+    nsgs = [
+        k
+        for k in graphdict.keys()
+        if "azurerm_network_security_group" in k and "association" not in k
+    ]
+    subnets = [
+        k for k in graphdict.keys() if "azurerm_subnet" in k and "association" not in k
+    ]
 
     for subnet in subnets:
         subnet_match = re.search(suffix_pattern, subnet)
@@ -553,7 +591,9 @@ def match_nsg_to_subnets(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]
     return result
 
 
-def match_nic_to_vm(graphdict: Dict[str, List[str]], meta_data: Dict[str, Any]) -> Dict[str, List[str]]:
+def match_nic_to_vm(
+    graphdict: Dict[str, List[str]], meta_data: Dict[str, Any]
+) -> Dict[str, List[str]]:
     """Match NICs to VMs based on network_interface_ids reference.
 
     Args:
@@ -565,12 +605,23 @@ def match_nic_to_vm(graphdict: Dict[str, List[str]], meta_data: Dict[str, Any]) 
     """
     result = dict(graphdict)
 
-    nics = [k for k in graphdict.keys() if "azurerm_network_interface" in k and "association" not in k]
-    vms = [k for k in graphdict.keys() if any(vm_type in k for vm_type in [
-        "azurerm_virtual_machine",
-        "azurerm_linux_virtual_machine",
-        "azurerm_windows_virtual_machine"
-    ])]
+    nics = [
+        k
+        for k in graphdict.keys()
+        if "azurerm_network_interface" in k and "association" not in k
+    ]
+    vms = [
+        k
+        for k in graphdict.keys()
+        if any(
+            vm_type in k
+            for vm_type in [
+                "azurerm_virtual_machine",
+                "azurerm_linux_virtual_machine",
+                "azurerm_windows_virtual_machine",
+            ]
+        )
+    ]
 
     for vm in vms:
         if not meta_data.get(vm):

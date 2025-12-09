@@ -19,17 +19,18 @@ logger = logging.getLogger(__name__)
 
 # Module name mapping for each provider
 PROVIDER_CONFIG_MODULES = {
-    'aws': 'modules.config.cloud_config_aws',
-    'azure': 'modules.config.cloud_config_azure',
-    'gcp': 'modules.config.cloud_config_gcp'
+    "aws": "modules.config.cloud_config_aws",
+    "azure": "modules.config.cloud_config_azure",
+    "gcp": "modules.config.cloud_config_gcp",
 }
 
 # Supported providers
-SUPPORTED_PROVIDERS = ['aws', 'azure', 'gcp']
+SUPPORTED_PROVIDERS = ["aws", "azure", "gcp"]
 
 
 class ConfigurationError(Exception):
     """Raised when configuration loading fails."""
+
     pass
 
 
@@ -88,7 +89,9 @@ def load_config(provider: str) -> Any:
     try:
         # Dynamically import the configuration module
         config_module = importlib.import_module(module_name)
-        logger.info(f"Loaded configuration for provider '{provider}' from {module_name}")
+        logger.info(
+            f"Loaded configuration for provider '{provider}' from {module_name}"
+        )
         return config_module
 
     except ImportError as e:
@@ -181,10 +184,10 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
         True
     """
     required_attrs = [
-        'PROVIDER_NAME',
-        'PROVIDER_PREFIX',
-        'ICON_LIBRARY',
-        'RESOURCE_MAPPINGS'
+        "PROVIDER_NAME",
+        "PROVIDER_PREFIX",
+        "ICON_LIBRARY",
+        "RESOURCE_MAPPINGS",
     ]
 
     missing_attrs = []
@@ -202,7 +205,7 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
     return True
 
 
-def get_config_with_fallback(provider: str, fallback_provider: str = 'aws') -> Any:
+def get_config_with_fallback(provider: str, fallback_provider: str = "aws") -> Any:
     """
     Load provider configuration with fallback to another provider.
 
@@ -229,7 +232,9 @@ def get_config_with_fallback(provider: str, fallback_provider: str = 'aws') -> A
         try:
             return load_config(fallback_provider)
         except (ValueError, ConfigurationError) as fallback_error:
-            logger.error(f"Fallback to '{fallback_provider}' also failed: {fallback_error}")
+            logger.error(
+                f"Fallback to '{fallback_provider}' also failed: {fallback_error}"
+            )
             raise ConfigurationError(
                 f"Could not load config for '{provider}' and fallback to '{fallback_provider}' failed"
             ) from fallback_error
@@ -274,4 +279,4 @@ def get_aws_config() -> Any:
         >>> config = get_aws_config()
         >>> # Equivalent to: from modules import cloud_config_aws as config
     """
-    return load_config('aws')
+    return load_config("aws")

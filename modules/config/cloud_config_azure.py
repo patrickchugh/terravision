@@ -102,14 +102,30 @@ AZURE_AUTO_ANNOTATIONS = [
             "arrow": "forward",
         }
     },
-    {"azurerm_kubernetes_cluster": {"link": ["azurerm_container_registry.acr"], "arrow": "forward"}},
-    {"azurerm_app_service": {"link": ["azurerm_app_service_plan.appplan"], "arrow": "reverse"}},
+    {
+        "azurerm_kubernetes_cluster": {
+            "link": ["azurerm_container_registry.acr"],
+            "arrow": "forward",
+        }
+    },
+    {
+        "azurerm_app_service": {
+            "link": ["azurerm_app_service_plan.appplan"],
+            "arrow": "reverse",
+        }
+    },
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type
 AZURE_NODE_VARIANTS = {
-    "azurerm_virtual_machine": {"linux": "azurerm_linux_virtual_machine", "windows": "azurerm_windows_virtual_machine"},
-    "azurerm_sql_database": {"basic": "azurerm_sql_database_basic", "standard": "azurerm_sql_database_standard"},
+    "azurerm_virtual_machine": {
+        "linux": "azurerm_linux_virtual_machine",
+        "windows": "azurerm_windows_virtual_machine",
+    },
+    "azurerm_sql_database": {
+        "basic": "azurerm_sql_database_basic",
+        "standard": "azurerm_sql_database_standard",
+    },
 }
 
 # Automatically reverse arrow direction for these resources when discovered through source
@@ -122,7 +138,12 @@ AZURE_REVERSE_ARROW_LIST = [
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
-AZURE_FORCED_DEST = ["azurerm_sql_database", "azurerm_postgresql_server", "azurerm_mysql_server", "azurerm_virtual_machine"]
+AZURE_FORCED_DEST = [
+    "azurerm_sql_database",
+    "azurerm_postgresql_server",
+    "azurerm_mysql_server",
+    "azurerm_virtual_machine",
+]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
 AZURE_FORCED_ORIGIN = ["azurerm_dns_zone", "azurerm_traffic_manager_profile"]

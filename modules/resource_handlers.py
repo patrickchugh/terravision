@@ -21,11 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Provider-specific handler module registry
-HANDLER_MODULES = {
-    'aws': aws_handlers,
-    'azure': azure_handlers,
-    'gcp': gcp_handlers
-}
+HANDLER_MODULES = {"aws": aws_handlers, "azure": azure_handlers, "gcp": gcp_handlers}
 
 
 def get_handler_module(tfdata: Dict[str, Any]):
@@ -44,7 +40,9 @@ def get_handler_module(tfdata: Dict[str, Any]):
     handler_module = HANDLER_MODULES.get(provider)
 
     if not handler_module:
-        logger.warning(f"No handler module found for provider '{provider}', defaulting to AWS")
+        logger.warning(
+            f"No handler module found for provider '{provider}', defaulting to AWS"
+        )
         handler_module = aws_handlers
 
     logger.info(f"Using {provider.upper()} resource handlers")
@@ -114,7 +112,7 @@ def get_special_resource_handler(resource_type: str, provider: str) -> Callable:
         return None
 
     # Get SPECIAL_RESOURCES dict from provider module
-    special_resources = getattr(handler_module, 'SPECIAL_RESOURCES', {})
+    special_resources = getattr(handler_module, "SPECIAL_RESOURCES", {})
 
     # Find handler for this resource type (prefix match)
     for prefix, handler_name in special_resources.items():
@@ -132,7 +130,9 @@ def get_special_resource_handler(resource_type: str, provider: str) -> Callable:
     return None
 
 
-def apply_special_resource_handlers(tfdata: Dict[str, Any], provider: str) -> Dict[str, Any]:
+def apply_special_resource_handlers(
+    tfdata: Dict[str, Any], provider: str
+) -> Dict[str, Any]:
     """Apply all special resource handlers for a provider.
 
     This processes SPECIAL_RESOURCES config in order, applying each handler function.
@@ -149,23 +149,26 @@ def apply_special_resource_handlers(tfdata: Dict[str, Any], provider: str) -> Di
         logger.warning(f"No handler module for provider '{provider}'")
         return tfdata
 
-    special_resources = getattr(handler_module, 'SPECIAL_RESOURCES', {})
+    special_resources = getattr(handler_module, "SPECIAL_RESOURCES", {})
 
     # Apply handlers in order defined in config
     for prefix, handler_name in special_resources.items():
         # Check if any resources match this prefix
         matching_resources = [
-            r for r in tfdata.get("all_resource", [])
-            if r.startswith(prefix)
+            r for r in tfdata.get("all_resource", []) if r.startswith(prefix)
         ]
 
         if matching_resources:
             # Get and apply handler function
             handler_func = getattr(handler_module, handler_name, None)
             if handler_func:
-                logger.debug(f"Applying {handler_name} for {len(matching_resources)} resources")
+                logger.debug(
+                    f"Applying {handler_name} for {len(matching_resources)} resources"
+                )
                 tfdata = handler_func(tfdata)
             else:
-                logger.warning(f"Handler '{handler_name}' not found in {provider} module")
+                logger.warning(
+                    f"Handler '{handler_name}' not found in {provider} module"
+                )
 
     return tfdata

@@ -40,7 +40,7 @@ def _get_provider_config(tfdata: Dict[str, Any]) -> Any:
 
 def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) -> None:
     """Custom exception hook for unhandled errors.
-    
+
     Args:
         exc_type: Exception type
         exc_value: Exception instance
@@ -66,10 +66,10 @@ def _show_banner() -> None:
 
 def _validate_source(source: List[str]) -> None:
     """Validate source input is not a .tf file.
-    
+
     Args:
         source: List of source paths
-        
+
     Raises:
         SystemExit: If source is a .tf file
     """
@@ -86,10 +86,10 @@ def _validate_source(source: List[str]) -> None:
 
 def _load_json_source(source: str) -> Dict[str, Any]:
     """Load and parse JSON source file.
-    
+
     Args:
         source: Path to JSON file
-        
+
     Returns:
         Dictionary containing tfdata with graphdict and metadata
     """
@@ -115,14 +115,14 @@ def _process_terraform_source(
     source: List[str], varfile: List[str], workspace: str, annotate: str, debug: bool
 ) -> Dict[str, Any]:
     """Process Terraform source files and generate initial tfdata.
-    
+
     Args:
         source: List of source paths
         varfile: List of variable file paths
         workspace: Terraform workspace name
         annotate: Path to annotations file
         debug: Enable debug mode
-        
+
     Returns:
         Dictionary containing parsed Terraform data
     """
@@ -139,14 +139,16 @@ def _process_terraform_source(
     return tfdata
 
 
-def _enrich_graph_data(tfdata: Dict[str, Any], debug: bool, already_processed: bool) -> Dict[str, Any]:
+def _enrich_graph_data(
+    tfdata: Dict[str, Any], debug: bool, already_processed: bool
+) -> Dict[str, Any]:
     """Enrich graph data with relationships and transformations.
-    
+
     Args:
         tfdata: Terraform data dictionary
         debug: Enable debug mode
         already_processed: Whether data was already processed
-        
+
     Returns:
         Enriched tfdata dictionary
     """
@@ -168,7 +170,7 @@ def _enrich_graph_data(tfdata: Dict[str, Any], debug: bool, already_processed: b
 
 def _print_graph_debug(outputdict: Dict[str, Any], title: str) -> None:
     """Print formatted graph dictionary for debugging.
-    
+
     Args:
         outputdict: Dictionary to print
         title: Title to display
@@ -178,7 +180,11 @@ def _print_graph_debug(outputdict: Dict[str, Any], title: str) -> None:
 
 
 def compile_tfdata(
-    source: List[str], varfile: List[str], workspace: str, debug: bool, annotate: str = ""
+    source: List[str],
+    varfile: List[str],
+    workspace: str,
+    debug: bool,
+    annotate: str = "",
 ) -> Dict[str, Any]:
     """Compile Terraform data from source files into enriched graph dictionary.
 
@@ -322,13 +328,14 @@ def _create_ollama_client(ollama_host: str) -> ollama.Client:
     Returns:
         Configured Ollama client instance
     """
-    return ollama.Client(
-        host=ollama_host, headers={"x-some-header": "some-value"}
-    )
+    return ollama.Client(host=ollama_host, headers={"x-some-header": "some-value"})
 
 
 def _stream_ollama_llm_response(
-    client: ollama.Client, graphdict: Dict[str, Any], refinement_prompt: str, debug: bool
+    client: ollama.Client,
+    graphdict: Dict[str, Any],
+    refinement_prompt: str,
+    debug: bool,
 ) -> str:
     """Stream LLM response and return complete output.
 
@@ -368,7 +375,10 @@ def _stream_ollama_llm_response(
 
 
 def _stream_bedrock_response(
-    graphdict: Dict[str, Any], refinement_prompt: str, bedrock_endpoint: str, debug: bool
+    graphdict: Dict[str, Any],
+    refinement_prompt: str,
+    bedrock_endpoint: str,
+    debug: bool,
 ) -> str:
     """Stream Bedrock API response and return complete output.
 
@@ -413,7 +423,9 @@ def _stream_bedrock_response(
     return full_response
 
 
-def _refine_with_llm(tfdata: Dict[str, Any], aibackend: str, debug: bool) -> Dict[str, Any]:
+def _refine_with_llm(
+    tfdata: Dict[str, Any], aibackend: str, debug: bool
+) -> Dict[str, Any]:
     """Refine graph dictionary using LLM and return updated tfdata.
 
     Args:
@@ -430,7 +442,9 @@ def _refine_with_llm(tfdata: Dict[str, Any], aibackend: str, debug: bool) -> Dic
 
     # Get provider-specific refinement prompt
     refinement_prompt_attr = f"{provider.upper()}_REFINEMENT_PROMPT"
-    refinement_prompt = getattr(config, refinement_prompt_attr, config.AWS_REFINEMENT_PROMPT)
+    refinement_prompt = getattr(
+        config, refinement_prompt_attr, config.AWS_REFINEMENT_PROMPT
+    )
 
     click.echo(
         click.style(
@@ -464,13 +478,9 @@ def _check_bedrock_endpoint(bedrock_endpoint: str) -> None:
     """
     click.echo("  checking Bedrock API Gateway endpoint..")
     try:
-        response = requests.get(
-            bedrock_endpoint, timeout=5, stream=True
-        )
+        response = requests.get(bedrock_endpoint, timeout=5, stream=True)
         if response.status_code in [200, 403, 404]:
-            click.echo(
-                f"  Bedrock API Gateway reachable at: {bedrock_endpoint}"
-            )
+            click.echo(f"  Bedrock API Gateway reachable at: {bedrock_endpoint}")
             if response.status_code == 200:
                 response.close()
         else:
@@ -505,7 +515,7 @@ def preflight_check(aibackend: Optional[str] = None) -> None:
 
     if aibackend:
         # Load default AWS config for preflight (endpoints are the same across providers)
-        default_config = load_config('aws')
+        default_config = load_config("aws")
 
         if aibackend.lower() == "ollama":
             _check_ollama_server(default_config.OLLAMA_HOST)
@@ -583,7 +593,7 @@ def draw(
     avl_classes: Any,
 ) -> None:
     """Draw architecture diagram from Terraform code.
-    
+
     Args:
         debug: Enable debug mode
         source: Source paths tuple
@@ -663,7 +673,7 @@ def graphdata(
     outfile: str = "graphdata.json",
 ) -> None:
     """List cloud resources and relations as JSON.
-    
+
     Args:
         debug: Enable debug mode
         source: Source paths tuple

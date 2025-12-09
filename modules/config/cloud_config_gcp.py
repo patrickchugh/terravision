@@ -96,15 +96,36 @@ GCP_AUTO_ANNOTATIONS = [
             "arrow": "forward",
         }
     },
-    {"google_container_cluster": {"link": ["google_container_registry.gcr"], "arrow": "forward"}},
-    {"google_cloud_run_service": {"link": ["google_storage_bucket.artifacts"], "arrow": "forward"}},
-    {"google_compute_instance": {"link": ["google_logging_project_sink.logging"], "arrow": "forward"}},
+    {
+        "google_container_cluster": {
+            "link": ["google_container_registry.gcr"],
+            "arrow": "forward",
+        }
+    },
+    {
+        "google_cloud_run_service": {
+            "link": ["google_storage_bucket.artifacts"],
+            "arrow": "forward",
+        }
+    },
+    {
+        "google_compute_instance": {
+            "link": ["google_logging_project_sink.logging"],
+            "arrow": "forward",
+        }
+    },
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type
 GCP_NODE_VARIANTS = {
-    "google_compute_instance": {"n1": "google_compute_instance_n1", "n2": "google_compute_instance_n2"},
-    "google_sql_database_instance": {"mysql": "google_sql_mysql", "postgres": "google_sql_postgres"},
+    "google_compute_instance": {
+        "n1": "google_compute_instance_n1",
+        "n2": "google_compute_instance_n2",
+    },
+    "google_sql_database_instance": {
+        "mysql": "google_sql_mysql",
+        "postgres": "google_sql_postgres",
+    },
 }
 
 # Automatically reverse arrow direction for these resources when discovered through source
@@ -117,7 +138,11 @@ GCP_REVERSE_ARROW_LIST = [
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
-GCP_FORCED_DEST = ["google_sql_database_instance", "google_compute_instance", "google_storage_bucket"]
+GCP_FORCED_DEST = [
+    "google_sql_database_instance",
+    "google_compute_instance",
+    "google_storage_bucket",
+]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
 GCP_FORCED_ORIGIN = ["google_dns_managed_zone", "google_compute_global_forwarding_rule"]

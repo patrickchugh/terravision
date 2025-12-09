@@ -28,7 +28,7 @@ def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
         Falls back to AWS annotations if provider detection is missing or fails.
     """
     # Extract provider from tfdata (set by provider_detector)
-    provider = 'aws'  # Default fallback
+    provider = "aws"  # Default fallback
     if tfdata.get("provider_detection"):
         provider = tfdata["provider_detection"].get("primary_provider", "aws")
 
@@ -37,8 +37,8 @@ def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
         config = config_loader.load_config(provider)
     except (ValueError, config_loader.ConfigurationError):
         # Fallback to AWS if provider config fails to load
-        config = config_loader.load_config('aws')
-        provider = 'aws'
+        config = config_loader.load_config("aws")
+        provider = "aws"
 
     # Get the provider-specific AUTO_ANNOTATIONS constant
     # Convention: {PROVIDER}_AUTO_ANNOTATIONS (e.g., AWS_AUTO_ANNOTATIONS)
@@ -49,7 +49,7 @@ def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
         return getattr(config, annotations_attr)
     else:
         # Fallback to AWS if provider doesn't have AUTO_ANNOTATIONS
-        aws_config = config_loader.load_config('aws')
+        aws_config = config_loader.load_config("aws")
         return aws_config.AWS_AUTO_ANNOTATIONS
 
 

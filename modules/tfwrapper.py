@@ -29,7 +29,7 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 # Use AWS config as default for backward compatibility
-REVERSE_ARROW_LIST = config_loader.load_config('aws').AWS_REVERSE_ARROW_LIST
+REVERSE_ARROW_LIST = config_loader.load_config("aws").AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(
@@ -452,6 +452,7 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
     # Verify cloud resources exist (check all supported provider prefixes)
     from modules.provider_detector import PROVIDER_PREFIXES
+
     has_cloud_resources = any(
         helpers.list_of_dictkeys_containing(tfdata["graphdict"], prefix)
         for prefix in PROVIDER_PREFIXES.keys()
