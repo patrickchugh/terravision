@@ -126,7 +126,7 @@ class TestValidateConfigModule:
         # Create a mock config module with missing attributes
         class IncompleteConfig:
             PROVIDER_NAME = "Test"
-            # Missing PROVIDER_PREFIX, ICON_LIBRARY, RESOURCE_MAPPINGS
+            # Missing PROVIDER_PREFIX, ICON_LIBRARY
 
         with pytest.raises(ConfigurationError) as exc_info:
             validate_config_module(IncompleteConfig, "test")

@@ -176,7 +176,6 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
         - PROVIDER_NAME (str): Human-readable provider name
         - PROVIDER_PREFIX (str or list): Resource name prefix(es)
         - ICON_LIBRARY (str): Path to icon library
-        - RESOURCE_MAPPINGS (dict): Resource type to icon mappings
 
     Examples:
         >>> config = load_config('aws')
@@ -186,8 +185,7 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
     required_attrs = [
         "PROVIDER_NAME",
         "PROVIDER_PREFIX",
-        "ICON_LIBRARY",
-        "RESOURCE_MAPPINGS",
+        "ICON_LIBRARY"
     ]
 
     missing_attrs = []
