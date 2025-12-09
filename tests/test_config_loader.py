@@ -1,7 +1,7 @@
 """
 Unit tests for config_loader module.
 
-Tests the dynamic configuration loading functionality for multi-cloud support including:
+Tests the dynamic configuration loading functionality including:
 - Loading provider-specific configurations
 - Validation of configuration modules
 - Error handling for missing or invalid providers
@@ -11,7 +11,6 @@ Tests the dynamic configuration loading functionality for multi-cloud support in
 import pytest
 from modules.config_loader import (
     load_config,
-    get_all_configs,
     reload_config,
     validate_config_module,
     get_config_with_fallback,
@@ -77,46 +76,6 @@ class TestLoadConfig:
 
         # Same module object (Python's import cache)
         assert config1 is config2
-
-
-class TestGetAllConfigs:
-    """Tests for get_all_configs() function."""
-
-    def test_get_all_configs_single_provider(self):
-        """Test loading single provider configuration."""
-        configs = get_all_configs(['aws'])
-
-        assert len(configs) == 1
-        assert 'aws' in configs
-        assert configs['aws'].PROVIDER_NAME == 'AWS'
-
-    def test_get_all_configs_multiple_providers(self):
-        """Test loading multiple provider configurations."""
-        configs = get_all_configs(['aws', 'azure'])
-
-        assert len(configs) == 2
-        assert 'aws' in configs
-        assert 'azure' in configs
-        assert configs['aws'].PROVIDER_NAME == 'AWS'
-        assert configs['azure'].PROVIDER_NAME == 'Azure'
-
-    def test_get_all_configs_all_providers(self):
-        """Test loading all supported providers."""
-        configs = get_all_configs(['aws', 'azure', 'gcp'])
-
-        assert len(configs) == 3
-        assert set(configs.keys()) == {'aws', 'azure', 'gcp'}
-
-    def test_get_all_configs_invalid_provider_raises_error(self):
-        """Test that invalid provider in list raises error."""
-        with pytest.raises(ValueError):
-            get_all_configs(['aws', 'invalid_provider'])
-
-    def test_get_all_configs_empty_list(self):
-        """Test getting configs for empty provider list."""
-        configs = get_all_configs([])
-
-        assert configs == {}
 
 
 class TestReloadConfig:
@@ -240,9 +199,9 @@ class TestProviderConstants:
 
     def test_provider_config_modules_complete(self):
         """Test that PROVIDER_CONFIG_MODULES has entries for all providers."""
-        assert PROVIDER_CONFIG_MODULES['aws'] == 'modules.cloud_config_aws'
-        assert PROVIDER_CONFIG_MODULES['azure'] == 'modules.cloud_config_azure'
-        assert PROVIDER_CONFIG_MODULES['gcp'] == 'modules.cloud_config_gcp'
+        assert PROVIDER_CONFIG_MODULES['aws'] == 'modules.config.cloud_config_aws'
+        assert PROVIDER_CONFIG_MODULES['azure'] == 'modules.config.cloud_config_azure'
+        assert PROVIDER_CONFIG_MODULES['gcp'] == 'modules.config.cloud_config_gcp'
 
     def test_supported_providers_complete(self):
         """Test that SUPPORTED_PROVIDERS contains expected providers."""
@@ -346,27 +305,3 @@ class TestIntegrationWithProviderDetector:
         config = load_config(primary_provider)
 
         assert config.PROVIDER_NAME == 'Azure'
-
-    def test_load_all_configs_for_multi_cloud(self):
-        """Test loading all configs for multi-cloud project."""
-        from modules.provider_detector import detect_providers
-
-        # Multi-cloud project
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "azurerm_virtual_machine.app",
-                "google_compute_instance.vm"
-            ]
-        }
-
-        detection_result = detect_providers(tfdata)
-        providers = detection_result["providers"]
-
-        # Load all detected provider configs
-        configs = get_all_configs(providers)
-
-        assert len(configs) == 3
-        assert 'aws' in configs
-        assert 'azure' in configs
-        assert 'gcp' in configs

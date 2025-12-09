@@ -40,49 +40,6 @@ resource "azurerm_subnet" "test" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Network Interface
-resource "azurerm_network_interface" "test" {
-  name                = "terravision-test-nic"
-  location            = azurerm_resource_group.test.location
-  resource_group_name = azurerm_resource_group.test.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.test.id
-    private_ip_address_allocation = "Dynamic"
-  }
-}
-
-# Virtual Machine
-resource "azurerm_linux_virtual_machine" "test" {
-  name                = "terravision-test-vm"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  size                = "Standard_B1s"
-  admin_username      = "adminuser"
-
-  network_interface_ids = [
-    azurerm_network_interface.test.id,
-  ]
-
-  admin_ssh_key {
-    username   = "adminuser"
-    public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3"
-  }
-
-  os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-}
-
 # Storage Account
 resource "azurerm_storage_account" "test" {
   name                     = "terravisionteststorage"

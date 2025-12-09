@@ -89,7 +89,8 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 1. **Specification**: New features MUST include user scenarios with acceptance criteria
 2. **Testing**: Core functionality changes MUST be validated with real Terraform repositories
 3. **Documentation**: New features MUST update README with usage examples and troubleshooting
-4. **Backward Compatibility**: Changes MUST maintain compatibility with existing Terraform code and annotation files
+4. **Backward Compatibility**: Changes MUST maintain compatibility with existing Terraform code, Graph Transformation logic and annotation files. All deterministic JSON output should pass the unit tests to ensure the same values are produced with new code. 
+5. Format and location changes of config files are permitted when new cloud providers are introduced or where necessary.
 
 ### Code Review Requirements
 
@@ -102,7 +103,7 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 
 - **RC-001**: Each release MUST increment version following semantic versioning (currently 0.8)
 - **RC-002**: Breaking changes to annotation YAML format require migration guide
-- **RC-003**: New cloud provider support requires complete icon library (200+ services for production-ready status)
+- **RC-003**: New cloud provider support requires icon library with the top 30 services ready for use
 - **RC-004**: Performance regressions >20% on reference repositories block release
 
 ## Governance

@@ -35,9 +35,34 @@ class ProviderDetectionError(Exception):
     pass
 
 
-# Type Aliases
-ProviderDetectionResult = Dict[str, Any]
-ResourcesByProvider = Dict[str, Any]
+def _extract_resource_names(all_resources: Any) -> List[str]:
+    """
+    Extract flat list of resource names from all_resource structure.
+
+    The all_resource structure is a dict with file paths as keys and lists of
+    resource dicts as values: {"file.tf": [{"aws_instance": {...}}, ...]}
+
+    Args:
+        all_resources: The all_resource structure (dict or list for backward compatibility)
+
+    Returns:
+        Flat list of resource names (e.g., ["aws_instance.web", "azurerm_vm.app"])
+    """
+    resource_names = []
+    if isinstance(all_resources, dict):
+        for _file_path, resource_list in all_resources.items():
+            if isinstance(resource_list, list):
+                for resource_item in resource_list:
+                    if isinstance(resource_item, dict):
+                        # Resource item is a dict like {"aws_instance": {...}}
+                        resource_names.extend(resource_item.keys())
+                    elif isinstance(resource_item, str):
+                        # Sometimes might be a simple string
+                        resource_names.append(resource_item)
+    elif isinstance(all_resources, list):
+        # Backward compatibility: handle flat list format
+        resource_names = all_resources
+    return resource_names
 
 
 def get_provider_for_resource(resource_name: str) -> str:
@@ -77,7 +102,7 @@ def get_provider_for_resource(resource_name: str) -> str:
     return 'unknown'
 
 
-def detect_providers(tfdata: Dict[str, Any]) -> ProviderDetectionResult:
+def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     Detect all cloud providers used in Terraform project.
 
@@ -91,7 +116,7 @@ def detect_providers(tfdata: Dict[str, Any]) -> ProviderDetectionResult:
             - meta_data (Dict): Resource metadata
 
     Returns:
-        ProviderDetectionResult dictionary containing:
+        Dict[str, Any] dictionary containing:
             - providers (List[str]): List of detected providers
             - primary_provider (str): Provider with most resources
             - resource_counts (Dict[str, int]): Resource count per provider
@@ -117,9 +142,10 @@ def detect_providers(tfdata: Dict[str, Any]) -> ProviderDetectionResult:
     if "all_resource" not in tfdata:
         raise ValueError("tfdata missing required key 'all_resource'")
 
-    all_resources = tfdata.get("all_resource", [])
+    all_resources = tfdata.get("all_resource", {})
+    resource_names = _extract_resource_names(all_resources)
 
-    if not all_resources:
+    if not resource_names:
         logger.warning("No resources found in tfdata, defaulting to AWS")
         return {
             "providers": ["aws"],
@@ -132,7 +158,7 @@ def detect_providers(tfdata: Dict[str, Any]) -> ProviderDetectionResult:
     # Count resources per provider
     resource_counts: Dict[str, int] = {}
 
-    for resource_name in all_resources:
+    for resource_name in resource_names:
         provider = get_provider_for_resource(resource_name)
         resource_counts[provider] = resource_counts.get(provider, 0) + 1
 
@@ -219,92 +245,8 @@ def _calculate_confidence(resource_counts: Dict[str, int], total_resources: int)
         return 0.4
 
 
-def filter_resources_by_provider(
-    tfdata: Dict[str, Any],
-    provider: str
-) -> ResourcesByProvider:
-    """
-    Extract subset of resources belonging to specific provider.
-
-    Args:
-        tfdata: Full Terraform data dictionary containing:
-            - all_resource (List[str]): All resource names
-            - graphdict (Dict): Resource relationship graph
-            - meta_data (Dict): Resource metadata
-        provider: Provider to filter ('aws' | 'azure' | 'gcp')
-
-    Returns:
-        ResourcesByProvider dictionary containing:
-            - provider (str): Provider name
-            - resources (List[str]): Resource keys for this provider
-            - graphdict (Dict[str, List[str]]): Filtered relationship graph
-            - metadata (Dict[str, Dict]): Filtered metadata
-
-    Raises:
-        ValueError: If provider not in SUPPORTED_PROVIDERS
-
-    Examples:
-        >>> tfdata = {
-        ...     "all_resource": ["aws_instance.web", "azurerm_vm.app"],
-        ...     "graphdict": {"aws_instance.web": [], "azurerm_vm.app": []},
-        ...     "meta_data": {"aws_instance.web": {}, "azurerm_vm.app": {}}
-        ... }
-        >>> aws_resources = filter_resources_by_provider(tfdata, "aws")
-        >>> len(aws_resources["resources"])
-        1
-    """
-    # Validate provider
-    if provider not in SUPPORTED_PROVIDERS:
-        raise ValueError(
-            f"Provider '{provider}' not supported. "
-            f"Must be one of: {', '.join(SUPPORTED_PROVIDERS)}"
-        )
-
-    all_resources = tfdata.get("all_resource", [])
-    graphdict = tfdata.get("graphdict", {})
-    meta_data = tfdata.get("meta_data", {})
-
-    # Filter resources for this provider
-    filtered_resources = [
-        resource_name for resource_name in all_resources
-        if get_provider_for_resource(resource_name) == provider
-    ]
-
-    # Build filtered graphdict (only include edges between filtered resources)
-    filtered_graphdict = {}
-    for resource_name in filtered_resources:
-        if resource_name in graphdict:
-            # Only include dependencies that are also in filtered resources
-            dependencies = [
-                dep for dep in graphdict[resource_name]
-                if dep in filtered_resources
-            ]
-            filtered_graphdict[resource_name] = dependencies
-        else:
-            filtered_graphdict[resource_name] = []
-
-    # Build filtered metadata
-    filtered_metadata = {
-        resource_name: meta_data.get(resource_name, {})
-        for resource_name in filtered_resources
-    }
-
-    result = {
-        "provider": provider,
-        "resources": filtered_resources,
-        "graphdict": filtered_graphdict,
-        "metadata": filtered_metadata
-    }
-
-    logger.info(
-        f"Filtered {len(filtered_resources)} resources for provider '{provider}'"
-    )
-
-    return result
-
-
 def validate_provider_detection(
-    result: ProviderDetectionResult,
+    result: Dict[str, Any],
     tfdata: Dict[str, Any]
 ) -> bool:
     """
@@ -371,11 +313,15 @@ def validate_provider_detection(
         # Check 5: Resource counts sum matches total (allowing for unknown resources)
         resource_counts = result.get("resource_counts", {})
         total_detected = sum(resource_counts.values())
-        total_actual = len(tfdata.get("all_resource", []))
+
+        # Extract flat list of resource names
+        all_resources = tfdata.get("all_resource", {})
+        resource_names = _extract_resource_names(all_resources)
+        total_actual = len(resource_names)
 
         # Count unknown resources separately
         unknown_count = 0
-        for resource_name in tfdata.get("all_resource", []):
+        for resource_name in resource_names:
             if get_provider_for_resource(resource_name) == 'unknown':
                 unknown_count += 1
 
@@ -424,23 +370,3 @@ def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
         return "aws"
 
 
-def has_multiple_providers(tfdata: Dict[str, Any]) -> bool:
-    """
-    Check if Terraform project uses multiple cloud providers.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        True if multiple providers detected, False otherwise
-    """
-    if "provider_detection" in tfdata:
-        providers = tfdata["provider_detection"]["providers"]
-        return len(providers) > 1
-
-    # Try to detect on-the-fly
-    try:
-        result = detect_providers(tfdata)
-        return len(result["providers"]) > 1
-    except (ValueError, ProviderDetectionError):
-        return False

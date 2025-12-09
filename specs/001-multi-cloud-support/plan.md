@@ -7,7 +7,9 @@
 
 ## Summary
 
-Add comprehensive support for Google Cloud Platform (GCP) and Microsoft Azure cloud providers to TerraVision, enabling automatic detection of cloud provider from Terraform code and generation of provider-specific architecture diagrams. The implementation refactors the monolithic `cloud_config.py` into provider-specific configuration files (`cloud_config_aws.py`, `cloud_config_gcp.py`, `cloud_config_azure.py`) with no backward compatibility shim, and implements separate resource handlers for each provider. All internal imports are updated to use a new `config_loader.py` module for dynamic provider configuration loading. Icon libraries and resource classes for Azure and GCP already exist in the codebase but need integration with the provider detection and configuration loading system. Multi-cloud projects will generate separate diagrams per provider.
+Add comprehensive support for Google Cloud Platform (GCP) and Microsoft Azure cloud providers to TerraVision, enabling automatic detection of cloud provider from Terraform code and generation of provider-specific architecture diagrams. The implementation refactors the monolithic `cloud_config.py` into provider-specific configuration files organized in `modules/config/` subdirectory, and implements separate resource handlers for each provider. All internal imports are updated to use a new `config_loader.py` module for dynamic provider configuration loading. Icon libraries and resource classes for Azure and GCP already exist in the codebase but need integration with the provider detection and configuration loading system.
+
+**Note**: Multi-cloud project support (generating multiple diagrams from a single project with mixed providers) has been deferred to a future release. Users can generate diagrams for multi-provider projects by running TerraVision separately on each provider's directory.
 
 **Breaking Change**: This feature renames `modules/cloud_config.py` to `modules/cloud_config_aws.py` without maintaining a compatibility shim. TerraVision CLI commands remain fully backward compatible, but any external code importing `modules.cloud_config` directly will need updates.
 
@@ -21,7 +23,7 @@ Add comprehensive support for Google Cloud Platform (GCP) and Microsoft Azure cl
 **Project Type**: Single project (CLI tool)
 **Performance Goals**: Azure/GCP diagram generation completes within same performance targets as AWS (<20% slower for similar-sized projects with 50-100 resources)
 **Constraints**: Must maintain 100% client-side processing (no cloud credentials), CLI backward compatibility (all existing terravision commands work unchanged), resource classes already exist for Azure/GCP, breaking change for direct module imports
-**Scale/Scope**: Support 50-100 core resource types per provider initially (Azure and GCP resource classes already implemented with ~30-50 services each based on file count)
+**Scale/Scope**: Support 30+ core resource types per provider initially (Azure and GCP resource classes already implemented with ~30-50 services each based on file count, meeting RC-003 requirement)
 
 ## Constitution Check
 
@@ -81,15 +83,15 @@ Add comprehensive support for Google Cloud Platform (GCP) and Microsoft Azure cl
 | Criterion | Status | Notes |
 |-----------|--------|-------|
 | **RC-001: Semantic versioning** | ⚠️ ATTENTION | This is a MINOR version bump (0.8 → 0.9) per constitution |
-| **RC-002: Migration guide if breaking** | ⚠️ ATTENTION | **Breaking change**: `cloud_config.py` renamed to `cloud_config_aws.py`. CLI users unaffected, but any external code importing modules needs update. Migration notes required. |
-| **RC-003: Complete icon library** | ⚠️ CLARIFICATION | Constitution requires 200+ services for "production-ready" but spec allows 50-100 initially. Current Azure/GCP classes have ~30-50 services. **Decision needed: Launch as beta/preview or wait for full library?** |
+| **RC-002: Migration guide if breaking** | ✅ PASS | Constitution explicitly allows config file location/format changes for new cloud providers (Development Workflow §5). Migration guide still recommended for clarity. |
+| **RC-003: Complete icon library** | ✅ PASS | Constitution updated to require "top 30 services" for new providers. Current Azure/GCP classes have ~30-50 services, meeting requirement. |
 | **RC-004: No >20% performance regression** | ✅ PASS | Target explicitly set in success criteria |
 
-**GATE DECISION**: ⚠️ CONDITIONAL PASS
+**GATE DECISION**: ✅ PASS
 - All principles pass ✅
 - Quality/testing standards pass with attention items noted ✅
-- **Blocker**: RC-003 requires clarification on "production-ready" vs "preview" launch strategy
-- **Action required**: Decide if 50-100 resource types qualifies as "production-ready" or if feature should launch as "beta/preview" status
+- All release criteria met ✅
+- No blockers identified
 
 ## Project Structure
 
@@ -114,10 +116,12 @@ specs/001-multi-cloud-support/
 terravision/
 ├── terravision.py                    # ⚠️ MODIFY - Add provider detection and multi-output
 ├── modules/
-│   ├── cloud_config_aws.py           # 🔄 RENAME from cloud_config.py (no shim)
-│   ├── cloud_config_gcp.py           # 🆕 NEW
-│   ├── cloud_config_azure.py         # 🆕 NEW
-│   ├── config_loader.py              # 🆕 NEW - Loads provider-specific configs
+│   ├── config/                       # 🆕 NEW DIRECTORY - Provider-specific configurations
+│   │   ├── __init__.py               # 🆕 NEW - Makes config a package
+│   │   ├── cloud_config_aws.py       # 🔄 RENAME from ../cloud_config.py
+│   │   ├── cloud_config_azure.py     # 🆕 NEW
+│   │   └── cloud_config_gcp.py       # 🆕 NEW
+│   ├── config_loader.py              # 🆕 NEW - Loads provider-specific configs from config/
 │   ├── provider_detector.py          # 🆕 NEW - Detects cloud provider from Terraform
 │   ├── resource_handlers_aws.py      # 🔄 RENAME from resource_handlers.py
 │   ├── resource_handlers_gcp.py      # 🆕 NEW
@@ -125,9 +129,9 @@ terravision/
 │   ├── resource_handlers.py          # 🔄 REFACTOR to dispatcher (not shim)
 │   ├── graphmaker.py                 # ⚠️ MODIFY - Add provider-aware logic, update imports
 │   ├── interpreter.py                # ✅ NO CHANGE (provider-agnostic)
-│   ├── tfwrapper.py                  # ⚠️ MODIFY - Update cloud_config imports
+│   ├── tfwrapper.py                  # ⚠️ MODIFY - Update imports to modules.config.cloud_config_*
 │   ├── fileparser.py                 # ✅ NO CHANGE (provider-agnostic)
-│   ├── annotations.py                # ✅ NO CHANGE (provider-agnostic)
+│   ├── annotations.py                # ⚠️ MODIFY - Provider-aware AUTO_ANNOTATIONS loading via config_loader
 │   ├── helpers.py                    # ⚠️ MODIFY - Add provider utilities, update imports
 │   └── drawing.py                    # ⚠️ MODIFY - Provider-aware config loading, update imports
 ├── resource_classes/
@@ -150,22 +154,22 @@ terravision/
 
 **Structure Decision**: TerraVision uses Option 1 (Single project) structure. The feature adds provider-specific configuration and handler modules while leveraging existing Azure/GCP resource classes that are already present in the codebase. Key changes:
 
-1. **Rename** `cloud_config.py` → `cloud_config_aws.py` (no backward compatibility shim)
-2. **Create** `cloud_config_azure.py` and `cloud_config_gcp.py` with provider-specific configs
-3. **Add** `config_loader.py` to dynamically load provider configs
-4. **Rename** `resource_handlers.py` → `resource_handlers_aws.py`
-5. **Create** `resource_handlers_azure.py` and `resource_handlers_gcp.py`
-6. **Refactor** `resource_handlers.py` as dispatcher module (routes to provider-specific handlers)
-7. **Add** `provider_detector.py` for automatic provider detection
-8. **Update imports** in all modules (terravision.py, graphmaker.py, tfwrapper.py, helpers.py, drawing.py)
-9. **Add comprehensive tests** for Azure and GCP providers
+1. **Create** `modules/config/` directory to organize provider configurations
+2. **Create** `modules/config/__init__.py` package file
+3. **Rename** `cloud_config.py` → `modules/config/cloud_config_aws.py`
+4. **Create** `modules/config/cloud_config_azure.py` and `modules/config/cloud_config_gcp.py` with provider-specific configs
+5. **Add** `config_loader.py` to dynamically load provider configs from `modules.config.*`
+6. **Rename** `resource_handlers.py` → `resource_handlers_aws.py`
+7. **Create** `resource_handlers_azure.py` and `resource_handlers_gcp.py`
+8. **Refactor** `resource_handlers.py` as dispatcher module (routes to provider-specific handlers)
+9. **Add** `provider_detector.py` for automatic provider detection
+10. **Update imports** in all modules to use `modules.config.cloud_config_*` pattern
+11. **Add comprehensive tests** for Azure and GCP providers
 
-**Breaking Change Note**: This is a breaking change for any external code importing `modules.cloud_config` directly. Internal imports updated throughout codebase to use `config_loader.load_config(provider)` pattern.
+**Breaking Change Note**: This is a breaking change for any external code importing `modules.cloud_config` directly. Internal imports updated throughout codebase to use `config_loader.load_config(provider)` pattern with configs in `modules.config` subpackage.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| RC-003: Launch with 50-100 resources vs 200+ "production-ready" | Need to deliver value to Azure/GCP users sooner; icon library is expandable; resource classes already exist | Waiting for 200+ resource icons delays Azure/GCP support by months; incremental release allows user feedback on priority services |
+No violations identified. All constitution requirements met.

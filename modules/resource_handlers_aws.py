@@ -5,7 +5,7 @@ EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 """
 
 from typing import Dict, List, Any
-import modules.cloud_config_aws as cloud_config
+import modules.config.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 from ast import literal_eval
 import re

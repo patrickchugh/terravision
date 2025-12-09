@@ -1,10 +1,8 @@
 """
 Unit tests for provider_detector module.
 
-Tests the multi-cloud provider detection functionality including:
+Tests the provider detection functionality including:
 - Single provider detection (AWS, Azure, GCP)
-- Multi-cloud provider detection
-- Resource filtering by provider
 - Validation of detection results
 - Edge cases and error handling
 """
@@ -13,10 +11,8 @@ import pytest
 from modules.provider_detector import (
     detect_providers,
     get_provider_for_resource,
-    filter_resources_by_provider,
     validate_provider_detection,
     get_primary_provider_or_default,
-    has_multiple_providers,
     ProviderDetectionError,
     PROVIDER_PREFIXES,
     SUPPORTED_PROVIDERS
@@ -129,46 +125,6 @@ class TestDetectProviders:
         assert result["resource_counts"]["gcp"] == 3
         assert result["confidence"] == 1.0
 
-    def test_detect_multi_cloud_aws_azure(self):
-        """Test detection of AWS + Azure multi-cloud project."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "azurerm_virtual_machine.app",
-                "azurerm_storage_account.logs"
-            ]
-        }
-
-        result = detect_providers(tfdata)
-
-        assert set(result["providers"]) == {"aws", "azure"}
-        assert result["primary_provider"] in ["aws", "azure"]  # Either is valid (tied)
-        assert result["resource_counts"]["aws"] == 2
-        assert result["resource_counts"]["azure"] == 2
-        assert result["confidence"] == 1.0
-
-    def test_detect_multi_cloud_all_three(self):
-        """Test detection of AWS + Azure + GCP project."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "azurerm_virtual_machine.app",
-                "google_compute_instance.vm1",
-                "google_storage_bucket.data"
-            ]
-        }
-
-        result = detect_providers(tfdata)
-
-        assert set(result["providers"]) == {"aws", "azure", "gcp"}
-        assert result["primary_provider"] in ["aws", "gcp"]  # aws=2, azure=1, gcp=2
-        assert result["resource_counts"]["aws"] == 2
-        assert result["resource_counts"]["azure"] == 1
-        assert result["resource_counts"]["gcp"] == 2
-        assert result["confidence"] == 1.0
-
     def test_detect_with_unknown_resources_high_confidence(self):
         """Test detection with some unknown resources (>80% known)."""
         tfdata = {
@@ -264,142 +220,6 @@ class TestDetectProviders:
         assert result["resource_counts"]["gcp"] == 1
 
 
-class TestFilterResourcesByProvider:
-    """Tests for filter_resources_by_provider() function."""
-
-    def test_filter_aws_resources(self):
-        """Test filtering AWS resources from multi-cloud project."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "azurerm_virtual_machine.app",
-                "google_compute_instance.vm"
-            ],
-            "graphdict": {
-                "aws_instance.web": ["aws_s3_bucket.data"],
-                "aws_s3_bucket.data": [],
-                "azurerm_virtual_machine.app": [],
-                "google_compute_instance.vm": []
-            },
-            "meta_data": {
-                "aws_instance.web": {"instance_type": "t2.micro"},
-                "aws_s3_bucket.data": {"bucket": "my-bucket"},
-                "azurerm_virtual_machine.app": {"size": "Standard_B1s"},
-                "google_compute_instance.vm": {"machine_type": "e2-micro"}
-            }
-        }
-
-        result = filter_resources_by_provider(tfdata, "aws")
-
-        assert result["provider"] == "aws"
-        assert len(result["resources"]) == 2
-        assert "aws_instance.web" in result["resources"]
-        assert "aws_s3_bucket.data" in result["resources"]
-        assert "aws_instance.web" in result["graphdict"]
-        assert "aws_instance.web" in result["metadata"]
-        assert "azurerm_virtual_machine.app" not in result["resources"]
-
-    def test_filter_azure_resources(self):
-        """Test filtering Azure resources from multi-cloud project."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "azurerm_virtual_machine.app",
-                "azurerm_storage_account.logs"
-            ],
-            "graphdict": {
-                "aws_instance.web": [],
-                "azurerm_virtual_machine.app": ["azurerm_storage_account.logs"],
-                "azurerm_storage_account.logs": []
-            },
-            "meta_data": {}
-        }
-
-        result = filter_resources_by_provider(tfdata, "azure")
-
-        assert result["provider"] == "azure"
-        assert len(result["resources"]) == 2
-        assert "azurerm_virtual_machine.app" in result["resources"]
-        assert "azurerm_storage_account.logs" in result["resources"]
-        assert "aws_instance.web" not in result["resources"]
-
-    def test_filter_gcp_resources(self):
-        """Test filtering GCP resources from multi-cloud project."""
-        tfdata = {
-            "all_resource": [
-                "google_compute_instance.vm",
-                "google_storage_bucket.data",
-                "aws_instance.web"
-            ],
-            "graphdict": {},
-            "meta_data": {}
-        }
-
-        result = filter_resources_by_provider(tfdata, "gcp")
-
-        assert result["provider"] == "gcp"
-        assert len(result["resources"]) == 2
-        assert "google_compute_instance.vm" in result["resources"]
-        assert "google_storage_bucket.data" in result["resources"]
-
-    def test_filter_invalid_provider_raises_error(self):
-        """Test that filtering with invalid provider raises ValueError."""
-        tfdata = {"all_resource": ["aws_instance.web"]}
-
-        with pytest.raises(ValueError) as exc_info:
-            filter_resources_by_provider(tfdata, "invalid_provider")
-
-        assert "not supported" in str(exc_info.value)
-
-    def test_filter_no_matching_resources_returns_empty(self):
-        """Test that filtering with no matches returns empty result."""
-        tfdata = {
-            "all_resource": ["aws_instance.web", "aws_s3_bucket.data"],
-            "graphdict": {},
-            "meta_data": {}
-        }
-
-        result = filter_resources_by_provider(tfdata, "azure")
-
-        assert result["provider"] == "azure"
-        assert len(result["resources"]) == 0
-        assert result["graphdict"] == {}
-        assert result["metadata"] == {}
-
-    def test_filter_preserves_cross_provider_edges(self):
-        """Test that cross-provider dependencies are removed from graphdict."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "azurerm_virtual_machine.app"
-            ],
-            "graphdict": {
-                "aws_instance.web": ["azurerm_virtual_machine.app"],  # Cross-provider edge
-                "azurerm_virtual_machine.app": []
-            },
-            "meta_data": {}
-        }
-
-        aws_result = filter_resources_by_provider(tfdata, "aws")
-
-        # Cross-provider dependency should be filtered out
-        assert aws_result["graphdict"]["aws_instance.web"] == []
-
-    def test_filter_with_missing_graphdict_key(self):
-        """Test filtering when resource not in graphdict."""
-        tfdata = {
-            "all_resource": ["aws_instance.web"],
-            "graphdict": {},  # Resource not in graphdict
-            "meta_data": {}
-        }
-
-        result = filter_resources_by_provider(tfdata, "aws")
-
-        # Should create empty list for missing resource
-        assert result["graphdict"]["aws_instance.web"] == []
-
-
 class TestValidateProviderDetection:
     """Tests for validate_provider_detection() function."""
 
@@ -417,25 +237,6 @@ class TestValidateProviderDetection:
                 "aws_instance.web",
                 "aws_s3_bucket.data",
                 "aws_vpc.main"
-            ]
-        }
-
-        assert validate_provider_detection(result, tfdata) is True
-
-    def test_validate_multi_cloud_success(self):
-        """Test validation of multi-cloud detection result."""
-        result = {
-            "providers": ["aws", "azure"],
-            "primary_provider": "aws",
-            "resource_counts": {"aws": 2, "azure": 1},
-            "detection_method": "resource_prefix",
-            "confidence": 1.0
-        }
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "aws_s3_bucket.data",
-                "azurerm_virtual_machine.app"
             ]
         }
 
@@ -563,39 +364,6 @@ class TestHelperFunctions:
         tfdata = {"all_resource": []}
 
         assert get_primary_provider_or_default(tfdata) == "aws"
-
-    def test_has_multiple_providers_true(self):
-        """Test detecting multiple providers."""
-        tfdata = {
-            "provider_detection": {
-                "providers": ["aws", "azure"],
-                "primary_provider": "aws"
-            }
-        }
-
-        assert has_multiple_providers(tfdata) is True
-
-    def test_has_multiple_providers_false(self):
-        """Test detecting single provider."""
-        tfdata = {
-            "provider_detection": {
-                "providers": ["aws"],
-                "primary_provider": "aws"
-            }
-        }
-
-        assert has_multiple_providers(tfdata) is False
-
-    def test_has_multiple_providers_with_auto_detection(self):
-        """Test auto-detecting multiple providers."""
-        tfdata = {
-            "all_resource": [
-                "aws_instance.web",
-                "azurerm_virtual_machine.app"
-            ]
-        }
-
-        assert has_multiple_providers(tfdata) is True
 
 
 class TestConstants:

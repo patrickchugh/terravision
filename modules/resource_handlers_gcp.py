@@ -5,7 +5,7 @@ firewall rules, load balancers, and other GCP-specific relationships.
 """
 
 from typing import Dict, List, Any
-import modules.cloud_config_gcp as cloud_config
+import modules.config.cloud_config_gcp as cloud_config
 import modules.helpers as helpers
 from ast import literal_eval
 import re

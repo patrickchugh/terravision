@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 import ollama
+import requests
 import click
 
 import modules.annotations as annotations
@@ -604,7 +605,15 @@ def draw(
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend:
         tfdata = _refine_with_llm(tfdata, aibackend, debug)
-    drawing.render_diagram(tfdata, show, simplified, outfile, format, source)
+
+    # Add provider suffix to output filename for non-AWS providers
+    final_outfile = outfile
+    if tfdata.get("provider_detection"):
+        provider = tfdata["provider_detection"].get("primary_provider", "aws")
+        if provider != "aws" and not outfile.endswith(f"-{provider}"):
+            final_outfile = f"{outfile}-{provider}"
+
+    drawing.render_diagram(tfdata, show, simplified, final_outfile, format, source)
 
 
 @cli.command()

@@ -9,8 +9,8 @@
 
 This document provides an actionable task list for implementing multi-cloud provider support (Azure and GCP) in TerraVision. Tasks are organized by user story to enable independent implementation and parallel execution.
 
-**Total Tasks**: 52
-**MVP Scope**: User Story 1 (Azure Support) - 22 tasks
+**Total Tasks**: 104 (updated to include config/ directory structure, provider detection error handling, and AI refinement validation; multi-cloud support deferred to future release)
+**MVP Scope**: User Story 1 (Azure Support) - Tasks T001-T049 plus validation tasks
 **Estimated Completion**: Incremental delivery per user story
 
 ---
@@ -23,8 +23,9 @@ This document provides an actionable task list for implementing multi-cloud prov
 2. **Phase 2 (Foundational)**: Provider detection and configuration loading - *Blocking for all stories*
 3. **Phase 3 (US1 - P1)**: Azure diagram generation - *MVP deliverable, independently testable*
 4. **Phase 4 (US2 - P2)**: GCP diagram generation - *Independent of US1, can be parallel*
-5. **Phase 5 (US3 - P3)**: Multi-cloud project support - *Depends on US1 + US2*
-6. **Phase 6 (Polish)**: Documentation, testing, and release preparation
+5. **Phase 5 (Polish)**: Documentation, testing, and release preparation
+
+**Note**: Multi-cloud project support (originally Phase 5/US3) has been deferred to a future release. Users can still generate diagrams for multi-provider projects by running TerraVision separately on each provider's directory.
 
 ### Parallelization Opportunities
 
@@ -46,13 +47,15 @@ This document provides an actionable task list for implementing multi-cloud prov
 - [ ] T001 Create git branch `001-multi-cloud-support` from main
 - [ ] T002 Backup existing `modules/cloud_config.py` for reference during refactoring
 - [ ] T003 Backup existing `modules/resource_handlers.py` for reference during refactoring
+- [ ] T003a Create `modules/config/` directory to organize provider-specific configurations
+- [ ] T003b Create `modules/config/__init__.py` to make config a Python package
 - [ ] T004 Create test fixtures directory structure: `tests/fixtures/azure_terraform/` and `tests/fixtures/gcp_terraform/`
 - [ ] T005 [P] Create sample Azure Terraform fixture in `tests/fixtures/azure_terraform/main.tf` (VM + VNet + Storage Account)
 - [ ] T006 [P] Create sample GCP Terraform fixture in `tests/fixtures/gcp_terraform/main.tf` (Compute Instance + VPC + Cloud Storage)
-- [ ] T007 [P] Create sample multi-cloud Terraform fixture in `tests/fixtures/multi_cloud/main.tf` (AWS + Azure resources)
 
 **Completion Criteria**:
 - Branch created and checked out
+- `modules/config/` directory created with `__init__.py`
 - Test fixture directories exist with sample Terraform code
 - Original files backed up for reference
 
@@ -72,10 +75,12 @@ This document provides an actionable task list for implementing multi-cloud prov
 - [ ] T010 Implement `get_provider_for_resource(resource_name)` function in `modules/provider_detector.py` (extract resource type, match prefix)
 - [ ] T011 Implement `filter_resources_by_provider(tfdata, provider)` function in `modules/provider_detector.py` (filter graphdict and metadata)
 - [ ] T012 Implement `validate_provider_detection(result, tfdata)` function in `modules/provider_detector.py` (validation checks from contract)
-- [ ] T013 Create `modules/config_loader.py` with `load_config(provider)` function (dynamic import based on provider name)
+- [ ] T013 Create `modules/config_loader.py` with `load_config(provider)` function (dynamic import from `modules.config.cloud_config_<provider>`)
 - [ ] T014 Add `ProviderDetectionError` exception class to `modules/provider_detector.py`
-- [ ] T015 Rename `modules/cloud_config.py` to `modules/cloud_config_aws.py` (git mv to preserve history)
-- [ ] T016 Update all AWS config variable names in `modules/cloud_config_aws.py` (verify AWS_ prefix on all variables)
+- [ ] T014a Implement no-provider-detected handling in `modules/provider_detector.py` - raise ProviderDetectionError with user-friendly message when no cloud resources found
+- [ ] T014b Add error handling in `terravision.py` to catch ProviderDetectionError and exit gracefully with message "No cloud provider resources detected in Terraform project"
+- [ ] T015 Move `modules/cloud_config.py` to `modules/config/cloud_config_aws.py` (git mv to preserve history)
+- [ ] T016 Update all AWS config variable names in `modules/config/cloud_config_aws.py` (verify AWS_ prefix on all variables)
 - [ ] T017 Update import statement in `terravision.py` from `import modules.cloud_config` to use `config_loader.load_config('aws')` pattern
 - [ ] T018 Update import statement in `modules/graphmaker.py` to use `config_loader.load_config(provider)` pattern
 - [ ] T019 Update import statement in `modules/tfwrapper.py` to use `config_loader.load_config(provider)` pattern
@@ -89,11 +94,12 @@ This document provides an actionable task list for implementing multi-cloud prov
 - [ ] T027 Add provider detection call to `terravision.py` main flow after tfwrapper.tf_initplan() - store result in tfdata["provider_detection"]
 
 **Completion Criteria**:
-- Provider detection module complete with all 4 API functions
-- Configuration loader dynamically loads provider configs
+- Provider detection module complete with all 4 API functions plus error handling
+- Configuration loader dynamically loads provider configs from `modules.config.*`
+- AWS config file moved to `modules/config/cloud_config_aws.py`
 - All internal imports updated to use config_loader
 - Resource handler dispatcher routes to provider-specific handlers
-- Provider detection integrated into main CLI flow
+- Provider detection integrated into main CLI flow with graceful error handling
 
 **Independent Test**:
 ```bash
@@ -138,15 +144,15 @@ terravision draw --source tests/fixtures/azure_terraform --outfile azure-test
 
 #### Configuration
 
-- [ ] T028 [P] [US1] Create `modules/cloud_config_azure.py` based on AWS config structure
-- [ ] T029 [US1] Define AZURE_CONSOLIDATED_NODES in `modules/cloud_config_azure.py` (NSG, Application Gateway grouping rules)
-- [ ] T030 [US1] Define AZURE_GROUP_NODES in `modules/cloud_config_azure.py` (azurerm_resource_group → azurerm_virtual_network → azurerm_subnet hierarchy)
-- [ ] T031 [US1] Define AZURE_EDGE_NODES, AZURE_OUTER_NODES in `modules/cloud_config_azure.py`
-- [ ] T032 [US1] Define AZURE_DRAW_ORDER in `modules/cloud_config_azure.py` (rendering sequence for Azure resources)
-- [ ] T033 [US1] Define AZURE_NODE_VARIANTS in `modules/cloud_config_azure.py` (VM types, LB types)
-- [ ] T034 [US1] Define AZURE_SPECIAL_RESOURCES in `modules/cloud_config_azure.py` (handler function mapping for Resource Groups, NSGs, VNets)
-- [ ] T035 [US1] Define AZURE_REFINEMENT_PROMPT in `modules/cloud_config_azure.py` per research.md prompt template (Resource Group hierarchy, VNet conventions)
-- [ ] T036 [US1] Define AZURE_DOCUMENTATION_PROMPT in `modules/cloud_config_azure.py`
+- [ ] T028 [P] [US1] Create `modules/config/cloud_config_azure.py` based on AWS config structure
+- [ ] T029 [US1] Define AZURE_CONSOLIDATED_NODES in `modules/config/cloud_config_azure.py` (NSG, Application Gateway grouping rules)
+- [ ] T030 [US1] Define AZURE_GROUP_NODES in `modules/config/cloud_config_azure.py` (azurerm_resource_group → azurerm_virtual_network → azurerm_subnet hierarchy)
+- [ ] T031 [US1] Define AZURE_EDGE_NODES, AZURE_OUTER_NODES in `modules/config/cloud_config_azure.py`
+- [ ] T032 [US1] Define AZURE_DRAW_ORDER in `modules/config/cloud_config_azure.py` (rendering sequence for Azure resources)
+- [ ] T033 [US1] Define AZURE_NODE_VARIANTS in `modules/config/cloud_config_azure.py` (VM types, LB types)
+- [ ] T034 [US1] Define AZURE_SPECIAL_RESOURCES in `modules/config/cloud_config_azure.py` (handler function mapping for Resource Groups, NSGs, VNets)
+- [ ] T035 [US1] Define AZURE_REFINEMENT_PROMPT in `modules/config/cloud_config_azure.py` per research.md prompt template (Resource Group hierarchy, VNet conventions)
+- [ ] T036 [US1] Define AZURE_DOCUMENTATION_PROMPT in `modules/config/cloud_config_azure.py`
 
 #### Resource Handlers
 
@@ -210,15 +216,15 @@ terravision draw --source tests/fixtures/gcp_terraform --outfile gcp-test
 
 #### Configuration
 
-- [ ] T050 [P] [US2] Create `modules/cloud_config_gcp.py` based on AWS config structure
-- [ ] T051 [US2] Define GCP_CONSOLIDATED_NODES in `modules/cloud_config_gcp.py` (Firewall, Load Balancer grouping rules)
-- [ ] T052 [US2] Define GCP_GROUP_NODES in `modules/cloud_config_gcp.py` (google_project → google_compute_network → google_compute_subnetwork hierarchy)
-- [ ] T053 [US2] Define GCP_EDGE_NODES, GCP_OUTER_NODES in `modules/cloud_config_gcp.py`
-- [ ] T054 [US2] Define GCP_DRAW_ORDER in `modules/cloud_config_gcp.py` (rendering sequence for GCP resources)
-- [ ] T055 [US2] Define GCP_NODE_VARIANTS in `modules/cloud_config_gcp.py` (Instance types, LB types)
-- [ ] T056 [US2] Define GCP_SPECIAL_RESOURCES in `modules/cloud_config_gcp.py` (handler function mapping for Projects, VPCs, Firewall Rules)
-- [ ] T057 [US2] Define GCP_REFINEMENT_PROMPT in `modules/cloud_config_gcp.py` per research.md prompt template (Project hierarchy, global VPC, regional subnets)
-- [ ] T058 [US2] Define GCP_DOCUMENTATION_PROMPT in `modules/cloud_config_gcp.py`
+- [ ] T050 [P] [US2] Create `modules/config/cloud_config_gcp.py` based on AWS config structure
+- [ ] T051 [US2] Define GCP_CONSOLIDATED_NODES in `modules/config/cloud_config_gcp.py` (Firewall, Load Balancer grouping rules)
+- [ ] T052 [US2] Define GCP_GROUP_NODES in `modules/config/cloud_config_gcp.py` (google_project → google_compute_network → google_compute_subnetwork hierarchy)
+- [ ] T053 [US2] Define GCP_EDGE_NODES, GCP_OUTER_NODES in `modules/config/cloud_config_gcp.py`
+- [ ] T054 [US2] Define GCP_DRAW_ORDER in `modules/config/cloud_config_gcp.py` (rendering sequence for GCP resources)
+- [ ] T055 [US2] Define GCP_NODE_VARIANTS in `modules/config/cloud_config_gcp.py` (Instance types, LB types)
+- [ ] T056 [US2] Define GCP_SPECIAL_RESOURCES in `modules/config/cloud_config_gcp.py` (handler function mapping for Projects, VPCs, Firewall Rules)
+- [ ] T057 [US2] Define GCP_REFINEMENT_PROMPT in `modules/config/cloud_config_gcp.py` per research.md prompt template (Project hierarchy, global VPC, regional subnets)
+- [ ] T058 [US2] Define GCP_DOCUMENTATION_PROMPT in `modules/config/cloud_config_gcp.py`
 
 #### Resource Handlers
 
@@ -251,58 +257,12 @@ terravision draw --source tests/fixtures/gcp_terraform --outfile gcp-test
 
 ---
 
-## Phase 5: User Story 3 - Multi-Cloud Project Support (P3)
-
-**Goal**: Handle Terraform projects with multiple cloud providers by generating separate diagrams per provider
-
-**Priority**: P3
-**Duration**: ~4 hours
-**Dependencies**: Phase 3 (US1) AND Phase 4 (US2) - requires both Azure and GCP support complete
-
-### User Story
-
-A solutions architect working on a multi-cloud deployment has Terraform code that provisions resources across AWS, GCP, and Azure. They need to visualize their entire infrastructure. When they run TerraVision, the tool detects all cloud providers used and generates separate diagrams per provider.
-
-### Independent Test Criteria
-
-```bash
-# Test multi-cloud diagram generation
-terravision draw --source tests/fixtures/multi_cloud --outfile architecture
-
-# Verify:
-# 1. Multiple output files created: architecture-aws.png, architecture-azure.png
-# 2. Each diagram contains only resources from that provider
-# 3. Console output shows "Detected 2 providers: aws, azure"
-# 4. Console output shows separate "Generating AWS diagram..." and "Generating Azure diagram..." messages
-```
-
-### Tasks
-
-- [ ] T072 [US3] Update `terravision.py` to detect if multiple providers exist in tfdata["provider_detection"]["providers"]
-- [ ] T073 [US3] Implement `generate_output_filename(base_filename, provider, providers_list)` helper function in `terravision.py` (adds provider suffix if multi-provider)
-- [ ] T074 [US3] Implement main loop in `terravision.py` to iterate over detected providers and generate separate diagrams
-- [ ] T075 [US3] Update console output messaging in `terravision.py` to show "Detected N providers: aws, azure, gcp" when multiple detected
-- [ ] T076 [US3] Update console output to show "Generating [Provider] diagram..." for each provider in multi-cloud projects
-- [ ] T077 [US3] Add logic to filter tfdata by provider before passing to drawing module in multi-cloud scenario using `filter_resources_by_provider()`
-- [ ] T078 [P] [US3] Update multi-cloud test fixture to include all three providers (AWS + Azure + GCP)
-- [ ] T079 [P] [US3] Add test_multi_cloud_detection() to `tests/test_provider_detection.py` (verify detects all 3 providers)
-- [ ] T080 [US3] Add integration test to `tests/integration_test.py` for multi-cloud project (verify separate outputs generated)
-
-**Completion Criteria**:
-- Multi-provider projects detected correctly
-- Separate output files generated per provider with appropriate naming
-- Each diagram contains only resources from its respective provider
-- Console messaging clearly indicates multi-cloud detection and progress
-- Independent test passes
-
----
-
-## Phase 6: Testing & Polish
+## Phase 5: Testing & Polish
 
 **Goal**: Comprehensive testing, documentation updates, and release preparation
 
 **Duration**: ~6 hours
-**Dependencies**: All user stories complete
+**Dependencies**: Phase 3 (Azure) AND Phase 4 (GCP) complete
 
 ### Tasks
 
@@ -318,22 +278,28 @@ terravision draw --source tests/fixtures/multi_cloud --outfile architecture
 - [ ] T088 [P] Add test_filter_resources_by_provider() to `tests/test_provider_detection.py`
 - [ ] T089 [P] Add test_validate_provider_detection_success() to `tests/test_provider_detection.py`
 - [ ] T090 [P] Add test_validate_provider_detection_failure() to `tests/test_provider_detection.py`
+- [ ] T090a [P] Add test_no_provider_detected_raises_error() to `tests/test_provider_detection.py` (test ProviderDetectionError raised when no resources)
+- [ ] T090b [P] Add test_no_provider_detected_exit_gracefully() to `tests/integration_test.py` (end-to-end test of error message and clean exit)
 
 #### Integration Tests
 
 - [ ] T091 [P] Add test_azure_diagram_generation() to `tests/integration_test.py` (end-to-end Azure test)
 - [ ] T092 [P] Add test_gcp_diagram_generation() to `tests/integration_test.py` (end-to-end GCP test)
+- [ ] T092a [P] [US1] Add test_azure_ai_refinement_ollama() to `tests/test_azure_resources.py` (test AI refinement with Ollama backend uses Azure-specific prompt)
+- [ ] T092b [P] [US1] Add test_azure_ai_refinement_bedrock() to `tests/test_azure_resources.py` (test AI refinement with Bedrock backend uses Azure-specific prompt)
+- [ ] T092c [P] [US2] Add test_gcp_ai_refinement_ollama() to `tests/test_gcp_resources.py` (test AI refinement with Ollama backend uses GCP-specific prompt)
+- [ ] T092d [P] [US2] Add test_gcp_ai_refinement_bedrock() to `tests/test_gcp_resources.py` (test AI refinement with Bedrock backend uses GCP-specific prompt)
 - [ ] T093 Run full pytest suite and verify all tests pass: `pytest tests/`
 - [ ] T094 Test backward compatibility: run TerraVision on existing AWS Terraform projects and verify no regressions
 
 #### Documentation
 
 - [ ] T095 Update README.md to change Azure and GCP status from "Coming soon" to "✅ Supported"
-- [ ] T096 Add "Supported Cloud Providers" section to README.md with Azure and GCP resource lists (50+ core services each)
+- [ ] T096 Add "Supported Cloud Providers" section to README.md with Azure and GCP resource lists (30+ core services each)
 - [ ] T097 Add "Multi-Cloud Projects" section to README.md explaining separate diagram generation
 - [ ] T098 Add troubleshooting section to README.md for provider detection issues
 - [ ] T099 Update version number in `terravision.py` from 0.8 to 0.9 (MINOR version bump per constitution)
-- [ ] T100 Create MIGRATION.md guide for any external code importing `modules.cloud_config` (breaking change notice)
+- [ ] T100 Create MIGRATION.md guide for any external code importing `modules.cloud_config` (document move to `modules.config.cloud_config_aws`)
 
 #### Visual Validation
 
@@ -357,7 +323,7 @@ terravision draw --source tests/fixtures/multi_cloud --outfile architecture
 ### Critical Path
 
 ```
-Setup (T001-T007)
+Setup (T001-T006)
   ↓
 Foundational (T008-T027) ← BLOCKING for all user stories
   ↓
@@ -365,21 +331,18 @@ Foundational (T008-T027) ← BLOCKING for all user stories
   │
   └─→ US2: GCP (T050-T071) ← Can run in parallel with US1
       ↓
-      └─→ US3: Multi-Cloud (T072-T080) ← Requires US1 AND US2 complete
-          ↓
-          └─→ Polish (T081-T103)
+      └─→ Polish (T081-T103)
 ```
 
 ### Story Dependencies
 
 - **US1 (Azure)**: Depends on Phase 2 (Foundational), Independent of US2
 - **US2 (GCP)**: Depends on Phase 2 (Foundational), Independent of US1
-- **US3 (Multi-Cloud)**: Depends on US1 AND US2 complete
 
 ### Parallel Execution Opportunities
 
 **Within Foundational Phase**:
-- T005, T006, T007 (test fixtures) can run in parallel
+- T005, T006 (test fixtures) can run in parallel
 
 **After Foundational Phase Complete**:
 - **Team A**: US1 (Azure) tasks T028-T049
@@ -414,9 +377,7 @@ Before marking feature complete, verify:
 - [ ] FR-005: Separate resource handlers for each provider ✓
 - [ ] FR-006: Backward compatibility with AWS projects maintained ✓
 - [ ] FR-007: Provider-specific styling applied to diagrams ✓
-- [ ] FR-008: Multi-cloud projects generate separate diagrams per provider ✓
-- [ ] FR-009: Azure diagrams support all formats (PNG, SVG, PDF, BMP) ✓
-- [ ] FR-010: GCP diagrams support all formats (PNG, SVG, PDF, BMP) ✓
+- [ ] FR-008: Azure, GCP, and AWS diagrams support all formats (PNG, SVG, PDF, BMP) ✓
 - [ ] FR-011: Official cloud provider icons used ✓
 - [ ] FR-012: YAML annotations work for Azure and GCP ✓
 - [ ] FR-013: JSON graph export works for Azure and GCP ✓
@@ -432,17 +393,16 @@ Before marking feature complete, verify:
 - [ ] SC-006: GCP diagrams use recognizable GCP icons ✓
 - [ ] SC-007: No regressions in AWS functionality ✓
 - [ ] SC-008: 100% detection accuracy on explicit provider blocks ✓
-- [ ] SC-009: 50+ core Azure resource types supported ✓
-- [ ] SC-010: 50+ core GCP resource types supported ✓
+- [ ] SC-009: 30+ core Azure resource types supported ✓
+- [ ] SC-010: 30+ core GCP resource types supported ✓
 - [ ] SC-011: Icon mappings extensible without core changes ✓
 - [ ] SC-012: Documentation explains Azure/GCP support ✓
 
 ### Test Coverage
 
-- [ ] Provider detection unit tests (10 tests) ✓
-- [ ] Azure integration tests (2 tests) ✓
-- [ ] GCP integration tests (2 tests) ✓
-- [ ] Multi-cloud integration test (1 test) ✓
+- [ ] Provider detection unit tests (12 tests including no-provider scenarios) ✓
+- [ ] Azure integration tests (4 tests including AI refinement) ✓
+- [ ] GCP integration tests (4 tests including AI refinement) ✓
 - [ ] AWS regression tests pass ✓
 - [ ] Visual validation complete (screenshots) ✓
 
@@ -459,13 +419,14 @@ Before marking feature complete, verify:
 - Independently testable and deployable
 - Can gather user feedback before implementing GCP
 
-**MVP Task Count**: 49 tasks (T001-T049)
-**Estimated MVP Duration**: ~16 hours
+**MVP Task Count**: 55 tasks (T001-T049 plus T003a, T003b, T014a, T014b, T090a, T090b, T092a, T092b and validation)
+**Estimated MVP Duration**: ~18 hours
 
 **Post-MVP Releases**:
-- Release 0.9.0: Azure support (US1)
-- Release 0.10.0: GCP support (US2)
-- Release 0.11.0: Multi-cloud support (US3)
+- Release 0.9.0: Azure and GCP support (US1 + US2)
+
+**Future Releases**:
+- Multi-cloud project support (deferred to future release based on user feedback)
 
 ---
 
@@ -473,50 +434,55 @@ Before marking feature complete, verify:
 
 ### File Path Reference
 
-**New Files Created**:
-- `modules/provider_detector.py`
-- `modules/config_loader.py`
-- `modules/cloud_config_azure.py`
-- `modules/cloud_config_gcp.py`
-- `modules/resource_handlers_azure.py`
-- `modules/resource_handlers_gcp.py`
-- `tests/test_provider_detection.py`
-- `tests/test_azure_resources.py`
-- `tests/test_gcp_resources.py`
-- `tests/fixtures/azure_terraform/main.tf`
-- `tests/fixtures/gcp_terraform/main.tf`
-- `tests/fixtures/multi_cloud/main.tf`
-- `MIGRATION.md`
+**New Directories Created**:
+- `modules/config/` - Provider-specific configuration files
+- `tests/fixtures/azure_terraform/` - Azure test fixtures
+- `tests/fixtures/gcp_terraform/` - GCP test fixtures
 
-**Files Renamed** (use `git mv` to preserve history):
-- `modules/cloud_config.py` → `modules/cloud_config_aws.py`
+**New Files Created**:
+- `modules/config/__init__.py` - Makes config a Python package
+- `modules/config/cloud_config_azure.py` - Azure provider configuration
+- `modules/config/cloud_config_gcp.py` - GCP provider configuration
+- `modules/provider_detector.py` - Cloud provider detection logic
+- `modules/config_loader.py` - Dynamic config loader
+- `modules/resource_handlers_azure.py` - Azure resource handlers
+- `modules/resource_handlers_gcp.py` - GCP resource handlers
+- `tests/test_provider_detection.py` - Provider detection tests
+- `tests/test_azure_resources.py` - Azure-specific tests
+- `tests/test_gcp_resources.py` - GCP-specific tests
+- `tests/fixtures/azure_terraform/main.tf` - Azure test fixture
+- `tests/fixtures/gcp_terraform/main.tf` - GCP test fixture
+- `MIGRATION.md` - Migration guide for breaking changes
+
+**Files Moved** (use `git mv` to preserve history):
+- `modules/cloud_config.py` → `modules/config/cloud_config_aws.py`
 - `modules/resource_handlers.py` → `modules/resource_handlers_aws.py`
 
 **Files Modified**:
-- `terravision.py` (provider detection integration, multi-output logic, imports)
-- `modules/resource_handlers.py` (refactored as dispatcher)
-- `modules/graphmaker.py` (provider-aware handler calls, imports)
-- `modules/tfwrapper.py` (import updates)
-- `modules/helpers.py` (import updates, provider utilities)
-- `modules/drawing.py` (provider-aware resource imports, config loading)
-- `tests/integration_test.py` (Azure, GCP, multi-cloud tests)
-- `README.md` (supported providers section)
+- `terravision.py` - Provider detection integration, multi-output logic, import updates
+- `modules/resource_handlers.py` - Refactored as dispatcher (recreated after move)
+- `modules/graphmaker.py` - Provider-aware handler calls, import updates to use config_loader
+- `modules/tfwrapper.py` - Import updates to use config_loader
+- `modules/helpers.py` - Import updates, provider utilities
+- `modules/drawing.py` - Provider-aware resource imports, config loading via config_loader
+- `modules/annotations.py` - Provider-aware AUTO_ANNOTATIONS loading (uses config_loader to get correct provider annotations)
+- `tests/integration_test.py` - Azure, GCP, multi-cloud tests
+- `README.md` - Supported providers section
 
 **Files Unchanged**:
-- `modules/interpreter.py` (provider-agnostic)
-- `modules/fileparser.py` (provider-agnostic)
-- `modules/annotations.py` (provider-agnostic)
-- `resource_classes/` (existing Azure and GCP classes already present)
+- `modules/interpreter.py` - Provider-agnostic
+- `modules/fileparser.py` - Provider-agnostic
+- `resource_classes/` - Existing Azure and GCP classes already present
 
 ### Breaking Changes
 
 **Impact**: Low (TerraVision is primarily a CLI tool, not a library)
 
-**Change**: `modules/cloud_config.py` renamed to `modules/cloud_config_aws.py`
+**Change**: `modules/cloud_config.py` moved to `modules/config/cloud_config_aws.py`
 
 **Affected**: Any external code directly importing `modules.cloud_config`
 
-**Migration**: Update imports to use `config_loader.load_config('aws')` or import `modules.cloud_config_aws` directly
+**Migration**: Update imports to use `config_loader.load_config('aws')` or import `modules.config.cloud_config_aws` directly
 
 **CLI Users**: No changes required - all `terravision` commands work identically
 

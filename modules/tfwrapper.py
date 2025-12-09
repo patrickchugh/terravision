@@ -16,7 +16,7 @@ import tempfile
 import shutil
 import json
 import ipaddr
-import modules.cloud_config_aws as cloud_config
+import modules.config_loader as config_loader
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -28,7 +28,8 @@ os.environ["TF_DATA_DIR"] = temp_dir.name
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
-REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
+# Use AWS config as default for backward compatibility
+REVERSE_ARROW_LIST = config_loader.load_config('aws').AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(

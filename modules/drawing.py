@@ -13,11 +13,15 @@ from typing import Dict, List, Tuple, Any, Optional
 
 import click
 
-import modules.cloud_config_aws as cloud_config
+import modules.config_loader as config_loader
 import modules.helpers as helpers
+from modules.provider_detector import get_primary_provider_or_default
 
+# Import all provider resource classes
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
+
+# AWS resource classes
 from resource_classes.aws.analytics import *
 from resource_classes.aws.ar import *
 from resource_classes.aws.blockchain import *
@@ -45,21 +49,107 @@ from resource_classes.aws.robotics import *
 from resource_classes.aws.satellite import *
 from resource_classes.aws.security import *
 from resource_classes.aws.storage import *
+
+# Azure resource classes
+from resource_classes.azure.aimachinelearning import *
+from resource_classes.azure.analytics import *
+from resource_classes.azure.appservices import *
+from resource_classes.azure.azureecosystem import *
+from resource_classes.azure.azurestack import *
+from resource_classes.azure.blockchain import *
+from resource_classes.azure.compute import *
+from resource_classes.azure.containers import *
+from resource_classes.azure.database import *
+from resource_classes.azure.databases import *
+from resource_classes.azure.devops import *
+from resource_classes.azure.general import *
+from resource_classes.azure.hybridmulticloud import *
+from resource_classes.azure.identity import *
+from resource_classes.azure.integration import *
+from resource_classes.azure.intune import *
+from resource_classes.azure.iot import *
+from resource_classes.azure.managementgovernance import *
+from resource_classes.azure.migrate import *
+from resource_classes.azure.migration import *
+from resource_classes.azure.ml import *
+from resource_classes.azure.mobile import *
+from resource_classes.azure.monitor import *
+from resource_classes.azure.network import *
+from resource_classes.azure.networking import *
+from resource_classes.azure.security import *
+from resource_classes.azure.storage import *
+from resource_classes.azure.web import *
+
+# GCP resource classes
+from resource_classes.gcp.analytics import *
+from resource_classes.gcp.api import *
+from resource_classes.gcp.compute import *
+from resource_classes.gcp.database import *
+from resource_classes.gcp.devtools import *
+from resource_classes.gcp.iot import *
+from resource_classes.gcp.ml import *
+from resource_classes.gcp.network import *
+from resource_classes.gcp.operations import *
+from resource_classes.gcp.security import *
+from resource_classes.gcp.storage import *
+
+# Generic resources
 from resource_classes.generic.blank import Blank
 
 avl_classes = dir()
 
-CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
-GROUP_NODES = cloud_config.AWS_GROUP_NODES
-DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
-NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
-OUTER_NODES = cloud_config.AWS_OUTER_NODES
-AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
-OUTER_NODES = cloud_config.AWS_OUTER_NODES
-EDGE_NODES = cloud_config.AWS_EDGE_NODES
-SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
-ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
-NEVER_DRAW_LINE = cloud_config.AWS_NEVER_DRAW_LINE
+# Module-level constants that get set per-provider in render_diagram
+# Initialize with empty defaults
+CONSOLIDATED_NODES = []
+GROUP_NODES = []
+DRAW_ORDER = []
+NODE_VARIANTS = {}
+OUTER_NODES = []
+AUTO_ANNOTATIONS = []
+EDGE_NODES = []
+SHARED_SERVICES = []
+ALWAYS_DRAW_LINE = []
+NEVER_DRAW_LINE = []
+
+
+def _get_provider_config(tfdata: Dict[str, Any]):
+    """Load provider-specific configuration dynamically.
+
+    Args:
+        tfdata: Terraform data dictionary with provider_detection
+
+    Returns:
+        Configuration module for detected provider
+    """
+    provider = get_primary_provider_or_default(tfdata)
+    return config_loader.load_config(provider)
+
+
+def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Load provider-specific configuration constants.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Dictionary with provider-specific drawing constants
+    """
+    config = _get_provider_config(tfdata)
+    provider = get_primary_provider_or_default(tfdata)
+    provider_upper = provider.upper()
+
+    return {
+        'CONSOLIDATED_NODES': getattr(config, f'{provider_upper}_CONSOLIDATED_NODES', []),
+        'GROUP_NODES': getattr(config, f'{provider_upper}_GROUP_NODES', []),
+        'DRAW_ORDER': getattr(config, f'{provider_upper}_DRAW_ORDER', []),
+        'NODE_VARIANTS': getattr(config, f'{provider_upper}_NODE_VARIANTS', {}),
+        'OUTER_NODES': getattr(config, f'{provider_upper}_OUTER_NODES', []),
+        'AUTO_ANNOTATIONS': getattr(config, f'{provider_upper}_AUTO_ANNOTATIONS', []),
+        'EDGE_NODES': getattr(config, f'{provider_upper}_EDGE_NODES', []),
+        'SHARED_SERVICES': getattr(config, f'{provider_upper}_SHARED_SERVICES', []),
+        'ALWAYS_DRAW_LINE': getattr(config, f'{provider_upper}_ALWAYS_DRAW_LINE', []),
+        'NEVER_DRAW_LINE': getattr(config, f'{provider_upper}_NEVER_DRAW_LINE', []),
+    }
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> str:
@@ -467,6 +557,24 @@ def render_diagram(
     Returns:
         None (generates diagram file as side effect)
     """
+    # Load provider-specific configuration constants and set module globals
+    global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
+
+    provider = get_primary_provider_or_default(tfdata)
+    constants = _load_provider_constants(tfdata)
+    CONSOLIDATED_NODES = constants['CONSOLIDATED_NODES']
+    GROUP_NODES = constants['GROUP_NODES']
+    DRAW_ORDER = constants['DRAW_ORDER']
+    NODE_VARIANTS = constants['NODE_VARIANTS']
+    OUTER_NODES = constants['OUTER_NODES']
+    AUTO_ANNOTATIONS = constants['AUTO_ANNOTATIONS']
+    EDGE_NODES = constants['EDGE_NODES']
+    SHARED_SERVICES = constants['SHARED_SERVICES']
+    ALWAYS_DRAW_LINE = constants['ALWAYS_DRAW_LINE']
+    NEVER_DRAW_LINE = constants['NEVER_DRAW_LINE']
+
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()
 
@@ -482,7 +590,13 @@ def render_diagram(
     setdiagram(myDiagram)
 
     # Create main cloud provider boundary
-    cloudGroup = AWSgroup()
+    # Select appropriate cloud group class based on provider
+    if provider == 'azure':
+        cloudGroup = Azure()
+    elif provider == 'gcp':
+        cloudGroup = GCP()
+    else:  # aws (default)
+        cloudGroup = AWSgroup()
     setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
 

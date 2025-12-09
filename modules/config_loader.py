@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 # Module name mapping for each provider
 PROVIDER_CONFIG_MODULES = {
-    'aws': 'modules.cloud_config_aws',
-    'azure': 'modules.cloud_config_azure',
-    'gcp': 'modules.cloud_config_gcp'
+    'aws': 'modules.config.cloud_config_aws',
+    'azure': 'modules.config.cloud_config_azure',
+    'gcp': 'modules.config.cloud_config_gcp'
 }
 
 # Supported providers
@@ -68,7 +68,7 @@ def load_config(provider: str) -> Any:
 
     Usage Notes:
         - Configuration modules are cached after first import
-        - Module must exist at modules/cloud_config_{provider}.py
+        - Module must exist at modules/config/cloud_config_{provider}.py
         - Each config module must define standard constants (see cloud_config_aws.py)
     """
     # Validate provider
@@ -104,49 +104,6 @@ def load_config(provider: str) -> Any:
         raise ConfigurationError(
             f"Unexpected error loading configuration for provider '{provider}': {e}"
         ) from e
-
-
-def get_all_configs(providers: list) -> Dict[str, Any]:
-    """
-    Load configurations for multiple providers.
-
-    Useful for multi-cloud projects where multiple provider configurations
-    need to be loaded simultaneously.
-
-    Args:
-        providers: List of provider names to load configs for
-
-    Returns:
-        Dictionary mapping provider name to configuration module
-
-    Raises:
-        ValueError: If any provider not supported
-        ConfigurationError: If any configuration cannot be loaded
-
-    Examples:
-        >>> configs = get_all_configs(['aws', 'azure'])
-        >>> configs['aws'].PROVIDER_NAME
-        'AWS'
-        >>> configs['azure'].PROVIDER_NAME
-        'Azure'
-
-        >>> # Multi-cloud project
-        >>> detection_result = detect_providers(tfdata)
-        >>> configs = get_all_configs(detection_result['providers'])
-        >>> for provider, config in configs.items():
-        ...     print(f"{provider}: {config.PROVIDER_NAME}")
-    """
-    configs = {}
-
-    for provider in providers:
-        try:
-            configs[provider] = load_config(provider)
-        except (ValueError, ConfigurationError) as e:
-            logger.error(f"Failed to load config for provider '{provider}': {e}")
-            raise
-
-    logger.info(f"Loaded configurations for {len(configs)} provider(s): {', '.join(configs.keys())}")
-    return configs
 
 
 def reload_config(provider: str) -> Any:
