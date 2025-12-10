@@ -15,9 +15,8 @@ TerraVision securely runs 100% Client Side without any dependency or access to y
 
 ## Supported Cloud Providers
 - ✅ **AWS** (Full support with 200+ services)
-- 🔄 **Google Cloud Platform** (Coming soon)
-- 🔄 **Microsoft Azure** (Coming soon)
-- ✅ **On-Premises** (Generic infrastructure components)
+- 🔄 **Google Cloud Platform** (Partial Support)
+- 🔄 **Microsoft Azure** (Partial Support)
 
 Turn this... 
 
