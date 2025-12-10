@@ -467,6 +467,6 @@ class Workflow(_General):
 # Aliases
 
 # Terraform aliases
-azurerm_resource_group = ResourceGroups
+# Note: azurerm_resource_group alias is defined in groups.py as a Cluster class
 azurerm_subscription = Subscriptions
 azurerm_management_group = ManagementGroups

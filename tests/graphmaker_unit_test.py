@@ -23,12 +23,20 @@ class TestReverseRelations(unittest.TestCase):
 
 class TestCheckRelationship(unittest.TestCase):
     def test_check_relationship_no_match(self):
-        tfdata = {"node_list": ["node1", "node2"], "graphdict": {"node1": [], "node2": []}, "hidden": []}
+        tfdata = {
+            "node_list": ["node1", "node2"],
+            "graphdict": {"node1": [], "node2": []},
+            "hidden": [],
+        }
         result = check_relationship("node1", ["value"], tfdata)
         self.assertEqual(result, [])
 
     def test_check_relationship_with_match(self):
-        tfdata = {"node_list": ["node1", "node2"], "graphdict": {"node1": [], "node2": []}, "hidden": []}
+        tfdata = {
+            "node_list": ["node1", "node2"],
+            "graphdict": {"node1": [], "node2": []},
+            "hidden": [],
+        }
         result = check_relationship("node1", ["node2"], tfdata)
         self.assertIsInstance(result, list)
 
@@ -40,7 +48,10 @@ class TestAddRelations(unittest.TestCase):
             "node_list": ["node1", "node2"],
             "graphdict": {"node1": [], "node2": []},
             "meta_data": {"node1": {"param1": "node2"}},
-            "original_metadata": {"node1": {"param1": "value1"}, "node2": {"param2": "value2"}},
+            "original_metadata": {
+                "node1": {"param1": "value1"},
+                "node2": {"param2": "value2"},
+            },
             "hidden": [],
         }
         result = add_relations(tfdata)
@@ -53,7 +64,10 @@ class TestAddRelations(unittest.TestCase):
             "node_list": ["node1", "node2"],
             "graphdict": {"node1": [], "node2": []},
             "meta_data": {"node1": {"param1": "node3"}},
-            "original_metadata": {"node1": {"param1": "value1"}, "node2": {"param2": "value2"}},
+            "original_metadata": {
+                "node1": {"param1": "value1"},
+                "node2": {"param2": "value2"},
+            },
             "hidden": [],
         }
         result = add_relations(tfdata)

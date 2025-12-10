@@ -7,10 +7,50 @@ It processes annotation rules to add, remove, connect, and modify nodes in the g
 import sys
 from typing import Dict, List, Any
 import click
-import modules.cloud_config as cloud_config
+import modules.config_loader as config_loader
 import modules.helpers as helpers
 
-AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
+
+def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
+    """
+    Get provider-specific AUTO_ANNOTATIONS from the appropriate cloud config.
+
+    Extracts provider from tfdata, loads the correct config, and returns
+    the provider-specific AUTO_ANNOTATIONS constant.
+
+    Args:
+        tfdata: Dictionary containing provider_detection with primary_provider
+
+    Returns:
+        List of auto-annotation rules for the detected provider
+
+    Note:
+        Falls back to AWS annotations if provider detection is missing or fails.
+    """
+    # Extract provider from tfdata (set by provider_detector)
+    provider = "aws"  # Default fallback
+    if tfdata.get("provider_detection"):
+        provider = tfdata["provider_detection"].get("primary_provider", "aws")
+
+    # Load provider-specific config
+    try:
+        config = config_loader.load_config(provider)
+    except (ValueError, config_loader.ConfigurationError):
+        # Fallback to AWS if provider config fails to load
+        config = config_loader.load_config("aws")
+        provider = "aws"
+
+    # Get the provider-specific AUTO_ANNOTATIONS constant
+    # Convention: {PROVIDER}_AUTO_ANNOTATIONS (e.g., AWS_AUTO_ANNOTATIONS)
+    provider_upper = provider.upper()
+    annotations_attr = f"{provider_upper}_AUTO_ANNOTATIONS"
+
+    if hasattr(config, annotations_attr):
+        return getattr(config, annotations_attr)
+    else:
+        # Fallback to AWS if provider doesn't have AUTO_ANNOTATIONS
+        aws_config = config_loader.load_config("aws")
+        return aws_config.AWS_AUTO_ANNOTATIONS
 
 
 def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -19,20 +59,27 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Processes both automatic cloud provider annotations and custom user annotations
     to modify the graph structure, add connections, and update metadata.
 
+    This function is provider-aware and will use the correct AUTO_ANNOTATIONS
+    based on the cloud provider detected in tfdata["provider_detection"].
+
     Args:
         tfdata: Dictionary containing graph data with keys:
             - graphdict: Node connections dictionary
             - meta_data: Resource metadata dictionary
             - annotations: Optional user-defined annotations
+            - provider_detection: Provider detection result (optional)
 
     Returns:
         Modified tfdata dictionary with updated graphdict and meta_data
     """
     graphdict = tfdata["graphdict"]
 
+    # Get provider-specific auto annotations
+    auto_annotations = _get_provider_auto_annotations(tfdata)
+
     # Apply automatic cloud provider annotations
     for node in list(graphdict):
-        for auto_node in AUTO_ANNOTATIONS:
+        for auto_node in auto_annotations:
             node_prefix = str(list(auto_node.keys())[0])
             # Check if current node matches annotation pattern
             if helpers.get_no_module_name(node).startswith(node_prefix):

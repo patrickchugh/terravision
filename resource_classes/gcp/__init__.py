@@ -7,7 +7,7 @@ from resource_classes import Node
 
 class _GCP(Node):
     _provider = "gcp"
-    _icon_dir = "resources/gcp"
+    _icon_dir = "resource_images/gcp"
 
     fontcolor = "#2d3436"
 

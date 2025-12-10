@@ -7,7 +7,7 @@ from resource_classes import Node
 
 class _Azure(Node):
     _provider = "azure"
-    _icon_dir = "resources/azure"
+    _icon_dir = "resource_images/azure"
 
     fontcolor = "#ffffff"
 

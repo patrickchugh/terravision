@@ -100,7 +100,7 @@ class SecurityGroup(Cluster):
         super().__init__(cluster_label, defaultdir, graph_attrs)
 
 
-class AWSgroup(Cluster):
+class AWSGroup(Cluster):
     def __init__(self, label="AWS Cloud", **kwargs):
         aws_graph_attrs = {
             "style": "solid",

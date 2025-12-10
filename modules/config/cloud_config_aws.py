@@ -1,3 +1,12 @@
+# AWS Cloud Configuration for TerraVision
+# Provider: Amazon Web Services (aws provider)
+# Architecture: VPC > Availability Zones > Subnets > Resources
+
+# Provider metadata
+PROVIDER_NAME = "AWS"
+PROVIDER_PREFIX = ["aws_"]
+ICON_LIBRARY = "aws"
+
 # Any resource names with certain prefixes are consolidated into one node
 AWS_CONSOLIDATED_NODES = [
     {

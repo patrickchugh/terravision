@@ -15,18 +15,71 @@ from typing import Dict, List, Any, Tuple, Optional, Union
 
 import click
 
-import modules.cloud_config as cloud_config
+import modules.config_loader as config_loader
 import modules.helpers as helpers
 
 
-REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
-IMPLIED_CONNECTIONS = cloud_config.AWS_IMPLIED_CONNECTIONS
-GROUP_NODES = cloud_config.AWS_GROUP_NODES
-CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
-NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
-SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
-ACRONYMS_LIST = cloud_config.AWS_ACRONYMS_LIST
-NAME_REPLACEMENTS = cloud_config.AWS_NAME_REPLACEMENTS
+# NOTE: These module-level constants are AWS-specific defaults for backward compatibility.
+# Functions that receive tfdata should use _get_provider_config_constants() to load
+# provider-specific constants dynamically. Functions without tfdata access use these defaults.
+def _get_aws_defaults():
+    """Get AWS configuration constants as defaults."""
+    aws_config = config_loader.load_config("aws")
+    return {
+        "REVERSE_ARROW_LIST": aws_config.AWS_REVERSE_ARROW_LIST,
+        "IMPLIED_CONNECTIONS": aws_config.AWS_IMPLIED_CONNECTIONS,
+        "GROUP_NODES": aws_config.AWS_GROUP_NODES,
+        "CONSOLIDATED_NODES": aws_config.AWS_CONSOLIDATED_NODES,
+        "NODE_VARIANTS": aws_config.AWS_NODE_VARIANTS,
+        "SPECIAL_RESOURCES": aws_config.AWS_SPECIAL_RESOURCES,
+        "ACRONYMS_LIST": aws_config.AWS_ACRONYMS_LIST,
+        "NAME_REPLACEMENTS": aws_config.AWS_NAME_REPLACEMENTS,
+    }
+
+
+def _get_provider_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Load provider-specific configuration constants from tfdata.
+
+    Args:
+        tfdata: Terraform data dictionary with provider_detection
+
+    Returns:
+        Dictionary with provider-specific constants
+    """
+    from modules.provider_detector import get_primary_provider_or_default
+
+    provider = get_primary_provider_or_default(tfdata)
+    config = config_loader.load_config(provider)
+    provider_upper = provider.upper()
+
+    return {
+        "REVERSE_ARROW_LIST": getattr(
+            config, f"{provider_upper}_REVERSE_ARROW_LIST", []
+        ),
+        "IMPLIED_CONNECTIONS": getattr(
+            config, f"{provider_upper}_IMPLIED_CONNECTIONS", {}
+        ),
+        "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "CONSOLIDATED_NODES": getattr(
+            config, f"{provider_upper}_CONSOLIDATED_NODES", []
+        ),
+        "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", {}),
+        "SPECIAL_RESOURCES": getattr(config, f"{provider_upper}_SPECIAL_RESOURCES", {}),
+        "ACRONYMS_LIST": getattr(config, f"{provider_upper}_ACRONYMS_LIST", []),
+        "NAME_REPLACEMENTS": getattr(config, f"{provider_upper}_NAME_REPLACEMENTS", {}),
+    }
+
+
+# AWS defaults for functions that don't have tfdata access
+_defaults = _get_aws_defaults()
+REVERSE_ARROW_LIST = _defaults["REVERSE_ARROW_LIST"]
+IMPLIED_CONNECTIONS = _defaults["IMPLIED_CONNECTIONS"]
+GROUP_NODES = _defaults["GROUP_NODES"]
+CONSOLIDATED_NODES = _defaults["CONSOLIDATED_NODES"]
+NODE_VARIANTS = _defaults["NODE_VARIANTS"]
+SPECIAL_RESOURCES = _defaults["SPECIAL_RESOURCES"]
+ACRONYMS_LIST = _defaults["ACRONYMS_LIST"]
+NAME_REPLACEMENTS = _defaults["NAME_REPLACEMENTS"]
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data", "output"]

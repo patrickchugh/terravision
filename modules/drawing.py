@@ -6,60 +6,145 @@ including nodes, clusters, connections, and edge labels.
 """
 
 import datetime
+import importlib
 import os
+import pkgutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
 import click
 
-import modules.cloud_config as cloud_config
+import modules.config_loader as config_loader
 import modules.helpers as helpers
+from modules.provider_detector import get_primary_provider_or_default
 
+# Import base resource classes
 # pylint: disable=unused-wildcard-import
 from resource_classes import *
-from resource_classes.aws.analytics import *
-from resource_classes.aws.ar import *
-from resource_classes.aws.blockchain import *
-from resource_classes.aws.business import *
-from resource_classes.aws.compute import *
-from resource_classes.aws.cost import *
-from resource_classes.aws.database import *
-from resource_classes.aws.devtools import *
-from resource_classes.aws.enablement import *
-from resource_classes.aws.enduser import *
-from resource_classes.aws.engagement import *
-from resource_classes.aws.game import *
-from resource_classes.aws.general import *
-from resource_classes.aws.groups import *
-from resource_classes.aws.integration import *
-from resource_classes.aws.iot import *
-from resource_classes.aws.management import *
-from resource_classes.aws.media import *
-from resource_classes.aws.migration import *
-from resource_classes.aws.ml import *
-from resource_classes.aws.mobile import *
-from resource_classes.aws.network import *
-from resource_classes.aws.quantum import *
-from resource_classes.aws.robotics import *
-from resource_classes.aws.satellite import *
-from resource_classes.aws.security import *
-from resource_classes.aws.storage import *
+
+# Generic resources (always needed)
 from resource_classes.generic.blank import Blank
 
-avl_classes = dir()
+# Track available classes - will be populated dynamically per provider
+avl_classes = []
+_loaded_provider = None
 
-CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
-GROUP_NODES = cloud_config.AWS_GROUP_NODES
-DRAW_ORDER = cloud_config.AWS_DRAW_ORDER
-NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
-OUTER_NODES = cloud_config.AWS_OUTER_NODES
-AUTO_ANNOTATIONS = cloud_config.AWS_AUTO_ANNOTATIONS
-OUTER_NODES = cloud_config.AWS_OUTER_NODES
-EDGE_NODES = cloud_config.AWS_EDGE_NODES
-SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
-ALWAYS_DRAW_LINE = cloud_config.AWS_ALWAYS_DRAW_LINE
-NEVER_DRAW_LINE = cloud_config.AWS_NEVER_DRAW_LINE
+
+def _load_provider_resources(provider: str) -> None:
+    """Dynamically load resource classes for the specified cloud provider.
+
+    Args:
+        provider: Cloud provider name ('aws', 'azure', 'gcp')
+    """
+    global avl_classes, _loaded_provider
+
+    # Skip if already loaded for this provider
+    if _loaded_provider == provider:
+        return
+
+    # Map provider names to package names
+    provider_packages = {
+        "aws": "resource_classes.aws",
+        "azure": "resource_classes.azure",
+        "gcp": "resource_classes.gcp",
+    }
+
+    package_name = provider_packages.get(provider)
+    if not package_name:
+        click.echo(
+            click.style(
+                f"\nERROR: Unknown provider '{provider}'. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+
+    # Import all submodules from the provider package
+    try:
+        package = importlib.import_module(package_name)
+        package_path = Path(package.__file__).parent
+
+        for _, module_name, _ in pkgutil.iter_modules([str(package_path)]):
+            full_module_name = f"{package_name}.{module_name}"
+            module = importlib.import_module(full_module_name)
+
+            # Import all public names from the module into this module's namespace
+            for name in dir(module):
+                if not name.startswith("_"):
+                    obj = getattr(module, name)
+                    globals()[name] = obj
+
+        # Update available classes list
+        avl_classes = list(globals().keys())
+        _loaded_provider = provider
+
+    except ImportError as e:
+        click.echo(
+            click.style(
+                f"\nERROR: Failed to load resource classes for provider '{provider}': {e}. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+
+
+# Module-level constants that get set per-provider in render_diagram
+# Initialize with empty defaults
+CONSOLIDATED_NODES = []
+GROUP_NODES = []
+DRAW_ORDER = []
+NODE_VARIANTS = {}
+OUTER_NODES = []
+AUTO_ANNOTATIONS = []
+EDGE_NODES = []
+SHARED_SERVICES = []
+ALWAYS_DRAW_LINE = []
+NEVER_DRAW_LINE = []
+
+
+def _get_provider_config(tfdata: Dict[str, Any]):
+    """Load provider-specific configuration dynamically.
+
+    Args:
+        tfdata: Terraform data dictionary with provider_detection
+
+    Returns:
+        Configuration module for detected provider
+    """
+    provider = get_primary_provider_or_default(tfdata)
+    return config_loader.load_config(provider)
+
+
+def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Load provider-specific configuration constants.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Dictionary with provider-specific drawing constants
+    """
+    config = _get_provider_config(tfdata)
+    provider = get_primary_provider_or_default(tfdata)
+    provider_upper = provider.upper()
+
+    return {
+        "CONSOLIDATED_NODES": getattr(
+            config, f"{provider_upper}_CONSOLIDATED_NODES", []
+        ),
+        "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "DRAW_ORDER": getattr(config, f"{provider_upper}_DRAW_ORDER", []),
+        "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", {}),
+        "OUTER_NODES": getattr(config, f"{provider_upper}_OUTER_NODES", []),
+        "AUTO_ANNOTATIONS": getattr(config, f"{provider_upper}_AUTO_ANNOTATIONS", []),
+        "EDGE_NODES": getattr(config, f"{provider_upper}_EDGE_NODES", []),
+        "SHARED_SERVICES": getattr(config, f"{provider_upper}_SHARED_SERVICES", []),
+        "ALWAYS_DRAW_LINE": getattr(config, f"{provider_upper}_ALWAYS_DRAW_LINE", []),
+        "NEVER_DRAW_LINE": getattr(config, f"{provider_upper}_NEVER_DRAW_LINE", []),
+    }
 
 
 def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> str:
@@ -467,6 +552,28 @@ def render_diagram(
     Returns:
         None (generates diagram file as side effect)
     """
+    # Load provider-specific configuration constants and set module globals
+    global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
+
+    provider = get_primary_provider_or_default(tfdata)
+
+    # Dynamically load resource classes for the detected provider
+    _load_provider_resources(provider)
+
+    constants = _load_provider_constants(tfdata)
+    CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
+    GROUP_NODES = constants["GROUP_NODES"]
+    DRAW_ORDER = constants["DRAW_ORDER"]
+    NODE_VARIANTS = constants["NODE_VARIANTS"]
+    OUTER_NODES = constants["OUTER_NODES"]
+    AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
+    EDGE_NODES = constants["EDGE_NODES"]
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
+    ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
+    NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
+
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()
 
@@ -482,7 +589,19 @@ def render_diagram(
     setdiagram(myDiagram)
 
     # Create main cloud provider boundary
-    cloudGroup = AWSgroup()
+    # Dynamically select cloud group class based on provider (e.g., 'aws' -> 'AWSGroup', 'azure' -> 'AZUREGroup')
+    provider_group_name = provider.upper() + "Group"
+    cloud_group_class = globals().get(provider_group_name)
+    if cloud_group_class is None:
+        click.echo(
+            click.style(
+                f"\nERROR: No group class '{provider_group_name}' found for provider '{provider}'. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+    cloudGroup = cloud_group_class()
     setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
 

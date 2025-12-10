@@ -16,7 +16,7 @@ import tempfile
 import shutil
 import json
 import ipaddr
-import modules.cloud_config as cloud_config
+import modules.config_loader as config_loader
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -28,7 +28,8 @@ os.environ["TF_DATA_DIR"] = temp_dir.name
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
-REVERSE_ARROW_LIST = cloud_config.AWS_REVERSE_ARROW_LIST
+# Use AWS config as default for backward compatibility
+REVERSE_ARROW_LIST = config_loader.load_config("aws").AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(
@@ -449,8 +450,14 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     # Save original graph and metadata for reference
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
-    # Verify cloud resources exist
-    if len(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_")) == 0:
+    # Verify cloud resources exist (check all supported provider prefixes)
+    from modules.provider_detector import PROVIDER_PREFIXES
+
+    has_cloud_resources = any(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], prefix)
+        for prefix in PROVIDER_PREFIXES.keys()
+    )
+    if not has_cloud_resources:
         click.echo(
             click.style(
                 f"\nERROR: No AWS, Azure or Google resources will be created with current plan. Exiting.",
