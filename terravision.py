@@ -719,6 +719,6 @@ if __name__ == "__main__":
     cli(
         default_map={
             "draw": {"avl_classes": dir()},
-            "graphlist": {"avl_classes": dir()},
+            "graphdata": {"avl_classes": dir()},
         }
     )
