@@ -4,7 +4,7 @@ TerraVision is an AI-powered CLI tool that converts Terraform code into Professi
 
 TerraVision securely runs 100% Client Side without any dependency or access to your Cloud environment, dynamically parses your conditionally created resources and variables and generates an automatic visual of your architecture. TerraVision is designed to be a 'Docs as Code' (DaC) tool that can be included in your CI/CD pipeline to update architecture diagrams after your build/test/release pipeline phases and supplement other document generators like readthedocs.io alongside it. 
 
-**Current Version: 0.8**
+
 
 ## Supported Cloud Providers
 - ✅ **AWS** (Full support with 200+ services)
@@ -396,7 +396,7 @@ terravision graphdata --help
 
 ## Version Information
 
-**Current Version:** 0.8
+
 
 **Recent Updates:**
 - Enhanced cloud provider support

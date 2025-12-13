@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into professional cloud architecture diagrams. It runs 100% client-side, securely parses Terraform plans, and generates visual representations of cloud infrastructure without requiring access to cloud environments.
 
-**Current Version:** 0.8
+
 
 ## Commands
 

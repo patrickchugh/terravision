@@ -1,7 +1,7 @@
 [tool.poetry]
 # Change this section to be project specific
 name = "terravision"
-version = "0.8"
+version = "0.9"
 description = "Terraform Architecture Visualizer"
 authors = []
 readme = 'README.md'
@@ -21,6 +21,7 @@ ipaddr = "^2.2.0"
 ollama = "^0.6.1"
 requests = ">=2.32.3"
 typing-extensions = "^4.0.0"
+tomli = "^2.0.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.1"

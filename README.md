@@ -8,7 +8,7 @@ TerraVision securely runs 100% Client Side without any dependency or access to y
 
 
 ## Status
-**Current Version: 0.8**
+
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 
@@ -608,7 +608,7 @@ terravision graphdata --help
 
 ## Version Information
 
-**Current Version:** 0.8
+
 
 **Recent Updates:**
 - Enhanced cloud provider support

@@ -10,6 +10,7 @@ import ollama
 import requests
 import click
 
+import tomli
 import modules.annotations as annotations
 import modules.drawing as drawing
 import modules.fileparser as fileparser
@@ -22,7 +23,15 @@ from modules.config_loader import load_config
 from modules.provider_detector import detect_providers, get_primary_provider_or_default
 
 
-__version__ = "0.8"
+def _get_version() -> str:
+    """Read version from pyproject.toml."""
+    pyproject_path = Path(__file__).parent / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        pyproject = tomli.load(f)
+    return pyproject["tool"]["poetry"]["version"]
+
+
+__version__ = _get_version()
 
 
 def _get_provider_config(tfdata: Dict[str, Any]) -> Any:

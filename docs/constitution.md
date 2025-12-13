@@ -101,7 +101,7 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 
 ### Release Criteria
 
-- **RC-001**: Each release MUST increment version following semantic versioning (currently 0.8)
+- **RC-001**: Each release MUST increment version following semantic versioning in pyproject.toml
 - **RC-002**: Breaking changes to annotation YAML format require migration guide
 - **RC-003**: New cloud provider support requires icon library with the top 30 services ready for use
 - **RC-004**: Performance regressions >20% on reference repositories block release
