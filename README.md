@@ -1,5 +1,3 @@
-
-
 # TerraVision
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams and solves the problem of keeping the most important document in cloud projects, the architecture diagram, up to date. With high velocity releases the norm now, code is the new source of truth so machine generated architecture diagrams are more accurate than relying on the freestyle diagram drawn by the cloud architect that probably doesn't match the reality of what is actually deployed in the cloud anymore. 
