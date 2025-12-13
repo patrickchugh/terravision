@@ -219,10 +219,11 @@ Describe testing performed
 
 ### Review Process
 
-1. Automated CI runs on all PRs (Black check, pytest suite)
-2. Maintainer review required for merge
-3. Address review feedback promptly
-4. Keep PRs focused and reasonably sized
+1. Any major revamps to code or new ideas not discussed with a maintainer will be rejected
+2. Github passes Automated CI runs on all PRs (Black check, pytest suite)
+3. Maintainer review required for merge, maintainer to review files changed
+4. You address review feedback promptly
+5. Keep PRs focused and reasonably sized - try to implement only one specific change per PR so it rollback will be easier.
 
 ## AI-Assisted Development
 
