@@ -11,12 +11,13 @@
         "module.private-vpc.aws_subnet.private_subnets[2]~3",
         "module.private-vpc.aws_subnet.public_subnets[2]~3"
     ],
-    "aws_eip.elastic_ip": [],
+    "aws_eip.elastic_ip": [
+        "aws_internet_gateway.igw"
+    ],
     "aws_group.shared_services": [
         "aws_eip.elastic_ip"
     ],
     "aws_internet_gateway.igw": [
-        "aws_eip.elastic_ip",
         "tv_aws_internet.internet"
     ],
     "module.bastion-host.aws_instance.bastion_host": [],
@@ -34,15 +35,18 @@
     "module.private-vpc.aws_nat_gateway.nat_gw~1": [
         "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
+        "aws_internet_gateway.igw",
         "module.private-vpc.aws_route.private_nat_gateway"
     ],
     "module.private-vpc.aws_nat_gateway.nat_gw~2": [
         "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
+        "aws_internet_gateway.igw",
         "module.private-vpc.aws_route.private_nat_gateway"
     ],
     "module.private-vpc.aws_nat_gateway.nat_gw~3": [
         "aws_eip.elastic_ip",
+        "aws_internet_gateway.igw",
         "aws_internet_gateway.igw",
         "module.private-vpc.aws_route.private_nat_gateway"
     ],
@@ -82,9 +86,6 @@
     ],
     "module.private-vpc.aws_security_group.allow-strict_ec2_instance": [
         "module.ec2-instance.aws_instance.ec2_instance"
-    ],
-    "module.private-vpc.aws_security_group.allow-strict~1": [
-        "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1"
     ],
     "module.private-vpc.aws_security_group_rule.ingress_ssh[0]~1": [],
     "module.private-vpc.aws_subnet.private_subnets[0]~1": [

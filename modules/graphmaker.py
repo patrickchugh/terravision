@@ -8,7 +8,7 @@ diagram generation.
 
 import copy
 from typing import Dict, List, Any, Tuple, Generator, Optional
-
+import re
 import click
 
 import modules.config_loader as config_loader
@@ -145,14 +145,15 @@ def check_relationship(
         matching = []
 
         # Handle list references (e.g., resource[0])
-        if "[" in param and "[*]" not in param and param != "[]":
+        if re.search(r'\[\d+\]', param) and "[*]" not in param and param != "[]":
             matching = list(
                 {
                     s
                     for s in nodes
-                    if helpers.remove_numbered_suffix(s) in param.replace(".*", "")
+                    if s.split("~")[0] in param.replace(".*", "")
                 }
             )
+            pass
         else:
             # Extract Terraform resource references from parameter
             extracted_resources_list = helpers.extract_terraform_resource(param)
