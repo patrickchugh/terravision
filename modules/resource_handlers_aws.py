@@ -742,21 +742,328 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle EKS service configurations.
+    """Handle EKS cluster and node group configurations.
+
+    Creates EKS service groups, expands node groups, and links control plane to workers.
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with ECS configured
+        Updated tfdata with EKS clusters and node groups configured
     """
-    eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
-    pass
-    # for ecs in ecs_nodes:
-    #     tfdata["meta_data"][ecs]["count"] = 3
-    # ecs_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_ek_cluster")
-    # for eks in eks_nodes:
-    #     del tfdata["graphdict"][eks]
+    # Process EKS resources in order
+    tfdata = handle_eks_cluster_grouping(tfdata)
+    tfdata = link_eks_control_plane_to_nodes(tfdata)
+    tfdata = match_node_groups_to_subnets(tfdata)
+    tfdata = link_node_groups_to_worker_nodes(tfdata)
+    return tfdata
+
+
+def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Create EKS service group and move control plane into it.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with EKS service groups created
+    """
+    # Find all EKS clusters
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+
+    if not eks_clusters:
+        return tfdata
+
+    # Create EKS service group for each cluster
+    for cluster in eks_clusters:
+        cluster_name = cluster.split(".")[-1]
+        eks_group_name = f"aws_group.eks_service_{cluster_name}"
+
+        # Create EKS service group
+        if eks_group_name not in tfdata["graphdict"]:
+            tfdata["graphdict"][eks_group_name] = []
+            tfdata["meta_data"][eks_group_name] = {
+                "type": "eks_service",
+                "name": f"EKS Service - {cluster_name}",
+            }
+
+        # Move control plane into EKS service group
+        if cluster not in tfdata["graphdict"][eks_group_name]:
+            tfdata["graphdict"][eks_group_name].append(cluster)
+
+        # Remove cluster from VPC/subnet hierarchy
+        for node in sorted(tfdata["graphdict"].keys()):
+            node_type = helpers.get_no_module_name(node).split(".")[0]
+            if node_type in ["aws_vpc", "aws_subnet", "aws_az"]:
+                if cluster in tfdata["graphdict"][node]:
+                    tfdata["graphdict"][node].remove(cluster)
+
+    return tfdata
+
+
+def link_eks_control_plane_to_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Expand node groups and link control plane to them.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with node groups expanded and linked
+    """
+    # Find EKS clusters and node groups
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+    eks_node_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_node_group"
+    )
+
+    for cluster in eks_clusters:
+        cluster_name = cluster.split(".")[-1]
+
+        # Find node groups belonging to this cluster
+        cluster_node_groups = []
+        for node_group in eks_node_groups:
+            # Check if node group references this cluster
+            if node_group in tfdata["meta_data"]:
+                cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
+                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
+                    cluster_node_groups.append(node_group)
+
+        # Expand node groups if they have desired_size > 1
+        for node_group in list(cluster_node_groups):
+            node_count = 1
+
+            # Get desired instance count
+            if node_group in tfdata["meta_data"]:
+                if "desired_size" in tfdata["meta_data"][node_group]:
+                    node_count = tfdata["meta_data"][node_group]["desired_size"]
+                elif "count" in tfdata["meta_data"][node_group]:
+                    node_count = tfdata["meta_data"][node_group]["count"]
+
+            # Convert to int if string
+            if isinstance(node_count, str):
+                try:
+                    node_count = int(node_count)
+                except (ValueError, TypeError):
+                    node_count = 1
+
+            # Create numbered node group instances if needed
+            if node_count > 1 and "~" not in node_group:
+                for i in range(1, node_count + 1):
+                    numbered_node_group = f"{node_group}~{i}"
+                    tfdata["graphdict"][numbered_node_group] = list(
+                        tfdata["graphdict"].get(node_group, [])
+                    )
+                    tfdata["meta_data"][numbered_node_group] = copy.deepcopy(
+                        tfdata["meta_data"].get(node_group, {})
+                    )
+
+                # Remove original unnumbered node group
+                if node_group in tfdata["graphdict"]:
+                    del tfdata["graphdict"][node_group]
+                if node_group in tfdata["meta_data"]:
+                    del tfdata["meta_data"][node_group]
+
+        # Link cluster to all node groups (numbered or not)
+        all_node_groups = helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "aws_eks_node_group"
+        )
+
+        for node_group in all_node_groups:
+            # Verify this node group belongs to this cluster
+            if node_group in tfdata["meta_data"]:
+                cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
+                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
+                    # Add connection from cluster to node group
+                    if node_group not in tfdata["graphdict"][cluster]:
+                        tfdata["graphdict"][cluster].append(node_group)
+
+    return tfdata
+
+
+def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Match node groups to subnets by suffix pattern.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with node groups matched to subnets
+    """
+    suffix_pattern = r"~(\d+)$"
+
+    # Find all node groups and subnets
+    eks_node_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_node_group"
+    )
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+
+    # Process each node group
+    for node_group in eks_node_groups:
+        # Check if node group has subnet references in metadata
+        subnet_ids = []
+        if node_group in tfdata["meta_data"]:
+            subnet_ids = tfdata["meta_data"][node_group].get("subnet_ids", [])
+            if isinstance(subnet_ids, str):
+                subnet_ids = [subnet_ids]
+
+        # Match numbered node groups to numbered subnets
+        if "~" in node_group:
+            node_match = re.search(suffix_pattern, node_group)
+            if node_match:
+                node_suffix = node_match.group(1)
+
+                # Find matching subnets with same suffix
+                for subnet in subnets:
+                    if "~" in subnet:
+                        subnet_match = re.search(suffix_pattern, subnet)
+                        if subnet_match and subnet_match.group(1) == node_suffix:
+                            # Add node group to this subnet
+                            if node_group not in tfdata["graphdict"][subnet]:
+                                tfdata["graphdict"][subnet].append(node_group)
+
+                            # Remove node group from other subnets
+                            for other_subnet in subnets:
+                                if other_subnet != subnet:
+                                    if node_group in tfdata["graphdict"][other_subnet]:
+                                        tfdata["graphdict"][other_subnet].remove(
+                                            node_group
+                                        )
+        else:
+            # Unnumbered node group - determine matching subnets
+            matching_subnets = []
+
+            for subnet in subnets:
+                subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+                subnet_name = subnet.split(".")[-1]
+
+                # Check if subnet matches by ID or name
+                if any(
+                    subnet_id in str(sid) or subnet_name in str(sid)
+                    for sid in subnet_ids
+                ):
+                    matching_subnets.append(subnet)
+
+            # If node group spans multiple subnets, create numbered instances
+            if len(matching_subnets) > 1:
+                # Create numbered node group instances
+                for i, subnet in enumerate(matching_subnets, start=1):
+                    numbered_node_group = f"{node_group}~{i}"
+
+                    # Create numbered instance if doesn't exist
+                    if numbered_node_group not in tfdata["graphdict"]:
+                        tfdata["graphdict"][numbered_node_group] = list(
+                            tfdata["graphdict"].get(node_group, [])
+                        )
+                        tfdata["meta_data"][numbered_node_group] = copy.deepcopy(
+                            tfdata["meta_data"].get(node_group, {})
+                        )
+
+                    # Add numbered node group to subnet
+                    if numbered_node_group not in tfdata["graphdict"][subnet]:
+                        tfdata["graphdict"][subnet].append(numbered_node_group)
+
+                # Remove original unnumbered node group
+                if node_group in tfdata["graphdict"]:
+                    del tfdata["graphdict"][node_group]
+                if node_group in tfdata["meta_data"]:
+                    del tfdata["meta_data"][node_group]
+
+            elif len(matching_subnets) == 1:
+                # Single subnet - add node group directly
+                subnet = matching_subnets[0]
+                if node_group not in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].append(node_group)
+
+    # Link any newly created numbered node groups to their control plane
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+    all_node_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_node_group"
+    )
+
+    for cluster in eks_clusters:
+        cluster_name = cluster.split(".")[-1]
+        for node_group in all_node_groups:
+            # Check if this node group belongs to this cluster
+            if node_group in tfdata["meta_data"]:
+                cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
+                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
+                    # Add connection from cluster to node group if not already present
+                    if node_group not in tfdata["graphdict"].get(cluster, []):
+                        tfdata["graphdict"][cluster].append(node_group)
+
+    return tfdata
+
+
+def link_node_groups_to_worker_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Link node groups to EC2 instances or Auto Scaling Groups.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with worker nodes linked to node groups
+    """
+    # Find node groups and potential worker nodes
+    eks_node_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_node_group"
+    )
+    ec2_instances = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_instance"
+    )
+    auto_scaling_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_autoscaling_group"
+    )
+
+    for node_group in eks_node_groups:
+        node_group_name = (
+            node_group.split(".")[-1].replace("~", "").replace("[", "").replace("]", "")
+        )
+
+        # Check for ASG-based node groups
+        for asg in auto_scaling_groups:
+            # Check if ASG tags reference this node group
+            if asg in tfdata["meta_data"]:
+                tags = tfdata["meta_data"][asg].get("tags", {})
+                asg_name = asg.split(".")[-1]
+
+                # Match by name or tags
+                if (
+                    node_group_name in asg_name
+                    or node_group_name in str(tags)
+                    or "eks:nodegroup-name" in str(tags)
+                ):
+                    # Link node group to ASG
+                    if asg not in tfdata["graphdict"][node_group]:
+                        tfdata["graphdict"][node_group].append(asg)
+
+        # Check for EC2-based worker nodes
+        for instance in ec2_instances:
+            if instance in tfdata["meta_data"]:
+                tags = tfdata["meta_data"][instance].get("tags", {})
+
+                # Check if instance tags reference this node group
+                if "eks:nodegroup-name" in str(tags):
+                    nodegroup_tag = str(tags.get("eks:nodegroup-name", ""))
+                    if node_group_name in nodegroup_tag:
+                        # Link node group to EC2 instance
+                        if instance not in tfdata["graphdict"][node_group]:
+                            tfdata["graphdict"][node_group].append(instance)
+
+        # If node group has no workers, add metadata note
+        if not tfdata["graphdict"].get(node_group):
+            if node_group in tfdata["meta_data"]:
+                desired_size = tfdata["meta_data"][node_group].get("desired_size", "")
+                tfdata["meta_data"][node_group][
+                    "note"
+                ] = f"Manages worker nodes (count: {desired_size})"
+
     return tfdata
 
 
