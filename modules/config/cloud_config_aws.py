@@ -303,7 +303,7 @@ Please refine this diagram following AWS conventions and industry best practices
 7. Add implied connections (e.g., Lambda in VPC needs ENI connection, ECS or EKS will connect to an ECR repository node)
 8. Autoscaling targets should appear as group type nodes within their relevant subnet with the same instance number
 9. NAT Gateways in a public subnet should be duplicated with incremental instance numbers in all public subnets to show multi-AZ deployment
-10. EKS Cluster nodes should be inside subnet groups
+10. EKS Cluster worker nodes should be inside subnet groups
 
 """
 

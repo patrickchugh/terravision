@@ -780,7 +780,7 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Create EKS service group for each cluster
     for cluster in eks_clusters:
         cluster_name = cluster.split(".")[-1]
-        eks_group_name = f"aws_group.eks_service_{cluster_name}"
+        eks_group_name = f"aws_group.eks_control_plane_{cluster_name}"
 
         # Create EKS service group
         if eks_group_name not in tfdata["graphdict"]:

@@ -385,7 +385,7 @@ def unique_services(nodelist: List[str]) -> List[str]:
 
 
 def remove_numbered_suffix(s: str) -> str:
-    """Remove numbered suffix (~N) from resource name.
+    """Remove numbered suffix (~N) or [N] from resource name.
 
     Args:
         s: Resource name potentially with suffix
@@ -393,7 +393,8 @@ def remove_numbered_suffix(s: str) -> str:
     Returns:
         Resource name without suffix
     """
-    return s.split("~")[0] if "~" in s else s
+    s = s.split("~")[0] if "~" in s else s
+    return re.sub(r'\[\d+\]', '', s)
 
 
 def find_between(
