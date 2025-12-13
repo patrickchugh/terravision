@@ -676,7 +676,8 @@ def find_resource_in_all_resource(
 
 
 def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract resource attributes from Terraform source and plan data and merge to create metadata.
+    """Extract resource attributes from raw Terraform source code and merge with attributes from terraform plan. 
+    Required so that relationships between resources can be accurately mapped and any variables in attributes that point to other resources resolved.
 
     Args:
         tfdata: Terraform data dictionary
