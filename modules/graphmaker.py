@@ -145,13 +145,9 @@ def check_relationship(
         matching = []
 
         # Handle list references (e.g., resource[0])
-        if re.search(r'\[\d+\]', param) and "[*]" not in param and param != "[]":
+        if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
             matching = list(
-                {
-                    s
-                    for s in nodes
-                    if s.split("~")[0] in param.replace(".*", "")
-                }
+                {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
             )
             pass
         else:

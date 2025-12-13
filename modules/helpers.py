@@ -394,7 +394,7 @@ def remove_numbered_suffix(s: str) -> str:
         Resource name without suffix
     """
     s = s.split("~")[0] if "~" in s else s
-    return re.sub(r'\[\d+\]', '', s)
+    return re.sub(r"\[\d+\]", "", s)
 
 
 def find_between(
