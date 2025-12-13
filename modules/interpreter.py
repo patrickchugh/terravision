@@ -676,8 +676,10 @@ def find_resource_in_all_resource(
 
 
 def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract resource attributes from raw Terraform source code and merge with attributes from terraform plan. 
-    Required so that relationships between resources can be accurately mapped and any variables in attributes that point to other resources resolved.
+    """
+    Extract resource attributes from raw Terraform source code and merge with attributes from terraform plan.
+    Required so that relationships between resources can be accurately mapped by revealing attributes with original variable names,
+    that often point to other resources once resolved.
 
     Args:
         tfdata: Terraform data dictionary
@@ -711,6 +713,12 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if md.get("count"):
                 md["original_count"] = str(md["count"])
             omd.update(md)
+            # Clean up metadata by removing empty or True values which add no info and clutter metadata
+            omd = {
+                k: v
+                for k, v in omd.items()
+                if v is not True and v != "" and v != {} and v != [] and v != None
+            }
             meta_data[resource_node] = omd
             if "~" in resource_node or meta_data[resource_node].get("count"):
                 meta_data = handle_numbered_nodes(resource_node, tfdata, meta_data)
