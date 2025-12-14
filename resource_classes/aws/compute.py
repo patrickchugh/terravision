@@ -106,6 +106,7 @@ aws_ecs_service = ElasticContainerService
 aws_ecs_cluster = ElasticContainerService
 aws_ecs = ElasticContainerService
 aws_ecs_fargate = Fargate
+aws_eks_fargate_profile = Fargate
 aws_fargate = Fargate
 aws_ecs_ec2 = EC2
 aws_ec2ecs = EC2

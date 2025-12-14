@@ -756,6 +756,7 @@ def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata = handle_eks_cluster_grouping(tfdata)
     tfdata = link_eks_control_plane_to_nodes(tfdata)
     tfdata = match_node_groups_to_subnets(tfdata)
+    tfdata = match_fargate_profiles_to_subnets(tfdata)
     tfdata = link_node_groups_to_worker_nodes(tfdata)
     return tfdata
 
@@ -1067,6 +1068,113 @@ def link_node_groups_to_worker_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Match Fargate profiles to subnets by creating numbered instances.
+
+    When a Fargate profile spans multiple subnets, create numbered instances
+    (profile~1, profile~2) to match each subnet. Delete the original unnumbered
+    profile after creating numbered instances.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with Fargate profiles matched to subnets
+    """
+    # Find all fargate profiles and subnets
+    fargate_profiles = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_fargate_profile"
+    )
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+
+    for profile in list(fargate_profiles):
+        # Skip if already numbered
+        if "~" in profile:
+            continue
+
+        # Check if profile has subnet references in metadata
+        subnet_ids = []
+        if profile in tfdata["meta_data"]:
+            subnet_ids = tfdata["meta_data"][profile].get("subnet_ids", [])
+            if isinstance(subnet_ids, str):
+                subnet_ids = [subnet_ids]
+
+        # Find matching subnets
+        matching_subnets = []
+        for subnet in subnets:
+            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+            subnet_name = subnet.split(".")[-1]
+
+            # Check if subnet matches by ID or name
+            if any(
+                subnet_id in str(sid) or subnet_name in str(sid) for sid in subnet_ids
+            ):
+                matching_subnets.append(subnet)
+
+        # If profile spans multiple subnets, create numbered instances
+        if len(matching_subnets) > 1:
+            # Sort for deterministic suffix assignment
+            matching_subnets = sorted(matching_subnets)
+
+            for i, subnet in enumerate(matching_subnets, start=1):
+                numbered_profile = f"{profile}~{i}"
+
+                # Create numbered instance
+                if numbered_profile not in tfdata["graphdict"]:
+                    tfdata["graphdict"][numbered_profile] = list(
+                        tfdata["graphdict"].get(profile, [])
+                    )
+                    tfdata["meta_data"][numbered_profile] = copy.deepcopy(
+                        tfdata["meta_data"].get(profile, {})
+                    )
+
+                # Add numbered profile to subnet
+                if numbered_profile not in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].append(numbered_profile)
+
+                # Remove unnumbered profile from subnet if present
+                if profile in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].remove(profile)
+
+            # Update EKS cluster to reference numbered profiles
+            eks_clusters = helpers.list_of_dictkeys_containing(
+                tfdata["graphdict"], "aws_eks_cluster"
+            )
+            for cluster in eks_clusters:
+                if profile in tfdata["graphdict"].get(cluster, []):
+                    tfdata["graphdict"][cluster].remove(profile)
+                    # Add all numbered profiles to cluster
+                    for i in range(1, len(matching_subnets) + 1):
+                        numbered_profile = f"{profile}~{i}"
+                        if numbered_profile not in tfdata["graphdict"][cluster]:
+                            tfdata["graphdict"][cluster].append(numbered_profile)
+
+            # Update other resources that reference the Fargate profile
+            # (e.g., IAM roles for Fargate pod execution)
+            for resource in list(tfdata["graphdict"].keys()):
+                if profile in tfdata["graphdict"][resource]:
+                    tfdata["graphdict"][resource].remove(profile)
+                    # Add all numbered profiles
+                    for i in range(1, len(matching_subnets) + 1):
+                        numbered_profile = f"{profile}~{i}"
+                        if numbered_profile not in tfdata["graphdict"][resource]:
+                            tfdata["graphdict"][resource].append(numbered_profile)
+
+            # Remove original unnumbered profile
+            if profile in tfdata["graphdict"]:
+                del tfdata["graphdict"][profile]
+            if profile in tfdata["meta_data"]:
+                del tfdata["meta_data"][profile]
+
+        elif len(matching_subnets) == 1:
+            # Single subnet - keep as is
+            subnet = matching_subnets[0]
+            if profile not in tfdata["graphdict"][subnet]:
+                tfdata["graphdict"][subnet].append(profile)
+
+    return tfdata
+
+
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Remove random string resources from graph.
 
@@ -1284,8 +1392,10 @@ def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
                 if dep_match and dep_match.group(1) == az_suffix:
                     matched_subnets.append(dep)
 
-        # Update AZ with only matched subnets
-        result[az] = matched_subnets
+        # Update AZ with matched subnets if found, otherwise preserve original
+        if matched_subnets:
+            result[az] = matched_subnets
+        # Otherwise keep the original dependencies (don't replace with empty list)
 
     return result
 

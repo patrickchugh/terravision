@@ -1000,7 +1000,12 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If cosolidated node, add all connections to node
+            # Skip this logic for EKS Fargate profiles which are manually matched to subnets
             if "~" in c and (helpers.consolidated_node_check(node) or "~" not in node):
+                # Skip Fargate profiles - they are matched to subnets by suffix in aws_handle_eks
+                if "aws_eks_fargate_profile" in c:
+                    continue
+
                 for i in range(1, int(c.split("~")[1]) + 4):
                     suffixed_node = f"{c.split('~')[0]}~{i}"
                     if (
