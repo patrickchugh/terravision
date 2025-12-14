@@ -164,6 +164,7 @@ AWS_AUTO_ANNOTATIONS = [
 # Variant icons for the same service - matches keyword in meta data and changes resource type
 AWS_NODE_VARIANTS = {
     "aws_ecs_service": {"FARGATE": "aws_fargate", "EC2": "aws_ec2ecs"},
+    "aws_eks_cluster": {"compute_config": "aws_eks_cluster_auto"},
     "aws_lb": {"application": "aws_alb", "network": "aws_nlb"},
     "aws_rds": {
         "aurora": "aws_rds_aurora",

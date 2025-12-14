@@ -37,6 +37,8 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for d in DISCONNECT_SERVICES:
             if d in r:
                 tfdata["graphdict"][r] = []
+    # Fill empty groups with blank nodes
+    tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
     return tfdata
 
 
@@ -754,10 +756,51 @@ def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Process EKS resources in order
     tfdata = handle_eks_cluster_grouping(tfdata)
+    tfdata = expand_eks_auto_mode_clusters(tfdata)
     tfdata = link_eks_control_plane_to_nodes(tfdata)
     tfdata = match_node_groups_to_subnets(tfdata)
     tfdata = match_fargate_profiles_to_subnets(tfdata)
     tfdata = link_node_groups_to_worker_nodes(tfdata)
+    return tfdata
+
+
+def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Create numbered instances of aws_eks_cluster.auto for each subnet.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with numbered auto cluster instances
+    """
+    auto_cluster = "aws_eks_cluster.auto"
+    if auto_cluster not in tfdata["graphdict"]:
+        return tfdata
+
+    parents = helpers.list_of_parents(tfdata["graphdict"], auto_cluster)
+    subnets = [p for p in parents if "aws_subnet" in p]
+    
+    if len(subnets) <= 1:
+        return tfdata
+
+    counter = 1
+    for subnet in sorted(subnets):
+        numbered = f"{auto_cluster}_{counter}"
+        tfdata["graphdict"][numbered] = []
+        tfdata["meta_data"][numbered] = copy.deepcopy(tfdata["meta_data"][auto_cluster])
+        tfdata["graphdict"][subnet].remove(auto_cluster)
+        tfdata["graphdict"][subnet].append(numbered)
+        counter += 1
+
+    eks_group = "aws_group.eks_control_plane_auto"
+    if eks_group in tfdata["graphdict"]:
+        tfdata["graphdict"][eks_group].remove(auto_cluster)
+        for i in range(1, counter):
+            tfdata["graphdict"][eks_group].append(f"{auto_cluster}_{i}")
+
+    del tfdata["graphdict"][auto_cluster]
+    del tfdata["meta_data"][auto_cluster]
+
     return tfdata
 
 
@@ -794,6 +837,10 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Move control plane into EKS service group
         if cluster not in tfdata["graphdict"][eks_group_name]:
             tfdata["graphdict"][eks_group_name].append(cluster)
+
+        # Skip removing from subnets if cluster name is 'auto' (EKS Auto Mode)
+        if cluster_name == "auto":
+            continue
 
         # Remove cluster from VPC/subnet hierarchy
         for node in sorted(tfdata["graphdict"].keys()):
@@ -1210,6 +1257,41 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Remove generic subnet references
     tfdata["graphdict"] = _remove_consolidated_subnet_refs(tfdata["graphdict"])
     return tfdata
+
+
+
+def _fill_empty_groups_with_space(
+    graphdict: Dict[str, List[str]],
+) -> Dict[str, List[str]]:
+    """Connect orphaned group nodes to blank nodes.
+
+    Args:
+        graphdict: Resource graph dictionary
+
+    Returns:
+        Updated graphdict with orphaned group nodes connected to blank nodes
+    """
+    suffix_pattern = r"~(\d+)$"
+    counter = 1
+    
+    for resource in list(graphdict.keys()):
+        # Check if resource starts with any GROUP_NODES prefix
+        resource_type = helpers.get_no_module_name(resource).split(".")[0]
+        if any(resource_type.startswith(g) for g in GROUP_NODES):
+            # Check if resource has any outgoing connections
+            if not graphdict.get(resource):
+                # Extract suffix if present, otherwise use sequential counter
+                match = re.search(suffix_pattern, resource)
+                suffix = f"~{match.group(1)}" if match else f"~{counter}"
+                if not match:
+                    counter += 1
+                blank_node = f"tv_blank.empty{suffix}"
+                graphdict[resource] = [blank_node]
+                # Ensure blank node exists in graph
+                if blank_node not in graphdict:
+                    graphdict[blank_node] = []
+    
+    return graphdict
 
 
 def _remove_consolidated_subnet_refs(

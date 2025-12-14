@@ -497,8 +497,9 @@ def pretty_name(name: str, show_title=True) -> str:
     Beautification for AWS Labels
     """
     resourcename = ""
-    if "null_" in name or "random" in name or "time_sleep" in name:
-        return "Null"
+    skip_keywords = ["null_", "random", "time_sleep", "empty", "blank"]
+    if any(keyword in name for keyword in skip_keywords):
+        return " "
     else:
         name = name.replace("tv_aws_", "")
         name = name.replace("aws_", "")

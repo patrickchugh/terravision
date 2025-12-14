@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.78.0"
+    }
+  }
+}
+
 resource "aws_eks_cluster" "auto" {
   name     = "eks-auto-cluster"
   role_arn = aws_iam_role.cluster.arn
@@ -7,6 +16,12 @@ resource "aws_eks_cluster" "auto" {
     enabled       = true
     node_pools    = ["general-purpose", "system"]
     node_role_arn = aws_iam_role.node.arn
+  }
+
+  kubernetes_network_config {
+    elastic_load_balancing {
+      enabled = true
+    }
   }
 
   vpc_config {

@@ -1,0 +1,54 @@
+{
+    "aws_az.availability_zone_us_east_1a~1": [
+        "aws_subnet.private_1"
+    ],
+    "aws_az.availability_zone_us_east_1b~2": [
+        "aws_subnet.private_2"
+    ],
+    "aws_ecr_repository.ecr": [],
+    "aws_eks_cluster.main": [
+        "aws_ecr_repository.ecr",
+        "aws_eks_fargate_profile.default~1",
+        "aws_eks_fargate_profile.default~2",
+        "aws_eks_fargate_profile.kube_system~1",
+        "aws_eks_fargate_profile.kube_system~2"
+    ],
+    "aws_eks_fargate_profile.default~1": [],
+    "aws_eks_fargate_profile.default~2": [],
+    "aws_eks_fargate_profile.kube_system~1": [],
+    "aws_eks_fargate_profile.kube_system~2": [],
+    "aws_eks_service.eks": [
+        "aws_eks_cluster.main"
+    ],
+    "aws_group.eks_control_plane_main": [
+        "aws_eks_cluster.main"
+    ],
+    "aws_group.shared_services": [
+        "aws_ecr_repository.ecr"
+    ],
+    "aws_iam_role.cluster": [
+        "aws_eks_cluster.main",
+        "aws_iam_role_policy_attachment.cluster_policy"
+    ],
+    "aws_iam_role.fargate_pod": [
+        "aws_eks_fargate_profile.default~1",
+        "aws_eks_fargate_profile.default~2",
+        "aws_eks_fargate_profile.kube_system~1",
+        "aws_eks_fargate_profile.kube_system~2",
+        "aws_iam_role_policy_attachment.fargate_pod_policy"
+    ],
+    "aws_iam_role_policy_attachment.cluster_policy": [],
+    "aws_iam_role_policy_attachment.fargate_pod_policy": [],
+    "aws_subnet.private_1": [
+        "aws_eks_fargate_profile.default~1",
+        "aws_eks_fargate_profile.kube_system~1"
+    ],
+    "aws_subnet.private_2": [
+        "aws_eks_fargate_profile.default~2",
+        "aws_eks_fargate_profile.kube_system~2"
+    ],
+    "aws_vpc.main": [
+        "aws_az.availability_zone_us_east_1a~1",
+        "aws_az.availability_zone_us_east_1b~2"
+    ]
+}

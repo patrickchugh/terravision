@@ -25,10 +25,11 @@ class ElasticContainerRegistry(_Compute):
 class EC2(_Compute):
     _icon = "ec2.png"
 
+class EC2Instance(_Compute):
+    _icon = "ec2-instance.png"
 
-class EC2_instances(_Compute):
+class EC2Instances(_Compute):
     _icon = "ec2-instances.png"
-
 
 class ElasticBeanstalk(_Compute):
     _icon = "elastic-beanstalk.png"
@@ -108,13 +109,15 @@ aws_ecs = ElasticContainerService
 aws_ecs_fargate = Fargate
 aws_eks_fargate_profile = Fargate
 aws_fargate = Fargate
-aws_ecs_ec2 = EC2
-aws_ec2ecs = EC2
+aws_ecs_ec2 = EC2Instance
+aws_ec2ecs = EC2Instance
 aws_eks_service = ElasticKubernetesService
-aws_eks_cluster = EC2_instances
-aws_eks_node_group = EC2_instances
+aws_eks_cluster = EC2Instances
+aws_eks_cluster_auto = EC2
+aws_eks_node_group = EC2Instances
 aws_elastic_beanstalk_application = ElasticBeanstalk
-aws_instance = EC2
+aws_instance = EC2Instance
 aws_lambda_function = Lambda
 aws_lightsail_instance = Lightsail
 aws_eip = ElasticIP
+ 

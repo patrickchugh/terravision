@@ -6,7 +6,10 @@ from . import _AWS
 class _General(_AWS):
     _type = "general"
     _icon_dir = "resource_images/aws/general"
+ 
 
+class Blank(_General):
+    _icon = "blank.png"
 
 class InternetGateway(_General):
     _icon = "Internet-gateway.png"
@@ -112,3 +115,6 @@ OfficeBuilding = GenericOfficeBuilding
 tv_aws_users = Users
 tv_aws_internet = InternetAlt1
 aws_internet_gateway = InternetGateway
+tv_blank = Blank
+tv_empty = Blank
+no_icon = Blank
