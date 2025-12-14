@@ -37,8 +37,7 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for d in DISCONNECT_SERVICES:
             if d in r:
                 tfdata["graphdict"][r] = []
-    # Fill empty groups with blank nodes
-    tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
+    
     return tfdata
 
 
@@ -302,6 +301,8 @@ def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Link parent to AZ
             if az not in tfdata["graphdict"][parent]:
                 tfdata["graphdict"][parent].append(az)
+    # Fill empty groups with blank nodes
+    tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
     return tfdata
 
 
@@ -788,15 +789,24 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         numbered = f"{auto_cluster}_{counter}"
         tfdata["graphdict"][numbered] = []
         tfdata["meta_data"][numbered] = copy.deepcopy(tfdata["meta_data"][auto_cluster])
-        tfdata["graphdict"][subnet].remove(auto_cluster)
-        tfdata["graphdict"][subnet].append(numbered)
+        
+        managed_group = f"aws_group.aws_managed_ec2_{counter}"
+        tfdata["graphdict"][managed_group] = [numbered]
+        tfdata["meta_data"][managed_group] = {}
+        
+        tfdata["graphdict"][subnet] = [managed_group if x == auto_cluster else x for x in tfdata["graphdict"][subnet]]
         counter += 1
 
-    eks_group = "aws_group.eks_control_plane_auto"
+    eks_service = "aws_eks_service.eks"
+    tfdata["graphdict"][eks_service] = []
+    tfdata["meta_data"][eks_service] = {}
+    for i in range(1, counter):
+        tfdata["graphdict"][eks_service].append(f"{auto_cluster}_{i}")
+
+    eks_group = "aws_account.eks_control_plane_auto"
     if eks_group in tfdata["graphdict"]:
         tfdata["graphdict"][eks_group].remove(auto_cluster)
-        for i in range(1, counter):
-            tfdata["graphdict"][eks_group].append(f"{auto_cluster}_{i}")
+        tfdata["graphdict"][eks_group].append(eks_service)
 
     del tfdata["graphdict"][auto_cluster]
     del tfdata["meta_data"][auto_cluster]
@@ -824,7 +834,7 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Create EKS service group for each cluster
     for cluster in eks_clusters:
         cluster_name = cluster.split(".")[-1]
-        eks_group_name = f"aws_group.eks_control_plane_{cluster_name}"
+        eks_group_name = f"aws_account.eks_control_plane_{cluster_name}"
 
         # Create EKS service group
         if eks_group_name not in tfdata["graphdict"]:
@@ -1263,6 +1273,7 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 def _fill_empty_groups_with_space(
     graphdict: Dict[str, List[str]],
 ) -> Dict[str, List[str]]:
+   
     """Connect orphaned group nodes to blank nodes.
 
     Args:
@@ -1277,7 +1288,7 @@ def _fill_empty_groups_with_space(
     for resource in list(graphdict.keys()):
         # Check if resource starts with any GROUP_NODES prefix
         resource_type = helpers.get_no_module_name(resource).split(".")[0]
-        if any(resource_type.startswith(g) for g in GROUP_NODES):
+        if  resource_type == "aws_subnet" or resource_type == "aws_vpc"  :
             # Check if resource has any outgoing connections
             if not graphdict.get(resource):
                 # Extract suffix if present, otherwise use sequential counter

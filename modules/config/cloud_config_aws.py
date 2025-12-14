@@ -102,6 +102,7 @@ AWS_GROUP_NODES = [
     "aws_vpc",
     "aws_az",
     "aws_group",
+    "aws_account",
     "aws_appautoscaling_target",
     "aws_subnet",
     "aws_security_group",

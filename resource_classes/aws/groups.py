@@ -116,6 +116,21 @@ class AWSGroup(Cluster):
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 
+class AWSAccount(Cluster):
+    def __init__(self, label="AWS Account", **kwargs):
+        aws_graph_attrs = {
+            "style": "solid",
+            "pencolor": "#e7157b",
+            "margin": "100",
+            "ordering": "in",
+            "penwidth": "2",
+            "center": "true",
+            "labeljust": "l",
+            "_shift": "1",
+        }
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws_account.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        super().__init__(aws_label, defaultdir, aws_graph_attrs)
+
 class OnPrem(Cluster):
     def __init__(self, label="Corporate Datacenter", **kwargs):
         aws_graph_attrs = {
@@ -133,6 +148,7 @@ class OnPrem(Cluster):
 
 aws_vpc = VPCgroup
 aws_group = GenericGroup
+aws_account = AWSAccount
 aws_security_group = SecurityGroup
 aws_subnet = SubnetGroup
 aws_appautoscaling_target = GenericAutoScalingGroup

@@ -42,7 +42,7 @@
     "aws_eks_service.eks": [
         "aws_eks_cluster.main"
     ],
-    "aws_group.eks_control_plane_main": [
+    "aws_account.eks_control_plane_main": [
         "aws_eks_cluster.main"
     ],
     "aws_group.shared_services": [
