@@ -37,7 +37,7 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for d in DISCONNECT_SERVICES:
             if d in r:
                 tfdata["graphdict"][r] = []
-    
+
     return tfdata
 
 
@@ -780,7 +780,7 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     parents = helpers.list_of_parents(tfdata["graphdict"], auto_cluster)
     subnets = [p for p in parents if "aws_subnet" in p]
-    
+
     if len(subnets) <= 1:
         return tfdata
 
@@ -789,12 +789,15 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         numbered = f"{auto_cluster}_{counter}"
         tfdata["graphdict"][numbered] = []
         tfdata["meta_data"][numbered] = copy.deepcopy(tfdata["meta_data"][auto_cluster])
-        
+
         managed_group = f"aws_group.aws_managed_ec2_{counter}"
         tfdata["graphdict"][managed_group] = [numbered]
         tfdata["meta_data"][managed_group] = {}
-        
-        tfdata["graphdict"][subnet] = [managed_group if x == auto_cluster else x for x in tfdata["graphdict"][subnet]]
+
+        tfdata["graphdict"][subnet] = [
+            managed_group if x == auto_cluster else x
+            for x in tfdata["graphdict"][subnet]
+        ]
         counter += 1
 
     eks_service = "aws_eks_service.eks"
@@ -1269,11 +1272,9 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-
 def _fill_empty_groups_with_space(
     graphdict: Dict[str, List[str]],
 ) -> Dict[str, List[str]]:
-   
     """Connect orphaned group nodes to blank nodes.
 
     Args:
@@ -1284,11 +1285,11 @@ def _fill_empty_groups_with_space(
     """
     suffix_pattern = r"~(\d+)$"
     counter = 1
-    
+
     for resource in list(graphdict.keys()):
         # Check if resource starts with any GROUP_NODES prefix
         resource_type = helpers.get_no_module_name(resource).split(".")[0]
-        if  resource_type == "aws_subnet" or resource_type == "aws_vpc"  :
+        if resource_type == "aws_subnet" or resource_type == "aws_vpc":
             # Check if resource has any outgoing connections
             if not graphdict.get(resource):
                 # Extract suffix if present, otherwise use sequential counter
@@ -1301,7 +1302,7 @@ def _fill_empty_groups_with_space(
                 # Ensure blank node exists in graph
                 if blank_node not in graphdict:
                     graphdict[blank_node] = []
-    
+
     return graphdict
 
 
