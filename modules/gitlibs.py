@@ -203,15 +203,22 @@ def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
     else:
         # URL with path segments: domain/owner/repo/subfolder/path
         parts = sourceURL.rstrip("/").split("/")
-        if len(parts) > 3:
-            # First 3 parts = domain/owner/repo, rest = subfolder
+        if sourceURL.startswith(("http://", "https://")):
+            # HTTPS URL: https://domain/owner/repo[.git] or https://domain/owner/repo/subfolder
+            if len(parts) > 5:
+                githubURL = "/".join(parts[:5])
+                subfolder = "/".join(parts[5:])
+            else:
+                githubURL = sourceURL
+        elif len(parts) > 3:
+            # Non-HTTP URL: domain/owner/repo/subfolder
             githubURL = "/".join(parts[:3])
             subfolder = "/".join(parts[3:])
+            githubURL = "https://" + githubURL
         else:
             githubURL = sourceURL
-
-        # Ensure HTTPS protocol prefix
-        githubURL = "https://" + githubURL if "http" not in githubURL else githubURL
+            if "http" not in githubURL:
+                githubURL = "https://" + githubURL
 
     return githubURL, subfolder, git_tag
 

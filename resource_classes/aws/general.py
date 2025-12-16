@@ -118,3 +118,4 @@ aws_internet_gateway = InternetGateway
 tv_blank = Blank
 tv_empty = Blank
 no_icon = Blank
+aws_security_group_rule = Blank
