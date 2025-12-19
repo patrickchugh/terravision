@@ -906,38 +906,9 @@ def link_eks_control_plane_to_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Expand node groups if they have desired_size > 1
         for node_group in list(cluster_node_groups):
-            node_count = 1
-
-            # Get desired instance count
-            if node_group in tfdata["meta_data"]:
-                if "desired_size" in tfdata["meta_data"][node_group]:
-                    node_count = tfdata["meta_data"][node_group]["desired_size"]
-                elif "count" in tfdata["meta_data"][node_group]:
-                    node_count = tfdata["meta_data"][node_group]["count"]
-
-            # Convert to int if string
-            if isinstance(node_count, str):
-                try:
-                    node_count = int(node_count)
-                except (ValueError, TypeError):
-                    node_count = 1
-
-            # Create numbered node group instances if needed
-            if node_count > 1 and "~" not in node_group:
-                for i in range(1, node_count + 1):
-                    numbered_node_group = f"{node_group}~{i}"
-                    tfdata["graphdict"][numbered_node_group] = list(
-                        tfdata["graphdict"].get(node_group, [])
-                    )
-                    tfdata["meta_data"][numbered_node_group] = copy.deepcopy(
-                        tfdata["meta_data"].get(node_group, {})
-                    )
-
-                # Remove original unnumbered node group
-                if node_group in tfdata["graphdict"]:
-                    del tfdata["graphdict"][node_group]
-                if node_group in tfdata["meta_data"]:
-                    del tfdata["meta_data"][node_group]
+            # Don't expand based on desired_size - that's for EC2 instances, not subnets
+            # Subnet-based expansion happens in match_node_groups_to_subnets
+            pass
 
         # Link cluster to all node groups (numbered or not)
         all_node_groups = helpers.list_of_dictkeys_containing(
@@ -957,7 +928,7 @@ def link_eks_control_plane_to_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Match node groups to subnets by suffix pattern.
+    """Match node groups to subnets using sorted order.
 
     Args:
         tfdata: Terraform data dictionary
@@ -965,107 +936,74 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with node groups matched to subnets
     """
-    suffix_pattern = r"~(\d+)$"
-
     # Find all node groups and subnets
     eks_node_groups = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_eks_node_group"
     )
-    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    subnets = sorted(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet"))
 
-    # Process each node group
-    for node_group in eks_node_groups:
-        # Check if node group has subnet references in metadata
-        subnet_ids = []
-        if node_group in tfdata["meta_data"]:
-            subnet_ids = tfdata["meta_data"][node_group].get("subnet_ids", [])
-            if isinstance(subnet_ids, str):
-                subnet_ids = [subnet_ids]
-
-        # Match numbered node groups to numbered subnets
+    # Process each unnumbered node group
+    for node_group in list(eks_node_groups):
         if "~" in node_group:
-            node_match = re.search(suffix_pattern, node_group)
-            if node_match:
-                node_suffix = node_match.group(1)
+            continue
 
-                # Find matching subnets with same suffix
-                for subnet in subnets:
-                    if "~" in subnet:
-                        subnet_match = re.search(suffix_pattern, subnet)
-                        if subnet_match and subnet_match.group(1) == node_suffix:
-                            # Add node group to this subnet
-                            if node_group not in tfdata["graphdict"][subnet]:
-                                tfdata["graphdict"][subnet].append(node_group)
+        # Get subnet references from metadata
+        subnet_ids = tfdata["meta_data"].get(node_group, {}).get("subnet_ids", [])
+        if isinstance(subnet_ids, str):
+            subnet_ids = [subnet_ids]
 
-                            # Remove node group from other subnets
-                            for other_subnet in subnets:
-                                if other_subnet != subnet:
-                                    if node_group in tfdata["graphdict"][other_subnet]:
-                                        tfdata["graphdict"][other_subnet].remove(
-                                            node_group
-                                        )
-        else:
-            # Unnumbered node group - determine matching subnets
-            matching_subnets = []
+        # Find matching subnets
+        matching_subnets = []
+        for subnet in subnets:
+            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+            if any(subnet_id in str(sid) for sid in subnet_ids):
+                matching_subnets.append(subnet)
 
+        # Sort for deterministic assignment
+        matching_subnets = sorted(matching_subnets)
+
+        # Create numbered instances if multiple subnets
+        if len(matching_subnets) > 1:
+            # Create numbered node groups
+            for i in range(1, len(matching_subnets) + 1):
+                numbered_node_group = f"{node_group}~{i}"
+                
+                if numbered_node_group not in tfdata["graphdict"]:
+                    tfdata["graphdict"][numbered_node_group] = list(tfdata["graphdict"].get(node_group, []))
+                    tfdata["meta_data"][numbered_node_group] = copy.deepcopy(tfdata["meta_data"].get(node_group, {}))
+
+            # Add each numbered node group to its corresponding subnet only
+            for i, subnet in enumerate(matching_subnets, start=1):
+                numbered_node_group = f"{node_group}~{i}"
+                if numbered_node_group not in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].append(numbered_node_group)
+
+            # Remove original from all subnets
             for subnet in subnets:
-                subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
-                subnet_name = subnet.split(".")[-1]
+                if node_group in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].remove(node_group)
 
-                # Check if subnet matches by ID or name
-                if any(
-                    subnet_id in str(sid) or subnet_name in str(sid)
-                    for sid in subnet_ids
-                ):
-                    matching_subnets.append(subnet)
+            # Delete original
+            if node_group in tfdata["graphdict"]:
+                del tfdata["graphdict"][node_group]
+            if node_group in tfdata["meta_data"]:
+                del tfdata["meta_data"][node_group]
 
-            # If node group spans multiple subnets, create numbered instances
-            if len(matching_subnets) > 1:
-                # Create numbered node group instances
-                for i, subnet in enumerate(matching_subnets, start=1):
-                    numbered_node_group = f"{node_group}~{i}"
+        elif len(matching_subnets) == 1:
+            subnet = matching_subnets[0]
+            if node_group not in tfdata["graphdict"][subnet]:
+                tfdata["graphdict"][subnet].append(node_group)
 
-                    # Create numbered instance if doesn't exist
-                    if numbered_node_group not in tfdata["graphdict"]:
-                        tfdata["graphdict"][numbered_node_group] = list(
-                            tfdata["graphdict"].get(node_group, [])
-                        )
-                        tfdata["meta_data"][numbered_node_group] = copy.deepcopy(
-                            tfdata["meta_data"].get(node_group, {})
-                        )
-
-                    # Add numbered node group to subnet
-                    if numbered_node_group not in tfdata["graphdict"][subnet]:
-                        tfdata["graphdict"][subnet].append(numbered_node_group)
-
-                # Remove original unnumbered node group
-                if node_group in tfdata["graphdict"]:
-                    del tfdata["graphdict"][node_group]
-                if node_group in tfdata["meta_data"]:
-                    del tfdata["meta_data"][node_group]
-
-            elif len(matching_subnets) == 1:
-                # Single subnet - add node group directly
-                subnet = matching_subnets[0]
-                if node_group not in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].append(node_group)
-
-    # Link any newly created numbered node groups to their control plane
-    eks_clusters = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_eks_cluster"
-    )
-    all_node_groups = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_eks_node_group"
-    )
+    # Link numbered node groups to control plane
+    eks_clusters = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_eks_cluster")
+    all_node_groups = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_eks_node_group")
 
     for cluster in eks_clusters:
         cluster_name = cluster.split(".")[-1]
         for node_group in all_node_groups:
-            # Check if this node group belongs to this cluster
             if node_group in tfdata["meta_data"]:
                 cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
                 if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
-                    # Add connection from cluster to node group if not already present
                     if node_group not in tfdata["graphdict"].get(cluster, []):
                         tfdata["graphdict"][cluster].append(node_group)
 

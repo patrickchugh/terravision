@@ -231,8 +231,9 @@ def compile_tfdata(
                 )
             )
         except Exception as e:
-            # If detection fails, default to AWS (backward compatibility)
-            click.echo(f"Warning: Provider detection failed ({e}), defaulting to AWS")
+            pass
+            # # If detection fails, default to AWS (backward compatibility)
+            # click.echo(f"Warning: Provider detection failed ({e}), defaulting to AWS")
 
     if "all_resource" in tfdata:
         _print_graph_debug(tfdata["graphdict"], "Terraform JSON graph dictionary")

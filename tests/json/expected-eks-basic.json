@@ -1,4 +1,7 @@
 {
+    "aws_account.eks_control_plane_main": [
+        "aws_eks_cluster.main"
+    ],
     "aws_az.availability_zone_us_east_1a~1": [
         "aws_subnet.private[0]~1",
         "aws_subnet.public[0]~1"
@@ -40,9 +43,6 @@
         "aws_iam_role_policy_attachment.eks_worker_node_policy"
     ],
     "aws_eks_service.eks": [
-        "aws_eks_cluster.main"
-    ],
-    "aws_account.eks_control_plane_main": [
         "aws_eks_cluster.main"
     ],
     "aws_group.shared_services": [
@@ -93,11 +93,9 @@
     ],
     "aws_subnet.private[0]~1": [
         "aws_eks_node_group.main~1",
-        "aws_eks_node_group.main~1",
         "aws_route_table_association.private[0]~1"
     ],
     "aws_subnet.private[1]~2": [
-        "aws_eks_node_group.main~2",
         "aws_eks_node_group.main~2",
         "aws_route_table_association.private[1]~2"
     ],

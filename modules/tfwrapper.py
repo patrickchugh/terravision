@@ -497,7 +497,7 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 subnet_cidr = ipaddr.IPNetwork(
                     tfdata["meta_data"][subnet]["cidr_block"]
                 )
-                # Add subnet to VPC if CIDR ranges overlap
-                if subnet_cidr.overlaps(vpc_cidr):
+                # Add subnet to VPC if CIDR ranges overlap and not already present
+                if subnet_cidr.overlaps(vpc_cidr) and subnet not in tfdata["graphdict"][vpc]:
                     tfdata["graphdict"][vpc].append(subnet)
     return tfdata

@@ -42,26 +42,16 @@ def _load_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     config = _get_provider_config(tfdata)
     provider = get_primary_provider_or_default(tfdata)
     provider_upper = provider.upper()
-
-    return {
-        "REVERSE_ARROW_LIST": getattr(
-            config, f"{provider_upper}_REVERSE_ARROW_LIST", []
-        ),
-        "IMPLIED_CONNECTIONS": getattr(
-            config, f"{provider_upper}_IMPLIED_CONNECTIONS", {}
-        ),
-        "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
-        "CONSOLIDATED_NODES": getattr(
-            config, f"{provider_upper}_CONSOLIDATED_NODES", []
-        ),
-        "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", []),
-        "SPECIAL_RESOURCES": getattr(config, f"{provider_upper}_SPECIAL_RESOURCES", {}),
-        "SHARED_SERVICES": getattr(config, f"{provider_upper}_SHARED_SERVICES", []),
-        "AUTO_ANNOTATIONS": getattr(config, f"{provider_upper}_AUTO_ANNOTATIONS", []),
-        "EDGE_NODES": getattr(config, f"{provider_upper}_EDGE_NODES", []),
-        "FORCED_DEST": getattr(config, f"{provider_upper}_FORCED_DEST", []),
-        "FORCED_ORIGIN": getattr(config, f"{provider_upper}_FORCED_ORIGIN", []),
-    }
+    
+    # Load all constants from config that match provider prefix
+    constants = {}
+    for attr_name in dir(config):
+        if attr_name.startswith(f"{provider_upper}_") and not attr_name.startswith("_"):
+            # Remove provider prefix from key name
+            key_name = attr_name.replace(f"{provider_upper}_", "")
+            constants[key_name] = getattr(config, attr_name)
+    
+    return constants
 
 
 def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -991,6 +981,10 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with corrected singular references
     """
+    # Load provider-specific constants
+    constants = _load_config_constants(tfdata)
+    SKIP_SINGULAR_EXPANSION = constants.get("SKIP_SINGULAR_EXPANSION", [])
+    
     for node, connections in dict(tfdata["graphdict"]).items():
         for c in list(connections):
             if "~" in node and not "~" in c:
@@ -1000,10 +994,11 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If cosolidated node, add all connections to node
-            # Skip this logic for EKS Fargate profiles which are manually matched to subnets
+            # Skip resources that are manually matched to subnets by suffix in their handlers
             if "~" in c and (helpers.consolidated_node_check(node) or "~" not in node):
-                # Skip Fargate profiles - they are matched to subnets by suffix in aws_handle_eks
-                if "aws_eks_fargate_profile" in c:
+                # Check if connection should skip automatic expansion
+                should_skip = any(skip_pattern in c for skip_pattern in SKIP_SINGULAR_EXPANSION)
+                if should_skip:
                     continue
 
                 for i in range(1, int(c.split("~")[1]) + 4):
