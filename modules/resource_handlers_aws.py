@@ -807,17 +807,24 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"][eks_service].append(f"{auto_cluster}_{i}")
 
     eks_group = "aws_account.eks_control_plane_auto"
-    
+
     # Redirect all parent connections to expanded nodes (except eks_group)
     for parent in parents:
-        if parent != eks_group and parent in tfdata["graphdict"] and auto_cluster in tfdata["graphdict"][parent]:
+        if (
+            parent != eks_group
+            and parent in tfdata["graphdict"]
+            and auto_cluster in tfdata["graphdict"][parent]
+        ):
             idx = tfdata["graphdict"][parent].index(auto_cluster)
             tfdata["graphdict"][parent].remove(auto_cluster)
             for i in range(1, counter):
                 tfdata["graphdict"][parent].insert(idx, f"{auto_cluster}_{i}")
 
     # # Handle eks_group separately - point to eks_service
-    if eks_group in tfdata["graphdict"] and auto_cluster in tfdata["graphdict"][eks_group]:
+    if (
+        eks_group in tfdata["graphdict"]
+        and auto_cluster in tfdata["graphdict"][eks_group]
+    ):
         tfdata["graphdict"][eks_group].remove(auto_cluster)
         tfdata["graphdict"][eks_group].append(eks_service)
 
@@ -845,12 +852,14 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         return tfdata
 
     # Check if any node groups or Fargate profiles exist
-    has_node_groups = bool(helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_eks_node_group"
-    ))
-    has_fargate = bool(helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_eks_fargate_profile"
-    ))
+    has_node_groups = bool(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_eks_node_group")
+    )
+    has_fargate = bool(
+        helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "aws_eks_fargate_profile"
+        )
+    )
 
     # Create EKS service group for each cluster
     for cluster in eks_clusters:
@@ -882,67 +891,79 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["graphdict"][node].remove(cluster)
         else:
             # For Karpenter (no node groups/Fargate), expand cluster into numbered instances per subnet
-            subnets_with_cluster = sorted([
-                node for node in tfdata["graphdict"].keys()
-                if "aws_subnet" in node and cluster in tfdata["graphdict"][node]
-            ])
-            
+            subnets_with_cluster = sorted(
+                [
+                    node
+                    for node in tfdata["graphdict"].keys()
+                    if "aws_subnet" in node and cluster in tfdata["graphdict"][node]
+                ]
+            )
+
             if len(subnets_with_cluster) > 1:
                 for i, subnet in enumerate(subnets_with_cluster, start=1):
                     numbered_cluster = f"{cluster}~{i}"
                     tfdata["graphdict"][numbered_cluster] = []
-                    tfdata["meta_data"][numbered_cluster] = copy.deepcopy(tfdata["meta_data"][cluster])
-                    
+                    tfdata["meta_data"][numbered_cluster] = copy.deepcopy(
+                        tfdata["meta_data"][cluster]
+                    )
+
                     tfdata["graphdict"][subnet].remove(cluster)
                     tfdata["graphdict"][subnet].append(numbered_cluster)
-                
+
                 # Update EKS group to link to cluster via existing cluster node
                 tfdata["graphdict"][eks_group_name].remove(cluster)
-                
+
                 # Link numbered clusters to existing cluster node
                 tfdata["graphdict"][cluster] = []
                 for i in range(1, len(subnets_with_cluster) + 1):
                     tfdata["graphdict"][cluster].append(f"{cluster}~{i}")
-                
+
                 # Add cluster to EKS group
                 tfdata["graphdict"][eks_group_name].append(cluster)
-                
+
                 # Detect Karpenter usage
                 karpenter_roles = [
-                    k for k in tfdata["graphdict"].keys()
+                    k
+                    for k in tfdata["graphdict"].keys()
                     if "aws_iam_role" in k and "karpenter" in k.lower()
                 ]
                 karpenter_queues = [
-                    k for k in tfdata["graphdict"].keys()
+                    k
+                    for k in tfdata["graphdict"].keys()
                     if "aws_sqs_queue" in k and "karpenter" in k.lower()
                 ]
                 has_karpenter_tags = any(
-                    "karpenter.sh/discovery" in str(tfdata["meta_data"].get(s, {}).get("tags", ""))
+                    "karpenter.sh/discovery"
+                    in str(tfdata["meta_data"].get(s, {}).get("tags", ""))
                     for s in subnets_with_cluster
                 )
-                
+
                 if karpenter_roles or karpenter_queues or has_karpenter_tags:
                     # Create numbered Karpenter nodes in each subnet FIRST
                     for i, subnet in enumerate(subnets_with_cluster, start=1):
                         karpenter_node = f"tv_karpenter.karpenter~{i}"
                         tfdata["graphdict"][karpenter_node] = [f"{cluster}~{i}"]
-                        tfdata["meta_data"][karpenter_node] = {
-                            "label": "Karpenter"
-                        }
+                        tfdata["meta_data"][karpenter_node] = {"label": "Karpenter"}
                         # Add Karpenter to subnet
                         tfdata["graphdict"][subnet].append(karpenter_node)
-                    
+
                     # Link IAM roles with instance profiles to numbered clusters
                     for role in karpenter_roles:
-                        if "aws_iam_instance_profile" in str(tfdata["graphdict"].get(role, [])):
+                        if "aws_iam_instance_profile" in str(
+                            tfdata["graphdict"].get(role, [])
+                        ):
                             for i in range(1, len(subnets_with_cluster) + 1):
                                 tfdata["graphdict"][role].append(f"{cluster}~{i}")
-                    
+
                     # Link SQS queues to numbered Karpenter nodes (only if they connect to CloudWatch event targets)
                     for queue in karpenter_queues:
-                        if "aws_cloudwatch_event_target" in str(tfdata["original_graphdict"].get(queue, [])):
+                        if "aws_cloudwatch_event_target" in str(
+                            tfdata["original_graphdict"].get(queue, [])
+                        ):
                             for i in range(1, len(subnets_with_cluster) + 1):
-                                tfdata["graphdict"][queue].append(f"tv_karpenter.karpenter~{i}")
+                                tfdata["graphdict"][queue].append(
+                                    f"tv_karpenter.karpenter~{i}"
+                                )
 
     return tfdata
 
@@ -1012,7 +1033,9 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     eks_node_groups = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_eks_node_group"
     )
-    subnets = sorted(helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet"))
+    subnets = sorted(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    )
 
     # Process each unnumbered node group
     for node_group in list(eks_node_groups):
@@ -1039,10 +1062,14 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Create numbered node groups
             for i in range(1, len(matching_subnets) + 1):
                 numbered_node_group = f"{node_group}~{i}"
-                
+
                 if numbered_node_group not in tfdata["graphdict"]:
-                    tfdata["graphdict"][numbered_node_group] = list(tfdata["graphdict"].get(node_group, []))
-                    tfdata["meta_data"][numbered_node_group] = copy.deepcopy(tfdata["meta_data"].get(node_group, {}))
+                    tfdata["graphdict"][numbered_node_group] = list(
+                        tfdata["graphdict"].get(node_group, [])
+                    )
+                    tfdata["meta_data"][numbered_node_group] = copy.deepcopy(
+                        tfdata["meta_data"].get(node_group, {})
+                    )
 
             # Add each numbered node group to its corresponding subnet only
             for i, subnet in enumerate(matching_subnets, start=1):
@@ -1067,8 +1094,12 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][subnet].append(node_group)
 
     # Link numbered node groups to control plane
-    eks_clusters = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_eks_cluster")
-    all_node_groups = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_eks_node_group")
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+    all_node_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_node_group"
+    )
 
     for cluster in eks_clusters:
         cluster_name = cluster.split(".")[-1]

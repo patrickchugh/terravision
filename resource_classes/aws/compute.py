@@ -25,11 +25,14 @@ class ElasticContainerRegistry(_Compute):
 class EC2(_Compute):
     _icon = "ec2.png"
 
+
 class EC2Instance(_Compute):
     _icon = "ec2-instance.png"
 
+
 class EC2Instances(_Compute):
     _icon = "ec2-instances.png"
+
 
 class ElasticBeanstalk(_Compute):
     _icon = "elastic-beanstalk.png"
@@ -103,6 +106,7 @@ class VmwareCloudOnAWS(_Compute):
 class Karpenter(_Compute):
     _icon = "karpenter.png"
 
+
 # Terraform aliases
 aws_batch_compute_environment = Batch
 aws_ecr_repository = ElasticContainerRegistry
@@ -125,4 +129,3 @@ aws_lambda_function = Lambda
 aws_lightsail_instance = Lightsail
 aws_eip = ElasticIP
 tv_karpenter = Karpenter
- 

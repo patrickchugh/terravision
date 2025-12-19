@@ -131,6 +131,7 @@ class AWSAccount(Cluster):
         aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws_account.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
+
 class OnPrem(Cluster):
     def __init__(self, label="Corporate Datacenter", **kwargs):
         aws_graph_attrs = {

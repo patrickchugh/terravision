@@ -3,9 +3,8 @@ repos:
     hooks:
       - id: black
         name: Run black
-        entry: poetry run black --check .
+        entry: poetry run black .
         language: system
-        types: [python]
         pass_filenames: false
       - id: pytest
         name: Run pytest

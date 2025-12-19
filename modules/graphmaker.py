@@ -42,7 +42,7 @@ def _load_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     config = _get_provider_config(tfdata)
     provider = get_primary_provider_or_default(tfdata)
     provider_upper = provider.upper()
-    
+
     # Load all constants from config that match provider prefix
     constants = {}
     for attr_name in dir(config):
@@ -50,7 +50,7 @@ def _load_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Remove provider prefix from key name
             key_name = attr_name.replace(f"{provider_upper}_", "")
             constants[key_name] = getattr(config, attr_name)
-    
+
     return constants
 
 
@@ -984,7 +984,7 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
     SKIP_SINGULAR_EXPANSION = constants.get("SKIP_SINGULAR_EXPANSION", [])
-    
+
     for node, connections in dict(tfdata["graphdict"]).items():
         for c in list(connections):
             if "~" in node and not "~" in c:
@@ -996,9 +996,15 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # If consolidated node, add all connections to node
             # Skip resources that are manually matched to subnets by suffix in their handlers
             # Also skip if node is a subnet - subnets should keep their specific numbered instances
-            if "~" in c and helpers.consolidated_node_check(node) and "aws_subnet" not in node:
+            if (
+                "~" in c
+                and helpers.consolidated_node_check(node)
+                and "aws_subnet" not in node
+            ):
                 # Check if connection should skip automatic expansion
-                should_skip = any(skip_pattern in c for skip_pattern in SKIP_SINGULAR_EXPANSION)
+                should_skip = any(
+                    skip_pattern in c for skip_pattern in SKIP_SINGULAR_EXPANSION
+                )
                 if should_skip:
                     continue
 

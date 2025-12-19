@@ -1,15 +1,14 @@
-
-
 from . import _AWS
 
 
 class _General(_AWS):
     _type = "general"
     _icon_dir = "resource_images/aws/general"
- 
+
 
 class Blank(_General):
     _icon = "blank.png"
+
 
 class InternetGateway(_General):
     _icon = "Internet-gateway.png"
