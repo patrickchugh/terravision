@@ -993,9 +993,10 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if suffixed_node in tfdata["graphdict"]:
                     tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
-            # If cosolidated node, add all connections to node
+            # If consolidated node, add all connections to node
             # Skip resources that are manually matched to subnets by suffix in their handlers
-            if "~" in c and (helpers.consolidated_node_check(node) or "~" not in node):
+            # Also skip if node is a subnet - subnets should keep their specific numbered instances
+            if "~" in c and helpers.consolidated_node_check(node) and "aws_subnet" not in node:
                 # Check if connection should skip automatic expansion
                 should_skip = any(skip_pattern in c for skip_pattern in SKIP_SINGULAR_EXPANSION)
                 if should_skip:

@@ -99,6 +99,10 @@ class ThinkboxXmesh(_Compute):
 class VmwareCloudOnAWS(_Compute):
     _icon = "vmware-cloud-on-aws.png"
 
+
+class Karpenter(_Compute):
+    _icon = "karpenter.png"
+
 # Terraform aliases
 aws_batch_compute_environment = Batch
 aws_ecr_repository = ElasticContainerRegistry
@@ -120,4 +124,5 @@ aws_instance = EC2Instance
 aws_lambda_function = Lambda
 aws_lightsail_instance = Lightsail
 aws_eip = ElasticIP
+tv_karpenter = Karpenter
  

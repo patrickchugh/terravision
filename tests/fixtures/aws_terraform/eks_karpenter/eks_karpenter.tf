@@ -138,7 +138,7 @@ resource "aws_subnet" "private_1" {
   availability_zone = "us-east-1a"
 
   tags = {
-    "karpenter.sh/discovery" = aws_eks_cluster.main.name
+    "karpenter.sh/discovery" = "eks-karpenter-cluster"
   }
 }
 
@@ -148,7 +148,7 @@ resource "aws_subnet" "private_2" {
   availability_zone = "us-east-1b"
 
   tags = {
-    "karpenter.sh/discovery" = aws_eks_cluster.main.name
+    "karpenter.sh/discovery" = "eks-karpenter-cluster"
   }
 }
 
@@ -165,7 +165,7 @@ resource "aws_security_group" "karpenter_node" {
   }
 
   tags = {
-    "karpenter.sh/discovery" = aws_eks_cluster.main.name
+    "karpenter.sh/discovery" = "eks-karpenter-cluster"
   }
 }
 
