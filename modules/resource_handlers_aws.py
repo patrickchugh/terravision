@@ -807,7 +807,17 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"][eks_service].append(f"{auto_cluster}_{i}")
 
     eks_group = "aws_account.eks_control_plane_auto"
-    if eks_group in tfdata["graphdict"]:
+    
+    # Redirect all parent connections to expanded nodes (except eks_group)
+    for parent in parents:
+        if parent != eks_group and parent in tfdata["graphdict"] and auto_cluster in tfdata["graphdict"][parent]:
+            idx = tfdata["graphdict"][parent].index(auto_cluster)
+            tfdata["graphdict"][parent].remove(auto_cluster)
+            for i in range(1, counter):
+                tfdata["graphdict"][parent].insert(idx, f"{auto_cluster}_{i}")
+
+    # # Handle eks_group separately - point to eks_service
+    if eks_group in tfdata["graphdict"] and auto_cluster in tfdata["graphdict"][eks_group]:
         tfdata["graphdict"][eks_group].remove(auto_cluster)
         tfdata["graphdict"][eks_group].append(eks_service)
 
