@@ -1,13 +1,14 @@
 <!--
 Sync Impact Report:
-- Version change: N/A → 1.0.0 (initial ratification)
-- Modified principles: N/A (initial version)
-- Added sections: All core principles, Technical Standards, Governance
+- Version change: 1.0.0 → 1.1.0 (added new technical standard)
+- Modified principles: None
+- Added sections: Technical Standards > Code Organization > Provider-Specific Code Isolation
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
+  ⚠ CLAUDE.md - Already contains detailed guidance on provider-specific architecture that aligns with new standard
 - Follow-up TODOs: None
 -->
 
@@ -67,6 +68,22 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 - **Input Formats**: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON
 - **Output Formats**: PNG (default), SVG, PDF, BMP, JSON
 
+### Code Organization
+
+#### Provider-Specific Code Isolation
+
+All cloud-specific resource handling logic MUST reside exclusively in provider-specific configuration and handler modules. Common modules shared across all cloud service providers (CSPs) MUST remain provider-agnostic.
+
+**Enforcement Rules**:
+
+- **CO-001**: Cloud-specific resource handling logic MUST be implemented in `modules/config/cloud_config_<provider>.py` files (e.g., `cloud_config_aws.py`, `cloud_config_azure.py`, `cloud_config_gcp.py`)
+- **CO-002**: Provider-specific resource handlers MUST be implemented in `modules/resource_handlers_<provider>.py` files (e.g., `resource_handlers_aws.py`, `resource_handlers_azure.py`, `resource_handlers_gcp.py`)
+- **CO-003**: Common modules (e.g., `graphmaker.py`, `drawing.py`, `fileparser.py`, `interpreter.py`, `tfwrapper.py`) MUST NOT contain hardcoded provider-specific logic or resource types
+- **CO-004**: Provider detection and configuration loading MUST use dynamic dispatch patterns to route to provider-specific implementations
+- **CO-005**: New cloud provider support MUST follow the established pattern: create `cloud_config_<provider>.py` + `resource_handlers_<provider>.py` without modifying common modules
+
+**Rationale**: Strict separation of provider-specific code from common infrastructure ensures maintainability, testability, and extensibility as new cloud providers are added. This architectural boundary prevents provider-specific logic from polluting shared modules and enables teams to add cloud support without risk of breaking existing providers.
+
 ### Quality Requirements
 
 - **QR-001**: Architecture diagrams MUST be generated without requiring deployed infrastructure (work from `terraform plan`, not remote state)
@@ -89,7 +106,7 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 1. **Specification**: New features MUST include user scenarios with acceptance criteria
 2. **Testing**: Core functionality changes MUST be validated with real Terraform repositories
 3. **Documentation**: New features MUST update README with usage examples and troubleshooting
-4. **Backward Compatibility**: Changes MUST maintain compatibility with existing Terraform code, Graph Transformation logic and annotation files. All deterministic JSON output should pass the unit tests to ensure the same values are produced with new code. 
+4. **Backward Compatibility**: Changes MUST maintain compatibility with existing Terraform code, Graph Transformation logic and annotation files. All deterministic JSON output should pass the unit tests to ensure the same values are produced with new code.
 5. Format and location changes of config files are permitted when new cloud providers are introduced or where necessary.
 
 ### Code Review Requirements
@@ -98,6 +115,7 @@ AI-powered diagram refinement MUST remain optional and support multiple backends
 - **CR-002**: Icon/styling changes require visual comparison screenshots in PR
 - **CR-003**: AI backend changes require testing with both Bedrock and Ollama
 - **CR-004**: Security-related changes require explicit threat model consideration
+- **CR-005**: Provider-specific code changes MUST NOT modify common modules (enforces CO-001 through CO-005)
 
 ### Release Criteria
 
@@ -126,11 +144,12 @@ This constitution supersedes all other development practices and documentation. 
 - **Feature proposals** that violate Code as Source of Truth principle MUST be rejected
 - **Architectural changes** requiring server-side processing or cloud credentials MUST provide compelling justification and maintain client-side alternative
 - **Complexity additions** (new dependencies, architectural patterns) MUST demonstrate necessity over simpler alternatives
+- **Provider-specific changes** MUST comply with Code Organization standards (CO-001 through CO-005)
 
 ### Versioning Policy
 
 - **MAJOR**: Backward-incompatible changes to CLI interface, annotation format, or core principles
-- **MINOR**: New cloud provider support, new output formats, new AI backends, new principles
+- **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-07
+**Version**: 1.1.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-20
