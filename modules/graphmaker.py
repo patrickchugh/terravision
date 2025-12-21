@@ -1057,25 +1057,46 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Fix singular references to numbered nodes
     tfdata = handle_singular_references(tfdata)
 
-    # Clean up original resource names
+    # Clean up original resource names but preserve connections to numbered instances
     for resource in multi_resources:
-        # Remove original resource if not shared service
-        if (
+        # Find all numbered instances of this resource
+        numbered_instances = sorted(
+            [k for k in tfdata["graphdict"].keys() if k.startswith(resource + "~")]
+        )
+
+        # If numbered instances exist, update original to point to them
+        if numbered_instances and resource in tfdata["graphdict"]:
+            tfdata["graphdict"][resource] = numbered_instances
+
+            # Update any nodes that point to this resource to point to numbered instances instead
+            for node in list(tfdata["graphdict"].keys()):
+                if node != resource and resource in tfdata["graphdict"][node]:
+                    tfdata["graphdict"][node].remove(resource)
+                    for inst in numbered_instances:
+                        if inst not in tfdata["graphdict"][node]:
+                            tfdata["graphdict"][node].append(inst)
+
+            # Delete the original resource after updating references
+            if resource.split(".")[0] not in SHARED_SERVICES:
+                del tfdata["graphdict"][resource]
+
+        # Remove original resource if not shared service and no numbered instances to link to
+        elif (
             helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
             and resource.split(".")[0] not in SHARED_SERVICES
         ):
             del tfdata["graphdict"][resource]
 
         # Remove from parent connections
-        parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
-        for parent in parents_list:
-            if (
-                resource in tfdata["graphdict"][parent]
-                and not parent.startswith("aws_group.shared")
-                and "~" not in parent
-                and not tfdata["meta_data"][resource].get("count")
-            ):
-                tfdata["graphdict"][parent].remove(resource)
+        if resource not in tfdata["graphdict"]:
+            parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
+            for parent in parents_list:
+                if (
+                    resource in tfdata["graphdict"][parent]
+                    and not parent.startswith("aws_group.shared")
+                    and "~" not in parent
+                ):
+                    tfdata["graphdict"][parent].remove(resource)
 
     # Clean up original security group nodes
     security_group_list = [
