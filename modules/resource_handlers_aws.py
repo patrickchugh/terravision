@@ -741,25 +741,19 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Expand autoscaling groups and launch templates to numbered instances per subnet
     tfdata = expand_autoscaling_groups_to_subnets(tfdata)
-    # Link EC2-based ECS services to autoscaling groups
-    tfdata = link_ec2_ecs_to_autoscaling(tfdata)
+
     return tfdata
 
 
 def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Expand autoscaling groups into numbered instances per subnet.
-
-    Similar to how EKS node groups are expanded, autoscaling groups that span
-    multiple subnets are split into numbered instances (~1, ~2, ~3) with one
-    instance per subnet. Launch templates are also expanded to match.
+    """Expand autoscaling groups, autoscaling policies and launch templates into numbered instances per subnet.
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with numbered autoscaling groups and launch templates
+        Updated tfdata with numbered autoscaling groups, launch templates, and policies
     """
-    # Find all autoscaling groups and subnets
     autoscaling_groups = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_autoscaling_group"
     )
@@ -767,161 +761,76 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
         helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
     )
 
-    # Process each unnumbered autoscaling group
     for asg in list(autoscaling_groups):
         if "~" in asg:
             continue
 
-        # Get subnet references from metadata (vpc_zone_identifier)
         vpc_zone_identifier = (
             tfdata["meta_data"].get(asg, {}).get("vpc_zone_identifier", [])
         )
         if isinstance(vpc_zone_identifier, str):
             vpc_zone_identifier = [vpc_zone_identifier]
 
-        # Find matching subnets
-        matching_subnets = []
-        for subnet in subnets:
-            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
-            if any(subnet_id in str(sid) for sid in vpc_zone_identifier):
-                matching_subnets.append(subnet)
+        matching_subnets = sorted(
+            [
+                s
+                for s in subnets
+                if any(
+                    tfdata["meta_data"].get(s, {}).get("id", "") in str(sid)
+                    for sid in vpc_zone_identifier
+                )
+            ]
+        )
 
-        # Sort for deterministic assignment
-        matching_subnets = sorted(matching_subnets)
+        if len(matching_subnets) <= 1:
+            continue
 
-        # Create numbered instances if multiple subnets
-        if len(matching_subnets) > 1:
-            # Check if this ASG has a launch template reference
-            launch_template_ref = (
-                tfdata["meta_data"].get(asg, {}).get("launch_template", {})
+        children = tfdata["graphdict"].get(asg, [])
+        launch_templates = [r for r in children if "aws_launch_template" in r]
+        policies = [r for r in children if "aws_autoscaling_policy" in r]
+        ecs_clusters = [r for r in tfdata["graphdict"] if "aws_ecs_cluster" in r]
+
+        for i in range(1, len(matching_subnets) + 1):
+            numbered_asg = f"{asg}~{i}"
+            tfdata["graphdict"][numbered_asg] = []
+            tfdata["meta_data"][numbered_asg] = copy.deepcopy(
+                tfdata["meta_data"].get(asg, {})
             )
-            launch_template_id = None
-            if isinstance(launch_template_ref, dict):
-                launch_template_id = launch_template_ref.get("id", "")
 
-            # Find the actual launch template resource
-            launch_template = None
-            if launch_template_id:
-                for resource in tfdata["graphdict"].keys():
-                    if "aws_launch_template" in resource:
-                        res_id = tfdata["meta_data"].get(resource, {}).get("id", "")
-                        if launch_template_id in str(res_id) or resource in str(
-                            launch_template_id
-                        ):
-                            launch_template = resource
-                            break
+            for lt in launch_templates:
+                numbered_lt = f"{lt}~{i}"
+                tfdata["graphdict"][numbered_lt] = list(tfdata["graphdict"].get(lt, []))
+                tfdata["meta_data"][numbered_lt] = copy.deepcopy(
+                    tfdata["meta_data"].get(lt, {})
+                )
+                tfdata["graphdict"][numbered_asg].append(numbered_lt)
 
-            # Create numbered ASG instances
-            for i in range(1, len(matching_subnets) + 1):
-                numbered_asg = f"{asg}~{i}"
+            for policy in policies:
+                numbered_policy = f"{policy}~{i}"
+                tfdata["graphdict"][numbered_policy] = list(
+                    tfdata["graphdict"].get(policy, [])
+                )
+                tfdata["meta_data"][numbered_policy] = copy.deepcopy(
+                    tfdata["meta_data"].get(policy, {})
+                )
+                tfdata["graphdict"][numbered_asg].append(numbered_policy)
 
-                if numbered_asg not in tfdata["graphdict"]:
-                    tfdata["graphdict"][numbered_asg] = list(
-                        tfdata["graphdict"].get(asg, [])
-                    )
-                    tfdata["meta_data"][numbered_asg] = copy.deepcopy(
-                        tfdata["meta_data"].get(asg, {})
-                    )
+            tfdata["graphdict"][matching_subnets[i - 1]].append(numbered_asg)
 
-                # Create numbered launch template if it exists
-                if launch_template:
-                    numbered_lt = f"{launch_template}~{i}"
-                    if numbered_lt not in tfdata["graphdict"]:
-                        tfdata["graphdict"][numbered_lt] = list(
-                            tfdata["graphdict"].get(launch_template, [])
-                        )
-                        tfdata["meta_data"][numbered_lt] = copy.deepcopy(
-                            tfdata["meta_data"].get(launch_template, {})
-                        )
+        for subnet in subnets:
+            if asg in tfdata["graphdict"][subnet]:
+                tfdata["graphdict"][subnet].remove(asg)
+        tfdata["graphdict"].pop(asg, None)
+        tfdata["meta_data"].pop(asg, None)
 
-                    # Update ASG to reference numbered launch template
-                    if numbered_lt not in tfdata["graphdict"][numbered_asg]:
-                        tfdata["graphdict"][numbered_asg].append(numbered_lt)
+        for lt in launch_templates:
+            tfdata["graphdict"].pop(lt, None)
 
-                    # Remove reference to unnumbered launch template
-                    if launch_template in tfdata["graphdict"][numbered_asg]:
-                        tfdata["graphdict"][numbered_asg].remove(launch_template)
+        for policy in policies:
+            tfdata["graphdict"].pop(policy, None)
 
-            # Add each numbered ASG to its corresponding subnet only
-            for i, subnet in enumerate(matching_subnets, start=1):
-                numbered_asg = f"{asg}~{i}"
-                if numbered_asg not in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].append(numbered_asg)
-
-            # Remove original ASG from all subnets
-            for subnet in subnets:
-                if asg in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].remove(asg)
-
-            # Remove unnumbered launch template from subnets if it exists
-            if launch_template:
-                for subnet in subnets:
-                    if launch_template in tfdata["graphdict"][subnet]:
-                        tfdata["graphdict"][subnet].remove(launch_template)
-
-    return tfdata
-
-
-def link_ec2_ecs_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Link EC2-based ECS services to their autoscaling groups.
-
-    EC2-based ECS services run on infrastructure managed by autoscaling groups.
-    This function establishes the relationship between numbered EC2 ECS service
-    instances and their corresponding autoscaling groups.
-
-    Pattern:
-        aws_autoscaling_group.ecs~1 → aws_ec2ecs.ecs~1
-        aws_autoscaling_group.ecs~2 → aws_ec2ecs.ecs~2
-
-    Fargate services are SKIPPED - they are serverless and the generic pipeline
-    handles them correctly (shown in subnets like Lambda functions).
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with EC2 ECS linked to autoscaling groups
-    """
-    all_resources = list(tfdata["graphdict"].keys())
-
-    # Find ONLY EC2-based ECS services (not Fargate, not generic ecs_service)
-    ec2_ecs_services = []
-    for resource in all_resources:
-        resource_type = helpers.get_no_module_name(resource).split(".")[0]
-        # Only process aws_ec2ecs (EC2-based ECS), skip aws_fargate
-        if resource_type == "aws_ec2ecs":
-            resource_name = helpers.get_no_module_name(resource).split(".")[1]
-            if resource_name == "ecs" or "ecs" in resource_name:
-                ec2_ecs_services.append(resource)
-
-    # If no EC2 ECS services found, skip processing
-    if not ec2_ecs_services:
-        return tfdata
-
-    # Find all autoscaling groups (EC2 infrastructure)
-    autoscaling_groups = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_autoscaling_group"
-    )
-
-    # Link numbered EC2 ECS services to numbered autoscaling groups
-    for asg in sorted(autoscaling_groups):
-        # Extract suffix from ASG (e.g., "ecs~1" → "~1")
-        if "~" in asg:
-            asg_suffix = "~" + asg.split("~")[1]
-
-            # Find EC2 ECS services with matching suffix
-            for service in sorted(ec2_ecs_services):
-                if service.endswith(asg_suffix):
-                    # Add EC2 ECS service to autoscaling group if not already present
-                    if service not in tfdata["graphdict"][asg]:
-                        tfdata["graphdict"][asg].append(service)
-        else:
-            # Unnumbered autoscaling group - link to unnumbered EC2 ECS service
-            for service in ec2_ecs_services:
-                if "~" not in service:
-                    # Add EC2 ECS service to autoscaling group if not already present
-                    if service not in tfdata["graphdict"][asg]:
-                        tfdata["graphdict"][asg].append(service)
+        for cluster in ecs_clusters:
+            tfdata["graphdict"].pop(cluster, None)
 
     return tfdata
 

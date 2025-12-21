@@ -95,6 +95,13 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": False,
         }
     },
+    {
+        "aws_autoscaling_policy": {
+            "resource_name": "aws_autoscaling_policy.autoscaling_policy",
+            "import_location": "resource_classes.aws.compute",
+            "vpc": True,
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in
@@ -104,6 +111,7 @@ AWS_GROUP_NODES = [
     "aws_group",
     "aws_account",
     "aws_appautoscaling_target",
+    "aws_autoscaling_group",
     "aws_subnet",
     "aws_security_group",
     "tv_aws_onprem",
@@ -217,7 +225,6 @@ AWS_SHARED_SERVICES = [
     "aws_acm_certificate",
     "aws_cloudwatch_log_group",
     "aws_ecr_repository",
-    "aws_ecs_cluster",
     "aws_efs_file_system",
     "aws_ssm_parameter",
     "aws_kms_key",

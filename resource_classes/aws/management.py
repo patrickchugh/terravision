@@ -6,11 +6,6 @@ class _Management(_AWS):
     _icon_dir = "resource_images/aws/management"
 
 
-# TODO: Add Autoscaling as group
-class AutoScaling(_Management):
-    _icon = "auto-scaling.png"
-
-
 class Cloudformation(_Management):
     _icon = "cloudformation.png"
 
@@ -85,7 +80,7 @@ SSM = SystemsManager
 ParameterStore = SystemsManagerParameterStore
 
 # Terraform aliases
-aws_autoscaling_group = AutoScaling
+
 aws_cloudformation_stack = Cloudformation
 aws_cloudformation_stack_set = Cloudformation
 aws_cloudtrail = Cloudtrail

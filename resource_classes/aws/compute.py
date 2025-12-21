@@ -123,6 +123,8 @@ aws_eks_service = ElasticKubernetesService
 aws_eks_cluster = EC2Instances
 aws_eks_cluster_auto = EC2
 aws_eks_node_group = EC2Instances
+aws_launch_template = EC2
+
 aws_elastic_beanstalk_application = ElasticBeanstalk
 aws_instance = EC2Instance
 aws_lambda_function = Lambda
