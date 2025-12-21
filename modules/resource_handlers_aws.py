@@ -739,8 +739,126 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with EC2 ECS services linked to autoscaling targets
     """
-    # Only process EC2-based ECS services
+    # Expand autoscaling groups and launch templates to numbered instances per subnet
+    tfdata = expand_autoscaling_groups_to_subnets(tfdata)
+    # Link EC2-based ECS services to autoscaling groups
     tfdata = link_ec2_ecs_to_autoscaling(tfdata)
+    return tfdata
+
+
+def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Expand autoscaling groups into numbered instances per subnet.
+
+    Similar to how EKS node groups are expanded, autoscaling groups that span
+    multiple subnets are split into numbered instances (~1, ~2, ~3) with one
+    instance per subnet. Launch templates are also expanded to match.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with numbered autoscaling groups and launch templates
+    """
+    # Find all autoscaling groups and subnets
+    autoscaling_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_autoscaling_group"
+    )
+    subnets = sorted(
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    )
+
+    # Process each unnumbered autoscaling group
+    for asg in list(autoscaling_groups):
+        if "~" in asg:
+            continue
+
+        # Get subnet references from metadata (vpc_zone_identifier)
+        vpc_zone_identifier = (
+            tfdata["meta_data"].get(asg, {}).get("vpc_zone_identifier", [])
+        )
+        if isinstance(vpc_zone_identifier, str):
+            vpc_zone_identifier = [vpc_zone_identifier]
+
+        # Find matching subnets
+        matching_subnets = []
+        for subnet in subnets:
+            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+            if any(subnet_id in str(sid) for sid in vpc_zone_identifier):
+                matching_subnets.append(subnet)
+
+        # Sort for deterministic assignment
+        matching_subnets = sorted(matching_subnets)
+
+        # Create numbered instances if multiple subnets
+        if len(matching_subnets) > 1:
+            # Check if this ASG has a launch template reference
+            launch_template_ref = (
+                tfdata["meta_data"].get(asg, {}).get("launch_template", {})
+            )
+            launch_template_id = None
+            if isinstance(launch_template_ref, dict):
+                launch_template_id = launch_template_ref.get("id", "")
+
+            # Find the actual launch template resource
+            launch_template = None
+            if launch_template_id:
+                for resource in tfdata["graphdict"].keys():
+                    if "aws_launch_template" in resource:
+                        res_id = tfdata["meta_data"].get(resource, {}).get("id", "")
+                        if launch_template_id in str(res_id) or resource in str(
+                            launch_template_id
+                        ):
+                            launch_template = resource
+                            break
+
+            # Create numbered ASG instances
+            for i in range(1, len(matching_subnets) + 1):
+                numbered_asg = f"{asg}~{i}"
+
+                if numbered_asg not in tfdata["graphdict"]:
+                    tfdata["graphdict"][numbered_asg] = list(
+                        tfdata["graphdict"].get(asg, [])
+                    )
+                    tfdata["meta_data"][numbered_asg] = copy.deepcopy(
+                        tfdata["meta_data"].get(asg, {})
+                    )
+
+                # Create numbered launch template if it exists
+                if launch_template:
+                    numbered_lt = f"{launch_template}~{i}"
+                    if numbered_lt not in tfdata["graphdict"]:
+                        tfdata["graphdict"][numbered_lt] = list(
+                            tfdata["graphdict"].get(launch_template, [])
+                        )
+                        tfdata["meta_data"][numbered_lt] = copy.deepcopy(
+                            tfdata["meta_data"].get(launch_template, {})
+                        )
+
+                    # Update ASG to reference numbered launch template
+                    if numbered_lt not in tfdata["graphdict"][numbered_asg]:
+                        tfdata["graphdict"][numbered_asg].append(numbered_lt)
+
+                    # Remove reference to unnumbered launch template
+                    if launch_template in tfdata["graphdict"][numbered_asg]:
+                        tfdata["graphdict"][numbered_asg].remove(launch_template)
+
+            # Add each numbered ASG to its corresponding subnet only
+            for i, subnet in enumerate(matching_subnets, start=1):
+                numbered_asg = f"{asg}~{i}"
+                if numbered_asg not in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].append(numbered_asg)
+
+            # Remove original ASG from all subnets
+            for subnet in subnets:
+                if asg in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].remove(asg)
+
+            # Remove unnumbered launch template from subnets if it exists
+            if launch_template:
+                for subnet in subnets:
+                    if launch_template in tfdata["graphdict"][subnet]:
+                        tfdata["graphdict"][subnet].remove(launch_template)
+
     return tfdata
 
 
