@@ -22,7 +22,7 @@
 
 **Handler Scope**: The ECS handler **only processes EC2-based ECS** services. Fargate services are handled entirely by the generic pipeline (consolidation, variant detection, subnet placement).
 
-**Transformation**: For EC2-based ECS only, link numbered ECS service instances to their corresponding autoscaling targets using suffix matching to show infrastructure management.
+**Transformation**: For EC2-based ECS only, link numbered ECS service instances to their corresponding autoscaling groups using suffix matching to show infrastructure management.
 
 **Core Transformation**:
 ```
@@ -35,14 +35,13 @@ Subnet private~1
 EC2 (Infrastructure) - ECS Handler Processing:
 Before (Generic pipeline):
 aws_ec2ecs.ecs~1 → [connects to various resources]
-aws_appautoscaling_target.this~1 → [autoscaling policies]
+aws_autoscaling_group.ecs~1 → [EC2 instances]
 
 After (ECS handler):
 Subnet private~1
-└── aws_appautoscaling_target.this~1 (Autoscaling Group)
-    ├── autoscaling_policy.scale_down
-    ├── autoscaling_policy.scale_up
-    └── aws_ec2ecs.ecs~1 (EC2 ECS Service - runs on customer EC2s)
+└── aws_autoscaling_group.ecs~1 (EC2 Autoscaling Group)
+    ├── aws_instance (EC2 instances)
+    └── aws_ec2ecs.ecs~1 (EC2 ECS Service - runs on these instances)
 ```
 
 This reflects the architectural difference: Fargate is serverless (shown simply in subnets), while EC2 ECS requires showing the infrastructure layer.
@@ -60,14 +59,14 @@ This reflects the architectural difference: Fargate is serverless (shown simply 
 4. **Multiple resources** (`graphmaker.create_multiple_resources`): Creates numbered instances based on `desired_count` metadata
 5. **Subnet matching** (`resource_handlers.match_resources`): Matches numbered services to numbered subnets by suffix
 
-**ECS Handler** (`aws_handle_ecs`): **EC2 ECS ONLY** - links to autoscaling targets:
+**ECS Handler** (`aws_handle_ecs`): **EC2 ECS ONLY** - links to autoscaling groups:
 1. **Filter for EC2 ECS**: Find **ONLY** `aws_ec2ecs` resources (skip `aws_fargate` entirely)
-2. **Find autoscaling targets**: Locate all `aws_appautoscaling_target` resources
-3. **Suffix matching**: Match numbered EC2 ECS services to numbered targets:
-   - `aws_ec2ecs.ecs~1` → `aws_appautoscaling_target.this~1`
-   - `aws_ec2ecs.ecs~2` → `aws_appautoscaling_target.this~2`
-   - `aws_ec2ecs.ecs~3` → `aws_appautoscaling_target.this~3`
-4. **Add containment**: Place EC2 ECS services inside autoscaling targets (shows infrastructure management)
+2. **Find autoscaling groups**: Locate all `aws_autoscaling_group` resources (EC2 infrastructure)
+3. **Suffix matching**: Match numbered EC2 ECS services to numbered autoscaling groups:
+   - `aws_ec2ecs.ecs~1` → `aws_autoscaling_group.ecs~1`
+   - `aws_ec2ecs.ecs~2` → `aws_autoscaling_group.ecs~2`
+   - `aws_ec2ecs.ecs~3` → `aws_autoscaling_group.ecs~3`
+4. **Add containment**: Place EC2 ECS services inside autoscaling groups (shows infrastructure layer)
 5. **Skip Fargate**: Fargate services remain in subnets (like Lambda - serverless simplification)
 
 **Hierarchy for Fargate (Serverless - Generic Pipeline Only)**:
@@ -95,17 +94,18 @@ aws_fargate.ecs~1 → aws_ecr_repository.ecr, aws_ecs_cluster.ecs
 VPC
 ├── AZ us-east-1a
 │   └── Subnet private~1
-│       └── aws_appautoscaling_target.this~1 (Infrastructure layer)
-│           ├── scale_down_policy
-│           ├── scale_up_policy
-│           └── aws_ec2ecs.ecs~1 (Runs on customer EC2s)
+│       └── aws_autoscaling_group.ecs~1 (EC2 Infrastructure)
+│           ├── aws_instance (EC2 instances managed by ASG)
+│           └── aws_ec2ecs.ecs~1 (ECS tasks run on these instances)
 ├── AZ us-east-1b
 │   └── Subnet private~2
-│       └── aws_appautoscaling_target.this~2
+│       └── aws_autoscaling_group.ecs~2
+│           ├── aws_instance
 │           └── aws_ec2ecs.ecs~2
 └── AZ us-east-1c
     └── Subnet private~3
-        └── aws_appautoscaling_target.this~3
+        └── aws_autoscaling_group.ecs~3
+            ├── aws_instance
             └── aws_ec2ecs.ecs~3
 
 # Logical connections (same as Fargate)
@@ -116,7 +116,7 @@ aws_ec2ecs.ecs~1 → aws_ecr_repository.ecr, aws_ecs_cluster.ecs
 
 **Key Differences**:
 - **Fargate**: Services directly in subnets (serverless, no infrastructure to manage)
-- **EC2 ECS**: Services inside autoscaling targets (shows infrastructure management layer)
+- **EC2 ECS**: Services inside autoscaling groups (shows customer-managed infrastructure layer)
 
 **Why**: This follows the Lambda pattern - serverless compute is shown in subnets for diagram simplicity, even though AWS manages the underlying infrastructure. EC2-based compute requires showing the customer-managed infrastructure layer.
 
@@ -146,29 +146,29 @@ FUNCTION link_ec2_ecs_to_autoscaling(tfdata):
     IF ec2_ecs_services IS EMPTY:
         RETURN tfdata  // Nothing to do - all Fargate
 
-    // Step 3: Find all autoscaling targets
-    autoscaling_targets = FIND_RESOURCES_CONTAINING(graphdict, "aws_appautoscaling_target")
+    // Step 3: Find all autoscaling groups (EC2 infrastructure)
+    autoscaling_groups = FIND_RESOURCES_CONTAINING(graphdict, "aws_autoscaling_group")
 
-    // Step 4: Link numbered EC2 ECS services to numbered autoscaling targets
-    FOR EACH target IN SORTED(autoscaling_targets):
-        IF target contains "~":
-            // Extract suffix (e.g., "this~1" → "~1")
-            target_suffix = "~" + EXTRACT_SUFFIX(target)
+    // Step 4: Link numbered EC2 ECS services to numbered autoscaling groups
+    FOR EACH asg IN SORTED(autoscaling_groups):
+        IF asg contains "~":
+            // Extract suffix (e.g., "ecs~1" → "~1")
+            asg_suffix = "~" + EXTRACT_SUFFIX(asg)
 
             // Find EC2 ECS services with matching suffix
             FOR EACH service IN SORTED(ec2_ecs_services):
-                IF service ends with target_suffix:
-                    // Add EC2 ECS service to autoscaling target
-                    IF service NOT IN graphdict[target]:
-                        ADD service TO graphdict[target]
+                IF service ends with asg_suffix:
+                    // Add EC2 ECS service to autoscaling group
+                    IF service NOT IN graphdict[asg]:
+                        ADD service TO graphdict[asg]
 
         ELSE:
-            // Unnumbered autoscaling target
+            // Unnumbered autoscaling group
             FOR EACH service IN ec2_ecs_services:
                 IF service does NOT contain "~":
-                    // Add unnumbered EC2 ECS service to unnumbered target
-                    IF service NOT IN graphdict[target]:
-                        ADD service TO graphdict[target]
+                    // Add unnumbered EC2 ECS service to unnumbered ASG
+                    IF service NOT IN graphdict[asg]:
+                        ADD service TO graphdict[asg]
 
     RETURN tfdata
 ```
@@ -176,13 +176,13 @@ FUNCTION link_ec2_ecs_to_autoscaling(tfdata):
 **Key Operations**:
 - `GET_TYPE(resource)`: Extract resource type (e.g., "aws_ec2ecs" from "aws_ec2ecs.ecs~1")
 - `GET_NAME(resource)`: Extract resource name (e.g., "ecs" from "aws_ec2ecs.ecs~1")
-- `EXTRACT_SUFFIX(target)`: Get numeric suffix (e.g., "1" from "this~1")
+- `EXTRACT_SUFFIX(asg)`: Get numeric suffix (e.g., "1" from "ecs~1")
 - **Fargate filtering**: Explicitly skip `aws_fargate` resources - they remain in subnets
 - **No parent removal**: Only adds containment, doesn't remove logical connections
 
 **Critical Decisions**:
 1. **Fargate is SKIPPED entirely** - generic pipeline handles it (like Lambda)
-2. **Only EC2 ECS gets infrastructure containment** - shows customer-managed infrastructure
+2. **Only EC2 ECS gets infrastructure containment** - links to autoscaling groups
 3. **Preserves all logical connections** - ALB, IAM, CloudWatch, etc. still point to services
 
 ---
@@ -205,12 +205,24 @@ resource "aws_ecs_service" "app" {
   }
 }
 
-resource "aws_appautoscaling_target" "this" {
-  max_capacity       = 6
-  min_capacity       = 3
-  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
+resource "aws_autoscaling_group" "ecs" {
+  name                = "ecs-asg"
+  vpc_zone_identifier = [subnet1, subnet2, subnet3]
+  desired_capacity    = 3
+  max_size            = 6
+  min_size            = 3
+
+  launch_template {
+    id = aws_launch_template.ecs.id
+  }
+}
+
+resource "aws_ecs_capacity_provider" "main" {
+  name = "capacity-provider"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.ecs.arn
+  }
 }
 ```
 
@@ -223,8 +235,8 @@ resource "aws_appautoscaling_target" "this" {
   ],
   "aws_ec2ecs.ecs~2": [...],
   "aws_ec2ecs.ecs~3": [...],
-  "aws_appautoscaling_target.this~1": [
-    "aws_appautoscaling_policy.scale_up"
+  "aws_autoscaling_group.ecs~1": [
+    "aws_instance"
   ],
   "aws_alb.elb~1": ["aws_ec2ecs.ecs~1"]
 }
@@ -239,63 +251,19 @@ resource "aws_appautoscaling_target" "this" {
   ],
   "aws_ec2ecs.ecs~2": [...],
   "aws_ec2ecs.ecs~3": [...],
-  "aws_appautoscaling_target.this~1": [
-    "aws_appautoscaling_policy.scale_up",
-    "aws_ec2ecs.ecs~1"  // ← ADDED (infrastructure containment)
+  "aws_autoscaling_group.ecs~1": [
+    "aws_instance",
+    "aws_ec2ecs.ecs~1"  // ← ADDED (shows ECS tasks run on these instances)
   ],
   "aws_alb.elb~1": ["aws_ec2ecs.ecs~1"]  // ← UNCHANGED (logical connection)
 }
 ```
 
-**Result**: EC2 ECS services are contained within autoscaling targets to show infrastructure management.
+**Result**: EC2 ECS services are contained within autoscaling groups to show infrastructure management.
 
 ---
 
-#### Example 2: Fargate-based ECS (Handler Skips)
-
-**Terraform Code**:
-```hcl
-resource "aws_ecs_service" "app" {
-  name            = "app-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 3
-  launch_type     = "FARGATE"  # Serverless
-
-  network_configuration {
-    subnets = [subnet1, subnet2, subnet3]
-  }
-}
-
-resource "aws_appautoscaling_target" "this" {
-  # Task count scaling (not infrastructure scaling)
-  max_capacity = 6
-  min_capacity = 3
-}
-```
-
-**After Generic Pipeline** (ECS handler does nothing):
-```json
-{
-  "aws_fargate.ecs~1": [
-    "aws_ecr_repository.ecr",
-    "aws_ecs_cluster.ecs"
-  ],
-  "aws_fargate.ecs~2": [...],
-  "aws_fargate.ecs~3": [...],
-  "aws_appautoscaling_target.this~1": [
-    "aws_appautoscaling_policy.scale_up"
-  ],
-  "module.vpc.aws_subnet.private~1": [
-    "aws_fargate.ecs~1"  // ← Fargate in subnet (like Lambda)
-  ],
-  "aws_alb.elb~1": ["aws_fargate.ecs~1"]
-}
-```
-
-**Result**: Fargate services remain in subnets (serverless simplification). No autoscaling target containment. Handler does not process Fargate at all.
-
----
+ 
 
 ### ECS vs EKS Comparison
 
@@ -371,13 +339,13 @@ resource "aws_ecs_service" "this" {
 }
 ```
 - Variant detection: `aws_ecs_service.this` → `aws_ec2ecs.ecs`
-- Handler links to autoscaling targets (shows infrastructure layer)
+- Handler links to autoscaling groups (shows infrastructure layer)
 - Shows EC2-based container orchestration with infrastructure management
 
-**EC2 ECS Without Autoscaling Target**:
+**EC2 ECS Without Autoscaling Group**:
 ```
-If terraform has aws_ec2ecs but no aws_appautoscaling_target:
-- ECS handler does nothing (no autoscaling targets to link)
+If terraform has aws_ec2ecs but no aws_autoscaling_group:
+- ECS handler does nothing (no autoscaling groups to link)
 - EC2 ECS services remain in subnets
 - Shows static capacity (no autoscaling)
 ```
@@ -390,14 +358,14 @@ resource "aws_ecs_service" "this" {
 }
 ```
 - No numbered instances created (`~1`, `~2`, etc.)
-- Handler matches unnumbered EC2 ECS to unnumbered autoscaling target
+- Handler matches unnumbered EC2 ECS to unnumbered autoscaling group
 - Simpler deployment pattern (single AZ or dev environment)
 
 **Mixed Deployments**:
 ```
 If terraform has BOTH Fargate and EC2 ECS services:
 - Fargate services: Remain in subnets (serverless)
-- EC2 ECS services: Linked to autoscaling targets (infrastructure)
+- EC2 ECS services: Linked to autoscaling groups (infrastructure)
 - Handler only processes EC2 ECS, skips Fargate
 ```
 
@@ -409,13 +377,13 @@ If terraform has BOTH Fargate and EC2 ECS services:
 
 | From | To | Relationship Type | Reason |
 |------|-----|-------------------|--------|
-| `aws_appautoscaling_target~N` | `aws_ec2ecs.ecs~N` | Hierarchical containment | Autoscaling target manages EC2 infrastructure for service |
-| `aws_appautoscaling_target~N` | `scale_up/down_policy` | Hierarchical containment | Policies belong to target |
+| `aws_autoscaling_group.ecs~N` | `aws_ec2ecs.ecs~N` | Hierarchical containment | ECS tasks run on EC2 instances managed by ASG |
+| `aws_autoscaling_group.ecs~N` | `aws_instance` | Hierarchical containment | EC2 instances belong to ASG |
 | `aws_alb.elb~N` | `aws_ec2ecs.ecs~N` | Logical connection | Load balancer routes traffic to service |
 | `aws_iam_role.task_execution` | `aws_ec2ecs.ecs~N` | Logical connection | IAM permissions for task execution |
 | `aws_ec2ecs.ecs~N` | `aws_ecs_cluster.ecs` | Logical connection | Service belongs to cluster |
 | `aws_ec2ecs.ecs~N` | `aws_ecr_repository.ecr` | Logical connection | Service pulls images from ECR |
-| `module.vpc.aws_subnet.private~N` | `aws_appautoscaling_target~N` | Hierarchical containment | Infrastructure deployed in subnet |
+| `module.vpc.aws_subnet.private~N` | `aws_autoscaling_group.ecs~N` | Hierarchical containment | ASG infrastructure deployed in subnet |
 
 **Fargate (Generic Pipeline - Handler Skips)**:
 
@@ -428,7 +396,7 @@ If terraform has BOTH Fargate and EC2 ECS services:
 | `aws_fargate.ecs~N` | `aws_ecs_cluster.ecs` | Logical connection | Service belongs to cluster |
 | `aws_fargate.ecs~N` | `aws_ecr_repository.ecr` | Logical connection | Service pulls images from ECR |
 
-**Key Difference**: EC2 ECS shows infrastructure layer (autoscaling groups), Fargate shows serverless simplification (directly in subnets).
+**Key Difference**: EC2 ECS shows customer-managed infrastructure (autoscaling groups with EC2 instances), Fargate shows serverless simplification (directly in subnets like Lambda).
 
 ---
 

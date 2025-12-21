@@ -128,7 +128,7 @@ def handle_cloudfront_domains(
     """
     # Search metadata for domain references
     for key, value in mdata.items():
-        for k, v in value.items():
+        for _, v in value.items():
             # Check if domain is referenced in non-CloudFront/Route53 resources
             if (
                 domain in str(v)
@@ -745,15 +745,15 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def link_ec2_ecs_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Link EC2-based ECS services to their autoscaling targets.
+    """Link EC2-based ECS services to their autoscaling groups.
 
     EC2-based ECS services run on infrastructure managed by autoscaling groups.
     This function establishes the relationship between numbered EC2 ECS service
-    instances and their corresponding autoscaling targets.
+    instances and their corresponding autoscaling groups.
 
     Pattern:
-        aws_appautoscaling_target.this~1 → aws_ec2ecs.ecs~1
-        aws_appautoscaling_target.this~2 → aws_ec2ecs.ecs~2
+        aws_autoscaling_group.ecs~1 → aws_ec2ecs.ecs~1
+        aws_autoscaling_group.ecs~2 → aws_ec2ecs.ecs~2
 
     Fargate services are SKIPPED - they are serverless and the generic pipeline
     handles them correctly (shown in subnets like Lambda functions).
@@ -762,7 +762,7 @@ def link_ec2_ecs_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with EC2 ECS-autoscaling relationships
+        Updated tfdata with EC2 ECS linked to autoscaling groups
     """
     all_resources = list(tfdata["graphdict"].keys())
 
@@ -780,30 +780,30 @@ def link_ec2_ecs_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     if not ec2_ecs_services:
         return tfdata
 
-    # Find all autoscaling targets
-    autoscaling_targets = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "aws_appautoscaling_target"
+    # Find all autoscaling groups (EC2 infrastructure)
+    autoscaling_groups = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_autoscaling_group"
     )
 
-    # Link numbered EC2 ECS services to numbered autoscaling targets
-    for target in sorted(autoscaling_targets):
-        # Extract suffix from target (e.g., "this~1" → "~1")
-        if "~" in target:
-            target_suffix = "~" + target.split("~")[1]
+    # Link numbered EC2 ECS services to numbered autoscaling groups
+    for asg in sorted(autoscaling_groups):
+        # Extract suffix from ASG (e.g., "ecs~1" → "~1")
+        if "~" in asg:
+            asg_suffix = "~" + asg.split("~")[1]
 
             # Find EC2 ECS services with matching suffix
             for service in sorted(ec2_ecs_services):
-                if service.endswith(target_suffix):
-                    # Add EC2 ECS service to autoscaling target if not already present
-                    if service not in tfdata["graphdict"][target]:
-                        tfdata["graphdict"][target].append(service)
+                if service.endswith(asg_suffix):
+                    # Add EC2 ECS service to autoscaling group if not already present
+                    if service not in tfdata["graphdict"][asg]:
+                        tfdata["graphdict"][asg].append(service)
         else:
-            # Unnumbered autoscaling target - link to unnumbered EC2 ECS service
+            # Unnumbered autoscaling group - link to unnumbered EC2 ECS service
             for service in ec2_ecs_services:
                 if "~" not in service:
-                    # Add EC2 ECS service to autoscaling target if not already present
-                    if service not in tfdata["graphdict"][target]:
-                        tfdata["graphdict"][target].append(service)
+                    # Add EC2 ECS service to autoscaling group if not already present
+                    if service not in tfdata["graphdict"][asg]:
+                        tfdata["graphdict"][asg].append(service)
 
     return tfdata
 

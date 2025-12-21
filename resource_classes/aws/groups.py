@@ -153,5 +153,6 @@ aws_account = AWSAccount
 aws_security_group = SecurityGroup
 aws_subnet = SubnetGroup
 aws_appautoscaling_target = GenericAutoScalingGroup
+aws_autoscaling_group = GenericAutoScalingGroup
 tv_aws_onprem = OnPrem
 aws_az = AvailabilityZone
