@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: black
         name: Run black
-        entry: poetry run black
+        entry: poetry run black --check
         language: system
         pass_filenames: true
         types: [python]
