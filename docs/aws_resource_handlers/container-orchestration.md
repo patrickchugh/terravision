@@ -6,6 +6,8 @@
 2. [EKS Node Groups](#eks-node-groups)
 3. [EKS Control Plane to Node Linking](#eks-control-plane-to-node-linking)
 4. [EKS Fargate Profiles](#eks-fargate-profiles)
+5. [EKS Auto Mode](#eks-auto-mode)
+6. [Karpenter Support](#karpenter-support)
 
 ---
 
@@ -760,15 +762,669 @@ aws_group.eks_service_main
 
 ---
 
+## EKS Auto Mode
+
+**Philosophy**: EKS Auto Mode is a fully managed compute option where AWS automatically provisions and manages EC2 instances across multiple availability zones. Unlike node groups or Fargate, Auto Mode creates a single cluster resource that needs to be expanded per subnet to show the distributed compute architecture.
+
+**Transformation**: The `aws_eks_cluster.auto` resource is expanded into numbered instances - one per subnet - similar to how node groups and Fargate profiles are handled. Each numbered instance is wrapped in an `aws_group.aws_managed_ec2` container to show AWS's automated management.
+
+**Core Transformation**:
+```
+Before (Terraform's view):
+aws_eks_cluster.auto
+└── spans multiple subnets
+
+After (Architecture view):
+aws_account.eks_control_plane_auto
+└── aws_eks_service.eks
+    ├── aws_eks_cluster.auto_1
+    ├── aws_eks_cluster.auto_2
+    └── aws_eks_cluster.auto_3
+
+Subnet private~1
+└── aws_group.aws_managed_ec2_1
+    └── aws_eks_cluster.auto_1
+
+Subnet private~2
+└── aws_group.aws_managed_ec2_2
+    └── aws_eks_cluster.auto_2
+
+Subnet private~3
+└── aws_group.aws_managed_ec2_3
+    └── aws_eks_cluster.auto_3
+```
+
+This shows how Auto Mode distributes managed compute across availability zones without user-managed node groups.
+
+---
+
+### What Happens
+
+1. **Detect Auto Mode cluster**:
+   - Find compute_config.get("enabled") == True or "system" in compute_config.get("node_pools") from meta data
+   - Identify all parent subnets
+
+2. **Create numbered instances**:
+   - For each subnet, create `aws_eks_cluster.auto_1`, `auto_2`, etc.
+   - Each instance is wrapped in `aws_group.aws_managed_ec2_N` to indicate AWS management
+   - Copy metadata from original cluster to each numbered instance
+
+3. **Create EKS service aggregator**:
+   - Create `aws_eks_service.eks` resource
+   - Link all numbered cluster instances to this service
+   - This acts as a central point showing all Auto Mode instances
+
+4. **Update parent connections**:
+   - Replace subnet references from `auto` to `aws_managed_ec2_N` groups
+   - Update EKS control plane group to point to `eks_service`
+   - Delete original unnumbered `aws_eks_cluster.auto`
+
+**Hierarchy**:
+```
+aws_account.eks_control_plane_auto
+└── aws_eks_service.eks (Service Aggregator)
+    ├── aws_eks_cluster.auto_1
+    ├── aws_eks_cluster.auto_2
+    └── aws_eks_cluster.auto_3
+
+VPC
+├── AZ us-east-1a
+│   └── Subnet private_1
+│       └── aws_group.aws_managed_ec2_1 (AWS-Managed Container)
+│           └── aws_eks_cluster.auto_1
+├── AZ us-east-1b
+│   └── Subnet private_2
+│       └── aws_group.aws_managed_ec2_2 (AWS-Managed Container)
+│           └── aws_eks_cluster.auto_2
+└── AZ us-east-1c
+    └── Subnet private_3
+        └── aws_group.aws_managed_ec2_3 (AWS-Managed Container)
+            └── aws_eks_cluster.auto_3
+```
+
+**Connections**:
+- **Added**: Numbered cluster instances (`auto_1`, `auto_2`, `auto_3`)
+- **Added**: AWS-managed EC2 group containers per subnet
+- **Added**: EKS service aggregator linking all instances
+- **Removed**: Original unnumbered `aws_eks_cluster.auto` (deleted)
+
+**Why**: Auto Mode is serverless from the user's perspective (no node groups to manage), but AWS still provisions EC2 instances across AZs. Creating numbered instances shows this distributed architecture while the managed EC2 groups indicate AWS's full control.
+
+---
+
+### Implementation: Expand EKS Auto Mode Clusters
+
+```
+FUNCTION expand_eks_auto_mode_clusters(tfdata):
+
+    // Step 1: Find Auto Mode cluster
+    auto_cluster = "aws_eks_cluster.auto"
+
+    IF auto_cluster NOT IN graphdict:
+        RETURN tfdata  // No Auto Mode cluster to process
+
+    // Step 2: Find all subnets containing this cluster
+    parents = GET_PARENTS(graphdict, auto_cluster)
+    subnets = FILTER parents WHERE "aws_subnet" IN parent
+
+    IF LENGTH(subnets) <= 1:
+        RETURN tfdata  // Single subnet, no expansion needed
+
+    // Step 3: Create numbered instances for each subnet
+    counter = 1
+    SORT subnets  // Ensure deterministic ordering
+
+    FOR EACH subnet IN subnets:
+        numbered_cluster = auto_cluster + "_" + counter
+
+        // Create numbered cluster instance
+        CREATE graphdict[numbered_cluster] = EMPTY LIST
+        CREATE meta_data[numbered_cluster] = DEEP_COPY(meta_data[auto_cluster])
+
+        // Create AWS-managed EC2 group wrapper
+        managed_group = "aws_group.aws_managed_ec2_" + counter
+        CREATE graphdict[managed_group] = [numbered_cluster]
+        CREATE meta_data[managed_group] = {}
+
+        // Update subnet to reference managed group instead of original cluster
+        FOR EACH resource IN graphdict[subnet]:
+            IF resource == auto_cluster:
+                REPLACE resource WITH managed_group IN graphdict[subnet]
+
+        counter = counter + 1
+
+    // Step 4: Create EKS service aggregator
+    eks_service = "aws_eks_service.eks"
+    CREATE graphdict[eks_service] = EMPTY LIST
+    CREATE meta_data[eks_service] = {}
+
+    FOR i FROM 1 TO (counter - 1):
+        numbered_cluster = auto_cluster + "_" + i
+        ADD numbered_cluster TO graphdict[eks_service]
+
+    // Step 5: Update parent connections
+    eks_group = "aws_account.eks_control_plane_auto"
+
+    // Redirect all parent connections to numbered instances (except eks_group)
+    FOR EACH parent IN parents:
+        IF parent != eks_group AND auto_cluster IN graphdict[parent]:
+            idx = INDEX_OF(graphdict[parent], auto_cluster)
+            REMOVE auto_cluster FROM graphdict[parent]
+
+            // Insert all numbered instances at same position
+            FOR i FROM 1 TO (counter - 1):
+                INSERT auto_cluster + "_" + i INTO graphdict[parent] AT idx
+
+    // Step 6: Update EKS control plane group to point to service
+    IF eks_group IN graphdict AND auto_cluster IN graphdict[eks_group]:
+        REMOVE auto_cluster FROM graphdict[eks_group]
+        ADD eks_service TO graphdict[eks_group]
+
+    // Step 7: Delete original unnumbered cluster
+    DELETE graphdict[auto_cluster]
+    DELETE meta_data[auto_cluster]
+
+    RETURN tfdata
+```
+
+**Key Operations**:
+- Uses underscore suffix (`_1`, `_2`) instead of tilde (`~1`, `~2`) to distinguish Auto Mode from node groups
+- Creates synthetic `aws_group.aws_managed_ec2_N` containers to indicate AWS management
+- Creates `aws_eks_service.eks` aggregator to show all Auto Mode instances
+- Deletes original unnumbered cluster after expansion
+
+---
+
+### Example Transformation
+
+**Terraform Code**:
+```hcl
+resource "aws_eks_cluster" "auto" {
+  name     = "auto-cluster"
+  role_arn = aws_iam_role.eks.arn
+
+  # Auto Mode doesn't need explicit compute config
+  # AWS automatically provisions EC2 instances
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_1.id,
+      aws_subnet.private_2.id,
+      aws_subnet.private_3.id
+    ]
+  }
+}
+```
+
+**Before Transformation** (graphdict):
+```json
+{
+  "aws_eks_cluster.auto": [],
+  "aws_subnet.private_1": ["aws_eks_cluster.auto"],
+  "aws_subnet.private_2": ["aws_eks_cluster.auto"],
+  "aws_subnet.private_3": ["aws_eks_cluster.auto"],
+  "aws_account.eks_control_plane_auto": ["aws_eks_cluster.auto"]
+}
+```
+
+**Problem**: Same cluster appears in three parent subnets - Graphviz error!
+
+**After Transformation** (graphdict):
+```json
+{
+  "aws_eks_cluster.auto_1": [],
+  "aws_eks_cluster.auto_2": [],
+  "aws_eks_cluster.auto_3": [],
+  "aws_group.aws_managed_ec2_1": ["aws_eks_cluster.auto_1"],
+  "aws_group.aws_managed_ec2_2": ["aws_eks_cluster.auto_2"],
+  "aws_group.aws_managed_ec2_3": ["aws_eks_cluster.auto_3"],
+  "aws_eks_service.eks": [
+    "aws_eks_cluster.auto_1",
+    "aws_eks_cluster.auto_2",
+    "aws_eks_cluster.auto_3"
+  ],
+  "aws_subnet.private_1": ["aws_group.aws_managed_ec2_1"],
+  "aws_subnet.private_2": ["aws_group.aws_managed_ec2_2"],
+  "aws_subnet.private_3": ["aws_group.aws_managed_ec2_3"],
+  "aws_account.eks_control_plane_auto": ["aws_eks_service.eks"]
+}
+```
+
+**Solution**: Each subnet gets its own numbered cluster wrapped in a managed EC2 group. Service aggregator shows all instances.
+
+---
+
+### Auto Mode vs Node Groups vs Fargate
+
+| Aspect | Node Groups | Fargate Profiles | Auto Mode |
+|--------|-------------|------------------|-----------|
+| **Management** | User-managed EC2 | AWS-managed serverless | AWS-managed EC2 |
+| **Numbering suffix** | `~1`, `~2` | `~1`, `~2` | `_1`, `_2` |
+| **Container wrapper** | None | None | `aws_group.aws_managed_ec2_N` |
+| **Service aggregator** | No | No | `aws_eks_service.eks` |
+| **Original resource** | **DELETED** | **DELETED** | **DELETED** |
+| **Cluster links to** | Numbered instances | Numbered instances | Service aggregator |
+| **Subnet links to** | Numbered instances | Numbered instances | Managed EC2 groups |
+| **Child resources** | Links to ASG/EC2 | Leaf nodes | Leaf nodes (AWS-managed) |
+
+---
+
+### Special Cases
+
+**Single Subnet Auto Mode**:
+```hcl
+resource "aws_eks_cluster" "auto" {
+  vpc_config {
+    subnet_ids = [aws_subnet.private_1.id]
+  }
+}
+```
+- No numbering needed (only one subnet)
+- Cluster remains unnumbered: `aws_eks_cluster.auto`
+- No managed EC2 group wrapper created
+- Direct connection: `Subnet → Cluster → Control Plane`
+
+**Multi-Cluster Auto Mode**:
+```
+aws_account.eks_control_plane_auto
+└── aws_eks_service.eks
+    ├── aws_eks_cluster.auto_1
+    ├── aws_eks_cluster.auto_2
+    └── aws_eks_cluster.auto_3
+
+aws_account.eks_control_plane_production
+└── aws_eks_cluster.production
+    └── [Regular node groups or Fargate]
+```
+- Auto Mode clusters get service aggregator
+- Regular clusters don't need service aggregator
+- Both can coexist in same infrastructure
+
+---
+
+## Karpenter Support
+
+**Philosophy**: Karpenter is a Kubernetes cluster autoscaler that dynamically provisions EC2 instances based on pod requirements. Unlike managed node groups, Karpenter doesn't create visible EKS node group resources in Terraform. Instead, it operates via IAM roles, SQS queues, and CloudWatch events. When no node groups or Fargate profiles exist, TerraVision infers Karpenter usage and creates visual placeholders showing the autoscaling architecture.
+
+**Transformation**: When an EKS cluster has no node groups/Fargate but shows Karpenter indicators (IAM roles, SQS queues, or subnet tags), create synthetic `tv_karpenter.karpenter` resources distributed across subnets to visualize the dynamic compute provisioning.
+
+**Core Transformation**:
+```
+Before (Terraform's view):
+aws_eks_cluster.main
+├── (no node groups)
+├── (no Fargate profiles)
+└── aws_iam_role.karpenter_node
+└── aws_sqs_queue.karpenter_events
+
+After (Architecture view):
+aws_account.eks_control_plane_main
+└── aws_eks_cluster.main (Control Plane)
+    ├── aws_eks_cluster.main~1
+    ├── aws_eks_cluster.main~2
+    └── aws_eks_cluster.main~3
+
+Subnet private~1
+└── tv_karpenter.karpenter~1
+    └── aws_eks_cluster.main~1
+
+Subnet private~2
+└── tv_karpenter.karpenter~2
+    └── aws_eks_cluster.main~2
+
+Subnet private~3
+└── tv_karpenter.karpenter~3
+    └── aws_eks_cluster.main~3
+
+aws_iam_role.karpenter_node
+├── aws_eks_cluster.main~1
+├── aws_eks_cluster.main~2
+└── aws_eks_cluster.main~3
+
+aws_sqs_queue.karpenter_events
+├── tv_karpenter.karpenter~1
+├── tv_karpenter.karpenter~2
+└── tv_karpenter.karpenter~3
+```
+
+This shows how Karpenter provisions compute across availability zones based on pod scheduling needs.
+
+---
+
+### What Happens
+
+1. **Detect Karpenter usage**:
+   - Find EKS clusters with no node groups or Fargate profiles
+   - Cluster spans multiple subnets (requires expansion)
+   - Look for indicators:
+     - IAM roles with "karpenter" in name
+     - SQS queues with "karpenter" in name
+     - Subnet tags containing `karpenter.sh/discovery`
+
+2. **Expand cluster across subnets**:
+   - Create numbered cluster instances (`cluster~1`, `cluster~2`, `cluster~3`)
+   - Keep original cluster as parent that links to numbered instances
+   - Each numbered instance represents cluster presence in one AZ
+
+3. **Create Karpenter visualizations**:
+   - Create `tv_karpenter.karpenter~N` synthetic resources (one per subnet)
+   - Place each Karpenter node in its corresponding subnet
+   - Link Karpenter nodes to numbered cluster instances
+
+4. **Link IAM roles**:
+   - Find IAM roles with instance profiles (needed for EC2 provisioning)
+   - Connect roles to all numbered cluster instances
+   - Shows permission flow for dynamic node creation
+
+5. **Link SQS queues**:
+   - Find SQS queues connected to CloudWatch event targets
+   - Connect queues to all numbered Karpenter nodes
+   - Shows event-driven scaling architecture
+
+**Hierarchy**:
+```
+aws_account.eks_control_plane_main
+└── aws_eks_cluster.main (Parent)
+    ├── aws_eks_cluster.main~1
+    ├── aws_eks_cluster.main~2
+    └── aws_eks_cluster.main~3
+
+VPC
+├── AZ us-east-1a
+│   └── Subnet private~1
+│       └── tv_karpenter.karpenter~1 (Dynamic Provisioner)
+│           └── aws_eks_cluster.main~1
+├── AZ us-east-1b
+│   └── Subnet private~2
+│       └── tv_karpenter.karpenter~2 (Dynamic Provisioner)
+│           └── aws_eks_cluster.main~2
+└── AZ us-east-1c
+    └── Subnet private~3
+        └── tv_karpenter.karpenter~3 (Dynamic Provisioner)
+            └── aws_eks_cluster.main~3
+
+aws_iam_role.karpenter_node
+├── aws_eks_cluster.main~1
+├── aws_eks_cluster.main~2
+└── aws_eks_cluster.main~3
+
+aws_sqs_queue.karpenter_interruption
+├── tv_karpenter.karpenter~1
+├── tv_karpenter.karpenter~2
+└── tv_karpenter.karpenter~3
+```
+
+**Connections**:
+- **Added**: Numbered cluster instances per subnet (`cluster~1`, `cluster~2`)
+- **Added**: Synthetic Karpenter resources (`tv_karpenter.karpenter~N`)
+- **Added**: Parent cluster linking to numbered instances
+- **Added**: IAM role → Numbered clusters (permission flow)
+- **Added**: SQS queue → Karpenter nodes (event flow)
+
+**Why**: Karpenter doesn't create visible Terraform resources for nodes, so synthetic visualizations show where dynamic provisioning occurs. Numbering across subnets shows the multi-AZ autoscaling architecture.
+
+---
+
+### Implementation: Karpenter Detection and Expansion
+
+```
+FUNCTION handle_karpenter_support(tfdata):
+    // This logic is embedded in handle_eks_cluster_grouping()
+
+    // Step 1: Detect clusters needing expansion
+    FOR EACH cluster IN eks_clusters:
+        has_node_groups = ANY "aws_eks_node_group" IN graphdict
+        has_fargate = ANY "aws_eks_fargate_profile" IN graphdict
+
+        // Skip if cluster has explicit compute resources
+        IF has_node_groups OR has_fargate:
+            CONTINUE
+
+        // Find subnets containing this cluster
+        subnets_with_cluster = FIND_ALL subnets WHERE cluster IN graphdict[subnet]
+
+        // Only expand if multiple subnets (multi-AZ)
+        IF LENGTH(subnets_with_cluster) <= 1:
+            CONTINUE
+
+        // Step 2: Expand cluster into numbered instances
+        SORT subnets_with_cluster  // Deterministic ordering
+
+        FOR i FROM 1 TO LENGTH(subnets_with_cluster):
+            numbered_cluster = cluster + "~" + i
+            subnet = subnets_with_cluster[i - 1]
+
+            // Create numbered cluster instance
+            CREATE graphdict[numbered_cluster] = EMPTY LIST
+            CREATE meta_data[numbered_cluster] = DEEP_COPY(meta_data[cluster])
+
+            // Update subnet to reference numbered instance
+            REMOVE cluster FROM graphdict[subnet]
+            ADD numbered_cluster TO graphdict[subnet]
+
+        // Step 3: Update parent cluster to link numbered instances
+        REMOVE cluster FROM graphdict[eks_group]
+        graphdict[cluster] = EMPTY LIST
+
+        FOR i FROM 1 TO LENGTH(subnets_with_cluster):
+            ADD cluster + "~" + i TO graphdict[cluster]
+
+        ADD cluster TO graphdict[eks_group]
+
+        // Step 4: Detect Karpenter indicators
+        karpenter_roles = FIND resources WHERE:
+            - Type is "aws_iam_role"
+            - Name contains "karpenter" (case-insensitive)
+
+        karpenter_queues = FIND resources WHERE:
+            - Type is "aws_sqs_queue"
+            - Name contains "karpenter" (case-insensitive)
+
+        has_karpenter_tags = ANY subnet IN subnets_with_cluster WHERE:
+            - meta_data[subnet]["tags"] contains "karpenter.sh/discovery"
+
+        // Step 5: If Karpenter detected, create visualizations
+        IF karpenter_roles OR karpenter_queues OR has_karpenter_tags:
+
+            // Create numbered Karpenter nodes in each subnet
+            FOR i FROM 1 TO LENGTH(subnets_with_cluster):
+                karpenter_node = "tv_karpenter.karpenter~" + i
+                numbered_cluster = cluster + "~" + i
+                subnet = subnets_with_cluster[i - 1]
+
+                // Create Karpenter visualization
+                CREATE graphdict[karpenter_node] = [numbered_cluster]
+                CREATE meta_data[karpenter_node] = {"label": "Karpenter"}
+
+                // Add to subnet
+                ADD karpenter_node TO graphdict[subnet]
+
+            // Link IAM roles with instance profiles to numbered clusters
+            FOR EACH role IN karpenter_roles:
+                IF "aws_iam_instance_profile" IN str(graphdict[role]):
+                    FOR i FROM 1 TO LENGTH(subnets_with_cluster):
+                        ADD cluster + "~" + i TO graphdict[role]
+
+            // Link SQS queues to numbered Karpenter nodes
+            FOR EACH queue IN karpenter_queues:
+                // Only if queue connects to CloudWatch event targets
+                IF "aws_cloudwatch_event_target" IN str(original_graphdict[queue]):
+                    FOR i FROM 1 TO LENGTH(subnets_with_cluster):
+                        ADD "tv_karpenter.karpenter~" + i TO graphdict[queue]
+
+    RETURN tfdata
+```
+
+**Detection Criteria**:
+1. **No managed compute**: Cluster has no `aws_eks_node_group` or `aws_eks_fargate_profile` resources
+2. **Multi-AZ deployment**: Cluster spans multiple subnets
+3. **Karpenter indicators** (any of):
+   - IAM roles with "karpenter" in name
+   - SQS queues with "karpenter" in name
+   - Subnets tagged with `karpenter.sh/discovery`
+
+**Key Patterns**:
+- Numbered cluster instances use tilde suffix (`~1`, `~2`) like node groups
+- Synthetic Karpenter resources use `tv_` prefix to indicate TerraVision-generated
+- Original cluster becomes parent node linking to numbered instances
+- IAM roles only linked if they have instance profiles (EC2 provisioning)
+- SQS queues only linked if connected to CloudWatch events (interruption handling)
+
+---
+
+### Example Transformation
+
+**Terraform Code**:
+```hcl
+resource "aws_eks_cluster" "main" {
+  name     = "production-cluster"
+  role_arn = aws_iam_role.eks_cluster.arn
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_1.id,
+      aws_subnet.private_2.id,
+      aws_subnet.private_3.id
+    ]
+  }
+}
+
+resource "aws_iam_role" "karpenter_node" {
+  name = "karpenter-node-role"
+  # ... assume role policy
+}
+
+resource "aws_iam_instance_profile" "karpenter" {
+  name = "karpenter-profile"
+  role = aws_iam_role.karpenter_node.name
+}
+
+resource "aws_sqs_queue" "karpenter_interruption" {
+  name = "karpenter-interruption-queue"
+}
+
+resource "aws_cloudwatch_event_target" "karpenter" {
+  rule = aws_cloudwatch_event_rule.interruption.name
+  arn  = aws_sqs_queue.karpenter_interruption.arn
+}
+```
+
+**Before Transformation** (graphdict):
+```json
+{
+  "aws_eks_cluster.main": [],
+  "aws_subnet.private_1": ["aws_eks_cluster.main"],
+  "aws_subnet.private_2": ["aws_eks_cluster.main"],
+  "aws_subnet.private_3": ["aws_eks_cluster.main"],
+  "aws_account.eks_control_plane_main": ["aws_eks_cluster.main"],
+  "aws_iam_role.karpenter_node": ["aws_iam_instance_profile.karpenter"],
+  "aws_sqs_queue.karpenter_interruption": []
+}
+```
+
+**After Transformation** (graphdict):
+```json
+{
+  "aws_eks_cluster.main": [
+    "aws_eks_cluster.main~1",
+    "aws_eks_cluster.main~2",
+    "aws_eks_cluster.main~3"
+  ],
+  "aws_eks_cluster.main~1": [],
+  "aws_eks_cluster.main~2": [],
+  "aws_eks_cluster.main~3": [],
+  "tv_karpenter.karpenter~1": ["aws_eks_cluster.main~1"],
+  "tv_karpenter.karpenter~2": ["aws_eks_cluster.main~2"],
+  "tv_karpenter.karpenter~3": ["aws_eks_cluster.main~3"],
+  "aws_subnet.private_1": ["tv_karpenter.karpenter~1"],
+  "aws_subnet.private_2": ["tv_karpenter.karpenter~2"],
+  "aws_subnet.private_3": ["tv_karpenter.karpenter~3"],
+  "aws_account.eks_control_plane_main": ["aws_eks_cluster.main"],
+  "aws_iam_role.karpenter_node": [
+    "aws_iam_instance_profile.karpenter",
+    "aws_eks_cluster.main~1",
+    "aws_eks_cluster.main~2",
+    "aws_eks_cluster.main~3"
+  ],
+  "aws_sqs_queue.karpenter_interruption": [
+    "tv_karpenter.karpenter~1",
+    "tv_karpenter.karpenter~2",
+    "tv_karpenter.karpenter~3"
+  ]
+}
+```
+
+**Result**: Karpenter autoscaling architecture visualized across three availability zones with event-driven scaling shown via SQS connections.
+
+---
+
+### Karpenter vs Node Groups vs Fargate
+
+| Aspect | Node Groups | Fargate | Karpenter |
+|--------|-------------|---------|-----------|
+| **Terraform resources** | `aws_eks_node_group` | `aws_eks_fargate_profile` | **No EKS resources** |
+| **Compute visibility** | Visible ASG/EC2 | Invisible (serverless) | Invisible (dynamic) |
+| **Detection method** | Resource type | Resource type | IAM roles + SQS queues + tags |
+| **Cluster expansion** | Not needed | Not needed | **Cluster numbered per subnet** |
+| **Synthetic resources** | None | None | `tv_karpenter.karpenter~N` |
+| **IAM role links** | Automatic | Automatic | **Manual (if instance profile exists)** |
+| **Event queue links** | N/A | N/A | **SQS → Karpenter nodes** |
+| **Numbering trigger** | `subnet_ids` count | `subnet_ids` count | Subnet count (multi-AZ) |
+
+---
+
+### Special Cases
+
+**Karpenter + Node Groups (Hybrid)**:
+```
+aws_account.eks_control_plane_main
+└── aws_eks_cluster.main
+    ├── aws_eks_node_group.system~1 (Static - system pods)
+    ├── aws_eks_node_group.system~2
+    └── aws_eks_node_group.system~3
+
+Subnet private~1
+├── aws_eks_node_group.system~1
+└── (No Karpenter - node groups present)
+```
+- If node groups exist, Karpenter logic is **skipped**
+- Assumes all compute is managed via node groups
+- Prevents duplication and confusion
+
+**Karpenter Without Multi-AZ**:
+```hcl
+resource "aws_eks_cluster" "main" {
+  vpc_config {
+    subnet_ids = [aws_subnet.private_1.id]  # Single subnet
+  }
+}
+```
+- No cluster expansion (only one subnet)
+- No Karpenter visualization (expansion required)
+- Cluster remains unnumbered in single subnet
+- Karpenter indicators ignored if not multi-AZ
+
+**Karpenter Without CloudWatch Events**:
+```
+aws_iam_role.karpenter_node → aws_eks_cluster.main~1, main~2, main~3
+aws_sqs_queue.karpenter_queue (not linked - no CloudWatch connection)
+```
+- IAM roles still linked (needed for node provisioning)
+- SQS queues **not linked** unless connected to CloudWatch event targets
+- Prevents incorrect connections for unrelated SQS queues
+
+---
+
 ## Complete Processing Order
 
 The EKS handlers should be executed in this sequence:
 
-1. **`handle_eks_cluster_grouping`**: Create EKS service group, move control plane
-2. **`link_eks_control_plane_to_nodes`**: Expand node groups, link to control plane
-3. **`match_node_groups_to_subnets`**: Place node groups in correct subnets (suffix matching)
-4. **`match_fargate_profiles_to_subnets`**: Split Fargate profiles across subnets (NEW)
-5. **`link_node_groups_to_worker_nodes`**: Connect node groups to actual EC2/ASG workers
+1. **`handle_eks_cluster_grouping`**: Create EKS service group, move control plane, handle Karpenter detection
+2. **`expand_eks_auto_mode_clusters`**: Expand Auto Mode clusters across subnets
+3. **`link_eks_control_plane_to_nodes`**: Expand node groups, link to control plane
+4. **`match_node_groups_to_subnets`**: Place node groups in correct subnets (suffix matching)
+5. **`match_fargate_profiles_to_subnets`**: Split Fargate profiles across subnets
+6. **`link_node_groups_to_worker_nodes`**: Connect node groups to actual EC2/ASG workers
 
 **Final Result**:
 ```

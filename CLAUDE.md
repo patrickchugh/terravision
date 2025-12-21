@@ -6,7 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into professional cloud architecture diagrams. It runs 100% client-side, securely parses Terraform plans, and generates visual representations of cloud infrastructure without requiring access to cloud environments.
 
+## Virtual Environment
 
+**CRITICAL**: This project uses Poetry for dependency management. **ALWAYS** use `poetry run` prefix for all Python commands.
+
+```bash
+# ✅ CORRECT - Always use poetry run
+poetry run python terravision.py draw --source <path>
+
+# ❌ WRONG - Never run directly
+python terravision.py draw --source <path>
+```
 
 ## Commands
 
@@ -25,17 +35,17 @@ pip install -r requirements.txt
 
 ```bash
 # Basic diagram generation
-python terravision.py draw --source <path>
+poetry run python terravision.py draw --source <path>
 
 # With AI refinement
-python terravision.py draw --source <path> --aibackend bedrock
-python terravision.py draw --source <path> --aibackend ollama
+poetry run python terravision.py draw --source <path> --aibackend bedrock
+poetry run python terravision.py draw --source <path> --aibackend ollama
 
 # Export graph data
-python terravision.py graphdata --source <path> --outfile graph.json
+poetry run python terravision.py graphdata --source <path> --outfile graph.json
 
 # Debug mode (exports tfdata.json)
-python terravision.py draw --source <path> --debug
+poetry run python terravision.py draw --source <path> --debug
 ```
 
 ### Testing
@@ -208,13 +218,13 @@ poetry run pytest tests/test_<provider>_resources.py -v
 When debugging Terraform parsing issues:
 ```bash
 # Generate debug output
-python terravision.py draw --source <path> --debug
+poetry run python terravision.py draw --source <path> --debug
 
 # Inspect tfdata.json (contains all_resource, original_metadata, graphdict)
 cat tfdata.json | jq '.graphdict'
 
 # Replay from debug file (skips terraform init/plan)
-python terravision.py draw --source tfdata.json
+poetry run python terravision.py draw --source tfdata.json
 ```
 
 ### Pre-commit Hooks
