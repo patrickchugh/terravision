@@ -744,6 +744,39 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def is_eks_auto_mode(tfdata: Dict[str, Any], cluster: str) -> bool:
+    """Check if EKS cluster has auto mode enabled.
+
+    Args:
+        tfdata: Terraform data dictionary
+        cluster: Cluster resource name
+
+    Returns:
+        True if auto mode is enabled
+    """
+    metadata = tfdata.get("meta_data", {}).get(cluster, {})
+    compute_config = metadata.get("compute_config", {})
+
+    # Convert string representation to list/dict if needed
+    if isinstance(compute_config, str):
+        if compute_config in ("[]", "{}"):
+            return False
+        try:
+            compute_config = literal_eval(compute_config)
+        except:
+            return False
+
+    # Handle list of configs (take first element)
+    if isinstance(compute_config, list):
+        compute_config = compute_config[0] if compute_config else {}
+
+    if isinstance(compute_config, dict):
+        if compute_config.get("node_pools"):
+            return "system" in compute_config["node_pools"]
+        return compute_config.get("enabled") == True
+    return False
+
+
 def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle EKS cluster and node group configurations.
 
@@ -766,7 +799,7 @@ def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Create numbered instances of aws_eks_cluster.auto for each subnet.
+    """Create numbered instances of EKS clusters with auto mode enabled.
 
     Args:
         tfdata: Terraform data dictionary
@@ -774,8 +807,18 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with numbered auto cluster instances
     """
-    auto_cluster = "aws_eks_cluster.auto"
-    if auto_cluster not in tfdata["graphdict"]:
+    # Find EKS clusters with auto mode enabled
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+
+    auto_cluster = None
+    for cluster in eks_clusters:
+        if is_eks_auto_mode(tfdata, cluster):
+            auto_cluster = cluster
+            break
+
+    if not auto_cluster:
         return tfdata
 
     parents = helpers.list_of_parents(tfdata["graphdict"], auto_cluster)
@@ -806,7 +849,8 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     for i in range(1, counter):
         tfdata["graphdict"][eks_service].append(f"{auto_cluster}_{i}")
 
-    eks_group = "aws_account.eks_control_plane_auto"
+    cluster_name = auto_cluster.split(".")[-1]
+    eks_group = f"aws_account.eks_control_plane_{cluster_name}"
 
     # Redirect all parent connections to expanded nodes (except eks_group)
     for parent in parents:
@@ -820,7 +864,7 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for i in range(1, counter):
                 tfdata["graphdict"][parent].insert(idx, f"{auto_cluster}_{i}")
 
-    # # Handle eks_group separately - point to eks_service
+    # Handle eks_group separately - point to eks_service
     if (
         eks_group in tfdata["graphdict"]
         and auto_cluster in tfdata["graphdict"][eks_group]
@@ -878,8 +922,8 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if cluster not in tfdata["graphdict"][eks_group_name]:
             tfdata["graphdict"][eks_group_name].append(cluster)
 
-        # Skip removing from subnets if cluster name is 'auto' (EKS Auto Mode)
-        if cluster_name == "auto":
+        # Skip removing from subnets if cluster has auto mode enabled
+        if is_eks_auto_mode(tfdata, cluster):
             continue
 
         # Only remove cluster from subnets if node groups or Fargate profiles exist
