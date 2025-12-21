@@ -133,7 +133,9 @@
   ],
   "aws_lb.elb": [
     "aws_acm_certificate.acm",
-    "aws_alb.elb"
+    "aws_alb.elb~1",
+    "aws_alb.elb~2",
+    "aws_alb.elb~3"
   ],
   "aws_rds_aurora.this": [],
   "aws_route53_record.route_53": [
