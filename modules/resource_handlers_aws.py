@@ -732,6 +732,7 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with ECS configured
     """
+
     # eks_nodes = helpers.list_of_parents(tfdata["graphdict"], "aws_eks_cluster")
     ecs_nodes = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_ecs_service"
