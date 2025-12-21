@@ -579,12 +579,12 @@ def render_diagram(
 
     # Initialize diagram canvas
     title = (
-        "Untitled"
+        "Untitled1"
         if not tfdata["annotations"].get("title")
         else tfdata["annotations"]["title"]
     )
     myDiagram = Canvas(
-        title, filename=outfile, outformat=format, show=picshow, direction="TB"
+        "", filename=outfile, outformat=format, show=picshow, direction="TB"
     )
     setdiagram(myDiagram)
 
@@ -601,6 +601,19 @@ def render_diagram(
             )
         )
         exit()
+
+    # Add title as a node at the top
+    setcluster(myDiagram)
+    title_style = {
+        "_titlenode": "1",
+        "shape": "plaintext",
+        "fontsize": "30",
+        "fontname": "Sans-Serif",
+        "fontcolor": "#2D3436",
+        "label": title,
+    }
+    getattr(sys.modules[__name__], "Node")(**title_style)
+
     cloudGroup = cloud_group_class()
     setcluster(cloudGroup)
     tfdata["connected_nodes"] = dict()
@@ -620,6 +633,8 @@ def render_diagram(
     if str(source) == "('.',)":
         source = os.getcwd()
 
+    # Set context to main diagram so footer is outside all clusters
+    setcluster(myDiagram)
     footer_style = {
         "_footernode": "1",
         "shape": "record",

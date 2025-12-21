@@ -1,6 +1,7 @@
 BEGIN{
-  double bbMinX, bbMinY, bbMaxX, bbMaxY, lpX, lpY, lpMinX, lpMaxY, newX, newY;
+  double bbMinX, bbMinY, bbMaxX, bbMaxY, lpX, lpY, lpMinX, lpMaxY, newX, newY, centerX;
   double fudgeX, fudgeY;
+  double cloudMinX, cloudMinY, cloudMaxX, cloudMaxY, cloudCenterX;
   string fld[int];
   
   // recursive routine, processing from the top (root) down
@@ -12,6 +13,11 @@ BEGIN{
     }
     
     if (match(Gr.name,"cluster")==0 ){
+      // Check for main cloud provider group using _cloudgroup flag
+      if (hasAttr(Gr, "_cloudgroup") && Gr._cloudgroup=="1"){
+        sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &cloudMinX, &cloudMinY, &cloudMaxX, &cloudMaxY);
+        cloudCenterX = (cloudMinX + cloudMaxX) / 2.0;
+      }
       if (hasAttr(Gr, "_shift") && Gr._shift!="" && Gr._shift!="0"){
         fudgeX=2.;  // aim for just inside periphery  - increase to shift left
         fudgeY=1.;  // aim for just inside periphery  - increase to shift up
@@ -38,4 +44,17 @@ BEGIN{
 BEG_G{
   labelShift($G);
 }
-N[_footernode=="1"]{pos=sprintf("%.0f,%.0f!", 0, -200)}
+END_G{
+  double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
+  // Center root graph label at the END after all processing
+  sscanf ($G.bb, "%lf,%lf,%lf,%lf", &gbbMinX, &gbbMinY, &gbbMaxX, &gbbMaxY);
+  gcenterX = (gbbMinX + gbbMaxX) / 2.0;
+  glpY = yOf($G.lp);
+  $G.lp = sprintf("%.1f,%.1f", gcenterX, glpY);
+}
+N[_titlenode=="1"]{
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMaxY + 100);
+}
+N[_footernode=="1"]{
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMinY - 150);
+}

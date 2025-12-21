@@ -111,6 +111,7 @@ class AWSGroup(Cluster):
             "center": "true",
             "labeljust": "l",
             "_shift": "1",
+            "_cloudgroup": "1",
         }
         aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)

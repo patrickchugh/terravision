@@ -610,7 +610,7 @@ def draw(
         workspace: Terraform workspace
         varfile: Variable files tuple
         outfile: Output filename
-        format: Output format (png/pdf/svg/bmp)
+        format: Output format (png/pdf/svg/bmp/dot)
         show: Show diagram after generation
         simplified: Generate simplified diagram
         annotate: Path to annotations file

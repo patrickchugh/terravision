@@ -21,6 +21,7 @@ class AZUREGroup(Cluster):
             "center": "true",
             "labeljust": "l",
             "_shift": "1",
+            "_cloudgroup": "1",
         }
         azure_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/azure/azure.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(azure_label, defaultdir, azure_graph_attrs)
