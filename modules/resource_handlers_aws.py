@@ -726,75 +726,82 @@ def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle ECS service configurations.
 
-    Links ECS services (Fargate or EC2) to their autoscaling targets,
-    ensuring proper placement in the diagram hierarchy.
+    Only processes EC2-based ECS services to link them with autoscaling targets.
+    Fargate services are skipped as they are serverless and handled well by the
+    generic pipeline (shown in subnets like Lambda functions).
+
+    EC2-based ECS requires special handling to show the infrastructure layer
+    (autoscaling groups, capacity providers, EC2 instances).
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with ECS services properly linked
+        Updated tfdata with EC2 ECS services linked to autoscaling targets
     """
-    # Process ECS services in order
-    tfdata = link_ecs_services_to_autoscaling(tfdata)
+    # Only process EC2-based ECS services
+    tfdata = link_ec2_ecs_to_autoscaling(tfdata)
     return tfdata
 
 
-def link_ecs_services_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Link ECS services to their autoscaling targets.
+def link_ec2_ecs_to_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Link EC2-based ECS services to their autoscaling targets.
 
-    ECS services that have autoscaling enabled are managed by
-    aws_appautoscaling_target resources. This function establishes
-    the relationship between numbered ECS service instances and their
-    corresponding autoscaling targets.
+    EC2-based ECS services run on infrastructure managed by autoscaling groups.
+    This function establishes the relationship between numbered EC2 ECS service
+    instances and their corresponding autoscaling targets.
 
     Pattern:
-        aws_appautoscaling_target.this~1 → aws_fargate.ecs~1
-        aws_appautoscaling_target.this~2 → aws_fargate.ecs~2
+        aws_appautoscaling_target.this~1 → aws_ec2ecs.ecs~1
+        aws_appautoscaling_target.this~2 → aws_ec2ecs.ecs~2
+
+    Fargate services are SKIPPED - they are serverless and the generic pipeline
+    handles them correctly (shown in subnets like Lambda functions).
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with ECS-autoscaling relationships
+        Updated tfdata with EC2 ECS-autoscaling relationships
     """
-    # Find all ECS services (after variant detection, these may be aws_fargate, aws_ec2ecs, etc.)
-    # We need to find all resources that originated from aws_ecs_service
     all_resources = list(tfdata["graphdict"].keys())
 
-    # Find ECS-related services (Fargate, EC2 ECS, or generic ECS services)
-    ecs_services = []
+    # Find ONLY EC2-based ECS services (not Fargate, not generic ecs_service)
+    ec2_ecs_services = []
     for resource in all_resources:
         resource_type = helpers.get_no_module_name(resource).split(".")[0]
-        # Check if this is an ECS service variant or consolidated ECS service
-        if resource_type in ["aws_fargate", "aws_ec2ecs", "aws_ecs_service"]:
-            # Only process if it's the consolidated service (ends with .ecs)
+        # Only process aws_ec2ecs (EC2-based ECS), skip aws_fargate
+        if resource_type == "aws_ec2ecs":
             resource_name = helpers.get_no_module_name(resource).split(".")[1]
             if resource_name == "ecs" or "ecs" in resource_name:
-                ecs_services.append(resource)
+                ec2_ecs_services.append(resource)
+
+    # If no EC2 ECS services found, skip processing
+    if not ec2_ecs_services:
+        return tfdata
 
     # Find all autoscaling targets
     autoscaling_targets = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_appautoscaling_target"
     )
 
-    # Link numbered ECS services to numbered autoscaling targets
+    # Link numbered EC2 ECS services to numbered autoscaling targets
     for target in sorted(autoscaling_targets):
         # Extract suffix from target (e.g., "this~1" → "~1")
         if "~" in target:
             target_suffix = "~" + target.split("~")[1]
 
-            # Find ECS services with matching suffix
-            for service in sorted(ecs_services):
+            # Find EC2 ECS services with matching suffix
+            for service in sorted(ec2_ecs_services):
                 if service.endswith(target_suffix):
-                    # Add ECS service to autoscaling target if not already present
+                    # Add EC2 ECS service to autoscaling target if not already present
                     if service not in tfdata["graphdict"][target]:
                         tfdata["graphdict"][target].append(service)
         else:
-            # Unnumbered autoscaling target - link to unnumbered ECS service
-            for service in ecs_services:
+            # Unnumbered autoscaling target - link to unnumbered EC2 ECS service
+            for service in ec2_ecs_services:
                 if "~" not in service:
-                    # Add ECS service to autoscaling target if not already present
+                    # Add EC2 ECS service to autoscaling target if not already present
                     if service not in tfdata["graphdict"][target]:
                         tfdata["graphdict"][target].append(service)
 
