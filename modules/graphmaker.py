@@ -273,8 +273,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Get metadata generator for parameter scanning
         if nodename not in tfdata["meta_data"].keys():
-            dg = dict_generator(tfdata["original_metadata"][node])
-            tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
+            if node in tfdata["original_metadata"]:
+                dg = dict_generator(tfdata["original_metadata"][node])
+                tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
         else:
             dg = dict_generator(tfdata["meta_data"][nodename])
 
@@ -522,7 +523,8 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
     target_has_count = (
-        tfdata["meta_data"][target_resource].get("count")
+        target_resource in tfdata["meta_data"]
+        and tfdata["meta_data"][target_resource].get("count")
         and int(tfdata["meta_data"][target_resource].get("count")) >= 1
     )
     not_already_multiple = "~" not in target_resource
@@ -538,7 +540,7 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
         )
     else:
         security_group_with_count = False
-    has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource])
+    has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource]) if resource in tfdata["meta_data"] else False
     not_unique_resource = "aws_route_table." not in resource
     if (
         (
