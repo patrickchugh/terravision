@@ -23,6 +23,9 @@ All Submissions:
 ### Checklist for Changes to Core Features:
 
 * [ ] Have you discussed any major revamp with a reviewer/maintainer first? (It's okay to just raise a PR directly for minor bugfixes)
+* [ ] Have you ensured your PR is focused on one major improvement and is not trying to do too many changes at once? For example:
+      Bad : Adding support for GCP and Azure system wide
+      Good: Just adding Azure resource handler for VNets
 * [ ] Have you added an explanation of what your changes do and why you'd like us to include them?
 * [ ] Have you written new tests for your core changes, as applicable, and made sure the new tests PASS?
 * [ ] Have you successfully run all previous system wide tests with your changes locally?
