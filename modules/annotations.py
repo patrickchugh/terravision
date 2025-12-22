@@ -164,6 +164,9 @@ def modify_nodes(
     """
     click.echo("\nUser Defined Modifications :\n")
 
+    if annotate.get("title"):
+        click.echo(f"Title: {annotate['title']}\n")
+
     # Add new nodes to the graph
     if annotate.get("add"):
         for node in annotate["add"]:

@@ -126,6 +126,18 @@ def handle_cloudfront_domains(
     Returns:
         Updated origin string with resource references
     """
+    # Check if domain is a module output reference (e.g., module.s3_bucket.output_name)
+    if "module." in domain:
+        # Extract module name and find matching resources
+        module_pattern = r"module\.([^.]+)\.(.+)"
+        match = re.match(module_pattern, domain)
+        if match:
+            module_name = match.group(1)
+            # Find S3 bucket resources that match the module name
+            for key in mdata.keys():
+                if module_name in key and "aws_s3_bucket" in key:
+                    return origin_string.replace(domain, key)
+
     # Search metadata for domain references
     for key, value in mdata.items():
         for _, v in value.items():
