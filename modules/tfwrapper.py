@@ -309,6 +309,7 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["node_list"] = list()
     tfdata["hidden"] = dict()
     tfdata["annotations"] = dict()
+
     # Create nodes from resources in plan
     for object in tfdata["tf_resources_created"]:
         # Only process managed resources (not data sources)
@@ -450,6 +451,7 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     # Save original graph and metadata for reference
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
+
     # Verify cloud resources exist (check all supported provider prefixes)
     from modules.provider_detector import PROVIDER_PREFIXES
 
@@ -503,4 +505,39 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and subnet not in tfdata["graphdict"][vpc]
                 ):
                     tfdata["graphdict"][vpc].append(subnet)
+    return tfdata
+
+
+def merge_hcl_source_data(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge raw HCL source data from all_resource into original_metadata.
+
+    This must be called AFTER fileparser.read_tfsource() populates all_resource.
+
+    Args:
+        tfdata: Terraform data dictionary with all_resource populated
+
+    Returns:
+        Updated tfdata with HCL source data merged into original_metadata
+    """
+    if tfdata.get("all_resource") and tfdata.get("original_metadata"):
+        for filepath, resource_list in tfdata["all_resource"].items():
+            for resource_dict in resource_list:
+                for resource_type, resources in resource_dict.items():
+                    for resource_data in resources:
+                        resource_name = list(resource_data.keys())[0]
+                        # Build resource address
+                        addr = f"{resource_type}.{resource_name}"
+                        # Find matching nodes (handle module prefix and indexed resources)
+                        matching_nodes = [
+                            n
+                            for n in tfdata["original_metadata"].keys()
+                            if addr in n or n.endswith(f".{resource_name}")
+                        ]
+                        for node in matching_nodes:
+                            if node not in tfdata["original_metadata"]:
+                                tfdata["original_metadata"][node] = {}
+                            # Store raw HCL source data
+                            tfdata["original_metadata"][node]["_hcl_source"] = (
+                                resource_data[resource_name]
+                            )
     return tfdata

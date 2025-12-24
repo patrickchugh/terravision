@@ -114,7 +114,10 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def handle_cloudfront_domains(
-    origin_string: str, domain: str, mdata: Dict[str, Any]
+    origin_string: str,
+    domain: str,
+    mdata: Dict[str, Any],
+    original_mdata: Dict[str, Any] = None,
 ) -> str:
     """Link CloudFront to resources by matching domain names.
 
@@ -122,6 +125,7 @@ def handle_cloudfront_domains(
         origin_string: Original origin configuration string
         domain: Domain name to search for
         mdata: Resource metadata dictionary
+        original_mdata: Original metadata with raw HCL source data
 
     Returns:
         Updated origin string with resource references
@@ -137,6 +141,35 @@ def handle_cloudfront_domains(
             for key in mdata.keys():
                 if module_name in key and "aws_s3_bucket" in key:
                     return origin_string.replace(domain, key)
+
+    # If domain is empty/blank, check original_metadata for module output references in HCL source
+    if (not domain or domain.strip() == "") and original_mdata:
+        for key, value in original_mdata.items():
+            if "aws_cloudfront" in key and isinstance(value, dict):
+                hcl_source = value.get("_hcl_source", {})
+                if hcl_source and "origin" in hcl_source:
+                    origins = hcl_source["origin"]
+                    # Handle list of origins
+                    if isinstance(origins, list) and len(origins) > 0:
+                        origin = origins[0]
+                        if isinstance(origin, dict) and "domain_name" in origin:
+                            domain_ref = origin["domain_name"]
+                            # Check if it's a module output reference string
+                            if isinstance(domain_ref, str) and "module." in domain_ref:
+                                # Extract module name
+                                module_pattern = r"module\.([^.]+)"
+                                match = re.search(module_pattern, domain_ref)
+                                if match:
+                                    module_name = match.group(1)
+                                    # Find S3 bucket resources that match the module name
+                                    for resource_key in mdata.keys():
+                                        if (
+                                            module_name in resource_key
+                                            and "aws_s3_bucket" in resource_key
+                                        ):
+                                            return origin_string.replace(
+                                                domain if domain else "", resource_key
+                                            )
 
     # Search metadata for domain references
     for key, value in mdata.items():
@@ -226,13 +259,16 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["graphdict"][cf_resource].append(
                             "aws_acm_certificate.acm"
                         )
-                    # Link origin domain to resources
-                    if origin_domain:
-                        tfdata["meta_data"][cf_resource]["origin"] = (
-                            handle_cloudfront_domains(
-                                str(origin_source), origin_domain, tfdata["meta_data"]
-                            )
+                    # Link origin domain to resources (pass original_metadata for module output resolution)
+                    tfdata["meta_data"][cf_resource]["origin"] = (
+                        handle_cloudfront_domains(
+                            str(origin_source),
+                            origin_domain,
+                            tfdata["meta_data"],
+                            tfdata.get("original_metadata"),
                         )
+                    )
+    return tfdata
     return tfdata
 
 

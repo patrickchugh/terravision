@@ -143,6 +143,8 @@ def _process_terraform_source(
         else tfdata["codepath"]
     )
     tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+    # Merge HCL source data after fileparser populates all_resource
+    tfdata = tfwrapper.merge_hcl_source_data(tfdata)
     if debug:
         helpers.export_tfdata(tfdata)
     return tfdata
