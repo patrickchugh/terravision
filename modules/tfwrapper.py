@@ -328,15 +328,16 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             tfdata["node_list"].append(node)
             # Collect resource metadata from plan
             details = object["change"]["after"]
-            details.update(object["change"]["after_unknown"])
-            details.update(object["change"]["after_sensitive"])
-            # Add module name if resource is in a module
-            if "module." in object["address"]:
-                modname = object["module_address"].split("module.")[-1].split(".")[0]
-                details["module"] = modname
-            else:
-                details["module"] = "main"
-            tfdata["meta_data"][node] = details
+            if details is not None:
+                details.update(object["change"]["after_unknown"])
+                details.update(object["change"]["after_sensitive"])
+                # Add module name if resource is in a module
+                if "module." in object["address"]:
+                    modname = object["module_address"].split("module.")[-1].split(".")[0]
+                    details["module"] = modname
+                else:
+                    details["module"] = "main"
+                tfdata["meta_data"][node] = details
     # Remove duplicates from node list
     tfdata["node_list"] = list(dict.fromkeys(tfdata["node_list"]))
     return tfdata

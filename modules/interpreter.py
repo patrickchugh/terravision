@@ -708,22 +708,24 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             meta_data, tfdata = handle_implied_resources(
                 item, resource_type, actual_key, tfdata, meta_data
             )
-            omd = dict(tfdata["original_metadata"][resource_node])
-            md = item[resource_type][actual_key]
-            if md.get("count"):
-                md["original_count"] = str(md["count"])
-            omd.update(md)
-            # Clean up metadata by removing empty or True values which add no info and clutter metadata
-            omd = {
-                k: v
-                for k, v in omd.items()
-                if v is not True and v != "" and v != {} and v != [] and v != None
-            }
-            meta_data[resource_node] = omd
-            if "~" in resource_node or meta_data[resource_node].get("count"):
-                meta_data = handle_numbered_nodes(resource_node, tfdata, meta_data)
-
-    tfdata["meta_data"] = meta_data
+            if resource_node in tfdata["original_metadata"]:
+                omd = dict(tfdata["original_metadata"][resource_node])
+                md = item[resource_type][actual_key]
+                if md.get("count"):
+                    md["original_count"] = str(md["count"])
+                omd.update(md)
+                # Clean up metadata by removing empty or True values which add no info and clutter metadata
+                omd = {
+                    k: v
+                    for k, v in omd.items()
+                    if v is not True and v != "" and v != {} and v != [] and v != None
+                }
+                meta_data[resource_node] = omd
+                if "~" in resource_node or meta_data[resource_node].get("count"):
+                    meta_data = handle_numbered_nodes(resource_node, tfdata, meta_data)
+            else:
+                print("Key is not in container: ", resource_node)
+            tfdata["meta_data"] = meta_data
     return tfdata
 
 
