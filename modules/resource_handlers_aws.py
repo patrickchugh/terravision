@@ -629,8 +629,11 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
     for lb in found_lbs:
         # Determine LB type (ALB, NLB, etc.)
+        if lb not in tfdata["meta_data"]:
+            continue
+
         lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
-        renamed_node = lb_type + "." + "elb"
+        renamed_node = str(lb_type) + "." + "elb"
         # Initialize renamed node metadata
         if not tfdata["meta_data"].get(renamed_node):
             tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
