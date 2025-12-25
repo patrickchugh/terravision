@@ -223,6 +223,7 @@ AWS_SPECIAL_RESOURCES = {
     "aws_vpc_endpoint": "aws_handle_vpcendpoints",
     "aws_ecs": "aws_handle_ecs",
     "aws_eks": "aws_handle_eks",
+    "helm_release": "helm_release_handler",
     "aws_": "aws_handle_sharedgroup",
     "random_string": "random_string_handler",
 }

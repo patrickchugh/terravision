@@ -364,5 +364,5 @@ def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
         result = detect_providers(tfdata)
         return result["primary_provider"]
     except (ValueError, ProviderDetectionError):
-        logger.warning("Could not detect provider, defaulting to AWS")
+        # logger.warning("Could not detect provider, defaulting to AWS")
         return "aws"

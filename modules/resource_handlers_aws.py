@@ -1090,15 +1090,17 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
                 if karpenter_roles or karpenter_queues or has_karpenter_tags:
                     # Create numbered Karpenter nodes in each subnet FIRST
-                    for i, subnet in enumerate(subnets_with_cluster, start=1):
+                    for i in range(1, len(subnets_with_cluster) + 1):
                         karpenter_node = f"tv_karpenter.karpenter~{i}"
                         tfdata["graphdict"][karpenter_node] = [f"{cluster}~{i}"]
                         tfdata["meta_data"][karpenter_node] = {"label": "Karpenter"}
                         # Add Karpenter to subnet
-                        tfdata["graphdict"][subnet].append(karpenter_node)
+                        tfdata["graphdict"][subnets_with_cluster[i - 1]].append(
+                            karpenter_node
+                        )
 
                     # Link IAM roles with instance profiles to numbered clusters
-                    for role in karpenter_roles:
+                    for role in sorted(karpenter_roles):
                         if "aws_iam_instance_profile" in str(
                             tfdata["graphdict"].get(role, [])
                         ):
@@ -1106,7 +1108,7 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 tfdata["graphdict"][role].append(f"{cluster}~{i}")
 
                     # Link SQS queues to numbered Karpenter nodes (only if they connect to CloudWatch event targets)
-                    for queue in karpenter_queues:
+                    for queue in sorted(karpenter_queues):
                         if "aws_cloudwatch_event_target" in str(
                             tfdata["original_graphdict"].get(queue, [])
                         ):
@@ -1136,33 +1138,23 @@ def link_eks_control_plane_to_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     for cluster in eks_clusters:
-        cluster_name = cluster.split(".")[-1]
-
-        # Find node groups belonging to this cluster
-        cluster_node_groups = []
-        for node_group in eks_node_groups:
-            # Check if node group references this cluster
-            if node_group in tfdata["meta_data"]:
-                cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
-                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
-                    cluster_node_groups.append(node_group)
-
-        # Expand node groups if they have desired_size > 1
-        for node_group in list(cluster_node_groups):
-            # Don't expand based on desired_size - that's for EC2 instances, not subnets
-            # Subnet-based expansion happens in match_node_groups_to_subnets
-            pass
-
-        # Link cluster to all node groups (numbered or not)
-        all_node_groups = helpers.list_of_dictkeys_containing(
-            tfdata["graphdict"], "aws_eks_node_group"
+        cluster_name = (
+            cluster.split(".")[-1].split("~")[0]
+            if "~" in cluster
+            else cluster.split(".")[-1]
         )
 
-        for node_group in all_node_groups:
+        # Link cluster to all node groups (numbered or not)
+        for node_group in eks_node_groups:
             # Verify this node group belongs to this cluster
             if node_group in tfdata["meta_data"]:
                 cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
-                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
+                base_cluster = cluster.split("~")[0] if "~" in cluster else cluster
+                if (
+                    base_cluster in str(cluster_ref)
+                    or cluster_name in str(cluster_ref)
+                    or str(cluster_ref) in ["True", "", "None"]
+                ):
                     # Add connection from cluster to node group
                     if node_group not in tfdata["graphdict"][cluster]:
                         tfdata["graphdict"][cluster].append(node_group)
@@ -1186,6 +1178,7 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     subnets = sorted(
         helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
     )
+    private_subnets = sorted([s for s in subnets if "private" in s.lower()])
 
     # Process each unnumbered node group
     for node_group in list(eks_node_groups):
@@ -1199,10 +1192,14 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Find matching subnets
         matching_subnets = []
-        for subnet in subnets:
-            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
-            if any(subnet_id in str(sid) for sid in subnet_ids):
-                matching_subnets.append(subnet)
+        if subnet_ids and subnet_ids != []:
+            for subnet in subnets:
+                subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+                if any(subnet_id in str(sid) for sid in subnet_ids):
+                    matching_subnets.append(subnet)
+        else:
+            # Fallback: use private subnets if no subnet_ids in metadata
+            matching_subnets = private_subnets
 
         # Sort for deterministic assignment
         matching_subnets = sorted(matching_subnets)
@@ -1252,11 +1249,20 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     for cluster in eks_clusters:
-        cluster_name = cluster.split(".")[-1]
+        cluster_name = (
+            cluster.split(".")[-1].split("~")[0]
+            if "~" in cluster
+            else cluster.split(".")[-1]
+        )
         for node_group in all_node_groups:
             if node_group in tfdata["meta_data"]:
                 cluster_ref = tfdata["meta_data"][node_group].get("cluster_name", "")
-                if cluster in str(cluster_ref) or cluster_name in str(cluster_ref):
+                base_cluster = cluster.split("~")[0] if "~" in cluster else cluster
+                if (
+                    base_cluster in str(cluster_ref)
+                    or cluster_name in str(cluster_ref)
+                    or str(cluster_ref) in ["True", "", "None"]
+                ):
                     if node_group not in tfdata["graphdict"].get(cluster, []):
                         tfdata["graphdict"][cluster].append(node_group)
 
@@ -1434,6 +1440,104 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][subnet].append(profile)
 
     return tfdata
+
+
+def helm_release_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle helm_release resources by inspecting chart metadata.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with helm_release connections
+    """
+    helm_releases = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "helm_release"
+    )
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+
+    if not eks_clusters:
+        return tfdata
+
+    for release in helm_releases:
+        chart_name = (
+            tfdata.get("meta_data", {}).get(release, {}).get("chart", "").lower()
+        )
+
+        if chart_name == "karpenter":
+            _handle_karpenter_release(tfdata, release)
+        else:
+            # Connect other helm releases to first EKS cluster
+            if eks_clusters[0] not in tfdata["graphdict"][release]:
+                tfdata["graphdict"][release].append(eks_clusters[0])
+
+    return tfdata
+
+
+def _handle_karpenter_release(tfdata: Dict[str, Any], release: str) -> None:
+    """Handle Karpenter helm release by creating numbered instances per subnet.
+
+    Args:
+        tfdata: Terraform data dictionary
+        release: Karpenter release resource name
+    """
+    new_name = release.replace("helm_release", "tv_karpenter")
+    tfdata["graphdict"][new_name] = tfdata["graphdict"].pop(release)
+    tfdata["meta_data"][new_name] = tfdata["meta_data"].pop(release)
+
+    node_groups = [k for k in tfdata["graphdict"] if "eks_node_group" in k]
+    private_subnets = sorted(
+        [k for k in tfdata["graphdict"] if "aws_subnet" in k and "private" in k.lower()]
+    )
+    eks_clusters = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "aws_eks_cluster"
+    )
+    launch_templates = [k for k in tfdata["graphdict"] if "aws_launch_template" in k]
+
+    if not (private_subnets and node_groups):
+        return
+
+    base_node_group = node_groups[0].split("~")[0]
+    base_lt = launch_templates[0].split("~")[0] if launch_templates else None
+
+    # Create numbered instances and link to clusters
+    for i, subnet in enumerate(private_subnets, start=1):
+        numbered_ng = f"{base_node_group}~{i}"
+        tfdata["graphdict"][f"{new_name}~{i}"] = [numbered_ng]
+        tfdata["meta_data"][f"{new_name}~{i}"] = copy.deepcopy(
+            tfdata["meta_data"][new_name]
+        )
+        if numbered_ng not in tfdata["graphdict"]:
+            tfdata["graphdict"][numbered_ng] = []
+            tfdata["meta_data"][numbered_ng] = copy.deepcopy(
+                tfdata["meta_data"].get(node_groups[0], {})
+            )
+        tfdata["graphdict"][subnet].extend([numbered_ng, f"{new_name}~{i}"])
+        for cluster in eks_clusters:
+            if numbered_ng not in tfdata["graphdict"][cluster]:
+                tfdata["graphdict"][cluster].append(numbered_ng)
+        if base_lt and numbered_ng not in tfdata["graphdict"].get(base_lt, []):
+            tfdata["graphdict"].setdefault(base_lt, []).append(numbered_ng)
+
+    # Cleanup
+    unnumbered = [ng for ng in node_groups if "~" not in ng]
+    for cluster in eks_clusters:
+        for ng in unnumbered:
+            (
+                tfdata["graphdict"][cluster].remove(ng)
+                if ng in tfdata["graphdict"][cluster]
+                else None
+            )
+
+    for key in (
+        [new_name]
+        + unnumbered
+        + [lt for lt in launch_templates if not tfdata["graphdict"].get(lt)]
+    ):
+        tfdata["graphdict"].pop(key, None)
+        tfdata["meta_data"].pop(key, None)
 
 
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:

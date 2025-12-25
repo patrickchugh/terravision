@@ -264,39 +264,49 @@ def handle_nodes(
 
             # Process non-group nodes
             if node_type not in GROUP_NODES:
-                if (
-                    node_type in avl_classes
-                    and resource != node_connection
-                    and node_connection in tfdata["graphdict"].keys()
-                ):
-                    # Detect circular references to prevent infinite recursion
-                    circular_reference = (
-                        resource in tfdata["graphdict"][node_connection]
-                    )
-
-                    if not circular_reference:
-                        # Recursively handle connected node
-                        connectedNode, drawn_resources = handle_nodes(
-                            node_connection,
-                            connectedGroup,
-                            cloudGroup,
-                            diagramCanvas,
-                            tfdata,
-                            drawn_resources,
+                if node_type in avl_classes and resource != node_connection:
+                    # Check if node already exists in metadata (was drawn earlier)
+                    if (
+                        node_connection in tfdata["meta_data"]
+                        and "node" in tfdata["meta_data"][node_connection]
+                    ):
+                        connectedNode = tfdata["meta_data"][node_connection]["node"]
+                    elif node_connection in tfdata["graphdict"].keys():
+                        # Node exists in graphdict, try to draw it
+                        circular_reference = resource in tfdata["graphdict"].get(
+                            node_connection, []
                         )
-                        if connectedNode is None:
-                            continue
-                    elif node_connection not in drawn_resources:
-                        # Draw circular reference node without recursion
-                        nodeClass = getattr(sys.modules[__name__], node_type)
-                        connectedNode = nodeClass(
-                            label=helpers.pretty_name(node_connection),
-                            tf_resource_name=node_connection,
+                        if not circular_reference:
+                            connectedNode, drawn_resources = handle_nodes(
+                                node_connection,
+                                connectedGroup,
+                                cloudGroup,
+                                diagramCanvas,
+                                tfdata,
+                                drawn_resources,
+                            )
+                            if connectedNode is None:
+                                # Defer connection if node couldn't be drawn yet
+                                tfdata["deferred_connections"].append(
+                                    (resource, node_connection)
+                                )
+                                continue
+                        elif node_connection not in drawn_resources:
+                            nodeClass = getattr(sys.modules[__name__], node_type)
+                            connectedNode = nodeClass(
+                                label=helpers.pretty_name(node_connection),
+                                tf_resource_name=node_connection,
+                            )
+                            drawn_resources.append(node_connection)
+                            tfdata["meta_data"].update(
+                                {node_connection: {"node": connectedNode}}
+                            )
+                    else:
+                        # Node not in graphdict yet, defer
+                        tfdata["deferred_connections"].append(
+                            (resource, node_connection)
                         )
-                        drawn_resources.append(node_connection)
-                        tfdata["meta_data"].update(
-                            {node_connection: {"node": connectedNode}}
-                        )
+                        continue
 
                 # Create edge connection if node was drawn
                 if connectedNode:
@@ -490,6 +500,8 @@ def draw_objects(
     Returns:
         Updated list of drawn resource names
     """
+    if not tfdata.get("hidden"):
+        tfdata["hidden"] = list()
     for node_type in node_type_list:
         # Extract node type string from dict or use directly
         if isinstance(node_type, dict):
@@ -585,6 +597,7 @@ def render_diagram(
 
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()
+    tfdata["deferred_connections"] = list()
 
     # Initialize diagram canvas
     title = (
@@ -637,6 +650,46 @@ def render_diagram(
         all_drawn_resources_list = draw_objects(
             node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
         )
+
+    # Process deferred connections after all nodes are drawn
+    if tfdata.get("deferred_connections"):
+        for origin_resource, dest_resource in tfdata["deferred_connections"]:
+            if (
+                dest_resource in tfdata["meta_data"]
+                and "node" in tfdata["meta_data"][dest_resource]
+            ):
+                if (
+                    origin_resource in tfdata["meta_data"]
+                    and "node" in tfdata["meta_data"][origin_resource]
+                ):
+                    originNode = tfdata["meta_data"][origin_resource]["node"]
+                    connectedNode = tfdata["meta_data"][dest_resource]["node"]
+                    origin_type = helpers.get_no_module_name(origin_resource).split(
+                        "."
+                    )[0]
+                    dest_type = helpers.get_no_module_name(dest_resource).split(".")[0]
+
+                    if originNode != connectedNode and ok_to_connect(
+                        origin_type, dest_type
+                    ):
+                        label = get_edge_labels(originNode, connectedNode, tfdata)
+                        line_style = (
+                            "solid"
+                            if always_draw_edge(origin_type, dest_type, tfdata)
+                            else "invis"
+                        )
+                        originNode.connect(
+                            connectedNode,
+                            Edge(forward=True, label=label, style=line_style),
+                        )
+                        if not tfdata["connected_nodes"].get(originNode._id):
+                            tfdata["connected_nodes"][originNode._id] = list()
+                        tfdata["connected_nodes"][originNode._id] = (
+                            helpers.append_dictlist(
+                                tfdata["connected_nodes"][originNode._id],
+                                connectedNode._id,
+                            )
+                        )
 
     # Add footer with metadata
     if str(source) == "('.',)":
