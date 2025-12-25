@@ -17,6 +17,7 @@ import shutil
 import json
 import ipaddr
 import modules.config_loader as config_loader
+import modules.provider_detector as provider_detector
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -28,8 +29,6 @@ os.environ["TF_DATA_DIR"] = temp_dir.name
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
-# Use AWS config as default for backward compatibility
-REVERSE_ARROW_LIST = config_loader.load_config("aws").AWS_REVERSE_ARROW_LIST
 
 
 def tf_initplan(
@@ -302,12 +301,16 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with initialized graph structures
     """
+    # Detect cloud provider and load appropriate config
+    detected_provider = provider_detector.get_primary_provider_or_default(tfdata)
+    cloud_config = config_loader.load_config(detected_provider)
+    HIDDEN_NODES = getattr(cloud_config, f"{detected_provider.upper()}_HIDE_NODES", [])
     # Initialize graph data structures
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
     tfdata["all_output"] = dict()
     tfdata["node_list"] = list()
-    tfdata["hidden"] = dict()
+    tfdata["hidden"] = HIDDEN_NODES
     tfdata["annotations"] = dict()
     # Create nodes from resources in plan
     for object in tfdata["tf_resources_created"]:
@@ -393,6 +396,13 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     Returns:
         Updated tfdata with populated graphdict connections
     """
+    # Detect cloud provider and load appropriate config
+    detected_provider = provider_detector.get_primary_provider_or_default(tfdata)
+    cloud_config = config_loader.load_config(detected_provider)
+    REVERSE_ARROW_LIST = getattr(
+        cloud_config, f"{detected_provider.upper()}_REVERSE_ARROW_LIST", []
+    )
+
     # Initialize graph structures
     tfdata = setup_tfdata(tfdata)
     # Build lookup table mapping graph IDs to resource names

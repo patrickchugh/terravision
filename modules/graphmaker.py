@@ -533,24 +533,6 @@ def _scan_node_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def _remove_hidden_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Remove hidden nodes from graph.
-
-    Returns mutated tfdata.
-    """
-    # Delete hidden resource nodes
-    for hidden_resource in tfdata["hidden"]:
-        if hidden_resource in tfdata["graphdict"]:
-            del tfdata["graphdict"][hidden_resource]
-    # Remove hidden resources from connection lists
-    for resource in tfdata["graphdict"]:
-        for hidden_resource in tfdata["hidden"]:
-            if hidden_resource in tfdata["graphdict"][resource]:
-                tfdata["graphdict"][resource].remove(hidden_resource)
-
-    return tfdata
-
-
 def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Build final graph structure by detecting ALL resource relationships.
 
@@ -577,9 +559,6 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Scan each node for relationships
     tfdata = _scan_node_relationships(tfdata)
-
-    # Remove hidden nodes from graph
-    tfdata = _remove_hidden_nodes(tfdata)
 
     # Scan module-to-module relationships
     scan_module_relationships(tfdata, tfdata["graphdict"])

@@ -73,18 +73,6 @@ class TestAddRelations(unittest.TestCase):
         result = add_relations(tfdata)
         self.assertEqual(len(result["graphdict"]["node1"]), 0)
 
-    @patch("modules.graphmaker.click.echo")
-    def test_add_relation_with_hidden(self, mock_echo):
-        tfdata = {
-            "node_list": ["node1", "node2", "node3"],
-            "graphdict": {"node1": [], "node2": [], "node3": []},
-            "meta_data": {"node1": {}, "node2": {}, "node3": {}},
-            "original_metadata": {"node1": {}, "node2": {}, "node3": {}},
-            "hidden": ["node3"],
-        }
-        result = add_relations(tfdata)
-        self.assertNotIn("node3", result["graphdict"])
-
 
 class TestConsolidateNodes(unittest.TestCase):
     def test_consolidate_nodes_removes_null_resource(self):

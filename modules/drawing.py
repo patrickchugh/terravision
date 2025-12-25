@@ -233,8 +233,8 @@ def handle_nodes(
         Tuple of (created Node object, updated drawn_resources list)
     """
     resource_type = helpers.get_no_module_name(resource).split(".")[0]
-    if resource_type not in avl_classes:
-        return
+    if resource_type not in avl_classes or resource_type in tfdata["hidden"]:
+        return None, drawn_resources
 
     # Reuse existing node if already drawn
     if resource in drawn_resources:
@@ -284,6 +284,8 @@ def handle_nodes(
                             tfdata,
                             drawn_resources,
                         )
+                        if connectedNode is None:
+                            continue
                     elif node_connection not in drawn_resources:
                         # Draw circular reference node without recursion
                         nodeClass = getattr(sys.modules[__name__], node_type)
@@ -408,8 +410,8 @@ def handle_group(
         Tuple of (created Cluster object, updated drawn_resources list)
     """
     resource_type = helpers.get_no_module_name(resource).split(".")[0]
-    if resource_type not in avl_classes:
-        return
+    if resource_type not in avl_classes or resource_type in tfdata["hidden"]:
+        return None, drawn_resources
 
     # Create new group/cluster
     newGroup = getattr(sys.modules[__name__], resource_type)(
@@ -425,7 +427,11 @@ def handle_group(
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
 
             # Handle nested subgroups
-            if node_type in GROUP_NODES and node_type in avl_classes:
+            if (
+                node_type in GROUP_NODES
+                and node_type in avl_classes
+                and node_type not in tfdata["hidden"]
+            ):
                 subGroup, drawn_resources = handle_group(
                     newGroup,
                     cloudGroup,
@@ -434,13 +440,15 @@ def handle_group(
                     tfdata,
                     drawn_resources,
                 )
-                newGroup.subgraph(subGroup.dot)
-                drawn_resources.append(node_connection)
+                if subGroup is not None:
+                    newGroup.subgraph(subGroup.dot)
+                    drawn_resources.append(node_connection)
 
             # Handle regular nodes within the group
             elif (
                 node_type not in GROUP_NODES
                 and node_type in avl_classes
+                and node_type not in tfdata["hidden"]
                 and node_connection != resource
             ):
                 targetGroup = diagramCanvas if node_type in OUTER_NODES else cloudGroup
@@ -452,9 +460,10 @@ def handle_group(
                     tfdata,
                     drawn_resources,
                 )
-                newGroup.add_node(
-                    newNode._id, label=helpers.pretty_name(node_connection)
-                )
+                if newNode is not None:
+                    newGroup.add_node(
+                        newNode._id, label=helpers.pretty_name(node_connection)
+                    )
 
     return newGroup, drawn_resources
 

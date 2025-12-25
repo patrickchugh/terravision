@@ -4,9 +4,6 @@ Provider Detection Module for TerraVision Multi-Cloud Support
 This module provides functionality to detect cloud providers (AWS, Azure, GCP) from
 Terraform project data by analyzing resource name prefixes and provider blocks.
 
-API Version: 1.0.0
-Author: TerraVision Multi-Cloud Feature
-Date: 2025-12-07
 """
 
 from typing import Dict, List, Any, Tuple

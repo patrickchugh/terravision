@@ -254,6 +254,9 @@ AWS_NEVER_DRAW_LINE = ["aws_iam_role_policy"]
 
 AWS_DISCONNECT_LIST = ["aws_iam_role_policy"]
 
+# Resources that should be hidden from the diagram by default
+AWS_HIDE_NODES = ["aws_security_group_rule"]
+
 # Resources that should skip automatic expansion in handle_singular_references
 # These resources are manually matched to subnets by suffix in their handlers
 AWS_SKIP_SINGULAR_EXPANSION = [
