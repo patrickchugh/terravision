@@ -45,7 +45,7 @@ BEGIN{
 BEG_G{
   node_t n;
   double nodeY;
-  topMostY = cloudMaxY;
+  topMostY = 0;
   
   labelShift($G);
   
@@ -56,6 +56,9 @@ BEG_G{
     nodeY = yOf(n.pos);
     if (nodeY > topMostY) topMostY = nodeY;
   }
+  
+  // Use higher of cloudMaxY or topMostY
+  if (cloudMaxY > topMostY) topMostY = cloudMaxY;
 }
 END_G{
   double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
