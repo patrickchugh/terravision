@@ -15,7 +15,8 @@
         "aws_internet_gateway.igw"
     ],
     "aws_group.shared_services": [
-        "aws_eip.elastic_ip"
+        "aws_eip.elastic_ip",
+        "aws_iam_group.iam"
     ],
     "aws_internet_gateway.igw": [
         "tv_aws_internet.internet"

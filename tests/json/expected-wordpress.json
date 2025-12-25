@@ -106,6 +106,7 @@
     "aws_ecr_repository.ecr",
     "aws_efs_file_system.efs",
     "aws_eip.elastic_ip",
+    "aws_iam_group.iam",
     "aws_ssm_parameter.ssmparam"
   ],
   "aws_iam_policy.task_execution_policy": [

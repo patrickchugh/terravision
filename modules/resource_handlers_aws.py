@@ -611,6 +611,11 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["graphdict"]["aws_group.shared_services"],
                     )
                 )
+    # Add default IAM service node
+    if not tfdata["graphdict"].get("aws_group.shared_services"):
+        tfdata["graphdict"]["aws_group.shared_services"] = []
+        tfdata["meta_data"]["aws_group.shared_services"] = {}
+    tfdata["graphdict"]["aws_group.shared_services"].append("aws_iam_group.iam")
     return tfdata
 
 

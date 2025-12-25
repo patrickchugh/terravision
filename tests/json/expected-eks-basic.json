@@ -48,7 +48,8 @@
     "aws_group.shared_services": [
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_ecr_repository.ecr",
-        "aws_eip.elastic_ip"
+        "aws_eip.elastic_ip",
+        "aws_iam_group.iam"
     ],
     "aws_iam_role.eks_cluster": [
         "aws_eks_cluster.main",

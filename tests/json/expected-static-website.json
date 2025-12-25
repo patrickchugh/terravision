@@ -1,4 +1,7 @@
 {
+    "aws_group.shared_services": [
+        "aws_iam_group.iam"
+    ],
     "module.cloudfront.aws_cloudfront_distribution.this[0]~1": [
         "module.s3_bucket.aws_s3_bucket.this[0]~1"
     ],
