@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "pyinstaller"]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "terravision"
-version = "0.6"
+version = "0.9"
 dependencies = [
     "Click",
     "python-hcl2",
@@ -52,7 +52,6 @@ tomli = "^2.0.1"
 pytest = "^7.3.1"
 black = "24.3.0"
 isort = "^5.12.0"
-
 
 
 [tool.poetry.group.dev.dependencies]
