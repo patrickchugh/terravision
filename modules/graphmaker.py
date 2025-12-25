@@ -449,10 +449,112 @@ def resolve_module_output_to_resources(
     return resources
 
 
-def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Build final graph structure by detecting resource relationships.
+def _get_base_node_name(node: str, tfdata: Dict[str, Any]) -> str:
+    """Determine base node name by stripping suffixes."""
+    if node not in tfdata["meta_data"].keys():
+        nodename = node.split("~")[0]
+        if "[" in nodename:
+            nodename = nodename.split("[")[0]
+    else:
+        nodename = node
+    return nodename
 
-    Scans resource metadata to find references between resources and adds
+
+def _should_skip_node(node: str, nodename: str) -> bool:
+    """Check if node should be skipped during relationship scanning."""
+    return (
+        helpers.get_no_module_name(nodename).startswith("random")
+        or helpers.get_no_module_name(node).startswith("aws_security_group")
+        or helpers.get_no_module_name(node).startswith("null")
+    )
+
+
+def _get_metadata_generator(node: str, nodename: str, tfdata: Dict[str, Any]):
+    """Get metadata generator for parameter scanning.
+
+    Note: Mutates tfdata["meta_data"] by copying from original_metadata if needed.
+    """
+    if nodename not in tfdata["meta_data"].keys():
+        if node in tfdata["original_metadata"]:
+            # Mutation: populate meta_data from original_metadata
+            tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
+            return dict_generator(tfdata["original_metadata"][node])
+    return dict_generator(tfdata["meta_data"][nodename])
+
+
+def _process_connection_pairs(
+    matching_result: List[str], tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Process connection pairs and add to graphdict.
+
+    Returns mutated tfdata.
+    """
+    for i in range(0, len(matching_result), 2):
+        origin = matching_result[i]
+        dest = matching_result[i + 1]
+        c_list = list(tfdata["graphdict"][origin])
+        # Add connection if not exists and not security group
+        if dest not in c_list and not helpers.get_no_module_name(origin).startswith(
+            "aws_security_group"
+        ):
+            click.echo(f"   {origin} --> {dest}")
+            c_list.append(dest)
+            # Replace unnumbered with numbered version
+            if "~" in origin and "~" in dest and dest.split("~")[0] in c_list:
+                c_list.remove(dest.split("~")[0])
+        # Update graphdict with new connections
+        tfdata["graphdict"][origin] = c_list
+
+    return tfdata
+
+
+def _scan_node_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Scan each node for relationships with other resources.
+
+    Returns mutated tfdata.
+    """
+    for node in tfdata["node_list"]:
+        nodename = _get_base_node_name(node, tfdata)
+
+        # Skip certain resource types
+        if _should_skip_node(node, nodename):
+            continue
+
+        # Get metadata generator for parameter scanning
+        dg = _get_metadata_generator(node, nodename, tfdata)
+
+        # Check each parameter for relationships
+        for param_item_list in dg:
+            matching_result = check_relationship(node, param_item_list, tfdata)
+            # Process connection pairs
+            if matching_result and len(matching_result) >= 2:
+                tfdata = _process_connection_pairs(matching_result, tfdata)
+
+    return tfdata
+
+
+def _remove_hidden_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove hidden nodes from graph.
+
+    Returns mutated tfdata.
+    """
+    # Delete hidden resource nodes
+    for hidden_resource in tfdata["hidden"]:
+        if hidden_resource in tfdata["graphdict"]:
+            del tfdata["graphdict"][hidden_resource]
+    # Remove hidden resources from connection lists
+    for resource in tfdata["graphdict"]:
+        for hidden_resource in tfdata["hidden"]:
+            if hidden_resource in tfdata["graphdict"][resource]:
+                tfdata["graphdict"][resource].remove(hidden_resource)
+
+    return tfdata
+
+
+def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Build final graph structure by detecting ALL resource relationships.
+
+    Scans resource metadata to find cross references between resources/modules and adds
     connections to the graph. Handles hidden nodes and security groups specially.
 
     Args:
@@ -461,8 +563,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with complete graphdict including all relationships
     """
-    # Deep copy to prevent mutation leakage
-    graphdict = copy.deepcopy(tfdata["graphdict"])
+    # Deep copy graphdict to prevent mutation issues during iteration
+    tfdata["graphdict"] = copy.deepcopy(tfdata["graphdict"])
+
     created_resources = len(tfdata["node_list"])
     click.echo(
         click.style(
@@ -473,75 +576,16 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     # Scan each node for relationships
-    for node in tfdata["node_list"]:
-        # Determine base node name
-        if node not in tfdata["meta_data"].keys():
-            nodename = node.split("~")[0]
-            if "[" in nodename:
-                nodename = nodename.split("[")[0]
-        else:
-            nodename = node
-
-        # Skip certain resource types
-        if (
-            helpers.get_no_module_name(nodename).startswith("random")
-            or helpers.get_no_module_name(node).startswith("aws_security_group")
-            or helpers.get_no_module_name(node).startswith("null")
-        ):
-            continue
-
-        # Get metadata generator for parameter scanning
-        if nodename not in tfdata["meta_data"].keys():
-            if node in tfdata["original_metadata"]:
-                dg = dict_generator(tfdata["original_metadata"][node])
-                tfdata["meta_data"][node] = copy.deepcopy(
-                    tfdata["original_metadata"][node]
-                )
-        else:
-            dg = dict_generator(tfdata["meta_data"][nodename])
-
-        # Check each parameter for relationships
-        for param_item_list in dg:
-            matching_result = check_relationship(
-                node,
-                param_item_list,
-                tfdata,
-            )
-            # Process connection pairs
-            if matching_result and len(matching_result) >= 2:
-                for i in range(0, len(matching_result), 2):
-                    origin = matching_result[i]
-                    dest = matching_result[i + 1]
-                    c_list = list(graphdict[origin])
-                    # Add connection if not exists and not security group
-                    if dest not in c_list and not helpers.get_no_module_name(
-                        origin
-                    ).startswith("aws_security_group"):
-                        click.echo(f"   {origin} --> {dest}")
-                        c_list.append(dest)
-                        # Replace unnumbered with numbered version
-                        if (
-                            "~" in origin
-                            and "~" in dest
-                            and dest.split("~")[0] in c_list
-                        ):
-                            c_list.remove(dest.split("~")[0])
-                    graphdict[origin] = c_list
+    tfdata = _scan_node_relationships(tfdata)
 
     # Remove hidden nodes from graph
-    for hidden_resource in tfdata["hidden"]:
-        del graphdict[hidden_resource]
-    for resource in graphdict:
-        for hidden_resource in tfdata["hidden"]:
-            if hidden_resource in graphdict[resource]:
-                graphdict[resource].remove(hidden_resource)
+    tfdata = _remove_hidden_nodes(tfdata)
 
     # Scan module-to-module relationships
-    scan_module_relationships(tfdata, graphdict)
+    scan_module_relationships(tfdata, tfdata["graphdict"])
 
-    tfdata["graphdict"] = graphdict
     # Store immutable snapshot for reference
-    tfdata["original_graphdict_with_relations"] = copy.deepcopy(graphdict)
+    tfdata["original_graphdict_with_relations"] = copy.deepcopy(tfdata["graphdict"])
 
     return tfdata
 
