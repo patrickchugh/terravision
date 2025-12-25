@@ -312,9 +312,11 @@ def scan_module_relationships(
     if not tfdata.get("all_module"):
         return
 
-    # Get provider prefixes for multi-cloud support
+    # Get provider prefixes and GROUP_NODES for multi-cloud support
     config = _get_provider_config(tfdata)
+    constants = _load_config_constants(tfdata)
     provider_prefixes = config.PROVIDER_PREFIX  # e.g., ["aws_", "google_", "azurerm_"]
+    GROUP_NODES = constants["GROUP_NODES"]
 
     # Build regex pattern for any provider resource (e.g., aws_|google_|azurerm_)
     provider_pattern = "|".join([p.replace("_", "\_") for p in provider_prefixes])
@@ -353,11 +355,22 @@ def scan_module_relationships(
                     target_resources = [
                         n for n in tfdata["node_list"] if target_pattern in n
                     ]
-                    # Create connections
+                    # Create connections, excluding GROUP nodes
                     for origin in module_resources:
                         for dest in target_resources:
-                            if origin in graphdict and dest not in graphdict[origin]:
-                                add_connection(graphdict, origin, dest)
+                            origin_type = helpers.get_no_module_name(origin).split(".")[
+                                0
+                            ]
+                            dest_type = helpers.get_no_module_name(dest).split(".")[0]
+                            if (
+                                origin_type not in GROUP_NODES
+                                and dest_type not in GROUP_NODES
+                            ):
+                                if (
+                                    origin in graphdict
+                                    and dest not in graphdict[origin]
+                                ):
+                                    add_connection(graphdict, origin, dest)
 
                 # Find module output references (e.g., module.s3_bucket.bucket_id)
                 module_output_refs = re.findall(r"module\.(\w+)\.(\w+)", metadata_str)
@@ -373,11 +386,22 @@ def scan_module_relationships(
                     target_resources = resolve_module_output_to_resources(
                         ref_module_name, output_name, tfdata
                     )
-                    # Create connections
+                    # Create connections, excluding GROUP nodes
                     for origin in module_resources:
                         for dest in target_resources:
-                            if origin in graphdict and dest not in graphdict[origin]:
-                                add_connection(graphdict, origin, dest)
+                            origin_type = helpers.get_no_module_name(origin).split(".")[
+                                0
+                            ]
+                            dest_type = helpers.get_no_module_name(dest).split(".")[0]
+                            if (
+                                origin_type not in GROUP_NODES
+                                and dest_type not in GROUP_NODES
+                            ):
+                                if (
+                                    origin in graphdict
+                                    and dest not in graphdict[origin]
+                                ):
+                                    add_connection(graphdict, origin, dest)
 
 
 def add_connection(graphdict: Dict, origin: str, dest: str) -> None:
@@ -511,6 +535,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for hidden_resource in tfdata["hidden"]:
             if hidden_resource in graphdict[resource]:
                 graphdict[resource].remove(hidden_resource)
+
+    # Scan module-to-module relationships
+    scan_module_relationships(tfdata, graphdict)
 
     tfdata["graphdict"] = graphdict
     # Store immutable snapshot for reference
