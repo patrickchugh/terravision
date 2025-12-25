@@ -103,6 +103,150 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def _find_implied_connections(
+    param: str, nodes: List[str], IMPLIED_CONNECTIONS: Dict
+) -> List[str]:
+    """Find implied connections based on keywords.
+
+    Args:
+        param: Parameter value to search for keywords
+        nodes: List of all resource nodes
+        IMPLIED_CONNECTIONS: Dictionary of implied connection keywords
+
+    Returns:
+        List of matching resource names from implied connections
+    """
+    matching = []
+    # Check for implied connections based on keywords
+    found_connection = list({s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)})
+    if found_connection:
+        for n in nodes:
+            if helpers.get_no_module_name(n).startswith(
+                IMPLIED_CONNECTIONS[found_connection[0]]
+            ):
+                matching.append(n)
+    return matching
+
+
+def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
+    """Find resources that match the parameter value.
+
+    Args:
+        param: Parameter value to search for references
+        nodes: List of all resource nodes
+
+    Returns:
+        List of matching resource names
+    """
+    matching = []
+
+    # Handle list references (e.g., resource[0])
+    if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
+        matching = list(
+            {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
+        )
+    else:
+        # Extract Terraform resource references from parameter
+        extracted_resources_list = helpers.extract_terraform_resource(param)
+        if extracted_resources_list:
+            for r in extracted_resources_list:
+                matching.extend(
+                    list(
+                        {
+                            s
+                            for s in nodes
+                            if (r in s or helpers.cleanup_curlies(r) in s)
+                            and s not in matching
+                        }
+                    )
+                )
+
+    return matching
+
+
+def _should_reverse_arrow(
+    param: str, resource_associated_with: str, REVERSE_ARROW_LIST: List[str]
+) -> bool:
+    """Determine if arrow direction should be reversed.
+
+    Args:
+        param: Parameter value being checked
+        resource_associated_with: Resource name being checked
+        REVERSE_ARROW_LIST: List of patterns that trigger arrow reversal
+
+    Returns:
+        True if arrow should be reversed
+    """
+    reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in str(param)]
+    if len(reverse_origin_match) == 0:
+        return False
+
+    # Prevent double reversal if both sides match
+    reverse_dest_match = [
+        s for s in REVERSE_ARROW_LIST if s in resource_associated_with
+    ]
+    if len(reverse_dest_match) > 0:
+        if REVERSE_ARROW_LIST.index(reverse_dest_match[0]) < REVERSE_ARROW_LIST.index(
+            reverse_origin_match[0]
+        ):
+            return False
+
+    return True
+
+
+def _numbered_nodes_match(matched_resource: str, resource_associated_with: str) -> bool:
+    """Check if numbered nodes have matching suffixes.
+
+    Args:
+        matched_resource: First resource name
+        resource_associated_with: Second resource name
+
+    Returns:
+        True if both have ~ suffix and suffixes match, or if no suffix check needed
+    """
+    # Match numbered nodes with same suffix
+    if "~" in matched_resource and "~" in resource_associated_with:
+        matched_resource_no = matched_resource.split("~")[1]
+        resource_associated_with_no = resource_associated_with.split("~")[1]
+        if matched_resource_no != resource_associated_with_no:
+            return False
+    return True
+
+
+def _add_connection_pair(
+    connection_pairs: List[str],
+    matched_resource: str,
+    resource_associated_with: str,
+    reverse: bool,
+    tfdata: Dict[str, Any],
+) -> None:
+    """Add connection pair in appropriate direction.
+
+    Args:
+        connection_pairs: List to append connection pairs to
+        matched_resource: Matched resource name
+        resource_associated_with: Origin resource name
+        reverse: Whether to reverse arrow direction
+        tfdata: Terraform data dictionary
+    """
+    if reverse:
+        # Reversed: matched -> resource
+        if (
+            resource_associated_with not in tfdata["graphdict"][matched_resource]
+            and matched_resource not in tfdata["graphdict"][resource_associated_with]
+        ):
+            connection_pairs.append(matched_resource)
+            connection_pairs.append(resource_associated_with)
+    else:
+        # Normal: resource -> matched
+        if (
+            matched_resource not in tfdata["graphdict"][resource_associated_with]
+            and matched_resource not in connection_pairs
+        ):
+            connection_pairs.append(resource_associated_with)
+            connection_pairs.append(matched_resource)
+
+
 def check_relationship(
     resource_associated_with: str, plist: List[Any], tfdata: Dict[str, Any]
 ) -> List[str]:
@@ -127,105 +271,36 @@ def check_relationship(
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
     connection_pairs: List[str] = list()
-    matching: List[str] = list()
 
     # Scan each parameter for resource references
     for p in plist:
         param = str(p)
-        matching = []
-
-        # Handle list references (e.g., resource[0])
-        if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
-            matching = list(
-                {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
-            )
-            pass
-        else:
-            # Extract Terraform resource references from parameter
-            extracted_resources_list = helpers.extract_terraform_resource(param)
-            if extracted_resources_list:
-                for r in extracted_resources_list:
-                    matching.extend(
-                        list(
-                            {
-                                s
-                                for s in nodes
-                                if (r in s or helpers.cleanup_curlies(r) in s)
-                                and s not in matching
-                            }
-                        )
-                    )
-
-        # Check for implied connections based on keywords
-        found_connection = list(
-            {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
-        )
-        if found_connection:
-            for n in nodes:
-                if (
-                    helpers.get_no_module_name(n).startswith(
-                        IMPLIED_CONNECTIONS[found_connection[0]]
-                    )
-                    and n not in matching
-                ):
-                    matching.append(n)
+        matching = _find_matching_resources(param, nodes)
+        implied = _find_implied_connections(param, nodes, IMPLIED_CONNECTIONS)
+        # Combine explicit and implied matches, avoiding duplicates
+        matching.extend([m for m in implied if m not in matching])
 
         # Process matched resources
-        if matching:
-            for matched_resource in matching:
-                reverse = False
-                # Skip hidden resources
-                if (
-                    matched_resource not in hidden
-                    and resource_associated_with not in hidden
-                ):
-                    # Check if arrow direction should be reversed
-                    reverse_origin_match = [
-                        s for s in REVERSE_ARROW_LIST if s in str(param)
-                    ]
-                    if len(reverse_origin_match) > 0:
-                        reverse = True
-                        # Prevent double reversal if both sides match
-                        reverse_dest_match = [
-                            s
-                            for s in REVERSE_ARROW_LIST
-                            if s in resource_associated_with
-                        ]
-                        if len(reverse_dest_match) > 0:
-                            if REVERSE_ARROW_LIST.index(
-                                reverse_dest_match[0]
-                            ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
-                                reverse = False
+        for matched_resource in matching:
+            # Skip hidden resources
+            if (
+                matched_resource not in hidden
+                and resource_associated_with not in hidden
+                and _numbered_nodes_match(matched_resource, resource_associated_with)
+            ):
+                # Check if arrow direction should be reversed
+                reverse = _should_reverse_arrow(
+                    param, resource_associated_with, REVERSE_ARROW_LIST
+                )
 
-                    # Match numbered nodes with same suffix
-                    if "~" in matched_resource and "~" in resource_associated_with:
-                        matched_resource_no = matched_resource.split("~")[1]
-                        resource_associated_with_no = resource_associated_with.split(
-                            "~"
-                        )[1]
-                        if matched_resource_no != resource_associated_with_no:
-                            continue
-
-                    # Add connection pair in appropriate direction
-                    if reverse:
-                        # Reversed: matched -> resource
-                        if (
-                            resource_associated_with
-                            not in tfdata["graphdict"][matched_resource]
-                            and matched_resource
-                            not in tfdata["graphdict"][resource_associated_with]
-                        ):
-                            connection_pairs.append(matched_resource)
-                            connection_pairs.append(resource_associated_with)
-                    else:
-                        # Normal: resource -> matched
-                        if (
-                            matched_resource
-                            not in tfdata["graphdict"][resource_associated_with]
-                            and matched_resource not in connection_pairs
-                        ):
-                            connection_pairs.append(resource_associated_with)
-                            connection_pairs.append(matched_resource)
+                # Add connection pair in appropriate direction
+                _add_connection_pair(
+                    connection_pairs,
+                    matched_resource,
+                    resource_associated_with,
+                    reverse,
+                    tfdata,
+                )
 
     return connection_pairs
 
@@ -303,6 +378,19 @@ def scan_module_relationships(
                         for dest in target_resources:
                             if origin in graphdict and dest not in graphdict[origin]:
                                 add_connection(graphdict, origin, dest)
+
+
+def add_connection(graphdict: Dict, origin: str, dest: str) -> None:
+    """Add connection between origin and dest nodes."""
+    if dest in graphdict[origin] or helpers.get_no_module_name(origin).startswith(
+        "aws_security_group"
+    ):
+        return
+    click.echo(f"   {origin} --> {dest}")
+    graphdict[origin].append(dest)
+    # Replace unnumbered with numbered version
+    if "~" in origin and "~" in dest and dest.split("~")[0] in graphdict[origin]:
+        graphdict[origin].remove(dest.split("~")[0])
 
 
 def resolve_module_output_to_resources(
