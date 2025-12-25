@@ -230,6 +230,113 @@ def check_relationship(
     return connection_pairs
 
 
+def scan_module_relationships(
+    tfdata: Dict[str, Any], graphdict: Dict[str, List[str]]
+) -> None:
+    """Scan module-to-module relationships via output references and direct resource references."""
+    if not tfdata.get("all_module"):
+        return
+
+    # Get provider prefixes for multi-cloud support
+    config = _get_provider_config(tfdata)
+    provider_prefixes = config.PROVIDER_PREFIX  # e.g., ["aws_", "google_", "azurerm_"]
+
+    # Build regex pattern for any provider resource (e.g., aws_|google_|azurerm_)
+    provider_pattern = "|".join([p.replace("_", "\_") for p in provider_prefixes])
+    direct_ref_pattern = rf"module\.(\w+)\.({provider_pattern}\w+)\.(\w+)"
+
+    for filepath, module_list in tfdata["all_module"].items():
+        if not isinstance(module_list, list):
+            continue
+        for module_dict in module_list:
+            if not isinstance(module_dict, dict):
+                continue
+            for module_name, module_metadata in module_dict.items():
+                if not isinstance(module_metadata, dict):
+                    continue
+
+                # Find resources in this module
+                module_resources = [
+                    n
+                    for n in tfdata["node_list"]
+                    if n.startswith(f"module.{module_name}.")
+                ]
+                if not module_resources:
+                    continue
+
+                metadata_str = str(module_metadata)
+
+                # Find direct resource references (e.g., module.s3_bucket.aws_s3_bucket.this)
+                direct_refs = re.findall(direct_ref_pattern, metadata_str)
+                for ref_module_name, resource_type, resource_name in set(direct_refs):
+                    if ref_module_name == module_name:
+                        continue
+                    # Find matching resources in node_list
+                    target_pattern = (
+                        f"module.{ref_module_name}.{resource_type}.{resource_name}"
+                    )
+                    target_resources = [
+                        n for n in tfdata["node_list"] if target_pattern in n
+                    ]
+                    # Create connections
+                    for origin in module_resources:
+                        for dest in target_resources:
+                            if origin in graphdict and dest not in graphdict[origin]:
+                                add_connection(graphdict, origin, dest)
+
+                # Find module output references (e.g., module.s3_bucket.bucket_id)
+                module_output_refs = re.findall(r"module\.(\w+)\.(\w+)", metadata_str)
+                for ref_module_name, output_name in set(module_output_refs):
+                    if ref_module_name == module_name:
+                        continue
+                    # Skip if already handled as direct reference (starts with provider prefix)
+                    if any(
+                        output_name.startswith(prefix) for prefix in provider_prefixes
+                    ):
+                        continue
+                    # Resolve output to actual resources
+                    target_resources = resolve_module_output_to_resources(
+                        ref_module_name, output_name, tfdata
+                    )
+                    # Create connections
+                    for origin in module_resources:
+                        for dest in target_resources:
+                            if origin in graphdict and dest not in graphdict[origin]:
+                                add_connection(graphdict, origin, dest)
+
+
+def resolve_module_output_to_resources(
+    module_name: str, output_name: str, tfdata: Dict[str, Any]
+) -> List[str]:
+    """Resolve module output reference to actual resource names.
+
+    Args:
+        module_name: Name of the module being referenced
+        output_name: Name of the output variable
+        tfdata: Terraform data dictionary
+
+    Returns:
+        List of actual resource names that the output references
+    """
+    resources = []
+    # Search through output files for matching module
+    for file in tfdata.get("all_output", {}).keys():
+        if f";{module_name};" in file:
+            for output_dict in tfdata["all_output"][file]:
+                if output_name in output_dict:
+                    output_value = output_dict[output_name].get("value", "")
+                    # Extract resource references from output value
+                    resource_refs = helpers.extract_terraform_resource(
+                        str(output_value)
+                    )
+                    for ref in resource_refs:
+                        # Find matching nodes in node_list
+                        matching = [n for n in tfdata["node_list"] if ref in n]
+                        resources.extend(matching)
+                    break
+    return resources
+
+
 def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Build final graph structure by detecting resource relationships.
 
@@ -275,7 +382,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if nodename not in tfdata["meta_data"].keys():
             if node in tfdata["original_metadata"]:
                 dg = dict_generator(tfdata["original_metadata"][node])
-                tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
+                tfdata["meta_data"][node] = copy.deepcopy(
+                    tfdata["original_metadata"][node]
+                )
         else:
             dg = dict_generator(tfdata["meta_data"][nodename])
 
@@ -540,7 +649,11 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
         )
     else:
         security_group_with_count = False
-    has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource]) if resource in tfdata["meta_data"] else False
+    has_variant = (
+        helpers.check_variant(resource, tfdata["meta_data"][resource])
+        if resource in tfdata["meta_data"]
+        else False
+    )
     not_unique_resource = "aws_route_table." not in resource
     if (
         (
