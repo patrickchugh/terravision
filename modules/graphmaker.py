@@ -275,7 +275,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if nodename not in tfdata["meta_data"].keys():
             if node in tfdata["original_metadata"]:
                 dg = dict_generator(tfdata["original_metadata"][node])
-                tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
+                tfdata["meta_data"][node] = copy.deepcopy(
+                    tfdata["original_metadata"][node]
+                )
         else:
             dg = dict_generator(tfdata["meta_data"][nodename])
 
@@ -540,7 +542,11 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
         )
     else:
         security_group_with_count = False
-    has_variant = helpers.check_variant(resource, tfdata["meta_data"][resource]) if resource in tfdata["meta_data"] else False
+    has_variant = (
+        helpers.check_variant(resource, tfdata["meta_data"][resource])
+        if resource in tfdata["meta_data"]
+        else False
+    )
     not_unique_resource = "aws_route_table." not in resource
     if (
         (
