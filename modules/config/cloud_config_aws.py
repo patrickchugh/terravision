@@ -142,6 +142,12 @@ AWS_DRAW_ORDER = [
 AWS_AUTO_ANNOTATIONS = [
     {"aws_route53": {"link": ["tv_aws_users.users"], "arrow": "reverse"}},
     {
+        "aws_cloudfront_distribution": {
+            "link": ["tv_aws_users.users"],
+            "arrow": "reverse",
+        }
+    },
+    {
         "aws_dx": {
             "link": [
                 "tv_aws_onprem.corporate_datacenter",

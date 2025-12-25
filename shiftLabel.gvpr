@@ -2,6 +2,7 @@ BEGIN{
   double bbMinX, bbMinY, bbMaxX, bbMaxY, lpX, lpY, lpMinX, lpMaxY, newX, newY, centerX;
   double fudgeX, fudgeY;
   double cloudMinX, cloudMinY, cloudMaxX, cloudMaxY, cloudCenterX;
+  double topMostY;
   string fld[int];
   
   // recursive routine, processing from the top (root) down
@@ -42,7 +43,19 @@ BEGIN{
   } // end of labelShift
 }
 BEG_G{
+  node_t n;
+  double nodeY;
+  topMostY = cloudMaxY;
+  
   labelShift($G);
+  
+  // Find topmost node position
+  for (n = fstnode($G); n; n = nxtnode(n)) {
+    if (hasAttr(n, "_titlenode") && n._titlenode == "1") continue;
+    if (hasAttr(n, "_footernode") && n._footernode == "1") continue;
+    nodeY = yOf(n.pos);
+    if (nodeY > topMostY) topMostY = nodeY;
+  }
 }
 END_G{
   double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
@@ -53,7 +66,7 @@ END_G{
   $G.lp = sprintf("%.1f,%.1f", gcenterX, glpY);
 }
 N[_titlenode=="1"]{
-  pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMaxY + 100);
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, topMostY + 200);
 }
 N[_footernode=="1"]{
   pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMinY - 150);

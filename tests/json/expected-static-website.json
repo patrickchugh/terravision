@@ -1,0 +1,13 @@
+{
+    "module.cloudfront.aws_cloudfront_distribution.this[0]~1": [
+        "module.s3_bucket.aws_s3_bucket.this[0]~1"
+    ],
+    "module.s3_bucket.aws_s3_bucket.this[0]~1": [],
+    "module.s3_bucket.aws_s3_bucket_acl.this[0]~1": [],
+    "module.s3_bucket.aws_s3_bucket_public_access_block.this[0]~1": [],
+    "module.s3_bucket.aws_s3_bucket_versioning.this[0]~1": [],
+    "module.s3_bucket.aws_s3_bucket_website_configuration.this[0]~1": [],
+    "tv_aws_users.users": [
+        "module.cloudfront.aws_cloudfront_distribution.this[0]~1"
+    ]
+}

@@ -103,6 +103,150 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def _find_implied_connections(
+    param: str, nodes: List[str], IMPLIED_CONNECTIONS: Dict
+) -> List[str]:
+    """Find implied connections based on keywords.
+
+    Args:
+        param: Parameter value to search for keywords
+        nodes: List of all resource nodes
+        IMPLIED_CONNECTIONS: Dictionary of implied connection keywords
+
+    Returns:
+        List of matching resource names from implied connections
+    """
+    matching = []
+    # Check for implied connections based on keywords
+    found_connection = list({s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)})
+    if found_connection:
+        for n in nodes:
+            if helpers.get_no_module_name(n).startswith(
+                IMPLIED_CONNECTIONS[found_connection[0]]
+            ):
+                matching.append(n)
+    return matching
+
+
+def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
+    """Find resources that match the parameter value.
+
+    Args:
+        param: Parameter value to search for references
+        nodes: List of all resource nodes
+
+    Returns:
+        List of matching resource names
+    """
+    matching = []
+
+    # Handle list references (e.g., resource[0])
+    if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
+        matching = list(
+            {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
+        )
+    else:
+        # Extract Terraform resource references from parameter
+        extracted_resources_list = helpers.extract_terraform_resource(param)
+        if extracted_resources_list:
+            for r in extracted_resources_list:
+                matching.extend(
+                    list(
+                        {
+                            s
+                            for s in nodes
+                            if (r in s or helpers.cleanup_curlies(r) in s)
+                            and s not in matching
+                        }
+                    )
+                )
+
+    return matching
+
+
+def _should_reverse_arrow(
+    param: str, resource_associated_with: str, REVERSE_ARROW_LIST: List[str]
+) -> bool:
+    """Determine if arrow direction should be reversed.
+
+    Args:
+        param: Parameter value being checked
+        resource_associated_with: Resource name being checked
+        REVERSE_ARROW_LIST: List of patterns that trigger arrow reversal
+
+    Returns:
+        True if arrow should be reversed
+    """
+    reverse_origin_match = [s for s in REVERSE_ARROW_LIST if s in str(param)]
+    if len(reverse_origin_match) == 0:
+        return False
+
+    # Prevent double reversal if both sides match
+    reverse_dest_match = [
+        s for s in REVERSE_ARROW_LIST if s in resource_associated_with
+    ]
+    if len(reverse_dest_match) > 0:
+        if REVERSE_ARROW_LIST.index(reverse_dest_match[0]) < REVERSE_ARROW_LIST.index(
+            reverse_origin_match[0]
+        ):
+            return False
+
+    return True
+
+
+def _numbered_nodes_match(matched_resource: str, resource_associated_with: str) -> bool:
+    """Check if numbered nodes have matching suffixes.
+
+    Args:
+        matched_resource: First resource name
+        resource_associated_with: Second resource name
+
+    Returns:
+        True if both have ~ suffix and suffixes match, or if no suffix check needed
+    """
+    # Match numbered nodes with same suffix
+    if "~" in matched_resource and "~" in resource_associated_with:
+        matched_resource_no = matched_resource.split("~")[1]
+        resource_associated_with_no = resource_associated_with.split("~")[1]
+        if matched_resource_no != resource_associated_with_no:
+            return False
+    return True
+
+
+def _add_connection_pair(
+    connection_pairs: List[str],
+    matched_resource: str,
+    resource_associated_with: str,
+    reverse: bool,
+    tfdata: Dict[str, Any],
+) -> None:
+    """Add connection pair in appropriate direction.
+
+    Args:
+        connection_pairs: List to append connection pairs to
+        matched_resource: Matched resource name
+        resource_associated_with: Origin resource name
+        reverse: Whether to reverse arrow direction
+        tfdata: Terraform data dictionary
+    """
+    if reverse:
+        # Reversed: matched -> resource
+        if (
+            resource_associated_with not in tfdata["graphdict"][matched_resource]
+            and matched_resource not in tfdata["graphdict"][resource_associated_with]
+        ):
+            connection_pairs.append(matched_resource)
+            connection_pairs.append(resource_associated_with)
+    else:
+        # Normal: resource -> matched
+        if (
+            matched_resource not in tfdata["graphdict"][resource_associated_with]
+            and matched_resource not in connection_pairs
+        ):
+            connection_pairs.append(resource_associated_with)
+            connection_pairs.append(matched_resource)
+
+
 def check_relationship(
     resource_associated_with: str, plist: List[Any], tfdata: Dict[str, Any]
 ) -> List[str]:
@@ -127,113 +271,290 @@ def check_relationship(
     nodes = tfdata["node_list"]
     hidden = tfdata["hidden"]
     connection_pairs: List[str] = list()
-    matching: List[str] = list()
 
     # Scan each parameter for resource references
     for p in plist:
         param = str(p)
-        matching = []
-
-        # Handle list references (e.g., resource[0])
-        if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
-            matching = list(
-                {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
-            )
-            pass
-        else:
-            # Extract Terraform resource references from parameter
-            extracted_resources_list = helpers.extract_terraform_resource(param)
-            if extracted_resources_list:
-                for r in extracted_resources_list:
-                    matching.extend(
-                        list(
-                            {
-                                s
-                                for s in nodes
-                                if (r in s or helpers.cleanup_curlies(r) in s)
-                                and s not in matching
-                            }
-                        )
-                    )
-
-        # Check for implied connections based on keywords
-        found_connection = list(
-            {s for s in IMPLIED_CONNECTIONS.keys() if s in str(param)}
-        )
-        if found_connection:
-            for n in nodes:
-                if (
-                    helpers.get_no_module_name(n).startswith(
-                        IMPLIED_CONNECTIONS[found_connection[0]]
-                    )
-                    and n not in matching
-                ):
-                    matching.append(n)
+        matching = _find_matching_resources(param, nodes)
+        implied = _find_implied_connections(param, nodes, IMPLIED_CONNECTIONS)
+        # Combine explicit and implied matches, avoiding duplicates
+        matching.extend([m for m in implied if m not in matching])
 
         # Process matched resources
-        if matching:
-            for matched_resource in matching:
-                reverse = False
-                # Skip hidden resources
-                if (
-                    matched_resource not in hidden
-                    and resource_associated_with not in hidden
-                ):
-                    # Check if arrow direction should be reversed
-                    reverse_origin_match = [
-                        s for s in REVERSE_ARROW_LIST if s in str(param)
-                    ]
-                    if len(reverse_origin_match) > 0:
-                        reverse = True
-                        # Prevent double reversal if both sides match
-                        reverse_dest_match = [
-                            s
-                            for s in REVERSE_ARROW_LIST
-                            if s in resource_associated_with
-                        ]
-                        if len(reverse_dest_match) > 0:
-                            if REVERSE_ARROW_LIST.index(
-                                reverse_dest_match[0]
-                            ) < REVERSE_ARROW_LIST.index(reverse_origin_match[0]):
-                                reverse = False
+        for matched_resource in matching:
+            # Skip hidden resources
+            if (
+                matched_resource not in hidden
+                and resource_associated_with not in hidden
+                and _numbered_nodes_match(matched_resource, resource_associated_with)
+            ):
+                # Check if arrow direction should be reversed
+                reverse = _should_reverse_arrow(
+                    param, resource_associated_with, REVERSE_ARROW_LIST
+                )
 
-                    # Match numbered nodes with same suffix
-                    if "~" in matched_resource and "~" in resource_associated_with:
-                        matched_resource_no = matched_resource.split("~")[1]
-                        resource_associated_with_no = resource_associated_with.split(
-                            "~"
-                        )[1]
-                        if matched_resource_no != resource_associated_with_no:
-                            continue
-
-                    # Add connection pair in appropriate direction
-                    if reverse:
-                        # Reversed: matched -> resource
-                        if (
-                            resource_associated_with
-                            not in tfdata["graphdict"][matched_resource]
-                            and matched_resource
-                            not in tfdata["graphdict"][resource_associated_with]
-                        ):
-                            connection_pairs.append(matched_resource)
-                            connection_pairs.append(resource_associated_with)
-                    else:
-                        # Normal: resource -> matched
-                        if (
-                            matched_resource
-                            not in tfdata["graphdict"][resource_associated_with]
-                            and matched_resource not in connection_pairs
-                        ):
-                            connection_pairs.append(resource_associated_with)
-                            connection_pairs.append(matched_resource)
+                # Add connection pair in appropriate direction
+                _add_connection_pair(
+                    connection_pairs,
+                    matched_resource,
+                    resource_associated_with,
+                    reverse,
+                    tfdata,
+                )
 
     return connection_pairs
 
 
-def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Build final graph structure by detecting resource relationships.
+def scan_module_relationships(
+    tfdata: Dict[str, Any], graphdict: Dict[str, List[str]]
+) -> None:
+    """Scan module-to-module relationships via output references and direct resource references."""
+    if not tfdata.get("all_module"):
+        return
 
-    Scans resource metadata to find references between resources and adds
+    # Get provider prefixes and GROUP_NODES for multi-cloud support
+    config = _get_provider_config(tfdata)
+    constants = _load_config_constants(tfdata)
+    provider_prefixes = config.PROVIDER_PREFIX  # e.g., ["aws_", "google_", "azurerm_"]
+    GROUP_NODES = constants["GROUP_NODES"]
+
+    # Build regex pattern for any provider resource (e.g., aws_|google_|azurerm_)
+    provider_pattern = "|".join([p.replace("_", "\_") for p in provider_prefixes])
+    direct_ref_pattern = rf"module\.(\w+)\.({provider_pattern}\w+)\.(\w+)"
+
+    for filepath, module_list in tfdata["all_module"].items():
+        if not isinstance(module_list, list):
+            continue
+        for module_dict in module_list:
+            if not isinstance(module_dict, dict):
+                continue
+            for module_name, module_metadata in module_dict.items():
+                if not isinstance(module_metadata, dict):
+                    continue
+
+                # Find resources in this module
+                module_resources = [
+                    n
+                    for n in tfdata["node_list"]
+                    if n.startswith(f"module.{module_name}.")
+                ]
+                if not module_resources:
+                    continue
+
+                metadata_str = str(module_metadata)
+
+                # Find direct resource references (e.g., module.s3_bucket.aws_s3_bucket.this)
+                direct_refs = re.findall(direct_ref_pattern, metadata_str)
+                for ref_module_name, resource_type, resource_name in set(direct_refs):
+                    if ref_module_name == module_name:
+                        continue
+                    # Find matching resources in node_list
+                    target_pattern = (
+                        f"module.{ref_module_name}.{resource_type}.{resource_name}"
+                    )
+                    target_resources = [
+                        n for n in tfdata["node_list"] if target_pattern in n
+                    ]
+                    # Create connections, excluding GROUP nodes
+                    for origin in module_resources:
+                        for dest in target_resources:
+                            origin_type = helpers.get_no_module_name(origin).split(".")[
+                                0
+                            ]
+                            dest_type = helpers.get_no_module_name(dest).split(".")[0]
+                            if (
+                                origin_type not in GROUP_NODES
+                                and dest_type not in GROUP_NODES
+                            ):
+                                if (
+                                    origin in graphdict
+                                    and dest not in graphdict[origin]
+                                ):
+                                    add_connection(graphdict, origin, dest)
+
+                # Find module output references (e.g., module.s3_bucket.bucket_id)
+                module_output_refs = re.findall(r"module\.(\w+)\.(\w+)", metadata_str)
+                for ref_module_name, output_name in set(module_output_refs):
+                    if ref_module_name == module_name:
+                        continue
+                    # Skip if already handled as direct reference (starts with provider prefix)
+                    if any(
+                        output_name.startswith(prefix) for prefix in provider_prefixes
+                    ):
+                        continue
+                    # Resolve output to actual resources
+                    target_resources = resolve_module_output_to_resources(
+                        ref_module_name, output_name, tfdata
+                    )
+                    # Create connections, excluding GROUP nodes
+                    for origin in module_resources:
+                        for dest in target_resources:
+                            origin_type = helpers.get_no_module_name(origin).split(".")[
+                                0
+                            ]
+                            dest_type = helpers.get_no_module_name(dest).split(".")[0]
+                            if (
+                                origin_type not in GROUP_NODES
+                                and dest_type not in GROUP_NODES
+                            ):
+                                if (
+                                    origin in graphdict
+                                    and dest not in graphdict[origin]
+                                ):
+                                    add_connection(graphdict, origin, dest)
+
+
+def add_connection(graphdict: Dict, origin: str, dest: str) -> None:
+    """Add connection between origin and dest nodes."""
+    if dest in graphdict[origin] or helpers.get_no_module_name(origin).startswith(
+        "aws_security_group"
+    ):
+        return
+    click.echo(f"   {origin} --> {dest}")
+    graphdict[origin].append(dest)
+    # Replace unnumbered with numbered version
+    if "~" in origin and "~" in dest and dest.split("~")[0] in graphdict[origin]:
+        graphdict[origin].remove(dest.split("~")[0])
+
+
+def resolve_module_output_to_resources(
+    module_name: str, output_name: str, tfdata: Dict[str, Any]
+) -> List[str]:
+    """Resolve module output reference to actual resource names.
+
+    Args:
+        module_name: Name of the module being referenced
+        output_name: Name of the output variable
+        tfdata: Terraform data dictionary
+
+    Returns:
+        List of actual resource names that the output references
+    """
+    resources = []
+    # Search through output files for matching module
+    for file in tfdata.get("all_output", {}).keys():
+        if f";{module_name};" in file:
+            for output_dict in tfdata["all_output"][file]:
+                if output_name in output_dict:
+                    output_value = output_dict[output_name].get("value", "")
+                    # Extract resource references from output value
+                    resource_refs = helpers.extract_terraform_resource(
+                        str(output_value)
+                    )
+                    for ref in resource_refs:
+                        # Find matching nodes in node_list
+                        matching = [n for n in tfdata["node_list"] if ref in n]
+                        resources.extend(matching)
+                    break
+    return resources
+
+
+def _get_base_node_name(node: str, tfdata: Dict[str, Any]) -> str:
+    """Determine base node name by stripping suffixes."""
+    if node not in tfdata["meta_data"].keys():
+        nodename = node.split("~")[0]
+        if "[" in nodename:
+            nodename = nodename.split("[")[0]
+    else:
+        nodename = node
+    return nodename
+
+
+def _should_skip_node(node: str, nodename: str) -> bool:
+    """Check if node should be skipped during relationship scanning."""
+    return (
+        helpers.get_no_module_name(nodename).startswith("random")
+        or helpers.get_no_module_name(node).startswith("aws_security_group")
+        or helpers.get_no_module_name(node).startswith("null")
+    )
+
+
+def _get_metadata_generator(node: str, nodename: str, tfdata: Dict[str, Any]):
+    """Get metadata generator for parameter scanning.
+
+    Note: Mutates tfdata["meta_data"] by copying from original_metadata if needed.
+    """
+    if nodename not in tfdata["meta_data"].keys():
+        if node in tfdata["original_metadata"]:
+            # Mutation: populate meta_data from original_metadata
+            tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
+            return dict_generator(tfdata["original_metadata"][node])
+    return dict_generator(tfdata["meta_data"][nodename])
+
+
+def _process_connection_pairs(
+    matching_result: List[str], tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Process connection pairs and add to graphdict.
+
+    Returns mutated tfdata.
+    """
+    for i in range(0, len(matching_result), 2):
+        origin = matching_result[i]
+        dest = matching_result[i + 1]
+        c_list = list(tfdata["graphdict"][origin])
+        # Add connection if not exists and not security group
+        if dest not in c_list and not helpers.get_no_module_name(origin).startswith(
+            "aws_security_group"
+        ):
+            click.echo(f"   {origin} --> {dest}")
+            c_list.append(dest)
+            # Replace unnumbered with numbered version
+            if "~" in origin and "~" in dest and dest.split("~")[0] in c_list:
+                c_list.remove(dest.split("~")[0])
+        # Update graphdict with new connections
+        tfdata["graphdict"][origin] = c_list
+
+    return tfdata
+
+
+def _scan_node_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Scan each node for relationships with other resources.
+
+    Returns mutated tfdata.
+    """
+    for node in tfdata["node_list"]:
+        nodename = _get_base_node_name(node, tfdata)
+
+        # Skip certain resource types
+        if _should_skip_node(node, nodename):
+            continue
+
+        # Get metadata generator for parameter scanning
+        dg = _get_metadata_generator(node, nodename, tfdata)
+
+        # Check each parameter for relationships
+        for param_item_list in dg:
+            matching_result = check_relationship(node, param_item_list, tfdata)
+            # Process connection pairs
+            if matching_result and len(matching_result) >= 2:
+                tfdata = _process_connection_pairs(matching_result, tfdata)
+
+    return tfdata
+
+
+def _remove_hidden_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove hidden nodes from graph.
+
+    Returns mutated tfdata.
+    """
+    # Delete hidden resource nodes
+    for hidden_resource in tfdata["hidden"]:
+        if hidden_resource in tfdata["graphdict"]:
+            del tfdata["graphdict"][hidden_resource]
+    # Remove hidden resources from connection lists
+    for resource in tfdata["graphdict"]:
+        for hidden_resource in tfdata["hidden"]:
+            if hidden_resource in tfdata["graphdict"][resource]:
+                tfdata["graphdict"][resource].remove(hidden_resource)
+
+    return tfdata
+
+
+def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Build final graph structure by detecting ALL resource relationships.
+
+    Scans resource metadata to find cross references between resources/modules and adds
     connections to the graph. Handles hidden nodes and security groups specially.
 
     Args:
@@ -242,8 +563,9 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with complete graphdict including all relationships
     """
-    # Deep copy to prevent mutation leakage
-    graphdict = copy.deepcopy(tfdata["graphdict"])
+    # Deep copy graphdict to prevent mutation issues during iteration
+    tfdata["graphdict"] = copy.deepcopy(tfdata["graphdict"])
+
     created_resources = len(tfdata["node_list"])
     click.echo(
         click.style(
@@ -254,72 +576,16 @@ def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     # Scan each node for relationships
-    for node in tfdata["node_list"]:
-        # Determine base node name
-        if node not in tfdata["meta_data"].keys():
-            nodename = node.split("~")[0]
-            if "[" in nodename:
-                nodename = nodename.split("[")[0]
-        else:
-            nodename = node
-
-        # Skip certain resource types
-        if (
-            helpers.get_no_module_name(nodename).startswith("random")
-            or helpers.get_no_module_name(node).startswith("aws_security_group")
-            or helpers.get_no_module_name(node).startswith("null")
-        ):
-            continue
-
-        # Get metadata generator for parameter scanning
-        if nodename not in tfdata["meta_data"].keys():
-            if node in tfdata["original_metadata"]:
-                dg = dict_generator(tfdata["original_metadata"][node])
-                tfdata["meta_data"][node] = copy.deepcopy(
-                    tfdata["original_metadata"][node]
-                )
-        else:
-            dg = dict_generator(tfdata["meta_data"][nodename])
-
-        # Check each parameter for relationships
-        for param_item_list in dg:
-            matching_result = check_relationship(
-                node,
-                param_item_list,
-                tfdata,
-            )
-            # Process connection pairs
-            if matching_result and len(matching_result) >= 2:
-                for i in range(0, len(matching_result), 2):
-                    origin = matching_result[i]
-                    dest = matching_result[i + 1]
-                    c_list = list(graphdict[origin])
-                    # Add connection if not exists and not security group
-                    if dest not in c_list and not helpers.get_no_module_name(
-                        origin
-                    ).startswith("aws_security_group"):
-                        click.echo(f"   {origin} --> {dest}")
-                        c_list.append(dest)
-                        # Replace unnumbered with numbered version
-                        if (
-                            "~" in origin
-                            and "~" in dest
-                            and dest.split("~")[0] in c_list
-                        ):
-                            c_list.remove(dest.split("~")[0])
-                    graphdict[origin] = c_list
+    tfdata = _scan_node_relationships(tfdata)
 
     # Remove hidden nodes from graph
-    for hidden_resource in tfdata["hidden"]:
-        del graphdict[hidden_resource]
-    for resource in graphdict:
-        for hidden_resource in tfdata["hidden"]:
-            if hidden_resource in graphdict[resource]:
-                graphdict[resource].remove(hidden_resource)
+    tfdata = _remove_hidden_nodes(tfdata)
 
-    tfdata["graphdict"] = graphdict
+    # Scan module-to-module relationships
+    scan_module_relationships(tfdata, tfdata["graphdict"])
+
     # Store immutable snapshot for reference
-    tfdata["original_graphdict_with_relations"] = copy.deepcopy(graphdict)
+    tfdata["original_graphdict_with_relations"] = copy.deepcopy(tfdata["graphdict"])
 
     return tfdata
 
