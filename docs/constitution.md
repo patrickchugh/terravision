@@ -1,14 +1,18 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 1.1.0 (added new technical standard)
+- Version change: 1.1.0 → 1.2.0 (added development tooling standards)
 - Modified principles: None
-- Added sections: Technical Standards > Code Organization > Provider-Specific Code Isolation
+- Added sections:
+  - Testing Standards > TS-005 (Poetry dependency management)
+  - Testing Standards > TS-006 (Black code formatting)
+  - Testing Standards > TS-007 (Pre-commit hooks)
+  - Quality Requirements > QR-006 (Cache directory standard)
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
-  ⚠ CLAUDE.md - Already contains detailed guidance on provider-specific architecture that aligns with new standard
+  ✅ CLAUDE.md - Contains detailed guidance on Poetry, Black, and pytest that now aligns with constitution
 - Follow-up TODOs: None
 -->
 
@@ -91,6 +95,7 @@ All cloud-specific resource handling logic MUST reside exclusively in provider-s
 - **QR-003**: Tool MUST automatically download and parse organizational/external Terraform modules
 - **QR-004**: Debug mode MUST export intermediate state (tfdata.json) for troubleshooting without re-running slow terraform operations
 - **QR-005**: All CLI commands MUST support both human-readable and JSON output formats
+- **QR-006**: Module cache and temporary files MUST use `~/.terravision` directory; cache MUST be clearable via `rm -rf ~/.terravision`
 
 ### Testing Standards
 
@@ -98,6 +103,9 @@ All cloud-specific resource handling logic MUST reside exclusively in provider-s
 - **TS-002**: Provider support additions MUST include icon library and resource mapping tests
 - **TS-003**: Annotation functionality MUST be tested with valid and malformed YAML inputs
 - **TS-004**: CI/CD integration examples MUST be validated against actual pipeline runners
+- **TS-005**: Poetry MUST be used for dependency management; all Python commands in documentation and development MUST use `poetry run` prefix (e.g., `poetry run python terravision.py`, `poetry run pytest`)
+- **TS-006**: Code MUST be formatted with Black using 88-character line length; CI MUST enforce formatting via `poetry run black --check -v modules`; violations MUST fail builds
+- **TS-007**: Pre-commit hooks MUST run non-slow tests (`poetry run pytest -m "not slow"`); terraform-dependent tests MUST be marked with `@pytest.mark.slow`
 
 ## Development Workflow
 
@@ -152,4 +160,4 @@ This constitution supersedes all other development practices and documentation. 
 - **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.1.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-20
+**Version**: 1.2.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-25
