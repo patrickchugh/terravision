@@ -6,6 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into professional cloud architecture diagrams. It runs 100% client-side, securely parses Terraform plans, and generates visual representations of cloud infrastructure without requiring access to cloud environments.
 
+## Documentation Location
+
+All project documentation, specifications, design artifacts, and templates are located in the `/docs` folder. When using speckit skills (`/speckit.*` commands) or referencing project documentation:
+- Specifications and feature docs are in `/docs`
+- Design templates and planning artifacts are in `/docs`
+- All speckit commands should reference and write to `/docs`
+
+**Configuration**: The speckit documentation directory is configured via the `SPECS_DIR` environment variable in `.claude/settings.json`:
+```json
+"env": {
+  "SPECS_DIR": "./docs"
+}
+```
+
+This ensures all `/speckit.*` commands (specify, plan, tasks, etc.) create and read documents from `./docs` instead of the default `/specs` directory.
+
 ## Virtual Environment
 
 **CRITICAL**: This project uses Poetry for dependency management. **ALWAYS** use `poetry run` prefix for all Python commands.
