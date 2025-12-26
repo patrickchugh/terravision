@@ -61,6 +61,5 @@ ai-backend-terraform/terraform.tfstate.backup
 ai-backend-terraform/.terraform/*
 ai-backend-terraform/lambda/node_modules/*
 .specify/
-.claude/
 .terraform/
 .terraform.lock.hcl
