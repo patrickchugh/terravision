@@ -1,21 +1,30 @@
 # AWS Resource Handler Specifications
 
-This summary document describes how TerraVision processes AWS Terraform resources to create accurate architecture diagrams. Written for cloud architects and DevOps engineers to understand the resource relationship transformations. The below TOC links to individual documents that describe the resource handlers for each resource in detail.
+This summary document describes how TerraVision processes AWS Terraform resources to create accurate architecture diagrams. Written for cloud architects and DevOps engineers to understand the resource relationship transformations.
+
+## Handler Architecture
+
+TerraVision uses a **hybrid configuration-driven approach** for resource handlers:
+
+- **Pure config-driven** (7 handlers): Simple operations using transformation building blocks
+- **Pure function** (9 handlers): Complex logic requiring custom Python code
+- **Hybrid** (0 handlers): Mix of config transformations and custom functions
+
+See `docs/HANDLER_ARCHITECTURE.md` for complete overview.
 
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [Architectural Principles](#architectural-principles)
-3. [Network Topology](./network-topology.md)
-4. [Security Groups](./security-groups.md)
-5. [Load Balancing](./load-balancing.md)
-6. [Storage & File Systems](./storage-file-systems.md)
-7. [Content Delivery](./content-delivery.md)
-8. [Autoscaling](./autoscaling.md)
-9. [Container Orchestration](./container-orchestration.md)
-10. [Database Resources](./database-resources.md)
-11. [Shared Services](./shared-services.md)
-12. [Resource Matching](./resource-matching.md)
+3. [Network Topology](./network-topology.md) - VPC, Subnet, AZ handlers (pure function)
+4. [Security Groups](./security-groups.md) - Security group handler (pure function)
+5. [Load Balancing](./load-balancing.md) - ALB/NLB handlers (pure function)
+6. [Storage & File Systems](./storage-file-systems.md) - EFS handler (pure function)
+7. [Content Delivery](./content-delivery.md) - CloudFront handler (pure function)
+8. [Container Orchestration](./container-orchestration.md) - ECS/EKS handlers (pure function)
+9. [Shared Services](./shared-services.md) - Shared services grouping (pure config)
+
+**Note**: Simple config-driven handlers (VPC endpoints, DB subnet groups, autoscaling groups, EKS node groups, EKS Fargate profiles, random strings) are documented in `HANDLER_CONFIG_GUIDE.md` and don't require detailed specifications.
 
 ---
 

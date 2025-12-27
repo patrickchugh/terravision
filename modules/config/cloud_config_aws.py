@@ -212,20 +212,22 @@ AWS_IMPLIED_CONNECTIONS = {
 }
 
 # List of special resources and handler function name
+# NOTE: Handlers migrated to config-driven approach in resource_handler_configs_aws.py:
+# - aws_eks_node_group, aws_eks_fargate_profile, aws_autoscaling_group
+# - random_string
+# - aws_vpc_endpoint (move to VPC parent + delete)
+# - aws_db_subnet_group (move to VPC + redirect to security groups)
+# - aws_shared_services (group shared services)
 AWS_SPECIAL_RESOURCES = {
     "aws_cloudfront_distribution": "aws_handle_cloudfront_pregraph",
     "aws_subnet": "aws_handle_subnet_azs",
     "aws_appautoscaling_target": "aws_handle_autoscaling",
     "aws_efs_file_system": "aws_handle_efs",
-    "aws_db_subnet": "aws_handle_dbsubnet",
-    "aws_security_group": "aws_handle_sg",  # place after db_subnet handler
+    "aws_security_group": "aws_handle_sg",
     "aws_lb": "aws_handle_lb",
-    "aws_vpc_endpoint": "aws_handle_vpcendpoints",
     "aws_ecs": "aws_handle_ecs",
     "aws_eks": "aws_handle_eks",
     "helm_release": "helm_release_handler",
-    "aws_": "aws_handle_sharedgroup",
-    "random_string": "random_string_handler",
 }
 
 AWS_SHARED_SERVICES = [

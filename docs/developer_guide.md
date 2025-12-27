@@ -144,19 +144,36 @@ The main processing pipeline in `terravision.py` follows this flow:
 
 ### Resource Handlers Pattern
 
-Special resources (VPCs, security groups, load balancers) have custom handlers defined in `SPECIAL_RESOURCES` dict in each `cloud_config_*.py`:
+TerraVision uses a hybrid configuration-driven approach for resource handlers. Handlers are defined in `RESOURCE_HANDLER_CONFIGS` dict in each `cloud_config_<provider>.py`:
+
+**Three handler types:**
+
+1. **Pure config-driven**: Use only transformation building blocks (7 AWS handlers)
+2. **Hybrid**: Use transformations + custom Python function (0 AWS handlers currently)
+3. **Pure function**: Use only custom Python function (9 AWS handlers)
 
 ```python
-# cloud_config_aws.py
-AWS_SPECIAL_RESOURCES = {
-    "aws_vpc": "handle_vpc",
-    "aws_subnet": "handle_subnet",
-    "aws_security_group": "handle_security_group",
-    # ... mapped to functions in resource_handlers_aws.py
+# modules/config/resource_handler_configs_aws.py
+RESOURCE_HANDLER_CONFIGS = {
+    # Pure config-driven
+    "aws_vpc_endpoint": {
+        "description": "Move VPC endpoints into VPC parent and delete endpoint nodes",
+        "transformations": [
+            {"operation": "move_to_parent", "params": {...}},
+            {"operation": "delete_nodes", "params": {...}},
+        ],
+    },
+    # Pure function
+    "aws_security_group": {
+        "description": "Process security group relationships and reverse connections",
+        "additional_handler_function": "aws_handle_sg",
+    },
 }
 ```
 
-The `handle_special_resources()` function in `graphmaker.py` dispatches to the appropriate handler module.
+The `handle_special_resources()` function in `graphmaker.py` executes:
+1. Config-driven transformations (if `transformations` key exists)
+2. Additional handler function (if `additional_handler_function` key exists)
 
 ### Numbered Resources (Count/For_Each)
 
@@ -185,6 +202,37 @@ Icons are sourced from provider-specific directories defined in each config:
 - Generic: `resource_classes/generic/` (fallback icons)
 
 ## Important Patterns
+
+### Configuration-Driven Handlers
+
+TerraVision uses a hybrid approach for resource handlers:
+
+**Pure config-driven** (simple operations):
+```python
+"aws_vpc_endpoint": {
+    "transformations": [
+        {"operation": "move_to_parent", "params": {...}},
+        {"operation": "delete_nodes", "params": {...}},
+    ],
+}
+```
+
+**Pure function** (complex logic):
+```python
+"aws_security_group": {
+    "additional_handler_function": "aws_handle_sg",
+}
+```
+
+**Hybrid** (both config and custom logic):
+```python
+"aws_complex_resource": {
+    "transformations": [{"operation": "expand_to_numbered_instances", "params": {...}}],
+    "additional_handler_function": "aws_handle_complex_custom",
+}
+```
+
+See `docs/CONFIGURATION_DRIVEN_HANDLERS.md` for details.
 
 ### Adding New Cloud Provider
 

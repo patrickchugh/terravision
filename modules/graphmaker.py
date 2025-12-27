@@ -15,6 +15,7 @@ import modules.config_loader as config_loader
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 from modules.provider_detector import get_primary_provider_or_default
+from modules.resource_transformers import apply_transformation_pipeline
 
 
 def _get_provider_config(tfdata: Dict[str, Any]):
@@ -932,12 +933,37 @@ def cleanup_originals(
     return tfdata
 
 
-# Handle resources which require pre/post-processing before/after being added to graphdict
+def _load_handler_configs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Load provider-specific handler configurations.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        RESOURCE_HANDLER_CONFIGS dict
+    """
+    provider = get_primary_provider_or_default(tfdata)
+
+    try:
+        config_module = __import__(
+            f"modules.config.resource_handler_configs_{provider}",
+            fromlist=["RESOURCE_HANDLER_CONFIGS"],
+        )
+        return getattr(config_module, "RESOURCE_HANDLER_CONFIGS", {})
+    except ImportError:
+        return {}
+
+
 def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Apply special processing for specific resource types.
 
-    Delegates to resource-specific handlers for resources that need
-    custom processing (e.g., VPCs, subnets, security groups).
+    Executes config-driven transformations and additional handler functions.
+    Supports hybrid approach with configurable execution order:
+    - If 'transformations' exist: apply config-driven transformations
+    - If 'additional_handler_function' exists: call Python function
+    - 'handler_execution_order': "before" or "after" (default: "after")
+      - "before": Run handler function BEFORE transformations
+      - "after": Run handler function AFTER transformations (default)
 
     Args:
         tfdata: Terraform data dictionary
@@ -945,20 +971,56 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata after special processing
     """
-    # Load provider-specific constants
-    constants = _load_config_constants(tfdata)
-    SPECIAL_RESOURCES = constants["SPECIAL_RESOURCES"]
 
-    # Get the provider-specific handler module
-    handler_module = resource_handlers.get_handler_module(tfdata)
+    RESOURCE_HANDLER_CONFIGS = _load_handler_configs(tfdata)
+
+    if not RESOURCE_HANDLER_CONFIGS:
+        return tfdata
 
     resource_types = list(
         {helpers.get_no_module_name(k).split(".")[0] for k in tfdata["node_list"]}
     )
-    for resource_prefix, handler in SPECIAL_RESOURCES.items():
-        matching_substring = [s for s in resource_types if resource_prefix in s]
-        if resource_prefix in resource_types or matching_substring:
-            tfdata = getattr(handler_module, handler)(tfdata)
+
+    for resource_pattern, config in RESOURCE_HANDLER_CONFIGS.items():
+        matching = [s for s in resource_types if resource_pattern in s]
+
+        if resource_pattern in resource_types or matching:
+            # Get execution order preference (default: "after")
+            execution_order = config.get("handler_execution_order", "after")
+
+            has_transformations = "transformations" in config
+            has_handler = "additional_handler_function" in config
+
+            # Execute in configured order
+            if execution_order == "before" and has_handler:
+                # Step 1: Run handler function FIRST
+                handler_module = resource_handlers.get_handler_module(tfdata)
+                handler_func = getattr(
+                    handler_module, config["additional_handler_function"]
+                )
+                tfdata = handler_func(tfdata)
+
+                # Step 2: Apply transformations AFTER
+                if has_transformations:
+                    tfdata = apply_transformation_pipeline(
+                        tfdata, config["transformations"]
+                    )
+            else:
+                # Default: transformations first, then handler
+                # Step 1: Apply config-driven transformations if present
+                if has_transformations:
+                    tfdata = apply_transformation_pipeline(
+                        tfdata, config["transformations"]
+                    )
+
+                # Step 2: Apply additional handler function if present
+                if has_handler:
+                    handler_module = resource_handlers.get_handler_module(tfdata)
+                    handler_func = getattr(
+                        handler_module, config["additional_handler_function"]
+                    )
+                    tfdata = handler_func(tfdata)
+
     return tfdata
 
 

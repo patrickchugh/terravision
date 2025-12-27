@@ -153,43 +153,8 @@ def handle_cloudfront_domains(
     return origin_string
 
 
-def handle_cloudfront_lbs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Connect CloudFront distributions to load balancers.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with CloudFront-LB connections
-    """
-    # Find CloudFront distributions and load balancers
-    cf_distros = sorted(
-        [s for s in tfdata["graphdict"].keys() if "aws_cloudfront" in s]
-    )
-    lbs = sorted([s for s in tfdata["graphdict"].keys() if "aws_lb." in s])
-    # Connect CloudFront to LBs when node connects to both
-    for node in sorted(tfdata["graphdict"].keys()):
-        connections = tfdata["graphdict"][node]
-        for cf in cf_distros:
-            if cf in connections:
-                for lb in lbs:
-                    # If node connects to LB, link CF directly to LB
-                    if node in tfdata["graphdict"][lb]:
-                        lb_parents = helpers.list_of_parents(tfdata["graphdict"], lb)
-                        tfdata["graphdict"][cf].append(lb)
-                        tfdata["graphdict"][node].remove(cf)
-                        # Remove LB from non-group parents
-                        for parent in lb_parents:
-                            if (
-                                helpers.get_no_module_name(parent).split(".")[0]
-                                not in GROUP_NODES
-                            ):
-                                tfdata["graphdict"][parent].remove(lb)
-    return tfdata
-
-
 def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Process CloudFront origin configurations and ACM certificates.
+    """Process CloudFront origin configurations.
 
     Args:
         tfdata: Terraform data dictionary
@@ -217,15 +182,6 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     origin_domain = helpers.cleanup(
                         origin_source.get("domain_name")
                     ).strip()
-                    # Link to ACM certificate if present
-                    if (
-                        tfdata["meta_data"][cf_resource].get("viewer_certificate")
-                        and "acm_certificate_arn"
-                        in tfdata["meta_data"][cf_resource]["viewer_certificate"]
-                    ):
-                        tfdata["graphdict"][cf_resource].append(
-                            "aws_acm_certificate.acm"
-                        )
                     # Link origin domain to resources
                     if origin_domain:
                         tfdata["meta_data"][cf_resource]["origin"] = (
@@ -233,21 +189,6 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 str(origin_source), origin_domain, tfdata["meta_data"]
                             )
                         )
-    return tfdata
-
-
-def aws_handle_cloudfront_pregraph(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Pre-process CloudFront resources before graph generation.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with CloudFront pre-processing complete
-    """
-    tfdata = handle_cloudfront_lbs(tfdata)
-    tfdata = handle_cf_origins(tfdata)
-
     return tfdata
 
 
@@ -265,56 +206,78 @@ def _add_suffix(s: str) -> str:
     return s
 
 
-def aws_handle_subnet_azs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Create availability zone nodes and link to subnets.
+def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> str:
+    """Generate availability zone node name from subnet metadata.
+
+    This is a helper function for the insert_intermediate_node transformer.
+
+    Args:
+        subnet_name: Name of the subnet resource (unused - required for transformer signature)
+        subnet_metadata: Metadata dictionary for the subnet
+
+    Returns:
+        Generated AZ node name
+    """
+    _ = subnet_name  # Unused but required by transformer signature
+
+    # Build AZ node name from subnet metadata
+    az = "aws_az.availability_zone_" + str(
+        subnet_metadata.get("availability_zone", "unknown")
+    )
+    az = az.replace("-", "_")
+    region = subnet_metadata.get("region")
+
+    # Replace placeholder with actual region
+    if region:
+        az = az.replace("True", region)
+    else:
+        az = az.replace(".True", ".availability_zone")
+
+    az = _add_suffix(az)
+    return az
+
+
+def aws_prepare_subnet_az_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Prepare AZ metadata for subnets before transformers run.
+
+    This function runs BEFORE transformations (handler_execution_order: "before")
+    to copy availability_zone and region data from original_metadata to meta_data
+    so that the generic insert_intermediate_node transformer can use them.
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with AZ nodes created
+        Updated tfdata with AZ metadata prepared
     """
     # Find all subnet resources (excluding hidden)
     subnet_resources = [
         k
         for k in tfdata["graphdict"]
         if helpers.get_no_module_name(k).startswith("aws_subnet")
-        and k not in tfdata["hidden"]
+        and k not in tfdata.get("hidden", [])
     ]
-    # Process each subnet to create AZ nodes
+
+    # Copy necessary metadata from original_metadata to meta_data
+    # so that generate_az_node_name can access it
     for subnet in subnet_resources:
-        parents_list = helpers.list_of_parents(tfdata["graphdict"], subnet)
-        for parent in parents_list:
-            # Remove direct subnet reference from parent
-            if subnet in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(subnet)
-            # Build AZ node name from subnet metadata
-            az = "aws_az.availability_zone_" + str(
-                tfdata["original_metadata"][subnet].get("availability_zone")
-            )
-            az = az.replace("-", "_")
-            region = tfdata["original_metadata"][subnet].get("region")
-            # Replace placeholder with actual region
-            if region:
-                az = az.replace("True", region)
-            else:
-                az = az.replace(".True", ".availability_zone")
-            az = _add_suffix(az)
-            # Create AZ node if it doesn't exist
-            if az not in tfdata["graphdict"].keys():
-                tfdata["graphdict"][az] = list()
-                tfdata["meta_data"][az] = {"count": ""}
-                tfdata["meta_data"][az]["count"] = str(
-                    tfdata["meta_data"][subnet].get("count")
-                )
-            # Link AZ to subnet if parent is VPC
-            if "aws_vpc" in parent:
-                tfdata["graphdict"][az].append(subnet)
-            # Link parent to AZ
-            if az not in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].append(az)
-    # Fill empty groups with blank nodes
+        original_meta = tfdata.get("original_metadata", {}).get(subnet, {})
+
+        # Ensure meta_data exists for this subnet
+        if subnet not in tfdata["meta_data"]:
+            tfdata["meta_data"][subnet] = {}
+
+        # Copy availability_zone and region for AZ name generation
+        if "availability_zone" in original_meta:
+            tfdata["meta_data"][subnet]["availability_zone"] = original_meta[
+                "availability_zone"
+            ]
+        if "region" in original_meta:
+            tfdata["meta_data"][subnet]["region"] = original_meta["region"]
+
+    # Fill empty groups with blank nodes (legacy behavior)
     tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
+
     return tfdata
 
 

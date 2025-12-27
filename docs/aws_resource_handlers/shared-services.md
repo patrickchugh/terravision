@@ -4,6 +4,8 @@
 
 **Philosophy**: Certain AWS services are shared/global and shouldn't clutter the network topology.
 
+**Handler Type**: Pure config-driven (uses `group_shared_services` transformer)
+
 **Services Grouped**:
 - IAM roles and policies
 - KMS keys
@@ -24,6 +26,23 @@
 - **Maintained**: Connections from resources to shared services
 
 **Consolidated Names**: If a shared service has a consolidated name (e.g., multiple IAM roles consolidated to `aws_iam_role`), the consolidated name is used in the group.
+
+## Configuration
+
+```python
+# In resource_handler_configs_aws.py
+"aws_": {  # Pattern matches all AWS resources
+    "description": "Group shared services (IAM, KMS, CloudWatch, etc.) together",
+    "transformations": [
+        {
+            "operation": "group_shared_services",
+            "params": {},
+        },
+    ],
+}
+```
+
+**Note**: Uses `aws_` pattern to match all AWS resources, ensuring shared services handler runs for any AWS infrastructure.
 
 ## Implementation
 
