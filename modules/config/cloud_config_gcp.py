@@ -152,18 +152,30 @@ GCP_IMPLIED_CONNECTIONS = {
     "service_account": "google_service_account",
 }
 
-# List of special resources and handler function name
-GCP_SPECIAL_RESOURCES = {
-    "google_project": "gcp_handle_project",
-    "google_compute_network": "gcp_handle_vpc",
-    "google_compute_subnetwork": "gcp_handle_subnet",
-    "google_compute_firewall": "gcp_handle_firewall",
-    "google_container_cluster": "gcp_handle_gke",
-    "google_compute_instance_group": "gcp_handle_instance_group",
-    "google_compute_backend_service": "gcp_handle_backend_service",
-    "google_": "gcp_handle_sharedgroup",
-    "random_string": "random_string_handler",
-}
+# Special resources that need custom handling
+# TODO: Migrate to config-driven approach like AWS (see resource_handler_configs_google.py)
+# For now, keeping manual dict until GCP handlers are refactored
+from modules.config.resource_handler_configs_google import RESOURCE_HANDLER_CONFIGS
+
+# Generate from config if available, otherwise use manual dict
+if RESOURCE_HANDLER_CONFIGS:
+    GCP_SPECIAL_RESOURCES = {
+        pattern: config.get("additional_handler_function", f"config_handler_{pattern}")
+        for pattern, config in RESOURCE_HANDLER_CONFIGS.items()
+    }
+else:
+    # Manual dict (legacy - will be removed once handlers are migrated)
+    GCP_SPECIAL_RESOURCES = {
+        "google_project": "gcp_handle_project",
+        "google_compute_network": "gcp_handle_vpc",
+        "google_compute_subnetwork": "gcp_handle_subnet",
+        "google_compute_firewall": "gcp_handle_firewall",
+        "google_container_cluster": "gcp_handle_gke",
+        "google_compute_instance_group": "gcp_handle_instance_group",
+        "google_compute_backend_service": "gcp_handle_backend_service",
+        "google_": "gcp_handle_sharedgroup",
+        "random_string": "random_string_handler",
+    }
 
 GCP_SHARED_SERVICES = [
     "google_kms_key_ring",

@@ -34,7 +34,7 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 - `aws_db_subnet_group` - Move and delete
 - `aws_` (pattern) - Group shared services
 
-### 2. Pure Function (9 AWS handlers)
+### 2. Pure Function (6 AWS handlers)
 
 **Use when**: Complex logic that can't be expressed declaratively
 
@@ -43,8 +43,8 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 - Dynamic name generation
 - Bidirectional relationship manipulation
 - Metadata parsing and propagation
-- Try/except error handling
-- Domain-specific logic (CloudFront origins, Karpenter detection)
+- Domain-specific logic (Karpenter detection, chart-specific behavior)
+- Selective copying with filtering
 
 **Example**:
 ```python
@@ -54,17 +54,14 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 ```
 
 **Current AWS handlers**:
-- `aws_cloudfront_distribution` - Origin domain parsing
-- `aws_subnet` - Dynamic AZ node creation
-- `aws_appautoscaling_target` - Count propagation
-- `aws_efs_file_system` - Bidirectional relationships
+- `aws_appautoscaling_target` - Count propagation + connection redirection
 - `aws_security_group` - Reverse relationships
 - `aws_lb` - Metadata parsing
 - `aws_ecs` - Conditional logic
 - `aws_eks` - Cluster grouping + Karpenter
 - `helm_release` - Chart-specific logic
 
-### 3. Hybrid (0 AWS handlers currently)
+### 3. Hybrid (3 AWS handlers)
 
 **Use when**: Common operations + unique logic
 
@@ -75,15 +72,22 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 
 **Example**:
 ```python
-"aws_complex_resource": {
+"aws_subnet": {
+    "handler_execution_order": "before",  # Run custom function FIRST
+    "additional_handler_function": "aws_prepare_subnet_az_metadata",
     "transformations": [
-        {"operation": "expand_to_numbered_instances", "params": {...}},
+        {"operation": "insert_intermediate_node", "params": {...}},
     ],
-    "additional_handler_function": "aws_handle_complex_custom",
 }
 ```
 
-**Execution order**: Config transformations → Custom function
+**Execution order**: Config transformations → Custom function (default: "after")
+- Use `handler_execution_order: "before"` to run custom function first
+
+**Current AWS handlers**:
+- `aws_subnet` - Metadata prep (before) + insert_intermediate_node transformer (51→39 lines, 24% reduction)
+- `aws_cloudfront_distribution` - Link transformers + custom origin parsing
+- `aws_efs_file_system` - Bidirectional link transformer + custom cleanup logic
 
 ## Architecture Components
 
@@ -93,7 +97,7 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 - `modules/config/resource_handler_configs_azure.py` - Azure handler configs
 
 ### Transformer Functions
-- `modules/resource_transformers.py` - 14 reusable transformation building blocks
+- `modules/resource_transformers.py` - 24 reusable transformation building blocks
 
 ### Handler Functions
 - `modules/resource_handlers_aws.py` - AWS custom handler functions
@@ -116,36 +120,68 @@ TerraVision uses a **hybrid configuration-driven architecture** for processing c
 3. Continue to next handler
 ```
 
-## 14 Available Transformers
+## 24 Available Transformers
 
 **Expansion**: `expand_to_numbered_instances`, `clone_with_suffix`
 
-**Grouping**: `create_group_node`, `group_shared_services`, `move_to_parent`, `move_to_vpc_parent`
+**Grouping**: `create_group_node`, `group_shared_services`, `move_to_parent`, `move_to_vpc_parent`, `consolidate_into_single_node`
 
-**Connections**: `link_resources`, `unlink_resources`, `redirect_connections`, `redirect_to_security_group`, `match_by_suffix`
+**Connections**: `link_resources`, `unlink_resources`, `unlink_from_parents`, `redirect_connections`, `redirect_to_security_group`, `match_by_suffix`, `link_via_shared_child`, `link_by_metadata_pattern`, `create_transitive_links`, `bidirectional_link`, `replace_connection_targets`
+
+**Graph Manipulation**: `insert_intermediate_node`
+
+**Metadata**: `propagate_metadata`
 
 **Cleanup**: `delete_nodes`
 
 **Variants**: `apply_resource_variants`, `apply_all_variants`
 
+**Pipeline**: `apply_transformation_pipeline`
+
+### Automatic Function Resolution
+
+Parameters ending in `_function` or `_generator` are **automatically resolved** from string names to actual function references from handler modules (`resource_handlers_aws.py`, `resource_handlers_gcp.py`, `resource_handlers_azure.py`).
+
+**Example**:
+```python
+"transformations": [
+    {
+        "operation": "insert_intermediate_node",
+        "params": {
+            "intermediate_node_generator": "generate_az_node_name",  # String in config
+        },
+    },
+]
+# Automatically resolved at runtime to: handlers_aws.generate_az_node_name (function reference)
+```
+
+This allows configuration files to specify callable parameters without module imports or manual function mapping.
+
 ## Key Decisions
 
-### Why Keep 9 Handlers as Functions?
+### Why Keep 6 Handlers as Pure Functions?
 
 After analysis, these handlers require Python functions because they involve:
 
-1. **Domain matching logic** (CloudFront origins)
-2. **Dynamic name generation** (AZ nodes with suffix calculation)
-3. **Count propagation with try/except** (autoscaling targets)
-4. **Bidirectional relationship manipulation** (EFS mount targets)
-5. **Complex conditional logic** (security group reverse relationships)
-6. **Metadata parsing** (load balancer target groups)
-7. **Chart-specific behavior** (Helm releases)
-8. **Complex detection logic** (EKS Karpenter support)
+1. **Count propagation with selective filtering** (autoscaling targets - copy to services but not policies)
+2. **Complex conditional logic** (security group reverse relationships)
+3. **Metadata parsing and redirection** (load balancer target groups)
+4. **Chart-specific behavior** (Helm releases, ECS task definitions)
+5. **Complex detection logic** (EKS Karpenter support)
 
 These operations are too complex to express declaratively with current transformers.
 
-### Why Migrate 7 Handlers to Config?
+### Why Use Hybrid for 3 Handlers?
+
+These handlers combine generic operations with custom logic:
+
+1. **aws_subnet** - Generic `insert_intermediate_node` transformer + custom metadata prep
+2. **aws_cloudfront_distribution** - Generic link transformers + custom origin domain parsing
+3. **aws_efs_file_system** - Generic `bidirectional_link` transformer + custom cleanup
+
+Result: 24% code reduction for aws_subnet (51→39 lines) while maintaining clarity.
+
+### Why Migrate 7 Handlers to Pure Config?
 
 These handlers only needed simple operations:
 - Expand resources to numbered instances
@@ -154,7 +190,7 @@ These handlers only needed simple operations:
 - Link/unlink resources
 - Group shared services
 
-All expressible with existing transformers → 76% code reduction (360 lines → 85 lines).
+All expressible with existing transformers → 70% code reduction (360 lines → 85 lines).
 
 ## Benefits
 

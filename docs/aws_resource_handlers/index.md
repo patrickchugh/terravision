@@ -7,8 +7,8 @@ This summary document describes how TerraVision processes AWS Terraform resource
 TerraVision uses a **hybrid configuration-driven approach** for resource handlers:
 
 - **Pure config-driven** (7 handlers): Simple operations using transformation building blocks
-- **Pure function** (9 handlers): Complex logic requiring custom Python code
-- **Hybrid** (0 handlers): Mix of config transformations and custom functions
+- **Hybrid** (3 handlers): Mix of config transformations and custom functions
+- **Pure function** (6 handlers): Complex logic requiring custom Python code
 
 See `docs/HANDLER_ARCHITECTURE.md` for complete overview.
 

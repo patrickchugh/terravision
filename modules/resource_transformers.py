@@ -909,31 +909,56 @@ def bidirectional_link(
 def propagate_metadata(
     tfdata: Dict[str, Any],
     source_pattern: str,
-    target_pattern: str,
+    target_pattern: str = "",
     metadata_keys: Optional[List[str]] = None,
     direction: str = "forward",
     copy_from_connections: bool = False,
+    propagate_to_children: bool = False,
 ) -> Dict[str, Any]:
     """Propagate metadata values from source to target resources.
 
     Args:
         tfdata: Terraform data dictionary
         source_pattern: Pattern to match source resources
-        target_pattern: Pattern to match target resources
+        target_pattern: Pattern to match target resources (empty if propagate_to_children=True)
         metadata_keys: List of metadata keys to propagate (None = copy all keys)
         direction: "forward" (source→target), "reverse" (target→source), or "bidirectional"
         copy_from_connections: Copy metadata from resources connected to source
+        propagate_to_children: Propagate to all children of source (ignores target_pattern)
 
     Returns:
         Updated tfdata with propagated metadata
     """
     sources = helpers.list_of_dictkeys_containing(tfdata["graphdict"], source_pattern)
-    targets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], target_pattern)
+
+    # Determine targets based on mode
+    if propagate_to_children:
+        # Propagate to all children of sources
+        targets = []
+        for source in sources:
+            children = tfdata["graphdict"].get(source, [])
+            # Filter by target_pattern if provided
+            if target_pattern:
+                children = [c for c in children if target_pattern in c]
+            targets.extend(children)
+        targets = list(set(targets))  # Remove duplicates
+    else:
+        targets = helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], target_pattern
+        )
 
     for source in sources:
         source_metadata = tfdata["meta_data"].get(source, {})
 
-        for target in targets:
+        # When propagating to children, get children for this specific source
+        if propagate_to_children:
+            source_targets = tfdata["graphdict"].get(source, [])
+            if target_pattern:
+                source_targets = [t for t in source_targets if target_pattern in t]
+        else:
+            source_targets = targets
+
+        for target in source_targets:
             if target not in tfdata["meta_data"]:
                 tfdata["meta_data"][target] = {}
 
@@ -1073,39 +1098,28 @@ def apply_transformation_pipeline(
 ) -> Dict[str, Any]:
     """Apply a sequence of transformations from configuration.
 
+    Transformers are automatically discovered by name from this module's globals.
+    The operation name in config must match the transformer function name exactly.
+
+    Function parameters ending in '_function' or '_generator' are automatically
+    resolved from string names to actual function references from handler modules.
+
     Args:
         tfdata: Terraform data dictionary
-        transformations: List of transformation configs
+        transformations: List of transformation configs with 'operation' and 'params' keys
+                        (params ending in _function or _generator are auto-resolved)
 
     Returns:
         Updated tfdata after all transformations
-    """
-    transformer_map = {
-        "expand_to_numbered_instances": expand_to_numbered_instances,
-        "apply_resource_variants": apply_resource_variants,
-        "create_group_node": create_group_node,
-        "move_to_parent": move_to_parent,
-        "link_resources": link_resources,
-        "unlink_resources": unlink_resources,
-        "delete_nodes": delete_nodes,
-        "match_by_suffix": match_by_suffix,
-        "redirect_connections": redirect_connections,
-        "clone_with_suffix": clone_with_suffix,
-        "apply_all_variants": apply_all_variants,
-        "move_to_vpc_parent": move_to_vpc_parent,
-        "redirect_to_security_group": redirect_to_security_group,
-        "group_shared_services": group_shared_services,
-        "link_via_shared_child": link_via_shared_child,
-        "link_by_metadata_pattern": link_by_metadata_pattern,
-        "create_transitive_links": create_transitive_links,
-        "unlink_from_parents": unlink_from_parents,
-        "insert_intermediate_node": insert_intermediate_node,
-        "bidirectional_link": bidirectional_link,
-        "propagate_metadata": propagate_metadata,
-        "consolidate_into_single_node": consolidate_into_single_node,
-        "replace_connection_targets": replace_connection_targets,
-    }
 
+    Example:
+        transformations = [
+            {"operation": "expand_to_numbered_instances", "params": {...}},
+            {"operation": "insert_intermediate_node", "params": {
+                "intermediate_node_generator": "generate_az_node_name"  # Auto-resolved
+            }},
+        ]
+    """
     for transform_config in transformations:
         operation = transform_config.get("operation")
         params = transform_config.get(
@@ -1113,29 +1127,38 @@ def apply_transformation_pipeline(
         ).copy()  # Copy to avoid modifying original
 
         # Resolve function name strings to actual function references
-        if operation == "insert_intermediate_node":
-            gen_func_name = params.get("intermediate_node_generator")
-            if isinstance(gen_func_name, str):
-                # Import and resolve the function by name
-                import modules.resource_handlers_aws as handlers_aws
-                import modules.resource_handlers_gcp as handlers_gcp
-                import modules.resource_handlers_azure as handlers_azure
+        # Any parameter ending in _function or _generator is expected to be callable
+        import modules.resource_handlers_aws as handlers_aws
+        import modules.resource_handlers_gcp as handlers_gcp
+        import modules.resource_handlers_azure as handlers_azure
 
+        for param_name, param_value in params.items():
+            if isinstance(param_value, str) and (
+                param_name.endswith("_function") or param_name.endswith("_generator")
+            ):
                 # Try to find the function in handler modules
-                if hasattr(handlers_aws, gen_func_name):
-                    params["intermediate_node_generator"] = getattr(
-                        handlers_aws, gen_func_name
-                    )
-                elif hasattr(handlers_gcp, gen_func_name):
-                    params["intermediate_node_generator"] = getattr(
-                        handlers_gcp, gen_func_name
-                    )
-                elif hasattr(handlers_azure, gen_func_name):
-                    params["intermediate_node_generator"] = getattr(
-                        handlers_azure, gen_func_name
+                if hasattr(handlers_aws, param_value):
+                    params[param_name] = getattr(handlers_aws, param_value)
+                elif hasattr(handlers_gcp, param_value):
+                    params[param_name] = getattr(handlers_gcp, param_value)
+                elif hasattr(handlers_azure, param_value):
+                    params[param_name] = getattr(handlers_azure, param_value)
+                else:
+                    raise ValueError(
+                        f"Could not resolve function '{param_value}' for parameter '{param_name}'. "
+                        f"Make sure the function exists in one of the handler modules."
                     )
 
-        if operation in transformer_map:
-            tfdata = transformer_map[operation](tfdata, **params)
+        # Dynamically look up transformer function by name
+        # Operation name must match function name exactly
+        transformer_func = globals().get(operation)
+
+        if transformer_func and callable(transformer_func):
+            tfdata = transformer_func(tfdata, **params)
+        else:
+            raise ValueError(
+                f"Unknown transformer operation: '{operation}'. "
+                f"Make sure the operation name matches a transformer function in resource_transformers.py"
+            )
 
     return tfdata

@@ -42,74 +42,97 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle AWS autoscaling group relationships and counts.
+    """Handle AWS autoscaling relationships and counts.
+
+    Part 1: Copies subnet count metadata to autoscaling targets and their ECS services
+    Part 2: Redirects subnet→service connections to subnet→ASG
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with autoscaling relationships configured
+        Updated tfdata with autoscaling configured
     """
+    # Get all autoscaling resources
+    asg_resources = [
+        r
+        for r in tfdata["graphdict"]
+        if helpers.get_no_module_name(r).startswith("aws_appautoscaling_target")
+    ]
+
+    if not asg_resources:
+        return tfdata
+
+    # Get services connected to ASG (children)
     try:
-        # Find autoscaling target connections
         scaler_links = next(
             v
             for k, v in tfdata["graphdict"].items()
             if "aws_appautoscaling_target" in k
         )
-        # Get all autoscaling resources
-        asg_resources = [
-            r
-            for r in tfdata["graphdict"]
-            if helpers.get_no_module_name(r).startswith("aws_appautoscaling_target")
-        ]
-        # Process each autoscaling group
-        for asg in asg_resources:
-            new_list = list()
-            for check_service in scaler_links:
-                # Find all subnets in the graph
-                possible_subnets = [
-                    k
-                    for k in tfdata["graphdict"]
-                    if helpers.get_no_module_name(k).startswith("aws_subnet")
-                ]
-                # Check if service is in subnet (part of ASG)
-                for sub in possible_subnets:
-                    if check_service in tfdata["graphdict"][sub]:
-                        new_list.append(sub)
-                # Copy subnet count to ASG and service
-                for subnet in new_list:
-                    if not tfdata["meta_data"][asg].get("count"):
-                        count_value = tfdata["meta_data"][subnet]["count"]
+    except StopIteration:
+        return tfdata
+
+    # Find all subnets
+    possible_subnets = [
+        k
+        for k in tfdata["graphdict"]
+        if helpers.get_no_module_name(k).startswith("aws_subnet")
+    ]
+
+    # Part 1: Count propagation
+    for asg in asg_resources:
+        # Skip if ASG already has count
+        if tfdata["meta_data"].get(asg, {}).get("count"):
+            continue
+
+        # Find subnets that have services as children (shared with ASG)
+        for service in scaler_links:
+            for subnet in possible_subnets:
+                if service in tfdata["graphdict"].get(subnet, []):
+                    # Copy subnet count to ASG and service
+                    count_value = tfdata["meta_data"].get(subnet, {}).get("count")
+                    if count_value is not None:
+                        # Copy to ASG
+                        if asg not in tfdata["meta_data"]:
+                            tfdata["meta_data"][asg] = {}
                         tfdata["meta_data"][asg]["count"] = (
                             int(count_value)
                             if isinstance(count_value, (int, str))
                             else count_value
                         )
-                        tfdata["meta_data"][check_service]["count"] = (
-                            int(count_value)
-                            if isinstance(count_value, (int, str))
-                            else count_value
-                        )
-    except:
-        pass
-    # Replace subnet references to ASG targets with ASG itself
+
+                        # Copy to services (not policies)
+                        if "policy" not in service.lower():
+                            if service not in tfdata["meta_data"]:
+                                tfdata["meta_data"][service] = {}
+                            tfdata["meta_data"][service]["count"] = (
+                                int(count_value)
+                                if isinstance(count_value, (int, str))
+                                else count_value
+                            )
+                    break  # Found subnet for this service, move to next service
+
+    # Part 2: Connection redirection (subnet→service becomes subnet→ASG)
     for asg in asg_resources:
-        for connection in sorted(tfdata["graphdict"][asg]):
+        for connection in sorted(tfdata["graphdict"].get(asg, [])):
+            # Find subnets that have this service as child
             asg_target_parents = helpers.list_of_parents(
                 tfdata["graphdict"], connection
             )
-            # Find subnets that reference this ASG target
             subnets_to_change = [
                 k
                 for k in asg_target_parents
                 if helpers.get_no_module_name(k).startswith("aws_subnet")
             ]
-            # Update subnet connections
+
+            # Redirect subnet→service to subnet→ASG
             for subnet in subnets_to_change:
                 if asg not in tfdata["graphdict"][subnet]:
                     tfdata["graphdict"][subnet].append(asg)
-                tfdata["graphdict"][subnet].remove(connection)
+                if connection in tfdata["graphdict"][subnet]:
+                    tfdata["graphdict"][subnet].remove(connection)
+
     return tfdata
 
 
@@ -618,12 +641,11 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 or tfdata["meta_data"][connection].get("desired_count")
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
-                if int(tfdata["meta_data"][connection]["count"]) > int(
+                conn_count = tfdata["meta_data"][connection].get("count")
+                if conn_count and int(conn_count) > int(
                     tfdata["meta_data"][renamed_node]["count"]
                 ):
-                    tfdata["meta_data"][renamed_node]["count"] = int(
-                        tfdata["meta_data"][connection]["count"]
-                    )
+                    tfdata["meta_data"][renamed_node]["count"] = int(conn_count)
                     plist = sorted(
                         helpers.list_of_parents(tfdata["graphdict"], renamed_node)
                     )

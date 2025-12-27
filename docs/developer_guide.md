@@ -149,8 +149,8 @@ TerraVision uses a hybrid configuration-driven approach for resource handlers. H
 **Three handler types:**
 
 1. **Pure config-driven**: Use only transformation building blocks (7 AWS handlers)
-2. **Hybrid**: Use transformations + custom Python function (0 AWS handlers currently)
-3. **Pure function**: Use only custom Python function (9 AWS handlers)
+2. **Hybrid**: Use transformations + custom Python function (3 AWS handlers)
+3. **Pure function**: Use only custom Python function (6 AWS handlers)
 
 ```python
 # modules/config/resource_handler_configs_aws.py

@@ -170,19 +170,86 @@ The main processing pipeline in `terravision.py` follows this flow:
 
 ### Resource Handlers Pattern
 
-Special resources (VPCs, security groups, load balancers) have custom handlers defined in `SPECIAL_RESOURCES` dict in each `cloud_config_*.py`:
+TerraVision uses a **config-driven resource handler architecture** that supports three handler types:
+
+#### Handler Types
+
+**1. Pure Config-Driven** (7 AWS handlers)
+- Uses only declarative transformation building blocks
+- Defined in `modules/config/resource_handler_configs_aws.py`
+- Example: `aws_vpc_endpoint`, `aws_eks_node_group`, `aws_db_subnet_group`
+- **When to use**: Simple, repetitive operations (move, link, delete, expand)
+
+**2. Hybrid** (3 AWS handlers)
+- Uses transformations + custom Python function
+- Transformations run first (or last via `handler_execution_order`)
+- Examples:
+  - `aws_subnet` (metadata prep + insert_intermediate_node transformer)
+  - `aws_cloudfront_distribution` (link transformers + origin parsing)
+  - `aws_efs_file_system` (bidirectional_link + custom cleanup)
+- **When to use**: Common operations + unique logic
+
+**3. Pure Function** (6 AWS handlers)
+- Uses only custom Python code
+- Defined in `resource_handlers_aws.py`, referenced in config
+- Examples: `aws_security_group`, `aws_lb`, `aws_appautoscaling_target`
+- **When to use**: Complex conditional logic, domain-specific patterns that don't map to generic transformers
+
+#### Configuration Location
+
+All handlers are defined in `modules/config/resource_handler_configs_<provider>.py`:
 
 ```python
-# cloud_config_aws.py
-AWS_SPECIAL_RESOURCES = {
-    "aws_vpc": "handle_vpc",
-    "aws_subnet": "handle_subnet",
-    "aws_security_group": "handle_security_group",
-    # ... mapped to functions in resource_handlers_aws.py
+RESOURCE_HANDLER_CONFIGS = {
+    # Pure Config-Driven
+    "aws_vpc_endpoint": {
+        "description": "Move VPC endpoints into VPC parent and delete endpoint nodes",
+        "transformations": [
+            {"operation": "move_to_parent", "params": {...}},
+            {"operation": "delete_nodes", "params": {...}},
+        ],
+    },
+
+    # Hybrid (transformations + custom function)
+    "aws_subnet": {
+        "description": "Create availability zone nodes and link to subnets",
+        "handler_execution_order": "before",  # Run custom function FIRST
+        "additional_handler_function": "aws_prepare_subnet_az_metadata",
+        "transformations": [
+            {"operation": "insert_intermediate_node", "params": {...}},
+        ],
+    },
+
+    # Pure Function
+    "aws_security_group": {
+        "description": "Process security group relationships and reverse connections",
+        "additional_handler_function": "aws_handle_sg",
+    },
 }
 ```
 
-The `handle_special_resources()` function in `graphmaker.py` dispatches to the appropriate handler module.
+#### Execution Order
+
+By default, transformations run first, then the custom handler function. Use `handler_execution_order: "before"` to reverse this:
+
+```python
+"handler_execution_order": "before",  # Run custom function BEFORE transformations
+"handler_execution_order": "after",   # Run custom function AFTER transformations (default)
+```
+
+#### Legacy Pattern (Deprecated)
+
+The old `AWS_SPECIAL_RESOURCES` dict in `cloud_config_*.py` is deprecated in favor of the config-driven approach:
+
+```python
+# OLD (Deprecated)
+AWS_SPECIAL_RESOURCES = {
+    "aws_vpc": "handle_vpc",
+    "aws_subnet": "handle_subnet",
+}
+```
+
+The `handle_special_resources()` function in `graphmaker.py` now uses `RESOURCE_HANDLER_CONFIGS` from the config files.
 
 ### Numbered Resources (Count/For_Each)
 

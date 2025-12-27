@@ -27,22 +27,47 @@ This led to:
 
 ### Core Transformers (`resource_transformers.py`)
 
-14 reusable transformation operations:
+24 reusable transformation operations organized by category:
 
+**Resource Expansion:**
 1. **expand_to_numbered_instances** - Create ~1, ~2, ~3 instances per subnet
-2. **apply_resource_variants** - Change resource type based on metadata
+2. **clone_with_suffix** - Duplicate resources with numbered suffixes
+
+**Resource Grouping:**
 3. **create_group_node** - Add container/group nodes
-4. **move_to_parent** - Relocate resources in hierarchy
-5. **move_to_vpc_parent** - Move resources to VPC level
-6. **link_resources** - Add connections between resources
-7. **unlink_resources** - Remove connections
-8. **delete_nodes** - Remove resources from graph
-9. **match_by_suffix** - Link resources with same ~N suffix
-10. **redirect_connections** - Change parent references
-11. **redirect_to_security_group** - Redirect to security groups if present
-12. **clone_with_suffix** - Duplicate resources with numbers
-13. **group_shared_services** - Group shared services together
-14. **apply_all_variants** - Apply all variants globally
+4. **group_shared_services** - Group shared services together (IAM, CloudWatch, etc.)
+5. **move_to_parent** - Relocate resources in hierarchy
+6. **move_to_vpc_parent** - Move resources to VPC level
+7. **consolidate_into_single_node** - Merge multiple resources into one
+
+**Connections:**
+8. **link_resources** - Add connections between resources
+9. **unlink_resources** - Remove connections
+10. **unlink_from_parents** - Remove child from parent connections
+11. **redirect_connections** - Change parent references
+12. **redirect_to_security_group** - Redirect to security groups if present
+13. **match_by_suffix** - Link resources with same ~N suffix
+14. **link_via_shared_child** - Create direct links when resources share a child
+15. **link_by_metadata_pattern** - Create links based on metadata patterns
+16. **create_transitive_links** - Create transitive connections through intermediates
+17. **bidirectional_link** - Create bidirectional connections between resources
+18. **replace_connection_targets** - Replace old connection targets with new ones
+
+**Graph Manipulation:**
+19. **insert_intermediate_node** - Insert intermediate nodes between parents and children
+
+**Metadata Operations:**
+20. **propagate_metadata** - Copy metadata from source to target resources
+
+**Cleanup:**
+21. **delete_nodes** - Remove resources from graph
+
+**Variants:**
+22. **apply_resource_variants** - Change resource type based on metadata
+23. **apply_all_variants** - Apply all variants globally
+
+**Pipeline:**
+24. **apply_transformation_pipeline** - Execute sequence of transformations
 
 ### Configuration Structure (`resource_handler_configs_<provider>.py`)
 
@@ -67,6 +92,21 @@ RESOURCE_HANDLER_CONFIGS = {
 ```
 
 **Execution Order**: Config transformations run first, then additional handler function (if present).
+
+**Automatic Function Resolution**: Parameters ending in `_function` or `_generator` are automatically resolved from string names to actual function references. This allows config files to specify callable parameters without importing modules.
+
+Example:
+```python
+"transformations": [
+    {
+        "operation": "insert_intermediate_node",
+        "params": {
+            "intermediate_node_generator": "generate_az_node_name",  # String
+        },
+    },
+]
+# Automatically resolved to: handlers_aws.generate_az_node_name
+```
 
 ## Migration Examples
 
@@ -221,14 +261,16 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 - `aws_autoscaling_group` - Link ASG to subnets
 - `random_string` - Disconnect random resources
 - `aws_vpc_endpoint` - Move to VPC and delete
-- `aws_db_subnet_group` - Move to VPC and delete
+- `aws_db_subnet_group` - Move to VPC, redirect to security groups
 - `aws_` (shared services) - Group shared services
 
-**Pure Function** (9 handlers):
-- `aws_cloudfront_distribution` - Complex origin domain parsing
-- `aws_subnet` - Dynamic AZ node creation with suffix logic
-- `aws_appautoscaling_target` - Count propagation with try/except
-- `aws_efs_file_system` - Bidirectional relationship manipulation
+**Hybrid** (3 handlers):
+- `aws_subnet` - Metadata prep (before) + insert_intermediate_node transformer
+- `aws_cloudfront_distribution` - Link transformers + custom origin parsing
+- `aws_efs_file_system` - Bidirectional link transformer + custom cleanup logic
+
+**Pure Function** (6 handlers - too complex for config):
+- `aws_appautoscaling_target` - Count propagation + connection redirection
 - `aws_security_group` - Complex reverse relationship logic
 - `aws_lb` - Metadata parsing and connection redirection
 - `aws_ecs` - Chart-specific conditional logic

@@ -153,17 +153,29 @@ AZURE_IMPLIED_CONNECTIONS = {
     "storage_account_id": "azurerm_storage_account",
 }
 
-# List of special resources and handler function name
-AZURE_SPECIAL_RESOURCES = {
-    "azurerm_resource_group": "azure_handle_resource_group",
-    "azurerm_virtual_network": "azure_handle_vnet",
-    "azurerm_subnet": "azure_handle_subnet",
-    "azurerm_network_security_group": "azure_handle_nsg",
-    "azurerm_virtual_machine_scale_set": "azure_handle_vmss",
-    "azurerm_application_gateway": "azure_handle_appgw",
-    "azurerm_": "azure_handle_sharedgroup",
-    "random_string": "random_string_handler",
-}
+# Special resources that need custom handling
+# TODO: Migrate to config-driven approach like AWS (see resource_handler_configs_azure.py)
+# For now, keeping manual dict until Azure handlers are refactored
+from modules.config.resource_handler_configs_azure import RESOURCE_HANDLER_CONFIGS
+
+# Generate from config if available, otherwise use manual dict
+if RESOURCE_HANDLER_CONFIGS:
+    AZURE_SPECIAL_RESOURCES = {
+        pattern: config.get("additional_handler_function", f"config_handler_{pattern}")
+        for pattern, config in RESOURCE_HANDLER_CONFIGS.items()
+    }
+else:
+    # Manual dict (legacy - will be removed once handlers are migrated)
+    AZURE_SPECIAL_RESOURCES = {
+        "azurerm_resource_group": "azure_handle_resource_group",
+        "azurerm_virtual_network": "azure_handle_vnet",
+        "azurerm_subnet": "azure_handle_subnet",
+        "azurerm_network_security_group": "azure_handle_nsg",
+        "azurerm_virtual_machine_scale_set": "azure_handle_vmss",
+        "azurerm_application_gateway": "azure_handle_appgw",
+        "azurerm_": "azure_handle_sharedgroup",
+        "random_string": "random_string_handler",
+    }
 
 AZURE_SHARED_SERVICES = [
     "azurerm_key_vault",

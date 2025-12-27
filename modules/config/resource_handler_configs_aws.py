@@ -156,6 +156,9 @@ RESOURCE_HANDLER_CONFIGS = {
     },
     "aws_appautoscaling_target": {
         "description": "Handle autoscaling target relationships and counts",
+        # Pure function handler - logic is too specific for generic transformers
+        # Handles: 1) Count propagation from subnet to ASG/services
+        #          2) Connection redirection (subnet→service becomes subnet→ASG)
         "additional_handler_function": "aws_handle_autoscaling",
     },
     "aws_efs_file_system": {

@@ -211,23 +211,18 @@ AWS_IMPLIED_CONNECTIONS = {
     "container_definitions": "aws_ecr_repository",
 }
 
-# List of special resources and handler function name
-# NOTE: Handlers migrated to config-driven approach in resource_handler_configs_aws.py:
-# - aws_eks_node_group, aws_eks_fargate_profile, aws_autoscaling_group
-# - random_string
-# - aws_vpc_endpoint (move to VPC parent + delete)
-# - aws_db_subnet_group (move to VPC + redirect to security groups)
-# - aws_shared_services (group shared services)
+# Special resources that need custom handling
+# This dict is automatically generated from RESOURCE_HANDLER_CONFIGS to maintain
+# backward compatibility with code that checks SPECIAL_RESOURCES.keys()
+#
+# See resource_handler_configs_aws.py for the config-driven approach (single source of truth)
+from modules.config.resource_handler_configs_aws import RESOURCE_HANDLER_CONFIGS
+
+# Generate AWS_SPECIAL_RESOURCES from RESOURCE_HANDLER_CONFIGS
+# Include any resource pattern that has transformations or additional handlers
 AWS_SPECIAL_RESOURCES = {
-    "aws_cloudfront_distribution": "aws_handle_cloudfront_pregraph",
-    "aws_subnet": "aws_handle_subnet_azs",
-    "aws_appautoscaling_target": "aws_handle_autoscaling",
-    "aws_efs_file_system": "aws_handle_efs",
-    "aws_security_group": "aws_handle_sg",
-    "aws_lb": "aws_handle_lb",
-    "aws_ecs": "aws_handle_ecs",
-    "aws_eks": "aws_handle_eks",
-    "helm_release": "helm_release_handler",
+    pattern: config.get("additional_handler_function", f"config_handler_{pattern}")
+    for pattern, config in RESOURCE_HANDLER_CONFIGS.items()
 }
 
 AWS_SHARED_SERVICES = [

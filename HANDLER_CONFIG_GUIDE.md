@@ -104,19 +104,40 @@ Uses only custom Python function for complex logic that can't be expressed with 
 
 ## Execution Order
 
-When a resource pattern matches:
+By default, when a resource pattern matches:
 
 1. **Config-driven transformations** are applied first (if `transformations` key exists)
 2. **Additional handler function** is called second (if `additional_handler_function` key exists)
 
+You can reverse this order using the `handler_execution_order` parameter:
+
+```python
+"handler_execution_order": "before",  # Run custom function BEFORE transformations
+"handler_execution_order": "after",   # Run custom function AFTER transformations (default)
+```
+
+**Use Case for "before"**: When transformations need prepared metadata from the custom function.
+
+**Example:**
+```python
+"aws_subnet": {
+    "handler_execution_order": "before",  # Run metadata prep FIRST
+    "additional_handler_function": "aws_prepare_subnet_az_metadata",  # Copies metadata
+    "transformations": [
+        {"operation": "insert_intermediate_node", ...},  # Uses prepared metadata
+    ],
+}
+```
+
 This allows you to:
 - Reuse common transformations across handlers
 - Only write custom code for unique logic
+- Control execution flow for complex scenarios
 - Gradually migrate complex handlers to config-driven approach
 
 ## Available Transformers
 
-All transformers are defined in `modules/resource_transformers.py`:
+All transformers are defined in `modules/resource_transformers.py`. Total: **24 generic transformers**.
 
 ### Resource Expansion
 - **expand_to_numbered_instances** - Create numbered instances per subnet (~1, ~2, ~3)
@@ -127,13 +148,31 @@ All transformers are defined in `modules/resource_transformers.py`:
 - **group_shared_services** - Group shared services together (IAM, CloudWatch, etc.)
 - **move_to_parent** - Move resources between parents
 - **move_to_vpc_parent** - Move resources to VPC level
+- **consolidate_into_single_node** - Merge multiple resources into one
 
 ### Connections
 - **link_resources** - Create connections between resources
-- **unlink_resources** - Remove connections
+- **unlink_resources** - Remove connections between resources
+- **unlink_from_parents** - Remove child from parent connections
 - **redirect_connections** - Redirect connections to different resources
 - **redirect_to_security_group** - Redirect to security groups if present
 - **match_by_suffix** - Link resources with matching ~N suffixes
+- **link_via_shared_child** - Create direct links when resources share a child
+- **link_by_metadata_pattern** - Create links based on metadata patterns
+- **create_transitive_links** - Create transitive connections through intermediates
+- **bidirectional_link** - Create bidirectional connections between resources
+- **replace_connection_targets** - Replace old connection targets with new ones
+
+### Graph Manipulation
+- **insert_intermediate_node** - Insert intermediate nodes between parents and children
+  - Example: VPC→subnet becomes VPC→AZ→subnet
+  - Handles node creation, metadata copying, and connection rewiring
+
+### Metadata Operations
+- **propagate_metadata** - Copy metadata from source to target resources
+  - Supports copying specific keys or all keys
+  - Supports `propagate_to_children: true` to copy to all children
+  - Direction: "forward", "reverse", or "bidirectional"
 
 ### Cleanup
 - **delete_nodes** - Delete nodes from graph
@@ -171,26 +210,29 @@ To migrate a handler from pure function to hybrid or pure config:
 
 **Pure config-driven** (7 handlers):
 - `aws_eks_node_group` - Expand node groups per subnet
-- `aws_eks_fargate_profile` - Expand Fargate profiles per subnet  
+- `aws_eks_fargate_profile` - Expand Fargate profiles per subnet
 - `aws_autoscaling_group` - Link ASG to subnets
 - `random_string` - Disconnect random resources
 - `aws_vpc_endpoint` - Move to VPC and delete
-- `aws_db_subnet_group` - Move to VPC and delete
+- `aws_db_subnet_group` - Move to VPC, redirect to security groups
 - `aws_` (pattern match) - Group shared services
 
-**Pure function** (9 handlers - too complex for config):
-- `aws_cloudfront_distribution` - Complex origin domain parsing + transitive LB links
-- `aws_subnet` - Dynamic AZ node creation with suffix logic
-- `aws_appautoscaling_target` - Count propagation with try/except
-- `aws_efs_file_system` - Bidirectional relationship manipulation
+**Hybrid** (3 handlers):
+- `aws_subnet` - Metadata prep (before) + `insert_intermediate_node` transformer
+  - Creates VPC→AZ→subnet structure
+  - 51 lines → 39 lines (24% reduction)
+- `aws_cloudfront_distribution` - Link transformers + custom origin parsing
+- `aws_efs_file_system` - Bidirectional link transformer + custom cleanup logic
+
+**Pure function** (6 handlers - too complex for config):
+- `aws_appautoscaling_target` - Count propagation + connection redirection
+  - Logic too specific: conditional copying, policy filtering
+  - Improved: removed dangerous `try/except: pass`, added explicit checks
 - `aws_security_group` - Complex reverse relationship logic
 - `aws_lb` - Metadata parsing and connection redirection
 - `aws_ecs` - Chart-specific conditional logic
 - `aws_eks` - Complex cluster grouping and Karpenter detection
 - `helm_release` - Chart-specific conditional logic
-
-**Hybrid** (0 handlers currently):
-- None yet, but architecture supports it for future needs
 
 ## Example: Before and After
 
@@ -221,3 +263,141 @@ AWS_SPECIAL_RESOURCES = {
 ```
 
 **Result**: 30 lines of Python → 10 lines of config (67% reduction)
+
+## Decision Guide: Which Handler Type to Use?
+
+Use this decision tree to determine the best approach for a new or existing handler:
+
+### Start Here
+
+```
+Does the handler involve complex conditional logic?
+├─ YES → Is the logic domain-specific (can't be generalized)?
+│  ├─ YES → Use Pure Function
+│  │         Examples: Security group reverse relationships,
+│  │                   autoscaling count propagation with policy filtering
+│  └─ NO → Can you break it into generic operations + custom logic?
+│     ├─ YES → Use Hybrid
+│     │         Examples: Subnet (metadata prep + insert intermediate node),
+│     │                   EFS (bidirectional link + custom cleanup)
+│     └─ NO → Use Pure Config-Driven
+│               Examples: VPC endpoint (move + delete),
+│                         EKS node group (expand to numbered instances)
+└─ NO → Can the entire operation be expressed with existing transformers?
+   ├─ YES → Use Pure Config-Driven
+   │         Examples: DB subnet group (move + redirect),
+   │                   Random string (delete nodes)
+   └─ NO → Would creating a new generic transformer be useful?
+      ├─ YES → Create transformer, then use Pure Config-Driven
+      │         Examples: insert_intermediate_node, propagate_metadata
+      └─ NO → Use Hybrid or Pure Function
+                Examples: Custom domain parsing, chart-specific logic
+```
+
+### Quick Reference
+
+| Characteristic | Pure Config | Hybrid | Pure Function |
+|----------------|-------------|--------|---------------|
+| **Code lines** | 0 Python, 10-20 config | 20-40 Python, 10-20 config | 50-150 Python, 5 config |
+| **Complexity** | Simple operations | Medium complexity | High complexity |
+| **Reusability** | 100% (all generic) | 50-80% (transformers reusable) | 0% (all custom) |
+| **Testability** | Test transformers once | Test function + transformers | Test entire function |
+| **Maintainability** | Easiest (declarative) | Medium (clear separation) | Hardest (procedural) |
+| **Use When** | Simple, repetitive ops | Common ops + unique logic | Complex conditional logic |
+
+### Red Flags for Pure Config
+
+Avoid Pure Config if handler has ANY of these:
+- ❌ Conditional logic based on resource properties (if/else)
+- ❌ Complex loops with nested conditions
+- ❌ Dynamic naming with custom logic (beyond simple patterns)
+- ❌ Try/except error handling
+- ❌ Metadata manipulation with complex rules
+- ❌ Domain-specific parsing (URLs, domains, ARNs)
+
+### Green Lights for Pure Config
+
+Use Pure Config if handler does ALL operations with existing transformers:
+- ✅ Move resources between parents
+- ✅ Create/delete nodes
+- ✅ Link/unlink resources
+- ✅ Expand to numbered instances
+- ✅ Redirect connections
+- ✅ Copy metadata (simple patterns)
+- ✅ Apply variants
+- ✅ Group resources
+
+### When to Choose Hybrid
+
+Choose Hybrid when:
+- ✅ Most operations can use transformers
+- ✅ Custom logic is isolated (metadata prep, name generation)
+- ✅ Custom function is simple (<50 lines)
+- ✅ Clear separation between generic and custom operations
+- ✅ Custom function prepares data for transformers (or vice versa)
+
+**Real Example - Subnet Handler:**
+```python
+# Custom function (21 lines): Copy metadata for transformer to use
+def aws_prepare_subnet_az_metadata(tfdata):
+    for subnet in subnets:
+        tfdata["meta_data"][subnet]["availability_zone"] = original["availability_zone"]
+        tfdata["meta_data"][subnet]["region"] = original["region"]
+    return tfdata
+
+# Transformer (10 lines config): Use prepared metadata to create AZ nodes
+"transformations": [
+    {
+        "operation": "insert_intermediate_node",
+        "params": {
+            "parent_pattern": "aws_vpc",
+            "child_pattern": "aws_subnet",
+            "intermediate_node_generator": "generate_az_node_name",
+        },
+    },
+]
+```
+
+### When to Keep as Pure Function
+
+Keep as Pure Function when:
+- ❌ Transformers would require too many steps (>5 transformations)
+- ❌ Logic has complex conditionals that can't be expressed declaratively
+- ❌ Custom code is <50 lines and very specific to this resource type
+- ❌ Attempting to use transformers causes edge cases or bugs
+- ❌ The logic is well-tested and stable (don't fix what isn't broken)
+
+**Real Example - Autoscaling Handler:**
+```python
+# Kept as Pure Function because:
+# 1. Conditional copying (only if ASG doesn't have count)
+# 2. Selective copying (services yes, policies no)
+# 3. Complex shared-child detection
+# 4. Logic is specific to autoscaling, not generalizable
+
+def aws_handle_autoscaling(tfdata):
+    for asg in asg_resources:
+        if tfdata["meta_data"].get(asg, {}).get("count"):  # Conditional
+            continue
+        for service in scaler_links:
+            if "policy" not in service.lower():  # Selective filtering
+                # Copy count logic...
+    # Connection redirection logic...
+    return tfdata
+```
+
+## Best Practices
+
+1. **Start with Pure Config**: Always try Pure Config first. If you can't express the logic with existing transformers, consider Hybrid or Pure Function.
+
+2. **Create Transformers for Common Patterns**: If you see a pattern used in multiple handlers, create a generic transformer.
+
+3. **Keep Functions Small**: If custom function is >100 lines, consider breaking it into multiple transformers or helper functions.
+
+4. **Document Handler Type**: Always include `"description"` explaining what the handler does and why it's that type.
+
+5. **Test Behavior Preservation**: When refactoring, ensure tests pass without changing expected output.
+
+6. **Use `handler_execution_order`**: When transformers need prepared data, run custom function first with `"handler_execution_order": "before"`.
+
+7. **Avoid Over-Engineering**: Don't create transformers for one-off operations. Pure Function is fine for unique, complex logic.
