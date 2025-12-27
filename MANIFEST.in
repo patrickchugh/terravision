@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include resource_images *.png
+recursive-include hcl2 *.lark
