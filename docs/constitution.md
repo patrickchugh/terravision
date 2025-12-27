@@ -1,19 +1,21 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 → 1.2.0 (added development tooling standards)
+- Version change: 1.2.0 → 1.3.0 (added resource handler implementation guidelines)
 - Modified principles: None
 - Added sections:
-  - Testing Standards > TS-005 (Poetry dependency management)
-  - Testing Standards > TS-006 (Black code formatting)
-  - Testing Standards > TS-007 (Pre-commit hooks)
-  - Quality Requirements > QR-006 (Cache directory standard)
+  - Code Organization > Resource Handler Implementation Guidelines (CO-006 through CO-012)
+- Modified sections:
+  - Code Organization: Added subsection for handler guidelines with config-first approach
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
-  ✅ CLAUDE.md - Contains detailed guidance on Poetry, Black, and pytest that now aligns with constitution
-- Follow-up TODOs: None
+  ✅ CLAUDE.md - Contains detailed guidance on Poetry, Black, pytest, and config-driven handlers
+  ✅ HANDLER_CONFIG_GUIDE.md - Comprehensive guide aligns with CO-006 through CO-012
+  ✅ CONFIGURATION_DRIVEN_HANDLERS.md - Architecture documentation supports new standards
+  ✅ HANDLER_ARCHITECTURE.md - Handler type breakdown aligns with decision hierarchy
+- Follow-up TODOs: Update AZURE_RESOURCE_HANDLERS.md to reflect config-first approach
 -->
 
 # TerraVision Constitution
@@ -88,6 +90,27 @@ All cloud-specific resource handling logic MUST reside exclusively in provider-s
 
 **Rationale**: Strict separation of provider-specific code from common infrastructure ensures maintainability, testability, and extensibility as new cloud providers are added. This architectural boundary prevents provider-specific logic from polluting shared modules and enables teams to add cloud support without risk of breaking existing providers.
 
+#### Resource Handler Implementation Guidelines
+
+All resource handlers MUST follow a **config-first approach**, preferring declarative configuration over imperative Python code. Handlers MUST be implemented using the hybrid configuration-driven architecture in `modules/config/resource_handler_configs_<provider>.py`.
+
+**Enforcement Rules**:
+
+- **CO-006**: Resource handlers MUST be implemented as **Pure Config-Driven** (using only transformation building blocks) whenever possible
+- **CO-007**: Resource handlers SHOULD use **Hybrid approach** (config transformations + custom Python function) when combining generic operations with unique logic
+- **CO-008**: Resource handlers MAY use **Pure Function** (custom Python only) ONLY when logic is too complex to express declaratively (conditional logic with multiple branches, domain-specific parsing, selective filtering with complex rules)
+- **CO-009**: Custom Python handler functions MUST include clear documentation explaining why config-driven approach was insufficient
+- **CO-010**: New transformers SHOULD be added to `resource_transformers.py` when a pattern is reused across 3+ handlers
+- **CO-011**: Handler configurations MUST include descriptive `description` field explaining purpose and handler type rationale
+- **CO-012**: Parameters ending in `_function` or `_generator` in transformation configs are automatically resolved to function references - use this convention for all callable parameters
+
+**Decision Hierarchy** (attempt in order):
+1. **Pure Config-Driven** - Use only existing transformers (70% code reduction, easiest to maintain)
+2. **Hybrid** - Add new generic transformer if pattern is reusable, supplement with custom function for unique logic
+3. **Pure Function** - Only for complex conditional logic that cannot be expressed declaratively
+
+**Rationale**: Config-driven handlers reduce code by 70%, improve maintainability through reusable building blocks, and make transformation logic transparent and testable. Requiring justification for imperative code prevents premature optimization and ensures the transformation library grows to handle common patterns. The automatic function resolution feature enables declarative configs to reference callable parameters without boilerplate.
+
 ### Quality Requirements
 
 - **QR-001**: Architecture diagrams MUST be generated without requiring deployed infrastructure (work from `terraform plan`, not remote state)
@@ -160,4 +183,4 @@ This constitution supersedes all other development practices and documentation. 
 - **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.2.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-25
+**Version**: 1.3.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-27

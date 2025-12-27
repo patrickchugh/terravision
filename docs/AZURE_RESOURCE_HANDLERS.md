@@ -17,6 +17,37 @@ This document describes how TerraVision processes Azure Terraform resources to c
 
 ## Overview
 
+### Handler Architecture
+
+TerraVision uses a **hybrid configuration-driven approach** for implementing Azure resource handlers. Following the project constitution (CO-006 through CO-012), all handlers MUST prioritize declarative configuration over imperative Python code.
+
+**Three Handler Types** (in order of preference):
+
+1. **Pure Config-Driven** ✅ PREFERRED
+   - Use only transformation building blocks from `resource_transformers.py`
+   - Defined entirely in `modules/config/resource_handler_configs_azure.py`
+   - 70% code reduction, easiest to maintain
+   - **Example**: VPC endpoints, DB subnet groups, autoscaling groups
+
+2. **Hybrid** ⚠️ USE WHEN NEEDED
+   - Use config transformations + custom Python function
+   - Generic operations handled by transformers, unique logic in custom function
+   - Best of both worlds
+   - **Example**: Subnet (metadata prep + insert_intermediate_node transformer)
+
+3. **Pure Function** ❌ LAST RESORT
+   - Use only when logic is too complex for declarative approach
+   - Requires documentation explaining why config-driven was insufficient
+   - **Example**: Security groups (complex reverse relationships)
+
+**Implementation Workflow**:
+1. Attempt Pure Config-Driven using existing transformers
+2. If pattern is reusable, create new generic transformer
+3. If unique logic needed, use Hybrid approach
+4. Only use Pure Function for complex conditional logic that cannot be expressed declaratively
+
+See `docs/HANDLER_CONFIG_GUIDE.md` for comprehensive implementation guide.
+
 ### Processing Philosophy
 
 TerraVision transforms Azure Terraform resources into a hierarchical architecture diagram that reflects Azure's organizational model:
@@ -102,6 +133,8 @@ For each resource:
 ```
 
 #### Implementation
+
+> **Note**: The pseudocode below describes the current implementation logic. Following constitution guidelines (CO-006 through CO-012), these handlers SHOULD be migrated to config-driven approach where possible. New Azure handlers MUST use the config-first approach defined in `resource_handler_configs_azure.py`.
 
 ```
 FUNCTION handle_resource_groups(tfdata):
