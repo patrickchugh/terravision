@@ -82,7 +82,8 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if reverse_dest:
                 if not tfdata["graphdict"].get(c):
                     tfdata["graphdict"][c] = list()
-                tfdata["graphdict"][c].append(n)
+                if n not in tfdata["graphdict"][c]:
+                    tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][n].remove(c)
 
             # Reverse if connection is a forced origin
@@ -98,7 +99,8 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 > 0
             )
             if reverse_origin:
-                tfdata["graphdict"][c].append(n)
+                if n not in tfdata["graphdict"][c]:
+                    tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][node].remove(c)
 
     return tfdata
@@ -610,6 +612,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Don't over-ride count values with 0 when merging
             if consolidated_name not in tfdata["graphdict"].keys():
                 tfdata["graphdict"][consolidated_name] = list()
+            # Merge connections using set union (deduplicates automatically)
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])
@@ -1306,7 +1309,8 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 suffix = node.split("~")[1]
                 suffixed_node = f"{c}~{suffix}"
                 if suffixed_node in tfdata["graphdict"]:
-                    tfdata["graphdict"][node].append(suffixed_node)
+                    if suffixed_node not in tfdata["graphdict"][node]:
+                        tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If consolidated node, add all connections to node
             # Skip resources that are manually matched to subnets by suffix in their handlers

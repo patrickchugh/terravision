@@ -251,96 +251,13 @@ RESOURCE_HANDLER_CONFIGS = {
     #         },
     #     ],
     # },
-    "aws_cloudwatch_event_rule": {
-        "description": "Hybrid: Link EventBridge rules to targets (Lambda, SNS, SQS, Step Functions)",
-        "transformations": [
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_cloudwatch_event_target",
-                    "target_pattern": "aws_lambda_function",
-                    "metadata_key": "arn",
-                    "metadata_value_pattern": "function:",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_cloudwatch_event_target",
-                    "target_pattern": "aws_sns_topic",
-                    "metadata_key": "arn",
-                    "metadata_value_pattern": "sns:",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_cloudwatch_event_target",
-                    "target_pattern": "aws_sqs_queue",
-                    "metadata_key": "arn",
-                    "metadata_value_pattern": "sqs:",
-                },
-            },
-        ],
-        "additional_handler_function": "aws_handle_eventbridge_targets",
-    },
-    "aws_sns_topic": {
-        "description": "Hybrid: Link SNS topics to subscriptions (Lambda, SQS, email, HTTP)",
-        "transformations": [
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_sns_topic_subscription",
-                    "target_pattern": "aws_lambda_function",
-                    "metadata_key": "endpoint",
-                    "metadata_value_pattern": "function:",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_sns_topic_subscription",
-                    "target_pattern": "aws_sqs_queue",
-                    "metadata_key": "endpoint",
-                    "metadata_value_pattern": "sqs:",
-                },
-            },
-        ],
-        "additional_handler_function": "aws_handle_sns_subscriptions",
-    },
-    "aws_lambda_event_source_mapping": {
-        "description": "Hybrid: Link Lambda ESM to DynamoDB Streams, Kinesis, SQS",
-        "transformations": [
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_lambda_event_source_mapping",
-                    "target_pattern": "aws_dynamodb_table",
-                    "metadata_key": "event_source_arn",
-                    "metadata_value_pattern": "dynamodb:",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_lambda_event_source_mapping",
-                    "target_pattern": "aws_kinesis_stream",
-                    "metadata_key": "event_source_arn",
-                    "metadata_value_pattern": "kinesis:",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_lambda_event_source_mapping",
-                    "target_pattern": "aws_sqs_queue",
-                    "metadata_key": "event_source_arn",
-                    "metadata_value_pattern": "sqs:",
-                },
-            },
-        ],
-        "additional_handler_function": "aws_handle_lambda_esm",
-    },
+    # NOTE (Phase 4): EventBridge, SNS, and Lambda ESM handlers NOT NEEDED
+    # Baseline validation proved these patterns work correctly without custom handlers.
+    # - EventBridge: Was broken due to overly broad "aws_cloudwatch" consolidation pattern
+    #   Fixed by changing pattern to "aws_cloudwatch_log" in AWS_CONSOLIDATED_NODES
+    # - SNS: Baseline Terraform graph already shows topics → subscriptions → SQS/Lambda correctly
+    # - Lambda ESM: Baseline already shows DynamoDB/Kinesis/SQS → ESM → Lambda correctly
+    # CO-005.1: "Most services MUST NOT have custom handlers" - validated!
     "aws_cognito_user_pool": {
         "description": "Hybrid: Link Cognito User Pools to Lambda triggers and App Clients",
         "transformations": [
@@ -348,7 +265,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_cognito_user_pool",
-                    "target_pattern": "aws_lambda_function",
+                    "target_resource": "aws_lambda_function",
                     "metadata_key": "lambda_config",
                     "metadata_value_pattern": "arn:aws:lambda",
                 },
@@ -363,7 +280,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_wafv2_web_acl_association",
-                    "target_pattern": "aws_lb",
+                    "target_resource": "aws_lb",
                     "metadata_key": "resource_arn",
                     "metadata_value_pattern": "loadbalancer",
                 },
@@ -372,7 +289,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_wafv2_web_acl_association",
-                    "target_pattern": "aws_cloudfront_distribution",
+                    "target_resource": "aws_cloudfront_distribution",
                     "metadata_key": "resource_arn",
                     "metadata_value_pattern": "distribution",
                 },
@@ -400,7 +317,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_s3_bucket_notification",
-                    "target_pattern": "aws_lambda_function",
+                    "target_resource": "aws_lambda_function",
                     "metadata_key": "lambda_function",
                     "metadata_value_pattern": "arn:aws:lambda",
                 },
@@ -409,7 +326,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_s3_bucket_notification",
-                    "target_pattern": "aws_sns_topic",
+                    "target_resource": "aws_sns_topic",
                     "metadata_key": "topic",
                     "metadata_value_pattern": "arn:aws:sns",
                 },
@@ -418,7 +335,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_s3_bucket_notification",
-                    "target_pattern": "aws_sqs_queue",
+                    "target_resource": "aws_sqs_queue",
                     "metadata_key": "queue",
                     "metadata_value_pattern": "arn:aws:sqs",
                 },
@@ -433,7 +350,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_secretsmanager_secret_rotation",
-                    "target_pattern": "aws_lambda_function",
+                    "target_resource": "aws_lambda_function",
                     "metadata_key": "rotation_lambda_arn",
                     "metadata_value_pattern": "function:",
                 },
@@ -448,7 +365,7 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "link_by_metadata_pattern",
                 "params": {
                     "source_pattern": "aws_glue_catalog_table",
-                    "target_pattern": "aws_s3_bucket",
+                    "target_resource": "aws_s3_bucket",
                     "metadata_key": "storage_descriptor",
                     "metadata_value_pattern": "s3://",
                 },
@@ -481,5 +398,11 @@ RESOURCE_HANDLER_CONFIGS = {
         # Domain-specific parsing of complex nested configuration blocks
         # Multiple conditional branches based on destination type
         "additional_handler_function": "aws_handle_firehose",
+    },
+    "aws_lambda_event_source_mapping": {
+        "description": "Pure Function: Create direct connections from event sources (SQS, Kinesis, DynamoDB) to Lambda functions",
+        # Creates transitive links and removes intermediary mapping node
+        # Handles multiple event source types (SQS, Kinesis, DynamoDB Streams)
+        "additional_handler_function": "aws_handle_lambda_event_source_mapping",
     },
 }

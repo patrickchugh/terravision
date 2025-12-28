@@ -191,9 +191,11 @@ def modify_nodes(
                     prefix = startnode.split("*")[0]
                     for node in graphdict:
                         if helpers.get_no_module_name(node).startswith(prefix):
-                            graphdict[node].append(connection)
+                            if connection not in graphdict[node]:
+                                graphdict[node].append(connection)
                 else:
-                    graphdict[startnode].append(connection)
+                    if connection not in graphdict[startnode]:
+                        graphdict[startnode].append(connection)
 
     # Remove existing connections between nodes
     if annotate.get("disconnect"):

@@ -32,14 +32,23 @@ cd tests/fixtures/aws_terraform/test_<resource_name>
 
 ```bash
 # Generate diagram WITHOUT any custom handler
+# IMPORTANT: Always use --debug flag to save tfdata.json for test reuse
 cd /Users/patrick/git/terravision
 poetry run python terravision.py graphdata \
   --source tests/fixtures/aws_terraform/test_<resource_name> \
-  --outfile baseline-<resource_name>.json
+  --outfile baseline-<resource_name>.json \
+  --debug
 ```
 
+**Why --debug flag?**
+- Saves `tfdata.json` containing Terraform plan output
+- Allows rapid iteration without re-running `terraform plan`
+- Enables reusing tfdata.json for integration tests
+- Example: `poetry run python terravision.py graphdata --source tfdata.json --outfile output.json`
+
 **Requirements**:
-- [ ] Baseline generated successfully
+- [ ] Baseline generated successfully with `--debug` flag
+- [ ] `tfdata.json` file created in current directory
 - [ ] No custom handler exists for this resource type
 - [ ] Output saved for analysis
 

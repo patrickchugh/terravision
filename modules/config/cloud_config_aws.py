@@ -18,10 +18,26 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_cloudwatch": {
+        "aws_cloudwatch_log": {
             "resource_name": "aws_cloudwatch_log_group.cloudwatch",
             "import_location": "resource_classes.aws.management",
             "vpc": False,
+        }
+    },
+    {
+        "aws_cloudwatch_event": {
+            "resource_name": "aws_cloudwatch_event_rule.eventbridge",
+            "import_location": "resource_classes.aws.integration",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_sns_topic": {
+            "resource_name": "aws_sns_topic.sns",
+            "import_location": "resource_classes.aws.integration",
+            "vpc": False,
+            "edge_service": True,
         }
     },
     {
@@ -146,6 +162,8 @@ AWS_EDGE_NODES = [
     "aws_internet_gateway",
     "aws_api_gateway",
     "aws_apigateway",
+    "aws_cloudwatch_event",  # Feature 002: EventBridge (consolidated)
+    "aws_sns_topic",  # Feature 002: SNS Topics (consolidated)
     "aws_cognito",  # Feature 002: Cognito User Pools/Identity Pools
     "aws_wafv2",  # Feature 002: WAF Web ACLs
     "aws_appsync",  # Feature 002: AppSync GraphQL APIs
@@ -224,6 +242,7 @@ AWS_NODE_VARIANTS = {
 AWS_REVERSE_ARROW_LIST = [
     "aws_route53",
     "aws_cloudfront",
+    "aws_cloudwatch_event",  # EventBridge emits events TO Lambda (reverse direction)
     "aws_vpc.",
     "aws_subnet.",
     "aws_appautoscaling_target",
@@ -235,7 +254,12 @@ AWS_REVERSE_ARROW_LIST = [
 AWS_FORCED_DEST = ["aws_rds", "aws_instance"]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = ["aws_route53", "aws_cloudfront_distribution"]
+AWS_FORCED_ORIGIN = [
+    "aws_route53",
+    "aws_cloudfront_distribution",
+    "aws_cloudwatch_event",  # EventBridge emits events (source only, not destination)
+    "aws_sns_topic",  # SNS emits messages to subscribers (source only, not destination)
+]
 
 
 AWS_IMPLIED_CONNECTIONS = {

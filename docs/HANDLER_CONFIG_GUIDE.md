@@ -20,7 +20,10 @@ All handlers are defined in `modules/config/resource_handler_configs_<provider>.
 # Create test Terraform code for the resource type
 cd tests/fixtures/aws_terraform/test_resource/
 # Run TerraVision WITHOUT any custom handler
-poetry run python ../../../terravision.py graphdata --source . --outfile baseline.json
+# IMPORTANT: Use --debug to save tfdata.json for test reuse
+poetry run python ../../../terravision.py graphdata --source . --outfile baseline.json --debug
+# The --debug flag creates tfdata.json which can be reused:
+# poetry run python ../../../terravision.py graphdata --source tfdata.json --outfile output.json
 ```
 
 **Step 2: Analyze Baseline Output**

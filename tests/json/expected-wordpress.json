@@ -10,10 +10,10 @@
         "aws_fargate.ecs~3"
     ],
     "aws_appautoscaling_policy.scale_down": [
-        "aws_cloudwatch_log_group.cloudwatch"
+        "aws_cloudwatch_metric_alarm.cpu_utilization_low"
     ],
     "aws_appautoscaling_policy.scale_up": [
-        "aws_cloudwatch_log_group.cloudwatch"
+        "aws_cloudwatch_metric_alarm.cpu_utilization_high"
     ],
     "aws_appautoscaling_target.this~1": [
         "aws_appautoscaling_policy.scale_down",
@@ -45,13 +45,8 @@
     "aws_cloudfront_distribution.this": [
         "aws_acm_certificate.acm",
         "aws_fargate.ecs~1",
-        "aws_fargate.ecs~1",
-        "aws_fargate.ecs~2",
         "aws_fargate.ecs~2",
         "aws_fargate.ecs~3",
-        "aws_fargate.ecs~3",
-        "aws_lb.elb",
-        "aws_route53_record.route_53",
         "aws_route53_record.route_53"
     ],
     "aws_cloudwatch_log_group.cloudwatch": [
@@ -59,8 +54,17 @@
         "aws_fargate.ecs~2",
         "aws_fargate.ecs~3"
     ],
+    "aws_cloudwatch_metric_alarm.cpu_utilization_high": [
+        "aws_fargate.ecs~1",
+        "aws_fargate.ecs~2",
+        "aws_fargate.ecs~3"
+    ],
+    "aws_cloudwatch_metric_alarm.cpu_utilization_low": [
+        "aws_fargate.ecs~1",
+        "aws_fargate.ecs~2",
+        "aws_fargate.ecs~3"
+    ],
     "aws_db_subnet_group.this": [
-        "aws_rds_aurora.this",
         "aws_rds_aurora.this"
     ],
     "aws_ecr_repository.ecr": [],
@@ -83,8 +87,6 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[0]~1",
-        "aws_lb.elb",
-        "aws_rds_aurora.this",
         "aws_rds_aurora.this"
     ],
     "aws_fargate.ecs~2": [
@@ -92,8 +94,6 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[1]~2",
-        "aws_lb.elb",
-        "aws_rds_aurora.this",
         "aws_rds_aurora.this"
     ],
     "aws_fargate.ecs~3": [
@@ -101,8 +101,6 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[2]~3",
-        "aws_lb.elb",
-        "aws_rds_aurora.this",
         "aws_rds_aurora.this"
     ],
     "aws_group.shared_services": [
@@ -175,7 +173,6 @@
     "module.vpc.aws_default_security_group.this[0]~1": [],
     "module.vpc.aws_nat_gateway.this[0]~1": [
         "aws_eip.elastic_ip",
-        "aws_internet_gateway.igw",
         "aws_internet_gateway.igw"
     ],
     "module.vpc.aws_nat_gateway.this[1]~2": [
@@ -252,8 +249,7 @@
     "module.vpc.aws_vpc.this[0]~1": [
         "aws_az.availability_zone_us_east_1a~1",
         "aws_az.availability_zone_us_east_1b~2",
-        "aws_az.availability_zone_us_east_1c~3",
-        "aws_lb.elb"
+        "aws_az.availability_zone_us_east_1c~3"
     ],
     "tv_aws_internet.internet": [],
     "tv_aws_users.users": [

@@ -7,6 +7,7 @@ EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 from typing import Dict, List, Any
 import modules.config.cloud_config_aws as cloud_config
 import modules.helpers as helpers
+import modules.resource_transformers as transformers
 from ast import literal_eval
 import re
 import copy
@@ -32,6 +33,7 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Handle cases where resources have transitive link via sqs policy
     tfdata["graphdict"] = link_sqs_queue_policy(tfdata["graphdict"])
+
     # Remove connections to services specified in disconnect services
     for r in sorted(tfdata["graphdict"].keys()):
         for d in DISCONNECT_SERVICES:
@@ -664,7 +666,16 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 ):
                     tfdata["graphdict"][p].append(renamed_node)
                     tfdata["graphdict"][p].remove(lb)
-        tfdata["graphdict"][lb].append(renamed_node)
+                elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
+                    # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
+                    # Traffic should flow LB → ALB → Compute, not Compute → LB
+                    if lb in tfdata["graphdict"][p]:
+                        tfdata["graphdict"][p].remove(lb)
+        # ELB service points TO ALB instances (correct direction)
+        if lb not in tfdata["graphdict"]:
+            tfdata["graphdict"][lb] = list()
+        if renamed_node not in tfdata["graphdict"][lb]:
+            tfdata["graphdict"][lb].append(renamed_node)
     return tfdata
 
 
@@ -746,6 +757,53 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Expand autoscaling groups and launch templates to numbered instances per subnet
     tfdata = expand_autoscaling_groups_to_subnets(tfdata)
+
+    return tfdata
+
+
+def aws_handle_lambda_event_source_mapping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle Lambda event source mappings by creating direct event source → Lambda connections.
+
+    Event source mappings (aws_lambda_event_source_mapping) are configuration resources that
+    connect event sources (SQS, Kinesis, DynamoDB Streams) to Lambda functions. This handler
+    creates direct connections and removes the intermediary mapping node.
+
+    Pattern:
+        Before: event_source_mapping → sqs_queue, event_source_mapping → lambda_function
+        After: sqs_queue → lambda_function (event_source_mapping removed)
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with direct event source → Lambda connections
+    """
+    # Create direct connections from SQS to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_sqs_queue",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
+
+    # Create direct connections from Kinesis to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_kinesis_stream",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
+
+    # Create direct connections from DynamoDB to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_dynamodb_table",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
 
     return tfdata
 

@@ -11,7 +11,6 @@
     "aws_lambda_function.api_handler": [
         "aws_api_gateway_integration.gateway",
         "aws_cloudwatch_log_group.cloudwatch",
-        "aws_cloudwatch_log_group.cloudwatch",
         "aws_lambda_permission.api_gateway"
     ],
     "aws_lambda_permission.api_gateway": [

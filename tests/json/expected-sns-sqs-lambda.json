@@ -1,0 +1,38 @@
+{
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.iam"
+    ],
+    "aws_iam_role.lambda_role": [
+        "aws_lambda_function.email_notifier",
+        "aws_lambda_function.order_processor"
+    ],
+    "aws_lambda_function.email_notifier": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_lambda_permission.allow_sns"
+    ],
+    "aws_lambda_function.order_processor": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_lambda_permission.allow_sns": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_sns_topic.sns": [
+        "aws_lambda_function.email_notifier",
+        "aws_lambda_permission.allow_sns",
+        "aws_sqs_queue.notifications",
+        "aws_sqs_queue.order_processing",
+        "aws_sqs_queue_policy.notifications_policy",
+        "aws_sqs_queue_policy.order_processing_policy"
+    ],
+    "aws_sqs_queue.notifications": [
+        "aws_sqs_queue_policy.notifications_policy"
+    ],
+    "aws_sqs_queue.order_processing": [
+        "aws_lambda_function.order_processor",
+        "aws_sqs_queue_policy.order_processing_policy"
+    ],
+    "aws_sqs_queue_policy.notifications_policy": [],
+    "aws_sqs_queue_policy.order_processing_policy": []
+}

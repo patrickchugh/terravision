@@ -74,6 +74,10 @@ class WellArchitectedTool(_Management):
     _icon = "well-architected-tool.png"
 
 
+class CloudWatchAlarm(_Management):
+    _icon = "cloudwatch-alarm.png"
+
+
 # Aliases
 
 SSM = SystemsManager
@@ -113,3 +117,4 @@ aws_ssm_patch_baseline = SystemsManager
 aws_ssm_maintenance_window = SystemsManager
 aws_ssm_association = SystemsManager
 aws_ssm_parameter = SystemsManagerParameterStore
+aws_cloudwatch_metric_alarm = CloudWatchAlarm

@@ -58,6 +58,19 @@ def test_help() -> None:
             "api-gateway-rest-lambda-tfdata.json",
             "expected-api-gateway-rest-lambda.json",
         ),
+        # Phase 4: Event-Driven Architecture patterns
+        (
+            "eventbridge-lambda-tfdata.json",
+            "expected-eventbridge-lambda.json",
+        ),
+        (
+            "sns-sqs-lambda-tfdata.json",
+            "expected-sns-sqs-lambda.json",
+        ),
+        (
+            "dynamodb-streams-lambda-tfdata.json",
+            "expected-dynamodb-streams-lambda.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

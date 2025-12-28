@@ -6,7 +6,8 @@
       "Bash(python3:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)"
     ]
   }
 }

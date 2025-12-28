@@ -63,6 +63,8 @@
 
 **Independent Test**: Run TerraVision against API Gateway + Lambda Terraform config and verify diagram shows proper flow
 
+**⚠️ OUTCOME: HANDLERS NOT NEEDED** - Baseline validation (per CO-005.1) showed that baseline Terraform graph parsing already produces clear, accurate diagrams for API Gateway patterns. Custom handlers were implemented but then removed after testing confirmed they added no value.
+
 ### Test Fixtures for User Story 1
 
 - [X] T011 [P] [US1] Create Terraform fixture for REST API + Lambda in `tests/fixtures/aws_terraform/api_gateway_rest_lambda/main.tf`
@@ -71,26 +73,33 @@
 
 ### Implementation for User Story 1
 
-**Handler Type**: Hybrid (config consolidation + custom integration parsing)
+**Handler Type**: ~~Hybrid (config consolidation + custom integration parsing)~~ **NONE - Baseline sufficient**
 
-- [ ] T014 [US1] Add `aws_api_gateway_rest_api` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Transformations: `consolidate_into_single_node`, `delete_nodes` for stages/deployments
-  - Custom function: `aws_handle_api_gateway_integrations`
-- [ ] T015 [US1] Add `aws_apigatewayv2_api` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Similar pattern as REST API
-- [ ] T016 [US1] Implement `aws_handle_api_gateway_integrations()` custom function in `modules/resource_handlers_aws.py`
-  - Parse integration URIs to find Lambda/Step Functions connections
-  - Add "External Integration" placeholder when no integrations found
-  - Handle VPC Link connections for private integrations
-- [ ] T017 [US1] Implement helper functions `find_integrations_for_api()` and `parse_integration_uri()` in `modules/resource_handlers_aws.py`
+- [X] T014 [US1] ~~Add `aws_api_gateway_rest_api` handler config~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
+  - **Baseline Output**: `Lambda → Integration → Method → Resource → API` (clear and accurate!)
+  - **Decision**: Integration URIs show as `true` in terraform plan - can't be parsed
+  - **Consolidation**: Added to `AWS_CONSOLIDATED_NODES` instead (config-driven)
+- [X] T015 [US1] ~~Add `aws_apigatewayv2_api` handler config~~ **NOT NEEDED** - Same reason as T014
+  - **Consolidation**: Added to `AWS_CONSOLIDATED_NODES` instead (config-driven)
+- [X] T016 [US1] ~~Implement `aws_handle_api_gateway_integrations()` custom function~~ **NOT NEEDED** - Handlers removed after baseline validation
+  - Handlers were implemented but removed (194 lines deleted)
+  - Baseline Terraform dependencies already show correct relationships
+- [X] T017 [US1] ~~Implement helper functions~~ **NOT NEEDED** - Part of removed handlers
 
 ### Validation for User Story 1
 
-- [ ] T020 [US1] Generate expected output JSON from REST API fixture in `tests/json/expected-api-gateway-rest-lambda.json`
-- [ ] T021 [US1] Add test case `test_api_gateway_rest_lambda_integration()` in `tests/graphmaker_unit_test.py`
-- [ ] T022 [US1] Run `poetry run black modules/` and verify all tests pass
+- [X] T020 [US1] Baseline validation completed - confirmed handlers unnecessary
+  - Baseline diagram shows all resources with correct connections
+  - Users can understand the architecture without custom handlers
+  - **Lesson**: Textbook example of CO-005.1 - "Most services MUST NOT have custom handlers"
+- [X] T021 [US1] Integration test created in `tests/integration_test.py` - test passes without handlers
+- [X] T022 [US1] All tests pass (135/135) - handlers not needed
 
-**Checkpoint**: API Gateway patterns complete and validated independently
+**Checkpoint**: ✅ API Gateway patterns validated - **baseline parsing is sufficient, no custom handlers needed**
+
+**📋 Documentation Created**:
+- Created `docs/BASELINE_VALIDATION_CHECKLIST.md` to prevent premature handler implementation
+- Updated `CLAUDE.md`, `docs/HANDLER_CONFIG_GUIDE.md`, and `docs/specs/002-aws-handler-refinement/research.md`
 
 ---
 
@@ -100,37 +109,102 @@
 
 **Independent Test**: Run TerraVision against EventBridge + SNS + SQS + Lambda config and verify event flow
 
+**⚠️ BASELINE VALIDATION RESULTS** (Completed):
+
 ### Test Fixtures for User Story 2
 
-- [ ] T023 [P] [US2] Create Terraform fixture for EventBridge + Lambda in `tests/fixtures/aws_terraform/eventbridge_lambda/main.tf`
-- [ ] T024 [P] [US2] Create Terraform fixture for SNS + SQS + Lambda fan-out in `tests/fixtures/aws_terraform/sns_sqs_lambda/main.tf`
-- [ ] T025 [P] [US2] Create Terraform fixture for DynamoDB Streams + Lambda in `tests/fixtures/aws_terraform/dynamodb_streams_lambda/main.tf`
+- [X] T023 [P] [US2] Create Terraform fixture for EventBridge + Lambda in `tests/fixtures/aws_terraform/eventbridge_lambda/main.tf`
+- [X] T024 [P] [US2] Create Terraform fixture for SNS + SQS + Lambda fan-out in `tests/fixtures/aws_terraform/sns_sqs_lambda/main.tf`
+- [X] T025 [P] [US2] Create Terraform fixture for DynamoDB Streams + Lambda in `tests/fixtures/aws_terraform/dynamodb_streams_lambda/main.tf`
+
+### Baseline Validation Process
+
+**IMPORTANT**: Always generate baselines with `--debug` flag:
+```bash
+poetry run python terravision.py graphdata \
+  --source tests/fixtures/aws_terraform/<pattern> \
+  --outfile baseline-<pattern>.json \
+  --debug
+```
+**Why --debug?** Creates `tfdata.json` for rapid iteration and integration tests without re-running terraform plan.
+
+### Baseline Validation Results
+
+**EventBridge (✅ FIXED - CONFIG BUG, NOT HANDLER ISSUE!)**:
+- ❌ **Initial Problem**: EventBridge rules and targets NOT shown in final output
+- 🔍 **Root Cause**: Overly broad consolidation pattern `"aws_cloudwatch"` was matching:
+  - `aws_cloudwatch_log_group` (intended ✅)
+  - `aws_cloudwatch_event_rule` (unintended ❌ - EventBridge!)
+  - `aws_cloudwatch_event_target` (unintended ❌ - EventBridge!)
+  - `aws_cloudwatch_metric_alarm` (unintended ❌ - CloudWatch Alarms!)
+- ✅ **Fix**: Changed pattern from `"aws_cloudwatch"` to `"aws_cloudwatch_log"` in `AWS_CONSOLIDATED_NODES`
+- ✅ **Result**: EventBridge rules, targets, and CloudWatch metric alarms now appear correctly
+- **Decision**: ❌ **No handler needed** - simple config fix resolved the issue!
+
+**SNS + SQS (✅ BASELINE SUFFICIENT)**:
+- ✅ SNS topics, subscriptions, and SQS queues all shown
+- ✅ Connections clear: SNS → subscriptions → SQS/Lambda
+- ✅ Lambda event source mappings shown with correct connections
+- **Decision**: ❌ **No handler needed** - baseline is already clear and accurate!
+
+**DynamoDB Streams + Kinesis (✅ BASELINE SUFFICIENT)**:
+- ✅ DynamoDB tables, Kinesis streams, Lambda ESM all shown
+- ✅ Connections clear: Table/Stream → ESM → Lambda
+- ✅ Users can understand data flow
+- **Decision**: ❌ **No handler needed** - baseline is already clear and accurate!
 
 ### Implementation for User Story 2
 
-**Handler Types**: Hybrid (config linking + custom ARN parsing)
+**Handler Type**: ~~Hybrid (config linking + custom ARN parsing)~~ **NONE - Config fix only!**
 
-- [ ] T026 [US2] Add `aws_cloudwatch_event_rule` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Custom function: `aws_handle_eventbridge_targets` for ARN parsing
-- [ ] T027 [US2] Add `aws_sns_topic` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Transformations: `link_resources` to SQS/Lambda
-  - Custom function: `aws_handle_sns_subscriptions` for protocol/endpoint parsing
-- [ ] T028 [US2] Add `aws_lambda_event_source_mapping` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Custom function: `aws_handle_lambda_esm` for event_source_arn parsing
-- [ ] T029 [US2] Implement custom functions in `modules/resource_handlers_aws.py`
-  - `aws_handle_eventbridge_targets()` - Parse target ARNs
-  - `aws_handle_sns_subscriptions()` - Parse subscription endpoints
-  - `aws_handle_lambda_esm()` - Detect DynamoDB Streams, Kinesis, SQS sources
-- [ ] T030 [US2] Ensure correct arrow directions (producer → consumer) for all event patterns
+- [X] T026 [US2] ~~Add `aws_cloudwatch_event_rule` handler config~~ **NOT NEEDED**
+  - **Root cause**: Config bug in `AWS_CONSOLIDATED_NODES`, not missing handler
+  - **Fix**: Changed pattern from `"aws_cloudwatch"` to `"aws_cloudwatch_log"` in `cloud_config_aws.py:21`
+- [X] T027 [US2] ~~Add `aws_sns_topic` handler~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
+  - SNS topics, subscriptions already shown with correct connections
+- [X] T028 [US2] ~~Add `aws_lambda_event_source_mapping` handler~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
+  - Lambda ESM already shows: DynamoDB/Kinesis/SQS → ESM → Lambda
+- [X] T029 [US2] ~~Implement custom functions~~ **NOT NEEDED**
+  - All event-driven patterns work correctly with baseline + config fix
+  - No custom handler code required!
+- [X] T030 [US2] ~~Ensure correct arrow directions~~ **Already correct in baseline**
 
 ### Validation for User Story 2
 
-- [ ] T031 [US2] Generate expected output JSON from EventBridge fixture in `tests/json/expected-eventbridge-lambda.json`
-- [ ] T032 [US2] Generate expected output JSON from SNS/SQS fixture in `tests/json/expected-sns-sqs-lambda.json`
-- [ ] T033 [US2] Add test cases for event-driven patterns in `tests/graphmaker_unit_test.py`
-- [ ] T034 [US2] Verify all existing tests still pass
+- [X] T031 [US2] Generate expected output JSON from EventBridge fixture in `tests/json/expected-eventbridge-lambda.json`
+- [X] T032 [US2] Generate expected output JSON from SNS/SQS fixture in `tests/json/expected-sns-sqs-lambda.json`
+- [X] T033 [US2] Generate expected output JSON from DynamoDB Streams fixture in `tests/json/expected-dynamodb-streams-lambda.json`
+- [X] T034 [US2] All existing tests pass (135/135 ✅)
 
-**Checkpoint**: Event-driven patterns complete and validated independently
+**Checkpoint**: ✅ **Event-driven patterns complete - ALL 3 PATTERNS WORK WITHOUT CUSTOM HANDLERS!**
+
+**📋 Lessons Learned**:
+1. **Baseline validation prevented implementing 3 unnecessary handlers** (EventBridge, SNS, Lambda ESM)
+2. **Root cause analysis matters** - What appeared to be a "missing handler" was actually a config bug
+3. **Simple fix > Complex solution** - Changed 1 word in config instead of writing ~300 lines of handler code
+4. **Bonus fix**: CloudWatch Metric Alarms also fixed by the same pattern change
+5. **CO-005.1 validated**: "Most services MUST NOT have custom handlers" - 100% true for event-driven patterns!
+
+**Post-Phase Refinements**:
+1. **EventBridge consolidation**: Added `aws_cloudwatch_event` to `AWS_CONSOLIDATED_NODES` for cleaner diagrams
+2. **Documentation updates**: Added `--debug` flag guidance to BASELINE_VALIDATION_CHECKLIST.md and HANDLER_CONFIG_GUIDE.md
+3. **Integration tests**: Added 3 regression tests (EventBridge, SNS/SQS, DynamoDB Streams) to prevent future breakage
+4. **EventBridge arrow direction fix**: Added `aws_cloudwatch_event` to `AWS_FORCED_ORIGIN` and `AWS_REVERSE_ARROW_LIST` to ensure EventBridge → Lambda direction (not Lambda → EventBridge)
+   - Root cause: Circular reference detection was removing the correct arrow when both directions existed
+   - Solution: Force EventBridge to be source-only, preventing Lambda → EventBridge connections
+5. **SNS consolidation**: Added `aws_sns_topic` to `AWS_CONSOLIDATED_NODES`, `AWS_EDGE_NODES`, and `AWS_FORCED_ORIGIN`
+   - Consolidates SNS topics and subscriptions into single icon
+   - Ensures correct arrow direction: SNS → SQS/Lambda (SNS emits to subscribers)
+   - Updated expected output for SNS/SQS test fixture
+6. **Duplicate connections fix**: Fixed root causes in all code paths that add connections
+   - **Root Cause Investigation**: Used debug tracing to identify all 4 sources of duplicates
+   - **Fixed `graphmaker.reverse_relations()`** (graphmaker.py:85, 101): Added duplicate checks when reversing FORCED_DEST and FORCED_ORIGIN connections
+   - **Fixed `annotations.py`** (annotations.py:194, 197): Added duplicate checks for manual YAML annotations
+   - **Fixed `graphmaker.handle_singular_references()`** (graphmaker.py:1312): Added duplicate check when creating numbered instance connections
+   - **Fixed `helpers.append_dictlist()`** (helpers.py:800): Added duplicate check for AUTO_ANNOTATIONS
+   - **No deduplication sweep needed**: All sources fixed at origin, preventing duplicates from being created
+   - Regenerated all expected outputs to match duplicate-free behavior
+7. **Test count**: 135 → 138 tests (all passing ✅)
 
 ---
 
@@ -552,6 +626,80 @@ With multiple developers:
 
 **Total Tasks**: 118
 **MVP Scope**: Phases 1-6 (T001-T052) = 52 tasks
+
+---
+
+## Post-Phase 4: Connection Quality Fixes
+
+**Purpose**: Fix connection quality issues discovered after Phase 4 implementation
+
+### Fix 1: Duplicate Connection Prevention (2025-01-28)
+
+**Problem**: Duplicate connections appearing in diagrams from multiple code paths
+
+**Root Causes Identified**:
+1. `graphmaker.reverse_relations()` - not checking before appending when reversing FORCED_DEST/FORCED_ORIGIN (lines 85, 101)
+2. `annotations.py` - not checking before appending manual YAML annotations (lines 194, 197)
+3. `graphmaker.handle_singular_references()` - not checking before appending numbered instances (line 1312)
+4. `helpers.append_dictlist()` - not checking before appending AUTO_ANNOTATIONS (line 800)
+
+**Solution**: Added duplicate checks at all 4 sources before appending connections
+
+**Files Modified**:
+- `modules/graphmaker.py` (lines 85, 101, 1312)
+- `modules/annotations.py` (lines 194, 197)
+- `modules/helpers.py` (line 800, removed `deduplicate_connections()`)
+- `terravision.py` (removed debug tracing code)
+
+**Test Updates**: Regenerated expected outputs for 5 test fixtures (wordpress, bastion, api-gateway-rest-lambda, eks-basic, static-website)
+
+**Validation**: All 139 tests pass with duplicate prevention at source
+
+### Fix 2: Load Balancer Connection Direction (2025-01-28)
+
+**Problem**: Bidirectional connections between ELB and compute resources (Fargate) bypassing ALB layer
+
+**Expected Flow**: Unidirectional flow `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3`
+
+**Incorrect Flow**:
+- Forward: `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3` ✓
+- Backward: `aws_fargate.ecs~1/2/3` → `aws_lb.elb` ✗ (creates bypass)
+
+**Solution**: Modified `aws_handle_lb()` function to:
+1. Add duplicate check when creating ELB → ALB connection (lines 672-676)
+2. Remove backward connections from compute resources TO LB (lines 667-671)
+
+**Files Modified**:
+- `modules/resource_handlers_aws.py` (lines 667-676)
+- `tests/json/expected-wordpress.json` (regenerated without backward connections)
+
+**Connection Logic**:
+```python
+# Handle GROUP_NODES parents (VPC, subnets)
+for p in parents:
+    p_type = p.split(".")[0]
+    if p_type in GROUP_NODES and p_type not in SHARED_SERVICES and p_type != "aws_vpc":
+        tfdata["graphdict"][p].append(renamed_node)
+        tfdata["graphdict"][p].remove(lb)
+    elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
+        # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
+        # Traffic should flow LB → ALB → Compute, not Compute → LB
+        if lb in tfdata["graphdict"][p]:
+            tfdata["graphdict"][p].remove(lb)
+
+# Create forward connection: ELB → ALB (with duplicate check)
+if lb not in tfdata["graphdict"]:
+    tfdata["graphdict"][lb] = list()
+if renamed_node not in tfdata["graphdict"][lb]:
+    tfdata["graphdict"][lb].append(renamed_node)
+```
+
+**Result**:
+- Correct unidirectional flow: `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3`
+- Backward connections removed: `aws_fargate.ecs~1/2/3` no longer points to `aws_lb.elb`
+- Prevents duplicate connections between ELB and ALB instances
+
+**Validation**: All 139 tests pass with corrected unidirectional flow
 
 ---
 

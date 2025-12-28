@@ -786,6 +786,72 @@ def create_transitive_links(
     return tfdata
 
 
+def link_peers_via_intermediary(
+    tfdata: Dict[str, Any],
+    intermediary_pattern: str,
+    source_pattern: str,
+    target_pattern: str,
+    remove_intermediary: bool = True,
+) -> Dict[str, Any]:
+    """Link peer resources that share an intermediary: intermediate→peer1 + intermediate→peer2 becomes peer1→peer2.
+
+    Use case: Event source mappings, queue policies, and other configuration resources
+    that logically connect two peers but shouldn't appear in diagrams.
+
+    Pattern:
+        Before: intermediate → source, intermediate → target
+        After: source → target (intermediate removed)
+
+    Args:
+        tfdata: Terraform data dictionary
+        intermediary_pattern: Pattern to match intermediary resources (e.g., "aws_lambda_event_source_mapping")
+        source_pattern: Pattern to match source peer resources (e.g., "aws_sqs_queue")
+        target_pattern: Pattern to match target peer resources (e.g., "aws_lambda_function")
+        remove_intermediary: Whether to remove intermediary node (default: True)
+
+    Returns:
+        Updated tfdata with peer links created and intermediary optionally removed
+    """
+    graphdict = tfdata["graphdict"]
+    intermediaries = sorted([s for s in graphdict.keys() if intermediary_pattern in s])
+
+    for intermediary in list(intermediaries):
+        intermediary_connections = graphdict.get(intermediary, [])
+
+        if not intermediary_connections:
+            continue
+
+        # Find source and target peers in intermediary's connections
+        sources = [c for c in intermediary_connections if source_pattern in c]
+        targets = [c for c in intermediary_connections if target_pattern in c]
+
+        # Only process if we have BOTH sources and targets
+        if not (sources and targets):
+            continue
+
+        # Create direct links from each source to each target
+        for source in sources:
+            for target in targets:
+                if source in graphdict:
+                    if target not in graphdict[source]:
+                        graphdict[source].append(target)
+                else:
+                    graphdict[source] = [target]
+
+        # Remove intermediary node if requested (only if we created links)
+        if remove_intermediary:
+            # Remove the intermediary node itself
+            graphdict.pop(intermediary, None)
+            tfdata["meta_data"].pop(intermediary, None)
+
+            # Clean up dangling references to the deleted intermediary from all other nodes
+            for node in list(graphdict.keys()):
+                if intermediary in graphdict[node]:
+                    graphdict[node].remove(intermediary)
+
+    return tfdata
+
+
 def unlink_from_parents(
     tfdata: Dict[str, Any],
     resource_pattern: str,

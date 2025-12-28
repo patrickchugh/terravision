@@ -764,15 +764,18 @@ def find_all_resources_containing(
 def append_dictlist(thelist: List[Any], new_item: Any) -> List[Any]:
     """Append item to list and return new list.
 
+    Checks for duplicates before appending to prevent duplicate connections.
+
     Args:
         thelist: Original list
         new_item: Item to append
 
     Returns:
-        New list with item appended
+        New list with item appended (no duplicates)
     """
     new_list = list(thelist)
-    new_list.append(new_item)
+    if new_item not in new_list:
+        new_list.append(new_item)
     return new_list
 
 
