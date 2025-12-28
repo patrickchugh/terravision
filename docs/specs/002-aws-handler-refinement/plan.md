@@ -17,7 +17,7 @@ Enhance TerraVision's AWS resource handlers to produce professional architecture
 **Project Type**: Single CLI application (enhancement to existing codebase)
 **Performance Goals**: N/A (batch diagram generation, not latency-sensitive)
 **Constraints**: Must pass all existing tests; changes must be additive where possible
-**Scale/Scope**: 11 user stories, 28 functional requirements, ~40 new/modified handler functions
+**Scale/Scope**: 11 user stories, 28 functional requirements, 14 handler configs (1 pure config, 11 hybrid, 2 pure function)
 
 ## Constitution Check
 
@@ -41,11 +41,20 @@ Enhance TerraVision's AWS resource handlers to produce professional architecture
 
 | Rule | Status | Notes |
 |------|--------|-------|
-| CO-001: Provider config in `cloud_config_<provider>.py` | ✅ PASS | All config changes in `cloud_config_aws.py` |
-| CO-002: Provider handlers in `resource_handlers_<provider>.py` | ✅ PASS | All handlers in `resource_handlers_aws.py` |
+| CO-001: Provider config in `cloud_config_<provider>.py` | ✅ PASS | Config additions minimal (edge nodes, consolidated nodes) |
+| CO-002: Provider handlers in `resource_handlers_<provider>.py` | ✅ PASS | Custom functions in `resource_handlers_aws.py` |
 | CO-003: Common modules provider-agnostic | ✅ PASS | No changes to `graphmaker.py`, `drawing.py`, etc. |
 | CO-004: Dynamic dispatch for providers | ✅ PASS | Using existing dispatch pattern |
 | CO-005: New providers follow pattern | N/A | AWS only, pattern already exists |
+| CO-005.1: Most services MUST NOT have handlers | ✅ PASS | 14 handlers for specific issues; most AWS services work with baseline |
+| CO-006: Pure Config-Driven handlers preferred | ✅ PASS | ElastiCache uses pure config (reuses existing transformers) |
+| CO-007: Hybrid approach for mixed logic | ✅ PASS | 11 handlers use hybrid (config + custom function) |
+| CO-008: Pure Function only when necessary | ✅ PASS | 2 handlers (Step Functions, Firehose) justified |
+| CO-009: Custom functions documented | ✅ PASS | All custom functions include justification |
+| CO-010: New transformers when reused 3+ times | ✅ PASS | No new transformers needed (existing 24 sufficient) |
+| CO-011: Descriptive descriptions required | ✅ PASS | All handlers include description with rationale |
+| CO-012: Function reference auto-resolution | ✅ PASS | Using `_function` suffix convention |
+| CO-013: Transformer library stability | ✅ PASS | No new transformers; library at 24 operations (target: ~30) |
 
 ### Quality Requirements Compliance
 
@@ -98,29 +107,33 @@ docs/specs/002-aws-handler-refinement/
 ```text
 # Existing TerraVision structure (enhancement target)
 modules/
-├── resource_handlers_aws.py    # PRIMARY: Add new handler functions here
-├── resource_handlers_gcp.py    # Not modified
-├── resource_handlers_azure.py  # Not modified
 ├── config/
-│   └── cloud_config_aws.py     # SECONDARY: Add resource configs here
-├── graphmaker.py               # May need minor updates for new patterns
-├── drawing.py                  # May need updates for new node types
-└── helpers.py                  # Utility functions
+│   ├── resource_handler_configs_aws.py  # PRIMARY: Add handler configs here (config-driven)
+│   ├── cloud_config_aws.py              # SECONDARY: Minimal additions (edge nodes, etc.)
+│   ├── resource_handler_configs_gcp.py  # Not modified
+│   └── resource_handler_configs_azure.py # Not modified
+├── resource_transformers.py             # REFERENCE: 24 reusable transformers (no changes)
+├── resource_handlers_aws.py             # TERTIARY: Custom functions for Hybrid/Pure Function handlers only
+├── resource_handlers_gcp.py             # Not modified
+├── resource_handlers_azure.py           # Not modified
+├── graphmaker.py                        # No changes (existing dispatch handles config-driven)
+├── drawing.py                           # May need updates for new node types
+└── helpers.py                           # Utility functions
 
 resource_classes/
-└── aws/                        # Icons for AWS resources (may need new icons if you cannot find a suitable existing one under all subfolders)
+└── aws/                                 # Icons for AWS resources (may need new icons)
 
 tests/
-├── json/                       # Test fixtures (add new pattern tests)
-│   ├── expected-*.json         # Expected outputs (DO NOT MODIFY existing)
-│   └── *-tfdata.json          # Input fixtures
-├── integration_test.py         # Integration tests
-├── graphmaker_unit_test.py     # Unit tests
-└── fixtures/                   # Terraform fixtures for testing
-    └── aws_terraform/          # AWS-specific test Terraform
+├── json/                                # Test fixtures (add new pattern tests)
+│   ├── expected-*.json                  # Expected outputs (DO NOT MODIFY existing)
+│   └── *-tfdata.json                   # Input fixtures
+├── integration_test.py                  # Integration tests
+├── graphmaker_unit_test.py              # Unit tests
+└── fixtures/                            # Terraform fixtures for testing
+    └── aws_terraform/                   # AWS-specific test Terraform
 ```
 
-**Structure Decision**: Enhancement to existing single-project CLI structure. No new top-level directories needed. All changes are within `modules/` and `tests/`.
+**Structure Decision**: Enhancement to existing single-project CLI structure. Primary work in `resource_handler_configs_aws.py` (config-driven), minimal custom functions in `resource_handlers_aws.py` only for complex parsing logic. No new top-level directories needed.
 
 ## Complexity Tracking
 

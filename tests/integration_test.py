@@ -54,6 +54,10 @@ def test_help() -> None:
         ("bastion-tfdata.json", "bastion-expected.json"),
         ("eks-basic-tfdata.json", "expected-eks-basic.json"),
         ("static-website-tfdata.json", "expected-static-website.json"),
+        (
+            "api-gateway-rest-lambda-tfdata.json",
+            "expected-api-gateway-rest-lambda.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

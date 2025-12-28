@@ -33,9 +33,24 @@ All existing automated tests under `tests/` MUST continue to pass after any chan
 
 ### Scope of Changes
 
-Changes to `resource_handlers_aws.py` and `cloud_config_aws.py` must be additive where possible. Existing handler functions should only be modified if:
+Changes follow the config-driven architecture (CO-005.1 through CO-013):
+
+1. **Primary changes**: Handler configs in `modules/config/resource_handler_configs_aws.py`
+2. **Secondary changes**: Custom functions in `modules/resource_handlers_aws.py` (only for Hybrid/Pure Function handlers)
+3. **Minimal changes**: Edge node declarations in `modules/config/cloud_config_aws.py`
+
+All changes must be additive where possible. Existing handler functions should only be modified if:
 1. A bug is discovered that produces incorrect diagrams
 2. The modification is required to support new patterns without breaking existing ones
+
+**⚠️ Baseline Validation Principle (CO-005.1)**:
+
+Most AWS services work correctly with TerraVision's baseline Terraform graph parsing. The 14 handlers in this spec address specific architectural patterns where baseline output is insufficient (consolidation, hierarchical containment, complex relationships).
+
+**For future handler proposals**: Baseline diagram output MUST be tested and documented as insufficient before implementing a handler. Evidence required:
+- Screenshot/description of baseline output
+- Specific issues (confusing layout, missing relationships, incorrect placement)
+- Justification that general config (implied connections, edge nodes) cannot fix the issue
 
 ### Implementation Prioritization
 

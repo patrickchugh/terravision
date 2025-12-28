@@ -991,67 +991,6 @@ def propagate_metadata(
     return tfdata
 
 
-def consolidate_into_single_node(
-    tfdata: Dict[str, Any],
-    resource_pattern: str,
-    target_node_name: str,
-    merge_connections: bool = True,
-    merge_metadata: bool = True,
-) -> Dict[str, Any]:
-    """Consolidate multiple resources into a single node.
-
-    Args:
-        tfdata: Terraform data dictionary
-        resource_pattern: Pattern to match resources to consolidate
-        target_node_name: Name of the consolidated target node
-        merge_connections: Merge all connections into target node
-        merge_metadata: Merge metadata into target node
-
-    Returns:
-        Updated tfdata with resources consolidated
-    """
-    resources = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], resource_pattern
-    )
-
-    # Create target node if it doesn't exist
-    if target_node_name not in tfdata["graphdict"]:
-        tfdata["graphdict"][target_node_name] = []
-        tfdata["meta_data"][target_node_name] = {}
-
-    # Merge all resources into target
-    for resource in resources:
-        if resource == target_node_name:
-            continue
-
-        # Merge connections
-        if merge_connections:
-            for connection in tfdata["graphdict"].get(resource, []):
-                if connection not in tfdata["graphdict"][target_node_name]:
-                    tfdata["graphdict"][target_node_name].append(connection)
-
-        # Merge metadata
-        if merge_metadata:
-            resource_metadata = tfdata["meta_data"].get(resource, {})
-            for key, value in resource_metadata.items():
-                if key not in tfdata["meta_data"][target_node_name]:
-                    tfdata["meta_data"][target_node_name][key] = value
-
-        # Update parent references
-        parents = helpers.list_of_parents(tfdata["graphdict"], resource)
-        for parent in parents:
-            if resource in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(resource)
-                if target_node_name not in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].append(target_node_name)
-
-        # Delete original resource
-        tfdata["graphdict"].pop(resource, None)
-        tfdata["meta_data"].pop(resource, None)
-
-    return tfdata
-
-
 def replace_connection_targets(
     tfdata: Dict[str, Any],
     source_pattern: str,

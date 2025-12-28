@@ -118,3 +118,4 @@ tv_blank = Blank
 tv_empty = Blank
 no_icon = Blank
 aws_security_group_rule = Blank
+tv_aws_mobile_client = MobileClient

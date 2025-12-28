@@ -337,46 +337,152 @@ AWS Cloud
 
 ---
 
-## Configuration Constants
+## Configuration Schema (Config-Driven Architecture)
 
-### AWS_SPECIAL_RESOURCES Additions
+All handlers defined in `modules/config/resource_handler_configs_aws.py` per constitution CO-006 through CO-013.
+
+### RESOURCE_HANDLER_CONFIGS Structure
 
 ```python
-AWS_SPECIAL_RESOURCES_ADDITIONS = {
-    "aws_api_gateway_rest_api": "handle_api_gateway",
-    "aws_apigatewayv2_api": "handle_api_gateway_v2",
-    "aws_cloudwatch_event_rule": "handle_eventbridge",
-    "aws_sns_topic": "handle_sns",
-    "aws_lambda_event_source_mapping": "handle_lambda_esm",
-    "aws_elasticache_cluster": "handle_elasticache",
-    "aws_elasticache_replication_group": "handle_elasticache_replication",
-    "aws_cognito_user_pool": "handle_cognito",
-    "aws_wafv2_web_acl": "handle_waf",
-    "aws_sagemaker_endpoint": "handle_sagemaker",
-    "aws_sfn_state_machine": "handle_step_functions",
-    "aws_s3_bucket_notification": "handle_s3_notifications",
-    "aws_secretsmanager_secret": "handle_secrets_manager",
-    "aws_glue_job": "handle_glue",
-    "aws_appsync_graphql_api": "handle_appsync",
+# Location: modules/config/resource_handler_configs_aws.py
+RESOURCE_HANDLER_CONFIGS = {
+    "resource_type_pattern": {
+        "description": str,  # Required (CO-011): Purpose and handler type rationale
+        "transformations": [  # Optional: List of transformation operations
+            {
+                "operation": str,  # One of 24 available transformers
+                "params": dict,    # Operation-specific parameters
+            },
+        ],
+        "additional_handler_function": str,  # Optional: Custom function name (CO-012)
+        "handler_execution_order": str,      # Optional: "before" or "after" (default: "after")
+    },
 }
 ```
 
-### AWS_CONSOLIDATED_NODES Additions
+### Handler Type Examples
 
+#### Pure Config-Driven (ElastiCache):
 ```python
-AWS_CONSOLIDATED_NODES_ADDITIONS = [
-    {"aws_api_gateway": {"resource_name": "aws_api_gateway.api", "edge_service": True}},
-    {"aws_apigatewayv2": {"resource_name": "aws_apigatewayv2.api", "edge_service": True}},
-    {"aws_cognito_user_pool": {"resource_name": "aws_cognito.auth", "edge_service": True}},
-    {"aws_wafv2_web_acl": {"resource_name": "aws_waf.firewall", "edge_service": True}},
-    {"aws_sagemaker_endpoint": {"resource_name": "aws_sagemaker.ml", "vpc": False}},
-    {"aws_appsync": {"resource_name": "aws_appsync.api", "edge_service": True}},
-]
+"aws_elasticache_replication_group": {
+    "description": "Expand ElastiCache replication groups to numbered instances per subnet",
+    "transformations": [
+        {
+            "operation": "expand_to_numbered_instances",
+            "params": {
+                "resource_pattern": "aws_elasticache_replication_group",
+                "subnet_key": "subnet_group_name",
+                "skip_if_numbered": True,
+            },
+        },
+        {
+            "operation": "match_by_suffix",
+            "params": {
+                "source_pattern": "aws_ecs_service|aws_eks_node_group",
+                "target_pattern": "aws_elasticache",
+            },
+        },
+    ],
+}
 ```
 
-### AWS_EDGE_NODES Additions
+#### Hybrid (API Gateway):
+```python
+"aws_api_gateway_rest_api": {
+    "description": "Consolidate API Gateway resources and parse integrations",
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",
+            "params": {
+                "resource_pattern": "aws_api_gateway",
+                "target_node_name": "aws_api_gateway.api",
+            },
+        },
+        {
+            "operation": "delete_nodes",
+            "params": {
+                "resource_pattern": "aws_api_gateway_stage|aws_api_gateway_deployment",
+                "remove_from_parents": True,
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_api_gateway_integrations",
+}
+```
+
+#### Pure Function (Step Functions):
+```python
+"aws_sfn_state_machine": {
+    "description": "Parse state machine definition JSON to detect service integrations",
+    "additional_handler_function": "aws_handle_step_functions",
+    # Why Pure Function: Parsing JSON state machine definitions with conditional
+    # logic for multiple task types cannot be expressed declaratively (CO-009)
+}
+```
+
+### Transformation Parameter Schemas
 
 ```python
+# expand_to_numbered_instances
+{
+    "operation": "expand_to_numbered_instances",
+    "params": {
+        "resource_pattern": str,     # Pattern to match resources
+        "subnet_key": str,           # Metadata key containing subnet list
+        "skip_if_numbered": bool,    # Skip if already numbered (optional)
+    },
+}
+
+# consolidate_into_single_node
+{
+    "operation": "consolidate_into_single_node",
+    "params": {
+        "resource_pattern": str,     # Resources to consolidate
+        "target_node_name": str,     # Name of consolidated node
+    },
+}
+
+# link_resources
+{
+    "operation": "link_resources",
+    "params": {
+        "source_pattern": str,       # Source resource pattern
+        "target_pattern": str,       # Target resource pattern
+    },
+}
+
+# group_shared_services
+{
+    "operation": "group_shared_services",
+    "params": {
+        "service_patterns": List[str],  # Patterns for services to group
+        "group_name": str,                # Group node name
+    },
+}
+
+# delete_nodes
+{
+    "operation": "delete_nodes",
+    "params": {
+        "resource_pattern": str,         # Pattern to match for deletion
+        "remove_from_parents": bool,     # Also remove from parent connections
+    },
+}
+
+# match_by_suffix
+{
+    "operation": "match_by_suffix",
+    "params": {
+        "source_pattern": str,           # Source resource pattern
+        "target_pattern": str,           # Target resource pattern
+    },
+}
+```
+
+### Minimal cloud_config_aws.py Additions
+
+```python
+# Only edge nodes need explicit declaration in cloud_config_aws.py
 AWS_EDGE_NODES_ADDITIONS = [
     "aws_api_gateway",
     "aws_apigatewayv2",
@@ -386,21 +492,7 @@ AWS_EDGE_NODES_ADDITIONS = [
 ]
 ```
 
-### AWS_HIDE_NODES Additions
-
-```python
-AWS_HIDE_NODES_ADDITIONS = [
-    "aws_api_gateway_stage",
-    "aws_api_gateway_deployment",
-    "aws_api_gateway_method",
-    "aws_api_gateway_resource",
-    "aws_cognito_user_pool_client",
-    "aws_cognito_user_pool_domain",
-    "aws_wafv2_web_acl_rule",
-    "aws_sagemaker_endpoint_configuration",
-    "aws_appsync_resolver",
-]
-```
+**Note**: All handler configurations, consolidation rules, and transformation pipelines are now defined in `resource_handler_configs_aws.py` instead of `cloud_config_aws.py` per constitution CO-006.
 
 ---
 

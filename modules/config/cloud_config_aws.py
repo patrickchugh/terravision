@@ -102,6 +102,28 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": True,
         }
     },
+    {
+        "aws_elasticache_replication_group": {
+            "resource_name": "aws_elasticache.cluster",
+            "import_location": "resource_classes.aws.database",
+            "vpc": True,
+        }
+    },
+    {
+        "aws_sagemaker_endpoint": {
+            "resource_name": "aws_sagemaker_endpoint.endpoint",
+            "import_location": "resource_classes.aws.ml",
+            "vpc": False,
+        }
+    },
+    {
+        "aws_appsync_graphql_api": {
+            "resource_name": "aws_appsync_graphql_api.graphql_api",
+            "import_location": "resource_classes.aws.network",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in
@@ -124,10 +146,19 @@ AWS_EDGE_NODES = [
     "aws_internet_gateway",
     "aws_api_gateway",
     "aws_apigateway",
+    "aws_cognito",  # Feature 002: Cognito User Pools/Identity Pools
+    "aws_wafv2",  # Feature 002: WAF Web ACLs
+    "aws_appsync",  # Feature 002: AppSync GraphQL APIs
 ]
 
 # Nodes outside Cloud boundary
-AWS_OUTER_NODES = ["tv_aws_users", "tv_aws_internet"]
+AWS_OUTER_NODES = [
+    "tv_aws_users",
+    "tv_aws_internet",
+    "tv_aws_device",
+    "tv_aws_onprem",
+    "tv_aws_mobile_client",
+]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 AWS_DRAW_ORDER = [
@@ -167,6 +198,7 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
     {"aws_eks_cluster": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
+    {"aws_api_gateway": {"link": ["tv_aws_mobile_client.mobile"], "arrow": "reverse"}},
     {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
     {
         "aws_lambda": {

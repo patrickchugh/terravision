@@ -5,7 +5,8 @@
       "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
       "Bash(python3:*)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(cat:*)"
     ]
   }
 }

@@ -14,7 +14,6 @@ class APIGatewayEndpoint(_Mobile):
     _icon = "api-gateway-endpoint.png"
 
 
-# TODO: Make API Gateway a Group and specify icon variant e.g. mobile icon is red
 class APIGatewayRed(_Mobile):
     _icon = "api-gateway.png"
 

@@ -4,7 +4,11 @@
 
 ## Overview
 
-This document captures research findings for implementing AWS resource handlers for the top 80% of common AWS architectural patterns.
+This document captures research findings for implementing AWS resource handlers for the top 80% of common AWS architectural patterns using TerraVision's **config-driven handler architecture**.
+
+**⚠️ Baseline Validation (CO-005.1)**: The 14 handlers in this research address specific cases where baseline Terraform graph parsing produces insufficient diagrams. Most AWS services (80-90%) work correctly with baseline parsing and DO NOT need custom handlers.
+
+**For future research**: Always test baseline output first and document why it's insufficient before proposing a handler.
 
 ---
 
@@ -12,11 +16,26 @@ This document captures research findings for implementing AWS resource handlers 
 
 ### Handler Architecture Principles
 
-**Decision**: Follow existing TerraVision handler patterns
-**Rationale**: Consistency with existing codebase ensures maintainability and reduces bugs
-**Alternatives Considered**: Custom patterns rejected as they would diverge from established conventions
+**Decision**: Follow config-driven handler architecture per constitution CO-006 through CO-012
+**Rationale**: Config-driven approach reduces code by 70%, improves maintainability through reusable transformers, and ensures cross-provider consistency
+**Alternatives Considered**: Pure Python handlers rejected due to linear code growth (270 functions for 3 providers × 90 services vs 25 transformers + configs)
 
-#### Core Principles Identified:
+#### Constitutional Requirements (CO-006 through CO-012):
+
+1. **CO-006**: Resource handlers MUST be implemented as **Pure Config-Driven** whenever possible
+2. **CO-007**: Handlers SHOULD use **Hybrid** approach when combining generic operations with unique logic
+3. **CO-008**: Handlers MAY use **Pure Function** ONLY when logic is too complex for declarative expression
+4. **CO-009**: Custom Python functions MUST document why config-driven was insufficient
+5. **CO-010**: New transformers added when pattern reused across 3+ handlers
+6. **CO-011**: Configurations MUST include descriptive `description` field
+7. **CO-012**: Parameters ending in `_function` or `_generator` auto-resolve to function references
+
+#### Decision Hierarchy (attempt in order):
+1. **Pure Config-Driven** - Use only existing transformers (70% code reduction, easiest to maintain)
+2. **Hybrid** - Add new generic transformer if pattern is reusable, supplement with custom function for unique logic
+3. **Pure Function** - Only for complex conditional logic that cannot be expressed declaratively
+
+#### Core Architectural Principles:
 
 1. **Hierarchy Over Flatness**: Transform Terraform's flat graphs into AWS's hierarchical structure (VPC → AZ → Subnet → Security Group → Resources)
 
@@ -24,90 +43,168 @@ This document captures research findings for implementing AWS resource handlers 
 
 3. **Direct Over Indirect**: Skip intermediate resources to show direct relationships (e.g., IAM Role → EC2, not Role → Profile → EC2)
 
-### Implementation Patterns
+### Available Transformers (24 operations)
 
-#### Pattern 1: Two-Step Connection Mapping
+Reference: `modules/resource_transformers.py`
+
+**Resource Expansion** (2):
+- `expand_to_numbered_instances` - Create ~1, ~2, ~3 instances per subnet
+- `clone_with_suffix` - Duplicate resources with numbered suffixes
+
+**Resource Grouping** (7):
+- `create_group_node` - Add container/group nodes
+- `group_shared_services` - Group shared services together (IAM, CloudWatch, etc.)
+- `move_to_parent` - Relocate resources in hierarchy
+- `move_to_vpc_parent` - Move resources to VPC level
+- `consolidate_into_single_node` - Merge multiple resources into one
+
+**Connections** (11):
+- `link_resources` - Add connections between resources
+- `unlink_resources` - Remove connections
+- `unlink_from_parents` - Remove child from parent connections
+- `redirect_connections` - Change parent references
+- `redirect_to_security_group` - Redirect to security groups if present
+- `match_by_suffix` - Link resources with same ~N suffix
+- `link_via_shared_child` - Create direct links when resources share a child
+- `link_by_metadata_pattern` - Create links based on metadata patterns
+- `create_transitive_links` - Create transitive connections through intermediates
+- `bidirectional_link` - Create bidirectional connections
+- `replace_connection_targets` - Replace old connection targets with new ones
+
+**Graph Manipulation** (1):
+- `insert_intermediate_node` - Insert intermediate nodes between parents and children
+
+**Metadata Operations** (1):
+- `propagate_metadata` - Copy metadata from source to target resources
+
+**Cleanup** (1):
+- `delete_nodes` - Remove resources from graph
+
+**Variants** (2):
+- `apply_resource_variants` - Change resource type based on metadata
+- `apply_all_variants` - Apply all variants globally
+
+### Config-Driven Implementation Patterns
+
+#### Pattern 1: Pure Config-Driven Handler
 ```python
-# Step 1: Build intermediate mapping
-mapping = {}
-for resource in graphdict:
-    for dependency in graphdict[resource]:
-        if is_target_type(dependency):
-            mapping[dependency] = resource
-
-# Step 2: Apply mapping to create direct connections
-for resource in graphdict:
-    for dependency in list(graphdict[resource]):  # Copy to avoid mutation
-        if dependency in mapping:
-            actual_target = mapping[dependency]
-            graphdict[resource].append(actual_target)
-            graphdict[resource].remove(dependency)
+# In modules/config/resource_handler_configs_aws.py
+"aws_resource_type": {
+    "description": "What this handler does and why it uses this approach",
+    "transformations": [
+        {
+            "operation": "expand_to_numbered_instances",
+            "params": {
+                "resource_pattern": "aws_resource_type",
+                "subnet_key": "subnet_ids",
+            },
+        },
+        {
+            "operation": "link_resources",
+            "params": {
+                "source_pattern": "aws_resource_type",
+                "target_pattern": "aws_target",
+            },
+        },
+    ],
+}
 ```
 
-#### Pattern 2: Numbered Resource Expansion
+#### Pattern 2: Hybrid Handler (Config + Custom Function)
 ```python
-# When resource spans multiple parents, create numbered instances
-for i, subnet in enumerate(matching_subnets, 1):
-    numbered = f"{resource}~{i}"
-    graphdict[numbered] = copy(graphdict[resource])
-    meta_data[numbered] = deepcopy(meta_data[resource])
-    graphdict[subnet].append(numbered)
+# Config-driven transformations + custom logic for complex cases
+"aws_complex_resource": {
+    "description": "Handler combining generic operations with unique logic",
+    "transformations": [
+        {
+            "operation": "expand_to_numbered_instances",
+            "params": {"resource_pattern": "aws_complex_resource", "subnet_key": "subnet_ids"},
+        },
+    ],
+    "additional_handler_function": "aws_handle_complex_custom",  # Custom function in resource_handlers_aws.py
+}
 
-# CRITICAL: Delete original unnumbered resource
-del graphdict[resource]
-del meta_data[resource]
+# In modules/resource_handlers_aws.py
+def aws_handle_complex_custom(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Handle complex logic that cannot be expressed with transformers.
+
+    Why custom function needed: [specific justification per CO-009]
+    """
+    # Complex conditional logic, metadata parsing, etc.
+    return tfdata
 ```
 
-#### Pattern 3: Synthetic Container Groups
+#### Pattern 3: Pure Function Handler (Too Complex for Config)
 ```python
-# Create grouping node for related resources
-group_node = f"aws_group.{service_name}"
-graphdict[group_node] = []
-graphdict[group_node].append(resource)
-# Remove from previous parent
-previous_parent.remove(resource)
+# Only when logic is too complex for declarative expression
+"aws_very_complex": {
+    "description": "Complex bidirectional logic requiring conditional branches",
+    "additional_handler_function": "aws_handle_very_complex",
+}
+
+# In modules/resource_handlers_aws.py
+def aws_handle_very_complex(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Why Pure Function: Multiple conditional branches, dynamic name generation,
+    bidirectional relationship manipulation that transformers cannot express.
+    """
+    # Complex logic here
+    return tfdata
 ```
 
 ---
 
 ## P1 Pattern Research: API Gateway
 
-### Decision: Add `handle_api_gateway()` function
-**Rationale**: API Gateway is the most common entry point for serverless architectures
+### Decision: **❌ NO HANDLER NEEDED** (Baseline validation showed handlers unnecessary)
 
-### Terraform Resources to Handle:
-- `aws_api_gateway_rest_api` - REST API
-- `aws_api_gateway_stage` - Deployment stages (consolidate)
-- `aws_api_gateway_deployment` - Deployments (consolidate)
-- `aws_api_gateway_method` - HTTP methods (consolidate)
-- `aws_api_gateway_integration` - Backend integrations (detect connections)
-- `aws_apigatewayv2_api` - HTTP API (v2)
-- `aws_apigatewayv2_integration` - HTTP API integrations
-- `aws_apigatewayv2_vpc_link` - VPC Link connections
+**⚠️ Original Plan (REJECTED)**: Hybrid handler with config transformations + custom integration parsing
 
-### Implementation Strategy:
-1. Consolidate all API Gateway sub-resources into single REST API node
-2. Detect `integration` attributes to find Lambda/Step Functions connections
-3. Position as edge service (outside VPC)
-4. Handle VPC Link connections to private resources
-5. Add "External Integration" placeholder when no integrations defined
+**Validation Process**:
+1. Created test Terraform: API Gateway REST API + Lambda integration
+2. Generated baseline diagram WITHOUT custom handler
+3. Analyzed output
 
-### Configuration Additions:
-```python
-# Add to AWS_CONSOLIDATED_NODES
-{"aws_api_gateway": {"resource_name": "aws_api_gateway.api", "edge_service": True}}
-
-# Add to AWS_SPECIAL_RESOURCES
-"aws_api_gateway_rest_api": "handle_api_gateway"
-"aws_apigatewayv2_api": "handle_api_gateway_v2"
+**Baseline Output**:
 ```
+Lambda → Integration → Method → Resource → REST API
+```
+
+**Analysis**:
+- ✅ All resources visible with correct icons
+- ✅ Connections show Lambda serving API Gateway
+- ✅ Hierarchy is clear (method → resource → API)
+- ✅ Users can understand the architecture
+
+**Attempted Implementation (Failed)**:
+- Tried to parse integration URIs to create direct API → Lambda connections
+- Problem: In `terraform plan`, URIs show as `true` (computed values), not actual ARNs
+- Result: Created unhelpful `tv_external.api_integration_...` placeholder nodes
+- Made diagram WORSE, not better
+
+**Final Decision**: ❌ **No handler implemented** - baseline is sufficient!
+
+**⚠️ Lesson Learned**: This is a textbook example of CO-005.1 in action:
+- "Most services MUST NOT have custom handlers - trust the baseline Terraform graph parsing"
+- Always validate baseline first before assuming handlers are needed
+- "Looks better" is not a valid reason - must fix actual confusion/inaccuracy
+
+### Terraform Resources (Handled by Baseline)
+- `aws_api_gateway_rest_api` - REST API (baseline shows clearly)
+- `aws_api_gateway_integration` - Integrations (connections visible via Terraform dependencies)
+- `aws_api_gateway_method` - Methods (part of resource hierarchy)
+- `aws_api_gateway_resource` - Resources (part of resource hierarchy)
+- `aws_apigatewayv2_api` - HTTP/WebSocket APIs (baseline shows clearly)
+
+**No custom handler code needed** - Terraform dependency graph is sufficient!
 
 ---
 
 ## P1 Pattern Research: Event-Driven Architecture
 
-### Decision: Add handlers for EventBridge, SNS, SQS, Lambda ESM
-**Rationale**: Event-driven is fundamental to modern AWS applications
+### Decision: **Hybrid Handlers** (config transformations + custom ARN parsing)
+**Rationale**: Event-driven is fundamental to modern AWS applications. Connection creation can use `link_resources` transformer, but ARN parsing and endpoint resolution require custom logic.
 
 ### Terraform Resources to Handle:
 - `aws_cloudwatch_event_rule` - EventBridge rules
@@ -117,64 +214,81 @@ previous_parent.remove(resource)
 - `aws_sqs_queue` - SQS queues
 - `aws_lambda_event_source_mapping` - Lambda ESM (SQS, Kinesis, DynamoDB Streams)
 
-### Implementation Strategy:
-
-#### EventBridge:
-1. Parse `aws_cloudwatch_event_target` to find target ARNs
-2. Create EventBridge → Target connections
-3. Handle Lambda, Step Functions, SNS, SQS targets
-
-#### SNS:
-1. Parse `aws_sns_topic_subscription` for protocol and endpoint
-2. Create SNS → SQS, SNS → Lambda connections based on protocol
-3. Arrow direction: SNS → consumer (fan-out pattern)
-
-#### SQS → Lambda:
-1. Parse `aws_lambda_event_source_mapping` for event_source_arn
-2. Create SQS → Lambda connection (Lambda polls SQS)
-3. Arrow direction: SQS → Lambda (event flow direction)
-
-#### DynamoDB Streams:
-1. Detect `stream_enabled = true` on `aws_dynamodb_table`
-2. Find Lambda ESM referencing the stream
-3. Create DynamoDB → Lambda connection
-
-### Configuration Additions:
+### Recommended Handler Type: **Hybrid** (ARN parsing requires custom logic)
 ```python
-# Add to AWS_REVERSE_ARROW_LIST (events flow from source to consumer)
-"aws_lambda_event_source_mapping"
-"aws_sns_topic_subscription"
-"aws_cloudwatch_event_target"
+# In modules/config/resource_handler_configs_aws.py
+"aws_cloudwatch_event_rule": {
+    "description": "Parse EventBridge targets and create event flow connections",
+    "additional_handler_function": "aws_handle_eventbridge_targets",  # Custom ARN parsing
+}
+
+"aws_sns_topic": {
+    "description": "Parse SNS subscriptions and create fan-out connections",
+    "transformations": [
+        {
+            "operation": "link_resources",
+            "params": {
+                "source_pattern": "aws_sns_topic",
+                "target_pattern": "aws_sqs_queue|aws_lambda_function",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_sns_subscriptions",  # Parse protocol/endpoint
+}
+
+"aws_lambda_event_source_mapping": {
+    "description": "Create event source to Lambda connections",
+    "additional_handler_function": "aws_handle_lambda_esm",  # Parse event_source_arn
+}
 ```
+
+**Why Hybrid**: ARN parsing and endpoint resolution from Terraform metadata requires conditional logic and string manipulation that transformers cannot express declaratively.
 
 ---
 
 ## P1 Pattern Research: ElastiCache
 
-### Decision: Add `handle_elasticache()` function
-**Rationale**: Nearly every production application uses caching
+### Decision: **Pure Config-Driven** (reuses existing `expand_to_numbered_instances` transformer)
+**Rationale**: Nearly every production application uses caching. Pattern is identical to EKS node groups (expansion across subnets).
 
 ### Terraform Resources to Handle:
 - `aws_elasticache_cluster` - Cache clusters
 - `aws_elasticache_replication_group` - Redis replication groups
 - `aws_elasticache_subnet_group` - Subnet groups
 
-### Implementation Strategy:
-1. Position ElastiCache inside VPC subnets
-2. Expand replication groups across AZs with numbered nodes
-3. Detect connections from ECS/EKS/EC2 to cache
-4. Match cache nodes to subnets by AZ
+### Recommended Handler Type: **Pure Config-Driven**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_elasticache_replication_group": {
+    "description": "Expand ElastiCache replication groups to numbered instances per subnet",
+    "transformations": [
+        {
+            "operation": "expand_to_numbered_instances",
+            "params": {
+                "resource_pattern": "aws_elasticache_replication_group",
+                "subnet_key": "subnet_group_name",  # References aws_elasticache_subnet_group
+                "skip_if_numbered": True,
+            },
+        },
+        {
+            "operation": "match_by_suffix",  # Link cache~1 to app~1
+            "params": {
+                "source_pattern": "aws_ecs_service|aws_eks_node_group",
+                "target_pattern": "aws_elasticache",
+            },
+        },
+    ],
+}
+```
 
-### Existing Pattern Reference:
-- Similar to EKS node group expansion across subnets
-- Use `aws_handle_subnet_azs` pattern for AZ placement
+**Why Pure Config**: Identical pattern to `aws_eks_node_group` - expansion across subnets + suffix matching for connections. No custom logic needed.
 
 ---
 
 ## P1 Pattern Research: Cognito
 
-### Decision: Add `handle_cognito()` function
-**Rationale**: Standard authentication service for serverless/web apps
+### Decision: **Hybrid Handler** (config consolidation + custom Lambda trigger detection)
+**Rationale**: Standard authentication service for serverless/web apps. Consolidation uses transformers, but parsing `lambda_config` metadata requires custom logic.
 
 ### Terraform Resources to Handle:
 - `aws_cognito_user_pool` - User pools
@@ -182,198 +296,264 @@ previous_parent.remove(resource)
 - `aws_cognito_identity_pool` - Identity pools
 - `aws_cognito_user_pool_domain` - Custom domains (consolidate)
 
-### Implementation Strategy:
-1. Consolidate User Pool + clients + domain into single Cognito node
-2. Detect API Gateway authorizers referencing Cognito
-3. Create Users → Cognito → API Gateway flow
-4. Detect Lambda triggers in user pool config
-5. Position as edge/authentication service
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_cognito_user_pool": {
+    "description": "Consolidate Cognito resources and detect Lambda triggers",
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",
+            "params": {
+                "resource_pattern": "aws_cognito",
+                "target_node_name": "aws_cognito.auth",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_cognito_triggers",  # Parse lambda_config
+}
+```
 
-### Lambda Trigger Detection:
-Parse `lambda_config` attribute in user pool for triggers:
-- `pre_sign_up`
-- `post_confirmation`
-- `pre_authentication`
-- `post_authentication`
-- `custom_message`
-- etc.
+**Why Hybrid**: Consolidation is generic, but detecting Lambda triggers from `lambda_config` metadata (pre_sign_up, post_confirmation, etc.) requires custom parsing logic.
 
 ---
 
 ## P2 Pattern Research: WAF
 
-### Decision: Add `handle_waf()` function
-**Rationale**: Essential for security compliance
+### Decision: **Hybrid Handler** (config consolidation + custom association parsing)
+**Rationale**: Essential for security compliance. Consolidation uses transformers, but parsing `resource_arn` from associations requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_wafv2_web_acl` - WAFv2 Web ACL
-- `aws_wafv2_web_acl_association` - ACL associations
-- `aws_waf_web_acl` - Classic WAF (legacy)
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_wafv2_web_acl": {
+    "description": "Consolidate WAF rules and parse resource associations",
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",
+            "params": {
+                "resource_pattern": "aws_wafv2_web_acl",
+                "target_node_name": "aws_waf.firewall",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_waf_associations",  # Parse resource_arn
+}
+```
 
-### Implementation Strategy:
-1. Parse `aws_wafv2_web_acl_association` for resource_arn
-2. Create WAF → CloudFront/ALB/API Gateway connections
-3. Position WAF in front of protected resources (between users and protected service)
-4. Consolidate WAF rules into single WAF node
+**Why Hybrid**: Consolidation is generic, but parsing association ARNs to determine CloudFront/ALB/API Gateway requires custom logic.
 
 ---
 
 ## P2 Pattern Research: SageMaker
 
-### Decision: Add `handle_sagemaker()` function
-**Rationale**: Growing ML workloads in enterprise
+### Decision: **Hybrid Handler** (config consolidation + custom S3 artifact detection)
+**Rationale**: Growing ML workloads in enterprise. Consolidation uses transformers, but parsing `model_data_url` for S3 connections requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_sagemaker_endpoint` - Inference endpoints
-- `aws_sagemaker_endpoint_configuration` - Endpoint configs (consolidate)
-- `aws_sagemaker_model` - Models (link to endpoint)
-- `aws_sagemaker_notebook_instance` - Notebooks (VPC placement)
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_sagemaker_endpoint": {
+    "description": "Consolidate SageMaker components and detect S3 artifacts",
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",
+            "params": {
+                "resource_pattern": "aws_sagemaker_endpoint",
+                "target_node_name": "aws_sagemaker.ml",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_sagemaker_artifacts",  # Parse model_data_url
+}
+```
 
-### Implementation Strategy:
-1. Consolidate endpoint + config + model into logical ML group
-2. Detect S3 references in model_data_url for artifact connections
-3. Position notebook instances in VPC subnets when configured
-4. Detect Lambda → SageMaker runtime invocations
+**Why Hybrid**: Consolidation is generic, but extracting S3 bucket references from model URLs requires custom parsing.
 
 ---
 
 ## P2 Pattern Research: Step Functions
 
-### Decision: Add `handle_step_functions()` function
-**Rationale**: Key orchestration service
+### Decision: **Pure Function Handler** (complex JSON definition parsing)
+**Rationale**: Key orchestration service. Parsing state machine definition JSON with conditional logic for different task types (Lambda, ECS, SageMaker, DynamoDB) is too complex for transformers.
 
-### Terraform Resources to Handle:
-- `aws_sfn_state_machine` - State machines
-
-### Implementation Strategy:
-1. Parse `definition` JSON to extract service integrations
-2. Detect Lambda, ECS, SageMaker, DynamoDB, SNS, SQS task states
-3. Create Step Functions → integrated service connections
-4. Handle API Gateway → Step Functions flow (sync/async)
-
-### Definition Parsing:
-State machine definitions contain resource ARNs in task states:
-```json
-{
-  "States": {
-    "LambdaTask": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:...:function:my-function"
-    }
-  }
+### Recommended Handler Type: **Pure Function**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_sfn_state_machine": {
+    "description": "Parse state machine definition JSON to detect service integrations",
+    "additional_handler_function": "aws_handle_step_functions",
 }
+
+# In modules/resource_handlers_aws.py
+def aws_handle_step_functions(tfdata):
+    """
+    Why Pure Function: Parsing JSON state machine definitions with conditional
+    logic for multiple task types (Lambda, ECS, SageMaker, DynamoDB, SNS, SQS)
+    requires complex branching and ARN extraction that transformers cannot express.
+    """
+    # Parse definition JSON, extract ARNs, create connections
+    return tfdata
 ```
+
+**Why Pure Function**: JSON parsing with conditional logic for multiple service integration types cannot be expressed declaratively.
 
 ---
 
 ## P2 Pattern Research: S3 Notifications
 
-### Decision: Add `handle_s3_notifications()` function
-**Rationale**: S3 is foundational for data flow patterns
+### Decision: **Hybrid Handler** (config linking + custom notification config parsing)
+**Rationale**: S3 is foundational for data flow patterns. Generic linking available, but parsing notification configurations requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_s3_bucket_notification` - Bucket notifications
-- `aws_s3_bucket_replication_configuration` - Replication
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_s3_bucket_notification": {
+    "description": "Parse S3 notification configurations and create event connections",
+    "transformations": [
+        {
+            "operation": "link_resources",
+            "params": {
+                "source_pattern": "aws_s3_bucket",
+                "target_pattern": "aws_lambda_function|aws_sqs_queue|aws_sns_topic",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_s3_notification_config",  # Parse notification targets
+}
+```
 
-### Implementation Strategy:
-1. Parse notification config for Lambda/SQS/SNS targets
-2. Create S3 → Lambda/SQS/SNS connections
-3. Detect replication configuration for bucket-to-bucket flows
+**Why Hybrid**: Generic linking available, but parsing notification configurations for specific targets requires custom logic.
 
 ---
 
 ## P2 Pattern Research: Secrets Manager
 
-### Decision: Add `handle_secrets_manager()` function
-**Rationale**: Essential for secure configuration
+### Decision: **Hybrid Handler** (config grouping + custom reference detection)
+**Rationale**: Essential for secure configuration. Adding to shared services uses transformer, but detecting secret references in environment variables requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_secretsmanager_secret` - Secrets
-- `aws_secretsmanager_secret_rotation` - Rotation config
-- `aws_ssm_parameter` - Parameter Store
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_secretsmanager_secret": {
+    "description": "Group secrets as shared services and detect application references",
+    "transformations": [
+        {
+            "operation": "group_shared_services",
+            "params": {
+                "service_patterns": ["aws_secretsmanager_secret", "aws_ssm_parameter"],
+                "group_name": "aws_group.shared_services",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_secret_references",  # Detect env var references
+}
+```
 
-### Implementation Strategy:
-1. Detect secret references in Lambda/ECS environment variables
-2. Create Application → Secrets Manager connections
-3. Detect rotation Lambda functions
-4. Add Secrets Manager to SHARED_SERVICES group
+**Why Hybrid**: Grouping is generic, but scanning Lambda/ECS environment variables for secret ARNs requires custom parsing.
 
 ---
 
-## P3 Pattern Research: Glue/Athena
+## P3 Pattern Research: Glue/Athena/Firehose
 
-### Decision: Add `handle_glue()` and `handle_athena()` functions
-**Rationale**: Common data lake patterns
+### Decision: **Hybrid Handlers** (config linking + custom script/config parsing)
+**Rationale**: Common data lake patterns. Generic linking available, but parsing Glue scripts and Firehose destinations requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_glue_job` - ETL jobs
-- `aws_glue_crawler` - Data crawlers
-- `aws_glue_catalog_database` - Catalog databases
-- `aws_athena_workgroup` - Query workgroups
-- `aws_kinesis_firehose_delivery_stream` - Firehose
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_glue_job": {
+    "description": "Parse Glue job scripts to detect S3 sources and targets",
+    "transformations": [
+        {
+            "operation": "link_resources",
+            "params": {
+                "source_pattern": "aws_glue_job",
+                "target_pattern": "aws_s3_bucket",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_glue_scripts",  # Parse script_location for S3
+}
 
-### Implementation Strategy:
-1. Parse Glue job scripts for S3 sources/destinations
-2. Detect Athena → S3 query patterns
-3. Parse Firehose destination configuration
+"aws_kinesis_firehose_delivery_stream": {
+    "description": "Parse Firehose destination configuration",
+    "additional_handler_function": "aws_handle_firehose_destinations",  # Parse destination config
+}
+```
+
+**Why Hybrid**: Generic linking available, but parsing job scripts and destination configurations requires custom logic.
 
 ---
 
 ## P3 Pattern Research: AppSync
 
-### Decision: Add `handle_appsync()` function
-**Rationale**: Growing GraphQL adoption
+### Decision: **Hybrid Handler** (config consolidation + custom data source parsing)
+**Rationale**: Growing GraphQL adoption. Consolidation uses transformers, but parsing data source configurations requires custom logic.
 
-### Terraform Resources to Handle:
-- `aws_appsync_graphql_api` - GraphQL API
-- `aws_appsync_datasource` - Data sources
-- `aws_appsync_resolver` - Resolvers (consolidate)
+### Recommended Handler Type: **Hybrid**
+```python
+# In modules/config/resource_handler_configs_aws.py
+"aws_appsync_graphql_api": {
+    "description": "Consolidate AppSync resources and parse data sources",
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",
+            "params": {
+                "resource_pattern": "aws_appsync",
+                "target_node_name": "aws_appsync.api",
+            },
+        },
+    ],
+    "additional_handler_function": "aws_handle_appsync_datasources",  # Parse data sources
+}
+```
 
-### Implementation Strategy:
-1. Parse data sources for DynamoDB/Lambda connections
-2. Consolidate resolvers into API node
-3. Position as edge service (similar to API Gateway)
-4. Detect Cognito authentication configuration
+**Why Hybrid**: Consolidation is generic, but parsing data source configurations for DynamoDB/Lambda requires custom logic.
 
 ---
 
 ## Configuration Updates Summary
 
-### AWS_SPECIAL_RESOURCES Additions:
-```python
-"aws_api_gateway_rest_api": "handle_api_gateway",
-"aws_apigatewayv2_api": "handle_api_gateway_v2",
-"aws_cloudwatch_event_rule": "handle_eventbridge",
-"aws_sns_topic": "handle_sns",
-"aws_lambda_event_source_mapping": "handle_lambda_esm",
-"aws_elasticache_cluster": "handle_elasticache",
-"aws_elasticache_replication_group": "handle_elasticache_replication",
-"aws_cognito_user_pool": "handle_cognito",
-"aws_wafv2_web_acl": "handle_waf",
-"aws_sagemaker_endpoint": "handle_sagemaker",
-"aws_sfn_state_machine": "handle_step_functions",
-"aws_s3_bucket_notification": "handle_s3_notifications",
-"aws_secretsmanager_secret": "handle_secrets_manager",
-"aws_glue_job": "handle_glue",
-"aws_appsync_graphql_api": "handle_appsync",
-```
+All handlers defined in `modules/config/resource_handler_configs_aws.py` per constitution CO-006 through CO-013.
 
-### AWS_CONSOLIDATED_NODES Additions:
-- API Gateway stages/deployments/methods
-- Cognito clients/domains
-- WAF rules/rule groups
-- SageMaker endpoint configs
-- AppSync resolvers
+### Handler Type Distribution:
 
-### AWS_EDGE_NODES Additions:
-- API Gateway
-- AppSync
-- Cognito (authentication layer)
-- WAF (security layer)
+| Handler | Type | Transformers Used | Custom Function | Rationale |
+|---------|------|-------------------|-----------------|-----------|
+| ElastiCache | Pure Config | expand_to_numbered_instances, match_by_suffix | None | Identical to EKS node groups |
+| API Gateway | Hybrid | consolidate_into_single_node, delete_nodes | aws_handle_api_gateway_integrations | URI parsing complex |
+| EventBridge | Hybrid | link_resources | aws_handle_eventbridge_targets | ARN parsing complex |
+| SNS | Hybrid | link_resources | aws_handle_sns_subscriptions | Protocol/endpoint resolution |
+| Lambda ESM | Hybrid | - | aws_handle_lambda_esm | event_source_arn parsing |
+| Cognito | Hybrid | consolidate_into_single_node | aws_handle_cognito_triggers | lambda_config parsing |
+| WAF | Hybrid | consolidate_into_single_node | aws_handle_waf_associations | Association ARN parsing |
+| SageMaker | Hybrid | consolidate_into_single_node | aws_handle_sagemaker_artifacts | model_data_url parsing |
+| Step Functions | Pure Function | - | aws_handle_step_functions | Complex JSON definition parsing |
+| S3 Notifications | Hybrid | link_resources | aws_handle_s3_notification_config | Notification config parsing |
+| Secrets Manager | Hybrid | group_shared_services | aws_handle_secret_references | Env var reference detection |
+| Glue | Hybrid | link_resources | aws_handle_glue_scripts | Script parsing |
+| Firehose | Pure Function | - | aws_handle_firehose_destinations | Destination config complex |
+| AppSync | Hybrid | consolidate_into_single_node | aws_handle_appsync_datasources | Data source parsing |
 
-### AWS_GROUP_NODES Considerations:
-- ElastiCache clusters may become group nodes for multi-node clusters
-- SageMaker notebook instances in VPC
+### Summary:
+- **1 Pure Config-Driven handler** (ElastiCache)
+- **11 Hybrid handlers** (most common pattern)
+- **2 Pure Function handlers** (Step Functions, Firehose)
+
+### New Transformers Needed:
+
+**None** - All patterns can be expressed using existing 24 transformers + custom functions for complex parsing logic.
+
+This validates the transformer library is approaching saturation per CO-013 (target: ~30 operations).
+
+### Cross-Provider Reusability:
+
+These handlers demonstrate strong cross-provider reusability potential:
+- ElastiCache expansion pattern → Azure Cache, GCP Memorystore
+- API Gateway consolidation → Azure API Management, GCP API Gateway
+- Event-driven patterns → Azure Event Grid, GCP Eventarc
+- Secrets management → Azure Key Vault, GCP Secret Manager
 
 ---
 

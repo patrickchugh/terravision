@@ -15,3 +15,4 @@ class Tablet(_Device):
 
 
 # Aliases
+tv_aws_device = Tablet

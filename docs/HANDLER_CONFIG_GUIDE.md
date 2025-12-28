@@ -9,6 +9,66 @@ TerraVision uses a unified hybrid configuration-driven approach for all resource
 
 All handlers are defined in `modules/config/resource_handler_configs_<provider>.py` with automatic provider detection.
 
+## ⚠️ CRITICAL: Validate Baseline First!
+
+**Before implementing ANY handler**, you MUST prove that the baseline Terraform graph parsing is insufficient.
+
+### Validation Process
+
+**Step 1: Generate Baseline**
+```bash
+# Create test Terraform code for the resource type
+cd tests/fixtures/aws_terraform/test_resource/
+# Run TerraVision WITHOUT any custom handler
+poetry run python ../../../terravision.py graphdata --source . --outfile baseline.json
+```
+
+**Step 2: Analyze Baseline Output**
+- ✅ Are resources visible with correct icons?
+- ✅ Are connections present (arrows show Terraform dependencies)?
+- ✅ Is hierarchy clear (VPC → subnet → resources)?
+- ✅ Can users understand the architecture?
+
+**Step 3: Decision**
+- If ALL checks pass → **STOP! No handler needed.** Trust the baseline.
+- If ANY check fails → Document specific issues, proceed cautiously
+
+### Real Example: API Gateway
+
+**Baseline Output** (no handler):
+```
+Lambda → Integration → Method → Resource → REST API
+```
+
+**Analysis**:
+- ✅ All resources visible
+- ✅ Connections show data flow
+- ✅ Hierarchy is clear
+- ✅ Users understand: Lambda serves API Gateway
+
+**Decision**: ❌ **Handler NOT needed** - baseline is sufficient!
+
+**Mistake Made**: Tried to parse integration URIs to create "better" diagrams
+**Result**: Added complexity, created unhelpful placeholder nodes
+**Lesson**: Baseline was already good - handler made it worse!
+
+### Counter-Example: Security Groups
+
+**Baseline Output** (no handler):
+```
+EC2 → Security Group (simple dependency arrow)
+```
+
+**Analysis**:
+- ✅ Resources visible
+- ❌ No ingress/egress rules shown
+- ❌ Can't see which SG allows which traffic
+- ❌ Users can't understand network security
+
+**Decision**: ✅ **Handler needed** - baseline insufficient!
+
+**Implementation**: Parse SG rules, create directional arrows with port/protocol labels
+
 ## Why Hybrid Architecture?
 
 **Problem**: Some handlers are simple (move, link, delete), others are complex (conditional logic, dynamic naming, metadata manipulation).
@@ -148,7 +208,8 @@ All transformers are defined in `modules/resource_transformers.py`. Total: **24 
 - **group_shared_services** - Group shared services together (IAM, CloudWatch, etc.)
 - **move_to_parent** - Move resources between parents
 - **move_to_vpc_parent** - Move resources to VPC level
-- **consolidate_into_single_node** - Merge multiple resources into one
+
+**⚠️ For Resource Consolidation**: Use `AWS_CONSOLIDATED_NODES` in `cloud_config_aws.py` instead of transformers. See "Resource Consolidation" section below.
 
 ### Connections
 - **link_resources** - Create connections between resources
@@ -183,6 +244,73 @@ All transformers are defined in `modules/resource_transformers.py`. Total: **24 
 
 ### Pipeline
 - **apply_transformation_pipeline** - Execute sequence of transformations
+
+## Resource Consolidation
+
+**⚠️ IMPORTANT**: When you need to consolidate multiple resources into a single node (e.g., merge all `aws_api_gateway_rest_api.*` into one `aws_api_gateway_rest_api.api` node), **DO NOT use a transformer**. Instead, add an entry to `AWS_CONSOLIDATED_NODES` in `cloud_config_aws.py`.
+
+### Why Use AWS_CONSOLIDATED_NODES?
+
+1. **Simpler**: Declarative configuration in one central location
+2. **More maintainable**: All consolidation rules in one place
+3. **Existing mechanism**: Uses the proven consolidation system already in TerraVision
+4. **Automatic**: Runs before handlers, so handlers see consolidated nodes
+
+### How to Consolidate Resources
+
+**❌ WRONG - Don't use transformers:**
+```python
+# DON'T DO THIS!
+"aws_api_gateway_rest_api": {
+    "transformations": [
+        {
+            "operation": "consolidate_into_single_node",  # This transformer was removed!
+            "params": {
+                "resource_pattern": "aws_api_gateway_rest_api",
+                "target_node_name": "aws_api_gateway_rest_api.api",
+            },
+        },
+    ],
+}
+```
+
+**✅ CORRECT - Add to AWS_CONSOLIDATED_NODES:**
+```python
+# In modules/config/cloud_config_aws.py
+AWS_CONSOLIDATED_NODES = [
+    # ... existing entries ...
+    {
+        "aws_api_gateway_rest_api": {
+            "resource_name": "aws_api_gateway_rest_api.api",
+            "import_location": "resource_classes.aws.network",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+]
+```
+
+### AWS_CONSOLIDATED_NODES Format
+
+```python
+{
+    "resource_prefix": {  # Pattern to match (e.g., "aws_api_gateway_rest_api")
+        "resource_name": "consolidated.node.name",  # Final consolidated name
+        "import_location": "resource_classes.aws.category",  # Icon path
+        "vpc": True/False,  # Whether resource is inside VPC
+        "edge_service": True/False,  # (Optional) Whether it's an edge service
+    }
+}
+```
+
+### When to Use Consolidation
+
+Use `AWS_CONSOLIDATED_NODES` when:
+- Multiple resources of the same type should appear as one node
+- You want to merge `aws_foo_bar.x`, `aws_foo_bar.y`, `aws_foo_bar.z` → `aws_foo_bar.consolidated`
+- Examples: API Gateway (many integration/method resources → 1 API), CloudWatch logs, Route53 records
+
+**Note**: After consolidation, you can still use handler transformations to add connections, delete sub-resources, etc.
 
 ## Benefits
 

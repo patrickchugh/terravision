@@ -1,0 +1,2073 @@
+{
+    "codepath": ".",
+    "workdir": "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/api_gateway_rest_lambda",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_api_gateway_deployment.example",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_deployment",
+                        "name": "example",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "canary_settings": [],
+                            "description": null,
+                            "stage_description": null,
+                            "stage_name": "prod",
+                            "triggers": null,
+                            "variables": null
+                        },
+                        "sensitive_values": {
+                            "canary_settings": []
+                        }
+                    },
+                    {
+                        "address": "aws_api_gateway_integration.lambda",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_integration",
+                        "name": "lambda",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "cache_key_parameters": null,
+                            "connection_id": null,
+                            "connection_type": "INTERNET",
+                            "content_handling": null,
+                            "credentials": null,
+                            "http_method": "GET",
+                            "integration_http_method": "POST",
+                            "request_parameters": null,
+                            "request_templates": null,
+                            "timeout_milliseconds": 29000,
+                            "tls_config": [],
+                            "type": "AWS_PROXY"
+                        },
+                        "sensitive_values": {
+                            "tls_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_api_gateway_method.get_users",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_method",
+                        "name": "get_users",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "api_key_required": false,
+                            "authorization": "NONE",
+                            "authorization_scopes": null,
+                            "authorizer_id": null,
+                            "http_method": "GET",
+                            "operation_name": null,
+                            "request_models": null,
+                            "request_parameters": null,
+                            "request_validator_id": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_api_gateway_resource.users",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_resource",
+                        "name": "users",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "path_part": "users"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_api_gateway_rest_api.example",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_rest_api",
+                        "name": "example",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "body": null,
+                            "description": "Example REST API",
+                            "fail_on_warnings": null,
+                            "name": "example-api",
+                            "parameters": null,
+                            "put_rest_api_mode": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "binary_media_types": [],
+                            "endpoint_configuration": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_group.lambda_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "lambda_logs",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "kms_key_id": null,
+                            "name": "/aws/lambda/api-handler",
+                            "retention_in_days": 7,
+                            "skip_destroy": false,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "api-handler-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_function.api_handler",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "api_handler",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "ENVIRONMENT": "test"
+                                    }
+                                }
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "api-handler",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": null,
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_permission.api_gateway",
+                        "mode": "managed",
+                        "type": "aws_lambda_permission",
+                        "name": "api_gateway",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "action": "lambda:InvokeFunction",
+                            "event_source_token": null,
+                            "function_name": "api-handler",
+                            "function_url_auth_type": null,
+                            "principal": "apigateway.amazonaws.com",
+                            "principal_org_id": null,
+                            "qualifier": null,
+                            "source_account": null,
+                            "statement_id": "AllowAPIGatewayInvoke"
+                        },
+                        "sensitive_values": {}
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_api_gateway_deployment.example",
+                "mode": "managed",
+                "type": "aws_api_gateway_deployment",
+                "name": "example",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "canary_settings": [],
+                        "description": null,
+                        "stage_description": null,
+                        "stage_name": "prod",
+                        "triggers": null,
+                        "variables": null,
+                        "created_date": true,
+                        "execution_arn": true,
+                        "id": true,
+                        "invoke_url": true,
+                        "rest_api_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "canary_settings": [],
+                        "created_date": true,
+                        "execution_arn": true,
+                        "id": true,
+                        "invoke_url": true,
+                        "rest_api_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "canary_settings": []
+                    }
+                }
+            },
+            {
+                "address": "aws_api_gateway_integration.lambda",
+                "mode": "managed",
+                "type": "aws_api_gateway_integration",
+                "name": "lambda",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "cache_key_parameters": null,
+                        "connection_id": null,
+                        "connection_type": "INTERNET",
+                        "content_handling": null,
+                        "credentials": null,
+                        "http_method": "GET",
+                        "integration_http_method": "POST",
+                        "request_parameters": null,
+                        "request_templates": null,
+                        "timeout_milliseconds": 29000,
+                        "tls_config": [],
+                        "type": "AWS_PROXY",
+                        "cache_namespace": true,
+                        "id": true,
+                        "passthrough_behavior": true,
+                        "resource_id": true,
+                        "rest_api_id": true,
+                        "uri": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "cache_namespace": true,
+                        "id": true,
+                        "passthrough_behavior": true,
+                        "resource_id": true,
+                        "rest_api_id": true,
+                        "tls_config": [],
+                        "uri": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tls_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_api_gateway_method.get_users",
+                "mode": "managed",
+                "type": "aws_api_gateway_method",
+                "name": "get_users",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "api_key_required": false,
+                        "authorization": "NONE",
+                        "authorization_scopes": null,
+                        "authorizer_id": null,
+                        "http_method": "GET",
+                        "operation_name": null,
+                        "request_models": null,
+                        "request_parameters": null,
+                        "request_validator_id": null,
+                        "id": true,
+                        "resource_id": true,
+                        "rest_api_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "resource_id": true,
+                        "rest_api_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_api_gateway_resource.users",
+                "mode": "managed",
+                "type": "aws_api_gateway_resource",
+                "name": "users",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "path_part": "users",
+                        "id": true,
+                        "parent_id": true,
+                        "path": true,
+                        "rest_api_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "parent_id": true,
+                        "path": true,
+                        "rest_api_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_api_gateway_rest_api.example",
+                "mode": "managed",
+                "type": "aws_api_gateway_rest_api",
+                "name": "example",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "body": null,
+                        "description": "Example REST API",
+                        "fail_on_warnings": null,
+                        "name": "example-api",
+                        "parameters": null,
+                        "put_rest_api_mode": null,
+                        "tags": null,
+                        "api_key_source": true,
+                        "arn": true,
+                        "binary_media_types": [],
+                        "created_date": true,
+                        "disable_execute_api_endpoint": true,
+                        "endpoint_configuration": [],
+                        "execution_arn": true,
+                        "id": true,
+                        "minimum_compression_size": true,
+                        "policy": true,
+                        "root_resource_id": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "api_key_source": true,
+                        "arn": true,
+                        "binary_media_types": true,
+                        "created_date": true,
+                        "disable_execute_api_endpoint": true,
+                        "endpoint_configuration": true,
+                        "execution_arn": true,
+                        "id": true,
+                        "minimum_compression_size": true,
+                        "policy": true,
+                        "root_resource_id": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "binary_media_types": [],
+                        "endpoint_configuration": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_cloudwatch_log_group.lambda_logs",
+                "mode": "managed",
+                "type": "aws_cloudwatch_log_group",
+                "name": "lambda_logs",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "kms_key_id": null,
+                        "name": "/aws/lambda/api-handler",
+                        "retention_in_days": 7,
+                        "skip_destroy": false,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.lambda_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "api-handler-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_function.api_handler",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "api_handler",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "api-handler",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": null,
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": true,
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_permission.api_gateway",
+                "mode": "managed",
+                "type": "aws_lambda_permission",
+                "name": "api_gateway",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "action": "lambda:InvokeFunction",
+                        "event_source_token": null,
+                        "function_name": "api-handler",
+                        "function_url_auth_type": null,
+                        "principal": "apigateway.amazonaws.com",
+                        "principal_org_id": null,
+                        "qualifier": null,
+                        "source_account": null,
+                        "statement_id": "AllowAPIGatewayInvoke",
+                        "id": true,
+                        "source_arn": true,
+                        "statement_id_prefix": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "source_arn": true,
+                        "statement_id_prefix": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_api_gateway_deployment.example",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_deployment",
+                        "name": "example",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "rest_api_id": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.id",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            },
+                            "stage_name": {
+                                "constant_value": "prod"
+                            }
+                        },
+                        "schema_version": 0,
+                        "depends_on": [
+                            "aws_api_gateway_integration.lambda"
+                        ]
+                    },
+                    {
+                        "address": "aws_api_gateway_integration.lambda",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_integration",
+                        "name": "lambda",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "http_method": {
+                                "references": [
+                                    "aws_api_gateway_method.get_users.http_method",
+                                    "aws_api_gateway_method.get_users"
+                                ]
+                            },
+                            "integration_http_method": {
+                                "constant_value": "POST"
+                            },
+                            "resource_id": {
+                                "references": [
+                                    "aws_api_gateway_resource.users.id",
+                                    "aws_api_gateway_resource.users"
+                                ]
+                            },
+                            "rest_api_id": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.id",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            },
+                            "type": {
+                                "constant_value": "AWS_PROXY"
+                            },
+                            "uri": {
+                                "references": [
+                                    "aws_lambda_function.api_handler.invoke_arn",
+                                    "aws_lambda_function.api_handler"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_api_gateway_method.get_users",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_method",
+                        "name": "get_users",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "authorization": {
+                                "constant_value": "NONE"
+                            },
+                            "http_method": {
+                                "constant_value": "GET"
+                            },
+                            "resource_id": {
+                                "references": [
+                                    "aws_api_gateway_resource.users.id",
+                                    "aws_api_gateway_resource.users"
+                                ]
+                            },
+                            "rest_api_id": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.id",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_api_gateway_resource.users",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_resource",
+                        "name": "users",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "parent_id": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.root_resource_id",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            },
+                            "path_part": {
+                                "constant_value": "users"
+                            },
+                            "rest_api_id": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.id",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_api_gateway_rest_api.example",
+                        "mode": "managed",
+                        "type": "aws_api_gateway_rest_api",
+                        "name": "example",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "description": {
+                                "constant_value": "Example REST API"
+                            },
+                            "name": {
+                                "constant_value": "example-api"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_group.lambda_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "lambda_logs",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "references": [
+                                    "aws_lambda_function.api_handler.function_name",
+                                    "aws_lambda_function.api_handler"
+                                ]
+                            },
+                            "retention_in_days": {
+                                "constant_value": 7
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "api-handler-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.api_handler",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "api_handler",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "constant_value": {
+                                            "ENVIRONMENT": "test"
+                                        }
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "api-handler"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.arn",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_permission.api_gateway",
+                        "mode": "managed",
+                        "type": "aws_lambda_permission",
+                        "name": "api_gateway",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "action": {
+                                "constant_value": "lambda:InvokeFunction"
+                            },
+                            "function_name": {
+                                "references": [
+                                    "aws_lambda_function.api_handler.function_name",
+                                    "aws_lambda_function.api_handler"
+                                ]
+                            },
+                            "principal": {
+                                "constant_value": "apigateway.amazonaws.com"
+                            },
+                            "source_arn": {
+                                "references": [
+                                    "aws_api_gateway_rest_api.example.execution_arn",
+                                    "aws_api_gateway_rest_api.example"
+                                ]
+                            },
+                            "statement_id": {
+                                "constant_value": "AllowAPIGatewayInvoke"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_api_gateway_resource.users",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_api_gateway_rest_api.example",
+                "attribute": [
+                    "execution_arn"
+                ]
+            },
+            {
+                "resource": "aws_api_gateway_rest_api.example",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_api_gateway_rest_api.example",
+                "attribute": [
+                    "root_resource_id"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.api_handler",
+                "attribute": [
+                    "invoke_arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_api_gateway_method.get_users",
+                "attribute": [
+                    "http_method"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.api_handler",
+                "attribute": [
+                    "function_name"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-28T16:14:13Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_api_gateway_deployment.example",
+            "mode": "managed",
+            "type": "aws_api_gateway_deployment",
+            "name": "example",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "canary_settings": [],
+                    "description": null,
+                    "stage_description": null,
+                    "stage_name": "prod",
+                    "triggers": null,
+                    "variables": null,
+                    "created_date": true,
+                    "execution_arn": true,
+                    "id": true,
+                    "invoke_url": true,
+                    "rest_api_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "canary_settings": [],
+                    "created_date": true,
+                    "execution_arn": true,
+                    "id": true,
+                    "invoke_url": true,
+                    "rest_api_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "canary_settings": []
+                }
+            }
+        },
+        {
+            "address": "aws_api_gateway_integration.lambda",
+            "mode": "managed",
+            "type": "aws_api_gateway_integration",
+            "name": "lambda",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "cache_key_parameters": null,
+                    "connection_id": null,
+                    "connection_type": "INTERNET",
+                    "content_handling": null,
+                    "credentials": null,
+                    "http_method": "GET",
+                    "integration_http_method": "POST",
+                    "request_parameters": null,
+                    "request_templates": null,
+                    "timeout_milliseconds": 29000,
+                    "tls_config": [],
+                    "type": "AWS_PROXY",
+                    "cache_namespace": true,
+                    "id": true,
+                    "passthrough_behavior": true,
+                    "resource_id": true,
+                    "rest_api_id": true,
+                    "uri": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "cache_namespace": true,
+                    "id": true,
+                    "passthrough_behavior": true,
+                    "resource_id": true,
+                    "rest_api_id": true,
+                    "tls_config": [],
+                    "uri": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tls_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_api_gateway_method.get_users",
+            "mode": "managed",
+            "type": "aws_api_gateway_method",
+            "name": "get_users",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "api_key_required": false,
+                    "authorization": "NONE",
+                    "authorization_scopes": null,
+                    "authorizer_id": null,
+                    "http_method": "GET",
+                    "operation_name": null,
+                    "request_models": null,
+                    "request_parameters": null,
+                    "request_validator_id": null,
+                    "id": true,
+                    "resource_id": true,
+                    "rest_api_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "resource_id": true,
+                    "rest_api_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_api_gateway_resource.users",
+            "mode": "managed",
+            "type": "aws_api_gateway_resource",
+            "name": "users",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "path_part": "users",
+                    "id": true,
+                    "parent_id": true,
+                    "path": true,
+                    "rest_api_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "parent_id": true,
+                    "path": true,
+                    "rest_api_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_api_gateway_rest_api.example",
+            "mode": "managed",
+            "type": "aws_api_gateway_rest_api",
+            "name": "example",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "body": null,
+                    "description": "Example REST API",
+                    "fail_on_warnings": null,
+                    "name": "example-api",
+                    "parameters": null,
+                    "put_rest_api_mode": null,
+                    "tags": null,
+                    "api_key_source": true,
+                    "arn": true,
+                    "binary_media_types": [],
+                    "created_date": true,
+                    "disable_execute_api_endpoint": true,
+                    "endpoint_configuration": [],
+                    "execution_arn": true,
+                    "id": true,
+                    "minimum_compression_size": true,
+                    "policy": true,
+                    "root_resource_id": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "api_key_source": true,
+                    "arn": true,
+                    "binary_media_types": true,
+                    "created_date": true,
+                    "disable_execute_api_endpoint": true,
+                    "endpoint_configuration": true,
+                    "execution_arn": true,
+                    "id": true,
+                    "minimum_compression_size": true,
+                    "policy": true,
+                    "root_resource_id": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "binary_media_types": [],
+                    "endpoint_configuration": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_cloudwatch_log_group.lambda_logs",
+            "mode": "managed",
+            "type": "aws_cloudwatch_log_group",
+            "name": "lambda_logs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "kms_key_id": null,
+                    "name": "/aws/lambda/api-handler",
+                    "retention_in_days": 7,
+                    "skip_destroy": false,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.lambda_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "api-handler-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_function.api_handler",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "api_handler",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "api-handler",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": null,
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": true,
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_permission.api_gateway",
+            "mode": "managed",
+            "type": "aws_lambda_permission",
+            "name": "api_gateway",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "action": "lambda:InvokeFunction",
+                    "event_source_token": null,
+                    "function_name": "api-handler",
+                    "function_url_auth_type": null,
+                    "principal": "apigateway.amazonaws.com",
+                    "principal_org_id": null,
+                    "qualifier": null,
+                    "source_account": null,
+                    "statement_id": "AllowAPIGatewayInvoke",
+                    "id": true,
+                    "source_arn": true,
+                    "statement_id_prefix": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "source_arn": true,
+                    "statement_id_prefix": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_api_gateway_deployment.example",
+                "fontname": "sans-serif",
+                "label": "aws_api_gateway_deployment.example",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_api_gateway_integration.lambda",
+                "fontname": "sans-serif",
+                "label": "aws_api_gateway_integration.lambda",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_api_gateway_method.get_users",
+                "fontname": "sans-serif",
+                "label": "aws_api_gateway_method.get_users",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_api_gateway_resource.users",
+                "fontname": "sans-serif",
+                "label": "aws_api_gateway_resource.users",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_api_gateway_rest_api.example",
+                "fontname": "sans-serif",
+                "label": "aws_api_gateway_rest_api.example",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_cloudwatch_log_group.lambda_logs",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_log_group.lambda_logs",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_iam_role.lambda_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "aws_lambda_function.api_handler",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.api_handler",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "aws_lambda_permission.api_gateway",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_permission.api_gateway",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 1
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 2
+            },
+            {
+                "_gvid": 2,
+                "tail": 1,
+                "head": 7
+            },
+            {
+                "_gvid": 3,
+                "tail": 2,
+                "head": 3
+            },
+            {
+                "_gvid": 4,
+                "tail": 3,
+                "head": 4
+            },
+            {
+                "_gvid": 5,
+                "tail": 5,
+                "head": 7
+            },
+            {
+                "_gvid": 6,
+                "tail": 7,
+                "head": 6
+            },
+            {
+                "_gvid": 7,
+                "tail": 8,
+                "head": 4
+            },
+            {
+                "_gvid": 8,
+                "tail": 8,
+                "head": 7
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_api_gateway_deployment.example": [],
+        "aws_api_gateway_integration.lambda": [
+            "aws_api_gateway_deployment.example"
+        ],
+        "aws_api_gateway_method.get_users": [
+            "aws_api_gateway_integration.lambda"
+        ],
+        "aws_api_gateway_resource.users": [
+            "aws_api_gateway_method.get_users"
+        ],
+        "aws_api_gateway_rest_api.example": [
+            "aws_api_gateway_resource.users",
+            "aws_lambda_permission.api_gateway"
+        ],
+        "aws_cloudwatch_log_group.lambda_logs": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.api_handler"
+        ],
+        "aws_lambda_function.api_handler": [
+            "aws_api_gateway_integration.lambda",
+            "aws_cloudwatch_log_group.lambda_logs",
+            "aws_lambda_permission.api_gateway"
+        ],
+        "aws_lambda_permission.api_gateway": []
+    },
+    "meta_data": {
+        "aws_api_gateway_deployment.example": {
+            "canary_settings": [],
+            "description": null,
+            "stage_description": null,
+            "stage_name": "prod",
+            "triggers": null,
+            "variables": null,
+            "created_date": true,
+            "execution_arn": true,
+            "id": true,
+            "invoke_url": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_integration.lambda": {
+            "cache_key_parameters": null,
+            "connection_id": null,
+            "connection_type": "INTERNET",
+            "content_handling": null,
+            "credentials": null,
+            "http_method": "GET",
+            "integration_http_method": "POST",
+            "request_parameters": null,
+            "request_templates": null,
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "AWS_PROXY",
+            "cache_namespace": true,
+            "id": true,
+            "passthrough_behavior": true,
+            "resource_id": true,
+            "rest_api_id": true,
+            "uri": true,
+            "module": "main"
+        },
+        "aws_api_gateway_method.get_users": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": null,
+            "authorizer_id": null,
+            "http_method": "GET",
+            "operation_name": null,
+            "request_models": null,
+            "request_parameters": null,
+            "request_validator_id": null,
+            "id": true,
+            "resource_id": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_resource.users": {
+            "path_part": "users",
+            "id": true,
+            "parent_id": true,
+            "path": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_rest_api.example": {
+            "body": null,
+            "description": "Example REST API",
+            "fail_on_warnings": null,
+            "name": "example-api",
+            "parameters": null,
+            "put_rest_api_mode": null,
+            "tags": null,
+            "api_key_source": true,
+            "arn": true,
+            "binary_media_types": [],
+            "created_date": true,
+            "disable_execute_api_endpoint": true,
+            "endpoint_configuration": [],
+            "execution_arn": true,
+            "id": true,
+            "minimum_compression_size": true,
+            "policy": true,
+            "root_resource_id": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_group.lambda_logs": {
+            "kms_key_id": null,
+            "name": "/aws/lambda/api-handler",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "api-handler-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.api_handler": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "api-handler",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_permission.api_gateway": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "api-handler",
+            "function_url_auth_type": null,
+            "principal": "apigateway.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": null,
+            "source_account": null,
+            "statement_id": "AllowAPIGatewayInvoke",
+            "id": true,
+            "source_arn": true,
+            "statement_id_prefix": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_api_gateway_deployment.example",
+        "aws_api_gateway_integration.lambda",
+        "aws_api_gateway_method.get_users",
+        "aws_api_gateway_resource.users",
+        "aws_api_gateway_rest_api.example",
+        "aws_cloudwatch_log_group.lambda_logs",
+        "aws_iam_role.lambda_role",
+        "aws_lambda_function.api_handler",
+        "aws_lambda_permission.api_gateway"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_api_gateway_deployment.example": [],
+        "aws_api_gateway_integration.lambda": [
+            "aws_api_gateway_deployment.example"
+        ],
+        "aws_api_gateway_method.get_users": [
+            "aws_api_gateway_integration.lambda"
+        ],
+        "aws_api_gateway_resource.users": [
+            "aws_api_gateway_method.get_users"
+        ],
+        "aws_api_gateway_rest_api.example": [
+            "aws_api_gateway_resource.users",
+            "aws_lambda_permission.api_gateway"
+        ],
+        "aws_cloudwatch_log_group.lambda_logs": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.api_handler"
+        ],
+        "aws_lambda_function.api_handler": [
+            "aws_api_gateway_integration.lambda",
+            "aws_cloudwatch_log_group.lambda_logs",
+            "aws_lambda_permission.api_gateway"
+        ],
+        "aws_lambda_permission.api_gateway": []
+    },
+    "original_metadata": {
+        "aws_api_gateway_deployment.example": {
+            "canary_settings": [],
+            "description": null,
+            "stage_description": null,
+            "stage_name": "prod",
+            "triggers": null,
+            "variables": null,
+            "created_date": true,
+            "execution_arn": true,
+            "id": true,
+            "invoke_url": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_integration.lambda": {
+            "cache_key_parameters": null,
+            "connection_id": null,
+            "connection_type": "INTERNET",
+            "content_handling": null,
+            "credentials": null,
+            "http_method": "GET",
+            "integration_http_method": "POST",
+            "request_parameters": null,
+            "request_templates": null,
+            "timeout_milliseconds": 29000,
+            "tls_config": [],
+            "type": "AWS_PROXY",
+            "cache_namespace": true,
+            "id": true,
+            "passthrough_behavior": true,
+            "resource_id": true,
+            "rest_api_id": true,
+            "uri": true,
+            "module": "main"
+        },
+        "aws_api_gateway_method.get_users": {
+            "api_key_required": false,
+            "authorization": "NONE",
+            "authorization_scopes": null,
+            "authorizer_id": null,
+            "http_method": "GET",
+            "operation_name": null,
+            "request_models": null,
+            "request_parameters": null,
+            "request_validator_id": null,
+            "id": true,
+            "resource_id": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_resource.users": {
+            "path_part": "users",
+            "id": true,
+            "parent_id": true,
+            "path": true,
+            "rest_api_id": true,
+            "module": "main"
+        },
+        "aws_api_gateway_rest_api.example": {
+            "body": null,
+            "description": "Example REST API",
+            "fail_on_warnings": null,
+            "name": "example-api",
+            "parameters": null,
+            "put_rest_api_mode": null,
+            "tags": null,
+            "api_key_source": true,
+            "arn": true,
+            "binary_media_types": [],
+            "created_date": true,
+            "disable_execute_api_endpoint": true,
+            "endpoint_configuration": [],
+            "execution_arn": true,
+            "id": true,
+            "minimum_compression_size": true,
+            "policy": true,
+            "root_resource_id": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_group.lambda_logs": {
+            "kms_key_id": null,
+            "name": "/aws/lambda/api-handler",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "api-handler-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.api_handler": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "api-handler",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_permission.api_gateway": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "api-handler",
+            "function_url_auth_type": null,
+            "principal": "apigateway.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": null,
+            "source_account": null,
+            "statement_id": "AllowAPIGatewayInvoke",
+            "id": true,
+            "source_arn": true,
+            "statement_id_prefix": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "./main.tf": [
+            {
+                "aws_lambda_function": {
+                    "api_handler": {
+                        "function_name": "api-handler",
+                        "runtime": "python3.11",
+                        "handler": "index.handler",
+                        "filename": "lambda.zip",
+                        "role": "${aws_iam_role.lambda_role.arn}",
+                        "environment": [
+                            {
+                                "variables": {
+                                    "ENVIRONMENT": "test"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda_role": {
+                        "name": "api-handler-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_api_gateway_rest_api": {
+                    "example": {
+                        "name": "example-api",
+                        "description": "Example REST API"
+                    }
+                }
+            },
+            {
+                "aws_api_gateway_resource": {
+                    "users": {
+                        "rest_api_id": "${aws_api_gateway_rest_api.example.id}",
+                        "parent_id": "${aws_api_gateway_rest_api.example.root_resource_id}",
+                        "path_part": "users"
+                    }
+                }
+            },
+            {
+                "aws_api_gateway_method": {
+                    "get_users": {
+                        "rest_api_id": "${aws_api_gateway_rest_api.example.id}",
+                        "resource_id": "${aws_api_gateway_resource.users.id}",
+                        "http_method": "GET",
+                        "authorization": "NONE"
+                    }
+                }
+            },
+            {
+                "aws_api_gateway_integration": {
+                    "lambda": {
+                        "rest_api_id": "${aws_api_gateway_rest_api.example.id}",
+                        "resource_id": "${aws_api_gateway_resource.users.id}",
+                        "http_method": "${aws_api_gateway_method.get_users.http_method}",
+                        "integration_http_method": "POST",
+                        "type": "AWS_PROXY",
+                        "uri": "${aws_lambda_function.api_handler.invoke_arn}"
+                    }
+                }
+            },
+            {
+                "aws_api_gateway_deployment": {
+                    "example": {
+                        "depends_on": [
+                            "${aws_api_gateway_integration.lambda}"
+                        ],
+                        "rest_api_id": "${aws_api_gateway_rest_api.example.id}",
+                        "stage_name": "prod"
+                    }
+                }
+            },
+            {
+                "aws_lambda_permission": {
+                    "api_gateway": {
+                        "statement_id": "AllowAPIGatewayInvoke",
+                        "action": "lambda:InvokeFunction",
+                        "function_name": "${aws_lambda_function.api_handler.function_name}",
+                        "principal": "apigateway.amazonaws.com",
+                        "source_arn": "${aws_api_gateway_rest_api.example.execution_arn}/*/*"
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_log_group": {
+                    "lambda_logs": {
+                        "name": "/aws/lambda/${aws_lambda_function.api_handler.function_name}",
+                        "retention_in_days": 7
+                    }
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpa1r63f_g'>"
+}

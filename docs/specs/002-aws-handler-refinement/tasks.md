@@ -7,6 +7,10 @@
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
+**⚠️ Baseline Validation (CO-005.1)**: The 14 handlers in this task list address specific cases where baseline Terraform graph parsing produces insufficient diagrams (consolidation, hierarchical containment, complex relationships). Most AWS services (80-90%) work correctly with baseline parsing and DO NOT need custom handlers.
+
+**For future task documents**: Validate baseline output first before proposing handlers.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -37,17 +41,17 @@
 
 ## Phase 2: Foundational (Configuration Structure)
 
-**Purpose**: Add configuration entries that all handlers depend on
+**Purpose**: Add handler configuration entries using config-driven architecture (CO-006 through CO-013)
 
-**⚠️ CRITICAL**: Handler functions will fail without these config entries
+**⚠️ CRITICAL**: All handlers defined in `resource_handler_configs_aws.py` per constitution
 
-- [X] T004 Add AWS_SPECIAL_RESOURCES entries for all new handlers in `modules/config/cloud_config_aws.py`
-- [X] T005 [P] Add AWS_CONSOLIDATED_NODES entries for API Gateway, Cognito, WAF, SageMaker, AppSync in `modules/config/cloud_config_aws.py`
-- [X] T006 [P] Add AWS_EDGE_NODES entries for API Gateway, AppSync, Cognito, WAF in `modules/config/cloud_config_aws.py`
-- [X] T007 [P] Add AWS_HIDE_NODES entries for sub-resources to be hidden in `modules/config/cloud_config_aws.py`
-- [X] T008 [P] Add AWS_REVERSE_ARROW_LIST entries for event-driven resources in `modules/config/cloud_config_aws.py`
-- [X] T009 Run `poetry run black modules/config/` to format config changes
-- [X] T010 Verify existing tests still pass with `poetry run pytest tests -v`
+- [ ] T004 Create handler config entries for all 14 handlers in `modules/config/resource_handler_configs_aws.py`
+  - 1 Pure Config-Driven (ElastiCache)
+  - 11 Hybrid (API Gateway, EventBridge, SNS, Lambda ESM, Cognito, WAF, SageMaker, S3 Notifications, Secrets Manager, Glue, AppSync)
+  - 2 Pure Function (Step Functions, Firehose)
+- [ ] T005 [P] Add minimal AWS_EDGE_NODES entries in `modules/config/cloud_config_aws.py` (API Gateway, AppSync, Cognito, WAF)
+- [ ] T006 Run `poetry run black modules/config/` to format config changes
+- [ ] T007 Verify existing tests still pass with `poetry run pytest tests -v`
 
 **Checkpoint**: Configuration ready - handler implementation can now begin
 
@@ -67,12 +71,18 @@
 
 ### Implementation for User Story 1
 
-- [X] T014 [US1] Implement `handle_api_gateway()` function for REST API in `modules/resource_handlers_aws.py`
-- [X] T015 [US1] Implement `handle_api_gateway_v2()` function for HTTP API in `modules/resource_handlers_aws.py`
-- [X] T016 [US1] Implement `find_integrations_for_api()` helper in `modules/resource_handlers_aws.py`
-- [X] T017 [US1] Implement `parse_integration_uri()` helper in `modules/resource_handlers_aws.py`
-- [X] T018 [US1] Add "External Integration" placeholder logic when no integrations found in `modules/resource_handlers_aws.py`
-- [X] T019 [US1] Handle VPC Link connections for private integrations in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config consolidation + custom integration parsing)
+
+- [ ] T014 [US1] Add `aws_api_gateway_rest_api` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `consolidate_into_single_node`, `delete_nodes` for stages/deployments
+  - Custom function: `aws_handle_api_gateway_integrations`
+- [ ] T015 [US1] Add `aws_apigatewayv2_api` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Similar pattern as REST API
+- [ ] T016 [US1] Implement `aws_handle_api_gateway_integrations()` custom function in `modules/resource_handlers_aws.py`
+  - Parse integration URIs to find Lambda/Step Functions connections
+  - Add "External Integration" placeholder when no integrations found
+  - Handle VPC Link connections for private integrations
+- [ ] T017 [US1] Implement helper functions `find_integrations_for_api()` and `parse_integration_uri()` in `modules/resource_handlers_aws.py`
 
 ### Validation for User Story 1
 
@@ -98,10 +108,19 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Implement `handle_eventbridge()` function in `modules/resource_handlers_aws.py`
-- [ ] T027 [US2] Implement `handle_sns()` function for SNS topic subscriptions in `modules/resource_handlers_aws.py`
-- [ ] T028 [US2] Implement `handle_lambda_esm()` function for event source mappings in `modules/resource_handlers_aws.py`
-- [ ] T029 [US2] Add logic to detect DynamoDB Streams and Kinesis event sources in `modules/resource_handlers_aws.py`
+**Handler Types**: Hybrid (config linking + custom ARN parsing)
+
+- [ ] T026 [US2] Add `aws_cloudwatch_event_rule` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Custom function: `aws_handle_eventbridge_targets` for ARN parsing
+- [ ] T027 [US2] Add `aws_sns_topic` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `link_resources` to SQS/Lambda
+  - Custom function: `aws_handle_sns_subscriptions` for protocol/endpoint parsing
+- [ ] T028 [US2] Add `aws_lambda_event_source_mapping` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Custom function: `aws_handle_lambda_esm` for event_source_arn parsing
+- [ ] T029 [US2] Implement custom functions in `modules/resource_handlers_aws.py`
+  - `aws_handle_eventbridge_targets()` - Parse target ARNs
+  - `aws_handle_sns_subscriptions()` - Parse subscription endpoints
+  - `aws_handle_lambda_esm()` - Detect DynamoDB Streams, Kinesis, SQS sources
 - [ ] T030 [US2] Ensure correct arrow directions (producer → consumer) for all event patterns
 
 ### Validation for User Story 2
@@ -128,10 +147,14 @@
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Implement `handle_elasticache()` function in `modules/resource_handlers_aws.py`
-- [ ] T038 [US3] Implement `handle_elasticache_replication()` function for replication groups in `modules/resource_handlers_aws.py`
-- [ ] T039 [US3] Add logic to expand cache nodes across AZs with numbered instances in `modules/resource_handlers_aws.py`
-- [ ] T040 [US3] Add logic to position ElastiCache inside VPC subnets in `modules/resource_handlers_aws.py`
+**Handler Type**: Pure Config-Driven (reuses existing transformers)
+
+- [ ] T037 [US3] Add `aws_elasticache_replication_group` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations only:
+    - `expand_to_numbered_instances` (subnet_key: "subnet_group_name")
+    - `match_by_suffix` (link cache~1 to app~1)
+  - **No custom function needed** - identical pattern to EKS node groups
+- [ ] T038 [US3] Verify ElastiCache expansion follows same pattern as `aws_eks_node_group` (existing handler)
 
 ### Validation for User Story 3
 
@@ -156,10 +179,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T046 [US4] Implement `handle_cognito()` function in `modules/resource_handlers_aws.py`
-- [ ] T047 [US4] Add logic to consolidate User Pool + clients + domain into single node in `modules/resource_handlers_aws.py`
-- [ ] T048 [US4] Add logic to detect Cognito Lambda triggers in `modules/resource_handlers_aws.py`
-- [ ] T049 [US4] Add logic to connect Cognito to API Gateway authorizers in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config consolidation + custom Lambda trigger detection)
+
+- [ ] T046 [US4] Add `aws_cognito_user_pool` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `consolidate_into_single_node` (target: "aws_cognito.auth")
+  - Custom function: `aws_handle_cognito_triggers`
+- [ ] T047 [US4] Implement `aws_handle_cognito_triggers()` custom function in `modules/resource_handlers_aws.py`
+  - Parse `lambda_config` metadata to detect Lambda triggers (pre_sign_up, post_confirmation, etc.)
+  - Connect Cognito to API Gateway authorizers
+  - Create Users → Cognito → API Gateway flow
 
 ### Validation for User Story 4
 
@@ -184,9 +212,15 @@
 
 ### Implementation for User Story 5
 
-- [ ] T055 [US5] Implement `handle_waf()` function in `modules/resource_handlers_aws.py`
-- [ ] T056 [US5] Add logic to parse WAF associations and position WAF in front of protected resources in `modules/resource_handlers_aws.py`
-- [ ] T057 [US5] Add logic to consolidate WAF rules into single WAF node in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config consolidation + custom association parsing)
+
+- [ ] T055 [US5] Add `aws_wafv2_web_acl` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `consolidate_into_single_node` (target: "aws_waf.firewall")
+  - Custom function: `aws_handle_waf_associations`
+- [ ] T056 [US5] Implement `aws_handle_waf_associations()` custom function in `modules/resource_handlers_aws.py`
+  - Parse `aws_wafv2_web_acl_association` for resource_arn
+  - Create WAF → CloudFront/ALB/API Gateway connections
+  - Position WAF in front of protected resources
 
 ### Validation for User Story 5
 
@@ -211,10 +245,15 @@
 
 ### Implementation for User Story 6
 
-- [ ] T063 [US6] Implement `handle_sagemaker()` function in `modules/resource_handlers_aws.py`
-- [ ] T064 [US6] Add logic to consolidate endpoint + config + model into ML group in `modules/resource_handlers_aws.py`
-- [ ] T065 [US6] Add logic to detect S3 model artifact connections in `modules/resource_handlers_aws.py`
-- [ ] T066 [US6] Add logic to position notebook instances in VPC subnets in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config consolidation + custom S3 artifact detection)
+
+- [ ] T063 [US6] Add `aws_sagemaker_endpoint` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `consolidate_into_single_node` (target: "aws_sagemaker.ml")
+  - Custom function: `aws_handle_sagemaker_artifacts`
+- [ ] T064 [US6] Implement `aws_handle_sagemaker_artifacts()` custom function in `modules/resource_handlers_aws.py`
+  - Consolidate endpoint + endpoint_configuration + model into ML group
+  - Parse `model_data_url` to detect S3 bucket connections
+  - Position notebook instances in VPC subnets when configured
 
 ### Validation for User Story 6
 
@@ -239,9 +278,16 @@
 
 ### Implementation for User Story 7
 
-- [ ] T072 [US7] Implement `handle_step_functions()` function in `modules/resource_handlers_aws.py`
-- [ ] T073 [US7] Add logic to parse state machine definition JSON for service integrations in `modules/resource_handlers_aws.py`
-- [ ] T074 [US7] Add logic to create connections to Lambda, ECS, SageMaker task states in `modules/resource_handlers_aws.py`
+**Handler Type**: Pure Function (complex JSON definition parsing)
+
+- [ ] T072 [US7] Add `aws_sfn_state_machine` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Pure function only: `aws_handle_step_functions`
+  - **Why Pure Function**: Parsing JSON state machine definitions with conditional logic for multiple task types cannot be expressed declaratively
+- [ ] T073 [US7] Implement `aws_handle_step_functions()` function in `modules/resource_handlers_aws.py`
+  - Parse `definition` JSON to extract service integrations
+  - Detect Lambda, ECS, SageMaker, DynamoDB, SNS, SQS task states
+  - Create Step Functions → integrated service connections
+  - Handle API Gateway → Step Functions flow (sync/async)
 
 ### Validation for User Story 7
 
@@ -266,9 +312,15 @@
 
 ### Implementation for User Story 8
 
-- [ ] T080 [US8] Implement `handle_s3_notifications()` function in `modules/resource_handlers_aws.py`
-- [ ] T081 [US8] Add logic to parse notification config for Lambda/SQS/SNS targets in `modules/resource_handlers_aws.py`
-- [ ] T082 [US8] Add logic to detect replication config for bucket-to-bucket flows in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config linking + custom notification config parsing)
+
+- [ ] T080 [US8] Add `aws_s3_bucket_notification` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `link_resources` (S3 → Lambda/SQS/SNS)
+  - Custom function: `aws_handle_s3_notification_config`
+- [ ] T081 [US8] Implement `aws_handle_s3_notification_config()` custom function in `modules/resource_handlers_aws.py`
+  - Parse notification config for Lambda/SQS/SNS targets
+  - Detect replication config for bucket-to-bucket flows
+  - Create S3 → target connections
 
 ### Validation for User Story 8
 
@@ -293,10 +345,15 @@
 
 ### Implementation for User Story 9
 
-- [ ] T088 [US9] Implement `handle_secrets_manager()` function in `modules/resource_handlers_aws.py`
-- [ ] T089 [US9] Add logic to detect secret references in Lambda/ECS environment variables in `modules/resource_handlers_aws.py`
-- [ ] T090 [US9] Add logic to detect rotation Lambda connections in `modules/resource_handlers_aws.py`
-- [ ] T091 [US9] Add Secrets Manager to SHARED_SERVICES group in `modules/config/cloud_config_aws.py`
+**Handler Type**: Hybrid (config grouping + custom reference detection)
+
+- [ ] T088 [US9] Add `aws_secretsmanager_secret` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `group_shared_services` (add to "aws_group.shared_services")
+  - Custom function: `aws_handle_secret_references`
+- [ ] T089 [US9] Implement `aws_handle_secret_references()` custom function in `modules/resource_handlers_aws.py`
+  - Scan Lambda/ECS environment variables for secret ARN references
+  - Create Application → Secrets Manager connections
+  - Detect rotation Lambda connections
 
 ### Validation for User Story 9
 
@@ -321,10 +378,19 @@
 
 ### Implementation for User Story 10
 
-- [ ] T097 [US10] Implement `handle_glue()` function in `modules/resource_handlers_aws.py`
-- [ ] T098 [US10] Implement `handle_firehose()` function in `modules/resource_handlers_aws.py`
-- [ ] T099 [US10] Add logic to parse Glue job scripts for S3 sources/destinations in `modules/resource_handlers_aws.py`
-- [ ] T100 [US10] Add logic to detect Firehose transformation Lambda in `modules/resource_handlers_aws.py`
+**Handler Types**: Hybrid (Glue) + Pure Function (Firehose)
+
+- [ ] T097 [US10] Add `aws_glue_job` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `link_resources` (Glue → S3)
+  - Custom function: `aws_handle_glue_scripts`
+- [ ] T098 [US10] Add `aws_kinesis_firehose_delivery_stream` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Pure function only: `aws_handle_firehose_destinations`
+  - **Why Pure Function**: Complex destination config parsing with conditional logic for multiple destination types
+- [ ] T099 [US10] Implement `aws_handle_glue_scripts()` custom function in `modules/resource_handlers_aws.py`
+  - Parse Glue job `script_location` for S3 sources/destinations
+- [ ] T100 [US10] Implement `aws_handle_firehose_destinations()` function in `modules/resource_handlers_aws.py`
+  - Parse destination configuration (S3, Redshift, Elasticsearch)
+  - Detect transformation Lambda in processing configuration
 
 ### Validation for User Story 10
 
@@ -349,10 +415,16 @@
 
 ### Implementation for User Story 11
 
-- [ ] T106 [US11] Implement `handle_appsync()` function in `modules/resource_handlers_aws.py`
-- [ ] T107 [US11] Add logic to parse data sources for DynamoDB/Lambda connections in `modules/resource_handlers_aws.py`
-- [ ] T108 [US11] Add logic to consolidate resolvers into API node in `modules/resource_handlers_aws.py`
-- [ ] T109 [US11] Add logic to detect Cognito authentication configuration in `modules/resource_handlers_aws.py`
+**Handler Type**: Hybrid (config consolidation + custom data source parsing)
+
+- [ ] T106 [US11] Add `aws_appsync_graphql_api` handler config to `modules/config/resource_handler_configs_aws.py`
+  - Transformations: `consolidate_into_single_node` (target: "aws_appsync.api")
+  - Custom function: `aws_handle_appsync_datasources`
+- [ ] T107 [US11] Implement `aws_handle_appsync_datasources()` custom function in `modules/resource_handlers_aws.py`
+  - Parse data sources for DynamoDB/Lambda connections
+  - Consolidate resolvers into API node
+  - Detect Cognito authentication configuration
+  - Position as edge service (similar to API Gateway)
 
 ### Validation for User Story 11
 

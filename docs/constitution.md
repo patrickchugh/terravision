@@ -1,20 +1,24 @@
 <!--
 Sync Impact Report:
-- Version change: 1.2.0 → 1.3.0 (added resource handler implementation guidelines)
+- Version change: 1.4.0 → 1.5.0 (added minimalist handler principle CO-005.1)
 - Modified principles: None
 - Added sections:
-  - Code Organization > Resource Handler Implementation Guidelines (CO-006 through CO-012)
+  - Code Organization > Resource Handler Implementation Guidelines: Added CO-005.1 "Most services MUST NOT have custom handlers"
+  - Added "When to implement a handler" criteria (4 conditions)
+  - Added "When NOT to implement a handler" guidance
 - Modified sections:
-  - Code Organization: Added subsection for handler guidelines with config-first approach
+  - Code Organization: Updated rationale to emphasize baseline Terraform parsing handles most resources
+  - Enhanced rationale with "Default to no handler; add only when baseline output is insufficient"
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
   ✅ CLAUDE.md - Contains detailed guidance on Poetry, Black, pytest, and config-driven handlers
-  ✅ HANDLER_CONFIG_GUIDE.md - Comprehensive guide aligns with CO-006 through CO-012
+  ✅ HANDLER_CONFIG_GUIDE.md - Comprehensive guide aligns with CO-006 through CO-013
   ✅ CONFIGURATION_DRIVEN_HANDLERS.md - Architecture documentation supports new standards
   ✅ HANDLER_ARCHITECTURE.md - Handler type breakdown aligns with decision hierarchy
+  ✅ docs/specs/002-aws-handler-refinement/ - All documents updated to reflect config-driven approach
 - Follow-up TODOs: Update AZURE_RESOURCE_HANDLERS.md to reflect config-first approach
 -->
 
@@ -92,10 +96,25 @@ All cloud-specific resource handling logic MUST reside exclusively in provider-s
 
 #### Resource Handler Implementation Guidelines
 
+**CRITICAL PRINCIPLE**: Most services DO NOT need custom handlers. TerraVision's core engine (Terraform graph parsing + relationship detection + icon mapping) produces accurate diagrams for the majority of resources. Only implement handlers when the baseline output is demonstrably insufficient.
+
+**When to implement a handler** (ALL must be true):
+1. The baseline diagram is confusing, inaccurate, or misleading for that resource type
+2. Critical relationships are missing or incorrect
+3. The issue cannot be fixed with general config (implied connections, edge nodes, etc.)
+4. The pattern affects user comprehension of architecture
+
+**When NOT to implement a handler**:
+- Icons display correctly
+- Relationships are clear from Terraform dependencies
+- Resource placement is logical
+- Users can understand the architecture without special handling
+
 All resource handlers MUST follow a **config-first approach**, preferring declarative configuration over imperative Python code. Handlers MUST be implemented using the hybrid configuration-driven architecture in `modules/config/resource_handler_configs_<provider>.py`.
 
 **Enforcement Rules**:
 
+- **CO-005.1**: Most services MUST NOT have custom handlers - trust the baseline Terraform graph parsing
 - **CO-006**: Resource handlers MUST be implemented as **Pure Config-Driven** (using only transformation building blocks) whenever possible
 - **CO-007**: Resource handlers SHOULD use **Hybrid approach** (config transformations + custom Python function) when combining generic operations with unique logic
 - **CO-008**: Resource handlers MAY use **Pure Function** (custom Python only) ONLY when logic is too complex to express declaratively (conditional logic with multiple branches, domain-specific parsing, selective filtering with complex rules)
@@ -103,13 +122,14 @@ All resource handlers MUST follow a **config-first approach**, preferring declar
 - **CO-010**: New transformers SHOULD be added to `resource_transformers.py` when a pattern is reused across 3+ handlers
 - **CO-011**: Handler configurations MUST include descriptive `description` field explaining purpose and handler type rationale
 - **CO-012**: Parameters ending in `_function` or `_generator` in transformation configs are automatically resolved to function references - use this convention for all callable parameters
+- **CO-013**: The transformer library SHOULD remain stable at ~30 operations. New transformers require justification that the pattern: (a) appears in 5+ handlers across 2+ cloud providers, (b) cannot be expressed by composing existing transformers, and (c) represents a fundamental graph operation not yet covered
 
 **Decision Hierarchy** (attempt in order):
 1. **Pure Config-Driven** - Use only existing transformers (70% code reduction, easiest to maintain)
 2. **Hybrid** - Add new generic transformer if pattern is reusable, supplement with custom function for unique logic
 3. **Pure Function** - Only for complex conditional logic that cannot be expressed declaratively
 
-**Rationale**: Config-driven handlers reduce code by 70%, improve maintainability through reusable building blocks, and make transformation logic transparent and testable. Requiring justification for imperative code prevents premature optimization and ensures the transformation library grows to handle common patterns. The automatic function resolution feature enables declarative configs to reference callable parameters without boilerplate.
+**Rationale**: TerraVision's core Terraform graph parsing handles most resources correctly without custom handlers. Adding handlers prematurely creates maintenance burden and complexity. When handlers ARE needed, config-driven approach reduces code by 70%, improves maintainability through reusable building blocks, and makes transformation logic transparent and testable. Requiring justification for imperative code prevents premature optimization and ensures the transformation library grows to handle common patterns. The automatic function resolution feature enables declarative configs to reference callable parameters without boilerplate. Limiting transformer growth to ~30 operations prevents DSL complexity while leveraging cross-provider reuse (3× multiplier for AWS/Azure/GCP). **Default to no handler; add only when baseline output is insufficient.**
 
 ### Quality Requirements
 
@@ -183,4 +203,4 @@ This constitution supersedes all other development practices and documentation. 
 - **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.3.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-27
+**Version**: 1.5.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-28

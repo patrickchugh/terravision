@@ -320,7 +320,7 @@ def scan_module_relationships(
     GROUP_NODES = constants["GROUP_NODES"]
 
     # Build regex pattern for any provider resource (e.g., aws_|google_|azurerm_)
-    provider_pattern = "|".join([p.replace("_", "\_") for p in provider_prefixes])
+    provider_pattern = "|".join([p.replace("_", r"\_") for p in provider_prefixes])
     direct_ref_pattern = rf"module\.(\w+)\.({provider_pattern}\w+)\.(\w+)"
 
     for filepath, module_list in tfdata["all_module"].items():

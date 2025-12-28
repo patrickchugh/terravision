@@ -23,151 +23,149 @@ poetry run pytest tests -v
 
 ---
 
-## Implementation Pattern
+## Implementation Pattern (Config-Driven Architecture)
 
-### Step 1: Add Configuration to `cloud_config_aws.py`
+Per constitution CO-006 through CO-013, follow this decision hierarchy:
+1. **Pure Config-Driven** - Use only existing transformers (preferred)
+2. **Hybrid** - Config transformations + custom function for unique logic
+3. **Pure Function** - Only when logic is too complex for declarative expression
 
-Location: `modules/config/cloud_config_aws.py`
+### Step 1: Add Handler Config to `resource_handler_configs_aws.py`
 
+Location: `modules/config/resource_handler_configs_aws.py`
+
+#### Pattern A: Pure Config-Driven (Preferred)
 ```python
-# 1. Add to AWS_SPECIAL_RESOURCES (maps resource type to handler function)
-AWS_SPECIAL_RESOURCES = {
-    # ... existing entries ...
-    "aws_api_gateway_rest_api": "handle_api_gateway",
-    "aws_elasticache_cluster": "handle_elasticache",
-    # ... add more as needed
-}
-
-# 2. Add to AWS_CONSOLIDATED_NODES (if resource should be consolidated)
-AWS_CONSOLIDATED_NODES = [
-    # ... existing entries ...
-    {
-        "aws_api_gateway": {
-            "resource_name": "aws_api_gateway.api",
-            "import_location": "resource_classes.aws.app_services",
-            "vpc": False,
-            "edge_service": True,
-        }
+# Example: ElastiCache (reuses existing transformers)
+RESOURCE_HANDLER_CONFIGS = {
+    "aws_elasticache_replication_group": {
+        "description": "Expand ElastiCache replication groups to numbered instances per subnet",
+        "transformations": [
+            {
+                "operation": "expand_to_numbered_instances",
+                "params": {
+                    "resource_pattern": "aws_elasticache_replication_group",
+                    "subnet_key": "subnet_group_name",
+                    "skip_if_numbered": True,
+                },
+            },
+            {
+                "operation": "match_by_suffix",
+                "params": {
+                    "source_pattern": "aws_ecs_service|aws_eks_node_group",
+                    "target_pattern": "aws_elasticache",
+                },
+            },
+        ],
     },
-]
-
-# 3. Add to AWS_EDGE_NODES (if resource is an edge service)
-AWS_EDGE_NODES = [
-    # ... existing entries ...
-    "aws_api_gateway",
-    "aws_appsync",
-    "aws_cognito",
-]
-
-# 4. Add to AWS_HIDE_NODES (if resource should be hidden from diagram)
-AWS_HIDE_NODES = [
-    # ... existing entries ...
-    "aws_api_gateway_stage",
-    "aws_api_gateway_deployment",
-]
+}
 ```
 
-### Step 2: Add Handler Function to `resource_handlers_aws.py`
+#### Pattern B: Hybrid (Config + Custom Function)
+```python
+# Example: API Gateway (config consolidation + custom integration parsing)
+RESOURCE_HANDLER_CONFIGS = {
+    "aws_api_gateway_rest_api": {
+        "description": "Consolidate API Gateway resources and parse integrations (Hybrid: consolidation is generic, URI parsing requires custom logic)",
+        "transformations": [
+            {
+                "operation": "consolidate_into_single_node",
+                "params": {
+                    "resource_pattern": "aws_api_gateway",
+                    "target_node_name": "aws_api_gateway.api",
+                },
+            },
+            {
+                "operation": "delete_nodes",
+                "params": {
+                    "resource_pattern": "aws_api_gateway_stage|aws_api_gateway_deployment",
+                    "remove_from_parents": True,
+                },
+            },
+        ],
+        "additional_handler_function": "aws_handle_api_gateway_integrations",
+    },
+}
+```
+
+#### Pattern C: Pure Function (Complex Logic Only)
+```python
+# Example: Step Functions (complex JSON parsing with conditional logic)
+RESOURCE_HANDLER_CONFIGS = {
+    "aws_sfn_state_machine": {
+        "description": "Parse state machine definition JSON to detect service integrations (Pure Function: JSON parsing with conditional logic for multiple task types cannot be expressed declaratively per CO-009)",
+        "additional_handler_function": "aws_handle_step_functions",
+    },
+}
+```
+
+### Step 2: Add Custom Function (if Hybrid or Pure Function)
 
 Location: `modules/resource_handlers_aws.py`
 
+Only needed for Hybrid or Pure Function handlers. **Skip this step for Pure Config-Driven handlers.**
+
 ```python
-def handle_api_gateway(tfdata: dict) -> dict:
+def aws_handle_api_gateway_integrations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Handle API Gateway resources.
+    Parse API Gateway integration URIs to detect Lambda/Step Functions connections.
 
-    This handler:
-    1. Consolidates API Gateway sub-resources into single node
-    2. Detects Lambda/Step Functions integrations
-    3. Positions as edge service outside VPC
-
-    Args:
-        tfdata: Dictionary containing graphdict, meta_data, all_resource
-
-    Returns:
-        Modified tfdata dictionary
+    Why custom function needed (CO-009): Integration URI parsing involves string
+    manipulation and ARN extraction logic that transformers cannot express declaratively.
     """
     graphdict = tfdata.get("graphdict", {})
     meta_data = tfdata.get("meta_data", {})
     all_resource = tfdata.get("all_resource", {})
 
     # Find all API Gateway REST APIs
-    api_gateways = [
-        r for r in graphdict.keys()
-        if r.startswith("aws_api_gateway_rest_api.")
-    ]
+    api_gateways = [r for r in graphdict.keys() if r.startswith("aws_api_gateway_rest_api.")]
 
     for api in api_gateways:
-        # Find integrations by looking for aws_api_gateway_integration resources
+        # Parse integrations to find Lambda/Step Functions
         integrations = find_integrations_for_api(api, all_resource)
 
         for integration in integrations:
-            # Parse integration URI to find Lambda/Step Functions
             target = parse_integration_uri(integration)
             if target and target in graphdict:
-                # Add connection: API Gateway -> Target
                 if target not in graphdict[api]:
                     graphdict[api].append(target)
 
-    # If no integrations found, add external placeholder
-    if not graphdict.get(api, []):
-        external_node = "aws_external_integration.external"
-        graphdict[api] = [external_node]
-        meta_data[external_node] = {"label": "External Integration"}
+        # Add placeholder if no integrations
+        if not graphdict.get(api, []):
+            external_node = "aws_external_integration.external"
+            graphdict[api] = [external_node]
+            meta_data[external_node] = {"label": "External Integration"}
 
     return tfdata
-
-
-def find_integrations_for_api(api: str, all_resource: dict) -> list:
-    """Find all integrations associated with an API Gateway."""
-    integrations = []
-    api_id = api.split(".")[-1]
-
-    for resource_name, resource_data in all_resource.items():
-        if resource_name.startswith("aws_api_gateway_integration."):
-            # Check if this integration belongs to our API
-            if resource_data.get("rest_api_id") == api_id:
-                integrations.append(resource_data)
-
-    return integrations
-
-
-def parse_integration_uri(integration: dict) -> str:
-    """Parse integration URI to extract Lambda/Step Functions ARN."""
-    uri = integration.get("uri", "")
-
-    # Lambda integration pattern
-    if ":lambda:" in uri:
-        # Extract function name from ARN
-        parts = uri.split(":")
-        for part in parts:
-            if "function:" in part:
-                return f"aws_lambda_function.{part.split('/')[-1]}"
-
-    # Step Functions integration pattern
-    if ":states:" in uri:
-        parts = uri.split(":")
-        for part in parts:
-            if "stateMachine:" in part:
-                return f"aws_sfn_state_machine.{part.split('/')[-1]}"
-
-    return None
 ```
 
-### Step 3: Register Handler in Dispatch
+### Step 3: Add Minimal Config (if Edge Service)
 
-The handler is automatically registered via `AWS_SPECIAL_RESOURCES`. The dispatch happens in `graphmaker.py`:
+Location: `modules/config/cloud_config_aws.py`
+
+Only if the resource is an edge service:
 
 ```python
-# In graphmaker.py (no modification needed - existing dispatch pattern)
+AWS_EDGE_NODES = [
+    # ... existing entries ...
+    "aws_api_gateway",
+    "aws_appsync",
+    "aws_cognito",
+]
+```
+
+### Step 4: Verify Handler Dispatch
+
+**No code changes needed!** The existing dispatch in `graphmaker.py` automatically loads and executes handlers from `RESOURCE_HANDLER_CONFIGS`:
+
+```python
+# In graphmaker.py (existing code - no modification needed)
 def handle_special_resources(tfdata):
     config = load_config(provider)
-    special_resources = config.SPECIAL_RESOURCES
+    handler_configs = config.RESOURCE_HANDLER_CONFIGS  # Auto-loaded
 
-    for resource_type, handler_name in special_resources.items():
-        if any(r.startswith(resource_type) for r in tfdata["graphdict"]):
-            handler = getattr(resource_handlers, handler_name)
-            tfdata = handler(tfdata)
+    # Transformers execute automatically based on config
+    # Custom functions called automatically if specified
 
     return tfdata
 ```
@@ -367,21 +365,27 @@ poetry run pytest tests/json/ -v
 
 For each new handler, verify:
 
-- [ ] Configuration added to `cloud_config_aws.py`
-  - [ ] `AWS_SPECIAL_RESOURCES` entry
-  - [ ] `AWS_CONSOLIDATED_NODES` if consolidating
-  - [ ] `AWS_EDGE_NODES` if edge service
-  - [ ] `AWS_HIDE_NODES` for sub-resources
-- [ ] Handler function in `resource_handlers_aws.py`
-  - [ ] Docstring with purpose and behavior
+- [ ] **Handler config added to `resource_handler_configs_aws.py`**
+  - [ ] `description` field explains purpose and handler type (CO-011)
+  - [ ] Handler type decision made (Pure Config / Hybrid / Pure Function)
+  - [ ] If Pure Config: Only `transformations` array populated
+  - [ ] If Hybrid: Both `transformations` and `additional_handler_function`
+  - [ ] If Pure Function: Only `additional_handler_function` + justification (CO-009)
+- [ ] **Custom function in `resource_handlers_aws.py` (if Hybrid or Pure Function)**
+  - [ ] Docstring includes "Why custom function needed" (CO-009)
   - [ ] Safe iteration (copy lists before modifying)
   - [ ] Deep copy for metadata
-  - [ ] Sorted iteration for determinism
-- [ ] Test fixture in `tests/fixtures/aws_terraform/`
-- [ ] Expected output in `tests/json/`
-- [ ] Test case in `tests/graphmaker_unit_test.py`
-- [ ] Black formatting applied
-- [ ] All existing tests still pass
+  - [ ] Follows existing handler patterns from HANDLER_ARCHITECTURE.md
+- [ ] **Minimal config in `cloud_config_aws.py` (only if needed)**
+  - [ ] `AWS_EDGE_NODES` entry (if edge service)
+  - [ ] **No** `AWS_SPECIAL_RESOURCES`, `AWS_CONSOLIDATED_NODES`, or `AWS_HIDE_NODES` entries (now in handler configs)
+- [ ] **Test fixtures**
+  - [ ] Terraform fixture in `tests/fixtures/aws_terraform/`
+  - [ ] Expected output in `tests/json/`
+  - [ ] Test case in `tests/graphmaker_unit_test.py`
+- [ ] **Quality checks**
+  - [ ] Black formatting applied: `poetry run black modules/`
+  - [ ] All existing tests still pass: `poetry run pytest tests -v`
 
 ---
 

@@ -170,30 +170,116 @@ The main processing pipeline in `terravision.py` follows this flow:
 
 ### Resource Handlers Pattern
 
-TerraVision uses a **config-driven resource handler architecture** that supports three handler types:
+**⚠️ CRITICAL PRINCIPLE**: Most services DO NOT need custom handlers. TerraVision's core engine (Terraform graph parsing + relationship detection + icon mapping) produces accurate diagrams for the majority of resources. **Default to no handler; add only when baseline output is demonstrably insufficient.**
+
+**⚠️ MANDATORY VALIDATION BEFORE IMPLEMENTING HANDLERS**:
+
+**📋 Complete the full validation checklist**: See `docs/BASELINE_VALIDATION_CHECKLIST.md` for the comprehensive validation process.
+
+Before implementing ANY handler, you MUST complete this validation process:
+
+1. **Generate Baseline Diagram**:
+   - Create real Terraform code for the resource type
+   - Run TerraVision WITHOUT any custom handler
+   - Save the output graph JSON
+
+2. **Analyze Baseline Output**:
+   - Are the resources visible? (icons, labels)
+   - Are the connections correct? (arrows show dependencies)
+   - Is the hierarchy clear? (VPC → subnet → resources)
+   - Can users understand the architecture?
+
+3. **Decision**:
+   - ✅ If baseline is clear → **STOP! No handler needed.**
+   - ❌ If baseline is confusing → Document specific issues, proceed to handler
+
+4. **Document Justification**:
+   - What specific diagram problem does the handler solve?
+   - Include baseline output vs. expected output comparison
+   - Cannot be subjective "looks better" - must fix actual confusion/inaccuracy
+
+**Example - API Gateway (Handler NOT Needed)**:
+- Baseline shows: `Lambda → Integration → Method → Resource → API`
+- This is clear and accurate!
+- Custom handler trying to parse URIs added complexity for no benefit
+- Result: No handler implemented ✅
+
+**Example - Security Groups (Handler Needed)**:
+- Baseline shows: `EC2 → Security Group` (simple dependency)
+- Missing: Ingress/egress rules, which SG allows which traffic
+- Problem: Can't understand network security model
+- Result: Custom handler parses rules, adds directional arrows ✅
+
+**When to implement a handler** (ALL must be true):
+1. Baseline diagram is confusing, inaccurate, or misleading
+2. Critical relationships are missing or incorrect
+3. Cannot be fixed with general config (implied connections, edge nodes)
+4. Pattern affects user comprehension
+
+**When NOT to implement a handler**:
+- Icons display correctly ✓
+- Relationships clear from Terraform dependencies ✓
+- Resource placement is logical ✓
+- Architecture is understandable ✓
+
+**Examples of services that DON'T need handlers**:
+- `aws_s3_bucket` - Icon displays, connections from Lambda/EC2 work via Terraform graph
+- `aws_dynamodb_table` - Relationships to Lambda work automatically
+- `aws_sqs_queue` - Standard queue-to-Lambda pattern works without handler
+- Most compute, storage, and database services work fine with baseline parsing
+
+**Examples of services that DO need handlers**:
+- `aws_security_group` - Bidirectional relationships + numbered resource matching (complex logic)
+- `aws_vpc` / `aws_subnet` - Hierarchical containment (VPC → AZ → Subnet) not in Terraform graph
+- `aws_api_gateway_rest_api` - Sub-resources need consolidation + integration parsing
+
+TerraVision uses a **config-driven resource handler architecture** per constitution CO-005.1 through CO-013 that supports three handler types:
+
+#### Constitutional Requirements (CO-005.1 through CO-013)
+
+- **CO-005.1**: Most services MUST NOT have custom handlers - trust baseline Terraform graph parsing
+
+- **CO-006**: Handlers MUST be Pure Config-Driven whenever possible
+- **CO-007**: Handlers SHOULD use Hybrid approach when combining generic operations with unique logic
+- **CO-008**: Handlers MAY use Pure Function ONLY when logic is too complex for declarative expression
+- **CO-009**: Custom functions MUST document why config-driven was insufficient
+- **CO-010**: New transformers added when pattern reused across 3+ handlers
+- **CO-011**: Configurations MUST include descriptive `description` field
+- **CO-012**: Parameters ending in `_function` or `_generator` auto-resolve to function references
+- **CO-013**: Transformer library SHOULD remain stable at ~30 operations (currently 24)
 
 #### Handler Types
 
-**1. Pure Config-Driven** (7 AWS handlers)
-- Uses only declarative transformation building blocks
-- Defined in `modules/config/resource_handler_configs_aws.py`
-- Example: `aws_vpc_endpoint`, `aws_eks_node_group`, `aws_db_subnet_group`
-- **When to use**: Simple, repetitive operations (move, link, delete, expand)
+**Decision Hierarchy** (attempt in order):
+1. Pure Config-Driven (preferred)
+2. Hybrid (common)
+3. Pure Function (only when necessary)
 
-**2. Hybrid** (3 AWS handlers)
+**Current AWS Handler Distribution**:
+- **Pure Config-Driven**: ~7% (e.g., `aws_eks_node_group`, `aws_elasticache_replication_group`)
+- **Hybrid**: ~79% (e.g., `aws_subnet`, `aws_cloudfront_distribution`, `aws_api_gateway_rest_api`)
+- **Pure Function**: ~14% (e.g., `aws_security_group`, `aws_lb`, `aws_sfn_state_machine`)
+
+**1. Pure Config-Driven** (Preferred)
+- Uses only declarative transformation building blocks (24 available transformers)
+- Defined in `modules/config/resource_handler_configs_aws.py`
+- Example: `aws_elasticache_replication_group` (expansion + suffix matching)
+- **When to use**: Pattern matches existing transformers exactly
+
+**2. Hybrid** (Most Common)
 - Uses transformations + custom Python function
 - Transformations run first (or last via `handler_execution_order`)
 - Examples:
   - `aws_subnet` (metadata prep + insert_intermediate_node transformer)
   - `aws_cloudfront_distribution` (link transformers + origin parsing)
-  - `aws_efs_file_system` (bidirectional_link + custom cleanup)
-- **When to use**: Common operations + unique logic
+  - `aws_api_gateway_rest_api` (consolidation + integration URI parsing)
+- **When to use**: Generic operations + unique parsing/matching logic
 
-**3. Pure Function** (6 AWS handlers)
+**3. Pure Function** (Complex Logic Only)
 - Uses only custom Python code
 - Defined in `resource_handlers_aws.py`, referenced in config
-- Examples: `aws_security_group`, `aws_lb`, `aws_appautoscaling_target`
-- **When to use**: Complex conditional logic, domain-specific patterns that don't map to generic transformers
+- Examples: `aws_security_group`, `aws_sfn_state_machine` (JSON parsing)
+- **When to use**: Complex conditional logic with multiple branches that transformers cannot express declaratively
 
 #### Configuration Location
 
@@ -281,11 +367,16 @@ Icons are sourced from provider-specific directories defined in each config:
 
 ### Adding New Cloud Provider
 
-1. Create `modules/config/cloud_config_<provider>.py` with required constants
-2. Create `modules/resource_handlers_<provider>.py` with handler functions
-3. Add provider prefix to `PROVIDER_PREFIXES` in `provider_detector.py`
-4. Add icons to `resource_classes/<provider>/`
-5. Update tests in `tests/test_provider_detection.py`
+**Follow config-driven architecture per CO-006 through CO-013**:
+
+1. Create `modules/config/resource_handler_configs_<provider>.py` with handler configurations (PRIMARY)
+2. Create `modules/config/cloud_config_<provider>.py` with provider constants (edge nodes, icon library, etc.)
+3. Create `modules/resource_handlers_<provider>.py` with custom functions (ONLY for Hybrid/Pure Function handlers)
+4. Add provider prefix to `PROVIDER_PREFIXES` in `provider_detector.py`
+5. Add icons to `resource_classes/<provider>/`
+6. Update tests in `tests/test_provider_detection.py`
+
+**Cross-Provider Reusability**: Aim for 70-80% transformer reuse across providers. Example: `expand_to_numbered_instances` used for AWS EKS → Azure AKS → GCP GKE node groups.
 
 ### Testing Provider-Specific Code
 
@@ -332,20 +423,32 @@ GitHub Actions workflow (`.github/workflows/lint-and-test.yml`) runs on push/PR 
 
 ## Critical Constants
 
-Each `cloud_config_*.py` defines these provider-specific constants:
+### In `resource_handler_configs_<provider>.py` (PRIMARY - Config-Driven)
+
+- `RESOURCE_HANDLER_CONFIGS`: Dict mapping resource types to handler configurations
+  - Pure Config-Driven: Only `transformations` array
+  - Hybrid: `transformations` + `additional_handler_function`
+  - Pure Function: Only `additional_handler_function`
+  - All require `description` field explaining handler type rationale (CO-011)
+
+### In `cloud_config_<provider>.py` (SECONDARY - Provider Constants)
 
 - `PROVIDER_PREFIX`: Resource name prefix(es) (e.g., `["aws_"]` or `["azurerm_", "azuread_"]`)
 - `ICON_LIBRARY`: Path to icon directory
-- `SPECIAL_RESOURCES`: Dict mapping resource types to handler functions
+- `EDGE_NODES`: Resources at diagram boundaries (API Gateway, CloudFront, etc.)
 - `GROUP_NODES`: Resources that create subgraphs (VPCs, resource groups)
-- `CONSOLIDATED_NODES`: Resources to merge into single nodes
 - `NODE_VARIANTS`: Resources with variants (Lambda runtime, EC2 type)
 - `IMPLIED_CONNECTIONS`: Keywords that imply connections
 - `REVERSE_ARROW_LIST`: Resources requiring reversed arrow direction
 - `FORCED_DEST/FORCED_ORIGIN`: Resources with fixed connection direction
 - `SHARED_SERVICES`: Resources shared across modules (IAM roles, etc.)
-- `EDGE_NODES`: Resources at diagram boundaries
 - `AUTO_ANNOTATIONS`: Auto-applied labels
+
+**Deprecated (Legacy)**:
+- `SPECIAL_RESOURCES`: Replaced by `RESOURCE_HANDLER_CONFIGS` in handler config files
+- `HIDE_NODES`: Now defined in `RESOURCE_HANDLER_CONFIGS` via `delete_nodes` transformer
+
+**⚠️ IMPORTANT**: For resource consolidation (merging multiple resources into one node), use `CONSOLIDATED_NODES` directly in `cloud_config_<provider>.py`. DO NOT use transformers for consolidation - the `consolidate_into_single_node` transformer was removed in favor of the simpler, centralized `CONSOLIDATED_NODES` mechanism.
 
 ## Testing Philosophy
 
