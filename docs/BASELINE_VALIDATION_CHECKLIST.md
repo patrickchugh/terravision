@@ -248,3 +248,17 @@ Decision: PROCEED / STOP (no handler needed)
 ---
 
 **Remember**: Most resources (80-90%) work perfectly with baseline parsing. Handlers are the exception, not the rule!
+
+---
+
+## Post-Implementation Validation
+
+After implementing a handler (if baseline validation failed), complete the **Post-Implementation Validation Checklist** in `docs/specs/002-aws-handler-refinement/tasks.md` to verify:
+
+- Connection directions are correct
+- No orphaned resources (missing connections)
+- No duplicate connections
+- Intermediary links work properly
+- Test coverage is complete
+
+This checklist catches implementation issues before declaring the handler complete.

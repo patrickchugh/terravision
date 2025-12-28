@@ -532,3 +532,10 @@ def aws_handle_autoscaling(tfdata):
 6. **Use `handler_execution_order`**: When transformers need prepared data, run custom function first with `"handler_execution_order": "before"`.
 
 7. **Avoid Over-Engineering**: Don't create transformers for one-off operations. Pure Function is fine for unique, complex logic.
+
+8. **Complete Validation Checklist**: Before declaring a handler complete, run the comprehensive validation checklist in `docs/specs/002-aws-handler-refinement/tasks.md` (Validation Checklist section). This catches:
+   - Connection direction errors (arrows pointing wrong way)
+   - Orphaned resources (missing connections)
+   - Duplicate connections
+   - Intermediary link issues (transitive links not created)
+   - Test coverage gaps
