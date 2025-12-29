@@ -292,21 +292,23 @@ RESOURCE_HANDLER_CONFIGS = {
     # - SNS: Baseline Terraform graph already shows topics → subscriptions → SQS/Lambda correctly
     # - Lambda ESM: Baseline already shows DynamoDB/Kinesis/SQS → ESM → Lambda correctly
     # CO-005.1: "Most services MUST NOT have custom handlers" - validated!
-    "aws_cognito_user_pool": {
-        "description": "Hybrid: Link Cognito User Pools to Lambda triggers and App Clients",
-        "transformations": [
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_cognito_user_pool",
-                    "target_resource": "aws_lambda_function",
-                    "metadata_key": "lambda_config",
-                    "metadata_value_pattern": "arn:aws:lambda",
-                },
-            },
-        ],
-        "additional_handler_function": "aws_handle_cognito_triggers",
-    },
+    # NOTE: Cognito handler temporarily disabled for baseline validation
+    # Will re-enable after determining if custom handler is needed
+    # "aws_cognito_user_pool": {
+    #     "description": "Hybrid: Link Cognito User Pools to Lambda triggers and App Clients",
+    #     "transformations": [
+    #         {
+    #             "operation": "link_by_metadata_pattern",
+    #             "params": {
+    #                 "source_pattern": "aws_cognito_user_pool",
+    #                 "target_resource": "aws_lambda_function",
+    #                 "metadata_key": "lambda_config",
+    #                 "metadata_value_pattern": "arn:aws:lambda",
+    #             },
+    #         },
+    #     ],
+    #     "additional_handler_function": "aws_handle_cognito_triggers",
+    # },
     "aws_wafv2_web_acl": {
         "description": "Hybrid: Link WAF Web ACLs to protected resources (ALB, CloudFront, API Gateway)",
         "transformations": [

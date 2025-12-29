@@ -137,6 +137,14 @@ AWS_CONSOLIDATED_NODES = [
             "edge_service": True,
         }
     },
+    {
+        "aws_cognito": {
+            "resource_name": "aws_cognito_user_pool.cognito",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in

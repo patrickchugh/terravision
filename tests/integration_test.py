@@ -79,6 +79,11 @@ def test_help() -> None:
             "elasticache-replication-tfdata.json",
             "expected-elasticache-replication.json",
         ),
+        # Phase 6: Authentication (Cognito) patterns
+        (
+            "cognito-api-gateway-tfdata.json",
+            "expected-cognito-api-gateway.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
