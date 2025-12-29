@@ -1356,6 +1356,60 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def cleanup_cross_subnet_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove connections between numbered and unnumbered resources in different subnets.
+
+    Prevents messy diagram rendering where numbered resources (e.g., redis~1, redis~2, redis~3)
+    in different subnets all connect to the same unnumbered resource (e.g., Lambda function)
+    that's only deployed in some subnets.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with cross-subnet connections removed
+    """
+    # Get all subnets and build a map of which resources are in which subnet
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    resource_to_subnets = {}  # Maps resource name to list of subnets containing it
+
+    for subnet in subnets:
+        for resource in tfdata["graphdict"].get(subnet, []):
+            if resource not in resource_to_subnets:
+                resource_to_subnets[resource] = []
+            resource_to_subnets[resource].append(subnet)
+
+    # For each numbered resource, check its connections to unnumbered resources
+    for resource_name, connections in list(tfdata["graphdict"].items()):
+        if "~" not in resource_name:
+            continue  # Skip unnumbered resources
+
+        # Get the subnets this numbered resource is in
+        source_subnets = resource_to_subnets.get(resource_name, [])
+        if not source_subnets:
+            continue
+
+        # Check each connection
+        for connection in list(connections):
+            # Skip if the target is also numbered (those connections are handled elsewhere)
+            if "~" in connection:
+                continue
+
+            # Skip if the connection is a special node (groups, shared services, etc.)
+            if connection.startswith("aws_group.") or connection.startswith("aws_az."):
+                continue
+
+            # Get the subnets the target resource is in
+            target_subnets = resource_to_subnets.get(connection, [])
+
+            # If the numbered resource and unnumbered resource don't share any common subnet,
+            # remove the connection
+            if target_subnets and not set(source_subnets) & set(target_subnets):
+                tfdata["graphdict"][resource_name].remove(connection)
+
+    return tfdata
+
+
 def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Main function to create multiple resource instances.
 
@@ -1394,6 +1448,9 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Fix singular references to numbered nodes
     tfdata = handle_singular_references(tfdata)
+
+    # Remove cross-subnet connections between numbered and unnumbered resources
+    tfdata = cleanup_cross_subnet_connections(tfdata)
 
     # Clean up original resource names but preserve connections to numbered instances
     for resource in multi_resources:

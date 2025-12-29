@@ -20,9 +20,7 @@
         "aws_lambda_function.cache_writer"
     ],
     "aws_elasticache_replication_group.redis~3": [
-        "aws_elasticache_subnet_group.redis",
-        "aws_lambda_function.cache_reader",
-        "aws_lambda_function.cache_writer"
+        "aws_elasticache_subnet_group.redis"
     ],
     "aws_elasticache_subnet_group.redis": [
         "aws_elasticache_replication_group.redis"
