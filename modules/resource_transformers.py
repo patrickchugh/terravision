@@ -16,6 +16,7 @@ def expand_to_numbered_instances(
     resource_pattern: str,
     subnet_key: str = "subnet_ids",
     skip_if_numbered: bool = True,
+    inherit_connections: bool = True,
 ) -> Dict[str, Any]:
     """Expand single resource into numbered instances (~1, ~2, ~3) per subnet.
 
@@ -24,6 +25,10 @@ def expand_to_numbered_instances(
         resource_pattern: Pattern to match resources (e.g., "aws_eks_node_group")
         subnet_key: Metadata key containing subnet references
         skip_if_numbered: Skip resources already containing ~
+        inherit_connections: If True, numbered instances inherit base resource connections.
+                            If False, numbered instances start with empty connections.
+                            Use False for visual-only resources (ElastiCache multi-AZ),
+                            True for actual instances (EKS nodes, ASG instances).
 
     Returns:
         Updated tfdata with numbered instances
@@ -55,9 +60,14 @@ def expand_to_numbered_instances(
         if len(matching_subnets) > 1:
             for i, subnet in enumerate(matching_subnets, start=1):
                 numbered = f"{resource}~{i}"
-                tfdata["graphdict"][numbered] = list(
-                    tfdata["graphdict"].get(resource, [])
-                )
+                # Inherit connections based on parameter
+                if inherit_connections:
+                    tfdata["graphdict"][numbered] = list(
+                        tfdata["graphdict"].get(resource, [])
+                    )
+                else:
+                    # Visual-only instances start with empty connections
+                    tfdata["graphdict"][numbered] = []
                 tfdata["meta_data"][numbered] = copy.deepcopy(
                     tfdata["meta_data"].get(resource, {})
                 )

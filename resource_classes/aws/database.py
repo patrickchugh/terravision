@@ -91,3 +91,4 @@ aws_elasticache_cluster = ElastiCache
 aws_neptune_cluster = Neptune
 aws_qldb_ledger = QuantumLedgerDatabaseQldb
 aws_redshift_cluster = Redshift
+aws_elasticache_replication_group = Elasticache

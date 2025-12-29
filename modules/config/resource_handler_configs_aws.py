@@ -154,6 +154,17 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_lambda_function": {
+        "description": "Move Lambda functions from subnets to VPC level to avoid duplication",
+        "transformations": [
+            {
+                "operation": "move_to_vpc_parent",
+                "params": {
+                    "resource_pattern": "aws_lambda_function",
+                },
+            },
+        ],
+    },
     "aws_appautoscaling_target": {
         "description": "Handle autoscaling target relationships and counts",
         # Pure function handler - logic is too specific for generic transformers
@@ -200,7 +211,7 @@ RESOURCE_HANDLER_CONFIGS = {
     # ============================================================================
     # Pure Config-Driven Handler (1/14)
     "aws_elasticache_replication_group": {
-        "description": "Pure Config-Driven: Expand replication groups to numbered instances per subnet and match by suffix",
+        "description": "Pure Config-Driven: Expand replication groups to numbered instances per subnet",
         "transformations": [
             {
                 "operation": "expand_to_numbered_instances",
@@ -208,13 +219,7 @@ RESOURCE_HANDLER_CONFIGS = {
                     "resource_pattern": "aws_elasticache_replication_group",
                     "subnet_key": "subnet_group_name",
                     "skip_if_numbered": True,
-                },
-            },
-            {
-                "operation": "match_by_suffix",
-                "params": {
-                    "source_pattern": "aws_elasticache_replication_group",
-                    "target_pattern": "aws_lambda",
+                    "inherit_connections": False,
                 },
             },
             {
@@ -232,7 +237,7 @@ RESOURCE_HANDLER_CONFIGS = {
         ],
     },
     "aws_elasticache_cluster": {
-        "description": "Pure Config-Driven: Expand ElastiCache clusters to numbered instances per subnet and match by suffix",
+        "description": "Pure Config-Driven: Expand ElastiCache clusters to numbered instances per subnet",
         "transformations": [
             {
                 "operation": "expand_to_numbered_instances",
@@ -240,20 +245,7 @@ RESOURCE_HANDLER_CONFIGS = {
                     "resource_pattern": "aws_elasticache_cluster",
                     "subnet_key": "subnet_group_name",
                     "skip_if_numbered": True,
-                },
-            },
-            {
-                "operation": "match_by_suffix",
-                "params": {
-                    "source_pattern": "aws_elasticache_cluster",
-                    "target_pattern": "aws_fargate",
-                },
-            },
-            {
-                "operation": "match_by_suffix",
-                "params": {
-                    "source_pattern": "aws_elasticache_cluster",
-                    "target_pattern": "aws_ecs",
+                    "inherit_connections": False,
                 },
             },
         ],
