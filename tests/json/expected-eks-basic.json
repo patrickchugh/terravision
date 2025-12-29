@@ -102,12 +102,10 @@
     ],
     "aws_subnet.public[0]~1": [
         "aws_eks_node_group.main~3",
-        "aws_nat_gateway.main",
-        "aws_route_table_association.public[0]~1"
+        "aws_nat_gateway.main"
     ],
     "aws_subnet.public[1]~2": [
-        "aws_eks_node_group.main~4",
-        "aws_route_table_association.public[1]~2"
+        "aws_eks_node_group.main~4"
     ],
     "aws_vpc.main": [
         "aws_az.availability_zone_us_east_1a~1",

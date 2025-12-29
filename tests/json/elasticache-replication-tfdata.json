@@ -1,0 +1,3722 @@
+{
+    "codepath": "tests/fixtures/aws_terraform/elasticache_replication",
+    "workdir": "/Users/patrick/git/terravision",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_elasticache_replication_group.redis",
+                        "mode": "managed",
+                        "type": "aws_elasticache_replication_group",
+                        "name": "redis",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 2,
+                        "values": {
+                            "auth_token": null,
+                            "auth_token_update_strategy": "ROTATE",
+                            "automatic_failover_enabled": true,
+                            "description": "Redis cluster with automatic failover",
+                            "engine": "redis",
+                            "engine_version": "7.0",
+                            "final_snapshot_identifier": null,
+                            "kms_key_id": null,
+                            "log_delivery_configuration": [],
+                            "maintenance_window": "sun:05:00-sun:07:00",
+                            "multi_az_enabled": true,
+                            "node_type": "cache.t3.micro",
+                            "notification_topic_arn": null,
+                            "num_cache_clusters": 3,
+                            "parameter_group_name": "default.redis7",
+                            "port": 6379,
+                            "preferred_cache_cluster_azs": null,
+                            "replication_group_id": "redis-replication",
+                            "snapshot_arns": null,
+                            "snapshot_name": null,
+                            "snapshot_retention_limit": 5,
+                            "snapshot_window": "03:00-05:00",
+                            "subnet_group_name": "redis-replication-subnet-group",
+                            "tags": {
+                                "Environment": "production",
+                                "Name": "Redis Replication Group"
+                            },
+                            "tags_all": {
+                                "Environment": "production",
+                                "Name": "Redis Replication Group"
+                            },
+                            "timeouts": null,
+                            "user_group_ids": null
+                        },
+                        "sensitive_values": {
+                            "auth_token": true,
+                            "log_delivery_configuration": [],
+                            "member_clusters": [],
+                            "security_group_ids": [],
+                            "security_group_names": [],
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_elasticache_subnet_group.redis",
+                        "mode": "managed",
+                        "type": "aws_elasticache_subnet_group",
+                        "name": "redis",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "description": "Managed by Terraform",
+                            "name": "redis-replication-subnet-group",
+                            "tags": {
+                                "Name": "Redis Replication Subnet Group"
+                            },
+                            "tags_all": {
+                                "Name": "Redis Replication Subnet Group"
+                            }
+                        },
+                        "sensitive_values": {
+                            "subnet_ids": [],
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.lambda",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "lambda-redis-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.lambda_vpc",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "lambda_vpc",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                            "role": "lambda-redis-role"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_lambda_function.cache_reader",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "cache_reader",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {}
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "redis-cache-reader",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": {
+                                "Name": "Cache Reader Lambda"
+                            },
+                            "tags_all": {
+                                "Name": "Cache Reader Lambda"
+                            },
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": [
+                                {
+                                    "ipv6_allowed_for_dual_stack": false
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags": {},
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": [
+                                {
+                                    "security_group_ids": [],
+                                    "subnet_ids": []
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_function.cache_writer",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "cache_writer",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {}
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "redis-cache-writer",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": {
+                                "Name": "Cache Writer Lambda"
+                            },
+                            "tags_all": {
+                                "Name": "Cache Writer Lambda"
+                            },
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": [
+                                {
+                                    "ipv6_allowed_for_dual_stack": false
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags": {},
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": [
+                                {
+                                    "security_group_ids": [],
+                                    "subnet_ids": []
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "address": "aws_security_group.redis",
+                        "mode": "managed",
+                        "type": "aws_security_group",
+                        "name": "redis",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "description": "Security group for Redis replication group",
+                            "egress": [
+                                {
+                                    "cidr_blocks": [
+                                        "0.0.0.0/0"
+                                    ],
+                                    "description": "",
+                                    "from_port": 0,
+                                    "ipv6_cidr_blocks": [],
+                                    "prefix_list_ids": [],
+                                    "protocol": "-1",
+                                    "security_groups": [],
+                                    "self": false,
+                                    "to_port": 0
+                                }
+                            ],
+                            "ingress": [
+                                {
+                                    "cidr_blocks": [
+                                        "10.0.0.0/16"
+                                    ],
+                                    "description": "Redis access from VPC",
+                                    "from_port": 6379,
+                                    "ipv6_cidr_blocks": [],
+                                    "prefix_list_ids": [],
+                                    "protocol": "tcp",
+                                    "security_groups": [],
+                                    "self": false,
+                                    "to_port": 6379
+                                }
+                            ],
+                            "name": "redis-replication-sg",
+                            "revoke_rules_on_delete": false,
+                            "tags": {
+                                "Name": "redis-replication-security-group"
+                            },
+                            "tags_all": {
+                                "Name": "redis-replication-security-group"
+                            },
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "egress": [
+                                {
+                                    "cidr_blocks": [
+                                        false
+                                    ],
+                                    "ipv6_cidr_blocks": [],
+                                    "prefix_list_ids": [],
+                                    "security_groups": []
+                                }
+                            ],
+                            "ingress": [
+                                {
+                                    "cidr_blocks": [
+                                        false
+                                    ],
+                                    "ipv6_cidr_blocks": [],
+                                    "prefix_list_ids": [],
+                                    "security_groups": []
+                                }
+                            ],
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_subnet.cache_a",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_a",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "assign_ipv6_address_on_creation": false,
+                            "availability_zone": "us-east-1a",
+                            "cidr_block": "10.0.1.0/24",
+                            "customer_owned_ipv4_pool": null,
+                            "enable_dns64": false,
+                            "enable_lni_at_device_index": null,
+                            "enable_resource_name_dns_a_record_on_launch": false,
+                            "enable_resource_name_dns_aaaa_record_on_launch": false,
+                            "ipv6_cidr_block": null,
+                            "ipv6_native": false,
+                            "map_customer_owned_ip_on_launch": null,
+                            "map_public_ip_on_launch": false,
+                            "outpost_arn": null,
+                            "tags": {
+                                "Name": "cache-subnet-a"
+                            },
+                            "tags_all": {
+                                "Name": "cache-subnet-a"
+                            },
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_subnet.cache_b",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_b",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "assign_ipv6_address_on_creation": false,
+                            "availability_zone": "us-east-1b",
+                            "cidr_block": "10.0.2.0/24",
+                            "customer_owned_ipv4_pool": null,
+                            "enable_dns64": false,
+                            "enable_lni_at_device_index": null,
+                            "enable_resource_name_dns_a_record_on_launch": false,
+                            "enable_resource_name_dns_aaaa_record_on_launch": false,
+                            "ipv6_cidr_block": null,
+                            "ipv6_native": false,
+                            "map_customer_owned_ip_on_launch": null,
+                            "map_public_ip_on_launch": false,
+                            "outpost_arn": null,
+                            "tags": {
+                                "Name": "cache-subnet-b"
+                            },
+                            "tags_all": {
+                                "Name": "cache-subnet-b"
+                            },
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_subnet.cache_c",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_c",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "assign_ipv6_address_on_creation": false,
+                            "availability_zone": "us-east-1c",
+                            "cidr_block": "10.0.3.0/24",
+                            "customer_owned_ipv4_pool": null,
+                            "enable_dns64": false,
+                            "enable_lni_at_device_index": null,
+                            "enable_resource_name_dns_a_record_on_launch": false,
+                            "enable_resource_name_dns_aaaa_record_on_launch": false,
+                            "ipv6_cidr_block": null,
+                            "ipv6_native": false,
+                            "map_customer_owned_ip_on_launch": null,
+                            "map_public_ip_on_launch": false,
+                            "outpost_arn": null,
+                            "tags": {
+                                "Name": "cache-subnet-c"
+                            },
+                            "tags_all": {
+                                "Name": "cache-subnet-c"
+                            },
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_vpc.main",
+                        "mode": "managed",
+                        "type": "aws_vpc",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "assign_generated_ipv6_cidr_block": null,
+                            "cidr_block": "10.0.0.0/16",
+                            "enable_dns_hostnames": true,
+                            "enable_dns_support": true,
+                            "instance_tenancy": "default",
+                            "ipv4_ipam_pool_id": null,
+                            "ipv4_netmask_length": null,
+                            "ipv6_ipam_pool_id": null,
+                            "ipv6_netmask_length": null,
+                            "tags": {
+                                "Name": "replication-vpc"
+                            },
+                            "tags_all": {
+                                "Name": "replication-vpc"
+                            }
+                        },
+                        "sensitive_values": {
+                            "tags": {},
+                            "tags_all": {}
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_elasticache_replication_group.redis",
+                "mode": "managed",
+                "type": "aws_elasticache_replication_group",
+                "name": "redis",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "auth_token": true,
+                        "auth_token_update_strategy": "ROTATE",
+                        "automatic_failover_enabled": true,
+                        "description": "Redis cluster with automatic failover",
+                        "engine": "redis",
+                        "engine_version": "7.0",
+                        "final_snapshot_identifier": null,
+                        "kms_key_id": null,
+                        "log_delivery_configuration": [],
+                        "maintenance_window": "sun:05:00-sun:07:00",
+                        "multi_az_enabled": true,
+                        "node_type": "cache.t3.micro",
+                        "notification_topic_arn": null,
+                        "num_cache_clusters": 3,
+                        "parameter_group_name": "default.redis7",
+                        "port": 6379,
+                        "preferred_cache_cluster_azs": null,
+                        "replication_group_id": "redis-replication",
+                        "snapshot_arns": null,
+                        "snapshot_name": null,
+                        "snapshot_retention_limit": 5,
+                        "snapshot_window": "03:00-05:00",
+                        "subnet_group_name": "redis-replication-subnet-group",
+                        "tags": {},
+                        "tags_all": {},
+                        "timeouts": null,
+                        "user_group_ids": null,
+                        "apply_immediately": true,
+                        "arn": true,
+                        "at_rest_encryption_enabled": true,
+                        "auto_minor_version_upgrade": true,
+                        "cluster_enabled": true,
+                        "cluster_mode": true,
+                        "configuration_endpoint_address": true,
+                        "data_tiering_enabled": true,
+                        "engine_version_actual": true,
+                        "global_replication_group_id": true,
+                        "id": true,
+                        "ip_discovery": true,
+                        "member_clusters": [],
+                        "network_type": true,
+                        "num_node_groups": true,
+                        "primary_endpoint_address": true,
+                        "reader_endpoint_address": true,
+                        "replicas_per_node_group": true,
+                        "security_group_ids": [],
+                        "security_group_names": [],
+                        "transit_encryption_enabled": true,
+                        "transit_encryption_mode": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "apply_immediately": true,
+                        "arn": true,
+                        "at_rest_encryption_enabled": true,
+                        "auto_minor_version_upgrade": true,
+                        "cluster_enabled": true,
+                        "cluster_mode": true,
+                        "configuration_endpoint_address": true,
+                        "data_tiering_enabled": true,
+                        "engine_version_actual": true,
+                        "global_replication_group_id": true,
+                        "id": true,
+                        "ip_discovery": true,
+                        "log_delivery_configuration": [],
+                        "member_clusters": true,
+                        "network_type": true,
+                        "num_node_groups": true,
+                        "primary_endpoint_address": true,
+                        "reader_endpoint_address": true,
+                        "replicas_per_node_group": true,
+                        "security_group_ids": true,
+                        "security_group_names": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "transit_encryption_enabled": true,
+                        "transit_encryption_mode": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "auth_token": true,
+                        "log_delivery_configuration": [],
+                        "member_clusters": [],
+                        "security_group_ids": [],
+                        "security_group_names": [],
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_elasticache_subnet_group.redis",
+                "mode": "managed",
+                "type": "aws_elasticache_subnet_group",
+                "name": "redis",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": "Managed by Terraform",
+                        "name": "redis-replication-subnet-group",
+                        "tags": {},
+                        "tags_all": {},
+                        "arn": true,
+                        "id": true,
+                        "subnet_ids": [],
+                        "vpc_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "subnet_ids": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "vpc_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "subnet_ids": [],
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.lambda",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "lambda-redis-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy_attachment.lambda_vpc",
+                "mode": "managed",
+                "type": "aws_iam_role_policy_attachment",
+                "name": "lambda_vpc",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                        "role": "lambda-redis-role",
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_lambda_function.cache_reader",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "cache_reader",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "redis-cache-reader",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": {},
+                        "tags_all": {},
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [
+                            {
+                                "security_group_ids": [],
+                                "subnet_ids": []
+                            }
+                        ],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": true
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": [
+                            {
+                                "security_group_ids": true,
+                                "subnet_ids": true,
+                                "vpc_id": true
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags": {},
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": [
+                            {
+                                "security_group_ids": [],
+                                "subnet_ids": []
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_function.cache_writer",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "cache_writer",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "redis-cache-writer",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": {},
+                        "tags_all": {},
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [
+                            {
+                                "security_group_ids": [],
+                                "subnet_ids": []
+                            }
+                        ],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": true
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": [
+                            {
+                                "security_group_ids": true,
+                                "subnet_ids": true,
+                                "vpc_id": true
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags": {},
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": [
+                            {
+                                "security_group_ids": [],
+                                "subnet_ids": []
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "aws_security_group.redis",
+                "mode": "managed",
+                "type": "aws_security_group",
+                "name": "redis",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": "Security group for Redis replication group",
+                        "egress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "ingress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "name": "redis-replication-sg",
+                        "revoke_rules_on_delete": false,
+                        "tags": {},
+                        "tags_all": {},
+                        "timeouts": null,
+                        "arn": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "owner_id": true,
+                        "vpc_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "egress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "id": true,
+                        "ingress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "name_prefix": true,
+                        "owner_id": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "vpc_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "egress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "ingress": [
+                            {
+                                "cidr_blocks": [
+                                    false
+                                ],
+                                "ipv6_cidr_blocks": [],
+                                "prefix_list_ids": [],
+                                "security_groups": []
+                            }
+                        ],
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_subnet.cache_a",
+                "mode": "managed",
+                "type": "aws_subnet",
+                "name": "cache_a",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assign_ipv6_address_on_creation": false,
+                        "availability_zone": "us-east-1a",
+                        "cidr_block": "10.0.1.0/24",
+                        "customer_owned_ipv4_pool": null,
+                        "enable_dns64": false,
+                        "enable_lni_at_device_index": null,
+                        "enable_resource_name_dns_a_record_on_launch": false,
+                        "enable_resource_name_dns_aaaa_record_on_launch": false,
+                        "ipv6_cidr_block": null,
+                        "ipv6_native": false,
+                        "map_customer_owned_ip_on_launch": null,
+                        "map_public_ip_on_launch": false,
+                        "outpost_arn": null,
+                        "tags": {},
+                        "tags_all": {},
+                        "timeouts": null,
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "vpc_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "vpc_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_subnet.cache_b",
+                "mode": "managed",
+                "type": "aws_subnet",
+                "name": "cache_b",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assign_ipv6_address_on_creation": false,
+                        "availability_zone": "us-east-1b",
+                        "cidr_block": "10.0.2.0/24",
+                        "customer_owned_ipv4_pool": null,
+                        "enable_dns64": false,
+                        "enable_lni_at_device_index": null,
+                        "enable_resource_name_dns_a_record_on_launch": false,
+                        "enable_resource_name_dns_aaaa_record_on_launch": false,
+                        "ipv6_cidr_block": null,
+                        "ipv6_native": false,
+                        "map_customer_owned_ip_on_launch": null,
+                        "map_public_ip_on_launch": false,
+                        "outpost_arn": null,
+                        "tags": {},
+                        "tags_all": {},
+                        "timeouts": null,
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "vpc_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "vpc_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_subnet.cache_c",
+                "mode": "managed",
+                "type": "aws_subnet",
+                "name": "cache_c",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assign_ipv6_address_on_creation": false,
+                        "availability_zone": "us-east-1c",
+                        "cidr_block": "10.0.3.0/24",
+                        "customer_owned_ipv4_pool": null,
+                        "enable_dns64": false,
+                        "enable_lni_at_device_index": null,
+                        "enable_resource_name_dns_a_record_on_launch": false,
+                        "enable_resource_name_dns_aaaa_record_on_launch": false,
+                        "ipv6_cidr_block": null,
+                        "ipv6_native": false,
+                        "map_customer_owned_ip_on_launch": null,
+                        "map_public_ip_on_launch": false,
+                        "outpost_arn": null,
+                        "tags": {},
+                        "tags_all": {},
+                        "timeouts": null,
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "vpc_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "availability_zone_id": true,
+                        "id": true,
+                        "ipv6_cidr_block_association_id": true,
+                        "owner_id": true,
+                        "private_dns_hostname_type_on_launch": true,
+                        "tags": {},
+                        "tags_all": {},
+                        "vpc_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_vpc.main",
+                "mode": "managed",
+                "type": "aws_vpc",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assign_generated_ipv6_cidr_block": null,
+                        "cidr_block": "10.0.0.0/16",
+                        "enable_dns_hostnames": true,
+                        "enable_dns_support": true,
+                        "instance_tenancy": "default",
+                        "ipv4_ipam_pool_id": null,
+                        "ipv4_netmask_length": null,
+                        "ipv6_ipam_pool_id": null,
+                        "ipv6_netmask_length": null,
+                        "tags": {},
+                        "tags_all": {},
+                        "arn": true,
+                        "default_network_acl_id": true,
+                        "default_route_table_id": true,
+                        "default_security_group_id": true,
+                        "dhcp_options_id": true,
+                        "enable_network_address_usage_metrics": true,
+                        "id": true,
+                        "ipv6_association_id": true,
+                        "ipv6_cidr_block": true,
+                        "ipv6_cidr_block_network_border_group": true,
+                        "main_route_table_id": true,
+                        "owner_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "default_network_acl_id": true,
+                        "default_route_table_id": true,
+                        "default_security_group_id": true,
+                        "dhcp_options_id": true,
+                        "enable_network_address_usage_metrics": true,
+                        "id": true,
+                        "ipv6_association_id": true,
+                        "ipv6_cidr_block": true,
+                        "ipv6_cidr_block_network_border_group": true,
+                        "main_route_table_id": true,
+                        "owner_id": true,
+                        "tags": {},
+                        "tags_all": {}
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_elasticache_replication_group.redis",
+                        "mode": "managed",
+                        "type": "aws_elasticache_replication_group",
+                        "name": "redis",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "automatic_failover_enabled": {
+                                "constant_value": true
+                            },
+                            "description": {
+                                "constant_value": "Redis cluster with automatic failover"
+                            },
+                            "engine": {
+                                "constant_value": "redis"
+                            },
+                            "engine_version": {
+                                "constant_value": "7.0"
+                            },
+                            "maintenance_window": {
+                                "constant_value": "sun:05:00-sun:07:00"
+                            },
+                            "multi_az_enabled": {
+                                "constant_value": true
+                            },
+                            "node_type": {
+                                "constant_value": "cache.t3.micro"
+                            },
+                            "num_cache_clusters": {
+                                "constant_value": 3
+                            },
+                            "parameter_group_name": {
+                                "constant_value": "default.redis7"
+                            },
+                            "port": {
+                                "constant_value": 6379
+                            },
+                            "replication_group_id": {
+                                "constant_value": "redis-replication"
+                            },
+                            "security_group_ids": {
+                                "references": [
+                                    "aws_security_group.redis.id",
+                                    "aws_security_group.redis"
+                                ]
+                            },
+                            "snapshot_retention_limit": {
+                                "constant_value": 5
+                            },
+                            "snapshot_window": {
+                                "constant_value": "03:00-05:00"
+                            },
+                            "subnet_group_name": {
+                                "references": [
+                                    "aws_elasticache_subnet_group.redis.name",
+                                    "aws_elasticache_subnet_group.redis"
+                                ]
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Environment": "production",
+                                    "Name": "Redis Replication Group"
+                                }
+                            }
+                        },
+                        "schema_version": 2
+                    },
+                    {
+                        "address": "aws_elasticache_subnet_group.redis",
+                        "mode": "managed",
+                        "type": "aws_elasticache_subnet_group",
+                        "name": "redis",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "redis-replication-subnet-group"
+                            },
+                            "subnet_ids": {
+                                "references": [
+                                    "aws_subnet.cache_a.id",
+                                    "aws_subnet.cache_a",
+                                    "aws_subnet.cache_b.id",
+                                    "aws_subnet.cache_b",
+                                    "aws_subnet.cache_c.id",
+                                    "aws_subnet.cache_c"
+                                ]
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "Redis Replication Subnet Group"
+                                }
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.lambda",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "lambda-redis-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.lambda_vpc",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "lambda_vpc",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "policy_arn": {
+                                "constant_value": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda.name",
+                                    "aws_iam_role.lambda"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.cache_reader",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "cache_reader",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "references": [
+                                            "aws_elasticache_replication_group.redis.primary_endpoint_address",
+                                            "aws_elasticache_replication_group.redis"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "redis-cache-reader"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda.arn",
+                                    "aws_iam_role.lambda"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "Cache Reader Lambda"
+                                }
+                            },
+                            "vpc_config": [
+                                {
+                                    "security_group_ids": {
+                                        "references": [
+                                            "aws_security_group.redis.id",
+                                            "aws_security_group.redis"
+                                        ]
+                                    },
+                                    "subnet_ids": {
+                                        "references": [
+                                            "aws_subnet.cache_a.id",
+                                            "aws_subnet.cache_a",
+                                            "aws_subnet.cache_b.id",
+                                            "aws_subnet.cache_b"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.cache_writer",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "cache_writer",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "references": [
+                                            "aws_elasticache_replication_group.redis.primary_endpoint_address",
+                                            "aws_elasticache_replication_group.redis"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "redis-cache-writer"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda.arn",
+                                    "aws_iam_role.lambda"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "Cache Writer Lambda"
+                                }
+                            },
+                            "vpc_config": [
+                                {
+                                    "security_group_ids": {
+                                        "references": [
+                                            "aws_security_group.redis.id",
+                                            "aws_security_group.redis"
+                                        ]
+                                    },
+                                    "subnet_ids": {
+                                        "references": [
+                                            "aws_subnet.cache_a.id",
+                                            "aws_subnet.cache_a",
+                                            "aws_subnet.cache_b.id",
+                                            "aws_subnet.cache_b"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_security_group.redis",
+                        "mode": "managed",
+                        "type": "aws_security_group",
+                        "name": "redis",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "description": {
+                                "constant_value": "Security group for Redis replication group"
+                            },
+                            "egress": {
+                                "constant_value": [
+                                    {
+                                        "cidr_blocks": [
+                                            "0.0.0.0/0"
+                                        ],
+                                        "description": null,
+                                        "from_port": 0,
+                                        "ipv6_cidr_blocks": null,
+                                        "prefix_list_ids": null,
+                                        "protocol": "-1",
+                                        "security_groups": null,
+                                        "self": null,
+                                        "to_port": 0
+                                    }
+                                ]
+                            },
+                            "ingress": {
+                                "constant_value": [
+                                    {
+                                        "cidr_blocks": [
+                                            "10.0.0.0/16"
+                                        ],
+                                        "description": "Redis access from VPC",
+                                        "from_port": 6379,
+                                        "ipv6_cidr_blocks": null,
+                                        "prefix_list_ids": null,
+                                        "protocol": "tcp",
+                                        "security_groups": null,
+                                        "self": null,
+                                        "to_port": 6379
+                                    }
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "redis-replication-sg"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "redis-replication-security-group"
+                                }
+                            },
+                            "vpc_id": {
+                                "references": [
+                                    "aws_vpc.main.id",
+                                    "aws_vpc.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_subnet.cache_a",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_a",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "availability_zone": {
+                                "constant_value": "us-east-1a"
+                            },
+                            "cidr_block": {
+                                "constant_value": "10.0.1.0/24"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "cache-subnet-a"
+                                }
+                            },
+                            "vpc_id": {
+                                "references": [
+                                    "aws_vpc.main.id",
+                                    "aws_vpc.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_subnet.cache_b",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_b",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "availability_zone": {
+                                "constant_value": "us-east-1b"
+                            },
+                            "cidr_block": {
+                                "constant_value": "10.0.2.0/24"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "cache-subnet-b"
+                                }
+                            },
+                            "vpc_id": {
+                                "references": [
+                                    "aws_vpc.main.id",
+                                    "aws_vpc.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_subnet.cache_c",
+                        "mode": "managed",
+                        "type": "aws_subnet",
+                        "name": "cache_c",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "availability_zone": {
+                                "constant_value": "us-east-1c"
+                            },
+                            "cidr_block": {
+                                "constant_value": "10.0.3.0/24"
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "cache-subnet-c"
+                                }
+                            },
+                            "vpc_id": {
+                                "references": [
+                                    "aws_vpc.main.id",
+                                    "aws_vpc.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_vpc.main",
+                        "mode": "managed",
+                        "type": "aws_vpc",
+                        "name": "main",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "cidr_block": {
+                                "constant_value": "10.0.0.0/16"
+                            },
+                            "enable_dns_hostnames": {
+                                "constant_value": true
+                            },
+                            "enable_dns_support": {
+                                "constant_value": true
+                            },
+                            "tags": {
+                                "constant_value": {
+                                    "Name": "replication-vpc"
+                                }
+                            }
+                        },
+                        "schema_version": 1
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_elasticache_replication_group.redis",
+                "attribute": [
+                    "primary_endpoint_address"
+                ]
+            },
+            {
+                "resource": "aws_elasticache_subnet_group.redis",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_subnet.cache_b",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_vpc.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_subnet.cache_a",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_security_group.redis",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_subnet.cache_c",
+                "attribute": [
+                    "id"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-28T22:23:41Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_elasticache_replication_group.redis",
+            "mode": "managed",
+            "type": "aws_elasticache_replication_group",
+            "name": "redis",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "auth_token": true,
+                    "auth_token_update_strategy": "ROTATE",
+                    "automatic_failover_enabled": true,
+                    "description": "Redis cluster with automatic failover",
+                    "engine": "redis",
+                    "engine_version": "7.0",
+                    "final_snapshot_identifier": null,
+                    "kms_key_id": null,
+                    "log_delivery_configuration": [],
+                    "maintenance_window": "sun:05:00-sun:07:00",
+                    "multi_az_enabled": true,
+                    "node_type": "cache.t3.micro",
+                    "notification_topic_arn": null,
+                    "num_cache_clusters": 3,
+                    "parameter_group_name": "default.redis7",
+                    "port": 6379,
+                    "preferred_cache_cluster_azs": null,
+                    "replication_group_id": "redis-replication",
+                    "snapshot_arns": null,
+                    "snapshot_name": null,
+                    "snapshot_retention_limit": 5,
+                    "snapshot_window": "03:00-05:00",
+                    "subnet_group_name": "redis-replication-subnet-group",
+                    "tags": {},
+                    "tags_all": {},
+                    "timeouts": null,
+                    "user_group_ids": null,
+                    "apply_immediately": true,
+                    "arn": true,
+                    "at_rest_encryption_enabled": true,
+                    "auto_minor_version_upgrade": true,
+                    "cluster_enabled": true,
+                    "cluster_mode": true,
+                    "configuration_endpoint_address": true,
+                    "data_tiering_enabled": true,
+                    "engine_version_actual": true,
+                    "global_replication_group_id": true,
+                    "id": true,
+                    "ip_discovery": true,
+                    "member_clusters": [],
+                    "network_type": true,
+                    "num_node_groups": true,
+                    "primary_endpoint_address": true,
+                    "reader_endpoint_address": true,
+                    "replicas_per_node_group": true,
+                    "security_group_ids": [],
+                    "security_group_names": [],
+                    "transit_encryption_enabled": true,
+                    "transit_encryption_mode": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "apply_immediately": true,
+                    "arn": true,
+                    "at_rest_encryption_enabled": true,
+                    "auto_minor_version_upgrade": true,
+                    "cluster_enabled": true,
+                    "cluster_mode": true,
+                    "configuration_endpoint_address": true,
+                    "data_tiering_enabled": true,
+                    "engine_version_actual": true,
+                    "global_replication_group_id": true,
+                    "id": true,
+                    "ip_discovery": true,
+                    "log_delivery_configuration": [],
+                    "member_clusters": true,
+                    "network_type": true,
+                    "num_node_groups": true,
+                    "primary_endpoint_address": true,
+                    "reader_endpoint_address": true,
+                    "replicas_per_node_group": true,
+                    "security_group_ids": true,
+                    "security_group_names": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "transit_encryption_enabled": true,
+                    "transit_encryption_mode": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "auth_token": true,
+                    "log_delivery_configuration": [],
+                    "member_clusters": [],
+                    "security_group_ids": [],
+                    "security_group_names": [],
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_elasticache_subnet_group.redis",
+            "mode": "managed",
+            "type": "aws_elasticache_subnet_group",
+            "name": "redis",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": "Managed by Terraform",
+                    "name": "redis-replication-subnet-group",
+                    "tags": {},
+                    "tags_all": {},
+                    "arn": true,
+                    "id": true,
+                    "subnet_ids": [],
+                    "vpc_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "subnet_ids": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "vpc_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "subnet_ids": [],
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.lambda",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "lambda-redis-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy_attachment.lambda_vpc",
+            "mode": "managed",
+            "type": "aws_iam_role_policy_attachment",
+            "name": "lambda_vpc",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+                    "role": "lambda-redis-role",
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_lambda_function.cache_reader",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "cache_reader",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "redis-cache-reader",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": {},
+                    "tags_all": {},
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [
+                        {
+                            "security_group_ids": [],
+                            "subnet_ids": []
+                        }
+                    ],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": true
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": [
+                        {
+                            "security_group_ids": true,
+                            "subnet_ids": true,
+                            "vpc_id": true
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags": {},
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": [
+                        {
+                            "security_group_ids": [],
+                            "subnet_ids": []
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_function.cache_writer",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "cache_writer",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "redis-cache-writer",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": {},
+                    "tags_all": {},
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [
+                        {
+                            "security_group_ids": [],
+                            "subnet_ids": []
+                        }
+                    ],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": true
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": [
+                        {
+                            "security_group_ids": true,
+                            "subnet_ids": true,
+                            "vpc_id": true
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags": {},
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": [
+                        {
+                            "security_group_ids": [],
+                            "subnet_ids": []
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "address": "aws_security_group.redis",
+            "mode": "managed",
+            "type": "aws_security_group",
+            "name": "redis",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": "Security group for Redis replication group",
+                    "egress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "ingress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "name": "redis-replication-sg",
+                    "revoke_rules_on_delete": false,
+                    "tags": {},
+                    "tags_all": {},
+                    "timeouts": null,
+                    "arn": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "owner_id": true,
+                    "vpc_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "egress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "id": true,
+                    "ingress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "name_prefix": true,
+                    "owner_id": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "vpc_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "egress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "ingress": [
+                        {
+                            "cidr_blocks": [
+                                false
+                            ],
+                            "ipv6_cidr_blocks": [],
+                            "prefix_list_ids": [],
+                            "security_groups": []
+                        }
+                    ],
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_subnet.cache_a",
+            "mode": "managed",
+            "type": "aws_subnet",
+            "name": "cache_a",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assign_ipv6_address_on_creation": false,
+                    "availability_zone": "us-east-1a",
+                    "cidr_block": "10.0.1.0/24",
+                    "customer_owned_ipv4_pool": null,
+                    "enable_dns64": false,
+                    "enable_lni_at_device_index": null,
+                    "enable_resource_name_dns_a_record_on_launch": false,
+                    "enable_resource_name_dns_aaaa_record_on_launch": false,
+                    "ipv6_cidr_block": null,
+                    "ipv6_native": false,
+                    "map_customer_owned_ip_on_launch": null,
+                    "map_public_ip_on_launch": false,
+                    "outpost_arn": null,
+                    "tags": {},
+                    "tags_all": {},
+                    "timeouts": null,
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "vpc_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "vpc_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_subnet.cache_b",
+            "mode": "managed",
+            "type": "aws_subnet",
+            "name": "cache_b",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assign_ipv6_address_on_creation": false,
+                    "availability_zone": "us-east-1b",
+                    "cidr_block": "10.0.2.0/24",
+                    "customer_owned_ipv4_pool": null,
+                    "enable_dns64": false,
+                    "enable_lni_at_device_index": null,
+                    "enable_resource_name_dns_a_record_on_launch": false,
+                    "enable_resource_name_dns_aaaa_record_on_launch": false,
+                    "ipv6_cidr_block": null,
+                    "ipv6_native": false,
+                    "map_customer_owned_ip_on_launch": null,
+                    "map_public_ip_on_launch": false,
+                    "outpost_arn": null,
+                    "tags": {},
+                    "tags_all": {},
+                    "timeouts": null,
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "vpc_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "vpc_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_subnet.cache_c",
+            "mode": "managed",
+            "type": "aws_subnet",
+            "name": "cache_c",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assign_ipv6_address_on_creation": false,
+                    "availability_zone": "us-east-1c",
+                    "cidr_block": "10.0.3.0/24",
+                    "customer_owned_ipv4_pool": null,
+                    "enable_dns64": false,
+                    "enable_lni_at_device_index": null,
+                    "enable_resource_name_dns_a_record_on_launch": false,
+                    "enable_resource_name_dns_aaaa_record_on_launch": false,
+                    "ipv6_cidr_block": null,
+                    "ipv6_native": false,
+                    "map_customer_owned_ip_on_launch": null,
+                    "map_public_ip_on_launch": false,
+                    "outpost_arn": null,
+                    "tags": {},
+                    "tags_all": {},
+                    "timeouts": null,
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "vpc_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "availability_zone_id": true,
+                    "id": true,
+                    "ipv6_cidr_block_association_id": true,
+                    "owner_id": true,
+                    "private_dns_hostname_type_on_launch": true,
+                    "tags": {},
+                    "tags_all": {},
+                    "vpc_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_vpc.main",
+            "mode": "managed",
+            "type": "aws_vpc",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assign_generated_ipv6_cidr_block": null,
+                    "cidr_block": "10.0.0.0/16",
+                    "enable_dns_hostnames": true,
+                    "enable_dns_support": true,
+                    "instance_tenancy": "default",
+                    "ipv4_ipam_pool_id": null,
+                    "ipv4_netmask_length": null,
+                    "ipv6_ipam_pool_id": null,
+                    "ipv6_netmask_length": null,
+                    "tags": {},
+                    "tags_all": {},
+                    "arn": true,
+                    "default_network_acl_id": true,
+                    "default_route_table_id": true,
+                    "default_security_group_id": true,
+                    "dhcp_options_id": true,
+                    "enable_network_address_usage_metrics": true,
+                    "id": true,
+                    "ipv6_association_id": true,
+                    "ipv6_cidr_block": true,
+                    "ipv6_cidr_block_network_border_group": true,
+                    "main_route_table_id": true,
+                    "owner_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "default_network_acl_id": true,
+                    "default_route_table_id": true,
+                    "default_security_group_id": true,
+                    "dhcp_options_id": true,
+                    "enable_network_address_usage_metrics": true,
+                    "id": true,
+                    "ipv6_association_id": true,
+                    "ipv6_cidr_block": true,
+                    "ipv6_cidr_block_network_border_group": true,
+                    "main_route_table_id": true,
+                    "owner_id": true,
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_elasticache_replication_group.redis",
+                "fontname": "sans-serif",
+                "label": "aws_elasticache_replication_group.redis",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_elasticache_subnet_group.redis",
+                "fontname": "sans-serif",
+                "label": "aws_elasticache_subnet_group.redis",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_iam_role.lambda",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_iam_role_policy_attachment.lambda_vpc",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy_attachment.lambda_vpc",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_lambda_function.cache_reader",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.cache_reader",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_lambda_function.cache_writer",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.cache_writer",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_security_group.redis",
+                "fontname": "sans-serif",
+                "label": "aws_security_group.redis",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "aws_subnet.cache_a",
+                "fontname": "sans-serif",
+                "label": "aws_subnet.cache_a",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "aws_subnet.cache_b",
+                "fontname": "sans-serif",
+                "label": "aws_subnet.cache_b",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 9,
+                "name": "aws_subnet.cache_c",
+                "fontname": "sans-serif",
+                "label": "aws_subnet.cache_c",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 10,
+                "name": "aws_vpc.main",
+                "fontname": "sans-serif",
+                "label": "aws_vpc.main",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 1
+            },
+            {
+                "_gvid": 1,
+                "tail": 0,
+                "head": 6
+            },
+            {
+                "_gvid": 2,
+                "tail": 1,
+                "head": 7
+            },
+            {
+                "_gvid": 3,
+                "tail": 1,
+                "head": 8
+            },
+            {
+                "_gvid": 4,
+                "tail": 1,
+                "head": 9
+            },
+            {
+                "_gvid": 5,
+                "tail": 3,
+                "head": 2
+            },
+            {
+                "_gvid": 6,
+                "tail": 4,
+                "head": 0
+            },
+            {
+                "_gvid": 7,
+                "tail": 4,
+                "head": 2
+            },
+            {
+                "_gvid": 8,
+                "tail": 5,
+                "head": 0
+            },
+            {
+                "_gvid": 9,
+                "tail": 5,
+                "head": 2
+            },
+            {
+                "_gvid": 10,
+                "tail": 6,
+                "head": 10
+            },
+            {
+                "_gvid": 11,
+                "tail": 7,
+                "head": 10
+            },
+            {
+                "_gvid": 12,
+                "tail": 8,
+                "head": 10
+            },
+            {
+                "_gvid": 13,
+                "tail": 9,
+                "head": 10
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_elasticache_replication_group.redis": [
+            "aws_lambda_function.cache_reader",
+            "aws_lambda_function.cache_writer"
+        ],
+        "aws_elasticache_subnet_group.redis": [
+            "aws_elasticache_replication_group.redis"
+        ],
+        "aws_iam_role.lambda": [
+            "aws_iam_role_policy_attachment.lambda_vpc",
+            "aws_lambda_function.cache_reader",
+            "aws_lambda_function.cache_writer"
+        ],
+        "aws_iam_role_policy_attachment.lambda_vpc": [],
+        "aws_lambda_function.cache_reader": [],
+        "aws_lambda_function.cache_writer": [],
+        "aws_security_group.redis": [
+            "aws_elasticache_replication_group.redis"
+        ],
+        "aws_subnet.cache_a": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_subnet.cache_b": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_subnet.cache_c": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_vpc.main": [
+            "aws_security_group.redis",
+            "aws_subnet.cache_a",
+            "aws_subnet.cache_b",
+            "aws_subnet.cache_c"
+        ]
+    },
+    "meta_data": {
+        "aws_elasticache_replication_group.redis": {
+            "auth_token": true,
+            "auth_token_update_strategy": "ROTATE",
+            "automatic_failover_enabled": true,
+            "description": "Redis cluster with automatic failover",
+            "engine": "redis",
+            "engine_version": "7.0",
+            "final_snapshot_identifier": null,
+            "kms_key_id": null,
+            "log_delivery_configuration": [],
+            "maintenance_window": "sun:05:00-sun:07:00",
+            "multi_az_enabled": true,
+            "node_type": "cache.t3.micro",
+            "notification_topic_arn": null,
+            "num_cache_clusters": 3,
+            "parameter_group_name": "default.redis7",
+            "port": 6379,
+            "preferred_cache_cluster_azs": null,
+            "replication_group_id": "redis-replication",
+            "snapshot_arns": null,
+            "snapshot_name": null,
+            "snapshot_retention_limit": 5,
+            "snapshot_window": "03:00-05:00",
+            "subnet_group_name": "redis-replication-subnet-group",
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "user_group_ids": null,
+            "apply_immediately": true,
+            "arn": true,
+            "at_rest_encryption_enabled": true,
+            "auto_minor_version_upgrade": true,
+            "cluster_enabled": true,
+            "cluster_mode": true,
+            "configuration_endpoint_address": true,
+            "data_tiering_enabled": true,
+            "engine_version_actual": true,
+            "global_replication_group_id": true,
+            "id": true,
+            "ip_discovery": true,
+            "member_clusters": [],
+            "network_type": true,
+            "num_node_groups": true,
+            "primary_endpoint_address": true,
+            "reader_endpoint_address": true,
+            "replicas_per_node_group": true,
+            "security_group_ids": [],
+            "security_group_names": [],
+            "transit_encryption_enabled": true,
+            "transit_encryption_mode": true,
+            "module": "main"
+        },
+        "aws_elasticache_subnet_group.redis": {
+            "description": "Managed by Terraform",
+            "name": "redis-replication-subnet-group",
+            "tags": {},
+            "tags_all": {},
+            "arn": true,
+            "id": true,
+            "subnet_ids": [],
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-redis-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.lambda_vpc": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+            "role": "lambda-redis-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.cache_reader": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "redis-cache-reader",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": {},
+            "tags_all": {},
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [
+                {
+                    "security_group_ids": [],
+                    "subnet_ids": []
+                }
+            ],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_function.cache_writer": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "redis-cache-writer",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": {},
+            "tags_all": {},
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [
+                {
+                    "security_group_ids": [],
+                    "subnet_ids": []
+                }
+            ],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_security_group.redis": {
+            "description": "Security group for Redis replication group",
+            "egress": [
+                {
+                    "cidr_blocks": [
+                        false
+                    ],
+                    "ipv6_cidr_blocks": [],
+                    "prefix_list_ids": [],
+                    "security_groups": []
+                }
+            ],
+            "ingress": [
+                {
+                    "cidr_blocks": [
+                        false
+                    ],
+                    "ipv6_cidr_blocks": [],
+                    "prefix_list_ids": [],
+                    "security_groups": []
+                }
+            ],
+            "name": "redis-replication-sg",
+            "revoke_rules_on_delete": false,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "owner_id": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_a": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1a",
+            "cidr_block": "10.0.1.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_b": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1b",
+            "cidr_block": "10.0.2.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_c": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1c",
+            "cidr_block": "10.0.3.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_vpc.main": {
+            "assign_generated_ipv6_cidr_block": null,
+            "cidr_block": "10.0.0.0/16",
+            "enable_dns_hostnames": true,
+            "enable_dns_support": true,
+            "instance_tenancy": "default",
+            "ipv4_ipam_pool_id": null,
+            "ipv4_netmask_length": null,
+            "ipv6_ipam_pool_id": null,
+            "ipv6_netmask_length": null,
+            "tags": {},
+            "tags_all": {},
+            "arn": true,
+            "default_network_acl_id": true,
+            "default_route_table_id": true,
+            "default_security_group_id": true,
+            "dhcp_options_id": true,
+            "enable_network_address_usage_metrics": true,
+            "id": true,
+            "ipv6_association_id": true,
+            "ipv6_cidr_block": true,
+            "ipv6_cidr_block_network_border_group": true,
+            "main_route_table_id": true,
+            "owner_id": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_elasticache_replication_group.redis",
+        "aws_elasticache_subnet_group.redis",
+        "aws_iam_role.lambda",
+        "aws_iam_role_policy_attachment.lambda_vpc",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer",
+        "aws_security_group.redis",
+        "aws_subnet.cache_a",
+        "aws_subnet.cache_b",
+        "aws_subnet.cache_c",
+        "aws_vpc.main"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_elasticache_replication_group.redis": [
+            "aws_lambda_function.cache_reader",
+            "aws_lambda_function.cache_writer"
+        ],
+        "aws_elasticache_subnet_group.redis": [
+            "aws_elasticache_replication_group.redis"
+        ],
+        "aws_iam_role.lambda": [
+            "aws_iam_role_policy_attachment.lambda_vpc",
+            "aws_lambda_function.cache_reader",
+            "aws_lambda_function.cache_writer"
+        ],
+        "aws_iam_role_policy_attachment.lambda_vpc": [],
+        "aws_lambda_function.cache_reader": [],
+        "aws_lambda_function.cache_writer": [],
+        "aws_security_group.redis": [
+            "aws_elasticache_replication_group.redis"
+        ],
+        "aws_subnet.cache_a": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_subnet.cache_b": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_subnet.cache_c": [
+            "aws_elasticache_subnet_group.redis"
+        ],
+        "aws_vpc.main": [
+            "aws_security_group.redis",
+            "aws_subnet.cache_a",
+            "aws_subnet.cache_b",
+            "aws_subnet.cache_c"
+        ]
+    },
+    "original_metadata": {
+        "aws_elasticache_replication_group.redis": {
+            "auth_token": true,
+            "auth_token_update_strategy": "ROTATE",
+            "automatic_failover_enabled": true,
+            "description": "Redis cluster with automatic failover",
+            "engine": "redis",
+            "engine_version": "7.0",
+            "final_snapshot_identifier": null,
+            "kms_key_id": null,
+            "log_delivery_configuration": [],
+            "maintenance_window": "sun:05:00-sun:07:00",
+            "multi_az_enabled": true,
+            "node_type": "cache.t3.micro",
+            "notification_topic_arn": null,
+            "num_cache_clusters": 3,
+            "parameter_group_name": "default.redis7",
+            "port": 6379,
+            "preferred_cache_cluster_azs": null,
+            "replication_group_id": "redis-replication",
+            "snapshot_arns": null,
+            "snapshot_name": null,
+            "snapshot_retention_limit": 5,
+            "snapshot_window": "03:00-05:00",
+            "subnet_group_name": "redis-replication-subnet-group",
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "user_group_ids": null,
+            "apply_immediately": true,
+            "arn": true,
+            "at_rest_encryption_enabled": true,
+            "auto_minor_version_upgrade": true,
+            "cluster_enabled": true,
+            "cluster_mode": true,
+            "configuration_endpoint_address": true,
+            "data_tiering_enabled": true,
+            "engine_version_actual": true,
+            "global_replication_group_id": true,
+            "id": true,
+            "ip_discovery": true,
+            "member_clusters": [],
+            "network_type": true,
+            "num_node_groups": true,
+            "primary_endpoint_address": true,
+            "reader_endpoint_address": true,
+            "replicas_per_node_group": true,
+            "security_group_ids": [],
+            "security_group_names": [],
+            "transit_encryption_enabled": true,
+            "transit_encryption_mode": true,
+            "module": "main"
+        },
+        "aws_elasticache_subnet_group.redis": {
+            "description": "Managed by Terraform",
+            "name": "redis-replication-subnet-group",
+            "tags": {},
+            "tags_all": {},
+            "arn": true,
+            "id": true,
+            "subnet_ids": [],
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-redis-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.lambda_vpc": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+            "role": "lambda-redis-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.cache_reader": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "redis-cache-reader",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": {},
+            "tags_all": {},
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [
+                {
+                    "security_group_ids": [],
+                    "subnet_ids": []
+                }
+            ],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_function.cache_writer": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "redis-cache-writer",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": {},
+            "tags_all": {},
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [
+                {
+                    "security_group_ids": [],
+                    "subnet_ids": []
+                }
+            ],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_security_group.redis": {
+            "description": "Security group for Redis replication group",
+            "egress": [
+                {
+                    "cidr_blocks": [
+                        false
+                    ],
+                    "ipv6_cidr_blocks": [],
+                    "prefix_list_ids": [],
+                    "security_groups": []
+                }
+            ],
+            "ingress": [
+                {
+                    "cidr_blocks": [
+                        false
+                    ],
+                    "ipv6_cidr_blocks": [],
+                    "prefix_list_ids": [],
+                    "security_groups": []
+                }
+            ],
+            "name": "redis-replication-sg",
+            "revoke_rules_on_delete": false,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "owner_id": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_a": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1a",
+            "cidr_block": "10.0.1.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_b": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1b",
+            "cidr_block": "10.0.2.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_subnet.cache_c": {
+            "assign_ipv6_address_on_creation": false,
+            "availability_zone": "us-east-1c",
+            "cidr_block": "10.0.3.0/24",
+            "customer_owned_ipv4_pool": null,
+            "enable_dns64": false,
+            "enable_lni_at_device_index": null,
+            "enable_resource_name_dns_a_record_on_launch": false,
+            "enable_resource_name_dns_aaaa_record_on_launch": false,
+            "ipv6_cidr_block": null,
+            "ipv6_native": false,
+            "map_customer_owned_ip_on_launch": null,
+            "map_public_ip_on_launch": false,
+            "outpost_arn": null,
+            "tags": {},
+            "tags_all": {},
+            "timeouts": null,
+            "arn": true,
+            "availability_zone_id": true,
+            "id": true,
+            "ipv6_cidr_block_association_id": true,
+            "owner_id": true,
+            "private_dns_hostname_type_on_launch": true,
+            "vpc_id": true,
+            "module": "main"
+        },
+        "aws_vpc.main": {
+            "assign_generated_ipv6_cidr_block": null,
+            "cidr_block": "10.0.0.0/16",
+            "enable_dns_hostnames": true,
+            "enable_dns_support": true,
+            "instance_tenancy": "default",
+            "ipv4_ipam_pool_id": null,
+            "ipv4_netmask_length": null,
+            "ipv6_ipam_pool_id": null,
+            "ipv6_netmask_length": null,
+            "tags": {},
+            "tags_all": {},
+            "arn": true,
+            "default_network_acl_id": true,
+            "default_route_table_id": true,
+            "default_security_group_id": true,
+            "dhcp_options_id": true,
+            "enable_network_address_usage_metrics": true,
+            "id": true,
+            "ipv6_association_id": true,
+            "ipv6_cidr_block": true,
+            "ipv6_cidr_block_network_border_group": true,
+            "main_route_table_id": true,
+            "owner_id": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "tests/fixtures/aws_terraform/elasticache_replication/main.tf": [
+            {
+                "aws_vpc": {
+                    "main": {
+                        "cidr_block": "10.0.0.0/16",
+                        "enable_dns_hostnames": true,
+                        "enable_dns_support": true,
+                        "tags": {
+                            "Name": "replication-vpc"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_subnet": {
+                    "cache_a": {
+                        "vpc_id": "${aws_vpc.main.id}",
+                        "cidr_block": "10.0.1.0/24",
+                        "availability_zone": "us-east-1a",
+                        "tags": {
+                            "Name": "cache-subnet-a"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_subnet": {
+                    "cache_b": {
+                        "vpc_id": "${aws_vpc.main.id}",
+                        "cidr_block": "10.0.2.0/24",
+                        "availability_zone": "us-east-1b",
+                        "tags": {
+                            "Name": "cache-subnet-b"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_subnet": {
+                    "cache_c": {
+                        "vpc_id": "${aws_vpc.main.id}",
+                        "cidr_block": "10.0.3.0/24",
+                        "availability_zone": "us-east-1c",
+                        "tags": {
+                            "Name": "cache-subnet-c"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_elasticache_subnet_group": {
+                    "redis": {
+                        "name": "redis-replication-subnet-group",
+                        "subnet_ids": [
+                            "${aws_subnet.cache_a.id}",
+                            "${aws_subnet.cache_b.id}",
+                            "${aws_subnet.cache_c.id}"
+                        ],
+                        "tags": {
+                            "Name": "Redis Replication Subnet Group"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_security_group": {
+                    "redis": {
+                        "name": "redis-replication-sg",
+                        "description": "Security group for Redis replication group",
+                        "vpc_id": "${aws_vpc.main.id}",
+                        "ingress": [
+                            {
+                                "from_port": 6379,
+                                "to_port": 6379,
+                                "protocol": "tcp",
+                                "cidr_blocks": [
+                                    "10.0.0.0/16"
+                                ],
+                                "description": "Redis access from VPC"
+                            }
+                        ],
+                        "egress": [
+                            {
+                                "from_port": 0,
+                                "to_port": 0,
+                                "protocol": "-1",
+                                "cidr_blocks": [
+                                    "0.0.0.0/0"
+                                ]
+                            }
+                        ],
+                        "tags": {
+                            "Name": "redis-replication-security-group"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_elasticache_replication_group": {
+                    "redis": {
+                        "replication_group_id": "redis-replication",
+                        "description": "Redis cluster with automatic failover",
+                        "engine": "redis",
+                        "engine_version": "7.0",
+                        "node_type": "cache.t3.micro",
+                        "port": 6379,
+                        "parameter_group_name": "default.redis7",
+                        "num_cache_clusters": 3,
+                        "automatic_failover_enabled": true,
+                        "multi_az_enabled": true,
+                        "subnet_group_name": "${aws_elasticache_subnet_group.redis.name}",
+                        "security_group_ids": [
+                            "${aws_security_group.redis.id}"
+                        ],
+                        "snapshot_retention_limit": 5,
+                        "snapshot_window": "03:00-05:00",
+                        "maintenance_window": "sun:05:00-sun:07:00",
+                        "tags": {
+                            "Name": "Redis Replication Group",
+                            "Environment": "production"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda": {
+                        "name": "lambda-redis-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy_attachment": {
+                    "lambda_vpc": {
+                        "role": "${aws_iam_role.lambda.name}",
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                    }
+                }
+            },
+            {
+                "aws_lambda_function": {
+                    "cache_reader": {
+                        "filename": "lambda.zip",
+                        "function_name": "redis-cache-reader",
+                        "role": "${aws_iam_role.lambda.arn}",
+                        "handler": "index.handler",
+                        "runtime": "python3.11",
+                        "vpc_config": [
+                            {
+                                "subnet_ids": [
+                                    "${aws_subnet.cache_a.id}",
+                                    "${aws_subnet.cache_b.id}"
+                                ],
+                                "security_group_ids": [
+                                    "${aws_security_group.redis.id}"
+                                ]
+                            }
+                        ],
+                        "environment": [
+                            {
+                                "variables": {
+                                    "REDIS_ENDPOINT": "${aws_elasticache_replication_group.redis.primary_endpoint_address}",
+                                    "REDIS_PORT": "6379"
+                                }
+                            }
+                        ],
+                        "tags": {
+                            "Name": "Cache Reader Lambda"
+                        }
+                    }
+                }
+            },
+            {
+                "aws_lambda_function": {
+                    "cache_writer": {
+                        "filename": "lambda.zip",
+                        "function_name": "redis-cache-writer",
+                        "role": "${aws_iam_role.lambda.arn}",
+                        "handler": "index.handler",
+                        "runtime": "python3.11",
+                        "vpc_config": [
+                            {
+                                "subnet_ids": [
+                                    "${aws_subnet.cache_a.id}",
+                                    "${aws_subnet.cache_b.id}"
+                                ],
+                                "security_group_ids": [
+                                    "${aws_security_group.redis.id}"
+                                ]
+                            }
+                        ],
+                        "environment": [
+                            {
+                                "variables": {
+                                    "REDIS_ENDPOINT": "${aws_elasticache_replication_group.redis.primary_endpoint_address}",
+                                    "REDIS_PORT": "6379"
+                                }
+                            }
+                        ],
+                        "tags": {
+                            "Name": "Cache Writer Lambda"
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmprpqsa6s6'>"
+}

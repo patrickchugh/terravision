@@ -1,0 +1,67 @@
+{
+    "aws_az.availability_zone_us_east_1a~1": [
+        "aws_subnet.cache_a"
+    ],
+    "aws_az.availability_zone_us_east_1b~2": [
+        "aws_subnet.cache_b"
+    ],
+    "aws_az.availability_zone_us_east_1c~3": [
+        "aws_subnet.cache_c"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_elasticache_replication_group.redis~1": [
+        "aws_elasticache_subnet_group.redis",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_elasticache_replication_group.redis~2": [
+        "aws_elasticache_subnet_group.redis",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_elasticache_replication_group.redis~3": [
+        "aws_elasticache_subnet_group.redis",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_elasticache_subnet_group.redis": [
+        "aws_elasticache_replication_group.redis"
+    ],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.iam"
+    ],
+    "aws_iam_role.lambda": [
+        "aws_iam_role_policy_attachment.lambda_vpc",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_iam_role_policy_attachment.lambda_vpc": [],
+    "aws_lambda_function.cache_reader": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_elasticache_replication_group.redis"
+    ],
+    "aws_lambda_function.cache_writer": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_elasticache_replication_group.redis"
+    ],
+    "aws_subnet.cache_a": [
+        "aws_elasticache_replication_group.redis~1",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_subnet.cache_b": [
+        "aws_elasticache_replication_group.redis~2",
+        "aws_lambda_function.cache_reader",
+        "aws_lambda_function.cache_writer"
+    ],
+    "aws_subnet.cache_c": [
+        "aws_elasticache_replication_group.redis~3"
+    ],
+    "aws_vpc.main": [
+        "aws_az.availability_zone_us_east_1a~1",
+        "aws_az.availability_zone_us_east_1b~2",
+        "aws_az.availability_zone_us_east_1c~3",
+        "aws_elasticache_subnet_group.redis"
+    ]
+}

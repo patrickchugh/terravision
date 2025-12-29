@@ -118,13 +118,10 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": True,
         }
     },
-    {
-        "aws_elasticache_replication_group": {
-            "resource_name": "aws_elasticache.cluster",
-            "import_location": "resource_classes.aws.database",
-            "vpc": True,
-        }
-    },
+    # REMOVED: aws_elasticache_replication_group consolidation
+    # Reason: Conflicts with expand_to_numbered_instances transformer in handler
+    # Multi-node replication groups need expansion (cache~1, cache~2, cache~3), not consolidation
+    # Handler now manages both single-node and multi-node cases via expansion transformer
     {
         "aws_sagemaker_endpoint": {
             "resource_name": "aws_sagemaker_endpoint.endpoint",

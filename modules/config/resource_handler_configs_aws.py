@@ -200,8 +200,23 @@ RESOURCE_HANDLER_CONFIGS = {
     # ============================================================================
     # Pure Config-Driven Handler (1/14)
     "aws_elasticache_replication_group": {
-        "description": "Pure Config-Driven: Link ElastiCache to subnet groups (consolidation via AWS_CONSOLIDATED_NODES)",
+        "description": "Pure Config-Driven: Expand replication groups to numbered instances per subnet and match by suffix",
         "transformations": [
+            {
+                "operation": "expand_to_numbered_instances",
+                "params": {
+                    "resource_pattern": "aws_elasticache_replication_group",
+                    "subnet_key": "subnet_group_name",
+                    "skip_if_numbered": True,
+                },
+            },
+            {
+                "operation": "match_by_suffix",
+                "params": {
+                    "source_pattern": "aws_elasticache_replication_group",
+                    "target_pattern": "aws_lambda",
+                },
+            },
             {
                 "operation": "move_to_vpc_parent",
                 "params": {
@@ -212,6 +227,33 @@ RESOURCE_HANDLER_CONFIGS = {
                 "operation": "redirect_to_security_group",
                 "params": {
                     "resource_pattern": "aws_elasticache_subnet_group",
+                },
+            },
+        ],
+    },
+    "aws_elasticache_cluster": {
+        "description": "Pure Config-Driven: Expand ElastiCache clusters to numbered instances per subnet and match by suffix",
+        "transformations": [
+            {
+                "operation": "expand_to_numbered_instances",
+                "params": {
+                    "resource_pattern": "aws_elasticache_cluster",
+                    "subnet_key": "subnet_group_name",
+                    "skip_if_numbered": True,
+                },
+            },
+            {
+                "operation": "match_by_suffix",
+                "params": {
+                    "source_pattern": "aws_elasticache_cluster",
+                    "target_pattern": "aws_fargate",
+                },
+            },
+            {
+                "operation": "match_by_suffix",
+                "params": {
+                    "source_pattern": "aws_elasticache_cluster",
+                    "target_pattern": "aws_ecs",
                 },
             },
         ],

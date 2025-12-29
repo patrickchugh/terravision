@@ -71,6 +71,14 @@ def test_help() -> None:
             "dynamodb-streams-lambda-tfdata.json",
             "expected-dynamodb-streams-lambda.json",
         ),
+        (
+            "elasticache-redis-tfdata.json",
+            "expected-elasticache-redis.json",
+        ),
+        (
+            "elasticache-replication-tfdata.json",
+            "expected-elasticache-replication.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
