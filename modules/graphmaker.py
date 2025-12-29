@@ -1174,7 +1174,26 @@ def add_multiples_to_parents(
                 else:
                     suffixed_name = resource + "~" + existing_suffix
             else:
-                suffixed_name = resource + "~" + str(i + 1)
+                # For subnets without ~ suffix: only add the instance matching the subnet's position
+                if "aws_subnet" in parent:
+                    # Get all subnets sorted to determine position
+                    all_subnets = sorted(
+                        [k for k in tfdata["graphdict"].keys() if "aws_subnet" in k]
+                    )
+                    try:
+                        subnet_position = all_subnets.index(parent) + 1
+                        # Only add if this numbered instance matches the subnet's position
+                        if subnet_position == i + 1:
+                            suffixed_name = resource + "~" + str(i + 1)
+                        else:
+                            # Skip this subnet - it should get a different numbered instance
+                            continue
+                    except (ValueError, IndexError):
+                        # Fallback: add instance to this subnet
+                        suffixed_name = resource + "~" + str(i + 1)
+                else:
+                    # Non-subnet parent: add numbered instance normally
+                    suffixed_name = resource + "~" + str(i + 1)
             if (
                 parent.split("~")[0] in tfdata["meta_data"].keys()
                 and (
@@ -1391,9 +1410,30 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for node in list(tfdata["graphdict"].keys()):
                 if node != resource and resource in tfdata["graphdict"][node]:
                     tfdata["graphdict"][node].remove(resource)
-                    for inst in numbered_instances:
-                        if inst not in tfdata["graphdict"][node]:
-                            tfdata["graphdict"][node].append(inst)
+
+                    # For subnets: only add the numbered instance matching the subnet's position
+                    if "aws_subnet" in node:
+                        # Get all subnets sorted to determine position
+                        all_subnets = sorted(
+                            [k for k in tfdata["graphdict"].keys() if "aws_subnet" in k]
+                        )
+                        try:
+                            subnet_position = all_subnets.index(node) + 1
+                            # Only add the instance matching this subnet's position
+                            matching_inst = f"{resource}~{subnet_position}"
+                            if matching_inst in numbered_instances:
+                                if matching_inst not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(matching_inst)
+                        except (ValueError, IndexError):
+                            # Fallback: add all instances if position can't be determined
+                            for inst in numbered_instances:
+                                if inst not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(inst)
+                    else:
+                        # For non-subnet nodes: add all numbered instances
+                        for inst in numbered_instances:
+                            if inst not in tfdata["graphdict"][node]:
+                                tfdata["graphdict"][node].append(inst)
 
             # Delete the original resource after updating references
             if resource.split(".")[0] not in SHARED_SERVICES:

@@ -84,9 +84,6 @@ def expand_to_numbered_instances(
     subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
     for subnet_idx, subnet in enumerate(sorted(subnets), start=1):
         subnet_connections = tfdata["graphdict"].get(subnet, [])[:]
-        print(
-            f"DEBUG: Cleaning up subnet {subnet} (position {subnet_idx}), connections: {subnet_connections}"
-        )
 
         for connection in subnet_connections:
             # Check if this is a numbered instance
@@ -94,13 +91,9 @@ def expand_to_numbered_instances(
             if match:
                 base_resource = match.group(1)
                 instance_num = int(match.group(2))
-                print(
-                    f"  Found numbered instance: {connection}, num={instance_num}, subnet_pos={subnet_idx}"
-                )
 
                 # If this numbered instance doesn't match the subnet's position, remove it
                 if instance_num != subnet_idx:
-                    print(f"    REMOVING {connection} from {subnet} (wrong position)")
                     tfdata["graphdict"][subnet].remove(connection)
 
     return tfdata

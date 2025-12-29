@@ -31,15 +31,12 @@
     ],
     "aws_subnet.private_a": [
         "aws_elasticache_cluster.redis~1",
-        "aws_elasticache_cluster.redis~2",
         "aws_elasticache_subnet_group.redis",
-        "aws_fargate.ecs~1",
-        "aws_fargate.ecs~2"
+        "aws_fargate.ecs~1"
     ],
     "aws_subnet.private_b": [
         "aws_elasticache_cluster.redis~2",
         "aws_elasticache_subnet_group.redis",
-        "aws_fargate.ecs~1",
         "aws_fargate.ecs~2"
     ],
     "aws_vpc.main": [
