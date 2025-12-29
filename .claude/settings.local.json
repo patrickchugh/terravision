@@ -7,7 +7,15 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(poetry install:*)",
+      "Bash(echo:*)",
+      "Bash(source:*)",
+      "Bash(terravision graphdata:*)",
+      "Bash(python:*)",
+      "Bash(./terravision graphdata:*)",
+      "Bash(export PATH=\"/Users/patrick/git/terravision-privatedev:$PATH\")",
+      "Bash(bash -c:*)"
     ]
   }
 }

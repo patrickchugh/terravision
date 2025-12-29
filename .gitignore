@@ -63,3 +63,6 @@ ai-backend-terraform/lambda/node_modules/*
 .specify/
 .terraform/
 .terraform.lock.hcl
+/docs/specs
+CLAUDE.md
+.claude/
