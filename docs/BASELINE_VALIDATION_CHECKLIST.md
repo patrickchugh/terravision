@@ -78,6 +78,18 @@ Open `baseline-<resource_name>.json` and evaluate:
 - [ ] **Data flow is visible** - can users trace request/data paths?
 - [ ] **No critical confusion** - nothing misleading or ambiguous
 
+#### 3.5 Rendering and Visual Layout
+- [ ] **No resource duplication** - same resource doesn't appear in multiple locations (e.g., Lambda in multiple subnets when it should be at VPC level)
+- [ ] **Numbered resource placement** - numbered instances (~1, ~2, ~3) distributed 1:1 with parent resources (e.g., subnet_a gets ~1, subnet_b gets ~2)
+- [ ] **No cross-subnet connections** - numbered resources don't create connections to unnumbered resources in different subnets
+- [ ] **Single logical parent** - resources don't appear as children of multiple parents unless architecturally correct (e.g., shared services)
+- [ ] **Clean connection routing** - no unnecessary crossing lines or messy connection patterns that obscure relationships
+
+**Common Rendering Issues to Check**:
+- Multi-subnet resources (Lambda, ElastiCache) appearing in all subnets instead of one logical location
+- Numbered resources (redis~1, redis~2, redis~3) all connecting to the same unnumbered resource (lambda) creating visual clutter
+- Resources placed at wrong hierarchy level (subnet-level vs VPC-level)
+
 ---
 
 ### Step 4: Decision Matrix
@@ -88,6 +100,7 @@ Open `baseline-<resource_name>.json` and evaluate:
 | Connections/Relationships | ☐ Yes ☐ No | |
 | Hierarchy/Grouping | ☐ Yes ☐ No | |
 | User Understanding | ☐ Yes ☐ No | |
+| Rendering/Visual Layout | ☐ Yes ☐ No | |
 
 **Decision Rules**:
 - ✅ **ALL checks pass** → **STOP! No handler needed.** Trust the baseline.
@@ -253,12 +266,23 @@ Decision: PROCEED / STOP (no handler needed)
 
 ## Post-Implementation Validation
 
-After implementing a handler (if baseline validation failed), complete the **Post-Implementation Validation Checklist** in `docs/specs/002-aws-handler-refinement/tasks.md` to verify:
+After implementing a handler (if baseline validation failed), you MUST complete the comprehensive validation checklist in **[`docs/POST_IMPLEMENTATION_VALIDATION.md`](POST_IMPLEMENTATION_VALIDATION.md)**.
 
-- Connection directions are correct
-- No orphaned resources (missing connections)
-- No duplicate connections
-- Intermediary links work properly
-- Test coverage is complete
+That checklist validates:
+1. **Test Suite**: All tests pass, test count hasn't decreased
+2. **Connection Directions**: Arrows point in correct direction (event sources → consumers, APIs → backends, etc.)
+3. **Orphaned Resources**: No resources missing expected connections
+4. **Duplicate Connections**: No duplicate entries in connection lists
+5. **Intermediary Links**: Transitive connections work properly when intermediaries are removed
+6. **Numbered Resources**: Count/for_each expansion works correctly
+7. **Expected Output**: Actual output matches expected JSON
+8. **Rendering Quality** (CRITICAL - added to prevent visual confusion):
+   - Resources appear exactly once at correct hierarchy level (e.g., Lambda at VPC, not duplicated in subnets)
+   - Numbered instances (~1, ~2, ~3) distributed 1:1 with parent resources (subnet_a → ~1, subnet_b → ~2)
+   - No cross-subnet connection clutter (numbered resources only connect to unnumbered resources in same subnet)
+   - Clean visual layout with no unnecessary crossing lines
+   - Test output matches expected JSON exactly
+9. **Integration Test Coverage**: Test fixtures exist and exercise handlers
+10. **Documentation**: Docs updated with implementation changes
 
-This checklist catches implementation issues before declaring the handler complete.
+**POST_IMPLEMENTATION_VALIDATION.md is the authoritative source for post-implementation validation.** Use it before declaring any handler complete.

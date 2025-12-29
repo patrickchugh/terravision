@@ -15,7 +15,9 @@
       "Bash(python:*)",
       "Bash(./terravision graphdata:*)",
       "Bash(export PATH=\"/Users/patrick/git/terravision-privatedev:$PATH\")",
-      "Bash(bash -c:*)"
+      "Bash(bash -c:*)",
+      "Bash(xargs cat:*)",
+      "Bash(/Users/patrick/git/terravision-privatedev/terravision graphdata --source tests/json/elasticache-replication-tfdata.json --outfile /tmp/correct-dir-test.json)"
     ]
   }
 }

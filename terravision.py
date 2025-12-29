@@ -170,6 +170,7 @@ def _enrich_graph_data(
     tfdata = graphmaker.handle_special_resources(tfdata)
     tfdata = graphmaker.handle_variants(tfdata)
     tfdata = graphmaker.create_multiple_resources(tfdata)
+    tfdata = graphmaker.cleanup_cross_subnet_connections(tfdata)
     tfdata = graphmaker.reverse_relations(tfdata)
     tfdata = helpers.remove_recursive_links(tfdata)
     tfdata = resource_handlers.match_resources(tfdata)
