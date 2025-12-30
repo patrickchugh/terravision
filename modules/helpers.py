@@ -494,7 +494,7 @@ def remove_brackets_and_numbers(input_string: str) -> str:
 
 def pretty_name(name: str, show_title=True) -> str:
     """
-    Beautification for AWS Labels
+    Beautification for   ddAWS Labels
     """
     resourcename = ""
     skip_keywords = ["null_", "random", "time_sleep", "empty", "blank"]

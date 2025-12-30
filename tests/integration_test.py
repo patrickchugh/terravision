@@ -34,7 +34,7 @@ def run_terravision(
     if WINDOWS:
         cmd = ["poetry", "run", "python", str(PARENT_DIR / "terravision.py")] + args
     else:
-        cmd = ["terravision"] + args
+        cmd = [str(PARENT_DIR / "terravision.py")] + args
 
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     return result
