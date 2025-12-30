@@ -11,6 +11,8 @@
 
 **For future task documents**: Validate baseline output first before proposing handlers.
 
+**⚠️ CRITICAL ARCHITECTURAL CHANGE**: The `consolidate_into_single_node` transformer has been REMOVED. Use `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py` instead for resource consolidation. This is a simpler, centralized approach that runs BEFORE handlers, preventing conflicts with transformers like `expand_to_numbered_instances`.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -19,8 +21,9 @@
 
 ## Path Conventions
 
-- **Handler code**: `modules/resource_handlers_aws.py`
-- **Configuration**: `modules/config/cloud_config_aws.py`
+- **Handler configs**: `modules/config/resource_handler_configs_aws.py`
+- **Provider config**: `modules/config/cloud_config_aws.py`
+- **Custom handler functions**: `modules/resource_handlers_aws.py`
 - **Test fixtures**: `tests/fixtures/aws_terraform/<pattern>/`
 - **Expected outputs**: `tests/json/`
 - **Unit tests**: `tests/graphmaker_unit_test.py`
@@ -45,13 +48,13 @@
 
 **⚠️ CRITICAL**: All handlers defined in `resource_handler_configs_aws.py` per constitution
 
-- [ ] T004 Create handler config entries for all 14 handlers in `modules/config/resource_handler_configs_aws.py`
+- [X] T004 Create handler config entries for all 14 handlers in `modules/config/resource_handler_configs_aws.py`
   - 1 Pure Config-Driven (ElastiCache)
   - 11 Hybrid (API Gateway, EventBridge, SNS, Lambda ESM, Cognito, WAF, SageMaker, S3 Notifications, Secrets Manager, Glue, AppSync)
   - 2 Pure Function (Step Functions, Firehose)
-- [ ] T005 [P] Add minimal AWS_EDGE_NODES entries in `modules/config/cloud_config_aws.py` (API Gateway, AppSync, Cognito, WAF)
-- [ ] T006 Run `poetry run black modules/config/` to format config changes
-- [ ] T007 Verify existing tests still pass with `poetry run pytest tests -v`
+- [X] T005 [P] Add minimal AWS_EDGE_NODES entries in `modules/config/cloud_config_aws.py` (API Gateway, AppSync, Cognito, WAF)
+- [X] T006 Run `poetry run black modules/config/` to format config changes
+- [X] T007 Verify existing tests still pass with `poetry run pytest tests -v`
 
 **Checkpoint**: Configuration ready - handler implementation can now begin
 
@@ -71,20 +74,18 @@
 - [X] T012 [P] [US1] Create Terraform fixture for HTTP API + VPC Link in `tests/fixtures/aws_terraform/api_gateway_http_vpc_link/main.tf` (Skipped - covered by implementation)
 - [X] T013 [P] [US1] Create Terraform fixture for API Gateway + Step Functions in `tests/fixtures/aws_terraform/api_gateway_stepfunctions/main.tf` (Skipped - covered by implementation)
 
-### Implementation for User Story 1
+### Configuration for User Story 1
 
-**Handler Type**: ~~Hybrid (config consolidation + custom integration parsing)~~ **NONE - Baseline sufficient**
+**Handler Type**: ~~Hybrid (config consolidation + custom integration parsing)~~ **Config-Only (Consolidation)**
 
-- [X] T014 [US1] ~~Add `aws_api_gateway_rest_api` handler config~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
-  - **Baseline Output**: `Lambda → Integration → Method → Resource → API` (clear and accurate!)
-  - **Decision**: Integration URIs show as `true` in terraform plan - can't be parsed
-  - **Consolidation**: Added to `AWS_CONSOLIDATED_NODES` instead (config-driven)
-- [X] T015 [US1] ~~Add `aws_apigatewayv2_api` handler config~~ **NOT NEEDED** - Same reason as T014
-  - **Consolidation**: Added to `AWS_CONSOLIDATED_NODES` instead (config-driven)
-- [X] T016 [US1] ~~Implement `aws_handle_api_gateway_integrations()` custom function~~ **NOT NEEDED** - Handlers removed after baseline validation
-  - Handlers were implemented but removed (194 lines deleted)
-  - Baseline Terraform dependencies already show correct relationships
-- [X] T017 [US1] ~~Implement helper functions~~ **NOT NEEDED** - Part of removed handlers
+- [X] T014 [US1] Add API Gateway patterns to `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py`
+  - Pattern: `aws_api_gateway` (matches rest_api, integration, method, resource, deployment, stage)
+  - Target: `aws_api_gateway_integration.gateway`
+  - Edge service: False (not external-facing like CloudFront)
+  - **Result**: Single consolidated API Gateway icon instead of multiple sub-resources
+  - **Rationale**: No point having separate icons for Integration, Method, Resource, Deployment - consolidate into one logical "API Gateway" node
+- [X] T015 [US1] ~~Add `aws_apigatewayv2_api` handler config~~ **NOT NEEDED** - Same consolidation pattern as REST API
+  - HTTP/WebSocket APIs consolidated via same `aws_api_gateway` pattern
 
 ### Validation for User Story 1
 
@@ -95,7 +96,7 @@
 - [X] T021 [US1] Integration test created in `tests/integration_test.py` - test passes without handlers
 - [X] T022 [US1] All tests pass (135/135) - handlers not needed
 
-**Checkpoint**: ✅ API Gateway patterns validated - **baseline parsing is sufficient, no custom handlers needed**
+**Checkpoint**: ✅ API Gateway patterns validated - **baseline parsing is sufficient, consolidation config handles visual organization**
 
 **📋 Documentation Created**:
 - Created `docs/BASELINE_VALIDATION_CHECKLIST.md` to prevent premature handler implementation
@@ -153,28 +154,30 @@ poetry run python terravision.py graphdata \
 - ✅ Users can understand data flow
 - **Decision**: ❌ **No handler needed** - baseline is already clear and accurate!
 
-### Implementation for User Story 2
+### Configuration for User Story 2
 
-**Handler Type**: ~~Hybrid (config linking + custom ARN parsing)~~ **NONE - Config fix only!**
+**Handler Type**: ~~Hybrid (config linking + custom ARN parsing)~~ **Config-Only (Consolidation fixes)**
 
-- [X] T026 [US2] ~~Add `aws_cloudwatch_event_rule` handler config~~ **NOT NEEDED**
+- [X] T026 [US2] Fix EventBridge consolidation pattern in `AWS_CONSOLIDATED_NODES` (cloud_config_aws.py:21)
   - **Root cause**: Config bug in `AWS_CONSOLIDATED_NODES`, not missing handler
-  - **Fix**: Changed pattern from `"aws_cloudwatch"` to `"aws_cloudwatch_log"` in `cloud_config_aws.py:21`
-- [X] T027 [US2] ~~Add `aws_sns_topic` handler~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
-  - SNS topics, subscriptions already shown with correct connections
-- [X] T028 [US2] ~~Add `aws_lambda_event_source_mapping` handler~~ **NOT NEEDED** - Baseline validation showed handlers unnecessary
-  - Lambda ESM already shows: DynamoDB/Kinesis/SQS → ESM → Lambda
-- [X] T029 [US2] ~~Implement custom functions~~ **NOT NEEDED**
-  - All event-driven patterns work correctly with baseline + config fix
-  - No custom handler code required!
-- [X] T030 [US2] ~~Ensure correct arrow directions~~ **Already correct in baseline**
+  - **Fix**: Changed pattern from `"aws_cloudwatch"` to `"aws_cloudwatch_log"`
+  - **Result**: EventBridge and CloudWatch Alarms now appear correctly
+- [X] T027 [US2] Add EventBridge consolidation to `AWS_CONSOLIDATED_NODES` (cloud_config_aws.py:28-34)
+  - Pattern: `aws_cloudwatch_event` (matches event_rule, event_target)
+  - Target: `aws_cloudwatch_event_rule.eventbridge`
+  - Edge service: True (positioned outside VPC like API Gateway)
+- [X] T028 [US2] Add SNS consolidation to `AWS_CONSOLIDATED_NODES` (cloud_config_aws.py:36-42)
+  - Pattern: `aws_sns_topic` (matches topic, subscription)
+  - Target: `aws_sns_topic.sns`
+  - Edge service: True (positioned outside VPC)
+  - Forced origin: True (SNS emits to subscribers, not reverse)
 
 ### Validation for User Story 2
 
 - [X] T031 [US2] Generate expected output JSON from EventBridge fixture in `tests/json/expected-eventbridge-lambda.json`
 - [X] T032 [US2] Generate expected output JSON from SNS/SQS fixture in `tests/json/expected-sns-sqs-lambda.json`
 - [X] T033 [US2] Generate expected output JSON from DynamoDB Streams fixture in `tests/json/expected-dynamodb-streams-lambda.json`
-- [X] T034 [US2] All existing tests pass (135/135 ✅)
+- [X] T034 [US2] All existing tests pass (138/138 ✅)
 
 **Checkpoint**: ✅ **Event-driven patterns complete - ALL 3 PATTERNS WORK WITHOUT CUSTOM HANDLERS!**
 
@@ -292,10 +295,10 @@ poetry run python terravision.py graphdata \
 
 ### Configuration for User Story 4
 
-**Handler Type**: ~~Hybrid (config consolidation + custom Lambda trigger detection)~~ **Config-Only Consolidation**
+**Handler Type**: ~~Hybrid (config consolidation + custom Lambda trigger detection)~~ **Config-Only (Consolidation)**
 
-- [X] T046 [US4] Add Cognito to `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py`
-  - Pattern: `aws_cognito` (matches user_pool, user_pool_client, identity_pool)
+- [X] T046 [US4] Add Cognito to `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py` (lines 141-147)
+  - Pattern: `aws_cognito` (matches user_pool, user_pool_client, identity_pool, user_pool_domain)
   - Target: `aws_cognito_user_pool.cognito`
   - Edge service: True (positioned outside VPC like API Gateway)
   - **Result**: Single consolidated Cognito icon instead of multiple sub-resources
@@ -337,14 +340,24 @@ poetry run python terravision.py graphdata \
 - [ ] T053 [P] [US5] Create Terraform fixture for WAF + CloudFront in `tests/fixtures/aws_terraform/waf_cloudfront/main.tf`
 - [ ] T054 [P] [US5] Create Terraform fixture for WAF + ALB in `tests/fixtures/aws_terraform/waf_alb/main.tf`
 
-### Implementation for User Story 5
+### Configuration for User Story 5
 
-**Handler Type**: Hybrid (config consolidation + custom association parsing)
+**Handler Type**: Config-Only (Consolidation) + Optional Hybrid if association parsing needed
 
-- [ ] T055 [US5] Add `aws_wafv2_web_acl` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Transformations: `consolidate_into_single_node` (target: "aws_waf.firewall")
-  - Custom function: `aws_handle_waf_associations`
-- [ ] T056 [US5] Implement `aws_handle_waf_associations()` custom function in `modules/resource_handlers_aws.py`
+**⚠️ LESSON FROM PHASES 1-6**: Try consolidation first, validate baseline, only add handler if truly needed
+
+- [ ] T055 [US5] Add WAF to `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py`
+  - Pattern: `aws_wafv2` or `aws_waf` (matches web_acl, web_acl_association, rule_group, ip_set)
+  - Target: `aws_wafv2_web_acl.waf` or `aws_waf_web_acl.waf`
+  - Edge service: True (positioned outside VPC like CloudFront)
+  - **Rationale**: Consolidate WAF rules and associations into single security boundary icon
+- [ ] T056 [US5] **Baseline validation**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: WAF + CloudFront/ALB
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-waf.json --debug`
+  - Analyze: Are WAF associations visible? Is positioning clear?
+  - **Decision point**: If baseline + consolidation sufficient → STOP. If not → proceed to T057
+- [ ] T057 [US5] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_waf_associations()` custom function in `modules/resource_handlers_aws.py`
+  - Add handler config to `resource_handler_configs_aws.py`
   - Parse `aws_wafv2_web_acl_association` for resource_arn
   - Create WAF → CloudFront/ALB/API Gateway connections
   - Position WAF in front of protected resources
@@ -352,7 +365,7 @@ poetry run python terravision.py graphdata \
 ### Validation for User Story 5
 
 - [ ] T058 [US5] Generate expected output JSON from WAF fixture in `tests/json/expected-waf-alb.json`
-- [ ] T059 [US5] Add test case for WAF security positioning in `tests/graphmaker_unit_test.py`
+- [ ] T059 [US5] Add test case for WAF security positioning in `tests/graphmaker_unit_test.py` (if handler implemented)
 - [ ] T060 [US5] Verify all existing tests still pass
 
 **Checkpoint**: WAF security patterns complete
@@ -370,22 +383,32 @@ poetry run python terravision.py graphdata \
 - [ ] T061 [P] [US6] Create Terraform fixture for SageMaker endpoint + model in `tests/fixtures/aws_terraform/sagemaker_endpoint/main.tf`
 - [ ] T062 [P] [US6] Create Terraform fixture for SageMaker notebook in VPC in `tests/fixtures/aws_terraform/sagemaker_notebook_vpc/main.tf`
 
-### Implementation for User Story 6
+### Configuration for User Story 6
 
-**Handler Type**: Hybrid (config consolidation + custom S3 artifact detection)
+**Handler Type**: Config-Only (Consolidation) + Optional Hybrid if artifact detection needed
 
-- [ ] T063 [US6] Add `aws_sagemaker_endpoint` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Transformations: `consolidate_into_single_node` (target: "aws_sagemaker.ml")
-  - Custom function: `aws_handle_sagemaker_artifacts`
-- [ ] T064 [US6] Implement `aws_handle_sagemaker_artifacts()` custom function in `modules/resource_handlers_aws.py`
-  - Consolidate endpoint + endpoint_configuration + model into ML group
+**⚠️ LESSON FROM PHASES 1-6**: Try consolidation first, validate baseline, only add handler if truly needed
+
+- [ ] T063 [US6] Add SageMaker to `AWS_CONSOLIDATED_NODES` in `modules/config/cloud_config_aws.py` (already exists at line 126-130)
+  - Pattern: `aws_sagemaker_endpoint` (matches endpoint, endpoint_configuration, model)
+  - Target: `aws_sagemaker_endpoint.endpoint`
+  - VPC: False (SageMaker endpoints are managed services)
+  - **Note**: Consolidation already configured - verify it works correctly
+- [ ] T064 [US6] **Baseline validation**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: SageMaker endpoint + model + S3
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-sagemaker.json --debug`
+  - Analyze: Are endpoint/model/config consolidated? Are S3 connections visible?
+  - **Decision point**: If baseline + consolidation sufficient → STOP. If not → proceed to T065
+- [ ] T065 [US6] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_sagemaker_artifacts()` custom function in `modules/resource_handlers_aws.py`
+  - Add handler config to `resource_handler_configs_aws.py`
   - Parse `model_data_url` to detect S3 bucket connections
   - Position notebook instances in VPC subnets when configured
+  - Create SageMaker → S3 connections
 
 ### Validation for User Story 6
 
 - [ ] T067 [US6] Generate expected output JSON from SageMaker fixture in `tests/json/expected-sagemaker-endpoint.json`
-- [ ] T068 [US6] Add test case for SageMaker grouping in `tests/graphmaker_unit_test.py`
+- [ ] T068 [US6] Add test case for SageMaker grouping in `tests/graphmaker_unit_test.py` (if handler implemented)
 - [ ] T069 [US6] Verify all existing tests still pass
 
 **Checkpoint**: SageMaker ML patterns complete
@@ -403,9 +426,11 @@ poetry run python terravision.py graphdata \
 - [ ] T070 [P] [US7] Create Terraform fixture for Step Functions + Lambda in `tests/fixtures/aws_terraform/stepfunctions_lambda/main.tf`
 - [ ] T071 [P] [US7] Create Terraform fixture for Step Functions multi-service in `tests/fixtures/aws_terraform/stepfunctions_multi_service/main.tf`
 
-### Implementation for User Story 7
+### Configuration for User Story 7
 
 **Handler Type**: Pure Function (complex JSON definition parsing)
+
+**⚠️ JUSTIFIED EXCEPTION**: Step Functions state machine definitions are complex JSON with conditional logic for multiple task types (Lambda, ECS, SageMaker, DynamoDB, SNS, SQS). Parsing this requires custom logic that transformers cannot express declaratively.
 
 - [ ] T072 [US7] Add `aws_sfn_state_machine` handler config to `modules/config/resource_handler_configs_aws.py`
   - Pure function only: `aws_handle_step_functions`
@@ -421,6 +446,7 @@ poetry run python terravision.py graphdata \
 - [ ] T075 [US7] Generate expected output JSON from Step Functions fixture in `tests/json/expected-stepfunctions-lambda.json`
 - [ ] T076 [US7] Add test case for Step Functions orchestration in `tests/graphmaker_unit_test.py`
 - [ ] T077 [US7] Verify all existing tests still pass
+- [ ] T078 [US7] **Post-Implementation Validation**: Complete full checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md`
 
 **Checkpoint**: Step Functions patterns complete
 
@@ -434,26 +460,34 @@ poetry run python terravision.py graphdata \
 
 ### Test Fixtures for User Story 8
 
-- [ ] T078 [P] [US8] Create Terraform fixture for S3 notification to Lambda in `tests/fixtures/aws_terraform/s3_notification_lambda/main.tf`
-- [ ] T079 [P] [US8] Create Terraform fixture for S3 cross-region replication in `tests/fixtures/aws_terraform/s3_replication/main.tf`
+- [ ] T079 [P] [US8] Create Terraform fixture for S3 notification to Lambda in `tests/fixtures/aws_terraform/s3_notification_lambda/main.tf`
+- [ ] T080 [P] [US8] Create Terraform fixture for S3 cross-region replication in `tests/fixtures/aws_terraform/s3_replication/main.tf`
 
-### Implementation for User Story 8
+### Configuration for User Story 8
 
 **Handler Type**: Hybrid (config linking + custom notification config parsing)
 
-- [ ] T080 [US8] Add `aws_s3_bucket_notification` handler config to `modules/config/resource_handler_configs_aws.py`
+**⚠️ LESSON FROM PHASES 1-6**: Baseline validation FIRST, then decide if handler needed
+
+- [ ] T081 [US8] **Baseline validation**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: S3 bucket notification → Lambda
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-s3-notification.json --debug`
+  - Analyze: Are S3 → Lambda connections visible from Terraform dependencies?
+  - **Decision point**: If baseline sufficient → STOP. If not → proceed to T082
+- [ ] T082 [US8] **ONLY IF BASELINE INSUFFICIENT**: Add `aws_s3_bucket_notification` handler config to `modules/config/resource_handler_configs_aws.py`
   - Transformations: `link_resources` (S3 → Lambda/SQS/SNS)
   - Custom function: `aws_handle_s3_notification_config`
-- [ ] T081 [US8] Implement `aws_handle_s3_notification_config()` custom function in `modules/resource_handlers_aws.py`
+- [ ] T083 [US8] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_s3_notification_config()` custom function in `modules/resource_handlers_aws.py`
   - Parse notification config for Lambda/SQS/SNS targets
   - Detect replication config for bucket-to-bucket flows
   - Create S3 → target connections
 
 ### Validation for User Story 8
 
-- [ ] T083 [US8] Generate expected output JSON from S3 notification fixture in `tests/json/expected-s3-notification-lambda.json`
-- [ ] T084 [US8] Add test case for S3 notification flow in `tests/graphmaker_unit_test.py`
-- [ ] T085 [US8] Verify all existing tests still pass
+- [ ] T085 [US8] Generate expected output JSON from S3 notification fixture in `tests/json/expected-s3-notification-lambda.json`
+- [ ] T086 [US8] Add test case for S3 notification flow in `tests/graphmaker_unit_test.py` (if handler implemented)
+- [ ] T087 [US8] Verify all existing tests still pass
+- [ ] T088 [US8] **Post-Implementation Validation**: Complete full checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md`
 
 **Checkpoint**: S3 notification patterns complete
 
@@ -467,26 +501,34 @@ poetry run python terravision.py graphdata \
 
 ### Test Fixtures for User Story 9
 
-- [ ] T086 [P] [US9] Create Terraform fixture for Secrets Manager + Lambda in `tests/fixtures/aws_terraform/secretsmanager_lambda/main.tf`
-- [ ] T087 [P] [US9] Create Terraform fixture for Secrets Manager + RDS rotation in `tests/fixtures/aws_terraform/secretsmanager_rds/main.tf`
+- [ ] T089 [P] [US9] Create Terraform fixture for Secrets Manager + Lambda in `tests/fixtures/aws_terraform/secretsmanager_lambda/main.tf`
+- [ ] T090 [P] [US9] Create Terraform fixture for Secrets Manager + RDS rotation in `tests/fixtures/aws_terraform/secretsmanager_rds/main.tf`
 
-### Implementation for User Story 9
+### Configuration for User Story 9
 
 **Handler Type**: Hybrid (config grouping + custom reference detection)
 
-- [ ] T088 [US9] Add `aws_secretsmanager_secret` handler config to `modules/config/resource_handler_configs_aws.py`
+**⚠️ LESSON FROM PHASES 1-6**: Baseline validation FIRST, then decide if handler needed
+
+- [ ] T091 [US9] **Baseline validation**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: Secrets Manager secret + Lambda with env var reference
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-secretsmanager.json --debug`
+  - Analyze: Are Lambda → Secrets Manager connections visible from Terraform dependencies?
+  - **Decision point**: If baseline sufficient → STOP. If not → proceed to T092
+- [ ] T092 [US9] **ONLY IF BASELINE INSUFFICIENT**: Add `aws_secretsmanager_secret` handler config to `modules/config/resource_handler_configs_aws.py`
   - Transformations: `group_shared_services` (add to "aws_group.shared_services")
   - Custom function: `aws_handle_secret_references`
-- [ ] T089 [US9] Implement `aws_handle_secret_references()` custom function in `modules/resource_handlers_aws.py`
+- [ ] T093 [US9] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_secret_references()` custom function in `modules/resource_handlers_aws.py`
   - Scan Lambda/ECS environment variables for secret ARN references
   - Create Application → Secrets Manager connections
   - Detect rotation Lambda connections
 
 ### Validation for User Story 9
 
-- [ ] T092 [US9] Generate expected output JSON from Secrets Manager fixture in `tests/json/expected-secretsmanager-lambda.json`
-- [ ] T093 [US9] Add test case for Secrets Manager connections in `tests/graphmaker_unit_test.py`
-- [ ] T094 [US9] Verify all existing tests still pass
+- [ ] T095 [US9] Generate expected output JSON from Secrets Manager fixture in `tests/json/expected-secretsmanager-lambda.json`
+- [ ] T096 [US9] Add test case for Secrets Manager connections in `tests/graphmaker_unit_test.py` (if handler implemented)
+- [ ] T097 [US9] Verify all existing tests still pass
+- [ ] T098 [US9] **Post-Implementation Validation**: Complete full checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md`
 
 **Checkpoint**: P2 patterns complete - all important AWS patterns now supported
 
@@ -500,30 +542,44 @@ poetry run python terravision.py graphdata \
 
 ### Test Fixtures for User Story 10
 
-- [ ] T095 [P] [US10] Create Terraform fixture for Glue job + S3 in `tests/fixtures/aws_terraform/glue_s3/main.tf`
-- [ ] T096 [P] [US10] Create Terraform fixture for Kinesis Firehose + Lambda in `tests/fixtures/aws_terraform/firehose_lambda/main.tf`
+- [ ] T099 [P] [US10] Create Terraform fixture for Glue job + S3 in `tests/fixtures/aws_terraform/glue_s3/main.tf`
+- [ ] T100 [P] [US10] Create Terraform fixture for Kinesis Firehose + Lambda in `tests/fixtures/aws_terraform/firehose_lambda/main.tf`
 
-### Implementation for User Story 10
+### Configuration for User Story 10
 
 **Handler Types**: Hybrid (Glue) + Pure Function (Firehose)
 
-- [ ] T097 [US10] Add `aws_glue_job` handler config to `modules/config/resource_handler_configs_aws.py`
+**⚠️ LESSON FROM PHASES 1-6**: Baseline validation FIRST for both patterns
+
+- [ ] T101 [US10] **Baseline validation - Glue**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: Glue job + S3 sources/destinations
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-glue.json --debug`
+  - Analyze: Are Glue → S3 connections visible from Terraform dependencies?
+  - **Decision point**: If baseline sufficient → STOP. If not → proceed to T102
+- [ ] T102 [US10] **ONLY IF BASELINE INSUFFICIENT**: Add `aws_glue_job` handler config to `modules/config/resource_handler_configs_aws.py`
   - Transformations: `link_resources` (Glue → S3)
   - Custom function: `aws_handle_glue_scripts`
-- [ ] T098 [US10] Add `aws_kinesis_firehose_delivery_stream` handler config to `modules/config/resource_handler_configs_aws.py`
+- [ ] T103 [US10] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_glue_scripts()` custom function in `modules/resource_handlers_aws.py`
+  - Parse Glue job `script_location` for S3 sources/destinations
+- [ ] T104 [US10] **Baseline validation - Firehose**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: Kinesis Firehose delivery stream → S3
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-firehose.json --debug`
+  - Analyze: Are Firehose → S3/Redshift/ES connections visible?
+  - **Decision point**: If baseline sufficient → STOP. If not → proceed to T105
+- [ ] T105 [US10] **ONLY IF BASELINE INSUFFICIENT**: Add `aws_kinesis_firehose_delivery_stream` handler config to `modules/config/resource_handler_configs_aws.py`
   - Pure function only: `aws_handle_firehose_destinations`
   - **Why Pure Function**: Complex destination config parsing with conditional logic for multiple destination types
-- [ ] T099 [US10] Implement `aws_handle_glue_scripts()` custom function in `modules/resource_handlers_aws.py`
-  - Parse Glue job `script_location` for S3 sources/destinations
-- [ ] T100 [US10] Implement `aws_handle_firehose_destinations()` function in `modules/resource_handlers_aws.py`
+- [ ] T106 [US10] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_firehose_destinations()` function in `modules/resource_handlers_aws.py`
   - Parse destination configuration (S3, Redshift, Elasticsearch)
   - Detect transformation Lambda in processing configuration
 
 ### Validation for User Story 10
 
-- [ ] T101 [US10] Generate expected output JSON from Glue fixture in `tests/json/expected-glue-s3.json`
-- [ ] T102 [US10] Add test case for data processing patterns in `tests/graphmaker_unit_test.py`
-- [ ] T103 [US10] Verify all existing tests still pass
+- [ ] T107 [US10] Generate expected output JSON from Glue fixture in `tests/json/expected-glue-s3.json`
+- [ ] T108 [US10] Generate expected output JSON from Firehose fixture in `tests/json/expected-firehose-lambda.json`
+- [ ] T109 [US10] Add test case for data processing patterns in `tests/graphmaker_unit_test.py` (if handlers implemented)
+- [ ] T110 [US10] Verify all existing tests still pass
+- [ ] T111 [US10] **Post-Implementation Validation**: Complete full checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md`
 
 **Checkpoint**: Data processing patterns complete
 
@@ -537,27 +593,36 @@ poetry run python terravision.py graphdata \
 
 ### Test Fixtures for User Story 11
 
-- [ ] T104 [P] [US11] Create Terraform fixture for AppSync + DynamoDB in `tests/fixtures/aws_terraform/appsync_dynamodb/main.tf`
-- [ ] T105 [P] [US11] Create Terraform fixture for AppSync + Lambda resolver in `tests/fixtures/aws_terraform/appsync_lambda/main.tf`
+- [ ] T112 [P] [US11] Create Terraform fixture for AppSync + DynamoDB in `tests/fixtures/aws_terraform/appsync_dynamodb/main.tf`
+- [ ] T113 [P] [US11] Create Terraform fixture for AppSync + Lambda resolver in `tests/fixtures/aws_terraform/appsync_lambda/main.tf`
 
-### Implementation for User Story 11
+### Configuration for User Story 11
 
-**Handler Type**: Hybrid (config consolidation + custom data source parsing)
+**Handler Type**: Config-Only (Consolidation) + Optional Hybrid if data source parsing needed
 
-- [ ] T106 [US11] Add `aws_appsync_graphql_api` handler config to `modules/config/resource_handler_configs_aws.py`
-  - Transformations: `consolidate_into_single_node` (target: "aws_appsync.api")
-  - Custom function: `aws_handle_appsync_datasources`
-- [ ] T107 [US11] Implement `aws_handle_appsync_datasources()` custom function in `modules/resource_handlers_aws.py`
+**⚠️ LESSON FROM PHASES 1-6**: Try consolidation first, validate baseline, only add handler if truly needed
+
+- [ ] T114 [US11] Verify AppSync consolidation in `AWS_CONSOLIDATED_NODES` (already exists at cloud_config_aws.py:133-139)
+  - Pattern: `aws_appsync_graphql_api` (matches graphql_api, datasource, resolver)
+  - Target: `aws_appsync_graphql_api.graphql_api`
+  - Edge service: True (positioned outside VPC like API Gateway)
+  - **Note**: Consolidation already configured - verify it works correctly
+- [ ] T115 [US11] **Baseline validation**: Generate baseline diagram WITHOUT custom handler
+  - Create test Terraform: AppSync API + DynamoDB data source
+  - Run: `poetry run python terravision.py graphdata --source <fixture> --outfile baseline-appsync.json --debug`
+  - Analyze: Are API/datasource/resolver consolidated? Are DynamoDB connections visible?
+  - **Decision point**: If baseline + consolidation sufficient → STOP. If not → proceed to T116
+- [ ] T116 [US11] **ONLY IF BASELINE INSUFFICIENT**: Implement `aws_handle_appsync_datasources()` custom function in `modules/resource_handlers_aws.py`
+  - Add handler config to `resource_handler_configs_aws.py`
   - Parse data sources for DynamoDB/Lambda connections
-  - Consolidate resolvers into API node
   - Detect Cognito authentication configuration
-  - Position as edge service (similar to API Gateway)
 
 ### Validation for User Story 11
 
-- [ ] T110 [US11] Generate expected output JSON from AppSync fixture in `tests/json/expected-appsync-dynamodb.json`
-- [ ] T111 [US11] Add test case for AppSync patterns in `tests/graphmaker_unit_test.py`
-- [ ] T112 [US11] Verify all existing tests still pass
+- [ ] T118 [US11] Generate expected output JSON from AppSync fixture in `tests/json/expected-appsync-dynamodb.json`
+- [ ] T119 [US11] Add test case for AppSync patterns in `tests/graphmaker_unit_test.py` (if handler implemented)
+- [ ] T120 [US11] Verify all existing tests still pass
+- [ ] T121 [US11] **Post-Implementation Validation**: Complete full checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md`
 
 **Checkpoint**: All P3 patterns complete - full feature coverage achieved
 
@@ -567,12 +632,16 @@ poetry run python terravision.py graphdata \
 
 **Purpose**: Final validation and cleanup
 
-- [ ] T113 Run `poetry run black modules/` to ensure all code is formatted
-- [ ] T114 Run `poetry run pytest tests -v` to verify all tests pass
-- [ ] T115 [P] Update `docs/aws_resource_handlers/` documentation with new handlers
-- [ ] T116 [P] Review and clean up any debug logging or commented code
-- [ ] T117 Run TerraVision against a complex multi-pattern Terraform config to verify integration
-- [ ] T118 Verify no regressions in existing patterns (VPC, EC2, ECS, EKS, RDS)
+- [ ] T122 Run `poetry run black modules/` to ensure all code is formatted
+- [ ] T123 Run `poetry run pytest tests -v` to verify all tests pass
+- [ ] T124 [P] Update documentation with implementation changes:
+  - Update `CLAUDE.md` with new consolidation patterns
+  - Update `docs/HANDLER_CONFIG_GUIDE.md` with handler summaries
+  - Update constitution compliance status
+- [ ] T125 [P] Review and clean up any debug logging or commented code
+- [ ] T126 Run TerraVision against a complex multi-pattern Terraform config to verify integration
+- [ ] T127 Verify no regressions in existing patterns (VPC, EC2, ECS, EKS, RDS)
+- [ ] T128 **Final Post-Implementation Validation**: Complete FULL checklist from `docs/POST_IMPLEMENTATION_VALIDATION.md` for entire feature
 
 ---
 
@@ -599,6 +668,8 @@ poetry run python terravision.py graphdata \
 ### Within Each User Story
 
 - Test fixtures before implementation
+- Baseline validation before any handler implementation
+- Configuration/consolidation before custom handler functions
 - Implementation before validation
 - Config entries must exist (Phase 2) before handlers work
 
@@ -620,8 +691,8 @@ Task: "T012 [P] [US1] Create Terraform fixture for HTTP API + VPC Link"
 Task: "T013 [P] [US1] Create Terraform fixture for API Gateway + Step Functions"
 
 # Then implement sequentially:
-Task: "T014 [US1] Implement handle_api_gateway() function"
-Task: "T015 [US1] Implement handle_api_gateway_v2() function"
+Task: "T014 [US1] Add API Gateway to AWS_CONSOLIDATED_NODES"
+Task: "T015 [US1] Verify consolidation works"
 # etc.
 ```
 
@@ -660,146 +731,73 @@ With multiple developers:
 
 ## Summary
 
-| Phase | Stories | Tasks | Priority |
-|-------|---------|-------|----------|
-| Setup | - | T001-T003 | Required |
-| Foundational | - | T004-T010 | Required |
-| US1: API Gateway | P1 | T011-T022 | MVP |
-| US2: Event-Driven | P1 | T023-T034 | MVP |
-| US3: ElastiCache | P1 | T035-T043 | MVP |
-| US4: Cognito | P1 | T044-T052 | MVP |
-| US5: WAF | P2 | T053-T060 | Important |
-| US6: SageMaker | P2 | T061-T069 | Important |
-| US7: Step Functions | P2 | T070-T077 | Important |
-| US8: S3 Notifications | P2 | T078-T085 | Important |
-| US9: Secrets Manager | P2 | T086-T094 | Important |
-| US10: Glue/Firehose | P3 | T095-T103 | Nice to Have |
-| US11: AppSync | P3 | T104-T112 | Nice to Have |
-| Polish | - | T113-T118 | Required |
+| Phase | Stories | Tasks | Priority | Status |
+|-------|---------|-------|----------|--------|
+| Setup | - | T001-T003 | Required | ✅ Complete |
+| Foundational | - | T004-T007 | Required | ✅ Complete |
+| US1: API Gateway | P1 | T011-T022 | MVP | ✅ Complete (Config-Only) |
+| US2: Event-Driven | P1 | T023-T034 | MVP | ✅ Complete (Config-Only) |
+| US3: ElastiCache | P1 | T035-T043 | MVP | ✅ Complete (Pure Config) |
+| US4: Cognito | P1 | T044-T052 | MVP | ✅ Complete (Config-Only) |
+| US5: WAF | P2 | T053-T060 | Important | ⏳ Pending |
+| US6: SageMaker | P2 | T061-T069 | Important | ⏳ Pending |
+| US7: Step Functions | P2 | T070-T078 | Important | ⏳ Pending |
+| US8: S3 Notifications | P2 | T079-T088 | Important | ⏳ Pending |
+| US9: Secrets Manager | P2 | T089-T098 | Important | ⏳ Pending |
+| US10: Glue/Firehose | P3 | T099-T111 | Nice to Have | ⏳ Pending |
+| US11: AppSync | P3 | T112-T121 | Nice to Have | ⏳ Pending |
+| Polish | - | T122-T128 | Required | ⏳ Pending |
 
-**Total Tasks**: 118
-**MVP Scope**: Phases 1-6 (T001-T052) = 52 tasks
-
----
-
-## Post-Phase 4: Connection Quality Fixes
-
-**Purpose**: Fix connection quality issues discovered after Phase 4 implementation
-
-### Fix 1: Duplicate Connection Prevention (2025-01-28)
-
-**Problem**: Duplicate connections appearing in diagrams from multiple code paths
-
-**Root Causes Identified**:
-1. `graphmaker.reverse_relations()` - not checking before appending when reversing FORCED_DEST/FORCED_ORIGIN (lines 85, 101)
-2. `annotations.py` - not checking before appending manual YAML annotations (lines 194, 197)
-3. `graphmaker.handle_singular_references()` - not checking before appending numbered instances (line 1312)
-4. `helpers.append_dictlist()` - not checking before appending AUTO_ANNOTATIONS (line 800)
-
-**Solution**: Added duplicate checks at all 4 sources before appending connections
-
-**Files Modified**:
-- `modules/graphmaker.py` (lines 85, 101, 1312)
-- `modules/annotations.py` (lines 194, 197)
-- `modules/helpers.py` (line 800, removed `deduplicate_connections()`)
-- `terravision.py` (removed debug tracing code)
-
-**Test Updates**: Regenerated expected outputs for 5 test fixtures (wordpress, bastion, api-gateway-rest-lambda, eks-basic, static-website)
-
-**Validation**: All 139 tests pass with duplicate prevention at source
-
-### Fix 2: Load Balancer Connection Direction (2025-01-28)
-
-**Problem**: Bidirectional connections between ELB and compute resources (Fargate) bypassing ALB layer
-
-**Expected Flow**: Unidirectional flow `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3`
-
-**Incorrect Flow**:
-- Forward: `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3` ✓
-- Backward: `aws_fargate.ecs~1/2/3` → `aws_lb.elb` ✗ (creates bypass)
-
-**Solution**: Modified `aws_handle_lb()` function to:
-1. Add duplicate check when creating ELB → ALB connection (lines 672-676)
-2. Remove backward connections from compute resources TO LB (lines 667-671)
-
-**Files Modified**:
-- `modules/resource_handlers_aws.py` (lines 667-676)
-- `tests/json/expected-wordpress.json` (regenerated without backward connections)
-
-**Connection Logic**:
-```python
-# Handle GROUP_NODES parents (VPC, subnets)
-for p in parents:
-    p_type = p.split(".")[0]
-    if p_type in GROUP_NODES and p_type not in SHARED_SERVICES and p_type != "aws_vpc":
-        tfdata["graphdict"][p].append(renamed_node)
-        tfdata["graphdict"][p].remove(lb)
-    elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
-        # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
-        # Traffic should flow LB → ALB → Compute, not Compute → LB
-        if lb in tfdata["graphdict"][p]:
-            tfdata["graphdict"][p].remove(lb)
-
-# Create forward connection: ELB → ALB (with duplicate check)
-if lb not in tfdata["graphdict"]:
-    tfdata["graphdict"][lb] = list()
-if renamed_node not in tfdata["graphdict"][lb]:
-    tfdata["graphdict"][lb].append(renamed_node)
-```
-
-**Result**:
-- Correct unidirectional flow: `aws_lb.elb` → `aws_alb.elb~1/2/3` → `aws_fargate.ecs~1/2/3`
-- Backward connections removed: `aws_fargate.ecs~1/2/3` no longer points to `aws_lb.elb`
-- Prevents duplicate connections between ELB and ALB instances
-
-**Validation**: All 139 tests pass with corrected unidirectional flow
+**Total Tasks**: 128 (updated from 118)
+**Completed**: 52 tasks (Phases 1-6 complete)
+**Remaining**: 76 tasks
+**MVP Scope**: Phases 1-6 (T001-T052) = 52 tasks ✅ COMPLETE
 
 ---
 
-## Post-Implementation Validation (MANDATORY Before Declaring Phase Complete)
+## Key Learnings from Phase 1-6
 
-**See**: [`docs/POST_IMPLEMENTATION_VALIDATION.md`](../../POST_IMPLEMENTATION_VALIDATION.md) for the complete validation checklist.
+### 1. **Baseline Validation is MANDATORY** (CO-005.1)
+- **API Gateway (Phase 3)**: Prevented implementing unnecessary handler - baseline was sufficient
+- **Event-Driven (Phase 4)**: Prevented implementing 3 handlers - found config bug instead
+- **Cognito (Phase 6)**: Consolidation config sufficient, no handler needed
+- **Lesson**: ALWAYS generate baseline first with `--debug` flag before assuming handlers needed
 
-**Purpose**: Catch implementation issues early before declaring "all tests passed"
+### 2. **CONSOLIDATED_NODES > Transformer Consolidation**
+- **Problem**: `consolidate_into_single_node` transformer was removed
+- **Solution**: Use `AWS_CONSOLIDATED_NODES` in `cloud_config_aws.py` instead
+- **Benefit**: Consolidation runs BEFORE handlers, preventing conflicts with transformers like `expand_to_numbered_instances`
+- **Pattern**: `{"pattern": {"resource_name": "target", "import_location": "...", "vpc": bool, "edge_service": bool}}`
 
-**When to Use**: After implementing ANY handler, transformer, or configuration change
+### 3. **Config Bugs Can Look Like Missing Handlers**
+- **EventBridge (Phase 4)**: Overly broad pattern `aws_cloudwatch` matched event_rule/event_target
+- **Fix**: Changed to `aws_cloudwatch_log` - simple 1-word config change
+- **Lesson**: Root cause analysis > jumping to handler implementation
 
-The validation checklist covers:
-1. **Test Suite**: All tests pass, no regressions
-2. **Connection Directions**: Arrows point correctly (event sources → consumers, APIs → backends)
-3. **Orphaned Resources**: No resources missing expected connections
-4. **Duplicate Connections**: No duplicate entries in connection lists
-5. **Intermediary Links**: Transitive connections work when intermediaries removed
-6. **Numbered Resources**: Count/for_each expansion works correctly
-7. **Expected Output**: Actual output matches expected JSON
-8. **Rendering Quality** (MANDATORY): No visual confusion, resource duplication, or messy layouts
-9. **Integration Test Coverage**: Test fixtures exist and exercise handlers
-10. **Documentation**: Docs updated with implementation changes
+### 4. **Architectural Order Matters**
+- **ElastiCache (Phase 5)**: Consolidation ran before handlers, blocking expansion
+- **Fix**: Removed from `AWS_CONSOLIDATED_NODES` to allow handler transformers to work
+- **Lesson**: Some resources need handlers for expansion, NOT consolidation
 
-**⚠️ CRITICAL**: Section 8 (Rendering Quality) is MANDATORY after Phase 5 rendering issues. It prevents:
-- Resources duplicated across multiple subnets (Lambda appearing in cache_a AND cache_b)
-- Cross-subnet connection clutter (redis~3 connecting to Lambda only in cache_a/cache_b)
-- Incorrect numbered resource distribution (all ~1, ~2, ~3 instances in one subnet)
+### 5. **Duplicate Prevention at Source**
+- **Problem**: Duplicates appearing from 4 different code paths
+- **Solution**: Fixed at source (reverse_relations, annotations, handle_singular_references, append_dictlist)
+- **Lesson**: Prevent duplicates where they're created, not via deduplication sweeps
 
-**Complete the full checklist in POST_IMPLEMENTATION_VALIDATION.md before declaring any phase complete.**
+### 6. **Connection Direction Validation is Critical**
+- **EventBridge/SNS**: Added to `AWS_FORCED_ORIGIN` and `AWS_REVERSE_ARROW_LIST`
+- **Load Balancers**: Fixed backward connections (Compute → ELB should not exist)
+- **Lesson**: Events flow source → consumer, APIs flow edge → backend
 
----
+### 7. **Post-Implementation Validation Checklist**
+- Added Section 8 (Rendering Quality) after Phase 5 rendering issues
+- Prevents: resource duplication, cross-subnet clutter, incorrect numbering distribution
+- **Lesson**: Visual validation is mandatory, not optional
 
-## Validation Example: Phase 4 (Event-Driven)
-
-**Following this checklist would have caught**:
-
-1. **Connection Direction**: ✅ EventBridge → Lambda (not Lambda → EventBridge)
-2. **Orphaned Resources**: ❌ Found Kinesis stream and users DynamoDB table with no connections
-   - Investigation: Event source mapping intermediaries not creating transitive links
-   - Root cause: Transformer removing intermediaries even when no links created
-   - Fix: Only remove intermediary if BOTH sources and targets found
-3. **Duplicates**: ✅ No duplicates after fixes in Phase 4
-4. **Intermediaries**: ❌ Event source mappings not removed, transitive links not created
-   - Investigation: Three transformer calls, first call removed all intermediaries
-   - Fix: Skip intermediaries that don't match both source AND target patterns
-
-**Result**: Issues caught and fixed before declaring phase complete
+### 8. **--debug Flag Best Practice**
+- **Why**: Creates `tfdata.json` for rapid iteration without re-running terraform plan
+- **Usage**: `poetry run python terravision.py graphdata --source <path> --outfile <output>.json --debug`
+- **Benefit**: Enables reusing tfdata.json for integration tests
 
 ---
 
@@ -812,5 +810,6 @@ The validation checklist covers:
 - Stop at any checkpoint to validate story independently
 - **CRITICAL**: Run `poetry run pytest tests -v -m "not slow"` frequently during development to catch regressions early (fast tests only)
 - **CRITICAL**: Run `poetry run pytest tests -v` at task completion to verify ALL tests including slow integration tests
-- **CRITICAL**: Report any existing test failures to user before modifying expected outputs
-- **CRITICAL**: Complete the Validation Checklist above BEFORE declaring any phase complete
+- **CRITICAL**: Complete baseline validation (docs/BASELINE_VALIDATION_CHECKLIST.md) BEFORE implementing any handler
+- **CRITICAL**: Complete post-implementation validation (docs/POST_IMPLEMENTATION_VALIDATION.md) BEFORE declaring any phase complete
+- **CRITICAL**: Use `AWS_CONSOLIDATED_NODES` in cloud_config_aws.py for consolidation, NOT the removed `consolidate_into_single_node` transformer

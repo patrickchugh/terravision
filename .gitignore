@@ -66,3 +66,4 @@ ai-backend-terraform/lambda/node_modules/*
 /docs/specs
 CLAUDE.md
 .claude/
+/specs
