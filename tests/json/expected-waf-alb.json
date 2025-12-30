@@ -1,0 +1,52 @@
+{
+    "aws_alb.elb~1": [],
+    "aws_alb.elb~2": [],
+    "aws_az.availability_zone_us_west_2a~1": [
+        "aws_subnet.public_a"
+    ],
+    "aws_az.availability_zone_us_west_2b~2": [
+        "aws_subnet.public_b"
+    ],
+    "aws_group.shared_services": [
+        "aws_iam_group.iam"
+    ],
+    "aws_internet_gateway.igw": [
+        "tv_aws_internet.internet"
+    ],
+    "aws_lb.elb": [
+        "aws_alb.elb~1",
+        "aws_alb.elb~2"
+    ],
+    "aws_route_table.public": [
+        "aws_internet_gateway.igw",
+        "aws_route_table_association.public_a",
+        "aws_route_table_association.public_b"
+    ],
+    "aws_route_table_association.public_a": [],
+    "aws_route_table_association.public_b": [],
+    "aws_security_group.alb_elb~1": [
+        "aws_alb.elb~1"
+    ],
+    "aws_security_group.alb_elb~2": [
+        "aws_alb.elb~2"
+    ],
+    "aws_subnet.public_a": [
+        "aws_route_table_association.public_a",
+        "aws_security_group.alb_elb~1"
+    ],
+    "aws_subnet.public_b": [
+        "aws_route_table_association.public_b",
+        "aws_security_group.alb_elb~2"
+    ],
+    "aws_vpc.main": [
+        "aws_az.availability_zone_us_west_2a~1",
+        "aws_az.availability_zone_us_west_2b~2",
+        "aws_internet_gateway.igw",
+        "aws_lb.elb",
+        "aws_route_table.public"
+    ],
+    "aws_wafv2_web_acl.waf": [
+        "aws_lb.elb"
+    ],
+    "tv_aws_internet.internet": []
+}

@@ -67,3 +67,4 @@ ai-backend-terraform/lambda/node_modules/*
 CLAUDE.md
 .claude/
 /specs
+terraform.tfstate

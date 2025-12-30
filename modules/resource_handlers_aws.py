@@ -603,7 +603,7 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     if not tfdata["graphdict"].get("aws_group.shared_services"):
         tfdata["graphdict"]["aws_group.shared_services"] = []
         tfdata["meta_data"]["aws_group.shared_services"] = {}
-    tfdata["graphdict"]["aws_group.shared_services"].append("aws_iam_group.iam")
+
     return tfdata
 
 
@@ -665,7 +665,10 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and p_type != "aws_vpc"
                 ):
                     tfdata["graphdict"][p].append(renamed_node)
-                    tfdata["graphdict"][p].remove(lb)
+                    # Defensive check: only remove if lb is actually in parent
+                    # (SG handler may have already modified structure for multi-subnet LBs)
+                    if lb in tfdata["graphdict"][p]:
+                        tfdata["graphdict"][p].remove(lb)
                 elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
                     # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
                     # Traffic should flow LB → ALB → Compute, not Compute → LB
@@ -1893,3 +1896,124 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
                         result[subnet].append(sg_with_suffix)
 
     return result
+
+
+def aws_handle_waf_associations(tfdata: dict) -> dict:
+    """Handle WAF WebACL associations to protected resources.
+
+    Parses aws_wafv2_web_acl_association (and aws_waf_web_acl_association for Classic WAF)
+    to create connections from WAF WebACLs to protected resources (ALB, CloudFront, API Gateway).
+
+    The association resource references:
+    - web_acl_arn: Terraform reference to WAF WebACL (e.g., "${aws_wafv2_web_acl.alb.arn}")
+    - resource_arn: Terraform reference to protected resource (e.g., "${aws_lb.main.arn}")
+
+    Note: ARNs are computed values (show as "true" in meta_data), so we parse from all_resource.
+
+    Args:
+        tfdata: TerraVision data structure containing graphdict, all_resource, meta_data
+
+    Returns:
+        Updated tfdata with WAF → protected resource connections
+
+    Constitutional Compliance:
+    - CO-005.1: Handler justified - association doesn't create Terraform dependencies
+    - Baseline validation showed WAF → ALB connection missing despite association existing
+    """
+    import re
+    from modules.helpers import append_dictlist
+
+    graphdict = tfdata.get("graphdict", {})
+    all_resource = tfdata.get("all_resource", {})
+
+    # Iterate through all Terraform files to find WAF associations
+    for _tf_file, resources in all_resource.items():
+        if not isinstance(resources, list):
+            continue
+
+        for resource_block in resources:
+            # Check if this is a WAF association resource
+            if "aws_wafv2_web_acl_association" in resource_block:
+                association_data = resource_block["aws_wafv2_web_acl_association"]
+            elif "aws_waf_web_acl_association" in resource_block:
+                association_data = resource_block["aws_waf_web_acl_association"]
+            else:
+                continue
+
+            # Process each association instance
+            for _instance_name, instance_data in association_data.items():
+                web_acl_arn_ref = instance_data.get("web_acl_arn", "")
+                resource_arn_ref = instance_data.get("resource_arn", "")
+
+                if not web_acl_arn_ref or not resource_arn_ref:
+                    continue
+
+                # Extract resource references from Terraform interpolations
+                # Format: "${aws_wafv2_web_acl.alb.arn}" or "${aws_lb.main.arn}"
+                waf_match = re.search(
+                    r"\$\{(aws_wafv2_web_acl\.\w+|aws_waf_web_acl\.\w+)",
+                    web_acl_arn_ref,
+                )
+                resource_match = re.search(
+                    r"\$\{(aws_lb\.\w+|aws_cloudfront_distribution\.\w+|aws_api_gateway_rest_api\.\w+)",
+                    resource_arn_ref,
+                )
+
+                if not waf_match or not resource_match:
+                    continue
+
+                # Note: waf_ref would be "aws_wafv2_web_acl.alb", but we search for consolidated node instead
+                protected_ref = resource_match.group(1)  # e.g., "aws_lb.main"
+
+                # Find the consolidated WAF resource in graphdict
+                # WAF consolidation creates "aws_wafv2_web_acl.waf" or "aws_waf_web_acl.waf"
+                waf_resource = None
+                for key in graphdict.keys():
+                    if "aws_wafv2_web_acl.waf" in key or "aws_waf_web_acl.waf" in key:
+                        waf_resource = key
+                        break
+
+                # Find the protected resource in graphdict
+                # Note: ALB is consolidated to "aws_lb.elb" (service node)
+                # We connect to the consolidation node, NOT numbered instances
+                protected_resource = None
+                for key in graphdict.keys():
+                    if "aws_lb" in protected_ref:
+                        # Look for LB consolidation node (aws_lb.elb) WITHOUT numbered suffix
+                        if key == "aws_lb.elb":
+                            protected_resource = key
+                            break
+                    elif "aws_cloudfront_distribution" in protected_ref:
+                        if "aws_cloudfront_distribution" in key and "~" not in key:
+                            protected_resource = key
+                            break
+                    elif "aws_api_gateway_rest_api" in protected_ref:
+                        # API Gateway consolidates to aws_api_gateway_integration.gateway
+                        if (
+                            "aws_api_gateway" in key
+                            and "gateway" in key
+                            and "~" not in key
+                        ):
+                            protected_resource = key
+                            break
+
+                # Create WAF → protected resource connection
+                if waf_resource and protected_resource:
+                    # Get existing connections for WAF
+                    waf_connections = graphdict.get(waf_resource, [])
+                    # Append protected resource if not already connected
+                    waf_connections = append_dictlist(
+                        waf_connections, protected_resource
+                    )
+                    # Update graphdict
+                    graphdict[waf_resource] = waf_connections
+
+                    # IMPORTANT: Remove any reverse connections (protected resource → WAF)
+                    # These come from Terraform dependencies but should not be in the graph
+                    # We only want WAF → protected resource (WAF protects resources)
+                    for key in list(graphdict.keys()):
+                        if waf_resource in graphdict.get(key, []):
+                            graphdict[key].remove(waf_resource)
+
+    tfdata["graphdict"] = graphdict
+    return tfdata

@@ -17,7 +17,12 @@
       "Bash(export PATH=\"/Users/patrick/git/terravision-privatedev:$PATH\")",
       "Bash(bash -c:*)",
       "Bash(xargs cat:*)",
-      "Bash(/Users/patrick/git/terravision-privatedev/terravision graphdata --source tests/json/elasticache-replication-tfdata.json --outfile /tmp/correct-dir-test.json)"
+      "Bash(/Users/patrick/git/terravision-privatedev/terravision graphdata --source tests/json/elasticache-replication-tfdata.json --outfile /tmp/correct-dir-test.json)",
+      "Bash(terraform init:*)",
+      "Bash(terraform plan:*)",
+      "Bash(for test in wordpress eks-basic elasticache-redis elasticache-replication)",
+      "Bash(do)",
+      "Bash(done)"
     ]
   }
 }

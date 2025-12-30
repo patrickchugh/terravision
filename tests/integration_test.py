@@ -84,6 +84,11 @@ def test_help() -> None:
             "cognito-api-gateway-tfdata.json",
             "expected-cognito-api-gateway.json",
         ),
+        # Phase 7: WAF Security patterns
+        (
+            "waf-alb-tfdata.json",
+            "expected-waf-alb.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

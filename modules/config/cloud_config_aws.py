@@ -145,6 +145,22 @@ AWS_CONSOLIDATED_NODES = [
             "edge_service": True,
         }
     },
+    {
+        "aws_wafv2": {
+            "resource_name": "aws_wafv2_web_acl.waf",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_waf": {
+            "resource_name": "aws_waf_web_acl.waf",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in
@@ -170,7 +186,8 @@ AWS_EDGE_NODES = [
     "aws_cloudwatch_event",  # Feature 002: EventBridge (consolidated)
     "aws_sns_topic",  # Feature 002: SNS Topics (consolidated)
     "aws_cognito",  # Feature 002: Cognito User Pools/Identity Pools
-    "aws_wafv2",  # Feature 002: WAF Web ACLs
+    "aws_wafv2",  # Feature 002: WAFv2 Web ACLs (consolidated)
+    "aws_waf",  # Feature 002: WAF Classic Web ACLs (consolidated)
     "aws_appsync",  # Feature 002: AppSync GraphQL APIs
 ]
 
@@ -264,6 +281,8 @@ AWS_FORCED_ORIGIN = [
     "aws_cloudfront_distribution",
     "aws_cloudwatch_event",  # EventBridge emits events (source only, not destination)
     "aws_sns_topic",  # SNS emits messages to subscribers (source only, not destination)
+    "aws_wafv2_web_acl",  # WAF protects resources (source only, not destination)
+    "aws_waf_web_acl",  # WAF Classic protects resources (source only, not destination)
 ]
 
 

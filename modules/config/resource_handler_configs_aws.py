@@ -310,27 +310,10 @@ RESOURCE_HANDLER_CONFIGS = {
     #     "additional_handler_function": "aws_handle_cognito_triggers",
     # },
     "aws_wafv2_web_acl": {
-        "description": "Hybrid: Link WAF Web ACLs to protected resources (ALB, CloudFront, API Gateway)",
-        "transformations": [
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_wafv2_web_acl_association",
-                    "target_resource": "aws_lb",
-                    "metadata_key": "resource_arn",
-                    "metadata_value_pattern": "loadbalancer",
-                },
-            },
-            {
-                "operation": "link_by_metadata_pattern",
-                "params": {
-                    "source_pattern": "aws_wafv2_web_acl_association",
-                    "target_resource": "aws_cloudfront_distribution",
-                    "metadata_key": "resource_arn",
-                    "metadata_value_pattern": "distribution",
-                },
-            },
-        ],
+        "description": "Hybrid: Link WAF Web ACLs to protected resources via association parsing",
+        # ⚠️ BASELINE VALIDATION RESULT: Baseline INSUFFICIENT
+        # Problem: WAF association doesn't create Terraform dependencies
+        # Solution: Parse aws_wafv2_web_acl_association to create WAF → ALB/CloudFront connections
         "additional_handler_function": "aws_handle_waf_associations",
     },
     "aws_sagemaker_endpoint": {

@@ -140,12 +140,13 @@ The main processing pipeline in `terravision.py` follows this flow:
 7. add_relations()    → Detect resource dependencies
 8. consolidate_nodes() → Merge similar resources
 9. add_annotations()  → Apply custom YAML annotations
-10. handle_special_resources() → VPC, subnet, security group logic
-11. handle_variants() → Add resource variants (Lambda runtime, EC2 type)
-12. create_multiple_resources() → Handle count/for_each (resource~1, resource~2)
-13. reverse_relations() → Fix arrow directions
-14. (Optional) _refine_with_llm() → AI diagram refinement
-15. render_diagram()  → Generate Graphviz output
+10. detect_and_set_counts() → Set synthetic count for multi-instance resources
+11. handle_special_resources() → VPC, subnet, security group logic
+12. handle_variants() → Add resource variants (Lambda runtime, EC2 type)
+13. create_multiple_resources() → Handle count/for_each (resource~1, resource~2)
+14. reverse_relations() → Fix arrow directions
+15. (Optional) _refine_with_llm() → AI diagram refinement
+16. render_diagram()  → Generate Graphviz output
 ```
 
 ### Key Modules
@@ -167,6 +168,50 @@ The main processing pipeline in `terravision.py` follows this flow:
 **annotations.py**: Processes custom YAML annotations (`terravision.yml`) to add/remove/update nodes and connections.
 
 **helpers.py**: Utility functions for node manipulation, JSON extraction, resource matching.
+
+**detect_multi_instance_resources.py**: Configuration-driven detection of resources requiring synthetic count. Detects resources deployed across multiple subnets/zones/networks without explicit Terraform count, sets synthetic count attribute for automatic numbering.
+
+### Multi-Instance Resource Detection
+
+**Purpose**: Automatically detect and number resources that span multiple availability zones, subnets, or networks but lack explicit Terraform `count` or `for_each` attributes.
+
+**How it works**:
+1. Scans Terraform configuration for resources matching configured patterns
+2. Checks if trigger attributes (e.g., `subnets`, `zones`) contain multiple references
+3. Sets synthetic `count` equal to number of references
+4. Optionally expands associated resources (e.g., security groups)
+5. Lets `create_multiple_resources()` handle numbering naturally
+
+**Configuration location**: `modules/detect_multi_instance_resources.py` → `MULTI_INSTANCE_PATTERNS`
+
+**Adding new patterns**:
+```python
+MULTI_INSTANCE_PATTERNS = {
+    "aws": [
+        {
+            "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
+            "trigger_attributes": ["subnets"],  # Trigger if len > 1
+            "also_expand_attributes": ["security_groups"],  # Also set count for these
+            "resource_pattern": r"\$\{(aws_\w+\.\w+)",  # Regex to extract references
+            "description": "ALB/NLB spanning multiple subnets",
+        },
+        # Add more AWS patterns...
+    ],
+    "azure": [
+        {
+            "resource_types": ["azurerm_lb"],
+            "trigger_attributes": ["zones"],
+            "also_expand_attributes": [],
+            "resource_pattern": r'"([^"]+)"',  # Zones are strings
+            "description": "Azure Load Balancer with multiple zones",
+        },
+        # Add more Azure patterns...
+    ],
+    # Add more providers...
+}
+```
+
+**Example**: AWS ALB with `subnets = [subnet_a, subnet_b]` triggers count=2, creating `aws_alb.elb~1` and `aws_alb.elb~2`.
 
 ### Resource Handlers Pattern
 
@@ -455,7 +500,90 @@ GitHub Actions workflow (`.github/workflows/lint-and-test.yml`) runs on push/PR 
 - **Unit tests**: Test individual functions in isolation (`tests/*_unit_test.py`)
 - **Integration tests**: Test full pipeline with real Terraform code (`tests/integration_test.py`)
 - **Provider tests**: Validate provider detection and config loading (`tests/test_provider_detection.py`, `tests/test_config_loader.py`)
+- **Validation tests**: Test output quality and catch rendering issues (`tests/test_validation.py`)
 - **Mark slow tests**: Use `@pytest.mark.slow` for tests that run terraform commands
+
+## Graph Validation
+
+**CRITICAL**: TerraVision includes validation checks to catch common issues that cause rendering problems or incorrect diagrams.
+
+### Validation Functions (modules/helpers.py)
+
+- `validate_no_shared_connections()`: Detects when multiple groups (subnets, AZs) share connections to the same resource, which causes graphviz rendering issues
+- `validate_graphdict()`: Aggregates all validation checks
+
+### Shared Connection Violations
+
+**Problem**: When multiple group nodes point to the same resource, graphviz cannot render correctly.
+
+Example violation:
+```json
+{
+  "aws_subnet.a": ["aws_instance.web"],
+  "aws_subnet.b": ["aws_instance.web"]
+}
+```
+
+**Solution**: Resources must be expanded into numbered instances:
+```json
+{
+  "aws_subnet.a": ["aws_instance.web~1"],
+  "aws_subnet.b": ["aws_instance.web~2"],
+  "aws_instance.web~1": [],
+  "aws_instance.web~2": []
+}
+```
+
+### Running Validation
+
+Validation tests run automatically in `tests/test_validation.py`:
+- `test_no_shared_connections_in_expected_outputs`: Validates all expected JSON files
+- These tests should NEVER be skipped or modified to pass
+- If validation fails, fix the handler to expand resources, don't regenerate expected JSON
+
+### When Implementing Handlers
+
+Before marking a task complete:
+1. Run validation tests: `poetry run pytest tests/test_validation.py -v`
+2. If validation fails, resources need to be expanded into numbered instances
+3. Add expansion logic to the handler (see numbered resources pattern below)
+4. DO NOT regenerate expected JSON to bypass validation
+
+## Expected JSON Modification Policy
+
+**CRITICAL RULE**: Expected test outputs (`tests/json/expected-*.json`) should RARELY be modified. When tests fail, the default assumption is that the code has a bug, NOT that the expected output is wrong.
+
+See `docs/EXPECTED_JSON_MODIFICATION_POLICY.md` for complete policy.
+
+### Quick Rules
+
+✅ **ONLY modify expected JSON when**:
+- Adding a new test case for a new feature
+- Explicit user request to change rendering behavior
+- Bug fix that improves accuracy (with user approval)
+- Validation failure with approved fix
+
+❌ **NEVER modify expected JSON to**:
+- Make failing tests pass without investigation
+- Fix side effects from other changes without fixing the handler
+- Bypass validation failures
+- "Improve" output without user approval
+
+### Required Process
+
+1. **Investigate WHY test failed** (don't just look at the diff)
+2. **Get user approval** before modifying expected JSON
+3. **Document thoroughly** in commit message
+4. **Validate no regressions** after modification
+
+### Red Flags
+
+🚩 Batch regeneration of multiple expected files
+🚩 "Tests failed → Regenerate expected → Tests pass ✓"
+🚩 No investigation of root cause
+🚩 "Looks fine to me" without user approval
+
+**If in doubt, ask the user before modifying expected JSON.**
 
 ## Known Constraints
 

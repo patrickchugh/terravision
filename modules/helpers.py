@@ -468,9 +468,6 @@ def remove_duplicate_words(string: str) -> str:
     return " ".join(unique_words_list)
 
 
-# 'aws_lb_target_group_attachment.mytg1["1"][1]'
-
-
 def remove_brackets_and_numbers(input_string: str) -> str:
     """Remove square brackets and their contents from string.
 
@@ -1236,3 +1233,135 @@ def remove_terraform_functions(text: str) -> str:
         return content
 
     return re.sub(pattern, process_expression, text)
+
+
+def validate_no_shared_connections(
+    graphdict: Dict[str, List[str]], tfdata: Dict[str, Any]
+) -> Tuple[bool, List[str]]:
+    """Validate that no two group nodes share connections to the same resource.
+
+    This is critical for graphviz rendering. When multiple groups (subnets, AZs, etc.)
+    point to the same resource, it creates rendering issues. Resources should be
+    expanded into numbered instances (~1, ~2, etc.) to match their parent groups.
+
+    However, some resources are INTENTIONALLY shared across groups:
+    - Subnet groups (ElastiCache, RDS) - span multiple subnets by design
+    - Route table associations - connect route tables to subnets
+    - Non-drawable resources (no icon) - don't appear in visual diagram
+
+    Args:
+        graphdict: Graph dictionary mapping nodes to their connections
+        tfdata: Terraform data dictionary with provider config
+
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+        - is_valid: True if no shared connections found, False otherwise
+        - list_of_errors: List of error messages describing violations
+
+    Example violations:
+        - aws_subnet.a → aws_instance.web
+        - aws_subnet.b → aws_instance.web
+        Result: ERROR - aws_instance.web should be aws_instance.web~1, aws_instance.web~2
+    """
+    config = _get_provider_config_constants(tfdata)
+    GROUP_NODES = config.get("GROUP_NODES", [])
+
+    # Resources that are INTENTIONALLY shared across groups (cross-group by design)
+    INTENTIONAL_SHARED_RESOURCES = [
+        "_subnet_group",  # aws_elasticache_subnet_group, aws_db_subnet_group, etc.
+        "_route_table_association",  # Route table associations
+        "_nat_gateway",  # NAT gateways can be shared
+        "_internet_gateway",  # Internet gateways span VPC
+        "_route_table",  # Route tables can be shared
+    ]
+
+    # Resources that are typically non-drawable (no icon/not visually rendered)
+    NON_DRAWABLE_RESOURCES = [
+        "aws_appautoscaling_policy",
+        "aws_appautoscaling_target",
+        "aws_iam_role_policy_attachment",
+        "aws_iam_policy",
+        "aws_cloudwatch_metric_alarm",
+        "aws_route_table_association",
+    ]
+
+    errors = []
+
+    # Build mapping of resource → list of parent groups
+    resource_to_parents = {}
+
+    for node, connections in graphdict.items():
+        # Check if this node is a group node
+        is_group = any(group_type in node for group_type in GROUP_NODES)
+        if not is_group:
+            continue
+
+        # For each connection from this group
+        for connection in connections:
+            # Skip if connection itself is a group or special node
+            if any(group_type in connection for group_type in GROUP_NODES):
+                continue
+            if connection.startswith("tv_") or connection.startswith("aws_group."):
+                continue
+
+            # Skip intentional shared resources (cross-group by design)
+            if any(
+                shared_type in connection
+                for shared_type in INTENTIONAL_SHARED_RESOURCES
+            ):
+                continue
+
+            # Skip non-drawable resources (not visually rendered)
+            if any(
+                non_drawable in connection for non_drawable in NON_DRAWABLE_RESOURCES
+            ):
+                continue
+
+            # Track which groups point to this connection
+            if connection not in resource_to_parents:
+                resource_to_parents[connection] = []
+            resource_to_parents[connection].append(node)
+
+    # Check for violations: any resource with multiple parent groups
+    for resource, parent_groups in resource_to_parents.items():
+        if len(parent_groups) > 1:
+            # Check if resource already has numbered instances (ends with ~N)
+            if "~" not in resource:
+                errors.append(
+                    f"SHARED CONNECTION VIOLATION: '{resource}' is connected from multiple groups: {parent_groups}. "
+                    f"This causes graphviz rendering issues. Resource should be expanded into numbered instances "
+                    f"({resource}~1, {resource}~2, etc.) to match each parent group."
+                )
+
+    return (len(errors) == 0, errors)
+
+
+def validate_graphdict(
+    graphdict: Dict[str, List[str]], tfdata: Dict[str, Any]
+) -> Tuple[bool, List[str]]:
+    """Run all validation checks on graphdict before rendering.
+
+    This function aggregates all validation checks to catch common issues
+    that cause rendering problems or incorrect diagrams.
+
+    Args:
+        graphdict: Graph dictionary mapping nodes to their connections
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Tuple of (is_valid, list_of_all_errors)
+    """
+    all_errors = []
+
+    # Check 1: No shared connections between groups
+    valid, errors = validate_no_shared_connections(graphdict, tfdata)
+    if not valid:
+        all_errors.extend(errors)
+
+    # Future checks can be added here:
+    # - Check for circular dependencies
+    # - Check for orphaned nodes
+    # - Check for invalid node names
+    # - etc.
+
+    return (len(all_errors) == 0, all_errors)
