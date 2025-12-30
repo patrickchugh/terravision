@@ -494,41 +494,149 @@ def remove_brackets_and_numbers(input_string: str) -> str:
 
 def pretty_name(name: str, show_title=True) -> str:
     """
-    Beautification for AWS Labels
+    Generate clean, human-readable labels for Terraform AWS resource names.
+
+    Examples:
+      - aws_cloudfront_distribution.this -> "Cloudfront Distribution"
+      - aws_lambda_function.cache_reader -> "Lambda Function - Cache Reader"
+      - aws_subnet.cache_a                -> "Subnet - Cache A"
+      - aws_efs_mount_target.this         -> "EFS Mount Target"
+      - aws_alb.elb~1                     -> "App Load Balancer - ELB"
+
+    Changed: max output length increased to 40 chars with a soft line-break
+    inserted after ~21 characters when the label is longer than that.
     """
-    resourcename = ""
-    skip_keywords = ["null_", "random", "time_sleep", "empty", "blank"]
-    if any(keyword in name for keyword in skip_keywords):
+    if not name:
+        return ""
+
+    skip_keywords = {"null_", "random", "time_sleep", "empty", "blank"}
+    if any(k in name for k in skip_keywords):
         return " "
+
+    # normalize and remove module prefixes / numbered suffixes and array indices
+    name = name.replace("tv_", "").replace("aws_", "")
+    name = get_no_module_no_number_name(name)
+    name = name.split("~", 1)[0]
+
+    m = re.match(r"^([a-z0-9_]+)(?:\.([a-z0-9_]+))?$", name)
+    if not m:
+        return (name or "")[:40]
+
+    resource_type = m.group(1) or ""
+    instance_raw = (m.group(2) or "").strip()
+
+    # placeholders we don't want as instance labels
+    placeholders = {"this", "default", "main", "resource"}
+    if instance_raw in placeholders:
+        instance_raw = ""
+
+    def _soft_break(s: str, soft_at: int, max_len: int) -> str:
+        """Insert a soft newline after the nearest word boundary after soft_at.
+        Do not cut a word. If no boundary found after soft_at, try before;
+        if none, return truncated string without introducing a newline."""
+        if len(s) <= soft_at:
+            return s if len(s) <= max_len else s[:max_len]
+        # prefer first space after soft_at
+        after = s.find(" ", soft_at)
+        if after != -1 and after <= max_len:
+            br = after
+        else:
+            # fallback to last space before soft_at
+            before = s.rfind(" ", 0, soft_at)
+            if before != -1:
+                br = before
+            else:
+                # no safe break available; return truncated string
+                return s[:max_len] if len(s) > max_len else s
+        # insert newline at the chosen space position
+        return s[:br] + "\n" + s[br + 1 :][: max_len - (1 if br < max_len else 0)]
+
+    # Special-case: availability zone formatting
+    # Input example: aws_az.availability_zone_us_east_1a~1
+    # Desired output: "Availability Zone US East 1a"
+    if resource_type == "az" and instance_raw.startswith("availability_zone_"):
+        zone = instance_raw[len("availability_zone_") :]
+        parts = [p for p in zone.split("_") if p]
+        acronyms = {a.lower(): a for a in ACRONYMS_LIST if a}
+        formatted_parts = []
+        for p in parts:
+            key = re.sub(r"[^\w]", "", p).lower()
+            if not key:
+                continue
+            if key in acronyms:
+                formatted_parts.append(acronyms[key].upper())
+                continue
+            if key.isalpha() and len(key) == 2:
+                formatted_parts.append(key.upper())
+                continue
+            mpart = re.match(r"^(\d+)([a-zA-Z])$", p)
+            if mpart:
+                formatted_parts.append(f"{mpart.group(1)}{mpart.group(2).lower()}")
+                continue
+            formatted_parts.append(p.title())
+        region_part = " ".join(formatted_parts)
+        az_label = f"Availability Zone {region_part}"
+        # soft-break and truncate to new limits
+        az_label = _soft_break(az_label, soft_at=21, max_len=40)
+        return az_label
+
+    # Prefer a full replacement for the whole resource_type (e.g. alb -> application_load_balancer)
+    left_raw = NAME_REPLACEMENTS.get(resource_type, "")
+    if left_raw:
+        if instance_raw and instance_raw.replace("_", "") == resource_type:
+            instance_raw = ""
     else:
-        name = name.replace("tv_aws_", "")
-        name = name.replace("aws_", "")
-    name = get_no_module_name(name)
-    servicename = name.split(".")[0]
-    service_label = name.split(".")[-1]
-    service_label = service_label.split("~")[0]
-    if servicename.startswith(service_label.replace("_", "")):
-        service_label = ""
-    if servicename in NAME_REPLACEMENTS.keys():
-        servicename = NAME_REPLACEMENTS[servicename]
-    if service_label.title == servicename:
-        service_label = ""
-    final_label = (service_label if show_title else "") + " " + servicename
-    final_label = final_label[:22]
-    final_label = final_label.replace("_", " ")
-    final_label = final_label.replace("~", " ")
-    final_label = final_label.replace("this", "").strip()
-    acronym = False
-    final_label = final_label.title()[:21]
-    for acro in ACRONYMS_LIST:
-        if acro.title() in final_label:
-            acronym = True
-            final_label = final_label.replace(acro.title(), acro.upper())
-    final_label = remove_duplicate_words(final_label)
-    if acronym:
-        return final_label
+        # split resource_type into service + suffix (lambda_function -> lambda + function)
+        parts = resource_type.split("_")
+        servicename = parts[0] if parts else resource_type
+        servicename_repl = NAME_REPLACEMENTS.get(servicename, servicename)
+        type_suffix = " ".join(parts[1:]) if len(parts) > 1 else ""
+        left_raw = (
+            f"{servicename_repl} {type_suffix}".strip()
+            if type_suffix
+            else servicename_repl
+        )
+        # avoid duplication when instance matches service/name replacement
+        if instance_raw and (
+            instance_raw.replace("_", "").lower() == servicename.lower()
+            or instance_raw.replace("_", "").lower()
+            == str(servicename_repl).replace(" ", "").lower()
+        ):
+            instance_raw = ""
+
+    left_part = (left_raw or "").replace("_", " ").strip()
+    right_part = (instance_raw or "").replace("_", " ").strip()
+
+    if show_title and right_part:
+        combined = f"{left_part} - {right_part}"
     else:
-        return str(final_label.title())[:21]
+        combined = left_part
+
+    combined = re.sub(r"\s+", " ", combined).strip()
+
+    # Title-case while preserving acronyms
+    acronyms = {a.lower(): a for a in ACRONYMS_LIST if a}
+    words = combined.split(" ")
+    processed_words = []
+    seen = set()
+    for w in words:
+        key = re.sub(r"[^\w]", "", w).lower()
+        if not key:
+            continue
+        if key in acronyms:
+            out = acronyms[key].upper()
+        else:
+            out = w.title()
+        if out.lower() not in seen:
+            seen.add(out.lower())
+            processed_words.append(out)
+
+    final = " ".join(processed_words).strip()
+
+    # Soft break after ~21 chars and increase max length to 40
+    final = _soft_break(final, soft_at=21, max_len=40)
+
+    return final
 
 
 def replace_variables(
