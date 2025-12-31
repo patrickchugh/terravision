@@ -1,0 +1,24 @@
+{
+    "aws_az.availability_zone_us_east_1a~1": [
+        "aws_subnet.private"
+    ],
+    "aws_group.shared_services": [
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.sagemaker_role": [
+        "aws_iam_role_policy_attachment.sagemaker_full_access",
+        "aws_sagemaker_notebook_instance.ml_notebook"
+    ],
+    "aws_iam_role_policy_attachment.sagemaker_full_access": [],
+    "aws_s3_bucket.notebook_storage": [],
+    "aws_sagemaker_notebook_instance.ml_notebook": [],
+    "aws_security_group.notebook_sg_ml_notebook": [
+        "aws_sagemaker_notebook_instance.ml_notebook"
+    ],
+    "aws_subnet.private": [
+        "aws_security_group.notebook_sg_ml_notebook"
+    ],
+    "aws_vpc.main": [
+        "aws_az.availability_zone_us_east_1a~1"
+    ]
+}

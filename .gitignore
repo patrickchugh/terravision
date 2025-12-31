@@ -56,10 +56,10 @@ architecture.dot.png
 tests/json/wrecked.json
 ai-backend-terraform/.terraform.lock.hcl
 ai-backend-terraform/lambda_function.zip
-ai-backend-terraform/terraform.tfstate
-ai-backend-terraform/terraform.tfstate.backup
-ai-backend-terraform/.terraform/*
-ai-backend-terraform/lambda/node_modules/*
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/*
+node_modules/*
 .specify/
 .terraform/
 .terraform.lock.hcl
@@ -68,3 +68,5 @@ CLAUDE.md
 .claude/
 /specs
 terraform.tfstate
+docs/EXTERNAL_FILE_LOADING_PROPOSAL.md
+*.zip

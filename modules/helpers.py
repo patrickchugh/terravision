@@ -137,11 +137,12 @@ def export_tfdata(tfdata: Dict[str, Any]) -> None:
         tfdata: Terraform data dictionary to export
     """
     tfdata["tempdir"] = str(tfdata["tempdir"])
-    with open("tfdata.json", "w") as file:
+    with open(Path.cwd() / "tfdata.json", "w") as file:
         json.dump(tfdata, file, indent=4)
+    out_path = (Path.cwd() / "tfdata.json").resolve()
     click.echo(
         click.style(
-            f"\nINFO: Debug flag used. Current state has been written to tfdata.json\n",
+            f"\nINFO: Debug flag used. Current state has been written to {out_path}\n",
             fg="yellow",
             bold=True,
         )

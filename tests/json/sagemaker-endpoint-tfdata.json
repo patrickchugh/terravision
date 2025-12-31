@@ -1,0 +1,2254 @@
+{
+    "codepath": "tests/fixtures/aws_terraform/sagemaker_endpoint",
+    "workdir": "/Users/patrick/git/terravision-privatedev",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "lambda-sagemaker-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.sagemaker_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "sagemaker_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "sagemaker-execution-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy.lambda_sagemaker_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "lambda_sagemaker_policy",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "lambda-sagemaker-policy"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.sagemaker_full_access",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "sagemaker_full_access",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess",
+                            "role": "sagemaker-execution-role"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_lambda_function.predictor",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "predictor",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "SAGEMAKER_ENDPOINT": "xgboost-endpoint"
+                                    }
+                                }
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "ml-predictor",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": null,
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.model_artifacts",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "model_artifacts",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "ml-model-artifacts",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_sagemaker_endpoint.xgboost_endpoint",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_endpoint",
+                        "name": "xgboost_endpoint",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "deployment_config": [],
+                            "endpoint_config_name": "xgboost-endpoint-config",
+                            "name": "xgboost-endpoint",
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "deployment_config": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_endpoint_configuration",
+                        "name": "xgboost_config",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "async_inference_config": [],
+                            "data_capture_config": [],
+                            "kms_key_arn": null,
+                            "name": "xgboost-endpoint-config",
+                            "production_variants": [
+                                {
+                                    "accelerator_type": null,
+                                    "container_startup_health_check_timeout_in_seconds": null,
+                                    "core_dump_config": [],
+                                    "enable_ssm_access": null,
+                                    "inference_ami_version": null,
+                                    "initial_instance_count": 1,
+                                    "initial_variant_weight": 1,
+                                    "instance_type": "ml.m5.large",
+                                    "managed_instance_scaling": [],
+                                    "model_data_download_timeout_in_seconds": null,
+                                    "model_name": "xgboost-model",
+                                    "routing_config": [],
+                                    "serverless_config": [],
+                                    "variant_name": "primary"
+                                }
+                            ],
+                            "shadow_production_variants": [],
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "async_inference_config": [],
+                            "data_capture_config": [],
+                            "production_variants": [
+                                {
+                                    "core_dump_config": [],
+                                    "managed_instance_scaling": [],
+                                    "routing_config": [],
+                                    "serverless_config": []
+                                }
+                            ],
+                            "shadow_production_variants": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_sagemaker_model.xgboost_model",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_model",
+                        "name": "xgboost_model",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "container": [],
+                            "enable_network_isolation": null,
+                            "name": "xgboost-model",
+                            "primary_container": [
+                                {
+                                    "container_hostname": null,
+                                    "environment": null,
+                                    "image": "433757028032.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest",
+                                    "image_config": [],
+                                    "inference_specification_name": null,
+                                    "mode": "SingleModel",
+                                    "model_data_url": "s3://ml-model-artifacts/model.tar.gz",
+                                    "model_package_name": null,
+                                    "multi_model_config": []
+                                }
+                            ],
+                            "tags": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "container": [],
+                            "inference_execution_config": [],
+                            "primary_container": [
+                                {
+                                    "image_config": [],
+                                    "model_data_source": [],
+                                    "multi_model_config": []
+                                }
+                            ],
+                            "tags_all": {},
+                            "vpc_config": []
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_iam_role.lambda_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "lambda-sagemaker-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.sagemaker_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "sagemaker_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "sagemaker-execution-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.lambda_sagemaker_policy",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "lambda_sagemaker_policy",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "lambda-sagemaker-policy",
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_iam_role_policy_attachment.sagemaker_full_access",
+                "mode": "managed",
+                "type": "aws_iam_role_policy_attachment",
+                "name": "sagemaker_full_access",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess",
+                        "role": "sagemaker-execution-role",
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_lambda_function.predictor",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "predictor",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "ml-predictor",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": null,
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": true,
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.model_artifacts",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "model_artifacts",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "ml-model-artifacts",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_sagemaker_endpoint.xgboost_endpoint",
+                "mode": "managed",
+                "type": "aws_sagemaker_endpoint",
+                "name": "xgboost_endpoint",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "deployment_config": [],
+                        "endpoint_config_name": "xgboost-endpoint-config",
+                        "name": "xgboost-endpoint",
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "deployment_config": [],
+                        "id": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "deployment_config": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                "mode": "managed",
+                "type": "aws_sagemaker_endpoint_configuration",
+                "name": "xgboost_config",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "async_inference_config": [],
+                        "data_capture_config": [],
+                        "kms_key_arn": null,
+                        "name": "xgboost-endpoint-config",
+                        "production_variants": [
+                            {
+                                "core_dump_config": [],
+                                "managed_instance_scaling": [],
+                                "routing_config": [],
+                                "serverless_config": []
+                            }
+                        ],
+                        "shadow_production_variants": [],
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "async_inference_config": [],
+                        "data_capture_config": [],
+                        "id": true,
+                        "name_prefix": true,
+                        "production_variants": [
+                            {
+                                "core_dump_config": [],
+                                "managed_instance_scaling": [],
+                                "routing_config": [],
+                                "serverless_config": [],
+                                "volume_size_in_gb": true
+                            }
+                        ],
+                        "shadow_production_variants": [],
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "async_inference_config": [],
+                        "data_capture_config": [],
+                        "production_variants": [
+                            {
+                                "core_dump_config": [],
+                                "managed_instance_scaling": [],
+                                "routing_config": [],
+                                "serverless_config": []
+                            }
+                        ],
+                        "shadow_production_variants": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_sagemaker_model.xgboost_model",
+                "mode": "managed",
+                "type": "aws_sagemaker_model",
+                "name": "xgboost_model",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "container": [],
+                        "enable_network_isolation": null,
+                        "name": "xgboost-model",
+                        "primary_container": [
+                            {
+                                "image_config": [],
+                                "model_data_source": [],
+                                "multi_model_config": []
+                            }
+                        ],
+                        "tags": null,
+                        "vpc_config": [],
+                        "arn": true,
+                        "execution_role_arn": true,
+                        "id": true,
+                        "inference_execution_config": [],
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "container": [],
+                        "execution_role_arn": true,
+                        "id": true,
+                        "inference_execution_config": true,
+                        "primary_container": [
+                            {
+                                "image_config": [],
+                                "model_data_source": true,
+                                "multi_model_config": []
+                            }
+                        ],
+                        "tags_all": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "container": [],
+                        "inference_execution_config": [],
+                        "primary_container": [
+                            {
+                                "image_config": [],
+                                "model_data_source": [],
+                                "multi_model_config": []
+                            }
+                        ],
+                        "tags_all": {},
+                        "vpc_config": []
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "lambda-sagemaker-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.sagemaker_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "sagemaker_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "sagemaker-execution-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.lambda_sagemaker_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "lambda_sagemaker_policy",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "lambda-sagemaker-policy"
+                            },
+                            "policy": {
+                                "references": [
+                                    "aws_sagemaker_endpoint.xgboost_endpoint.arn",
+                                    "aws_sagemaker_endpoint.xgboost_endpoint"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.id",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.sagemaker_full_access",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "sagemaker_full_access",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "policy_arn": {
+                                "constant_value": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.sagemaker_role.name",
+                                    "aws_iam_role.sagemaker_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.predictor",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "predictor",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "references": [
+                                            "aws_sagemaker_endpoint.xgboost_endpoint.name",
+                                            "aws_sagemaker_endpoint.xgboost_endpoint"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "ml-predictor"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.arn",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.model_artifacts",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "model_artifacts",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "ml-model-artifacts"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_sagemaker_endpoint.xgboost_endpoint",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_endpoint",
+                        "name": "xgboost_endpoint",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "endpoint_config_name": {
+                                "references": [
+                                    "aws_sagemaker_endpoint_configuration.xgboost_config.name",
+                                    "aws_sagemaker_endpoint_configuration.xgboost_config"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "xgboost-endpoint"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_endpoint_configuration",
+                        "name": "xgboost_config",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "xgboost-endpoint-config"
+                            },
+                            "production_variants": [
+                                {
+                                    "initial_instance_count": {
+                                        "constant_value": 1
+                                    },
+                                    "instance_type": {
+                                        "constant_value": "ml.m5.large"
+                                    },
+                                    "model_name": {
+                                        "references": [
+                                            "aws_sagemaker_model.xgboost_model.name",
+                                            "aws_sagemaker_model.xgboost_model"
+                                        ]
+                                    },
+                                    "variant_name": {
+                                        "constant_value": "primary"
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_sagemaker_model.xgboost_model",
+                        "mode": "managed",
+                        "type": "aws_sagemaker_model",
+                        "name": "xgboost_model",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "execution_role_arn": {
+                                "references": [
+                                    "aws_iam_role.sagemaker_role.arn",
+                                    "aws_iam_role.sagemaker_role"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "xgboost-model"
+                            },
+                            "primary_container": [
+                                {
+                                    "image": {
+                                        "constant_value": "433757028032.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest"
+                                    },
+                                    "model_data_url": {
+                                        "references": [
+                                            "aws_s3_bucket.model_artifacts.bucket",
+                                            "aws_s3_bucket.model_artifacts"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_iam_role.sagemaker_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.sagemaker_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.model_artifacts",
+                "attribute": [
+                    "bucket"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_sagemaker_model.xgboost_model",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_sagemaker_endpoint.xgboost_endpoint",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_sagemaker_endpoint.xgboost_endpoint",
+                "attribute": [
+                    "name"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-30T18:30:50Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_iam_role.lambda_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "lambda-sagemaker-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.sagemaker_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "sagemaker_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "sagemaker-execution-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.lambda_sagemaker_policy",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "lambda_sagemaker_policy",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "lambda-sagemaker-policy",
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_iam_role_policy_attachment.sagemaker_full_access",
+            "mode": "managed",
+            "type": "aws_iam_role_policy_attachment",
+            "name": "sagemaker_full_access",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess",
+                    "role": "sagemaker-execution-role",
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_lambda_function.predictor",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "predictor",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "ml-predictor",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": null,
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": true,
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.model_artifacts",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "model_artifacts",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "ml-model-artifacts",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_sagemaker_endpoint.xgboost_endpoint",
+            "mode": "managed",
+            "type": "aws_sagemaker_endpoint",
+            "name": "xgboost_endpoint",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "deployment_config": [],
+                    "endpoint_config_name": "xgboost-endpoint-config",
+                    "name": "xgboost-endpoint",
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "deployment_config": [],
+                    "id": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "deployment_config": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_sagemaker_endpoint_configuration.xgboost_config",
+            "mode": "managed",
+            "type": "aws_sagemaker_endpoint_configuration",
+            "name": "xgboost_config",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "async_inference_config": [],
+                    "data_capture_config": [],
+                    "kms_key_arn": null,
+                    "name": "xgboost-endpoint-config",
+                    "production_variants": [
+                        {
+                            "core_dump_config": [],
+                            "managed_instance_scaling": [],
+                            "routing_config": [],
+                            "serverless_config": []
+                        }
+                    ],
+                    "shadow_production_variants": [],
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "async_inference_config": [],
+                    "data_capture_config": [],
+                    "id": true,
+                    "name_prefix": true,
+                    "production_variants": [
+                        {
+                            "core_dump_config": [],
+                            "managed_instance_scaling": [],
+                            "routing_config": [],
+                            "serverless_config": [],
+                            "volume_size_in_gb": true
+                        }
+                    ],
+                    "shadow_production_variants": [],
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "async_inference_config": [],
+                    "data_capture_config": [],
+                    "production_variants": [
+                        {
+                            "core_dump_config": [],
+                            "managed_instance_scaling": [],
+                            "routing_config": [],
+                            "serverless_config": []
+                        }
+                    ],
+                    "shadow_production_variants": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_sagemaker_model.xgboost_model",
+            "mode": "managed",
+            "type": "aws_sagemaker_model",
+            "name": "xgboost_model",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "container": [],
+                    "enable_network_isolation": null,
+                    "name": "xgboost-model",
+                    "primary_container": [
+                        {
+                            "image_config": [],
+                            "model_data_source": [],
+                            "multi_model_config": []
+                        }
+                    ],
+                    "tags": null,
+                    "vpc_config": [],
+                    "arn": true,
+                    "execution_role_arn": true,
+                    "id": true,
+                    "inference_execution_config": [],
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "container": [],
+                    "execution_role_arn": true,
+                    "id": true,
+                    "inference_execution_config": true,
+                    "primary_container": [
+                        {
+                            "image_config": [],
+                            "model_data_source": true,
+                            "multi_model_config": []
+                        }
+                    ],
+                    "tags_all": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "container": [],
+                    "inference_execution_config": [],
+                    "primary_container": [
+                        {
+                            "image_config": [],
+                            "model_data_source": [],
+                            "multi_model_config": []
+                        }
+                    ],
+                    "tags_all": {},
+                    "vpc_config": []
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_iam_role.lambda_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_iam_role.sagemaker_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.sagemaker_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_iam_role_policy.lambda_sagemaker_policy",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.lambda_sagemaker_policy",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_iam_role_policy_attachment.sagemaker_full_access",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy_attachment.sagemaker_full_access",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_lambda_function.predictor",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.predictor",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_s3_bucket.model_artifacts",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.model_artifacts",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_sagemaker_endpoint.xgboost_endpoint",
+                "fontname": "sans-serif",
+                "label": "aws_sagemaker_endpoint.xgboost_endpoint",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                "fontname": "sans-serif",
+                "label": "aws_sagemaker_endpoint_configuration.xgboost_config",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "aws_sagemaker_model.xgboost_model",
+                "fontname": "sans-serif",
+                "label": "aws_sagemaker_model.xgboost_model",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 2,
+                "head": 0
+            },
+            {
+                "_gvid": 1,
+                "tail": 2,
+                "head": 6
+            },
+            {
+                "_gvid": 2,
+                "tail": 3,
+                "head": 1
+            },
+            {
+                "_gvid": 3,
+                "tail": 4,
+                "head": 0
+            },
+            {
+                "_gvid": 4,
+                "tail": 4,
+                "head": 6
+            },
+            {
+                "_gvid": 5,
+                "tail": 6,
+                "head": 7
+            },
+            {
+                "_gvid": 6,
+                "tail": 7,
+                "head": 8
+            },
+            {
+                "_gvid": 7,
+                "tail": 8,
+                "head": 1
+            },
+            {
+                "_gvid": 8,
+                "tail": 8,
+                "head": 5
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_iam_role.lambda_role": [
+            "aws_iam_role_policy.lambda_sagemaker_policy",
+            "aws_lambda_function.predictor"
+        ],
+        "aws_iam_role.sagemaker_role": [
+            "aws_iam_role_policy_attachment.sagemaker_full_access",
+            "aws_sagemaker_model.xgboost_model"
+        ],
+        "aws_iam_role_policy.lambda_sagemaker_policy": [],
+        "aws_iam_role_policy_attachment.sagemaker_full_access": [],
+        "aws_lambda_function.predictor": [],
+        "aws_s3_bucket.model_artifacts": [
+            "aws_sagemaker_model.xgboost_model"
+        ],
+        "aws_sagemaker_endpoint.xgboost_endpoint": [
+            "aws_iam_role_policy.lambda_sagemaker_policy",
+            "aws_lambda_function.predictor"
+        ],
+        "aws_sagemaker_endpoint_configuration.xgboost_config": [
+            "aws_sagemaker_endpoint.xgboost_endpoint"
+        ],
+        "aws_sagemaker_model.xgboost_model": [
+            "aws_sagemaker_endpoint_configuration.xgboost_config"
+        ]
+    },
+    "meta_data": {
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-sagemaker-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.sagemaker_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "sagemaker-execution-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.lambda_sagemaker_policy": {
+            "name": "lambda-sagemaker-policy",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.sagemaker_full_access": {
+            "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess",
+            "role": "sagemaker-execution-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.predictor": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "ml-predictor",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.model_artifacts": {
+            "bucket": "ml-model-artifacts",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_sagemaker_endpoint.xgboost_endpoint": {
+            "deployment_config": [],
+            "endpoint_config_name": "xgboost-endpoint-config",
+            "name": "xgboost-endpoint",
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_sagemaker_endpoint_configuration.xgboost_config": {
+            "async_inference_config": [],
+            "data_capture_config": [],
+            "kms_key_arn": null,
+            "name": "xgboost-endpoint-config",
+            "production_variants": [
+                {
+                    "core_dump_config": [],
+                    "managed_instance_scaling": [],
+                    "routing_config": [],
+                    "serverless_config": []
+                }
+            ],
+            "shadow_production_variants": [],
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_sagemaker_model.xgboost_model": {
+            "container": [],
+            "enable_network_isolation": null,
+            "name": "xgboost-model",
+            "primary_container": [
+                {
+                    "image_config": [],
+                    "model_data_source": [],
+                    "multi_model_config": []
+                }
+            ],
+            "tags": null,
+            "vpc_config": [],
+            "arn": true,
+            "execution_role_arn": true,
+            "id": true,
+            "inference_execution_config": [],
+            "tags_all": {},
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_iam_role.lambda_role",
+        "aws_iam_role.sagemaker_role",
+        "aws_iam_role_policy.lambda_sagemaker_policy",
+        "aws_iam_role_policy_attachment.sagemaker_full_access",
+        "aws_lambda_function.predictor",
+        "aws_s3_bucket.model_artifacts",
+        "aws_sagemaker_endpoint.xgboost_endpoint",
+        "aws_sagemaker_endpoint_configuration.xgboost_config",
+        "aws_sagemaker_model.xgboost_model"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_iam_role.lambda_role": [
+            "aws_iam_role_policy.lambda_sagemaker_policy",
+            "aws_lambda_function.predictor"
+        ],
+        "aws_iam_role.sagemaker_role": [
+            "aws_iam_role_policy_attachment.sagemaker_full_access",
+            "aws_sagemaker_model.xgboost_model"
+        ],
+        "aws_iam_role_policy.lambda_sagemaker_policy": [],
+        "aws_iam_role_policy_attachment.sagemaker_full_access": [],
+        "aws_lambda_function.predictor": [],
+        "aws_s3_bucket.model_artifacts": [
+            "aws_sagemaker_model.xgboost_model"
+        ],
+        "aws_sagemaker_endpoint.xgboost_endpoint": [
+            "aws_iam_role_policy.lambda_sagemaker_policy",
+            "aws_lambda_function.predictor"
+        ],
+        "aws_sagemaker_endpoint_configuration.xgboost_config": [
+            "aws_sagemaker_endpoint.xgboost_endpoint"
+        ],
+        "aws_sagemaker_model.xgboost_model": [
+            "aws_sagemaker_endpoint_configuration.xgboost_config"
+        ]
+    },
+    "original_metadata": {
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-sagemaker-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.sagemaker_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sagemaker.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "sagemaker-execution-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.lambda_sagemaker_policy": {
+            "name": "lambda-sagemaker-policy",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.sagemaker_full_access": {
+            "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess",
+            "role": "sagemaker-execution-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.predictor": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "ml-predictor",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.model_artifacts": {
+            "bucket": "ml-model-artifacts",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_sagemaker_endpoint.xgboost_endpoint": {
+            "deployment_config": [],
+            "endpoint_config_name": "xgboost-endpoint-config",
+            "name": "xgboost-endpoint",
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_sagemaker_endpoint_configuration.xgboost_config": {
+            "async_inference_config": [],
+            "data_capture_config": [],
+            "kms_key_arn": null,
+            "name": "xgboost-endpoint-config",
+            "production_variants": [
+                {
+                    "core_dump_config": [],
+                    "managed_instance_scaling": [],
+                    "routing_config": [],
+                    "serverless_config": []
+                }
+            ],
+            "shadow_production_variants": [],
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_sagemaker_model.xgboost_model": {
+            "container": [],
+            "enable_network_isolation": null,
+            "name": "xgboost-model",
+            "primary_container": [
+                {
+                    "image_config": [],
+                    "model_data_source": [],
+                    "multi_model_config": []
+                }
+            ],
+            "tags": null,
+            "vpc_config": [],
+            "arn": true,
+            "execution_role_arn": true,
+            "id": true,
+            "inference_execution_config": [],
+            "tags_all": {},
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "tests/fixtures/aws_terraform/sagemaker_endpoint/main.tf": [
+            {
+                "aws_s3_bucket": {
+                    "model_artifacts": {
+                        "bucket": "ml-model-artifacts"
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "sagemaker_role": {
+                        "name": "sagemaker-execution-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'sagemaker.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy_attachment": {
+                    "sagemaker_full_access": {
+                        "role": "${aws_iam_role.sagemaker_role.name}",
+                        "policy_arn": "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+                    }
+                }
+            },
+            {
+                "aws_sagemaker_model": {
+                    "xgboost_model": {
+                        "name": "xgboost-model",
+                        "execution_role_arn": "${aws_iam_role.sagemaker_role.arn}",
+                        "primary_container": [
+                            {
+                                "image": "433757028032.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest",
+                                "model_data_url": "s3://${aws_s3_bucket.model_artifacts.bucket}/model.tar.gz"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_sagemaker_endpoint_configuration": {
+                    "xgboost_config": {
+                        "name": "xgboost-endpoint-config",
+                        "production_variants": [
+                            {
+                                "variant_name": "primary",
+                                "model_name": "${aws_sagemaker_model.xgboost_model.name}",
+                                "initial_instance_count": 1,
+                                "instance_type": "ml.m5.large"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_sagemaker_endpoint": {
+                    "xgboost_endpoint": {
+                        "name": "xgboost-endpoint",
+                        "endpoint_config_name": "${aws_sagemaker_endpoint_configuration.xgboost_config.name}"
+                    }
+                }
+            },
+            {
+                "aws_lambda_function": {
+                    "predictor": {
+                        "filename": "lambda.zip",
+                        "function_name": "ml-predictor",
+                        "role": "${aws_iam_role.lambda_role.arn}",
+                        "handler": "index.handler",
+                        "runtime": "python3.11",
+                        "environment": [
+                            {
+                                "variables": {
+                                    "SAGEMAKER_ENDPOINT": "${aws_sagemaker_endpoint.xgboost_endpoint.name}"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda_role": {
+                        "name": "lambda-sagemaker-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "lambda_sagemaker_policy": {
+                        "name": "lambda-sagemaker-policy",
+                        "role": "${aws_iam_role.lambda_role.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['sagemaker:InvokeEndpoint'], 'Resource': '${aws_sagemaker_endpoint.xgboost_endpoint.arn}'}]})}"
+                    }
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpcyh0r8nc'>"
+}

@@ -34,7 +34,15 @@ if not os.path.exists(MODULE_DIR):
     os.makedirs(MODULE_DIR)
 
 # Terraform sections to extract during parsing
-EXTRACT: List[str] = ["module", "output", "variable", "locals", "resource", "data"]
+EXTRACT: List[str] = [
+    "module",
+    "output",
+    "variable",
+    "locals",
+    "resource",
+    "data",
+    "provider",
+]
 
 
 def find_tf_files(

@@ -22,7 +22,10 @@
       "Bash(terraform plan:*)",
       "Bash(for test in wordpress eks-basic elasticache-redis elasticache-replication)",
       "Bash(do)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(bash:*)",
+      "Bash(mkdir:*)",
+      "Bash(for test in wordpress bastion eks-basic static-website api-gateway-rest-lambda eventbridge-lambda sns-sqs-lambda dynamodb-streams-lambda elasticache-redis elasticache-replication cognito-api-gateway waf-alb sagemaker-endpoint sagemaker-notebook-vpc)"
     ]
   }
 }

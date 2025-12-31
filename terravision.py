@@ -21,7 +21,6 @@ import modules.tfwrapper as tfwrapper
 import modules.resource_handlers as resource_handlers
 from modules.config_loader import load_config
 from modules.provider_detector import detect_providers, get_primary_provider_or_default
-from modules import detect_multi_instance_resources
 
 
 def _get_version() -> str:
@@ -168,7 +167,7 @@ def _enrich_graph_data(
     tfdata = graphmaker.add_relations(tfdata)
     tfdata = graphmaker.consolidate_nodes(tfdata)
     tfdata = annotations.add_annotations(tfdata)
-    tfdata = detect_multi_instance_resources.detect_and_set_counts(tfdata)
+    tfdata = graphmaker.detect_and_set_counts(tfdata)
     tfdata = graphmaker.handle_special_resources(tfdata)
     tfdata = graphmaker.handle_variants(tfdata)
     tfdata = graphmaker.create_multiple_resources(tfdata)

@@ -675,7 +675,7 @@ def group_shared_services(
 
     # Add default IAM service
     if "aws_iam_group.iam" not in tfdata["graphdict"][group_name]:
-        tfdata["graphdict"][group_name].append("aws_iam_group.iam")
+        tfdata["graphdict"][group_name].append("aws_iam_group.of_services")
 
     return tfdata
 

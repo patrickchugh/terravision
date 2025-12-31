@@ -9,7 +9,7 @@
     ],
     "aws_group.shared_services": [
         "aws_cloudwatch_log_group.cloudwatch",
-        "aws_iam_group.iam"
+        "aws_iam_group.of_services"
     ],
     "aws_iam_role.lambda_role": [
         "aws_iam_role_policy.lambda_dynamodb_policy",

@@ -174,6 +174,7 @@ AWS_GROUP_NODES = [
     "aws_subnet",
     "aws_security_group",
     "tv_aws_onprem",
+    "tv_aws_region",
 ]
 
 # Nodes to be drawn first inside the AWS Cloud but outside any subnets or VPCs
@@ -265,6 +266,7 @@ AWS_REVERSE_ARROW_LIST = [
     "aws_route53",
     "aws_cloudfront",
     "aws_cloudwatch_event",  # EventBridge emits events TO Lambda (reverse direction)
+    "aws_sfn_state_machine",  # Step Functions orchestrates services (reverse direction)
     "aws_vpc.",
     "aws_subnet.",
     "aws_appautoscaling_target",
@@ -281,6 +283,8 @@ AWS_FORCED_ORIGIN = [
     "aws_cloudfront_distribution",
     "aws_cloudwatch_event",  # EventBridge emits events (source only, not destination)
     "aws_sns_topic",  # SNS emits messages to subscribers (source only, not destination)
+    "aws_sfn_state_machine",  # Step Functions orchestrates services (source only, not destination)
+    "aws_s3_bucket_notification",  # S3 notifications trigger services (source only, not destination)
     "aws_wafv2_web_acl",  # WAF protects resources (source only, not destination)
     "aws_waf_web_acl",  # WAF Classic protects resources (source only, not destination)
 ]
@@ -327,10 +331,11 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_rds_mysql",
     "aws_rds_postgres",
 ]
+AWS_NEVER_DRAW_LINE = []
+AWS_DISCONNECT_LIST = []
+# AWS_NEVER_DRAW_LINE = ["aws_iam_role_policy"]
 
-AWS_NEVER_DRAW_LINE = ["aws_iam_role_policy"]
-
-AWS_DISCONNECT_LIST = ["aws_iam_role_policy"]
+# AWS_DISCONNECT_LIST = ["aws_iam_role_policy"]
 
 # Resources that should be hidden from the diagram by default
 AWS_HIDE_NODES = ["aws_security_group_rule"]
@@ -341,31 +346,33 @@ AWS_SKIP_SINGULAR_EXPANSION = [
     "aws_eks_fargate_profile",
     "aws_eks_node_group",
 ]
-
 AWS_ACRONYMS_LIST = [
     "acm",
+    "acm",
     "alb",
+    "api",
     "db",
+    "dx",
+    "ebs",
     "ec2",
-    "kms",
-    "elb",
+    "ecr",
+    "ecs",
+    "efs",
     "eip",
     "eks",
-    "ecr",
-    "nlb",
-    "efs",
-    "ebs",
+    "elb",
+    "etl",
+    "igw",
     "iam",
     "ip",
-    "igw",
-    "api",
-    "acm",
-    "ecs",
-    "rds",
+    "kms",
     "lb",
-    "alb",
-    "nlb",
     "nat",
+    "nlb",
+    "rds",
+    "s3",
+    "sns",
+    "sqs",
     "vpc",
 ]
 
@@ -419,6 +426,30 @@ You are an AWS architect that needs to summarise this JSON of Terraform AWS reso
 4. Provide an overall summary of the architecture and what the system does
 
 """
+
+# Configuration patterns for multi-instance resource detection
+# Each pattern defines:
+# - resource_types: List of Terraform resource types to check
+# - trigger_attributes: Attributes that trigger expansion (e.g., "subnets", "zones")
+# - also_expand_attributes: Attributes containing related resources to also expand
+# - resource_pattern: Regex pattern to extract resource references from attribute values
+AWS_MULTI_INSTANCE_PATTERNS = [
+    {
+        "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
+        "trigger_attributes": ["subnets"],
+        "also_expand_attributes": ["security_groups"],
+        "resource_pattern": r"\$\{(aws_\w+\.\w+)",
+        "description": "ALB/NLB spanning multiple subnets",
+    },
+    {
+        "resource_types": ["aws_ecs_service"],
+        "trigger_attributes": ["subnets"],
+        "also_expand_attributes": ["security_groups"],
+        "resource_pattern": r"\$\{(aws_\w+\.\w+)",
+        "description": "ECS service spanning multiple subnets",
+    },
+    # Add more AWS patterns as needed
+]
 
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"

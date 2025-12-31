@@ -2017,3 +2017,153 @@ def aws_handle_waf_associations(tfdata: dict) -> dict:
 
     tfdata["graphdict"] = graphdict
     return tfdata
+
+
+def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Group S3 buckets by region for cross-region replication scenarios.
+
+    Creates tv_aws_region.<region> nodes and moves S3 buckets into their respective
+    regions based on provider alias configuration.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with regional grouping for S3 buckets
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    all_provider = tfdata.get("all_provider", {})
+    all_resource = tfdata.get("all_resource", {})
+
+    # Build provider alias -> region mapping
+    provider_region_map = {}
+    for filepath, provider_list in all_provider.items():
+        for provider_block in provider_list:
+            for provider_type, provider_config in provider_block.items():
+                if provider_type == "aws" and isinstance(provider_config, dict):
+                    region = provider_config.get("region")
+                    alias = provider_config.get("alias")
+                    if region and alias:
+                        provider_region_map[alias] = region
+
+    # If no provider mappings found, skip regional grouping
+    if not provider_region_map:
+        return tfdata
+
+    # Track which buckets belong to which regions
+    bucket_region_map = {}
+
+    # Find S3 buckets and their provider aliases
+    for filepath, resource_list in all_resource.items():
+        for resource_dict in resource_list:
+            if "aws_s3_bucket" in resource_dict:
+                for bucket_name, bucket_config in resource_dict[
+                    "aws_s3_bucket"
+                ].items():
+                    if isinstance(bucket_config, dict):
+                        provider_ref = bucket_config.get("provider", "")
+                        # Extract alias from provider reference like "${aws.primary}"
+                        if provider_ref:
+                            # Remove ${} and extract alias (e.g., "aws.primary" -> "primary")
+                            clean_ref = provider_ref.replace("${", "").replace("}", "")
+                            if "." in clean_ref:
+                                alias = clean_ref.split(".", 1)[1]
+                                region = provider_region_map.get(alias)
+                                if region:
+                                    bucket_resource_name = (
+                                        f"aws_s3_bucket.{bucket_name}"
+                                    )
+                                    bucket_region_map[bucket_resource_name] = region
+
+    # If multiple regions detected, create regional grouping
+    unique_regions = set(bucket_region_map.values())
+    if len(unique_regions) > 1:
+        # Create tv_aws_region nodes for each region
+        for region in unique_regions:
+            region_node = f"tv_aws_region.{region}"
+            if region_node not in graphdict:
+                graphdict[region_node] = []
+                meta_data[region_node] = {"region": region}
+
+        # Move S3 buckets (and related versioning resources) into their regions
+        for bucket_name, region in bucket_region_map.items():
+            region_node = f"tv_aws_region.{region}"
+
+            # Add bucket to region node's children
+            if bucket_name in graphdict and bucket_name not in graphdict[region_node]:
+                graphdict[region_node].append(bucket_name)
+
+            # Also move versioning resources to the same region
+            versioning_resource = bucket_name.replace(
+                "aws_s3_bucket.", "aws_s3_bucket_versioning."
+            )
+            if (
+                versioning_resource in graphdict
+                and versioning_resource not in graphdict[region_node]
+            ):
+                graphdict[region_node].append(versioning_resource)
+
+        # Create direct source → destination bucket connections for replication
+        for filepath, resource_list in all_resource.items():
+            for resource_dict in resource_list:
+                if "aws_s3_bucket_replication_configuration" in resource_dict:
+                    for repl_name, repl_config in resource_dict[
+                        "aws_s3_bucket_replication_configuration"
+                    ].items():
+                        if isinstance(repl_config, dict):
+                            # Extract source bucket reference (e.g., "${aws_s3_bucket.source.id}")
+                            source_ref = repl_config.get("bucket", "")
+                            source_bucket = None
+                            if "${" in source_ref and "}" in source_ref:
+                                # Parse "${aws_s3_bucket.source.id}" -> "aws_s3_bucket.source"
+                                ref_content = source_ref.replace("${", "").replace(
+                                    "}", ""
+                                )
+                                if ".id" in ref_content or ".bucket" in ref_content:
+                                    source_bucket = ref_content.rsplit(".", 1)[0]
+                                else:
+                                    source_bucket = ref_content
+
+                            # Extract destination bucket from rule configuration
+                            destination_bucket = None
+                            rules = repl_config.get("rule", [])
+                            if rules and len(rules) > 0:
+                                rule = rules[0]
+                                if isinstance(rule, dict):
+                                    dest_list = rule.get("destination", [])
+                                    # destination is an array of dicts
+                                    if (
+                                        isinstance(dest_list, list)
+                                        and len(dest_list) > 0
+                                    ):
+                                        dest_config = dest_list[0]
+                                        if isinstance(dest_config, dict):
+                                            dest_ref = dest_config.get("bucket", "")
+                                            if "${" in dest_ref and "}" in dest_ref:
+                                                # Parse "${aws_s3_bucket.destination.arn}" -> "aws_s3_bucket.destination"
+                                                ref_content = dest_ref.replace(
+                                                    "${", ""
+                                                ).replace("}", "")
+                                                if (
+                                                    ".arn" in ref_content
+                                                    or ".bucket" in ref_content
+                                                ):
+                                                    destination_bucket = (
+                                                        ref_content.rsplit(".", 1)[0]
+                                                    )
+                                                else:
+                                                    destination_bucket = ref_content
+
+                            # Create direct source → destination connection
+                            if source_bucket and destination_bucket:
+                                if (
+                                    source_bucket in graphdict
+                                    and destination_bucket
+                                    not in graphdict.get(source_bucket, [])
+                                ):
+                                    graphdict[source_bucket].append(destination_bucket)
+
+    tfdata["graphdict"] = graphdict
+    tfdata["meta_data"] = meta_data
+    return tfdata

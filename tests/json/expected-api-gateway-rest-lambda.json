@@ -3,7 +3,7 @@
     "aws_cloudwatch_log_group.cloudwatch": [],
     "aws_group.shared_services": [
         "aws_cloudwatch_log_group.cloudwatch",
-        "aws_iam_group.iam"
+        "aws_iam_group.of_services"
     ],
     "aws_iam_role.lambda_role": [
         "aws_lambda_function.api_handler"

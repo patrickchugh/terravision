@@ -250,65 +250,6 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
-    # Hybrid Handlers (11/14)
-    # REMOVED: API Gateway handlers don't add value since integration URIs aren't resolved in terraform plan
-    # The baseline already shows Lambda → Integration connections via Terraform dependencies
-    # "aws_api_gateway_rest_api": {
-    #     "description": "Clean up API Gateway deployments/stages (consolidation via AWS_CONSOLIDATED_NODES)",
-    #     "transformations": [
-    #         {
-    #             "operation": "delete_nodes",
-    #             "params": {
-    #                 "resource_pattern": "aws_api_gateway_stage",
-    #                 "remove_from_parents": True,
-    #             },
-    #         },
-    #         {
-    #             "operation": "delete_nodes",
-    #             "params": {
-    #                 "resource_pattern": "aws_api_gateway_deployment",
-    #                 "remove_from_parents": True,
-    #             },
-    #         },
-    #     ],
-    # },
-    # REMOVED: API Gateway v2 handler - same issue as REST API (URIs not resolved in terraform plan)
-    # "aws_apigatewayv2_api": {
-    #     "description": "Clean up API Gateway v2 stages (consolidation via AWS_CONSOLIDATED_NODES)",
-    #     "transformations": [
-    #         {
-    #             "operation": "delete_nodes",
-    #             "params": {
-    #                 "resource_pattern": "aws_apigatewayv2_stage",
-    #                 "remove_from_parents": True,
-    #             },
-    #         },
-    #     ],
-    # },
-    # NOTE (Phase 4): EventBridge, SNS, and Lambda ESM handlers NOT NEEDED
-    # Baseline validation proved these patterns work correctly without custom handlers.
-    # - EventBridge: Was broken due to overly broad "aws_cloudwatch" consolidation pattern
-    #   Fixed by changing pattern to "aws_cloudwatch_log" in AWS_CONSOLIDATED_NODES
-    # - SNS: Baseline Terraform graph already shows topics → subscriptions → SQS/Lambda correctly
-    # - Lambda ESM: Baseline already shows DynamoDB/Kinesis/SQS → ESM → Lambda correctly
-    # CO-005.1: "Most services MUST NOT have custom handlers" - validated!
-    # NOTE: Cognito handler temporarily disabled for baseline validation
-    # Will re-enable after determining if custom handler is needed
-    # "aws_cognito_user_pool": {
-    #     "description": "Hybrid: Link Cognito User Pools to Lambda triggers and App Clients",
-    #     "transformations": [
-    #         {
-    #             "operation": "link_by_metadata_pattern",
-    #             "params": {
-    #                 "source_pattern": "aws_cognito_user_pool",
-    #                 "target_resource": "aws_lambda_function",
-    #                 "metadata_key": "lambda_config",
-    #                 "metadata_value_pattern": "arn:aws:lambda",
-    #             },
-    #         },
-    #     ],
-    #     "additional_handler_function": "aws_handle_cognito_triggers",
-    # },
     "aws_wafv2_web_acl": {
         "description": "Hybrid: Link WAF Web ACLs to protected resources via association parsing",
         # ⚠️ BASELINE VALIDATION RESULT: Baseline INSUFFICIENT
@@ -317,7 +258,7 @@ RESOURCE_HANDLER_CONFIGS = {
         "additional_handler_function": "aws_handle_waf_associations",
     },
     "aws_sagemaker_endpoint": {
-        "description": "Hybrid: Link SageMaker endpoints to models (consolidation via AWS_CONSOLIDATED_NODES)",
+        "description": "Config-Only: Delete endpoint_configuration (consolidation via AWS_CONSOLIDATED_NODES)",
         "transformations": [
             {
                 "operation": "delete_nodes",
@@ -327,10 +268,13 @@ RESOURCE_HANDLER_CONFIGS = {
                 },
             },
         ],
-        "additional_handler_function": "aws_handle_sagemaker_models",
+    },
+    "aws_s3_bucket": {
+        "description": "Pure Function: Group S3 buckets by region for cross-region replication scenarios",
+        "additional_handler_function": "aws_handle_s3_cross_region_grouping",
     },
     "aws_s3_bucket_notification": {
-        "description": "Hybrid: Link S3 bucket notifications to Lambda, SNS, SQS",
+        "description": "Config-Only: Link S3 notifications to targets + create transitive S3 bucket → target links",
         "transformations": [
             {
                 "operation": "link_by_metadata_pattern",
@@ -359,8 +303,37 @@ RESOURCE_HANDLER_CONFIGS = {
                     "metadata_value_pattern": "arn:aws:sqs",
                 },
             },
+            # Create transitive links: S3 bucket → Lambda (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_lambda_function",
+                    "remove_intermediate": False,
+                },
+            },
+            # Create transitive links: S3 bucket → SNS (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_sns_topic",
+                    "remove_intermediate": False,
+                },
+            },
+            # Create transitive links: S3 bucket → SQS (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_sqs_queue",
+                    "remove_intermediate": False,
+                },
+            },
         ],
-        "additional_handler_function": "aws_handle_s3_notifications",
     },
     "aws_secretsmanager_secret": {
         "description": "Hybrid: Link Secrets Manager to rotation Lambda functions",
@@ -375,7 +348,6 @@ RESOURCE_HANDLER_CONFIGS = {
                 },
             },
         ],
-        "additional_handler_function": "aws_handle_secrets_manager",
     },
     "aws_glue_catalog_table": {
         "description": "Hybrid: Link Glue Catalog tables to databases and S3 buckets",
@@ -393,7 +365,7 @@ RESOURCE_HANDLER_CONFIGS = {
         "additional_handler_function": "aws_handle_glue_catalog",
     },
     "aws_appsync_graphql_api": {
-        "description": "Hybrid: Link AppSync APIs to data sources (consolidation via AWS_CONSOLIDATED_NODES)",
+        "description": "Config-Only: Consolidate AppSync resources + delete resolver nodes (consolidation via AWS_CONSOLIDATED_NODES)",
         "transformations": [
             {
                 "operation": "delete_nodes",
@@ -403,20 +375,15 @@ RESOURCE_HANDLER_CONFIGS = {
                 },
             },
         ],
-        "additional_handler_function": "aws_handle_appsync_datasources",
-    },
-    # Pure Function Handlers (2/14)
-    "aws_sfn_state_machine": {
-        "description": "Pure Function: Parse state machine ASL JSON to extract Lambda/service invocations",
-        # Complex conditional logic for ASL parsing, state traversal, and selective linking
-        # Cannot be expressed with generic transformers due to nested JSON parsing
-        "additional_handler_function": "aws_handle_step_functions",
+        # Baseline + consolidation sufficient - no custom handler needed
+        # "additional_handler_function": "aws_handle_appsync_datasources",
     },
     "aws_kinesis_firehose_delivery_stream": {
         "description": "Pure Function: Parse Firehose configuration for S3/Redshift/Elasticsearch destinations",
         # Domain-specific parsing of complex nested configuration blocks
         # Multiple conditional branches based on destination type
-        "additional_handler_function": "aws_handle_firehose",
+        # TEMPORARILY COMMENTED OUT FOR BASELINE VALIDATION (Phase 12)
+        # "additional_handler_function": "aws_handle_firehose",
     },
     "aws_lambda_event_source_mapping": {
         "description": "Pure Function: Create direct connections from event sources (SQS, Kinesis, DynamoDB) to Lambda functions",

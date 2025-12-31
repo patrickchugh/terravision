@@ -1,0 +1,1906 @@
+{
+    "codepath": "tests/fixtures/aws_terraform/stepfunctions_multi_service",
+    "workdir": "/Users/patrick/git/terravision-privatedev",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_dynamodb_table.orders",
+                        "mode": "managed",
+                        "type": "aws_dynamodb_table",
+                        "name": "orders",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "attribute": [
+                                {
+                                    "name": "orderId",
+                                    "type": "S"
+                                }
+                            ],
+                            "billing_mode": "PAY_PER_REQUEST",
+                            "deletion_protection_enabled": null,
+                            "global_secondary_index": [],
+                            "hash_key": "orderId",
+                            "import_table": [],
+                            "local_secondary_index": [],
+                            "name": "orders-table",
+                            "on_demand_throughput": [],
+                            "range_key": null,
+                            "replica": [],
+                            "restore_date_time": null,
+                            "restore_source_name": null,
+                            "restore_source_table_arn": null,
+                            "restore_to_latest_time": null,
+                            "stream_enabled": null,
+                            "table_class": null,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "attribute": [
+                                {}
+                            ],
+                            "global_secondary_index": [],
+                            "import_table": [],
+                            "local_secondary_index": [],
+                            "on_demand_throughput": [],
+                            "point_in_time_recovery": [],
+                            "replica": [],
+                            "server_side_encryption": [],
+                            "tags_all": {},
+                            "ttl": []
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "lambda-multiservice-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.sfn_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "sfn_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "stepfunctions-multiservice-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy.sfn_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "sfn_policy",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "stepfunctions-multiservice-policy",
+                            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"lambda:InvokeFunction\",\"dynamodb:PutItem\",\"dynamodb:GetItem\",\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_lambda_function.transform",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "transform",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "data-transformer",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": null,
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_sfn_state_machine.data_pipeline",
+                        "mode": "managed",
+                        "type": "aws_sfn_state_machine",
+                        "name": "data_pipeline",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "data-processing-pipeline",
+                            "publish": false,
+                            "tags": null,
+                            "timeouts": null,
+                            "type": "STANDARD"
+                        },
+                        "sensitive_values": {
+                            "encryption_configuration": [],
+                            "logging_configuration": [],
+                            "tags_all": {},
+                            "tracing_configuration": []
+                        }
+                    },
+                    {
+                        "address": "aws_sns_topic.notifications",
+                        "mode": "managed",
+                        "type": "aws_sns_topic",
+                        "name": "notifications",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "application_failure_feedback_role_arn": null,
+                            "application_success_feedback_role_arn": null,
+                            "application_success_feedback_sample_rate": null,
+                            "archive_policy": null,
+                            "content_based_deduplication": false,
+                            "delivery_policy": null,
+                            "display_name": null,
+                            "fifo_topic": false,
+                            "firehose_failure_feedback_role_arn": null,
+                            "firehose_success_feedback_role_arn": null,
+                            "firehose_success_feedback_sample_rate": null,
+                            "http_failure_feedback_role_arn": null,
+                            "http_success_feedback_role_arn": null,
+                            "http_success_feedback_sample_rate": null,
+                            "kms_master_key_id": null,
+                            "lambda_failure_feedback_role_arn": null,
+                            "lambda_success_feedback_role_arn": null,
+                            "lambda_success_feedback_sample_rate": null,
+                            "name": "order-notifications",
+                            "sqs_failure_feedback_role_arn": null,
+                            "sqs_success_feedback_role_arn": null,
+                            "sqs_success_feedback_sample_rate": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_dynamodb_table.orders",
+                "mode": "managed",
+                "type": "aws_dynamodb_table",
+                "name": "orders",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "attribute": [
+                            {}
+                        ],
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "deletion_protection_enabled": null,
+                        "global_secondary_index": [],
+                        "hash_key": "orderId",
+                        "import_table": [],
+                        "local_secondary_index": [],
+                        "name": "orders-table",
+                        "on_demand_throughput": [],
+                        "range_key": null,
+                        "replica": [],
+                        "restore_date_time": null,
+                        "restore_source_name": null,
+                        "restore_source_table_arn": null,
+                        "restore_to_latest_time": null,
+                        "stream_enabled": null,
+                        "table_class": null,
+                        "tags": null,
+                        "timeouts": null,
+                        "arn": true,
+                        "id": true,
+                        "point_in_time_recovery": [],
+                        "read_capacity": true,
+                        "server_side_encryption": [],
+                        "stream_arn": true,
+                        "stream_label": true,
+                        "stream_view_type": true,
+                        "tags_all": {},
+                        "ttl": [],
+                        "write_capacity": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "attribute": [
+                            {}
+                        ],
+                        "global_secondary_index": [],
+                        "id": true,
+                        "import_table": [],
+                        "local_secondary_index": [],
+                        "on_demand_throughput": [],
+                        "point_in_time_recovery": true,
+                        "read_capacity": true,
+                        "replica": [],
+                        "server_side_encryption": true,
+                        "stream_arn": true,
+                        "stream_label": true,
+                        "stream_view_type": true,
+                        "tags_all": true,
+                        "ttl": true,
+                        "write_capacity": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "attribute": [
+                            {}
+                        ],
+                        "global_secondary_index": [],
+                        "import_table": [],
+                        "local_secondary_index": [],
+                        "on_demand_throughput": [],
+                        "point_in_time_recovery": [],
+                        "replica": [],
+                        "server_side_encryption": [],
+                        "tags_all": {},
+                        "ttl": []
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.lambda_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "lambda-multiservice-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.sfn_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "sfn_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "stepfunctions-multiservice-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.sfn_policy",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "sfn_policy",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "stepfunctions-multiservice-policy",
+                        "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"lambda:InvokeFunction\",\"dynamodb:PutItem\",\"dynamodb:GetItem\",\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+                        "id": true,
+                        "name_prefix": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_lambda_function.transform",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "transform",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "data-transformer",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": null,
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": true,
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_sfn_state_machine.data_pipeline",
+                "mode": "managed",
+                "type": "aws_sfn_state_machine",
+                "name": "data_pipeline",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "data-processing-pipeline",
+                        "publish": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "type": "STANDARD",
+                        "arn": true,
+                        "creation_date": true,
+                        "definition": true,
+                        "description": true,
+                        "encryption_configuration": [],
+                        "id": true,
+                        "logging_configuration": [],
+                        "name_prefix": true,
+                        "revision_id": true,
+                        "role_arn": true,
+                        "state_machine_version_arn": true,
+                        "status": true,
+                        "tags_all": {},
+                        "tracing_configuration": [],
+                        "version_description": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "creation_date": true,
+                        "definition": true,
+                        "description": true,
+                        "encryption_configuration": true,
+                        "id": true,
+                        "logging_configuration": true,
+                        "name_prefix": true,
+                        "revision_id": true,
+                        "role_arn": true,
+                        "state_machine_version_arn": true,
+                        "status": true,
+                        "tags_all": true,
+                        "tracing_configuration": true,
+                        "version_description": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "encryption_configuration": [],
+                        "logging_configuration": [],
+                        "tags_all": {},
+                        "tracing_configuration": []
+                    }
+                }
+            },
+            {
+                "address": "aws_sns_topic.notifications",
+                "mode": "managed",
+                "type": "aws_sns_topic",
+                "name": "notifications",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "application_failure_feedback_role_arn": null,
+                        "application_success_feedback_role_arn": null,
+                        "application_success_feedback_sample_rate": null,
+                        "archive_policy": null,
+                        "content_based_deduplication": false,
+                        "delivery_policy": null,
+                        "display_name": null,
+                        "fifo_topic": false,
+                        "firehose_failure_feedback_role_arn": null,
+                        "firehose_success_feedback_role_arn": null,
+                        "firehose_success_feedback_sample_rate": null,
+                        "http_failure_feedback_role_arn": null,
+                        "http_success_feedback_role_arn": null,
+                        "http_success_feedback_sample_rate": null,
+                        "kms_master_key_id": null,
+                        "lambda_failure_feedback_role_arn": null,
+                        "lambda_success_feedback_role_arn": null,
+                        "lambda_success_feedback_sample_rate": null,
+                        "name": "order-notifications",
+                        "sqs_failure_feedback_role_arn": null,
+                        "sqs_success_feedback_role_arn": null,
+                        "sqs_success_feedback_sample_rate": null,
+                        "tags": null,
+                        "arn": true,
+                        "beginning_archive_time": true,
+                        "fifo_throughput_scope": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "owner": true,
+                        "policy": true,
+                        "signature_version": true,
+                        "tags_all": {},
+                        "tracing_config": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "beginning_archive_time": true,
+                        "fifo_throughput_scope": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "owner": true,
+                        "policy": true,
+                        "signature_version": true,
+                        "tags_all": true,
+                        "tracing_config": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_dynamodb_table.orders",
+                        "mode": "managed",
+                        "type": "aws_dynamodb_table",
+                        "name": "orders",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "attribute": [
+                                {
+                                    "name": {
+                                        "constant_value": "orderId"
+                                    },
+                                    "type": {
+                                        "constant_value": "S"
+                                    }
+                                }
+                            ],
+                            "billing_mode": {
+                                "constant_value": "PAY_PER_REQUEST"
+                            },
+                            "hash_key": {
+                                "constant_value": "orderId"
+                            },
+                            "name": {
+                                "constant_value": "orders-table"
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "lambda-multiservice-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.sfn_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "sfn_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "stepfunctions-multiservice-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.sfn_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "sfn_policy",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "stepfunctions-multiservice-policy"
+                            },
+                            "policy": {},
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.sfn_role.id",
+                                    "aws_iam_role.sfn_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.transform",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "transform",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "data-transformer"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.arn",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_sfn_state_machine.data_pipeline",
+                        "mode": "managed",
+                        "type": "aws_sfn_state_machine",
+                        "name": "data_pipeline",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "definition": {
+                                "references": [
+                                    "aws_lambda_function.transform.arn",
+                                    "aws_lambda_function.transform",
+                                    "aws_dynamodb_table.orders.name",
+                                    "aws_dynamodb_table.orders",
+                                    "aws_sns_topic.notifications.arn",
+                                    "aws_sns_topic.notifications"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "data-processing-pipeline"
+                            },
+                            "role_arn": {
+                                "references": [
+                                    "aws_iam_role.sfn_role.arn",
+                                    "aws_iam_role.sfn_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_sns_topic.notifications",
+                        "mode": "managed",
+                        "type": "aws_sns_topic",
+                        "name": "notifications",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "order-notifications"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_iam_role.sfn_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_dynamodb_table.orders",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.transform",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.sfn_role",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_sns_topic.notifications",
+                "attribute": [
+                    "arn"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-30T18:47:08Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_dynamodb_table.orders",
+            "mode": "managed",
+            "type": "aws_dynamodb_table",
+            "name": "orders",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "attribute": [
+                        {}
+                    ],
+                    "billing_mode": "PAY_PER_REQUEST",
+                    "deletion_protection_enabled": null,
+                    "global_secondary_index": [],
+                    "hash_key": "orderId",
+                    "import_table": [],
+                    "local_secondary_index": [],
+                    "name": "orders-table",
+                    "on_demand_throughput": [],
+                    "range_key": null,
+                    "replica": [],
+                    "restore_date_time": null,
+                    "restore_source_name": null,
+                    "restore_source_table_arn": null,
+                    "restore_to_latest_time": null,
+                    "stream_enabled": null,
+                    "table_class": null,
+                    "tags": null,
+                    "timeouts": null,
+                    "arn": true,
+                    "id": true,
+                    "point_in_time_recovery": [],
+                    "read_capacity": true,
+                    "server_side_encryption": [],
+                    "stream_arn": true,
+                    "stream_label": true,
+                    "stream_view_type": true,
+                    "tags_all": {},
+                    "ttl": [],
+                    "write_capacity": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "attribute": [
+                        {}
+                    ],
+                    "global_secondary_index": [],
+                    "id": true,
+                    "import_table": [],
+                    "local_secondary_index": [],
+                    "on_demand_throughput": [],
+                    "point_in_time_recovery": true,
+                    "read_capacity": true,
+                    "replica": [],
+                    "server_side_encryption": true,
+                    "stream_arn": true,
+                    "stream_label": true,
+                    "stream_view_type": true,
+                    "tags_all": true,
+                    "ttl": true,
+                    "write_capacity": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "attribute": [
+                        {}
+                    ],
+                    "global_secondary_index": [],
+                    "import_table": [],
+                    "local_secondary_index": [],
+                    "on_demand_throughput": [],
+                    "point_in_time_recovery": [],
+                    "replica": [],
+                    "server_side_encryption": [],
+                    "tags_all": {},
+                    "ttl": []
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.lambda_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "lambda-multiservice-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.sfn_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "sfn_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "stepfunctions-multiservice-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.sfn_policy",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "sfn_policy",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "stepfunctions-multiservice-policy",
+                    "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"lambda:InvokeFunction\",\"dynamodb:PutItem\",\"dynamodb:GetItem\",\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+                    "id": true,
+                    "name_prefix": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_lambda_function.transform",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "transform",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "data-transformer",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": null,
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": true,
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_sfn_state_machine.data_pipeline",
+            "mode": "managed",
+            "type": "aws_sfn_state_machine",
+            "name": "data_pipeline",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "data-processing-pipeline",
+                    "publish": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "type": "STANDARD",
+                    "arn": true,
+                    "creation_date": true,
+                    "definition": true,
+                    "description": true,
+                    "encryption_configuration": [],
+                    "id": true,
+                    "logging_configuration": [],
+                    "name_prefix": true,
+                    "revision_id": true,
+                    "role_arn": true,
+                    "state_machine_version_arn": true,
+                    "status": true,
+                    "tags_all": {},
+                    "tracing_configuration": [],
+                    "version_description": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "creation_date": true,
+                    "definition": true,
+                    "description": true,
+                    "encryption_configuration": true,
+                    "id": true,
+                    "logging_configuration": true,
+                    "name_prefix": true,
+                    "revision_id": true,
+                    "role_arn": true,
+                    "state_machine_version_arn": true,
+                    "status": true,
+                    "tags_all": true,
+                    "tracing_configuration": true,
+                    "version_description": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "encryption_configuration": [],
+                    "logging_configuration": [],
+                    "tags_all": {},
+                    "tracing_configuration": []
+                }
+            }
+        },
+        {
+            "address": "aws_sns_topic.notifications",
+            "mode": "managed",
+            "type": "aws_sns_topic",
+            "name": "notifications",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "application_failure_feedback_role_arn": null,
+                    "application_success_feedback_role_arn": null,
+                    "application_success_feedback_sample_rate": null,
+                    "archive_policy": null,
+                    "content_based_deduplication": false,
+                    "delivery_policy": null,
+                    "display_name": null,
+                    "fifo_topic": false,
+                    "firehose_failure_feedback_role_arn": null,
+                    "firehose_success_feedback_role_arn": null,
+                    "firehose_success_feedback_sample_rate": null,
+                    "http_failure_feedback_role_arn": null,
+                    "http_success_feedback_role_arn": null,
+                    "http_success_feedback_sample_rate": null,
+                    "kms_master_key_id": null,
+                    "lambda_failure_feedback_role_arn": null,
+                    "lambda_success_feedback_role_arn": null,
+                    "lambda_success_feedback_sample_rate": null,
+                    "name": "order-notifications",
+                    "sqs_failure_feedback_role_arn": null,
+                    "sqs_success_feedback_role_arn": null,
+                    "sqs_success_feedback_sample_rate": null,
+                    "tags": null,
+                    "arn": true,
+                    "beginning_archive_time": true,
+                    "fifo_throughput_scope": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "owner": true,
+                    "policy": true,
+                    "signature_version": true,
+                    "tags_all": {},
+                    "tracing_config": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "beginning_archive_time": true,
+                    "fifo_throughput_scope": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "owner": true,
+                    "policy": true,
+                    "signature_version": true,
+                    "tags_all": true,
+                    "tracing_config": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_dynamodb_table.orders",
+                "fontname": "sans-serif",
+                "label": "aws_dynamodb_table.orders",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_iam_role.lambda_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_iam_role.sfn_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.sfn_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_iam_role_policy.sfn_policy",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.sfn_policy",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_lambda_function.transform",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.transform",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_sfn_state_machine.data_pipeline",
+                "fontname": "sans-serif",
+                "label": "aws_sfn_state_machine.data_pipeline",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_sns_topic.notifications",
+                "fontname": "sans-serif",
+                "label": "aws_sns_topic.notifications",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 3,
+                "head": 2
+            },
+            {
+                "_gvid": 1,
+                "tail": 4,
+                "head": 1
+            },
+            {
+                "_gvid": 2,
+                "tail": 5,
+                "head": 0
+            },
+            {
+                "_gvid": 3,
+                "tail": 5,
+                "head": 2
+            },
+            {
+                "_gvid": 4,
+                "tail": 5,
+                "head": 4
+            },
+            {
+                "_gvid": 5,
+                "tail": 5,
+                "head": 6
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_dynamodb_table.orders": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.transform"
+        ],
+        "aws_iam_role.sfn_role": [
+            "aws_iam_role_policy.sfn_policy"
+        ],
+        "aws_iam_role_policy.sfn_policy": [],
+        "aws_lambda_function.transform": [],
+        "aws_sfn_state_machine.data_pipeline": [
+            "aws_dynamodb_table.orders",
+            "aws_iam_role.sfn_role",
+            "aws_lambda_function.transform",
+            "aws_sns_topic.notifications"
+        ],
+        "aws_sns_topic.notifications": []
+    },
+    "meta_data": {
+        "aws_dynamodb_table.orders": {
+            "attribute": [
+                {}
+            ],
+            "billing_mode": "PAY_PER_REQUEST",
+            "deletion_protection_enabled": null,
+            "global_secondary_index": [],
+            "hash_key": "orderId",
+            "import_table": [],
+            "local_secondary_index": [],
+            "name": "orders-table",
+            "on_demand_throughput": [],
+            "range_key": null,
+            "replica": [],
+            "restore_date_time": null,
+            "restore_source_name": null,
+            "restore_source_table_arn": null,
+            "restore_to_latest_time": null,
+            "stream_enabled": null,
+            "table_class": null,
+            "tags": null,
+            "timeouts": null,
+            "arn": true,
+            "id": true,
+            "point_in_time_recovery": [],
+            "read_capacity": true,
+            "server_side_encryption": [],
+            "stream_arn": true,
+            "stream_label": true,
+            "stream_view_type": true,
+            "tags_all": {},
+            "ttl": [],
+            "write_capacity": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-multiservice-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.sfn_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "stepfunctions-multiservice-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.sfn_policy": {
+            "name": "stepfunctions-multiservice-policy",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"lambda:InvokeFunction\",\"dynamodb:PutItem\",\"dynamodb:GetItem\",\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+            "id": true,
+            "name_prefix": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_lambda_function.transform": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "data-transformer",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_sfn_state_machine.data_pipeline": {
+            "name": "data-processing-pipeline",
+            "publish": false,
+            "tags": null,
+            "timeouts": null,
+            "type": "STANDARD",
+            "arn": true,
+            "creation_date": true,
+            "definition": true,
+            "description": true,
+            "encryption_configuration": [],
+            "id": true,
+            "logging_configuration": [],
+            "name_prefix": true,
+            "revision_id": true,
+            "role_arn": true,
+            "state_machine_version_arn": true,
+            "status": true,
+            "tags_all": {},
+            "tracing_configuration": [],
+            "version_description": true,
+            "module": "main"
+        },
+        "aws_sns_topic.notifications": {
+            "application_failure_feedback_role_arn": null,
+            "application_success_feedback_role_arn": null,
+            "application_success_feedback_sample_rate": null,
+            "archive_policy": null,
+            "content_based_deduplication": false,
+            "delivery_policy": null,
+            "display_name": null,
+            "fifo_topic": false,
+            "firehose_failure_feedback_role_arn": null,
+            "firehose_success_feedback_role_arn": null,
+            "firehose_success_feedback_sample_rate": null,
+            "http_failure_feedback_role_arn": null,
+            "http_success_feedback_role_arn": null,
+            "http_success_feedback_sample_rate": null,
+            "kms_master_key_id": null,
+            "lambda_failure_feedback_role_arn": null,
+            "lambda_success_feedback_role_arn": null,
+            "lambda_success_feedback_sample_rate": null,
+            "name": "order-notifications",
+            "sqs_failure_feedback_role_arn": null,
+            "sqs_success_feedback_role_arn": null,
+            "sqs_success_feedback_sample_rate": null,
+            "tags": null,
+            "arn": true,
+            "beginning_archive_time": true,
+            "fifo_throughput_scope": true,
+            "id": true,
+            "name_prefix": true,
+            "owner": true,
+            "policy": true,
+            "signature_version": true,
+            "tags_all": {},
+            "tracing_config": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_dynamodb_table.orders",
+        "aws_iam_role.lambda_role",
+        "aws_iam_role.sfn_role",
+        "aws_iam_role_policy.sfn_policy",
+        "aws_lambda_function.transform",
+        "aws_sfn_state_machine.data_pipeline",
+        "aws_sns_topic.notifications"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_dynamodb_table.orders": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.transform"
+        ],
+        "aws_iam_role.sfn_role": [
+            "aws_iam_role_policy.sfn_policy"
+        ],
+        "aws_iam_role_policy.sfn_policy": [],
+        "aws_lambda_function.transform": [],
+        "aws_sfn_state_machine.data_pipeline": [
+            "aws_dynamodb_table.orders",
+            "aws_iam_role.sfn_role",
+            "aws_lambda_function.transform",
+            "aws_sns_topic.notifications"
+        ],
+        "aws_sns_topic.notifications": []
+    },
+    "original_metadata": {
+        "aws_dynamodb_table.orders": {
+            "attribute": [
+                {}
+            ],
+            "billing_mode": "PAY_PER_REQUEST",
+            "deletion_protection_enabled": null,
+            "global_secondary_index": [],
+            "hash_key": "orderId",
+            "import_table": [],
+            "local_secondary_index": [],
+            "name": "orders-table",
+            "on_demand_throughput": [],
+            "range_key": null,
+            "replica": [],
+            "restore_date_time": null,
+            "restore_source_name": null,
+            "restore_source_table_arn": null,
+            "restore_to_latest_time": null,
+            "stream_enabled": null,
+            "table_class": null,
+            "tags": null,
+            "timeouts": null,
+            "arn": true,
+            "id": true,
+            "point_in_time_recovery": [],
+            "read_capacity": true,
+            "server_side_encryption": [],
+            "stream_arn": true,
+            "stream_label": true,
+            "stream_view_type": true,
+            "tags_all": {},
+            "ttl": [],
+            "write_capacity": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "lambda-multiservice-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.sfn_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"states.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "stepfunctions-multiservice-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.sfn_policy": {
+            "name": "stepfunctions-multiservice-policy",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"lambda:InvokeFunction\",\"dynamodb:PutItem\",\"dynamodb:GetItem\",\"sns:Publish\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}",
+            "id": true,
+            "name_prefix": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_lambda_function.transform": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "data-transformer",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_sfn_state_machine.data_pipeline": {
+            "name": "data-processing-pipeline",
+            "publish": false,
+            "tags": null,
+            "timeouts": null,
+            "type": "STANDARD",
+            "arn": true,
+            "creation_date": true,
+            "definition": true,
+            "description": true,
+            "encryption_configuration": [],
+            "id": true,
+            "logging_configuration": [],
+            "name_prefix": true,
+            "revision_id": true,
+            "role_arn": true,
+            "state_machine_version_arn": true,
+            "status": true,
+            "tags_all": {},
+            "tracing_configuration": [],
+            "version_description": true,
+            "module": "main"
+        },
+        "aws_sns_topic.notifications": {
+            "application_failure_feedback_role_arn": null,
+            "application_success_feedback_role_arn": null,
+            "application_success_feedback_sample_rate": null,
+            "archive_policy": null,
+            "content_based_deduplication": false,
+            "delivery_policy": null,
+            "display_name": null,
+            "fifo_topic": false,
+            "firehose_failure_feedback_role_arn": null,
+            "firehose_success_feedback_role_arn": null,
+            "firehose_success_feedback_sample_rate": null,
+            "http_failure_feedback_role_arn": null,
+            "http_success_feedback_role_arn": null,
+            "http_success_feedback_sample_rate": null,
+            "kms_master_key_id": null,
+            "lambda_failure_feedback_role_arn": null,
+            "lambda_success_feedback_role_arn": null,
+            "lambda_success_feedback_sample_rate": null,
+            "name": "order-notifications",
+            "sqs_failure_feedback_role_arn": null,
+            "sqs_success_feedback_role_arn": null,
+            "sqs_success_feedback_sample_rate": null,
+            "tags": null,
+            "arn": true,
+            "beginning_archive_time": true,
+            "fifo_throughput_scope": true,
+            "id": true,
+            "name_prefix": true,
+            "owner": true,
+            "policy": true,
+            "signature_version": true,
+            "tags_all": {},
+            "tracing_config": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "tests/fixtures/aws_terraform/stepfunctions_multi_service/main.tf": [
+            {
+                "aws_iam_role": {
+                    "sfn_role": {
+                        "name": "stepfunctions-multiservice-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'states.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "sfn_policy": {
+                        "name": "stepfunctions-multiservice-policy",
+                        "role": "${aws_iam_role.sfn_role.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['lambda:InvokeFunction', 'dynamodb:PutItem', 'dynamodb:GetItem', 'sns:Publish'], 'Resource': '*'}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda_role": {
+                        "name": "lambda-multiservice-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_lambda_function": {
+                    "transform": {
+                        "filename": "lambda.zip",
+                        "function_name": "data-transformer",
+                        "role": "${aws_iam_role.lambda_role.arn}",
+                        "handler": "index.handler",
+                        "runtime": "python3.11"
+                    }
+                }
+            },
+            {
+                "aws_dynamodb_table": {
+                    "orders": {
+                        "name": "orders-table",
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": "orderId",
+                        "attribute": [
+                            {
+                                "name": "orderId",
+                                "type": "S"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_sns_topic": {
+                    "notifications": {
+                        "name": "order-notifications"
+                    }
+                }
+            },
+            {
+                "aws_sfn_state_machine": {
+                    "data_pipeline": {
+                        "name": "data-processing-pipeline",
+                        "role_arn": "${aws_iam_role.sfn_role.arn}",
+                        "definition": "${jsonencode({'Comment': 'Data processing pipeline with multiple AWS services', 'StartAt': 'TransformData', 'States': {'TransformData': {'Type': 'Task', 'Resource': 'arn:aws:states:::lambda:invoke', 'Parameters': {'FunctionName': '${aws_lambda_function.transform.arn}', 'Payload.$': '$'}, 'Next': 'SaveToDynamoDB'}, 'SaveToDynamoDB': {'Type': 'Task', 'Resource': 'arn:aws:states:::dynamodb:putItem', 'Parameters': {'TableName': '${aws_dynamodb_table.orders.name}', 'Item': {'orderId': {'S.$': '$.orderId'}, 'data': {'S.$': '$.data'}}}, 'Next': 'PublishNotification'}, 'PublishNotification': {'Type': 'Task', 'Resource': 'arn:aws:states:::sns:publish', 'Parameters': {'TopicArn': '${aws_sns_topic.notifications.arn}', 'Message.$': '$.message'}, 'End': True}}})}"
+                    }
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpnwgl0ovs'>"
+}

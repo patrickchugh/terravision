@@ -89,6 +89,51 @@ def test_help() -> None:
             "waf-alb-tfdata.json",
             "expected-waf-alb.json",
         ),
+        # Phase 8: SageMaker ML patterns
+        (
+            "sagemaker-endpoint-tfdata.json",
+            "expected-sagemaker-endpoint.json",
+        ),
+        (
+            "sagemaker-notebook-vpc-tfdata.json",
+            "expected-sagemaker-notebook-vpc.json",
+        ),
+        # Phase 9: Step Functions patterns
+        (
+            "stepfunctions-lambda-tfdata.json",
+            "expected-stepfunctions-lambda.json",
+        ),
+        (
+            "stepfunctions-multi-service-tfdata.json",
+            "expected-stepfunctions-multi-service.json",
+        ),
+        # Phase 10: S3 Notifications patterns
+        (
+            "s3-notification-lambda-tfdata.json",
+            "expected-s3-notification-lambda.json",
+        ),
+        (
+            "s3-replication-tfdata.json",
+            "expected-s3-replication.json",
+        ),
+        # Phase 11: Secrets Manager patterns
+        (
+            "secretsmanager-lambda-tfdata.json",
+            "expected-secretsmanager-lambda.json",
+        ),
+        (
+            "secretsmanager-rds-tfdata.json",
+            "expected-secretsmanager-rds.json",
+        ),
+        # Phase 12: Data Processing (Glue/Firehose) patterns
+        (
+            "glue-s3-tfdata.json",
+            "expected-glue-s3.json",
+        ),
+        (
+            "firehose-lambda-tfdata.json",
+            "expected-firehose-lambda.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

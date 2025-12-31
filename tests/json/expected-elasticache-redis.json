@@ -24,7 +24,7 @@
     ],
     "aws_group.shared_services": [
         "aws_ecr_repository.ecr",
-        "aws_iam_group.iam"
+        "aws_iam_group.of_services"
     ],
     "aws_subnet.private_a": [
         "aws_elasticache_cluster.redis~1",

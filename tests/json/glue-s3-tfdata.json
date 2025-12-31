@@ -1,0 +1,36 @@
+{
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_glue_catalog_database.etl_database": [
+        "aws_glue_crawler.source_crawler"
+    ],
+    "aws_glue_crawler.source_crawler": [
+        "aws_s3_bucket.source"
+    ],
+    "aws_glue_job.etl_job": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_s3_bucket.scripts",
+        "aws_s3_object.etl_script"
+    ],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.glue_role": [
+        "aws_glue_crawler.source_crawler",
+        "aws_glue_job.etl_job",
+        "aws_iam_role_policy.glue_s3_policy",
+        "aws_iam_role_policy_attachment.glue_service"
+    ],
+    "aws_iam_role_policy.glue_s3_policy": [
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket.scripts",
+        "aws_s3_bucket.source"
+    ],
+    "aws_iam_role_policy_attachment.glue_service": [],
+    "aws_s3_bucket.destination": [],
+    "aws_s3_bucket.scripts": [
+        "aws_s3_object.etl_script"
+    ],
+    "aws_s3_bucket.source": [],
+    "aws_s3_object.etl_script": []
+}

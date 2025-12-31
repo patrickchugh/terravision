@@ -49,7 +49,7 @@
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_ecr_repository.ecr",
         "aws_eip.elastic_ip",
-        "aws_iam_group.iam"
+        "aws_iam_group.of_services"
     ],
     "aws_iam_role.eks_cluster": [
         "aws_eks_cluster.main",
@@ -62,9 +62,15 @@
         "aws_iam_role_policy_attachment.eks_worker_node_policy"
     ],
     "aws_iam_role_policy_attachment.eks_cluster_policy": [],
-    "aws_iam_role_policy_attachment.eks_cni_policy": [],
-    "aws_iam_role_policy_attachment.eks_container_registry_policy": [],
-    "aws_iam_role_policy_attachment.eks_worker_node_policy": [],
+    "aws_iam_role_policy_attachment.eks_cni_policy": [
+        "aws_eks_node_group.main"
+    ],
+    "aws_iam_role_policy_attachment.eks_container_registry_policy": [
+        "aws_eks_node_group.main"
+    ],
+    "aws_iam_role_policy_attachment.eks_worker_node_policy": [
+        "aws_eks_node_group.main"
+    ],
     "aws_internet_gateway.igw": [
         "tv_aws_internet.internet"
     ],

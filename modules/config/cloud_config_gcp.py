@@ -267,6 +267,33 @@ You are a GCP architect that needs to summarise this JSON of Terraform GCP resou
 
 """
 
+# Configuration patterns for multi-instance resource detection
+# Each pattern defines:
+# - resource_types: List of Terraform resource types to check
+# - trigger_attributes: Attributes that trigger expansion (e.g., "subnets", "zones")
+# - also_expand_attributes: Attributes containing related resources to also expand
+# - resource_pattern: Regex pattern to extract resource references from attribute values
+GCP_MULTI_INSTANCE_PATTERNS = [
+    {
+        "resource_types": [
+            "google_compute_instance_group_manager",
+            "google_compute_region_instance_group_manager",
+        ],
+        "trigger_attributes": ["zones", "target_pools"],
+        "also_expand_attributes": [],
+        "resource_pattern": r'"([^"]+)"',
+        "description": "GCP Instance Group Manager with multiple zones",
+    },
+    {
+        "resource_types": ["google_compute_forwarding_rule"],
+        "trigger_attributes": ["target"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(google_\w+\.\w+)",
+        "description": "GCP Forwarding Rule with target pool",
+    },
+    # Add more GCP patterns as needed
+]
+
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"
 

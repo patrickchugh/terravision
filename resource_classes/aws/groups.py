@@ -23,6 +23,18 @@ class VPCgroup(Cluster):
         super().__init__(vpc_label, defaultdir, vpc_graph_attrs)
 
 
+class RegionGroup(Cluster):
+    def __init__(self, label, **kwargs):
+        region_graph_attrs = {
+            "style": "solid",
+            "margin": "50",
+            "pencolor": "#00a4a6",
+            "rank": "same",
+        }
+        region_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/region.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        super().__init__(region_label, defaultdir, region_graph_attrs)
+
+
 class SubnetGroup(Cluster):
     def __init__(self, label, **kwargs):
         if "Public" in label:
@@ -157,3 +169,6 @@ aws_appautoscaling_target = GenericAutoScalingGroup
 aws_autoscaling_group = GenericAutoScalingGroup
 tv_aws_onprem = OnPrem
 aws_az = AvailabilityZone
+tv_aws_az = AvailabilityZone
+tv_aws_region = RegionGroup
+aws_region = RegionGroup
