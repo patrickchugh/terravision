@@ -512,7 +512,9 @@ def pretty_name(name: str, show_title=True) -> str:
         return " "
 
     # normalize and remove module prefixes / numbered suffixes and array indices
+    name = name.replace("tv_aws_", "")
     name = name.replace("tv_", "").replace("aws_", "")
+
     name = get_no_module_no_number_name(name)
     name = name.split("~", 1)[0]
 
