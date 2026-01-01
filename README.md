@@ -133,6 +133,8 @@ cd -
 
 **Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for Terraform to validate resources, but TerraVision itself never accesses your cloud account.
 
+**Important for Terraform Enterprise Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
+
 ### Try It Out!
 
 Generate your first diagram using our example Terraform code:

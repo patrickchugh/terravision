@@ -55,6 +55,11 @@ def tf_initplan(
         if os.path.isdir(sourceloc):
             os.chdir(sourceloc)
             codepath = sourceloc
+            # Copy override file to force local backend (ignores TFE remote state)
+            ovpath = os.path.join(basedir, "override.tf")
+            override_dest = os.path.join(codepath, "override.tf")
+            if not os.path.exists(override_dest):
+                shutil.copy(ovpath, codepath)
         # Handle Git repository source
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
@@ -75,6 +80,7 @@ def tf_initplan(
                 )
                 exit()
         click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
+        click.echo("  (Forcing local backend to generate full infrastructure plan)")
         # Initialize terraform with providers
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],

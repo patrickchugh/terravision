@@ -80,6 +80,51 @@ python3.10 -m pip install -r requirements.txt
 
 ---
 
+### Terraform Enterprise / Remote Backend Issues
+
+#### "Backend configuration changed" or "State locked"
+
+**Problem**: TerraVision conflicts with Terraform Enterprise remote backend
+
+**Explanation**: TerraVision automatically forces local backend execution to generate complete infrastructure diagrams (not just state deltas). This is intentional and required for accurate visualization.
+
+**How it works**:
+- TerraVision copies `override.tf` to your source directory
+- This forces `backend "local"` configuration
+- Terraform ignores remote state and shows all resources
+- Your actual TFE state remains unchanged
+
+**Solution**: This is expected behavior - no action needed. TerraVision will:
+1. Temporarily override your backend configuration
+2. Generate a fresh plan showing all resources
+3. Create the diagram from the complete infrastructure definition
+4. Leave your remote state untouched
+
+**Note**: If you see `override.tf` in your directory after running TerraVision, you can safely delete it or add to `.gitignore`.
+
+#### "TFE_TOKEN required for module registry"
+
+**Problem**: Private Terraform Enterprise module registry requires authentication
+
+**Solution**:
+```bash
+# Set TFE token for private module access
+export TFE_TOKEN="your-tfe-token"
+
+# Generate token from TFE UI:
+# Settings > Tokens > Create an API token
+
+# Or use .terraformrc credentials
+cat ~/.terraformrc
+# credentials "app.terraform.io" {
+#   token = "your-token"
+# }
+```
+
+**Note**: TFE_TOKEN is only needed for accessing private module registries, not for basic diagram generation.
+
+---
+
 ### Runtime Issues
 
 #### "No resources found"
