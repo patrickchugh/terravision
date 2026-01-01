@@ -1,0 +1,3100 @@
+{
+    "codepath": "tests/fixtures/aws_terraform/firehose_lambda",
+    "workdir": "/Users/patrick/git/terravision-privatedev",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_log_group.firehose_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "firehose_logs",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "kms_key_id": null,
+                            "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                            "retention_in_days": 7,
+                            "skip_destroy": false,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_group.lambda_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "lambda_logs",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "kms_key_id": null,
+                            "name": "/aws/lambda/firehose-data-transform",
+                            "retention_in_days": 7,
+                            "skip_destroy": false,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_stream.firehose_stream",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_stream",
+                        "name": "firehose_stream",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                            "name": "S3Delivery"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_iam_role.firehose_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "firehose_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "firehose-delivery-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "firehose-lambda-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy.firehose_lambda",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "firehose_lambda",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "firehose-lambda-invoke"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_iam_role_policy.firehose_s3",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "firehose_s3",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "firehose-s3-access"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.lambda_basic",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "lambda_basic",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                            "role": "firehose-lambda-role"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_kinesis_firehose_delivery_stream.main",
+                        "mode": "managed",
+                        "type": "aws_kinesis_firehose_delivery_stream",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "destination": "extended_s3",
+                            "elasticsearch_configuration": [],
+                            "extended_s3_configuration": [
+                                {
+                                    "buffering_interval": 300,
+                                    "buffering_size": 5,
+                                    "cloudwatch_logging_options": [
+                                        {
+                                            "enabled": true,
+                                            "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                                            "log_stream_name": "S3Delivery"
+                                        }
+                                    ],
+                                    "compression_format": "GZIP",
+                                    "custom_time_zone": "UTC",
+                                    "data_format_conversion_configuration": [],
+                                    "dynamic_partitioning_configuration": [],
+                                    "error_output_prefix": "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{firehose:error-output-type}/",
+                                    "file_extension": null,
+                                    "kms_key_arn": null,
+                                    "prefix": "data/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/",
+                                    "processing_configuration": [
+                                        {
+                                            "enabled": true,
+                                            "processors": [
+                                                {
+                                                    "parameters": [
+                                                        {
+                                                            "parameter_name": "BufferIntervalInSeconds",
+                                                            "parameter_value": "60"
+                                                        },
+                                                        {
+                                                            "parameter_name": "BufferSizeInMBs",
+                                                            "parameter_value": "3"
+                                                        },
+                                                        {
+                                                            "parameter_name": "LambdaArn"
+                                                        }
+                                                    ],
+                                                    "type": "Lambda"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "s3_backup_configuration": [],
+                                    "s3_backup_mode": "Disabled"
+                                }
+                            ],
+                            "http_endpoint_configuration": [],
+                            "iceberg_configuration": [],
+                            "kinesis_source_configuration": [],
+                            "msk_source_configuration": [],
+                            "name": "analytics-delivery-stream",
+                            "opensearch_configuration": [],
+                            "opensearchserverless_configuration": [],
+                            "redshift_configuration": [],
+                            "server_side_encryption": [],
+                            "snowflake_configuration": [],
+                            "splunk_configuration": [],
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "elasticsearch_configuration": [],
+                            "extended_s3_configuration": [
+                                {
+                                    "cloudwatch_logging_options": [
+                                        {}
+                                    ],
+                                    "data_format_conversion_configuration": [],
+                                    "dynamic_partitioning_configuration": [],
+                                    "processing_configuration": [
+                                        {
+                                            "processors": [
+                                                {
+                                                    "parameters": [
+                                                        {},
+                                                        {},
+                                                        {}
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "s3_backup_configuration": []
+                                }
+                            ],
+                            "http_endpoint_configuration": [],
+                            "iceberg_configuration": [],
+                            "kinesis_source_configuration": [],
+                            "msk_source_configuration": [],
+                            "opensearch_configuration": [],
+                            "opensearchserverless_configuration": [],
+                            "redshift_configuration": [],
+                            "server_side_encryption": [],
+                            "snowflake_configuration": [],
+                            "splunk_configuration": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_function.transform",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "transform",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "TRANSFORM_TYPE": "json_to_parquet"
+                                    }
+                                }
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "firehose-data-transform",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "python3.11",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": null,
+                            "timeout": 60,
+                            "timeouts": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "firehose-delivery-destination",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.errors",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "errors",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "firehose-delivery-errors",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_cloudwatch_log_group.firehose_logs",
+                "mode": "managed",
+                "type": "aws_cloudwatch_log_group",
+                "name": "firehose_logs",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "kms_key_id": null,
+                        "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                        "retention_in_days": 7,
+                        "skip_destroy": false,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_cloudwatch_log_group.lambda_logs",
+                "mode": "managed",
+                "type": "aws_cloudwatch_log_group",
+                "name": "lambda_logs",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "kms_key_id": null,
+                        "name": "/aws/lambda/firehose-data-transform",
+                        "retention_in_days": 7,
+                        "skip_destroy": false,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_cloudwatch_log_stream.firehose_stream",
+                "mode": "managed",
+                "type": "aws_cloudwatch_log_stream",
+                "name": "firehose_stream",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                        "name": "S3Delivery",
+                        "arn": true,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_iam_role.firehose_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "firehose_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "firehose-delivery-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.lambda_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "firehose-lambda-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.firehose_lambda",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "firehose_lambda",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "firehose-lambda-invoke",
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.firehose_s3",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "firehose_s3",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "firehose-s3-access",
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_iam_role_policy_attachment.lambda_basic",
+                "mode": "managed",
+                "type": "aws_iam_role_policy_attachment",
+                "name": "lambda_basic",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                        "role": "firehose-lambda-role",
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_kinesis_firehose_delivery_stream.main",
+                "mode": "managed",
+                "type": "aws_kinesis_firehose_delivery_stream",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "destination": "extended_s3",
+                        "elasticsearch_configuration": [],
+                        "extended_s3_configuration": [
+                            {
+                                "cloudwatch_logging_options": [
+                                    {}
+                                ],
+                                "data_format_conversion_configuration": [],
+                                "dynamic_partitioning_configuration": [],
+                                "processing_configuration": [
+                                    {
+                                        "processors": [
+                                            {
+                                                "parameters": [
+                                                    {},
+                                                    {},
+                                                    {}
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "s3_backup_configuration": []
+                            }
+                        ],
+                        "http_endpoint_configuration": [],
+                        "iceberg_configuration": [],
+                        "kinesis_source_configuration": [],
+                        "msk_source_configuration": [],
+                        "name": "analytics-delivery-stream",
+                        "opensearch_configuration": [],
+                        "opensearchserverless_configuration": [],
+                        "redshift_configuration": [],
+                        "server_side_encryption": [],
+                        "snowflake_configuration": [],
+                        "splunk_configuration": [],
+                        "tags": null,
+                        "timeouts": null,
+                        "arn": true,
+                        "destination_id": true,
+                        "id": true,
+                        "tags_all": {},
+                        "version_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "destination_id": true,
+                        "elasticsearch_configuration": [],
+                        "extended_s3_configuration": [
+                            {
+                                "bucket_arn": true,
+                                "cloudwatch_logging_options": [
+                                    {}
+                                ],
+                                "data_format_conversion_configuration": [],
+                                "dynamic_partitioning_configuration": [],
+                                "processing_configuration": [
+                                    {
+                                        "processors": [
+                                            {
+                                                "parameters": [
+                                                    {},
+                                                    {},
+                                                    {
+                                                        "parameter_value": true
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "role_arn": true,
+                                "s3_backup_configuration": []
+                            }
+                        ],
+                        "http_endpoint_configuration": [],
+                        "iceberg_configuration": [],
+                        "id": true,
+                        "kinesis_source_configuration": [],
+                        "msk_source_configuration": [],
+                        "opensearch_configuration": [],
+                        "opensearchserverless_configuration": [],
+                        "redshift_configuration": [],
+                        "server_side_encryption": [],
+                        "snowflake_configuration": [],
+                        "splunk_configuration": [],
+                        "tags_all": true,
+                        "version_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "elasticsearch_configuration": [],
+                        "extended_s3_configuration": [
+                            {
+                                "cloudwatch_logging_options": [
+                                    {}
+                                ],
+                                "data_format_conversion_configuration": [],
+                                "dynamic_partitioning_configuration": [],
+                                "processing_configuration": [
+                                    {
+                                        "processors": [
+                                            {
+                                                "parameters": [
+                                                    {},
+                                                    {},
+                                                    {}
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "s3_backup_configuration": []
+                            }
+                        ],
+                        "http_endpoint_configuration": [],
+                        "iceberg_configuration": [],
+                        "kinesis_source_configuration": [],
+                        "msk_source_configuration": [],
+                        "opensearch_configuration": [],
+                        "opensearchserverless_configuration": [],
+                        "redshift_configuration": [],
+                        "server_side_encryption": [],
+                        "snowflake_configuration": [],
+                        "splunk_configuration": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_function.transform",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "transform",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "firehose-data-transform",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "python3.11",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": null,
+                        "timeout": 60,
+                        "timeouts": null,
+                        "vpc_config": [],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": true,
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.destination",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "destination",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "firehose-delivery-destination",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.errors",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "errors",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "firehose-delivery-errors",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_log_group.firehose_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "firehose_logs",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "/aws/kinesisfirehose/analytics-delivery-stream"
+                            },
+                            "retention_in_days": {
+                                "constant_value": 7
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_group.lambda_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "lambda_logs",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "references": [
+                                    "aws_lambda_function.transform.function_name",
+                                    "aws_lambda_function.transform"
+                                ]
+                            },
+                            "retention_in_days": {
+                                "constant_value": 7
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_cloudwatch_log_stream.firehose_stream",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_stream",
+                        "name": "firehose_stream",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "log_group_name": {
+                                "references": [
+                                    "aws_cloudwatch_log_group.firehose_logs.name",
+                                    "aws_cloudwatch_log_group.firehose_logs"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "S3Delivery"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.firehose_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "firehose_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "firehose-delivery-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "firehose-lambda-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.firehose_lambda",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "firehose_lambda",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "firehose-lambda-invoke"
+                            },
+                            "policy": {
+                                "references": [
+                                    "aws_lambda_function.transform.arn",
+                                    "aws_lambda_function.transform"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.firehose_role.id",
+                                    "aws_iam_role.firehose_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.firehose_s3",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "firehose_s3",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "firehose-s3-access"
+                            },
+                            "policy": {
+                                "references": [
+                                    "aws_s3_bucket.destination.arn",
+                                    "aws_s3_bucket.destination",
+                                    "aws_s3_bucket.destination.arn",
+                                    "aws_s3_bucket.destination",
+                                    "aws_s3_bucket.errors.arn",
+                                    "aws_s3_bucket.errors",
+                                    "aws_s3_bucket.errors.arn",
+                                    "aws_s3_bucket.errors"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.firehose_role.id",
+                                    "aws_iam_role.firehose_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.lambda_basic",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "lambda_basic",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "policy_arn": {
+                                "constant_value": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.name",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_kinesis_firehose_delivery_stream.main",
+                        "mode": "managed",
+                        "type": "aws_kinesis_firehose_delivery_stream",
+                        "name": "main",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "destination": {
+                                "constant_value": "extended_s3"
+                            },
+                            "extended_s3_configuration": [
+                                {
+                                    "bucket_arn": {
+                                        "references": [
+                                            "aws_s3_bucket.destination.arn",
+                                            "aws_s3_bucket.destination"
+                                        ]
+                                    },
+                                    "buffering_interval": {
+                                        "constant_value": 300
+                                    },
+                                    "buffering_size": {
+                                        "constant_value": 5
+                                    },
+                                    "cloudwatch_logging_options": [
+                                        {
+                                            "enabled": {
+                                                "constant_value": true
+                                            },
+                                            "log_group_name": {
+                                                "references": [
+                                                    "aws_cloudwatch_log_group.firehose_logs.name",
+                                                    "aws_cloudwatch_log_group.firehose_logs"
+                                                ]
+                                            },
+                                            "log_stream_name": {
+                                                "constant_value": "S3Delivery"
+                                            }
+                                        }
+                                    ],
+                                    "compression_format": {
+                                        "constant_value": "GZIP"
+                                    },
+                                    "error_output_prefix": {
+                                        "constant_value": "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{firehose:error-output-type}/"
+                                    },
+                                    "prefix": {
+                                        "constant_value": "data/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
+                                    },
+                                    "processing_configuration": [
+                                        {
+                                            "enabled": {
+                                                "constant_value": true
+                                            },
+                                            "processors": [
+                                                {
+                                                    "parameters": [
+                                                        {
+                                                            "parameter_name": {
+                                                                "constant_value": "LambdaArn"
+                                                            },
+                                                            "parameter_value": {
+                                                                "references": [
+                                                                    "aws_lambda_function.transform.arn",
+                                                                    "aws_lambda_function.transform"
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            "parameter_name": {
+                                                                "constant_value": "BufferSizeInMBs"
+                                                            },
+                                                            "parameter_value": {
+                                                                "constant_value": "3"
+                                                            }
+                                                        },
+                                                        {
+                                                            "parameter_name": {
+                                                                "constant_value": "BufferIntervalInSeconds"
+                                                            },
+                                                            "parameter_value": {
+                                                                "constant_value": "60"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "type": {
+                                                        "constant_value": "Lambda"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "role_arn": {
+                                        "references": [
+                                            "aws_iam_role.firehose_role.arn",
+                                            "aws_iam_role.firehose_role"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "name": {
+                                "constant_value": "analytics-delivery-stream"
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_lambda_function.transform",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "transform",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "constant_value": {
+                                            "TRANSFORM_TYPE": "json_to_parquet"
+                                        }
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "firehose-data-transform"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.arn",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "python3.11"
+                            },
+                            "timeout": {
+                                "constant_value": 60
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "firehose-delivery-destination"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.errors",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "errors",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "firehose-delivery-errors"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_cloudwatch_log_group.firehose_logs",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.transform",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.destination",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.firehose_role",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.errors",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.firehose_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.transform",
+                "attribute": [
+                    "function_name"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "name"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-31T11:43:48Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_cloudwatch_log_group.firehose_logs",
+            "mode": "managed",
+            "type": "aws_cloudwatch_log_group",
+            "name": "firehose_logs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "kms_key_id": null,
+                    "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                    "retention_in_days": 7,
+                    "skip_destroy": false,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_cloudwatch_log_group.lambda_logs",
+            "mode": "managed",
+            "type": "aws_cloudwatch_log_group",
+            "name": "lambda_logs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "kms_key_id": null,
+                    "name": "/aws/lambda/firehose-data-transform",
+                    "retention_in_days": 7,
+                    "skip_destroy": false,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_cloudwatch_log_stream.firehose_stream",
+            "mode": "managed",
+            "type": "aws_cloudwatch_log_stream",
+            "name": "firehose_stream",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                    "name": "S3Delivery",
+                    "arn": true,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_iam_role.firehose_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "firehose_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "firehose-delivery-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.lambda_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "firehose-lambda-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.firehose_lambda",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "firehose_lambda",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "firehose-lambda-invoke",
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.firehose_s3",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "firehose_s3",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "firehose-s3-access",
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_iam_role_policy_attachment.lambda_basic",
+            "mode": "managed",
+            "type": "aws_iam_role_policy_attachment",
+            "name": "lambda_basic",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                    "role": "firehose-lambda-role",
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_kinesis_firehose_delivery_stream.main",
+            "mode": "managed",
+            "type": "aws_kinesis_firehose_delivery_stream",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "destination": "extended_s3",
+                    "elasticsearch_configuration": [],
+                    "extended_s3_configuration": [
+                        {
+                            "cloudwatch_logging_options": [
+                                {}
+                            ],
+                            "data_format_conversion_configuration": [],
+                            "dynamic_partitioning_configuration": [],
+                            "processing_configuration": [
+                                {
+                                    "processors": [
+                                        {
+                                            "parameters": [
+                                                {},
+                                                {},
+                                                {}
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "s3_backup_configuration": []
+                        }
+                    ],
+                    "http_endpoint_configuration": [],
+                    "iceberg_configuration": [],
+                    "kinesis_source_configuration": [],
+                    "msk_source_configuration": [],
+                    "name": "analytics-delivery-stream",
+                    "opensearch_configuration": [],
+                    "opensearchserverless_configuration": [],
+                    "redshift_configuration": [],
+                    "server_side_encryption": [],
+                    "snowflake_configuration": [],
+                    "splunk_configuration": [],
+                    "tags": null,
+                    "timeouts": null,
+                    "arn": true,
+                    "destination_id": true,
+                    "id": true,
+                    "tags_all": {},
+                    "version_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "destination_id": true,
+                    "elasticsearch_configuration": [],
+                    "extended_s3_configuration": [
+                        {
+                            "bucket_arn": true,
+                            "cloudwatch_logging_options": [
+                                {}
+                            ],
+                            "data_format_conversion_configuration": [],
+                            "dynamic_partitioning_configuration": [],
+                            "processing_configuration": [
+                                {
+                                    "processors": [
+                                        {
+                                            "parameters": [
+                                                {},
+                                                {},
+                                                {
+                                                    "parameter_value": true
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "role_arn": true,
+                            "s3_backup_configuration": []
+                        }
+                    ],
+                    "http_endpoint_configuration": [],
+                    "iceberg_configuration": [],
+                    "id": true,
+                    "kinesis_source_configuration": [],
+                    "msk_source_configuration": [],
+                    "opensearch_configuration": [],
+                    "opensearchserverless_configuration": [],
+                    "redshift_configuration": [],
+                    "server_side_encryption": [],
+                    "snowflake_configuration": [],
+                    "splunk_configuration": [],
+                    "tags_all": true,
+                    "version_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "elasticsearch_configuration": [],
+                    "extended_s3_configuration": [
+                        {
+                            "cloudwatch_logging_options": [
+                                {}
+                            ],
+                            "data_format_conversion_configuration": [],
+                            "dynamic_partitioning_configuration": [],
+                            "processing_configuration": [
+                                {
+                                    "processors": [
+                                        {
+                                            "parameters": [
+                                                {},
+                                                {},
+                                                {}
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "s3_backup_configuration": []
+                        }
+                    ],
+                    "http_endpoint_configuration": [],
+                    "iceberg_configuration": [],
+                    "kinesis_source_configuration": [],
+                    "msk_source_configuration": [],
+                    "opensearch_configuration": [],
+                    "opensearchserverless_configuration": [],
+                    "redshift_configuration": [],
+                    "server_side_encryption": [],
+                    "snowflake_configuration": [],
+                    "splunk_configuration": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_function.transform",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "transform",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "firehose-data-transform",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "python3.11",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": null,
+                    "timeout": 60,
+                    "timeouts": null,
+                    "vpc_config": [],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": true,
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.destination",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "destination",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "firehose-delivery-destination",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.errors",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "errors",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "firehose-delivery-errors",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_cloudwatch_log_group.firehose_logs",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_log_group.firehose_logs",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_cloudwatch_log_group.lambda_logs",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_log_group.lambda_logs",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_cloudwatch_log_stream.firehose_stream",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_log_stream.firehose_stream",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_iam_role.firehose_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.firehose_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_iam_role.lambda_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_iam_role_policy.firehose_lambda",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.firehose_lambda",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_iam_role_policy.firehose_s3",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.firehose_s3",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "aws_iam_role_policy_attachment.lambda_basic",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy_attachment.lambda_basic",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "aws_kinesis_firehose_delivery_stream.main",
+                "fontname": "sans-serif",
+                "label": "aws_kinesis_firehose_delivery_stream.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 9,
+                "name": "aws_lambda_function.transform",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.transform",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 10,
+                "name": "aws_s3_bucket.destination",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.destination",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 11,
+                "name": "aws_s3_bucket.errors",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.errors",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 1,
+                "head": 9
+            },
+            {
+                "_gvid": 1,
+                "tail": 2,
+                "head": 0
+            },
+            {
+                "_gvid": 2,
+                "tail": 5,
+                "head": 3
+            },
+            {
+                "_gvid": 3,
+                "tail": 5,
+                "head": 9
+            },
+            {
+                "_gvid": 4,
+                "tail": 6,
+                "head": 3
+            },
+            {
+                "_gvid": 5,
+                "tail": 6,
+                "head": 10
+            },
+            {
+                "_gvid": 6,
+                "tail": 6,
+                "head": 11
+            },
+            {
+                "_gvid": 7,
+                "tail": 7,
+                "head": 4
+            },
+            {
+                "_gvid": 8,
+                "tail": 8,
+                "head": 0
+            },
+            {
+                "_gvid": 9,
+                "tail": 8,
+                "head": 3
+            },
+            {
+                "_gvid": 10,
+                "tail": 8,
+                "head": 9
+            },
+            {
+                "_gvid": 11,
+                "tail": 8,
+                "head": 10
+            },
+            {
+                "_gvid": 12,
+                "tail": 9,
+                "head": 4
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_cloudwatch_log_group.firehose_logs": [
+            "aws_cloudwatch_log_stream.firehose_stream",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_cloudwatch_log_group.lambda_logs": [],
+        "aws_cloudwatch_log_stream.firehose_stream": [],
+        "aws_iam_role.firehose_role": [
+            "aws_iam_role_policy.firehose_lambda",
+            "aws_iam_role_policy.firehose_s3",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_iam_role.lambda_role": [
+            "aws_iam_role_policy_attachment.lambda_basic",
+            "aws_lambda_function.transform"
+        ],
+        "aws_iam_role_policy.firehose_lambda": [],
+        "aws_iam_role_policy.firehose_s3": [],
+        "aws_iam_role_policy_attachment.lambda_basic": [],
+        "aws_kinesis_firehose_delivery_stream.main": [],
+        "aws_lambda_function.transform": [
+            "aws_cloudwatch_log_group.lambda_logs",
+            "aws_iam_role_policy.firehose_lambda",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.firehose_s3",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_s3_bucket.errors": [
+            "aws_iam_role_policy.firehose_s3"
+        ]
+    },
+    "meta_data": {
+        "aws_cloudwatch_log_group.firehose_logs": {
+            "kms_key_id": null,
+            "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_group.lambda_logs": {
+            "kms_key_id": null,
+            "name": "/aws/lambda/firehose-data-transform",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_stream.firehose_stream": {
+            "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+            "name": "S3Delivery",
+            "arn": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_iam_role.firehose_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "firehose-delivery-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "firehose-lambda-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.firehose_lambda": {
+            "name": "firehose-lambda-invoke",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.firehose_s3": {
+            "name": "firehose-s3-access",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.lambda_basic": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            "role": "firehose-lambda-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_kinesis_firehose_delivery_stream.main": {
+            "destination": "extended_s3",
+            "elasticsearch_configuration": [],
+            "extended_s3_configuration": [
+                {
+                    "cloudwatch_logging_options": [
+                        {}
+                    ],
+                    "data_format_conversion_configuration": [],
+                    "dynamic_partitioning_configuration": [],
+                    "processing_configuration": [
+                        {
+                            "processors": [
+                                {
+                                    "parameters": [
+                                        {},
+                                        {},
+                                        {}
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "s3_backup_configuration": []
+                }
+            ],
+            "http_endpoint_configuration": [],
+            "iceberg_configuration": [],
+            "kinesis_source_configuration": [],
+            "msk_source_configuration": [],
+            "name": "analytics-delivery-stream",
+            "opensearch_configuration": [],
+            "opensearchserverless_configuration": [],
+            "redshift_configuration": [],
+            "server_side_encryption": [],
+            "snowflake_configuration": [],
+            "splunk_configuration": [],
+            "tags": null,
+            "timeouts": null,
+            "arn": true,
+            "destination_id": true,
+            "id": true,
+            "tags_all": {},
+            "version_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.transform": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "firehose-data-transform",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 60,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "firehose-delivery-destination",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.errors": {
+            "bucket": "firehose-delivery-errors",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_cloudwatch_log_group.firehose_logs",
+        "aws_cloudwatch_log_group.lambda_logs",
+        "aws_cloudwatch_log_stream.firehose_stream",
+        "aws_iam_role.firehose_role",
+        "aws_iam_role.lambda_role",
+        "aws_iam_role_policy.firehose_lambda",
+        "aws_iam_role_policy.firehose_s3",
+        "aws_iam_role_policy_attachment.lambda_basic",
+        "aws_kinesis_firehose_delivery_stream.main",
+        "aws_lambda_function.transform",
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket.errors"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_cloudwatch_log_group.firehose_logs": [
+            "aws_cloudwatch_log_stream.firehose_stream",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_cloudwatch_log_group.lambda_logs": [],
+        "aws_cloudwatch_log_stream.firehose_stream": [],
+        "aws_iam_role.firehose_role": [
+            "aws_iam_role_policy.firehose_lambda",
+            "aws_iam_role_policy.firehose_s3",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_iam_role.lambda_role": [
+            "aws_iam_role_policy_attachment.lambda_basic",
+            "aws_lambda_function.transform"
+        ],
+        "aws_iam_role_policy.firehose_lambda": [],
+        "aws_iam_role_policy.firehose_s3": [],
+        "aws_iam_role_policy_attachment.lambda_basic": [],
+        "aws_kinesis_firehose_delivery_stream.main": [],
+        "aws_lambda_function.transform": [
+            "aws_cloudwatch_log_group.lambda_logs",
+            "aws_iam_role_policy.firehose_lambda",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.firehose_s3",
+            "aws_kinesis_firehose_delivery_stream.main"
+        ],
+        "aws_s3_bucket.errors": [
+            "aws_iam_role_policy.firehose_s3"
+        ]
+    },
+    "original_metadata": {
+        "aws_cloudwatch_log_group.firehose_logs": {
+            "kms_key_id": null,
+            "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_group.lambda_logs": {
+            "kms_key_id": null,
+            "name": "/aws/lambda/firehose-data-transform",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_log_stream.firehose_stream": {
+            "log_group_name": "/aws/kinesisfirehose/analytics-delivery-stream",
+            "name": "S3Delivery",
+            "arn": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_iam_role.firehose_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "firehose-delivery-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "firehose-lambda-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.firehose_lambda": {
+            "name": "firehose-lambda-invoke",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.firehose_s3": {
+            "name": "firehose-s3-access",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.lambda_basic": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            "role": "firehose-lambda-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_kinesis_firehose_delivery_stream.main": {
+            "destination": "extended_s3",
+            "elasticsearch_configuration": [],
+            "extended_s3_configuration": [
+                {
+                    "cloudwatch_logging_options": [
+                        {}
+                    ],
+                    "data_format_conversion_configuration": [],
+                    "dynamic_partitioning_configuration": [],
+                    "processing_configuration": [
+                        {
+                            "processors": [
+                                {
+                                    "parameters": [
+                                        {},
+                                        {},
+                                        {}
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "s3_backup_configuration": []
+                }
+            ],
+            "http_endpoint_configuration": [],
+            "iceberg_configuration": [],
+            "kinesis_source_configuration": [],
+            "msk_source_configuration": [],
+            "name": "analytics-delivery-stream",
+            "opensearch_configuration": [],
+            "opensearchserverless_configuration": [],
+            "redshift_configuration": [],
+            "server_side_encryption": [],
+            "snowflake_configuration": [],
+            "splunk_configuration": [],
+            "tags": null,
+            "timeouts": null,
+            "arn": true,
+            "destination_id": true,
+            "id": true,
+            "tags_all": {},
+            "version_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.transform": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "firehose-data-transform",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "python3.11",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 60,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "firehose-delivery-destination",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.errors": {
+            "bucket": "firehose-delivery-errors",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "tests/fixtures/aws_terraform/firehose_lambda/main.tf": [
+            {
+                "aws_s3_bucket": {
+                    "destination": {
+                        "bucket": "firehose-delivery-destination"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket": {
+                    "errors": {
+                        "bucket": "firehose-delivery-errors"
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda_role": {
+                        "name": "firehose-lambda-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy_attachment": {
+                    "lambda_basic": {
+                        "role": "${aws_iam_role.lambda_role.name}",
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                    }
+                }
+            },
+            {
+                "aws_lambda_function": {
+                    "transform": {
+                        "filename": "lambda.zip",
+                        "function_name": "firehose-data-transform",
+                        "role": "${aws_iam_role.lambda_role.arn}",
+                        "handler": "index.handler",
+                        "runtime": "python3.11",
+                        "timeout": 60,
+                        "environment": [
+                            {
+                                "variables": {
+                                    "TRANSFORM_TYPE": "json_to_parquet"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_log_group": {
+                    "lambda_logs": {
+                        "name": "/aws/lambda/${aws_lambda_function.transform.function_name}",
+                        "retention_in_days": 7
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "firehose_role": {
+                        "name": "firehose-delivery-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'firehose.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "firehose_s3": {
+                        "name": "firehose-s3-access",
+                        "role": "${aws_iam_role.firehose_role.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['s3:AbortMultipartUpload', 's3:GetBucketLocation', 's3:GetObject', 's3:ListBucket', 's3:ListBucketMultipartUploads', 's3:PutObject'], 'Resource': ['${aws_s3_bucket.destination.arn}', '${aws_s3_bucket.destination.arn}/*', '${aws_s3_bucket.errors.arn}', '${aws_s3_bucket.errors.arn}/*']}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "firehose_lambda": {
+                        "name": "firehose-lambda-invoke",
+                        "role": "${aws_iam_role.firehose_role.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['lambda:InvokeFunction', 'lambda:GetFunctionConfiguration'], 'Resource': '${aws_lambda_function.transform.arn}'}]})}"
+                    }
+                }
+            },
+            {
+                "aws_kinesis_firehose_delivery_stream": {
+                    "main": {
+                        "name": "analytics-delivery-stream",
+                        "destination": "extended_s3",
+                        "extended_s3_configuration": [
+                            {
+                                "role_arn": "${aws_iam_role.firehose_role.arn}",
+                                "bucket_arn": "${aws_s3_bucket.destination.arn}",
+                                "prefix": "data/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/",
+                                "error_output_prefix": "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{firehose:error-output-type}/",
+                                "buffering_size": 5,
+                                "buffering_interval": 300,
+                                "compression_format": "GZIP",
+                                "processing_configuration": [
+                                    {
+                                        "enabled": true,
+                                        "processors": [
+                                            {
+                                                "type": "Lambda",
+                                                "parameters": [
+                                                    {
+                                                        "parameter_name": "LambdaArn",
+                                                        "parameter_value": "${aws_lambda_function.transform.arn}:$LATEST"
+                                                    },
+                                                    {
+                                                        "parameter_name": "BufferSizeInMBs",
+                                                        "parameter_value": "3"
+                                                    },
+                                                    {
+                                                        "parameter_name": "BufferIntervalInSeconds",
+                                                        "parameter_value": "60"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "cloudwatch_logging_options": [
+                                    {
+                                        "enabled": true,
+                                        "log_group_name": "${aws_cloudwatch_log_group.firehose_logs.name}",
+                                        "log_stream_name": "S3Delivery"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_log_group": {
+                    "firehose_logs": {
+                        "name": "/aws/kinesisfirehose/analytics-delivery-stream",
+                        "retention_in_days": 7
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_log_stream": {
+                    "firehose_stream": {
+                        "name": "S3Delivery",
+                        "log_group_name": "${aws_cloudwatch_log_group.firehose_logs.name}"
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "tests/fixtures/aws_terraform/firehose_lambda/main.tf": [
+            {
+                "aws": {
+                    "region": "us-east-1"
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpyygyy1d3'>"
+}

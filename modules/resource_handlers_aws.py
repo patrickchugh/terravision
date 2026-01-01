@@ -7,6 +7,7 @@ EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 from typing import Dict, List, Any
 import modules.config.cloud_config_aws as cloud_config
 import modules.helpers as helpers
+import modules.resource_transformers as transformers
 from ast import literal_eval
 import re
 import copy
@@ -32,6 +33,7 @@ def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Handle cases where resources have transitive link via sqs policy
     tfdata["graphdict"] = link_sqs_queue_policy(tfdata["graphdict"])
+
     # Remove connections to services specified in disconnect services
     for r in sorted(tfdata["graphdict"].keys()):
         for d in DISCONNECT_SERVICES:
@@ -601,7 +603,7 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     if not tfdata["graphdict"].get("aws_group.shared_services"):
         tfdata["graphdict"]["aws_group.shared_services"] = []
         tfdata["meta_data"]["aws_group.shared_services"] = {}
-    tfdata["graphdict"]["aws_group.shared_services"].append("aws_iam_group.iam")
+
     return tfdata
 
 
@@ -663,8 +665,20 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and p_type != "aws_vpc"
                 ):
                     tfdata["graphdict"][p].append(renamed_node)
-                    tfdata["graphdict"][p].remove(lb)
-        tfdata["graphdict"][lb].append(renamed_node)
+                    # Defensive check: only remove if lb is actually in parent
+                    # (SG handler may have already modified structure for multi-subnet LBs)
+                    if lb in tfdata["graphdict"][p]:
+                        tfdata["graphdict"][p].remove(lb)
+                elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
+                    # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
+                    # Traffic should flow LB → ALB → Compute, not Compute → LB
+                    if lb in tfdata["graphdict"][p]:
+                        tfdata["graphdict"][p].remove(lb)
+        # ELB service points TO ALB instances (correct direction)
+        if lb not in tfdata["graphdict"]:
+            tfdata["graphdict"][lb] = list()
+        if renamed_node not in tfdata["graphdict"][lb]:
+            tfdata["graphdict"][lb].append(renamed_node)
     return tfdata
 
 
@@ -746,6 +760,53 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Expand autoscaling groups and launch templates to numbered instances per subnet
     tfdata = expand_autoscaling_groups_to_subnets(tfdata)
+
+    return tfdata
+
+
+def aws_handle_lambda_event_source_mapping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle Lambda event source mappings by creating direct event source → Lambda connections.
+
+    Event source mappings (aws_lambda_event_source_mapping) are configuration resources that
+    connect event sources (SQS, Kinesis, DynamoDB Streams) to Lambda functions. This handler
+    creates direct connections and removes the intermediary mapping node.
+
+    Pattern:
+        Before: event_source_mapping → sqs_queue, event_source_mapping → lambda_function
+        After: sqs_queue → lambda_function (event_source_mapping removed)
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with direct event source → Lambda connections
+    """
+    # Create direct connections from SQS to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_sqs_queue",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
+
+    # Create direct connections from Kinesis to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_kinesis_stream",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
+
+    # Create direct connections from DynamoDB to Lambda
+    tfdata = transformers.link_peers_via_intermediary(
+        tfdata,
+        intermediary_pattern="aws_lambda_event_source_mapping",
+        source_pattern="aws_dynamodb_table",
+        target_pattern="aws_lambda_function",
+        remove_intermediary=True,
+    )
 
     return tfdata
 
@@ -1835,3 +1896,274 @@ def match_sg_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[
                         result[subnet].append(sg_with_suffix)
 
     return result
+
+
+def aws_handle_waf_associations(tfdata: dict) -> dict:
+    """Handle WAF WebACL associations to protected resources.
+
+    Parses aws_wafv2_web_acl_association (and aws_waf_web_acl_association for Classic WAF)
+    to create connections from WAF WebACLs to protected resources (ALB, CloudFront, API Gateway).
+
+    The association resource references:
+    - web_acl_arn: Terraform reference to WAF WebACL (e.g., "${aws_wafv2_web_acl.alb.arn}")
+    - resource_arn: Terraform reference to protected resource (e.g., "${aws_lb.main.arn}")
+
+    Note: ARNs are computed values (show as "true" in meta_data), so we parse from all_resource.
+
+    Args:
+        tfdata: TerraVision data structure containing graphdict, all_resource, meta_data
+
+    Returns:
+        Updated tfdata with WAF → protected resource connections
+
+    Constitutional Compliance:
+    - CO-005.1: Handler justified - association doesn't create Terraform dependencies
+    - Baseline validation showed WAF → ALB connection missing despite association existing
+    """
+    import re
+    from modules.helpers import append_dictlist
+
+    graphdict = tfdata.get("graphdict", {})
+    all_resource = tfdata.get("all_resource", {})
+
+    # Iterate through all Terraform files to find WAF associations
+    for _tf_file, resources in all_resource.items():
+        if not isinstance(resources, list):
+            continue
+
+        for resource_block in resources:
+            # Check if this is a WAF association resource
+            if "aws_wafv2_web_acl_association" in resource_block:
+                association_data = resource_block["aws_wafv2_web_acl_association"]
+            elif "aws_waf_web_acl_association" in resource_block:
+                association_data = resource_block["aws_waf_web_acl_association"]
+            else:
+                continue
+
+            # Process each association instance
+            for _instance_name, instance_data in association_data.items():
+                web_acl_arn_ref = instance_data.get("web_acl_arn", "")
+                resource_arn_ref = instance_data.get("resource_arn", "")
+
+                if not web_acl_arn_ref or not resource_arn_ref:
+                    continue
+
+                # Extract resource references from Terraform interpolations
+                # Format: "${aws_wafv2_web_acl.alb.arn}" or "${aws_lb.main.arn}"
+                waf_match = re.search(
+                    r"\$\{(aws_wafv2_web_acl\.\w+|aws_waf_web_acl\.\w+)",
+                    web_acl_arn_ref,
+                )
+                resource_match = re.search(
+                    r"\$\{(aws_lb\.\w+|aws_cloudfront_distribution\.\w+|aws_api_gateway_rest_api\.\w+)",
+                    resource_arn_ref,
+                )
+
+                if not waf_match or not resource_match:
+                    continue
+
+                # Note: waf_ref would be "aws_wafv2_web_acl.alb", but we search for consolidated node instead
+                protected_ref = resource_match.group(1)  # e.g., "aws_lb.main"
+
+                # Find the consolidated WAF resource in graphdict
+                # WAF consolidation creates "aws_wafv2_web_acl.waf" or "aws_waf_web_acl.waf"
+                waf_resource = None
+                for key in graphdict.keys():
+                    if "aws_wafv2_web_acl.waf" in key or "aws_waf_web_acl.waf" in key:
+                        waf_resource = key
+                        break
+
+                # Find the protected resource in graphdict
+                # Note: ALB is consolidated to "aws_lb.elb" (service node)
+                # We connect to the consolidation node, NOT numbered instances
+                protected_resource = None
+                for key in graphdict.keys():
+                    if "aws_lb" in protected_ref:
+                        # Look for LB consolidation node (aws_lb.elb) WITHOUT numbered suffix
+                        if key == "aws_lb.elb":
+                            protected_resource = key
+                            break
+                    elif "aws_cloudfront_distribution" in protected_ref:
+                        if "aws_cloudfront_distribution" in key and "~" not in key:
+                            protected_resource = key
+                            break
+                    elif "aws_api_gateway_rest_api" in protected_ref:
+                        # API Gateway consolidates to aws_api_gateway_integration.gateway
+                        if (
+                            "aws_api_gateway" in key
+                            and "gateway" in key
+                            and "~" not in key
+                        ):
+                            protected_resource = key
+                            break
+
+                # Create WAF → protected resource connection
+                if waf_resource and protected_resource:
+                    # Get existing connections for WAF
+                    waf_connections = graphdict.get(waf_resource, [])
+                    # Append protected resource if not already connected
+                    waf_connections = append_dictlist(
+                        waf_connections, protected_resource
+                    )
+                    # Update graphdict
+                    graphdict[waf_resource] = waf_connections
+
+                    # IMPORTANT: Remove any reverse connections (protected resource → WAF)
+                    # These come from Terraform dependencies but should not be in the graph
+                    # We only want WAF → protected resource (WAF protects resources)
+                    for key in list(graphdict.keys()):
+                        if waf_resource in graphdict.get(key, []):
+                            graphdict[key].remove(waf_resource)
+
+    tfdata["graphdict"] = graphdict
+    return tfdata
+
+
+def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Group S3 buckets by region for cross-region replication scenarios.
+
+    Creates tv_aws_region.<region> nodes and moves S3 buckets into their respective
+    regions based on provider alias configuration.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with regional grouping for S3 buckets
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    all_provider = tfdata.get("all_provider", {})
+    all_resource = tfdata.get("all_resource", {})
+
+    # Build provider alias -> region mapping
+    provider_region_map = {}
+    for filepath, provider_list in all_provider.items():
+        for provider_block in provider_list:
+            for provider_type, provider_config in provider_block.items():
+                if provider_type == "aws" and isinstance(provider_config, dict):
+                    region = provider_config.get("region")
+                    alias = provider_config.get("alias")
+                    if region and alias:
+                        provider_region_map[alias] = region
+
+    # If no provider mappings found, skip regional grouping
+    if not provider_region_map:
+        return tfdata
+
+    # Track which buckets belong to which regions
+    bucket_region_map = {}
+
+    # Find S3 buckets and their provider aliases
+    for filepath, resource_list in all_resource.items():
+        for resource_dict in resource_list:
+            if "aws_s3_bucket" in resource_dict:
+                for bucket_name, bucket_config in resource_dict[
+                    "aws_s3_bucket"
+                ].items():
+                    if isinstance(bucket_config, dict):
+                        provider_ref = bucket_config.get("provider", "")
+                        # Extract alias from provider reference like "${aws.primary}"
+                        if provider_ref:
+                            # Remove ${} and extract alias (e.g., "aws.primary" -> "primary")
+                            clean_ref = provider_ref.replace("${", "").replace("}", "")
+                            if "." in clean_ref:
+                                alias = clean_ref.split(".", 1)[1]
+                                region = provider_region_map.get(alias)
+                                if region:
+                                    bucket_resource_name = (
+                                        f"aws_s3_bucket.{bucket_name}"
+                                    )
+                                    bucket_region_map[bucket_resource_name] = region
+
+    # If multiple regions detected, create regional grouping
+    unique_regions = set(bucket_region_map.values())
+    if len(unique_regions) > 1:
+        # Create tv_aws_region nodes for each region
+        for region in unique_regions:
+            region_node = f"tv_aws_region.{region}"
+            if region_node not in graphdict:
+                graphdict[region_node] = []
+                meta_data[region_node] = {"region": region}
+
+        # Move S3 buckets (and related versioning resources) into their regions
+        for bucket_name, region in bucket_region_map.items():
+            region_node = f"tv_aws_region.{region}"
+
+            # Add bucket to region node's children
+            if bucket_name in graphdict and bucket_name not in graphdict[region_node]:
+                graphdict[region_node].append(bucket_name)
+
+            # Also move versioning resources to the same region
+            versioning_resource = bucket_name.replace(
+                "aws_s3_bucket.", "aws_s3_bucket_versioning."
+            )
+            if (
+                versioning_resource in graphdict
+                and versioning_resource not in graphdict[region_node]
+            ):
+                graphdict[region_node].append(versioning_resource)
+
+        # Create direct source → destination bucket connections for replication
+        for filepath, resource_list in all_resource.items():
+            for resource_dict in resource_list:
+                if "aws_s3_bucket_replication_configuration" in resource_dict:
+                    for repl_name, repl_config in resource_dict[
+                        "aws_s3_bucket_replication_configuration"
+                    ].items():
+                        if isinstance(repl_config, dict):
+                            # Extract source bucket reference (e.g., "${aws_s3_bucket.source.id}")
+                            source_ref = repl_config.get("bucket", "")
+                            source_bucket = None
+                            if "${" in source_ref and "}" in source_ref:
+                                # Parse "${aws_s3_bucket.source.id}" -> "aws_s3_bucket.source"
+                                ref_content = source_ref.replace("${", "").replace(
+                                    "}", ""
+                                )
+                                if ".id" in ref_content or ".bucket" in ref_content:
+                                    source_bucket = ref_content.rsplit(".", 1)[0]
+                                else:
+                                    source_bucket = ref_content
+
+                            # Extract destination bucket from rule configuration
+                            destination_bucket = None
+                            rules = repl_config.get("rule", [])
+                            if rules and len(rules) > 0:
+                                rule = rules[0]
+                                if isinstance(rule, dict):
+                                    dest_list = rule.get("destination", [])
+                                    # destination is an array of dicts
+                                    if (
+                                        isinstance(dest_list, list)
+                                        and len(dest_list) > 0
+                                    ):
+                                        dest_config = dest_list[0]
+                                        if isinstance(dest_config, dict):
+                                            dest_ref = dest_config.get("bucket", "")
+                                            if "${" in dest_ref and "}" in dest_ref:
+                                                # Parse "${aws_s3_bucket.destination.arn}" -> "aws_s3_bucket.destination"
+                                                ref_content = dest_ref.replace(
+                                                    "${", ""
+                                                ).replace("}", "")
+                                                if (
+                                                    ".arn" in ref_content
+                                                    or ".bucket" in ref_content
+                                                ):
+                                                    destination_bucket = (
+                                                        ref_content.rsplit(".", 1)[0]
+                                                    )
+                                                else:
+                                                    destination_bucket = ref_content
+
+                            # Create direct source → destination connection
+                            if source_bucket and destination_bucket:
+                                if (
+                                    source_bucket in graphdict
+                                    and destination_bucket
+                                    not in graphdict.get(source_bucket, [])
+                                ):
+                                    graphdict[source_bucket].append(destination_bucket)
+
+    tfdata["graphdict"] = graphdict
+    tfdata["meta_data"] = meta_data
+    return tfdata

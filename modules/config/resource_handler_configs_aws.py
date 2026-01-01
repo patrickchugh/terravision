@@ -1,6 +1,6 @@
 """AWS-specific resource handler configurations.
 
-Defines transformation pipelines for AWS resources.
+Defines transformation pipelines for AWS resources in a config-driven manner.
 Patterns support wildcards via substring matching.
 """
 
@@ -154,6 +154,17 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_lambda_function": {
+        "description": "Move Lambda functions from subnets to VPC level to avoid duplication",
+        "transformations": [
+            {
+                "operation": "move_to_vpc_parent",
+                "params": {
+                    "resource_pattern": "aws_lambda_function",
+                },
+            },
+        ],
+    },
     "aws_appautoscaling_target": {
         "description": "Handle autoscaling target relationships and counts",
         # Pure function handler - logic is too specific for generic transformers
@@ -194,5 +205,181 @@ RESOURCE_HANDLER_CONFIGS = {
     "helm_release": {
         "description": "Handle helm release resources",
         "additional_handler_function": "helm_release_handler",
+    },
+    "aws_elasticache_replication_group": {
+        "description": "Pure Config-Driven: Expand replication groups to numbered instances per subnet",
+        "transformations": [
+            {
+                "operation": "expand_to_numbered_instances",
+                "params": {
+                    "resource_pattern": "aws_elasticache_replication_group",
+                    "subnet_key": "subnet_group_name",
+                    "skip_if_numbered": True,
+                    "inherit_connections": False,
+                },
+            },
+            {
+                "operation": "move_to_vpc_parent",
+                "params": {
+                    "resource_pattern": "aws_elasticache_subnet_group",
+                },
+            },
+            {
+                "operation": "redirect_to_security_group",
+                "params": {
+                    "resource_pattern": "aws_elasticache_subnet_group",
+                },
+            },
+        ],
+    },
+    "aws_elasticache_cluster": {
+        "description": "Pure Config-Driven: Expand ElastiCache clusters to numbered instances per subnet",
+        "transformations": [
+            {
+                "operation": "expand_to_numbered_instances",
+                "params": {
+                    "resource_pattern": "aws_elasticache_cluster",
+                    "subnet_key": "subnet_group_name",
+                    "skip_if_numbered": True,
+                    "inherit_connections": False,
+                },
+            },
+        ],
+    },
+    "aws_wafv2_web_acl": {
+        "description": "Hybrid: Link WAF Web ACLs to protected resources via association parsing",
+        # Problem: WAF association doesn't create Terraform dependencies
+        # Solution: Parse aws_wafv2_web_acl_association to create WAF → ALB/CloudFront connections
+        "additional_handler_function": "aws_handle_waf_associations",
+    },
+    "aws_sagemaker_endpoint": {
+        "description": "Config-Only: Delete endpoint_configuration (consolidation via AWS_CONSOLIDATED_NODES)",
+        "transformations": [
+            {
+                "operation": "delete_nodes",
+                "params": {
+                    "resource_pattern": "aws_sagemaker_endpoint_configuration",
+                    "remove_from_parents": True,
+                },
+            },
+        ],
+    },
+    "aws_s3_bucket": {
+        "description": "Pure Function: Group S3 buckets by region for cross-region replication scenarios",
+        "additional_handler_function": "aws_handle_s3_cross_region_grouping",
+    },
+    "aws_s3_bucket_notification": {
+        "description": "Config-Only: Link S3 notifications to targets + create transitive S3 bucket → target links",
+        "transformations": [
+            {
+                "operation": "link_by_metadata_pattern",
+                "params": {
+                    "source_pattern": "aws_s3_bucket_notification",
+                    "target_resource": "aws_lambda_function",
+                    "metadata_key": "lambda_function",
+                    "metadata_value_pattern": "arn:aws:lambda",
+                },
+            },
+            {
+                "operation": "link_by_metadata_pattern",
+                "params": {
+                    "source_pattern": "aws_s3_bucket_notification",
+                    "target_resource": "aws_sns_topic",
+                    "metadata_key": "topic",
+                    "metadata_value_pattern": "arn:aws:sns",
+                },
+            },
+            {
+                "operation": "link_by_metadata_pattern",
+                "params": {
+                    "source_pattern": "aws_s3_bucket_notification",
+                    "target_resource": "aws_sqs_queue",
+                    "metadata_key": "queue",
+                    "metadata_value_pattern": "arn:aws:sqs",
+                },
+            },
+            # Create transitive links: S3 bucket → Lambda (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_lambda_function",
+                    "remove_intermediate": False,
+                },
+            },
+            # Create transitive links: S3 bucket → SNS (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_sns_topic",
+                    "remove_intermediate": False,
+                },
+            },
+            # Create transitive links: S3 bucket → SQS (via notification intermediate)
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_s3_bucket",
+                    "intermediate_pattern": "aws_s3_bucket_notification",
+                    "target_pattern": "aws_sqs_queue",
+                    "remove_intermediate": False,
+                },
+            },
+        ],
+    },
+    "aws_secretsmanager_secret": {
+        "description": "Hybrid: Link Secrets Manager to rotation Lambda functions",
+        "transformations": [
+            {
+                "operation": "link_by_metadata_pattern",
+                "params": {
+                    "source_pattern": "aws_secretsmanager_secret_rotation",
+                    "target_resource": "aws_lambda_function",
+                    "metadata_key": "rotation_lambda_arn",
+                    "metadata_value_pattern": "function:",
+                },
+            },
+        ],
+    },
+    "aws_glue_catalog_table": {
+        "description": "Hybrid: Link Glue Catalog tables to databases and S3 buckets",
+        "transformations": [
+            {
+                "operation": "link_by_metadata_pattern",
+                "params": {
+                    "source_pattern": "aws_glue_catalog_table",
+                    "target_resource": "aws_s3_bucket",
+                    "metadata_key": "storage_descriptor",
+                    "metadata_value_pattern": "s3://",
+                },
+            },
+        ],
+        "additional_handler_function": "aws_handle_glue_catalog",
+    },
+    "aws_appsync_graphql_api": {
+        "description": "Config-Only: Consolidate AppSync resources + delete resolver nodes (consolidation via AWS_CONSOLIDATED_NODES)",
+        "transformations": [
+            {
+                "operation": "delete_nodes",
+                "params": {
+                    "resource_pattern": "aws_appsync_resolver",
+                    "remove_from_parents": True,
+                },
+            },
+        ],
+    },
+    "aws_kinesis_firehose_delivery_stream": {
+        "description": "Pure Function: Parse Firehose configuration for S3/Redshift/Elasticsearch destinations",
+        # TEMPORARILY COMMENTED OUT FOR FUTURE IMPLEMENTATION
+        # "additional_handler_function": "aws_handle_firehose",
+    },
+    "aws_lambda_event_source_mapping": {
+        "description": "Pure Function: Create direct connections from event sources (SQS, Kinesis, DynamoDB) to Lambda functions",
+        # Creates transitive links and removes intermediary mapping node
+        # Handles multiple event source types (SQS, Kinesis, DynamoDB Streams)
+        "additional_handler_function": "aws_handle_lambda_event_source_mapping",
     },
 }

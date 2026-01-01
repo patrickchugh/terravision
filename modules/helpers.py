@@ -137,11 +137,12 @@ def export_tfdata(tfdata: Dict[str, Any]) -> None:
         tfdata: Terraform data dictionary to export
     """
     tfdata["tempdir"] = str(tfdata["tempdir"])
-    with open("tfdata.json", "w") as file:
+    with open(Path.cwd() / "tfdata.json", "w") as file:
         json.dump(tfdata, file, indent=4)
+    out_path = (Path.cwd() / "tfdata.json").resolve()
     click.echo(
         click.style(
-            f"\nINFO: Debug flag used. Current state has been written to tfdata.json\n",
+            f"\nINFO: Debug flag used. Current state has been written to {out_path}\n",
             fg="yellow",
             bold=True,
         )
@@ -468,9 +469,6 @@ def remove_duplicate_words(string: str) -> str:
     return " ".join(unique_words_list)
 
 
-# 'aws_lb_target_group_attachment.mytg1["1"][1]'
-
-
 def remove_brackets_and_numbers(input_string: str) -> str:
     """Remove square brackets and their contents from string.
 
@@ -494,41 +492,151 @@ def remove_brackets_and_numbers(input_string: str) -> str:
 
 def pretty_name(name: str, show_title=True) -> str:
     """
-    Beautification for   ddAWS Labels
+    Generate clean, human-readable labels for Terraform AWS resource names.
+
+    Examples:
+      - aws_cloudfront_distribution.this -> "Cloudfront Distribution"
+      - aws_lambda_function.cache_reader -> "Lambda Function - Cache Reader"
+      - aws_subnet.cache_a                -> "Subnet - Cache A"
+      - aws_efs_mount_target.this         -> "EFS Mount Target"
+      - aws_alb.elb~1                     -> "App Load Balancer - ELB"
+
+    Changed: max output length increased to 40 chars with a soft line-break
+    inserted after ~21 characters when the label is longer than that.
     """
-    resourcename = ""
-    skip_keywords = ["null_", "random", "time_sleep", "empty", "blank"]
-    if any(keyword in name for keyword in skip_keywords):
+    if not name:
+        return ""
+
+    skip_keywords = {"null_", "random", "time_sleep", "empty", "blank"}
+    if any(k in name for k in skip_keywords):
         return " "
+
+    # normalize and remove module prefixes / numbered suffixes and array indices
+    name = name.replace("tv_aws_", "")
+    name = name.replace("tv_", "").replace("aws_", "")
+
+    name = get_no_module_no_number_name(name)
+    name = name.split("~", 1)[0]
+
+    m = re.match(r"^([a-z0-9_]+)(?:\.([a-z0-9_]+))?$", name)
+    if not m:
+        return (name or "")[:40]
+
+    resource_type = m.group(1) or ""
+    instance_raw = (m.group(2) or "").strip()
+
+    # placeholders we don't want as instance labels
+    placeholders = {"this", "default", "main", "resource"}
+    if instance_raw in placeholders:
+        instance_raw = ""
+
+    def _soft_break(s: str, soft_at: int, max_len: int) -> str:
+        """Insert a soft newline after the nearest word boundary after soft_at.
+        Do not cut a word. If no boundary found after soft_at, try before;
+        if none, return truncated string without introducing a newline."""
+        if len(s) <= soft_at:
+            return s if len(s) <= max_len else s[:max_len]
+        # prefer first space after soft_at
+        after = s.find(" ", soft_at)
+        if after != -1 and after <= max_len:
+            br = after
+        else:
+            # fallback to last space before soft_at
+            before = s.rfind(" ", 0, soft_at)
+            if before != -1:
+                br = before
+            else:
+                # no safe break available; return truncated string
+                return s[:max_len] if len(s) > max_len else s
+        # insert newline at the chosen space position
+        return s[:br] + "\n" + s[br + 1 :][: max_len - (1 if br < max_len else 0)]
+
+    # Special-case: availability zone formatting
+    # Input example: aws_az.availability_zone_us_east_1a~1
+    # Desired output: "Availability Zone US East 1a"
+    if resource_type == "az" and instance_raw.startswith("availability_zone_"):
+        zone = instance_raw[len("availability_zone_") :]
+        parts = [p for p in zone.split("_") if p]
+        acronyms = {a.lower(): a for a in ACRONYMS_LIST if a}
+        formatted_parts = []
+        for p in parts:
+            key = re.sub(r"[^\w]", "", p).lower()
+            if not key:
+                continue
+            if key in acronyms:
+                formatted_parts.append(acronyms[key].upper())
+                continue
+            if key.isalpha() and len(key) == 2:
+                formatted_parts.append(key.upper())
+                continue
+            mpart = re.match(r"^(\d+)([a-zA-Z])$", p)
+            if mpart:
+                formatted_parts.append(f"{mpart.group(1)}{mpart.group(2).lower()}")
+                continue
+            formatted_parts.append(p.title())
+        region_part = " ".join(formatted_parts)
+        az_label = f"Availability Zone {region_part}"
+        # soft-break and truncate to new limits
+        az_label = _soft_break(az_label, soft_at=21, max_len=40)
+        return az_label
+
+    # Prefer a full replacement for the whole resource_type (e.g. alb -> application_load_balancer)
+    left_raw = NAME_REPLACEMENTS.get(resource_type, "")
+    if left_raw:
+        if instance_raw and instance_raw.replace("_", "") == resource_type:
+            instance_raw = ""
     else:
-        name = name.replace("tv_aws_", "")
-        name = name.replace("aws_", "")
-    name = get_no_module_name(name)
-    servicename = name.split(".")[0]
-    service_label = name.split(".")[-1]
-    service_label = service_label.split("~")[0]
-    if servicename.startswith(service_label.replace("_", "")):
-        service_label = ""
-    if servicename in NAME_REPLACEMENTS.keys():
-        servicename = NAME_REPLACEMENTS[servicename]
-    if service_label.title == servicename:
-        service_label = ""
-    final_label = (service_label if show_title else "") + " " + servicename
-    final_label = final_label[:22]
-    final_label = final_label.replace("_", " ")
-    final_label = final_label.replace("~", " ")
-    final_label = final_label.replace("this", "").strip()
-    acronym = False
-    final_label = final_label.title()[:21]
-    for acro in ACRONYMS_LIST:
-        if acro.title() in final_label:
-            acronym = True
-            final_label = final_label.replace(acro.title(), acro.upper())
-    final_label = remove_duplicate_words(final_label)
-    if acronym:
-        return final_label
+        # split resource_type into service + suffix (lambda_function -> lambda + function)
+        parts = resource_type.split("_")
+        servicename = parts[0] if parts else resource_type
+        servicename_repl = NAME_REPLACEMENTS.get(servicename, servicename)
+        type_suffix = " ".join(parts[1:]) if len(parts) > 1 else ""
+        left_raw = (
+            f"{servicename_repl} {type_suffix}".strip()
+            if type_suffix
+            else servicename_repl
+        )
+        # avoid duplication when instance matches service/name replacement
+        if instance_raw and (
+            instance_raw.replace("_", "").lower() == servicename.lower()
+            or instance_raw.replace("_", "").lower()
+            == str(servicename_repl).replace(" ", "").lower()
+        ):
+            instance_raw = ""
+
+    left_part = (left_raw or "").replace("_", " ").strip()
+    right_part = (instance_raw or "").replace("_", " ").strip()
+
+    if show_title and right_part:
+        combined = f"{left_part} - {right_part}"
     else:
-        return str(final_label.title())[:21]
+        combined = left_part
+
+    combined = re.sub(r"\s+", " ", combined).strip()
+
+    # Title-case while preserving acronyms
+    acronyms = {a.lower(): a for a in ACRONYMS_LIST if a}
+    words = combined.split(" ")
+    processed_words = []
+    seen = set()
+    for w in words:
+        key = re.sub(r"[^\w]", "", w).lower()
+        if not key:
+            continue
+        if key in acronyms:
+            out = acronyms[key].upper()
+        else:
+            out = w.title()
+        if out.lower() not in seen:
+            seen.add(out.lower())
+            processed_words.append(out)
+
+    final = " ".join(processed_words).strip()
+
+    # Soft break after ~21 chars and increase max length to 40
+    final = _soft_break(final, soft_at=21, max_len=40)
+
+    return final
 
 
 def replace_variables(
@@ -764,15 +872,18 @@ def find_all_resources_containing(
 def append_dictlist(thelist: List[Any], new_item: Any) -> List[Any]:
     """Append item to list and return new list.
 
+    Checks for duplicates before appending to prevent duplicate connections.
+
     Args:
         thelist: Original list
         new_item: Item to append
 
     Returns:
-        New list with item appended
+        New list with item appended (no duplicates)
     """
     new_list = list(thelist)
-    new_list.append(new_item)
+    if new_item not in new_list:
+        new_list.append(new_item)
     return new_list
 
 
@@ -1125,3 +1236,135 @@ def remove_terraform_functions(text: str) -> str:
         return content
 
     return re.sub(pattern, process_expression, text)
+
+
+def validate_no_shared_connections(
+    graphdict: Dict[str, List[str]], tfdata: Dict[str, Any]
+) -> Tuple[bool, List[str]]:
+    """Validate that no two group nodes share connections to the same resource.
+
+    This is critical for graphviz rendering. When multiple groups (subnets, AZs, etc.)
+    point to the same resource, it creates rendering issues. Resources should be
+    expanded into numbered instances (~1, ~2, etc.) to match their parent groups.
+
+    However, some resources are INTENTIONALLY shared across groups:
+    - Subnet groups (ElastiCache, RDS) - span multiple subnets by design
+    - Route table associations - connect route tables to subnets
+    - Non-drawable resources (no icon) - don't appear in visual diagram
+
+    Args:
+        graphdict: Graph dictionary mapping nodes to their connections
+        tfdata: Terraform data dictionary with provider config
+
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+        - is_valid: True if no shared connections found, False otherwise
+        - list_of_errors: List of error messages describing violations
+
+    Example violations:
+        - aws_subnet.a → aws_instance.web
+        - aws_subnet.b → aws_instance.web
+        Result: ERROR - aws_instance.web should be aws_instance.web~1, aws_instance.web~2
+    """
+    config = _get_provider_config_constants(tfdata)
+    GROUP_NODES = config.get("GROUP_NODES", [])
+
+    # Resources that are INTENTIONALLY shared across groups (cross-group by design)
+    INTENTIONAL_SHARED_RESOURCES = [
+        "_subnet_group",  # aws_elasticache_subnet_group, aws_db_subnet_group, etc.
+        "_route_table_association",  # Route table associations
+        "_nat_gateway",  # NAT gateways can be shared
+        "_internet_gateway",  # Internet gateways span VPC
+        "_route_table",  # Route tables can be shared
+    ]
+
+    # Resources that are typically non-drawable (no icon/not visually rendered)
+    NON_DRAWABLE_RESOURCES = [
+        "aws_appautoscaling_policy",
+        "aws_appautoscaling_target",
+        "aws_iam_role_policy_attachment",
+        "aws_iam_policy",
+        "aws_cloudwatch_metric_alarm",
+        "aws_route_table_association",
+    ]
+
+    errors = []
+
+    # Build mapping of resource → list of parent groups
+    resource_to_parents = {}
+
+    for node, connections in graphdict.items():
+        # Check if this node is a group node
+        is_group = any(group_type in node for group_type in GROUP_NODES)
+        if not is_group:
+            continue
+
+        # For each connection from this group
+        for connection in connections:
+            # Skip if connection itself is a group or special node
+            if any(group_type in connection for group_type in GROUP_NODES):
+                continue
+            if connection.startswith("tv_") or connection.startswith("aws_group."):
+                continue
+
+            # Skip intentional shared resources (cross-group by design)
+            if any(
+                shared_type in connection
+                for shared_type in INTENTIONAL_SHARED_RESOURCES
+            ):
+                continue
+
+            # Skip non-drawable resources (not visually rendered)
+            if any(
+                non_drawable in connection for non_drawable in NON_DRAWABLE_RESOURCES
+            ):
+                continue
+
+            # Track which groups point to this connection
+            if connection not in resource_to_parents:
+                resource_to_parents[connection] = []
+            resource_to_parents[connection].append(node)
+
+    # Check for violations: any resource with multiple parent groups
+    for resource, parent_groups in resource_to_parents.items():
+        if len(parent_groups) > 1:
+            # Check if resource already has numbered instances (ends with ~N)
+            if "~" not in resource:
+                errors.append(
+                    f"SHARED CONNECTION VIOLATION: '{resource}' is connected from multiple groups: {parent_groups}. "
+                    f"This causes graphviz rendering issues. Resource should be expanded into numbered instances "
+                    f"({resource}~1, {resource}~2, etc.) to match each parent group."
+                )
+
+    return (len(errors) == 0, errors)
+
+
+def validate_graphdict(
+    graphdict: Dict[str, List[str]], tfdata: Dict[str, Any]
+) -> Tuple[bool, List[str]]:
+    """Run all validation checks on graphdict before rendering.
+
+    This function aggregates all validation checks to catch common issues
+    that cause rendering problems or incorrect diagrams.
+
+    Args:
+        graphdict: Graph dictionary mapping nodes to their connections
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Tuple of (is_valid, list_of_all_errors)
+    """
+    all_errors = []
+
+    # Check 1: No shared connections between groups
+    valid, errors = validate_no_shared_connections(graphdict, tfdata)
+    if not valid:
+        all_errors.extend(errors)
+
+    # Future checks can be added here:
+    # - Check for circular dependencies
+    # - Check for orphaned nodes
+    # - Check for invalid node names
+    # - etc.
+
+    return (len(all_errors) == 0, all_errors)

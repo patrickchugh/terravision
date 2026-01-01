@@ -1,0 +1,25 @@
+{
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.lambda_role": [
+        "aws_lambda_function.image_processor"
+    ],
+    "aws_lambda_function.image_processor": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_lambda_permission.allow_s3"
+    ],
+    "aws_lambda_permission.allow_s3": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_s3_bucket.uploads"
+    ],
+    "aws_s3_bucket.uploads": [
+        "aws_lambda_function.image_processor"
+    ],
+    "aws_s3_bucket_notification.upload_notification": [
+        "aws_lambda_function.image_processor",
+        "aws_s3_bucket.uploads"
+    ]
+}

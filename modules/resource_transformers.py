@@ -16,6 +16,7 @@ def expand_to_numbered_instances(
     resource_pattern: str,
     subnet_key: str = "subnet_ids",
     skip_if_numbered: bool = True,
+    inherit_connections: bool = True,
 ) -> Dict[str, Any]:
     """Expand single resource into numbered instances (~1, ~2, ~3) per subnet.
 
@@ -24,6 +25,10 @@ def expand_to_numbered_instances(
         resource_pattern: Pattern to match resources (e.g., "aws_eks_node_group")
         subnet_key: Metadata key containing subnet references
         skip_if_numbered: Skip resources already containing ~
+        inherit_connections: If True, numbered instances inherit base resource connections.
+                            If False, numbered instances start with empty connections.
+                            Use False for visual-only resources (ElastiCache multi-AZ),
+                            True for actual instances (EKS nodes, ASG instances).
 
     Returns:
         Updated tfdata with numbered instances
@@ -55,9 +60,14 @@ def expand_to_numbered_instances(
         if len(matching_subnets) > 1:
             for i, subnet in enumerate(matching_subnets, start=1):
                 numbered = f"{resource}~{i}"
-                tfdata["graphdict"][numbered] = list(
-                    tfdata["graphdict"].get(resource, [])
-                )
+                # Inherit connections based on parameter
+                if inherit_connections:
+                    tfdata["graphdict"][numbered] = list(
+                        tfdata["graphdict"].get(resource, [])
+                    )
+                else:
+                    # Visual-only instances start with empty connections
+                    tfdata["graphdict"][numbered] = []
                 tfdata["meta_data"][numbered] = copy.deepcopy(
                     tfdata["meta_data"].get(resource, {})
                 )
@@ -78,6 +88,23 @@ def expand_to_numbered_instances(
             # Single subnet - add if not present
             if resource not in tfdata["graphdict"][matching_subnets[0]]:
                 tfdata["graphdict"][matching_subnets[0]].append(resource)
+
+    # Cleanup: Ensure each subnet only contains numbered instances assigned to it
+    # This prevents overlapping connections where subnet_a contains both resource~1 and resource~2
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    for subnet_idx, subnet in enumerate(sorted(subnets), start=1):
+        subnet_connections = tfdata["graphdict"].get(subnet, [])[:]
+
+        for connection in subnet_connections:
+            # Check if this is a numbered instance
+            match = re.search(r"(.+)~(\d+)$", connection)
+            if match:
+                base_resource = match.group(1)
+                instance_num = int(match.group(2))
+
+                # If this numbered instance doesn't match the subnet's position, remove it
+                if instance_num != subnet_idx:
+                    tfdata["graphdict"][subnet].remove(connection)
 
     return tfdata
 
@@ -648,7 +675,7 @@ def group_shared_services(
 
     # Add default IAM service
     if "aws_iam_group.iam" not in tfdata["graphdict"][group_name]:
-        tfdata["graphdict"][group_name].append("aws_iam_group.iam")
+        tfdata["graphdict"][group_name].append("aws_iam_group.of_services")
 
     return tfdata
 
@@ -782,6 +809,72 @@ def create_transitive_links(
                             # Remove intermediate node entirely
                             graphdict.pop(intermediate, None)
                             tfdata["meta_data"].pop(intermediate, None)
+
+    return tfdata
+
+
+def link_peers_via_intermediary(
+    tfdata: Dict[str, Any],
+    intermediary_pattern: str,
+    source_pattern: str,
+    target_pattern: str,
+    remove_intermediary: bool = True,
+) -> Dict[str, Any]:
+    """Link peer resources that share an intermediary: intermediate→peer1 + intermediate→peer2 becomes peer1→peer2.
+
+    Use case: Event source mappings, queue policies, and other configuration resources
+    that logically connect two peers but shouldn't appear in diagrams.
+
+    Pattern:
+        Before: intermediate → source, intermediate → target
+        After: source → target (intermediate removed)
+
+    Args:
+        tfdata: Terraform data dictionary
+        intermediary_pattern: Pattern to match intermediary resources (e.g., "aws_lambda_event_source_mapping")
+        source_pattern: Pattern to match source peer resources (e.g., "aws_sqs_queue")
+        target_pattern: Pattern to match target peer resources (e.g., "aws_lambda_function")
+        remove_intermediary: Whether to remove intermediary node (default: True)
+
+    Returns:
+        Updated tfdata with peer links created and intermediary optionally removed
+    """
+    graphdict = tfdata["graphdict"]
+    intermediaries = sorted([s for s in graphdict.keys() if intermediary_pattern in s])
+
+    for intermediary in list(intermediaries):
+        intermediary_connections = graphdict.get(intermediary, [])
+
+        if not intermediary_connections:
+            continue
+
+        # Find source and target peers in intermediary's connections
+        sources = [c for c in intermediary_connections if source_pattern in c]
+        targets = [c for c in intermediary_connections if target_pattern in c]
+
+        # Only process if we have BOTH sources and targets
+        if not (sources and targets):
+            continue
+
+        # Create direct links from each source to each target
+        for source in sources:
+            for target in targets:
+                if source in graphdict:
+                    if target not in graphdict[source]:
+                        graphdict[source].append(target)
+                else:
+                    graphdict[source] = [target]
+
+        # Remove intermediary node if requested (only if we created links)
+        if remove_intermediary:
+            # Remove the intermediary node itself
+            graphdict.pop(intermediary, None)
+            tfdata["meta_data"].pop(intermediary, None)
+
+            # Clean up dangling references to the deleted intermediary from all other nodes
+            for node in list(graphdict.keys()):
+                if intermediary in graphdict[node]:
+                    graphdict[node].remove(intermediary)
 
     return tfdata
 
@@ -987,67 +1080,6 @@ def propagate_metadata(
 
                     if direction in ["reverse", "bidirectional"]:
                         tfdata["meta_data"][source][key] = copy.deepcopy(value)
-
-    return tfdata
-
-
-def consolidate_into_single_node(
-    tfdata: Dict[str, Any],
-    resource_pattern: str,
-    target_node_name: str,
-    merge_connections: bool = True,
-    merge_metadata: bool = True,
-) -> Dict[str, Any]:
-    """Consolidate multiple resources into a single node.
-
-    Args:
-        tfdata: Terraform data dictionary
-        resource_pattern: Pattern to match resources to consolidate
-        target_node_name: Name of the consolidated target node
-        merge_connections: Merge all connections into target node
-        merge_metadata: Merge metadata into target node
-
-    Returns:
-        Updated tfdata with resources consolidated
-    """
-    resources = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], resource_pattern
-    )
-
-    # Create target node if it doesn't exist
-    if target_node_name not in tfdata["graphdict"]:
-        tfdata["graphdict"][target_node_name] = []
-        tfdata["meta_data"][target_node_name] = {}
-
-    # Merge all resources into target
-    for resource in resources:
-        if resource == target_node_name:
-            continue
-
-        # Merge connections
-        if merge_connections:
-            for connection in tfdata["graphdict"].get(resource, []):
-                if connection not in tfdata["graphdict"][target_node_name]:
-                    tfdata["graphdict"][target_node_name].append(connection)
-
-        # Merge metadata
-        if merge_metadata:
-            resource_metadata = tfdata["meta_data"].get(resource, {})
-            for key, value in resource_metadata.items():
-                if key not in tfdata["meta_data"][target_node_name]:
-                    tfdata["meta_data"][target_node_name][key] = value
-
-        # Update parent references
-        parents = helpers.list_of_parents(tfdata["graphdict"], resource)
-        for parent in parents:
-            if resource in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(resource)
-                if target_node_name not in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].append(target_node_name)
-
-        # Delete original resource
-        tfdata["graphdict"].pop(resource, None)
-        tfdata["meta_data"].pop(resource, None)
 
     return tfdata
 

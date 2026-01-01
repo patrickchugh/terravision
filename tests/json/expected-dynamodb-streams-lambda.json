@@ -1,0 +1,37 @@
+{
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_dynamodb_table.orders": [
+        "aws_iam_role_policy.lambda_dynamodb_policy",
+        "aws_lambda_function.stream_processor"
+    ],
+    "aws_dynamodb_table.users": [
+        "aws_lambda_function.user_event_processor"
+    ],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.lambda_role": [
+        "aws_iam_role_policy.lambda_dynamodb_policy",
+        "aws_iam_role_policy.lambda_kinesis_policy",
+        "aws_lambda_function.kinesis_processor",
+        "aws_lambda_function.stream_processor",
+        "aws_lambda_function.user_event_processor"
+    ],
+    "aws_iam_role_policy.lambda_dynamodb_policy": [],
+    "aws_iam_role_policy.lambda_kinesis_policy": [
+        "aws_kinesis_stream.events"
+    ],
+    "aws_kinesis_stream.events": [
+        "aws_lambda_function.kinesis_processor"
+    ],
+    "aws_lambda_function.kinesis_processor": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_lambda_function.stream_processor": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "aws_lambda_function.user_event_processor": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ]
+}

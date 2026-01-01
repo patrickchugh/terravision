@@ -54,6 +54,86 @@ def test_help() -> None:
         ("bastion-tfdata.json", "bastion-expected.json"),
         ("eks-basic-tfdata.json", "expected-eks-basic.json"),
         ("static-website-tfdata.json", "expected-static-website.json"),
+        (
+            "api-gateway-rest-lambda-tfdata.json",
+            "expected-api-gateway-rest-lambda.json",
+        ),
+        # Phase 4: Event-Driven Architecture patterns
+        (
+            "eventbridge-lambda-tfdata.json",
+            "expected-eventbridge-lambda.json",
+        ),
+        (
+            "sns-sqs-lambda-tfdata.json",
+            "expected-sns-sqs-lambda.json",
+        ),
+        (
+            "dynamodb-streams-lambda-tfdata.json",
+            "expected-dynamodb-streams-lambda.json",
+        ),
+        (
+            "elasticache-redis-tfdata.json",
+            "expected-elasticache-redis.json",
+        ),
+        (
+            "elasticache-replication-tfdata.json",
+            "expected-elasticache-replication.json",
+        ),
+        # Phase 6: Authentication (Cognito) patterns
+        (
+            "cognito-api-gateway-tfdata.json",
+            "expected-cognito-api-gateway.json",
+        ),
+        # Phase 7: WAF Security patterns
+        (
+            "waf-alb-tfdata.json",
+            "expected-waf-alb.json",
+        ),
+        # Phase 8: SageMaker ML patterns
+        (
+            "sagemaker-endpoint-tfdata.json",
+            "expected-sagemaker-endpoint.json",
+        ),
+        (
+            "sagemaker-notebook-vpc-tfdata.json",
+            "expected-sagemaker-notebook-vpc.json",
+        ),
+        # Phase 9: Step Functions patterns
+        (
+            "stepfunctions-lambda-tfdata.json",
+            "expected-stepfunctions-lambda.json",
+        ),
+        (
+            "stepfunctions-multi-service-tfdata.json",
+            "expected-stepfunctions-multi-service.json",
+        ),
+        # Phase 10: S3 Notifications patterns
+        (
+            "s3-notification-lambda-tfdata.json",
+            "expected-s3-notification-lambda.json",
+        ),
+        (
+            "s3-replication-tfdata.json",
+            "expected-s3-replication.json",
+        ),
+        # Phase 11: Secrets Manager patterns
+        (
+            "secretsmanager-lambda-tfdata.json",
+            "expected-secretsmanager-lambda.json",
+        ),
+        (
+            "secretsmanager-rds-tfdata.json",
+            "expected-secretsmanager-rds.json",
+        ),
+        # Phase 12: Data Processing (Glue/Firehose) patterns
+        (
+            "glue-s3-tfdata.json",
+            "expected-glue-s3.json",
+        ),
+        (
+            "firehose-lambda-tfdata.json",
+            "expected-firehose-lambda.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

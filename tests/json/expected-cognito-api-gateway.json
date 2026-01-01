@@ -1,0 +1,29 @@
+{
+    "aws_api_gateway_integration.gateway": [
+        "aws_cognito_user_pool.cognito"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_cognito_user_pool.cognito": [],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.lambda": [
+        "aws_iam_role_policy_attachment.lambda_basic",
+        "aws_lambda_function.get_users"
+    ],
+    "aws_iam_role_policy_attachment.lambda_basic": [],
+    "aws_lambda_function.get_users": [
+        "aws_api_gateway_integration.gateway",
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_cognito_user_pool.cognito",
+        "aws_lambda_permission.api_gateway"
+    ],
+    "aws_lambda_permission.api_gateway": [
+        "aws_api_gateway_integration.gateway",
+        "aws_cloudwatch_log_group.cloudwatch"
+    ],
+    "tv_aws_mobile_client.mobile": [
+        "aws_api_gateway_integration.gateway"
+    ]
+}

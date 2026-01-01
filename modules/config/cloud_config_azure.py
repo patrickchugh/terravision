@@ -263,6 +263,33 @@ You are an Azure architect that needs to summarise this JSON of Terraform Azure 
 
 """
 
+# Configuration patterns for multi-instance resource detection
+# Each pattern defines:
+# - resource_types: List of Terraform resource types to check
+# - trigger_attributes: Attributes that trigger expansion (e.g., "subnets", "zones")
+# - also_expand_attributes: Attributes containing related resources to also expand
+# - resource_pattern: Regex pattern to extract resource references from attribute values
+AZURE_MULTI_INSTANCE_PATTERNS = [
+    {
+        "resource_types": ["azurerm_lb", "azurerm_public_ip"],
+        "trigger_attributes": ["zones"],
+        "also_expand_attributes": [],
+        "resource_pattern": r'"([^"]+)"',  # Zones are often strings: ["1", "2"]
+        "description": "Azure Load Balancer with multiple zones",
+    },
+    {
+        "resource_types": [
+            "azurerm_linux_virtual_machine_scale_set",
+            "azurerm_windows_virtual_machine_scale_set",
+        ],
+        "trigger_attributes": ["zones"],
+        "also_expand_attributes": [],
+        "resource_pattern": r'"([^"]+)"',
+        "description": "Azure VM Scale Set with multiple zones",
+    },
+    # Add more Azure patterns as needed
+]
+
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"
 

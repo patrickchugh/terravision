@@ -2,6 +2,9 @@
 # Provider: Amazon Web Services (aws provider)
 # Architecture: VPC > Availability Zones > Subnets > Resources
 
+from modules.config.resource_handler_configs_aws import RESOURCE_HANDLER_CONFIGS
+
+
 # Provider metadata
 PROVIDER_NAME = "AWS"
 PROVIDER_PREFIX = ["aws_"]
@@ -18,10 +21,26 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
-        "aws_cloudwatch": {
+        "aws_cloudwatch_log": {
             "resource_name": "aws_cloudwatch_log_group.cloudwatch",
             "import_location": "resource_classes.aws.management",
             "vpc": False,
+        }
+    },
+    {
+        "aws_cloudwatch_event": {
+            "resource_name": "aws_cloudwatch_event_rule.eventbridge",
+            "import_location": "resource_classes.aws.integration",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_sns_topic": {
+            "resource_name": "aws_sns_topic.sns",
+            "import_location": "resource_classes.aws.integration",
+            "vpc": False,
+            "edge_service": True,
         }
     },
     {
@@ -102,6 +121,45 @@ AWS_CONSOLIDATED_NODES = [
             "vpc": True,
         }
     },
+    {
+        "aws_sagemaker_endpoint": {
+            "resource_name": "aws_sagemaker_endpoint.endpoint",
+            "import_location": "resource_classes.aws.ml",
+            "vpc": False,
+        }
+    },
+    {
+        "aws_appsync_graphql_api": {
+            "resource_name": "aws_appsync_graphql_api.graphql_api",
+            "import_location": "resource_classes.aws.network",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_cognito": {
+            "resource_name": "aws_cognito_user_pool.cognito",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_wafv2": {
+            "resource_name": "aws_wafv2_web_acl.waf",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
+    {
+        "aws_waf": {
+            "resource_name": "aws_waf_web_acl.waf",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+            "edge_service": True,
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in
@@ -115,6 +173,7 @@ AWS_GROUP_NODES = [
     "aws_subnet",
     "aws_security_group",
     "tv_aws_onprem",
+    "tv_aws_region",
 ]
 
 # Nodes to be drawn first inside the AWS Cloud but outside any subnets or VPCs
@@ -124,10 +183,22 @@ AWS_EDGE_NODES = [
     "aws_internet_gateway",
     "aws_api_gateway",
     "aws_apigateway",
+    "aws_cloudwatch_event",
+    "aws_sns_topic",
+    "aws_cognito",
+    "aws_wafv2",
+    "aws_waf",
+    "aws_appsync",
 ]
 
 # Nodes outside Cloud boundary
-AWS_OUTER_NODES = ["tv_aws_users", "tv_aws_internet"]
+AWS_OUTER_NODES = [
+    "tv_aws_users",
+    "tv_aws_internet",
+    "tv_aws_device",
+    "tv_aws_onprem",
+    "tv_aws_mobile_client",
+]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 AWS_DRAW_ORDER = [
@@ -167,6 +238,7 @@ AWS_AUTO_ANNOTATIONS = [
     {"aws_nat_gateway": {"link": ["aws_internet_gateway.*"], "arrow": "forward"}},
     {"aws_ecs_service": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
     {"aws_eks_cluster": {"link": ["aws_ecr_repository.ecr"], "arrow": "forward"}},
+    {"aws_api_gateway": {"link": ["tv_aws_mobile_client.mobile"], "arrow": "reverse"}},
     {"aws_ecs_": {"link": ["aws_ecs_cluster.ecs"], "arrow": "forward"}},
     {
         "aws_lambda": {
@@ -192,6 +264,8 @@ AWS_NODE_VARIANTS = {
 AWS_REVERSE_ARROW_LIST = [
     "aws_route53",
     "aws_cloudfront",
+    "aws_cloudwatch_event",  # EventBridge emits events TO Lambda (reverse direction)
+    "aws_sfn_state_machine",  # Step Functions orchestrates services (reverse direction)
     "aws_vpc.",
     "aws_subnet.",
     "aws_appautoscaling_target",
@@ -200,10 +274,19 @@ AWS_REVERSE_ARROW_LIST = [
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
-AWS_FORCED_DEST = ["aws_rds", "aws_instance"]
+AWS_FORCED_DEST = ["aws_rds", "aws_instance", "aws_elasticache"]
 
 # Force certain resources to be a origin connection only - original TF node relationships only
-AWS_FORCED_ORIGIN = ["aws_route53", "aws_cloudfront_distribution"]
+AWS_FORCED_ORIGIN = [
+    "aws_route53",
+    "aws_cloudfront_distribution",
+    "aws_cloudwatch_event",  # EventBridge emits events (source only, not destination)
+    "aws_sns_topic",  # SNS emits messages to subscribers (source only, not destination)
+    "aws_sfn_state_machine",  # Step Functions orchestrates services (source only, not destination)
+    "aws_s3_bucket_notification",  # S3 notifications trigger services (source only, not destination)
+    "aws_wafv2_web_acl",  # WAF protects resources (source only, not destination)
+    "aws_waf_web_acl",  # WAF Classic protects resources (source only, not destination)
+]
 
 
 AWS_IMPLIED_CONNECTIONS = {
@@ -211,14 +294,7 @@ AWS_IMPLIED_CONNECTIONS = {
     "container_definitions": "aws_ecr_repository",
 }
 
-# Special resources that need custom handling
-# This dict is automatically generated from RESOURCE_HANDLER_CONFIGS to maintain
-# backward compatibility with code that checks SPECIAL_RESOURCES.keys()
-#
-# See resource_handler_configs_aws.py for the config-driven approach (single source of truth)
-from modules.config.resource_handler_configs_aws import RESOURCE_HANDLER_CONFIGS
-
-# Generate AWS_SPECIAL_RESOURCES from RESOURCE_HANDLER_CONFIGS
+# Generate AWS_SPECIAL_RESOURCES from RESOURCE_HANDLER_CONFIGS for backward compatibility with older functions
 # Include any resource pattern that has transformations or additional handlers
 AWS_SPECIAL_RESOURCES = {
     pattern: config.get("additional_handler_function", f"config_handler_{pattern}")
@@ -247,10 +323,11 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_rds_mysql",
     "aws_rds_postgres",
 ]
+# Resources that should never have lines drawn between them
+AWS_NEVER_DRAW_LINE = []
 
-AWS_NEVER_DRAW_LINE = ["aws_iam_role_policy"]
-
-AWS_DISCONNECT_LIST = ["aws_iam_role_policy"]
+# Resources that should be disconnected
+AWS_DISCONNECT_LIST = []
 
 # Resources that should be hidden from the diagram by default
 AWS_HIDE_NODES = ["aws_security_group_rule"]
@@ -264,28 +341,31 @@ AWS_SKIP_SINGULAR_EXPANSION = [
 
 AWS_ACRONYMS_LIST = [
     "acm",
+    "acm",
     "alb",
+    "api",
     "db",
+    "dx",
+    "ebs",
     "ec2",
-    "kms",
-    "elb",
+    "ecr",
+    "ecs",
+    "efs",
     "eip",
     "eks",
-    "ecr",
-    "nlb",
-    "efs",
-    "ebs",
+    "elb",
+    "etl",
+    "igw",
     "iam",
     "ip",
-    "igw",
-    "api",
-    "acm",
-    "ecs",
-    "rds",
+    "kms",
     "lb",
-    "alb",
-    "nlb",
     "nat",
+    "nlb",
+    "rds",
+    "s3",
+    "sns",
+    "sqs",
     "vpc",
 ]
 
@@ -339,6 +419,30 @@ You are an AWS architect that needs to summarise this JSON of Terraform AWS reso
 4. Provide an overall summary of the architecture and what the system does
 
 """
+
+# Configuration patterns for multi-instance resource detection
+# Each pattern defines:
+# - resource_types: List of Terraform resource types to check
+# - trigger_attributes: Attributes that trigger expansion (e.g., "subnets", "zones")
+# - also_expand_attributes: Attributes containing related resources to also expand
+# - resource_pattern: Regex pattern to extract resource references from attribute values
+AWS_MULTI_INSTANCE_PATTERNS = [
+    {
+        "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
+        "trigger_attributes": ["subnets"],
+        "also_expand_attributes": ["security_groups"],
+        "resource_pattern": r"\$\{(aws_\w+\.\w+)",
+        "description": "ALB/NLB spanning multiple subnets",
+    },
+    {
+        "resource_types": ["aws_ecs_service"],
+        "trigger_attributes": ["subnets"],
+        "also_expand_attributes": ["security_groups"],
+        "resource_pattern": r"\$\{(aws_\w+\.\w+)",
+        "description": "ECS service spanning multiple subnets",
+    },
+    # Add more AWS patterns as needed
+]
 
 # Replace with your OLLAMA server IP and port number
 OLLAMA_HOST = "http://localhost:11434"

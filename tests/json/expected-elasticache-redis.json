@@ -1,0 +1,43 @@
+{
+    "aws_az.availability_zone_us_east_1a~1": [
+        "aws_subnet.private_a"
+    ],
+    "aws_az.availability_zone_us_east_1b~2": [
+        "aws_subnet.private_b"
+    ],
+    "aws_ecr_repository.ecr": [],
+    "aws_ecs_cluster.ecs": [],
+    "aws_elasticache_cluster.redis~1": [],
+    "aws_elasticache_cluster.redis~2": [
+        "aws_elasticache_subnet_group.redis"
+    ],
+    "aws_elasticache_subnet_group.redis": [],
+    "aws_fargate.ecs~1": [
+        "aws_ecr_repository.ecr",
+        "aws_ecs_cluster.ecs",
+        "aws_elasticache_cluster.redis~1"
+    ],
+    "aws_fargate.ecs~2": [
+        "aws_ecr_repository.ecr",
+        "aws_ecs_cluster.ecs",
+        "aws_elasticache_cluster.redis~2"
+    ],
+    "aws_group.shared_services": [
+        "aws_ecr_repository.ecr",
+        "aws_iam_group.of_services"
+    ],
+    "aws_subnet.private_a": [
+        "aws_elasticache_cluster.redis~1",
+        "aws_elasticache_subnet_group.redis",
+        "aws_fargate.ecs~1"
+    ],
+    "aws_subnet.private_b": [
+        "aws_elasticache_cluster.redis~2",
+        "aws_elasticache_subnet_group.redis",
+        "aws_fargate.ecs~2"
+    ],
+    "aws_vpc.main": [
+        "aws_az.availability_zone_us_east_1a~1",
+        "aws_az.availability_zone_us_east_1b~2"
+    ]
+}

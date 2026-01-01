@@ -1,0 +1,1413 @@
+{
+    "codepath": ".",
+    "workdir": "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/eventbridge_lambda",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_event_rule.every_five_minutes",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_event_rule",
+                        "name": "every_five_minutes",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "description": "Fires every five minutes",
+                            "event_bus_name": "default",
+                            "event_pattern": null,
+                            "force_destroy": false,
+                            "is_enabled": null,
+                            "name": "every-five-minutes",
+                            "role_arn": null,
+                            "schedule_expression": "rate(5 minutes)",
+                            "state": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_cloudwatch_event_target.lambda_target",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_event_target",
+                        "name": "lambda_target",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 1,
+                        "values": {
+                            "appsync_target": [],
+                            "batch_target": [],
+                            "dead_letter_config": [],
+                            "ecs_target": [],
+                            "event_bus_name": "default",
+                            "force_destroy": false,
+                            "http_target": [],
+                            "input": null,
+                            "input_path": null,
+                            "input_transformer": [],
+                            "kinesis_target": [],
+                            "redshift_target": [],
+                            "retry_policy": [],
+                            "role_arn": null,
+                            "rule": "every-five-minutes",
+                            "run_command_targets": [],
+                            "sagemaker_pipeline_target": [],
+                            "sqs_target": [],
+                            "target_id": "SendToLambda"
+                        },
+                        "sensitive_values": {
+                            "appsync_target": [],
+                            "batch_target": [],
+                            "dead_letter_config": [],
+                            "ecs_target": [],
+                            "http_target": [],
+                            "input_transformer": [],
+                            "kinesis_target": [],
+                            "redshift_target": [],
+                            "retry_policy": [],
+                            "run_command_targets": [],
+                            "sagemaker_pipeline_target": [],
+                            "sqs_target": []
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "event-processor-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_function.event_processor",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "event_processor",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "code_signing_config_arn": null,
+                            "dead_letter_config": [],
+                            "description": null,
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "ENVIRONMENT": "test"
+                                    }
+                                }
+                            ],
+                            "file_system_config": [],
+                            "filename": "lambda.zip",
+                            "function_name": "event-processor",
+                            "handler": "index.handler",
+                            "image_config": [],
+                            "image_uri": null,
+                            "kms_key_arn": null,
+                            "layers": null,
+                            "memory_size": 128,
+                            "package_type": "Zip",
+                            "publish": false,
+                            "replace_security_groups_on_destroy": null,
+                            "replacement_security_group_ids": null,
+                            "reserved_concurrent_executions": -1,
+                            "runtime": "nodejs18.x",
+                            "s3_bucket": null,
+                            "s3_key": null,
+                            "s3_object_version": null,
+                            "skip_destroy": false,
+                            "snap_start": [],
+                            "tags": null,
+                            "timeout": 3,
+                            "timeouts": null,
+                            "vpc_config": []
+                        },
+                        "sensitive_values": {
+                            "architectures": [],
+                            "dead_letter_config": [],
+                            "environment": [
+                                {
+                                    "variables": {}
+                                }
+                            ],
+                            "ephemeral_storage": [],
+                            "file_system_config": [],
+                            "image_config": [],
+                            "logging_config": [],
+                            "snap_start": [],
+                            "tags_all": {},
+                            "tracing_config": [],
+                            "vpc_config": []
+                        }
+                    },
+                    {
+                        "address": "aws_lambda_permission.allow_eventbridge",
+                        "mode": "managed",
+                        "type": "aws_lambda_permission",
+                        "name": "allow_eventbridge",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "action": "lambda:InvokeFunction",
+                            "event_source_token": null,
+                            "function_name": "event-processor",
+                            "function_url_auth_type": null,
+                            "principal": "events.amazonaws.com",
+                            "principal_org_id": null,
+                            "qualifier": null,
+                            "source_account": null,
+                            "statement_id": "AllowExecutionFromEventBridge"
+                        },
+                        "sensitive_values": {}
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_cloudwatch_event_rule.every_five_minutes",
+                "mode": "managed",
+                "type": "aws_cloudwatch_event_rule",
+                "name": "every_five_minutes",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": "Fires every five minutes",
+                        "event_bus_name": "default",
+                        "event_pattern": null,
+                        "force_destroy": false,
+                        "is_enabled": null,
+                        "name": "every-five-minutes",
+                        "role_arn": null,
+                        "schedule_expression": "rate(5 minutes)",
+                        "state": null,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "name_prefix": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_cloudwatch_event_target.lambda_target",
+                "mode": "managed",
+                "type": "aws_cloudwatch_event_target",
+                "name": "lambda_target",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "appsync_target": [],
+                        "batch_target": [],
+                        "dead_letter_config": [],
+                        "ecs_target": [],
+                        "event_bus_name": "default",
+                        "force_destroy": false,
+                        "http_target": [],
+                        "input": null,
+                        "input_path": null,
+                        "input_transformer": [],
+                        "kinesis_target": [],
+                        "redshift_target": [],
+                        "retry_policy": [],
+                        "role_arn": null,
+                        "rule": "every-five-minutes",
+                        "run_command_targets": [],
+                        "sagemaker_pipeline_target": [],
+                        "sqs_target": [],
+                        "target_id": "SendToLambda",
+                        "arn": true,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "appsync_target": [],
+                        "arn": true,
+                        "batch_target": [],
+                        "dead_letter_config": [],
+                        "ecs_target": [],
+                        "http_target": [],
+                        "id": true,
+                        "input_transformer": [],
+                        "kinesis_target": [],
+                        "redshift_target": [],
+                        "retry_policy": [],
+                        "run_command_targets": [],
+                        "sagemaker_pipeline_target": [],
+                        "sqs_target": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "appsync_target": [],
+                        "batch_target": [],
+                        "dead_letter_config": [],
+                        "ecs_target": [],
+                        "http_target": [],
+                        "input_transformer": [],
+                        "kinesis_target": [],
+                        "redshift_target": [],
+                        "retry_policy": [],
+                        "run_command_targets": [],
+                        "sagemaker_pipeline_target": [],
+                        "sqs_target": []
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.lambda_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "lambda_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "event-processor-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_function.event_processor",
+                "mode": "managed",
+                "type": "aws_lambda_function",
+                "name": "event_processor",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "code_signing_config_arn": null,
+                        "dead_letter_config": [],
+                        "description": null,
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "file_system_config": [],
+                        "filename": "lambda.zip",
+                        "function_name": "event-processor",
+                        "handler": "index.handler",
+                        "image_config": [],
+                        "image_uri": null,
+                        "kms_key_arn": null,
+                        "layers": null,
+                        "memory_size": 128,
+                        "package_type": "Zip",
+                        "publish": false,
+                        "replace_security_groups_on_destroy": null,
+                        "replacement_security_group_ids": null,
+                        "reserved_concurrent_executions": -1,
+                        "runtime": "nodejs18.x",
+                        "s3_bucket": null,
+                        "s3_key": null,
+                        "s3_object_version": null,
+                        "skip_destroy": false,
+                        "snap_start": [],
+                        "tags": null,
+                        "timeout": 3,
+                        "timeouts": null,
+                        "vpc_config": [],
+                        "architectures": [],
+                        "arn": true,
+                        "code_sha256": true,
+                        "ephemeral_storage": [],
+                        "id": true,
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": [],
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "version": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "architectures": true,
+                        "arn": true,
+                        "code_sha256": true,
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": true,
+                        "file_system_config": [],
+                        "id": true,
+                        "image_config": [],
+                        "invoke_arn": true,
+                        "last_modified": true,
+                        "logging_config": true,
+                        "qualified_arn": true,
+                        "qualified_invoke_arn": true,
+                        "role": true,
+                        "signing_job_arn": true,
+                        "signing_profile_version_arn": true,
+                        "snap_start": [],
+                        "source_code_hash": true,
+                        "source_code_size": true,
+                        "tags_all": true,
+                        "tracing_config": true,
+                        "version": true,
+                        "vpc_config": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "architectures": [],
+                        "dead_letter_config": [],
+                        "environment": [
+                            {
+                                "variables": {}
+                            }
+                        ],
+                        "ephemeral_storage": [],
+                        "file_system_config": [],
+                        "image_config": [],
+                        "logging_config": [],
+                        "snap_start": [],
+                        "tags_all": {},
+                        "tracing_config": [],
+                        "vpc_config": []
+                    }
+                }
+            },
+            {
+                "address": "aws_lambda_permission.allow_eventbridge",
+                "mode": "managed",
+                "type": "aws_lambda_permission",
+                "name": "allow_eventbridge",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "action": "lambda:InvokeFunction",
+                        "event_source_token": null,
+                        "function_name": "event-processor",
+                        "function_url_auth_type": null,
+                        "principal": "events.amazonaws.com",
+                        "principal_org_id": null,
+                        "qualifier": null,
+                        "source_account": null,
+                        "statement_id": "AllowExecutionFromEventBridge",
+                        "id": true,
+                        "source_arn": true,
+                        "statement_id_prefix": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "source_arn": true,
+                        "statement_id_prefix": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_event_rule.every_five_minutes",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_event_rule",
+                        "name": "every_five_minutes",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "description": {
+                                "constant_value": "Fires every five minutes"
+                            },
+                            "name": {
+                                "constant_value": "every-five-minutes"
+                            },
+                            "schedule_expression": {
+                                "constant_value": "rate(5 minutes)"
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_cloudwatch_event_target.lambda_target",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_event_target",
+                        "name": "lambda_target",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "arn": {
+                                "references": [
+                                    "aws_lambda_function.event_processor.arn",
+                                    "aws_lambda_function.event_processor"
+                                ]
+                            },
+                            "rule": {
+                                "references": [
+                                    "aws_cloudwatch_event_rule.every_five_minutes.name",
+                                    "aws_cloudwatch_event_rule.every_five_minutes"
+                                ]
+                            },
+                            "target_id": {
+                                "constant_value": "SendToLambda"
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "aws_iam_role.lambda_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "lambda_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "event-processor-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_function.event_processor",
+                        "mode": "managed",
+                        "type": "aws_lambda_function",
+                        "name": "event_processor",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "environment": [
+                                {
+                                    "variables": {
+                                        "constant_value": {
+                                            "ENVIRONMENT": "test"
+                                        }
+                                    }
+                                }
+                            ],
+                            "filename": {
+                                "constant_value": "lambda.zip"
+                            },
+                            "function_name": {
+                                "constant_value": "event-processor"
+                            },
+                            "handler": {
+                                "constant_value": "index.handler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.lambda_role.arn",
+                                    "aws_iam_role.lambda_role"
+                                ]
+                            },
+                            "runtime": {
+                                "constant_value": "nodejs18.x"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_lambda_permission.allow_eventbridge",
+                        "mode": "managed",
+                        "type": "aws_lambda_permission",
+                        "name": "allow_eventbridge",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "action": {
+                                "constant_value": "lambda:InvokeFunction"
+                            },
+                            "function_name": {
+                                "references": [
+                                    "aws_lambda_function.event_processor.function_name",
+                                    "aws_lambda_function.event_processor"
+                                ]
+                            },
+                            "principal": {
+                                "constant_value": "events.amazonaws.com"
+                            },
+                            "source_arn": {
+                                "references": [
+                                    "aws_cloudwatch_event_rule.every_five_minutes.arn",
+                                    "aws_cloudwatch_event_rule.every_five_minutes"
+                                ]
+                            },
+                            "statement_id": {
+                                "constant_value": "AllowExecutionFromEventBridge"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_iam_role.lambda_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_cloudwatch_event_rule.every_five_minutes",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.event_processor",
+                "attribute": [
+                    "function_name"
+                ]
+            },
+            {
+                "resource": "aws_cloudwatch_event_rule.every_five_minutes",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_lambda_function.event_processor",
+                "attribute": [
+                    "arn"
+                ]
+            }
+        ],
+        "timestamp": "2025-12-28T18:20:27Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_cloudwatch_event_rule.every_five_minutes",
+            "mode": "managed",
+            "type": "aws_cloudwatch_event_rule",
+            "name": "every_five_minutes",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": "Fires every five minutes",
+                    "event_bus_name": "default",
+                    "event_pattern": null,
+                    "force_destroy": false,
+                    "is_enabled": null,
+                    "name": "every-five-minutes",
+                    "role_arn": null,
+                    "schedule_expression": "rate(5 minutes)",
+                    "state": null,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "name_prefix": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_cloudwatch_event_target.lambda_target",
+            "mode": "managed",
+            "type": "aws_cloudwatch_event_target",
+            "name": "lambda_target",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "appsync_target": [],
+                    "batch_target": [],
+                    "dead_letter_config": [],
+                    "ecs_target": [],
+                    "event_bus_name": "default",
+                    "force_destroy": false,
+                    "http_target": [],
+                    "input": null,
+                    "input_path": null,
+                    "input_transformer": [],
+                    "kinesis_target": [],
+                    "redshift_target": [],
+                    "retry_policy": [],
+                    "role_arn": null,
+                    "rule": "every-five-minutes",
+                    "run_command_targets": [],
+                    "sagemaker_pipeline_target": [],
+                    "sqs_target": [],
+                    "target_id": "SendToLambda",
+                    "arn": true,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "appsync_target": [],
+                    "arn": true,
+                    "batch_target": [],
+                    "dead_letter_config": [],
+                    "ecs_target": [],
+                    "http_target": [],
+                    "id": true,
+                    "input_transformer": [],
+                    "kinesis_target": [],
+                    "redshift_target": [],
+                    "retry_policy": [],
+                    "run_command_targets": [],
+                    "sagemaker_pipeline_target": [],
+                    "sqs_target": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "appsync_target": [],
+                    "batch_target": [],
+                    "dead_letter_config": [],
+                    "ecs_target": [],
+                    "http_target": [],
+                    "input_transformer": [],
+                    "kinesis_target": [],
+                    "redshift_target": [],
+                    "retry_policy": [],
+                    "run_command_targets": [],
+                    "sagemaker_pipeline_target": [],
+                    "sqs_target": []
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.lambda_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "event-processor-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_function.event_processor",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "event_processor",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "code_signing_config_arn": null,
+                    "dead_letter_config": [],
+                    "description": null,
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "file_system_config": [],
+                    "filename": "lambda.zip",
+                    "function_name": "event-processor",
+                    "handler": "index.handler",
+                    "image_config": [],
+                    "image_uri": null,
+                    "kms_key_arn": null,
+                    "layers": null,
+                    "memory_size": 128,
+                    "package_type": "Zip",
+                    "publish": false,
+                    "replace_security_groups_on_destroy": null,
+                    "replacement_security_group_ids": null,
+                    "reserved_concurrent_executions": -1,
+                    "runtime": "nodejs18.x",
+                    "s3_bucket": null,
+                    "s3_key": null,
+                    "s3_object_version": null,
+                    "skip_destroy": false,
+                    "snap_start": [],
+                    "tags": null,
+                    "timeout": 3,
+                    "timeouts": null,
+                    "vpc_config": [],
+                    "architectures": [],
+                    "arn": true,
+                    "code_sha256": true,
+                    "ephemeral_storage": [],
+                    "id": true,
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": [],
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "version": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "architectures": true,
+                    "arn": true,
+                    "code_sha256": true,
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": true,
+                    "file_system_config": [],
+                    "id": true,
+                    "image_config": [],
+                    "invoke_arn": true,
+                    "last_modified": true,
+                    "logging_config": true,
+                    "qualified_arn": true,
+                    "qualified_invoke_arn": true,
+                    "role": true,
+                    "signing_job_arn": true,
+                    "signing_profile_version_arn": true,
+                    "snap_start": [],
+                    "source_code_hash": true,
+                    "source_code_size": true,
+                    "tags_all": true,
+                    "tracing_config": true,
+                    "version": true,
+                    "vpc_config": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "architectures": [],
+                    "dead_letter_config": [],
+                    "environment": [
+                        {
+                            "variables": {}
+                        }
+                    ],
+                    "ephemeral_storage": [],
+                    "file_system_config": [],
+                    "image_config": [],
+                    "logging_config": [],
+                    "snap_start": [],
+                    "tags_all": {},
+                    "tracing_config": [],
+                    "vpc_config": []
+                }
+            }
+        },
+        {
+            "address": "aws_lambda_permission.allow_eventbridge",
+            "mode": "managed",
+            "type": "aws_lambda_permission",
+            "name": "allow_eventbridge",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "action": "lambda:InvokeFunction",
+                    "event_source_token": null,
+                    "function_name": "event-processor",
+                    "function_url_auth_type": null,
+                    "principal": "events.amazonaws.com",
+                    "principal_org_id": null,
+                    "qualifier": null,
+                    "source_account": null,
+                    "statement_id": "AllowExecutionFromEventBridge",
+                    "id": true,
+                    "source_arn": true,
+                    "statement_id_prefix": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "source_arn": true,
+                    "statement_id_prefix": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_cloudwatch_event_rule.every_five_minutes",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_event_rule.every_five_minutes",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_cloudwatch_event_target.lambda_target",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_event_target.lambda_target",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_iam_role.lambda_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.lambda_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_lambda_function.event_processor",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_function.event_processor",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_lambda_permission.allow_eventbridge",
+                "fontname": "sans-serif",
+                "label": "aws_lambda_permission.allow_eventbridge",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 1,
+                "head": 0
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 3
+            },
+            {
+                "_gvid": 2,
+                "tail": 3,
+                "head": 2
+            },
+            {
+                "_gvid": 3,
+                "tail": 4,
+                "head": 0
+            },
+            {
+                "_gvid": 4,
+                "tail": 4,
+                "head": 3
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_cloudwatch_event_rule.every_five_minutes": [
+            "aws_cloudwatch_event_target.lambda_target",
+            "aws_lambda_permission.allow_eventbridge"
+        ],
+        "aws_cloudwatch_event_target.lambda_target": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.event_processor"
+        ],
+        "aws_lambda_function.event_processor": [
+            "aws_cloudwatch_event_target.lambda_target",
+            "aws_lambda_permission.allow_eventbridge"
+        ],
+        "aws_lambda_permission.allow_eventbridge": []
+    },
+    "meta_data": {
+        "aws_cloudwatch_event_rule.every_five_minutes": {
+            "description": "Fires every five minutes",
+            "event_bus_name": "default",
+            "event_pattern": null,
+            "force_destroy": false,
+            "is_enabled": null,
+            "name": "every-five-minutes",
+            "role_arn": null,
+            "schedule_expression": "rate(5 minutes)",
+            "state": null,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_event_target.lambda_target": {
+            "appsync_target": [],
+            "batch_target": [],
+            "dead_letter_config": [],
+            "ecs_target": [],
+            "event_bus_name": "default",
+            "force_destroy": false,
+            "http_target": [],
+            "input": null,
+            "input_path": null,
+            "input_transformer": [],
+            "kinesis_target": [],
+            "redshift_target": [],
+            "retry_policy": [],
+            "role_arn": null,
+            "rule": "every-five-minutes",
+            "run_command_targets": [],
+            "sagemaker_pipeline_target": [],
+            "sqs_target": [],
+            "target_id": "SendToLambda",
+            "arn": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "event-processor-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.event_processor": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "event-processor",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_permission.allow_eventbridge": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "event-processor",
+            "function_url_auth_type": null,
+            "principal": "events.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": null,
+            "source_account": null,
+            "statement_id": "AllowExecutionFromEventBridge",
+            "id": true,
+            "source_arn": true,
+            "statement_id_prefix": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_cloudwatch_event_rule.every_five_minutes",
+        "aws_cloudwatch_event_target.lambda_target",
+        "aws_iam_role.lambda_role",
+        "aws_lambda_function.event_processor",
+        "aws_lambda_permission.allow_eventbridge"
+    ],
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_cloudwatch_event_rule.every_five_minutes": [
+            "aws_cloudwatch_event_target.lambda_target",
+            "aws_lambda_permission.allow_eventbridge"
+        ],
+        "aws_cloudwatch_event_target.lambda_target": [],
+        "aws_iam_role.lambda_role": [
+            "aws_lambda_function.event_processor"
+        ],
+        "aws_lambda_function.event_processor": [
+            "aws_cloudwatch_event_target.lambda_target",
+            "aws_lambda_permission.allow_eventbridge"
+        ],
+        "aws_lambda_permission.allow_eventbridge": []
+    },
+    "original_metadata": {
+        "aws_cloudwatch_event_rule.every_five_minutes": {
+            "description": "Fires every five minutes",
+            "event_bus_name": "default",
+            "event_pattern": null,
+            "force_destroy": false,
+            "is_enabled": null,
+            "name": "every-five-minutes",
+            "role_arn": null,
+            "schedule_expression": "rate(5 minutes)",
+            "state": null,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_cloudwatch_event_target.lambda_target": {
+            "appsync_target": [],
+            "batch_target": [],
+            "dead_letter_config": [],
+            "ecs_target": [],
+            "event_bus_name": "default",
+            "force_destroy": false,
+            "http_target": [],
+            "input": null,
+            "input_path": null,
+            "input_transformer": [],
+            "kinesis_target": [],
+            "redshift_target": [],
+            "retry_policy": [],
+            "role_arn": null,
+            "rule": "every-five-minutes",
+            "run_command_targets": [],
+            "sagemaker_pipeline_target": [],
+            "sqs_target": [],
+            "target_id": "SendToLambda",
+            "arn": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_iam_role.lambda_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "event-processor-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_lambda_function.event_processor": {
+            "code_signing_config_arn": null,
+            "dead_letter_config": [],
+            "description": null,
+            "environment": [
+                {
+                    "variables": {}
+                }
+            ],
+            "file_system_config": [],
+            "filename": "lambda.zip",
+            "function_name": "event-processor",
+            "handler": "index.handler",
+            "image_config": [],
+            "image_uri": null,
+            "kms_key_arn": null,
+            "layers": null,
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "runtime": "nodejs18.x",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "skip_destroy": false,
+            "snap_start": [],
+            "tags": null,
+            "timeout": 3,
+            "timeouts": null,
+            "vpc_config": [],
+            "architectures": [],
+            "arn": true,
+            "code_sha256": true,
+            "ephemeral_storage": [],
+            "id": true,
+            "invoke_arn": true,
+            "last_modified": true,
+            "logging_config": [],
+            "qualified_arn": true,
+            "qualified_invoke_arn": true,
+            "role": true,
+            "signing_job_arn": true,
+            "signing_profile_version_arn": true,
+            "source_code_hash": true,
+            "source_code_size": true,
+            "tags_all": {},
+            "tracing_config": [],
+            "version": true,
+            "module": "main"
+        },
+        "aws_lambda_permission.allow_eventbridge": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "event-processor",
+            "function_url_auth_type": null,
+            "principal": "events.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": null,
+            "source_account": null,
+            "statement_id": "AllowExecutionFromEventBridge",
+            "id": true,
+            "source_arn": true,
+            "statement_id_prefix": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "./main.tf": [
+            {
+                "aws_lambda_function": {
+                    "event_processor": {
+                        "filename": "lambda.zip",
+                        "function_name": "event-processor",
+                        "role": "${aws_iam_role.lambda_role.arn}",
+                        "handler": "index.handler",
+                        "runtime": "nodejs18.x",
+                        "environment": [
+                            {
+                                "variables": {
+                                    "ENVIRONMENT": "test"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "lambda_role": {
+                        "name": "event-processor-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'lambda.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_event_rule": {
+                    "every_five_minutes": {
+                        "name": "every-five-minutes",
+                        "description": "Fires every five minutes",
+                        "schedule_expression": "rate(5 minutes)"
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_event_target": {
+                    "lambda_target": {
+                        "rule": "${aws_cloudwatch_event_rule.every_five_minutes.name}",
+                        "target_id": "SendToLambda",
+                        "arn": "${aws_lambda_function.event_processor.arn}"
+                    }
+                }
+            },
+            {
+                "aws_lambda_permission": {
+                    "allow_eventbridge": {
+                        "statement_id": "AllowExecutionFromEventBridge",
+                        "action": "lambda:InvokeFunction",
+                        "function_name": "${aws_lambda_function.event_processor.function_name}",
+                        "principal": "events.amazonaws.com",
+                        "source_arn": "${aws_cloudwatch_event_rule.every_five_minutes.arn}"
+                    }
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpc7m4s2o1'>"
+}

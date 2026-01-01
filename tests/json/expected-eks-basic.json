@@ -49,7 +49,7 @@
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_ecr_repository.ecr",
         "aws_eip.elastic_ip",
-        "aws_iam_group.iam"
+        "aws_iam_group.of_services"
     ],
     "aws_iam_role.eks_cluster": [
         "aws_eks_cluster.main",
@@ -62,9 +62,15 @@
         "aws_iam_role_policy_attachment.eks_worker_node_policy"
     ],
     "aws_iam_role_policy_attachment.eks_cluster_policy": [],
-    "aws_iam_role_policy_attachment.eks_cni_policy": [],
-    "aws_iam_role_policy_attachment.eks_container_registry_policy": [],
-    "aws_iam_role_policy_attachment.eks_worker_node_policy": [],
+    "aws_iam_role_policy_attachment.eks_cni_policy": [
+        "aws_eks_node_group.main"
+    ],
+    "aws_iam_role_policy_attachment.eks_container_registry_policy": [
+        "aws_eks_node_group.main"
+    ],
+    "aws_iam_role_policy_attachment.eks_worker_node_policy": [
+        "aws_eks_node_group.main"
+    ],
     "aws_internet_gateway.igw": [
         "tv_aws_internet.internet"
     ],
@@ -102,12 +108,10 @@
     ],
     "aws_subnet.public[0]~1": [
         "aws_eks_node_group.main~3",
-        "aws_nat_gateway.main",
-        "aws_route_table_association.public[0]~1"
+        "aws_nat_gateway.main"
     ],
     "aws_subnet.public[1]~2": [
-        "aws_eks_node_group.main~4",
-        "aws_route_table_association.public[1]~2"
+        "aws_eks_node_group.main~4"
     ],
     "aws_vpc.main": [
         "aws_az.availability_zone_us_east_1a~1",

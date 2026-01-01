@@ -70,6 +70,10 @@ class Storage(_Storage):
     _icon = "storage.png"
 
 
+class S3Object(_Storage):
+    _icon = "simple-storage-service-s3-object.png"
+
+
 # Aliases
 
 CDR = CloudendureDisasterRecovery
@@ -94,7 +98,7 @@ aws_fsx_windows_file_system = FsxForWindowsFileServer
 aws_glacier_vault = S3Glacier
 aws_s3_bucket = SimpleStorageServiceS3
 aws_s3_bucket_object = SimpleStorageServiceS3
-aws_s3_object = SimpleStorageServiceS3
+aws_s3_object = S3Object
 aws_storagegateway_gateway = StorageGateway
 aws_storagegateway_smb_file_share = StorageGateway
 aws_storagegateway_nfs_file_share = StorageGateway

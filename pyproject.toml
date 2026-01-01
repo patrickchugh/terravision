@@ -1,7 +1,7 @@
 [tool.poetry]
 # Change this section to be project specific
 name = "terravision"
-version = "0.9"
+version = "0.9.1"
 description = "Terraform Architecture Visualizer"
 authors = []
 readme = 'README.md'

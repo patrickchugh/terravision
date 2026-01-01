@@ -1,0 +1,21 @@
+{
+    "aws_cloudwatch_event_rule.eventbridge": [
+        "aws_lambda_function.event_processor",
+        "aws_lambda_permission.allow_eventbridge"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.lambda_role": [
+        "aws_lambda_function.event_processor"
+    ],
+    "aws_lambda_function.event_processor": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_lambda_permission.allow_eventbridge"
+    ],
+    "aws_lambda_permission.allow_eventbridge": [
+        "aws_cloudwatch_log_group.cloudwatch"
+    ]
+}

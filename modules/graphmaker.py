@@ -7,15 +7,215 @@ diagram generation.
 """
 
 import copy
-from typing import Dict, List, Any, Tuple, Generator, Optional
+from typing import Dict, List, Any, Tuple, Generator, Optional, Set
 import re
 import click
-
 import modules.config_loader as config_loader
 import modules.helpers as helpers
 import modules.resource_handlers as resource_handlers
 from modules.provider_detector import get_primary_provider_or_default
 from modules.resource_transformers import apply_transformation_pipeline
+
+
+def extract_resource_references(attribute_value: Any, pattern: str) -> List[str]:
+    """Extract resource references from attribute value using regex pattern.
+
+    Args:
+        attribute_value: The attribute value (list, string, etc.)
+        pattern: Regex pattern to extract references
+
+    Returns:
+        List of extracted resource references
+    """
+    references = []
+
+    if isinstance(attribute_value, list):
+        for item in attribute_value:
+            if isinstance(item, str):
+                matches = re.findall(pattern, item)
+                references.extend(matches)
+    elif isinstance(attribute_value, str):
+        matches = re.findall(pattern, attribute_value)
+        references.extend(matches)
+
+    return references
+
+
+def find_matching_node_in_graphdict(
+    original_resource: str,
+    graphdict: Dict[str, List[str]],
+    provider_config: Dict[str, Any],
+) -> List[str]:
+    """Find matching nodes in graphdict after consolidation.
+
+    Handles resource renaming during consolidation (e.g., aws_lb.main -> aws_alb.elb).
+
+    Args:
+        original_resource: Original resource name from all_resource
+        graphdict: Current graphdict (post-consolidation)
+        provider_config: Provider-specific configuration
+
+    Returns:
+        List of matching node names in graphdict
+    """
+    matching_nodes = []
+    resource_type = original_resource.split(".")[0]
+
+    # Get list of resource types that might be consolidated together
+    # For AWS: aws_lb, aws_alb, aws_nlb are often consolidated
+    consolidated_types = provider_config.get("resource_types", [resource_type])
+
+    for node in graphdict.keys():
+        if "~" in node:  # Skip already-numbered nodes
+            continue
+
+        node_type = node.split(".")[0]
+
+        # Check if node type matches or is a consolidated variant
+        if node_type == resource_type or node_type in consolidated_types:
+            matching_nodes.append(node)
+
+    return matching_nodes
+
+
+def detect_and_set_counts(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Detect multi-instance resources and set synthetic count attributes.
+
+    Uses configuration-driven patterns to detect resources across all cloud providers
+    that should be expanded into numbered instances.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with count attributes set for detected resources
+    """
+    all_resource = tfdata.get("all_resource", {})
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+
+    # Determine cloud provider from tfdata
+    provider_detection = tfdata.get("provider_detection", {})
+    primary_provider = provider_detection.get("primary_provider", "aws")
+
+    # Load provider-specific configuration
+    config = _get_provider_config(tfdata)
+    provider_upper = primary_provider.upper()
+
+    # Get patterns from provider config (e.g., AWS_MULTI_INSTANCE_PATTERNS)
+    pattern_attr = f"{provider_upper}_MULTI_INSTANCE_PATTERNS"
+    patterns = getattr(config, pattern_attr, [])
+
+    if not patterns:
+        # No patterns defined for this provider, return unchanged
+        return tfdata
+
+    # Track resources to expand: {resource_key: (count, [associated_resources])}
+    resources_to_expand: Dict[str, tuple[int, Set[str]]] = {}
+
+    # Scan all_resource for matching patterns
+    for tf_file, resources in all_resource.items():
+        if not isinstance(resources, list):
+            continue
+
+        for resource_block in resources:
+            for resource_type, instances in resource_block.items():
+                if not isinstance(instances, dict):
+                    continue
+
+                # Check if this resource type matches any pattern
+                for pattern in patterns:
+                    if resource_type not in pattern["resource_types"]:
+                        continue
+
+                    # Found matching resource type, check trigger attributes
+                    for instance_name, instance_data in instances.items():
+                        resource_key = f"{resource_type}.{instance_name}"
+
+                        # Check trigger attributes
+                        for trigger_attr in pattern["trigger_attributes"]:
+                            attr_value = instance_data.get(trigger_attr)
+                            if not attr_value:
+                                continue
+
+                            # Extract references from attribute
+                            references = extract_resource_references(
+                                attr_value, pattern["resource_pattern"]
+                            )
+
+                            if len(references) > 1:
+                                # Found multi-instance resource!
+                                if resource_key not in resources_to_expand:
+                                    resources_to_expand[resource_key] = (
+                                        len(references),
+                                        set(),
+                                    )
+
+                                # Extract associated resources to also expand
+                                for assoc_attr in pattern["also_expand_attributes"]:
+                                    assoc_value = instance_data.get(assoc_attr)
+                                    if assoc_value:
+                                        assoc_refs = extract_resource_references(
+                                            assoc_value, pattern["resource_pattern"]
+                                        )
+                                        resources_to_expand[resource_key][1].update(
+                                            assoc_refs
+                                        )
+
+    # Set count for detected resources
+    for resource_key, (count, associated_resources) in resources_to_expand.items():
+        resource_type = resource_key.split(".")[0]
+
+        # Find matching pattern for type matching logic
+        matching_pattern = None
+        for pattern in patterns:
+            if resource_type in pattern["resource_types"]:
+                matching_pattern = pattern
+                break
+
+        # Find corresponding nodes in graphdict (handles consolidation)
+        matching_nodes = find_matching_node_in_graphdict(
+            resource_key, graphdict, matching_pattern or {}
+        )
+
+        # Set count for main resource
+        for node in matching_nodes:
+            if node not in meta_data:
+                meta_data[node] = {}
+            if not meta_data[node].get("count"):
+                meta_data[node]["count"] = count
+
+        # Set count for associated resources
+        for assoc_resource in associated_resources:
+            # Find matching nodes in graphdict for associated resource
+            for node in graphdict.keys():
+                if "~" in node:  # Skip already-numbered
+                    continue
+
+                # Match by checking if original resource name is related to node
+                assoc_base = (
+                    assoc_resource.split(".")[1] if "." in assoc_resource else ""
+                )
+                node_base = node.split(".")[1] if "." in node else ""
+
+                # Check if this is the associated resource
+                if assoc_base and (assoc_base in node_base or node_base in assoc_base):
+                    node_type = node.split(".")[0]
+                    assoc_type = assoc_resource.split(".")[0]
+
+                    # Verify type matches
+                    if (
+                        node_type == assoc_type
+                        or node_type in assoc_type
+                        or assoc_type in node_type
+                    ):
+                        if node not in meta_data:
+                            meta_data[node] = {}
+                        if not meta_data[node].get("count"):
+                            meta_data[node]["count"] = count
+
+    tfdata["meta_data"] = meta_data
+    return tfdata
 
 
 def _get_provider_config(tfdata: Dict[str, Any]):
@@ -82,7 +282,8 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if reverse_dest:
                 if not tfdata["graphdict"].get(c):
                     tfdata["graphdict"][c] = list()
-                tfdata["graphdict"][c].append(n)
+                if n not in tfdata["graphdict"][c]:
+                    tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][n].remove(c)
 
             # Reverse if connection is a forced origin
@@ -98,7 +299,8 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 > 0
             )
             if reverse_origin:
-                tfdata["graphdict"][c].append(n)
+                if n not in tfdata["graphdict"][c]:
+                    tfdata["graphdict"][c].append(n)
                 tfdata["graphdict"][node].remove(c)
 
     return tfdata
@@ -320,7 +522,7 @@ def scan_module_relationships(
     GROUP_NODES = constants["GROUP_NODES"]
 
     # Build regex pattern for any provider resource (e.g., aws_|google_|azurerm_)
-    provider_pattern = "|".join([p.replace("_", "\_") for p in provider_prefixes])
+    provider_pattern = "|".join([p.replace("_", r"\_") for p in provider_prefixes])
     direct_ref_pattern = rf"module\.(\w+)\.({provider_pattern}\w+)\.(\w+)"
 
     for filepath, module_list in tfdata["all_module"].items():
@@ -610,6 +812,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Don't over-ride count values with 0 when merging
             if consolidated_name not in tfdata["graphdict"].keys():
                 tfdata["graphdict"][consolidated_name] = list()
+            # Merge connections using set union (deduplicates automatically)
             tfdata["graphdict"][consolidated_name] = list(
                 set(tfdata["graphdict"][consolidated_name])
                 | set(tfdata["graphdict"][resource])
@@ -1171,7 +1374,26 @@ def add_multiples_to_parents(
                 else:
                     suffixed_name = resource + "~" + existing_suffix
             else:
-                suffixed_name = resource + "~" + str(i + 1)
+                # For subnets without ~ suffix: only add the instance matching the subnet's position
+                if "aws_subnet" in parent:
+                    # Get all subnets sorted to determine position
+                    all_subnets = sorted(
+                        [k for k in tfdata["graphdict"].keys() if "aws_subnet" in k]
+                    )
+                    try:
+                        subnet_position = all_subnets.index(parent) + 1
+                        # Only add if this numbered instance matches the subnet's position
+                        if subnet_position == i + 1:
+                            suffixed_name = resource + "~" + str(i + 1)
+                        else:
+                            # Skip this subnet - it should get a different numbered instance
+                            continue
+                    except (ValueError, IndexError):
+                        # Fallback: add instance to this subnet
+                        suffixed_name = resource + "~" + str(i + 1)
+                else:
+                    # Non-subnet parent: add numbered instance normally
+                    suffixed_name = resource + "~" + str(i + 1)
             if (
                 parent.split("~")[0] in tfdata["meta_data"].keys()
                 and (
@@ -1306,7 +1528,8 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 suffix = node.split("~")[1]
                 suffixed_node = f"{c}~{suffix}"
                 if suffixed_node in tfdata["graphdict"]:
-                    tfdata["graphdict"][node].append(suffixed_node)
+                    if suffixed_node not in tfdata["graphdict"][node]:
+                        tfdata["graphdict"][node].append(suffixed_node)
                     tfdata["graphdict"][node].remove(c)
             # If consolidated node, add all connections to node
             # Skip resources that are manually matched to subnets by suffix in their handlers
@@ -1330,6 +1553,60 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         and suffixed_node not in tfdata["graphdict"][node]
                     ):
                         tfdata["graphdict"][node].append(suffixed_node)
+    return tfdata
+
+
+def cleanup_cross_subnet_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove connections between numbered and unnumbered resources in different subnets.
+
+    Prevents messy diagram rendering where numbered resources (e.g., redis~1, redis~2, redis~3)
+    in different subnets all connect to the same unnumbered resource (e.g., Lambda function)
+    that's only deployed in some subnets.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with cross-subnet connections removed
+    """
+    # Get all subnets and build a map of which resources are in which subnet
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    resource_to_subnets = {}  # Maps resource name to list of subnets containing it
+
+    for subnet in subnets:
+        for resource in tfdata["graphdict"].get(subnet, []):
+            if resource not in resource_to_subnets:
+                resource_to_subnets[resource] = []
+            resource_to_subnets[resource].append(subnet)
+
+    # For each numbered resource, check its connections to unnumbered resources
+    for resource_name, connections in list(tfdata["graphdict"].items()):
+        if "~" not in resource_name:
+            continue  # Skip unnumbered resources
+
+        # Get the subnets this numbered resource is in
+        source_subnets = resource_to_subnets.get(resource_name, [])
+        if not source_subnets:
+            continue
+
+        # Check each connection
+        for connection in list(connections):
+            # Skip if the target is also numbered (those connections are handled elsewhere)
+            if "~" in connection:
+                continue
+
+            # Skip if the connection is a special node (groups, shared services, etc.)
+            if connection.startswith("aws_group.") or connection.startswith("aws_az."):
+                continue
+
+            # Get the subnets the target resource is in
+            target_subnets = resource_to_subnets.get(connection, [])
+
+            # If the numbered resource and unnumbered resource don't share any common subnet,
+            # remove the connection
+            if target_subnets and not set(source_subnets) & set(target_subnets):
+                tfdata["graphdict"][resource_name].remove(connection)
+
     return tfdata
 
 
@@ -1372,6 +1649,9 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Fix singular references to numbered nodes
     tfdata = handle_singular_references(tfdata)
 
+    # Remove cross-subnet connections between numbered and unnumbered resources
+    tfdata = cleanup_cross_subnet_connections(tfdata)
+
     # Clean up original resource names but preserve connections to numbered instances
     for resource in multi_resources:
         # Find all numbered instances of this resource
@@ -1387,9 +1667,30 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for node in list(tfdata["graphdict"].keys()):
                 if node != resource and resource in tfdata["graphdict"][node]:
                     tfdata["graphdict"][node].remove(resource)
-                    for inst in numbered_instances:
-                        if inst not in tfdata["graphdict"][node]:
-                            tfdata["graphdict"][node].append(inst)
+
+                    # For subnets: only add the numbered instance matching the subnet's position
+                    if "aws_subnet" in node:
+                        # Get all subnets sorted to determine position
+                        all_subnets = sorted(
+                            [k for k in tfdata["graphdict"].keys() if "aws_subnet" in k]
+                        )
+                        try:
+                            subnet_position = all_subnets.index(node) + 1
+                            # Only add the instance matching this subnet's position
+                            matching_inst = f"{resource}~{subnet_position}"
+                            if matching_inst in numbered_instances:
+                                if matching_inst not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(matching_inst)
+                        except (ValueError, IndexError):
+                            # Fallback: add all instances if position can't be determined
+                            for inst in numbered_instances:
+                                if inst not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(inst)
+                    else:
+                        # For non-subnet nodes: add all numbered instances
+                        for inst in numbered_instances:
+                            if inst not in tfdata["graphdict"][node]:
+                                tfdata["graphdict"][node].append(inst)
 
             # Delete the original resource after updating references
             if resource.split(".")[0] not in SHARED_SERVICES:

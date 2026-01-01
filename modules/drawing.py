@@ -601,7 +601,7 @@ def render_diagram(
 
     # Initialize diagram canvas
     title = (
-        "Untitled1"
+        "Cloud Architecture Diagram"
         if not tfdata["annotations"].get("title")
         else tfdata["annotations"]["title"]
     )
@@ -703,7 +703,7 @@ def render_diagram(
         "width": "25",
         "height": "2",
         "fontsize": "18",
-        "label": f"Machine generated using terravision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
+        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 

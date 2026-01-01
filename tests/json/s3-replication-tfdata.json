@@ -1,0 +1,36 @@
+{
+    "aws_group.shared_services": [
+        "aws_iam_group.of_services"
+    ],
+    "aws_iam_role.replication": [
+        "aws_iam_role_policy.replication",
+        "aws_s3_bucket_replication_configuration.replication"
+    ],
+    "aws_iam_role_policy.replication": [
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket.source"
+    ],
+    "aws_s3_bucket.destination": [
+        "aws_s3_bucket_versioning.destination"
+    ],
+    "aws_s3_bucket.source": [
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket_versioning.source"
+    ],
+    "aws_s3_bucket_replication_configuration.replication": [
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket.source",
+        "aws_s3_bucket_versioning.destination",
+        "aws_s3_bucket_versioning.source"
+    ],
+    "aws_s3_bucket_versioning.destination": [],
+    "aws_s3_bucket_versioning.source": [],
+    "tv_aws_region.us-east-1": [
+        "aws_s3_bucket.source",
+        "aws_s3_bucket_versioning.source"
+    ],
+    "tv_aws_region.us-west-2": [
+        "aws_s3_bucket.destination",
+        "aws_s3_bucket_versioning.destination"
+    ]
+}
