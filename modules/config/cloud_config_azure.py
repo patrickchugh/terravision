@@ -18,13 +18,6 @@ AZURE_CONSOLIDATED_NODES = [
         }
     },
     {
-        "azurerm_network_security_group": {
-            "resource_name": "azurerm_network_security_group.nsg",
-            "import_location": "resource_classes.azure.network",
-            "vnet": True,
-        }
-    },
-    {
         "azurerm_application_gateway": {
             "resource_name": "azurerm_application_gateway.appgw",
             "import_location": "resource_classes.azure.network",
@@ -60,7 +53,6 @@ AZURE_GROUP_NODES = [
     "azurerm_resource_group",
     "azurerm_virtual_network",
     "azurerm_subnet",
-    "azurerm_network_security_group",
     "tv_azure_onprem",
 ]
 
@@ -170,7 +162,6 @@ else:
         "azurerm_resource_group": "azure_handle_resource_group",
         "azurerm_virtual_network": "azure_handle_vnet",
         "azurerm_subnet": "azure_handle_subnet",
-        "azurerm_network_security_group": "azure_handle_nsg",
         "azurerm_virtual_machine_scale_set": "azure_handle_vmss",
         "azurerm_application_gateway": "azure_handle_appgw",
         "azurerm_": "azure_handle_sharedgroup",

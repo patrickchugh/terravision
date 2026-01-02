@@ -37,19 +37,19 @@ BEGIN{
               // Position inside cluster at bottom with X offset to prevent neato from moving them
               if (n._labelposition == "bottom-left") {
                 // Different X offsets for different cluster types
-                labelY = clusterMinY + 35.0;
+                labelY = clusterMinY + 40.0;
                 if (hasAttr(n, "_clustertype") && n._clustertype == "SubnetGroup") {
-                  labelX = clusterMinX + 60.0;  // Smaller offset for Subnets (icon at corner)
+                  labelX = clusterMinX + 50.0;  // Smaller offset for Subnets (icon at corner)
                 } else if (hasAttr(n, "_clustertype") && n._clustertype == "AZUREGroup") {
                   labelX = clusterMinX + 70.0;  // medium offset for Azure Cloud (outermost container)
                   labelY = clusterMinY + 60.0;
                 } else {
-                  labelX = clusterMinX + 100.0;  // Standard offset for Resource Groups
+                  labelX = clusterMinX + 70.0;  // Standard offset for Resource Groups
                 }
                 
               } else if (n._labelposition == "bottom-right") {
-                labelX = clusterMaxX - 100.0;  // Shifted left from right edge
-                labelY = clusterMinY + 35.0;
+                labelX = clusterMaxX - 50.0;  // Shifted left from right edge
+                labelY = clusterMinY + 45.0;
               } else if (n._labelposition == "bottom-center") {
                 labelX = clusterCenterX;
                 labelY = clusterMinY + 50.0;
