@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Ml(_Azure):
     _type = "ml"
-    _icon_dir = "resources/azure/ml"
+    _icon_dir = "resource_images/azure/ml"
 
 
 class AzureOpenAI(_Ml):

@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Networking(_Azure):
     _type = "networking"
-    _icon_dir = "resources/azure/networking"
+    _icon_dir = "resource_images/azure/networking"
 
 
 class ApplicationGateways(_Networking):

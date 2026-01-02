@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Security(_Azure):
     _type = "security"
-    _icon_dir = "resources/azure/security"
+    _icon_dir = "resource_images/azure/security"
 
 
 class ApplicationSecurityGroups(_Security):

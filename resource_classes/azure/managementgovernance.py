@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Managementgovernance(_Azure):
     _type = "managementgovernance"
-    _icon_dir = "resources/azure/managementgovernance"
+    _icon_dir = "resource_images/azure/managementgovernance"
 
 
 class ActivityLog(_Managementgovernance):

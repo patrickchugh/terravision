@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Database(_Azure):
     _type = "database"
-    _icon_dir = "resources/azure/database"
+    _icon_dir = "resource_images/azure/database"
 
 
 class BlobStorage(_Database):

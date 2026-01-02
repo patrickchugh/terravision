@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Web(_Azure):
     _type = "web"
-    _icon_dir = "resources/azure/web"
+    _icon_dir = "resource_images/azure/web"
 
 
 class APICenter(_Web):

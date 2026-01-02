@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Mobile(_Azure):
     _type = "mobile"
-    _icon_dir = "resources/azure/mobile"
+    _icon_dir = "resource_images/azure/mobile"
 
 
 class AppServiceMobile(_Mobile):

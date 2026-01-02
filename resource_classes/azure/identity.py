@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Identity(_Azure):
     _type = "identity"
-    _icon_dir = "resources/azure/identity"
+    _icon_dir = "resource_images/azure/identity"
 
 
 class AadLicenses(_Identity):

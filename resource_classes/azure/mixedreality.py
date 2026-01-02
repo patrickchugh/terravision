@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Mixedreality(_Azure):
     _type = "mixedreality"
-    _icon_dir = "resources/azure/mixedreality"
+    _icon_dir = "resource_images/azure/mixedreality"
 
 
 class RemoteRendering(_Mixedreality):

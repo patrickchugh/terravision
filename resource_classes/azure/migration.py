@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Migration(_Azure):
     _type = "migration"
-    _icon_dir = "resources/azure/migration"
+    _icon_dir = "resource_images/azure/migration"
 
 
 class AzureDatabaseMigrationServices(_Migration):

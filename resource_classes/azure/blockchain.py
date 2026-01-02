@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Blockchain(_Azure):
     _type = "blockchain"
-    _icon_dir = "resources/azure/blockchain"
+    _icon_dir = "resource_images/azure/blockchain"
 
 
 class AbsMember(_Blockchain):

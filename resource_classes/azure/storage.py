@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Storage(_Azure):
     _type = "storage"
-    _icon_dir = "resources/azure/storage"
+    _icon_dir = "resource_images/azure/storage"
 
 
 class ArchiveStorage(_Storage):

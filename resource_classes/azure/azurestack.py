@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Azurestack(_Azure):
     _type = "azurestack"
-    _icon_dir = "resources/azure/azurestack"
+    _icon_dir = "resource_images/azure/azurestack"
 
 
 class Capacity(_Azurestack):

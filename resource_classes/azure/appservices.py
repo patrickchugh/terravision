@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Appservices(_Azure):
     _type = "appservices"
-    _icon_dir = "resources/azure/appservices"
+    _icon_dir = "resource_images/azure/appservices"
 
 
 class AppServiceCertificates(_Appservices):

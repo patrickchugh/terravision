@@ -3,7 +3,7 @@ from . import _Azure
 
 class _General(_Azure):
     _type = "general"
-    _icon_dir = "resources/azure/general"
+    _icon_dir = "resource_images/azure/general"
 
 
 class AllResources(_General):
@@ -468,3 +468,5 @@ class Workflow(_General):
 # Note: azurerm_resource_group alias is defined in groups.py as a Cluster class
 azurerm_subscription = Subscriptions
 azurerm_management_group = ManagementGroups
+tv_azurerm_users = Usericon
+tv_azurerm_internet = WebsitePower
