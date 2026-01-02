@@ -403,8 +403,6 @@ class TestAzureResourceHandlers:
         )
 
 
-
-
 class TestMatchResources:
     """Tests for match_resources helper functions."""
 
@@ -487,7 +485,9 @@ class TestAzureSubnetHandling:
             "graphdict": {
                 "azurerm_subnet.web": ["azurerm_network_interface.nic"],
                 "azurerm_network_interface.nic": [],
-                "azurerm_virtual_machine.vm": ["azurerm_network_interface.nic"],  # VM -> NIC (correct direction)
+                "azurerm_virtual_machine.vm": [
+                    "azurerm_network_interface.nic"
+                ],  # VM -> NIC (correct direction)
             },
             "meta_data": {
                 "azurerm_subnet.web": {},
@@ -505,6 +505,7 @@ class TestAzureSubnetHandling:
 
         # Then place VMs into subnets (happens after numbering in real pipeline)
         from modules.resource_handlers_azure import place_vms_in_subnets
+
         result = place_vms_in_subnets(result)
 
         # VM should be linked to subnet (through NIC relationship)

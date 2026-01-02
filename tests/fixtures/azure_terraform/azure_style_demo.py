@@ -11,21 +11,29 @@ Manually creates Azure resources to show new visual styling:
 
 from resource_classes import Canvas, setdiagram
 from resource_classes.azure.groups import (
-    AZUREGroup, ResourceGroupCluster, VNetGroup,
-    SubnetGroup, AvailabilityZone, SharedServicesGroup
+    AZUREGroup,
+    ResourceGroupCluster,
+    VNetGroup,
+    SubnetGroup,
+    AvailabilityZone,
+    SharedServicesGroup,
 )
 from resource_classes.azure.compute import VM, VMScaleSets
 from resource_classes.azure.database import SQLDatabases
 from resource_classes.azure.storage import StorageAccounts
 from resource_classes.azure.security import KeyVaults
-from resource_classes.azure.network import VirtualNetworks, ApplicationGateway, LoadBalancers
+from resource_classes.azure.network import (
+    VirtualNetworks,
+    ApplicationGateway,
+    LoadBalancers,
+)
 
 # Create canvas
 diagram = Canvas(
     name="Azure Architecture - Style Demo",
     filename="azure-style-demo",
     direction="TB",
-    outformat="png"
+    outformat="png",
 )
 setdiagram(diagram)
 

@@ -70,17 +70,21 @@ def test_no_shared_connections_in_expected_outputs(expected_file: str) -> None:
     # If validation fails, provide detailed error message
     if not is_valid:
         error_msg = f"\n\nVALIDATION FAILED for {expected_file}:\n\n"
-        error_msg += "="*80 + "\n"
+        error_msg += "=" * 80 + "\n"
         for error in errors:
             error_msg += f"❌ {error}\n\n"
-        error_msg += "="*80 + "\n\n"
+        error_msg += "=" * 80 + "\n\n"
         error_msg += "HOW TO FIX:\n"
         error_msg += "1. DO NOT regenerate expected JSON to make this pass\n"
-        error_msg += "2. Identify which resource handler should expand the shared resource\n"
+        error_msg += (
+            "2. Identify which resource handler should expand the shared resource\n"
+        )
         error_msg += "3. Add logic to create numbered instances (~1, ~2) matching parent groups\n"
         error_msg += "4. Ensure each group points to its own numbered instance\n"
         error_msg += "\nExample: If aws_subnet.a and aws_subnet.b both point to aws_instance.web,\n"
-        error_msg += "the handler should create aws_instance.web~1 and aws_instance.web~2\n"
+        error_msg += (
+            "the handler should create aws_instance.web~1 and aws_instance.web~2\n"
+        )
 
         pytest.fail(error_msg)
 
@@ -114,7 +118,9 @@ def test_validation_detects_shared_connections() -> None:
     # Check that both resources are mentioned in error messages
     all_errors = " ".join(errors)
     assert "aws_instance.web" in all_errors, "Should detect aws_instance.web"
-    assert "aws_lambda_function.func" in all_errors, "Should detect aws_lambda_function.func"
+    assert (
+        "aws_lambda_function.func" in all_errors
+    ), "Should detect aws_lambda_function.func"
 
 
 def test_validation_allows_numbered_instances() -> None:

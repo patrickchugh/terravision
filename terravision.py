@@ -56,6 +56,7 @@ def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) 
         exc_traceback: Traceback object
     """
     import traceback
+
     print(f"Unhandled error: {exc_type}, {exc_value}")
     traceback.print_exception(exc_type, exc_value, exc_traceback)
 
