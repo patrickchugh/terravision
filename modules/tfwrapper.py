@@ -53,13 +53,13 @@ def tf_initplan(
     for sourceloc in source:
         # Handle local directory source
         if os.path.isdir(sourceloc):
-            os.chdir(sourceloc)
-            codepath = sourceloc
+            codepath = os.path.abspath(sourceloc)
             # Copy override file to force local backend (ignores TFE remote state)
             ovpath = os.path.join(basedir, "override.tf")
             override_dest = os.path.join(codepath, "override.tf")
             if not os.path.exists(override_dest):
-                shutil.copy(ovpath, codepath)
+                shutil.copy(ovpath, override_dest)
+            os.chdir(codepath)
         # Handle Git repository source
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
@@ -310,7 +310,11 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Detect cloud provider from tf_resources_created (early detection before all_resource exists)
     detected_provider = None
     if "tf_resources_created" in tfdata:
-        resource_addresses = [obj["address"] for obj in tfdata["tf_resources_created"] if obj.get("mode") == "managed"]
+        resource_addresses = [
+            obj["address"]
+            for obj in tfdata["tf_resources_created"]
+            if obj.get("mode") == "managed"
+        ]
         provider_counts = {}
         for resource_addr in resource_addresses:
             provider = provider_detector.get_provider_for_resource(resource_addr)
@@ -424,7 +428,11 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     # At this stage, all_resource hasn't been populated yet, so we detect from terraform plan resources
     detected_provider = None
     if "tf_resources_created" in tfdata:
-        resource_addresses = [obj["address"] for obj in tfdata["tf_resources_created"] if obj.get("mode") == "managed"]
+        resource_addresses = [
+            obj["address"]
+            for obj in tfdata["tf_resources_created"]
+            if obj.get("mode") == "managed"
+        ]
         provider_counts = {}
         for resource_addr in resource_addresses:
             provider = provider_detector.get_provider_for_resource(resource_addr)

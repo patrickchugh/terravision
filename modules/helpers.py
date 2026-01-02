@@ -539,7 +539,7 @@ def pretty_name(name: str, show_title=True) -> str:
     instance_raw = (m.group(2) or "").strip()
 
     # placeholders we don't want as instance labels
-    placeholders = {"this", "default", "main", "resource"}
+    placeholders = {"this", "resource"}
     if instance_raw in placeholders:
         instance_raw = ""
 
@@ -1225,8 +1225,18 @@ def extract_terraform_resource(text: str) -> List[str]:
     aws_matches = re.findall(aws_pattern, text)
     results.extend(aws_matches)
 
-    # Pattern for module.name.aws_resource.name[*].id
-    module_pattern = r"module\.(\w+)\.(aws_\w+)\.(\w+)(?:\[\*?\])?(?:\.id)?"
+    # Pattern for Azure resources (azurerm_, azuread_, azapi_)
+    azure_pattern = r"((?:azurerm|azuread|azapi)_\w+\.\w+)"
+    azure_matches = re.findall(azure_pattern, text)
+    results.extend(azure_matches)
+
+    # Pattern for GCP resources
+    gcp_pattern = r"(google_\w+\.\w+)"
+    gcp_matches = re.findall(gcp_pattern, text)
+    results.extend(gcp_matches)
+
+    # Pattern for module.name.resource.name[*].id
+    module_pattern = r"module\.(\w+)\.(\w+_\w+)\.(\w+)(?:\[\*?\])?(?:\.id)?"
     module_matches = re.findall(module_pattern, text)
     for match in module_matches:
         results.append(f"module.{match[0]}.{match[1]}.{match[2]}")

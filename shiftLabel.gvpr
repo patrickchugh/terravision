@@ -41,8 +41,8 @@ BEGIN{
                 if (hasAttr(n, "_clustertype") && n._clustertype == "SubnetGroup") {
                   labelX = clusterMinX + 50.0;  // Smaller offset for Subnets (icon at corner)
                 } else if (hasAttr(n, "_clustertype") && n._clustertype == "AZUREGroup") {
-                  labelX = clusterMinX + 70.0;  // medium offset for Azure Cloud (outermost container)
-                  labelY = clusterMinY + 60.0;
+                  labelX = clusterMinX + 200.0;  // medium offset for Azure Cloud (outermost container)
+                  labelY = clusterMinY -20;
                 } else {
                   labelX = clusterMinX + 70.0;  // Standard offset for Resource Groups
                 }

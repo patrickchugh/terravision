@@ -48,7 +48,7 @@ except AttributeError:
 
 
 class AZUREGroup(Cluster):
-    def __init__(self, label="Azure Cloud", badge_label=None, **kwargs):
+    def __init__(self, label="", badge_label=None, **kwargs):
         azure_graph_attrs = {
             "style": "invis",  # No border
             "margin": "100",
@@ -205,6 +205,6 @@ class SharedServicesGroup(Cluster):
 azurerm_resource_group = ResourceGroupCluster
 azurerm_virtual_network = VNetGroup
 azurerm_subnet = SubnetGroup
-azure_az = AvailabilityZone
+tv_azurerm_zone = AvailabilityZone  # Virtual zones for VMSS instances
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup

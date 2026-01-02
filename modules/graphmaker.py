@@ -343,14 +343,18 @@ def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
     """
     matching = []
 
+    # Normalize count.index references by removing the index placeholder
+    # This allows ${resource.name[count.index].id} to match resource.name
+    normalized_param = param.replace("[count.index]", "")
+
     # Handle list references (e.g., resource[0])
-    if re.search(r"\[\d+\]", param) and "[*]" not in param and param != "[]":
+    if re.search(r"\[\d+\]", normalized_param) and "[*]" not in normalized_param and normalized_param != "[]":
         matching = list(
-            {s for s in nodes if s.split("~")[0] in param.replace(".*", "")}
+            {s for s in nodes if s.split("~")[0] in normalized_param.replace(".*", "")}
         )
     else:
         # Extract Terraform resource references from parameter
-        extracted_resources_list = helpers.extract_terraform_resource(param)
+        extracted_resources_list = helpers.extract_terraform_resource(normalized_param)
         if extracted_resources_list:
             for r in extracted_resources_list:
                 matching.extend(
@@ -1669,10 +1673,10 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][node].remove(resource)
 
                     # For subnets: only add the numbered instance matching the subnet's position
-                    if "aws_subnet" in node:
+                    if "_subnet" in node:
                         # Get all subnets sorted to determine position
                         all_subnets = sorted(
-                            [k for k in tfdata["graphdict"].keys() if "aws_subnet" in k]
+                            [k for k in tfdata["graphdict"].keys() if "_subnet" in k and "association" not in k]
                         )
                         try:
                             subnet_position = all_subnets.index(node) + 1

@@ -107,6 +107,34 @@ resource "azurerm_linux_virtual_machine" "main" {
   disable_password_authentication = true
 }
 
+# Public IP for Load Balancer
+resource "azurerm_public_ip" "lb" {
+  name                = "pip-lb-test"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+# Load Balancer
+resource "azurerm_lb" "main" {
+  name                = "lb-terravision-test"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "Standard"
+
+  frontend_ip_configuration {
+    name                 = "frontend"
+    public_ip_address_id = azurerm_public_ip.lb.id
+  }
+}
+
+# Backend Address Pool
+resource "azurerm_lb_backend_address_pool" "main" {
+  loadbalancer_id = azurerm_lb.main.id
+  name            = "vmss-backend-pool"
+}
+
 # Virtual Machine Scale Set
 resource "azurerm_linux_virtual_machine_scale_set" "main" {
   name                = "vmss-terravision-test"
@@ -144,6 +172,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
       name      = "internal"
       primary   = true
       subnet_id = azurerm_subnet.main.id
+
+      # Associate with Load Balancer backend pool
+      load_balancer_backend_address_pool_ids = [
+        azurerm_lb_backend_address_pool.main.id
+      ]
     }
   }
 

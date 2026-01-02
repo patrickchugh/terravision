@@ -48,26 +48,31 @@ TerraVision automatically converts your Terraform code into professional cloud a
 ## Key Features
 
 ### 🎨 Professional Diagrams
+
 - Industry-standard cloud provider icons (AWS, GCP, Azure)
 - Automatic resource grouping (VPCs, subnets, security groups)
 - Clean, readable layouts
 - Multiple output formats (PNG, SVG, PDF and DOT)
 
 ### 🤖 AI-Powered Refinement
+
 - Automatically fixes resource relationships
 - Adds missing logical connections, labels, titles and icons as needed
 - Ensures architectural diagramming best practices
 
 ### 📝 Customizable Annotations
+
 - Add custom labels and titles
 - Include external resources not in Terraform
 - Override automatic connections
 
 ### 🔄 CI/CD Integration
+
 - GitHub Actions, GitLab CI, Jenkins support
 - Show multiple environments using TF Variables to document variants of your infrastructure (e.g. prod vs dev)
 
 ### 🔒 Secure & Private
+
 - No cloud credentials required
 - Runs entirely on your local machine
 - No external API calls (except optional AI features)
@@ -162,7 +167,6 @@ Generate your first diagram using our example Terraform code:
 ./terravision.py draw --source /path/to/your/terraform/code
 ```
 
-
 ---
 
 ## Installation
@@ -170,6 +174,7 @@ Generate your first diagram using our example Terraform code:
 ### Method 1: Quick Install (Recommended for Users)
 
 **macOS/Linux:**
+
 ```bash
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
@@ -180,6 +185,7 @@ export PATH=$PATH:$(pwd)
 ```
 
 **Windows:**
+
 ```powershell
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
@@ -225,15 +231,15 @@ terravision draw --source ./terraform --show
 
 ### Common Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
-| `--source` | Terraform code location | `./terraform` or Git URL |
-| `--format` | Output format | `png`, `svg`, `pdf`, `bmp` |
-| `--outfile` | Output filename | `architecture` (default) |
-| `--workspace` | Terraform workspace | `production`, `staging` |
-| `--varfile` | Variable file | `prod.tfvars` |
-| `--show` | Open diagram after generation | (flag) |
-| `--debug` | Enable debug output | (flag) |
+| Option        | Description                   | Example                    |
+| ------------- | ----------------------------- | -------------------------- |
+| `--source`    | Terraform code location       | `./terraform` or Git URL   |
+| `--format`    | Output format                 | `png`, `svg`, `pdf`, `bmp` |
+| `--outfile`   | Output filename               | `architecture` (default)   |
+| `--workspace` | Terraform workspace           | `production`, `staging`    |
+| `--varfile`   | Variable file                 | `prod.tfvars`              |
+| `--show`      | Open diagram after generation | (flag)                     |
+| `--debug`     | Enable debug output           | (flag)                     |
 
 ### Export Graph Data
 
@@ -249,6 +255,7 @@ terravision graphdata --source ./terraform --outfile resources.json
 ## Documentation
 
 ### For Users
+
 - **[Installation Guide](docs/INSTALLATION.md)** - Detailed setup instructions
 - **[Usage Guide](docs/USAGE_GUIDE.md)** - Commands, options, and examples
 - **[Annotations Guide](docs/ANNOTATIONS.md)** - Customize your diagrams
@@ -256,11 +263,13 @@ terravision graphdata --source ./terraform --outfile resources.json
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### For Developers
+
 - **[Resource Handler Guide](docs/RESOURCE_HANDLER_GUIDE.md)** - Handler architecture
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
 - **[Developer Guide](docs/developer_guide.md)** - Development setup
 
 ### Advanced Topics
+
 - **[AI-Powered Refinement](docs/AI_REFINEMENT.md)** - Using AI to improve diagrams
 - **[Performance Optimization](docs/PERFORMANCE.md)** - Tips for large projects
 
@@ -268,16 +277,31 @@ terravision graphdata --source ./terraform --outfile resources.json
 
 ## Supported Cloud Providers
 
-| Provider | Status | Resources Supported |
-|----------|--------|---------------------|
-| **AWS** | ✅ Full Support | 200+ services |
-| **Google Cloud** | 🔄 Coming Soon | Core services |
-| **Azure** | 🔄 Partial Support | Core services |
-
+| Provider         | Status             | Resources Supported |
+| ---------------- | ------------------ | ------------------- |
+| **AWS**          | ✅ Full Support     | 200+ services       |
+| **Google Cloud** | 🔄 Coming Soon     | Core services       |
+| **Azure**        | 🔄 Partial Support | Core services       |
 
 ---
 
 ## CI/CD Integration Example
+
+### Pipeline Workflow
+
+```mermaid
+graph LR
+    A["📝 Source Code<br/>Checked into Git"] --> B["🧪 Test"]
+    B --> C["🔨 Build/Deploy"]
+    C --> D["📊 Generate Diagrams<br/>TerraVision"]
+    D --> E["📚 Document"]
+
+    style A fill:#e1f5ff
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e9
+    style E fill:#fce4ec
+```
 
 ```yaml
 # .github/workflows/architecture-diagrams.yml
@@ -320,6 +344,7 @@ jobs:
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Code of conduct
 - Development setup
 - Pull request process
@@ -344,7 +369,7 @@ Refer to LICENSE text file
 ## Acknowledgments
 
 TerraVision uses:
+
 - [Graphviz](https://graphviz.org/) for diagram rendering
 - [Terraform](https://www.terraform.io/) for infrastructure parsing
 - Cloud provider icons from official sources
-

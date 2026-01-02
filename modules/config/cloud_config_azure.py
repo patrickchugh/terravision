@@ -32,6 +32,20 @@ AZURE_CONSOLIDATED_NODES = [
         }
     },
     {
+        "azurerm_lb": {
+            "resource_name": "azurerm_lb.lb",
+            "import_location": "resource_classes.azure.network",
+            "vnet": True,
+        }
+    },
+    {
+        "azurerm_lb_backend_address_pool": {
+            "resource_name": "azurerm_lb.lb",
+            "import_location": "resource_classes.azure.network",
+            "vnet": True,
+        }
+    },
+    {
         "azurerm_key_vault": {
             "resource_name": "azurerm_key_vault.keyvault",
             "import_location": "resource_classes.azure.security",
@@ -53,6 +67,7 @@ AZURE_GROUP_NODES = [
     "azurerm_resource_group",
     "azurerm_virtual_network",
     "azurerm_subnet",
+    "tv_azurerm_zone",  # Availability zones for VMSS instances
     "tv_azure_onprem",
 ]
 
@@ -66,7 +81,7 @@ AZURE_EDGE_NODES = [
 ]
 
 # Nodes outside Cloud boundary
-AZURE_OUTER_NODES = ["tv_azure_users", "tv_azure_internet"]
+AZURE_OUTER_NODES = ["tv_azure_users", "tv_azurerm_internet "]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 AZURE_DRAW_ORDER = [
@@ -90,8 +105,14 @@ AZURE_AUTO_ANNOTATIONS = [
     },
     {
         "azurerm_public_ip": {
-            "link": ["tv_azure_internet.internet"],
+            "link": ["tv_azurerm_internet.internet", "tv_azurerm_users.users"],
             "arrow": "forward",
+        }
+    },
+    {
+        "tv_azurerm_internet.internet": {
+            "link": ["tv_azurerm_users.users"],
+            "arrow": "reverse",
         }
     },
     {
@@ -122,11 +143,11 @@ AZURE_NODE_VARIANTS = {
 
 # Automatically reverse arrow direction for these resources when discovered through source
 AZURE_REVERSE_ARROW_LIST = [
-    "azurerm_dns_zone",
+    "azurerm_resource_group.",  # Highest priority - everything belongs to a resource group
     "azurerm_virtual_network.",
     "azurerm_subnet.",
-    "azurerm_resource_group.",
     "azurerm_network_security_group.",
+    "azurerm_dns_zone",
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
@@ -163,6 +184,8 @@ else:
         "azurerm_virtual_network": "azure_handle_vnet",
         "azurerm_subnet": "azure_handle_subnet",
         "azurerm_virtual_machine_scale_set": "azure_handle_vmss",
+        "azurerm_linux_virtual_machine_scale_set": "azure_handle_vmss",
+        "azurerm_windows_virtual_machine_scale_set": "azure_handle_vmss",
         "azurerm_application_gateway": "azure_handle_appgw",
         "azurerm_": "azure_handle_sharedgroup",
         "random_string": "random_string_handler",
@@ -204,6 +227,7 @@ AZURE_ACRONYMS_LIST = [
 
 AZURE_NAME_REPLACEMENTS = {
     "virtual_machine": "VM",
+    "linux_virtual_machine": "Linux VM",
     "virtual_network": "VNet",
     "network_security_group": "NSG",
     "network_interface": "NIC",
@@ -224,7 +248,7 @@ AZURE_REFINEMENT_PROMPT = """
 You are an expert Azure Solutions Architect. I have a JSON representation of an Azure architecture diagram generated from Terraform code. The diagram may have incorrect resource groupings, missing connections, or layout issues.
 INPUT JSON FORMAT: Each key is a Terraform resource ID, and its value is a list of resource IDs it connects to.
 SPECIAL CONVENTIONS:
-- Resources starting with "tv_" are visual helper nodes (e.g., "tv_azure_internet.internet" represents the public internet)
+- Resources starting with "tv_" are visual helper nodes (e.g., "tv_azurerm_internet .internet" represents the public internet)
 - Resource Groups are always top-level containers - all Azure resources belong to a Resource Group
 - VNets (Virtual Networks) are network boundary containers within Resource Groups
 - Subnets are network segments within VNets
@@ -265,7 +289,7 @@ AZURE_MULTI_INSTANCE_PATTERNS = [
         "resource_types": ["azurerm_lb", "azurerm_public_ip"],
         "trigger_attributes": ["zones"],
         "also_expand_attributes": [],
-        "resource_pattern": r'"([^"]+)"',  # Zones are often strings: ["1", "2"]
+        "resource_pattern": r"^(.+)$",  # Match plain zone strings: ["1", "2", "3"]
         "description": "Azure Load Balancer with multiple zones",
     },
     {
@@ -275,7 +299,7 @@ AZURE_MULTI_INSTANCE_PATTERNS = [
         ],
         "trigger_attributes": ["zones"],
         "also_expand_attributes": [],
-        "resource_pattern": r'"([^"]+)"',
+        "resource_pattern": r"^(.+)$",  # Match plain zone strings ["1", "2", "3"]
         "description": "Azure VM Scale Set with multiple zones",
     },
     # Add more Azure patterns as needed

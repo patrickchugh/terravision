@@ -193,35 +193,8 @@ def azure_handle_subnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     if nic not in tfdata["graphdict"].get(subnet, []):
                         tfdata["graphdict"][subnet].append(nic)
 
-        # Find VMs and link them to subnets through their NICs
-        vms = helpers.list_of_dictkeys_containing(
-            tfdata["graphdict"], "azurerm_virtual_machine"
-        )
-        vms.extend(
-            helpers.list_of_dictkeys_containing(
-                tfdata["graphdict"], "azurerm_linux_virtual_machine"
-            )
-        )
-        vms.extend(
-            helpers.list_of_dictkeys_containing(
-                tfdata["graphdict"], "azurerm_windows_virtual_machine"
-            )
-        )
-
-        for vm in vms:
-            # Check if VM is connected to a NIC that's in this subnet
-            vm_nic_refs = (
-                tfdata["meta_data"].get(vm, {}).get("network_interface_ids", "")
-            )
-            for nic in nics:
-                if nic in str(vm_nic_refs) or nic.split(".")[-1] in str(vm_nic_refs):
-                    # If this NIC is in our subnet, put VM under the subnet
-                    if nic in tfdata["graphdict"].get(subnet, []):
-                        if vm not in tfdata["graphdict"].get(subnet, []):
-                            tfdata["graphdict"][subnet].append(vm)
-                        # Remove VM from NIC's children (VM is now direct child of subnet)
-                        if vm in tfdata["graphdict"].get(nic, []):
-                            tfdata["graphdict"][nic].remove(vm)
+        # NOTE: VM placement into subnets now happens in match_resources()
+        # after create_multiple_resources() completes numbering
 
     return tfdata
 
@@ -345,15 +318,18 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle Azure VM Scale Set relationships.
+    """Handle Azure VM Scale Set relationships and zone placement.
+
+    Creates availability zone containers for VMSS instances that are expanded
+    across multiple zones.
 
     Args:
         tfdata: Terraform data dictionary
 
     Returns:
-        Updated tfdata with VMSS relationships configured
+        Updated tfdata with VMSS relationships and zone containers configured
     """
-    # Find all VMSS resources
+    # Find all VMSS resources (including numbered instances)
     vmss_list = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "azurerm_virtual_machine_scale_set"
     )
@@ -373,7 +349,12 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "azurerm_lb"
     )
 
-    for vmss in vmss_list:
+    # Separate numbered and non-numbered VMSS
+    numbered_vmss = [v for v in vmss_list if "~" in v]
+    unnumbered_vmss = [v for v in vmss_list if "~" not in v]
+
+    # Handle non-numbered VMSS (original logic)
+    for vmss in unnumbered_vmss:
         if not tfdata["meta_data"].get(vmss):
             continue
 
@@ -398,6 +379,61 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 # Link LB to VMSS
                 if vmss not in tfdata["graphdict"].get(lb, []):
                     tfdata["graphdict"][lb].append(vmss)
+
+    # Handle numbered VMSS - create zone containers
+    if numbered_vmss:
+        # Group numbered VMSS by base name
+        vmss_by_base = {}
+        for vmss in numbered_vmss:
+            base_name = vmss.split("~")[0]
+            if base_name not in vmss_by_base:
+                vmss_by_base[base_name] = []
+            vmss_by_base[base_name].append(vmss)
+
+        for base_name, instances in vmss_by_base.items():
+            # Get metadata from first instance
+            if instances and tfdata["meta_data"].get(instances[0]):
+                metadata = tfdata["meta_data"][instances[0]]
+                zones_attr = metadata.get("zones", [])
+
+                # Only create zone containers if zones attribute exists and has values
+                if zones_attr and isinstance(zones_attr, list):
+                    # Find parent subnet for this VMSS
+                    parent_subnet = None
+                    network_profile = metadata.get("network_profile", "")
+                    for subnet in subnets:
+                        subnet_name = subnet.split(".")[-1]
+                        if subnet in str(network_profile) or subnet_name in str(network_profile):
+                            parent_subnet = subnet
+                            break
+
+                    if parent_subnet:
+                        # Create zone container for each instance
+                        for i, vmss_instance in enumerate(sorted(instances), start=1):
+                            if i <= len(zones_attr):
+                                zone_id = zones_attr[i - 1]
+                                # Create zone node name
+                                zone_node = f"tv_azurerm_zone.zone_{zone_id}"
+
+                                # Create zone node in graphdict if it doesn't exist
+                                if zone_node not in tfdata["graphdict"]:
+                                    tfdata["graphdict"][zone_node] = []
+                                    tfdata["meta_data"][zone_node] = {
+                                        "zone_id": zone_id,
+                                        "name": f"Availability Zone {zone_id}"
+                                    }
+
+                                # Place VMSS instance inside zone
+                                if vmss_instance not in tfdata["graphdict"][zone_node]:
+                                    tfdata["graphdict"][zone_node].append(vmss_instance)
+
+                                # Remove VMSS instance from subnet direct children
+                                if vmss_instance in tfdata["graphdict"].get(parent_subnet, []):
+                                    tfdata["graphdict"][parent_subnet].remove(vmss_instance)
+
+                                # Add zone to subnet if not already there
+                                if zone_node not in tfdata["graphdict"].get(parent_subnet, []):
+                                    tfdata["graphdict"][parent_subnet].append(zone_node)
 
     return tfdata
 
@@ -513,8 +549,519 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], tfdata.get("meta_data", {})
     )
 
+    # Place VMs into subnets (runs after numbering to handle numbered VMs correctly)
+    tfdata = place_vms_in_subnets(tfdata)
+
+    # Create availability zone containers for numbered VM instances
+    # This must run AFTER place_vms_in_subnets so VMs are in subnet
+    tfdata = create_vm_zone_containers(tfdata)
+
+    # Create availability zone containers for numbered VMSS instances
+    # This must run AFTER create_multiple_resources so numbered instances exist
+    tfdata = create_vmss_zone_containers(tfdata)
+
+    # Connect Load Balancers and Application Gateways to backend VMs
+    tfdata = connect_lb_to_backend_vms(tfdata)
+
     # Clean up orphaned resources
     tfdata["graphdict"] = remove_empty_groups(tfdata["graphdict"])
+
+    return tfdata
+
+
+def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Create availability zone containers for numbered VM instances.
+
+    This function runs AFTER create_multiple_resources, so numbered VM instances
+    like vm~1, vm~2, vm~3 already exist. It creates zone containers and places
+    each instance in its corresponding zone.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with zone containers created
+    """
+    # Find all numbered VM instances (individual VMs, not VMSS)
+    numbered_vms = [
+        k for k in tfdata["graphdict"].keys()
+        if ("azurerm_linux_virtual_machine" in k or
+            "azurerm_windows_virtual_machine" in k or
+            "azurerm_virtual_machine" in k) and "~" in k
+        and "scale_set" not in k  # Exclude VMSS
+    ]
+
+    if not numbered_vms:
+        return tfdata
+
+    # Find subnets
+    subnets = [
+        s for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
+        if "association" not in s
+    ]
+
+    # Group VMs by subnet
+    vms_by_subnet = {}
+    for vm in numbered_vms:
+        # Find which subnet contains this VM
+        vm_subnet = None
+        for subnet in subnets:
+            if vm in tfdata["graphdict"].get(subnet, []):
+                vm_subnet = subnet
+                break
+
+        if vm_subnet:
+            if vm_subnet not in vms_by_subnet:
+                vms_by_subnet[vm_subnet] = []
+            vms_by_subnet[vm_subnet].append(vm)
+
+    # For each subnet with zoned VMs, create zone containers
+    for subnet, vms in vms_by_subnet.items():
+        # Check if VMs have zone attributes
+        zones_used = {}
+        for vm in vms:
+            vm_metadata = tfdata["meta_data"].get(vm, {})
+            zone = vm_metadata.get("zone", "")
+            if zone:
+                # Remove quotes if present
+                zone = str(zone).strip('"').strip("'")
+
+                # Resolve count.index expressions for numbered instances
+                # e.g., "${tostring(count.index + 1)}" with vm~2 should become "2"
+                if "count.index" in zone and "~" in vm:
+                    # Extract instance number from vm~X
+                    instance_num = int(vm.split("~")[1])
+                    # count.index is 0-based, so instance 1 has count.index = 0
+                    count_index = instance_num - 1
+                    # Replace count.index with the actual value
+                    zone = zone.replace("count.index", str(count_index))
+                    # Evaluate simple expressions like "0 + 1" -> "1"
+                    # Remove ${} and tostring() wrappers
+                    zone = zone.replace("${", "").replace("}", "")
+                    zone = zone.replace("tostring(", "").replace(")", "")
+                    # Evaluate the expression
+                    try:
+                        zone = str(eval(zone))
+                    except Exception:
+                        # If evaluation fails, keep original
+                        pass
+
+                if zone not in zones_used:
+                    zones_used[zone] = []
+                zones_used[zone].append(vm)
+
+        # If no zones found, skip this subnet
+        if not zones_used:
+            continue
+
+        # Create zone containers
+        for zone_id, zone_vms in zones_used.items():
+            zone_name = f"tv_azurerm_zone.zone{zone_id}"
+
+            # Create zone container node
+            if zone_name not in tfdata["graphdict"]:
+                tfdata["graphdict"][zone_name] = []
+                tfdata["meta_data"][zone_name] = {
+                    "zone_id": zone_id,
+                    "type": "tv_azurerm_zone"
+                }
+
+            # Move VMs from subnet to zone
+            for vm in zone_vms:
+                if vm in tfdata["graphdict"].get(subnet, []):
+                    tfdata["graphdict"][subnet].remove(vm)
+
+                if vm not in tfdata["graphdict"][zone_name]:
+                    tfdata["graphdict"][zone_name].append(vm)
+
+            # Add zone to subnet
+            if zone_name not in tfdata["graphdict"].get(subnet, []):
+                tfdata["graphdict"][subnet].append(zone_name)
+
+    return tfdata
+
+
+def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Create availability zone containers for numbered VMSS instances.
+
+    This function runs AFTER create_multiple_resources, so numbered instances
+    like vmss~1, vmss~2, vmss~3 already exist. It creates zone containers and
+    places each instance in its corresponding zone.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with zone containers created
+    """
+    # Find all numbered VMSS instances
+    numbered_vmss = [
+        k for k in tfdata["graphdict"].keys()
+        if ("azurerm_linux_virtual_machine_scale_set" in k or
+            "azurerm_windows_virtual_machine_scale_set" in k or
+            "azurerm_virtual_machine_scale_set" in k) and "~" in k
+    ]
+
+    if not numbered_vmss:
+        return tfdata
+
+    # Find subnets
+    subnets = [
+        s
+        for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
+        if "association" not in s
+    ]
+
+    # Group numbered VMSS by base name
+    vmss_by_base = {}
+    for vmss in numbered_vmss:
+        base_name = vmss.split("~")[0]
+        if base_name not in vmss_by_base:
+            vmss_by_base[base_name] = []
+        vmss_by_base[base_name].append(vmss)
+
+    for base_name, instances in vmss_by_base.items():
+        # Get zones from metadata
+        metadata = tfdata["meta_data"].get(base_name) or tfdata.get("original_metadata", {}).get(base_name, {})
+        if not metadata:
+            metadata = tfdata["meta_data"].get(instances[0], {})
+
+        zones_attr_raw = metadata.get("zones", []) if metadata else []
+
+        # zones might be a string representation of a list, convert it
+        if isinstance(zones_attr_raw, str):
+            try:
+                zones_attr = literal_eval(zones_attr_raw)
+            except:
+                zones_attr = []
+        else:
+            zones_attr = zones_attr_raw
+
+
+        # Get subnet reference from all_resource (original Terraform config)
+        subnet_ref = None
+        vmss_type_parts = base_name.split(".")
+        vmss_type = vmss_type_parts[0]
+        vmss_name = vmss_type_parts[1] if len(vmss_type_parts) > 1 else None
+
+        if vmss_name:
+            for file_path, resources in tfdata.get("all_resource", {}).items():
+                if not isinstance(resources, list):
+                    continue
+                for res_block in resources:
+                    if vmss_type in res_block and vmss_name in res_block.get(vmss_type, {}):
+                        vmss_data = res_block[vmss_type][vmss_name]
+                        # Extract subnet from network_interface.ip_configuration.subnet_id
+                        ni = vmss_data.get("network_interface", [{}])
+                        if ni and isinstance(ni, list) and len(ni) > 0:
+                            ipc = ni[0].get("ip_configuration", [{}])
+                            if ipc and isinstance(ipc, list) and len(ipc) > 0:
+                                subnet_id_raw = ipc[0].get("subnet_id", "")
+                                # Extract subnet name from ${azurerm_subnet.main.id}
+                                import re
+                                match = re.search(r'\$\{([^.]+\.[^.]+)', str(subnet_id_raw))
+                                if match:
+                                    subnet_ref = match.group(1)
+                        break
+                if subnet_ref:
+                    break
+
+        if zones_attr and isinstance(zones_attr, list):
+
+            # Only create zone containers if zones attribute exists and has values
+            if zones_attr and isinstance(zones_attr, list) and subnet_ref:
+                # Use the subnet reference from all_resource
+                parent_subnet = subnet_ref if subnet_ref in subnets else None
+
+                # Fallback: check which subnet contains any instance
+                if not parent_subnet:
+                    for subnet in subnets:
+                        for instance in instances:
+                            if instance in tfdata["graphdict"].get(subnet, []):
+                                parent_subnet = subnet
+                                break
+                        if parent_subnet:
+                            break
+
+                if parent_subnet:
+                    # Create zone container for each instance
+                    for i, vmss_instance in enumerate(sorted(instances), start=1):
+                        if i <= len(zones_attr):
+                            zone_id = zones_attr[i - 1]
+                            # Create zone node name
+                            zone_node = f"tv_azurerm_zone.zone_{zone_id}"
+
+                            # Create zone node in graphdict if it doesn't exist
+                            if zone_node not in tfdata["graphdict"]:
+                                tfdata["graphdict"][zone_node] = []
+                                tfdata["meta_data"][zone_node] = {
+                                    "zone_id": zone_id,
+                                    "name": f"Availability Zone {zone_id}"
+                                }
+
+                            # Place VMSS instance inside zone
+                            if vmss_instance not in tfdata["graphdict"][zone_node]:
+                                tfdata["graphdict"][zone_node].append(vmss_instance)
+
+                            # Remove VMSS instance from subnet direct children
+                            if vmss_instance in tfdata["graphdict"].get(parent_subnet, []):
+                                tfdata["graphdict"][parent_subnet].remove(vmss_instance)
+
+                            # Add zone to subnet if not already there
+                            if zone_node not in tfdata["graphdict"].get(parent_subnet, []):
+                                tfdata["graphdict"][parent_subnet].append(zone_node)
+
+                    # Remove the base VMSS node after creating numbered instances in zones
+                    if base_name in tfdata["graphdict"]:
+                        # Check if any resources connect TO the base node
+                        base_connections = tfdata["graphdict"][base_name]
+
+                        # Delete the base node from graphdict
+                        del tfdata["graphdict"][base_name]
+
+                        # Remove base node from any parent's children list
+                        for node in tfdata["graphdict"]:
+                            if base_name in tfdata["graphdict"][node]:
+                                tfdata["graphdict"][node].remove(base_name)
+
+                        # If the base node had connections, expand them to numbered instances
+                        # For example, if base VMSS → Load Balancer, then vmss~1 → LB, vmss~2 → LB, vmss~3 → LB
+                        if base_connections:
+                            for instance in instances:
+                                if instance not in tfdata["graphdict"]:
+                                    tfdata["graphdict"][instance] = []
+                                # Add base node's connections to each numbered instance
+                                for conn in base_connections:
+                                    if conn not in tfdata["graphdict"][instance]:
+                                        tfdata["graphdict"][instance].append(conn)
+
+    return tfdata
+
+
+def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Place VMs into subnets based on their NIC placements.
+
+    This function runs AFTER create_multiple_resources so numbered VMs exist.
+    It places VMs in the same subnet as their NICs for proper visual hierarchy.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with VMs placed in subnets
+    """
+    # Find all subnets
+    subnets = [
+        s
+        for s in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
+        if "association" not in s
+    ]
+
+    # Find all VMs (numbered and unnumbered)
+    vms = []
+    for vm_type in [
+        "azurerm_virtual_machine",
+        "azurerm_linux_virtual_machine",
+        "azurerm_windows_virtual_machine",
+    ]:
+        vms.extend(helpers.list_of_dictkeys_containing(tfdata["graphdict"], vm_type))
+
+    # Find all NICs
+    nics = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_network_interface")
+    nics = [n for n in nics if "association" not in n]
+
+    # For each subnet, find VMs whose NICs are in that subnet
+    for subnet in subnets:
+        subnet_nics = tfdata["graphdict"].get(subnet, [])
+
+        for vm in vms:
+            # Check if this VM's NIC is in this subnet
+            vm_metadata = tfdata["meta_data"].get(vm, {})
+            vm_nic_ids = vm_metadata.get("network_interface_ids", [])
+
+            # Match VM to NIC by checking if any NIC in subnet matches VM's NIC reference
+            for nic in subnet_nics:
+                if "azurerm_network_interface" in nic:
+                    # Check if this NIC is referenced by the VM
+                    nic_name = helpers.get_no_module_name(nic)
+                    if nic in str(vm_nic_ids) or nic_name in str(vm_nic_ids):
+                        # Place VM in subnet if not already there
+                        if vm not in tfdata["graphdict"].get(subnet, []):
+                            tfdata["graphdict"][subnet].append(vm)
+                        break
+
+    # Clean up base NIC nodes that were numbered - remove them from subnets
+    # This handles the case where the base NIC was added to subnet before numbering occurred
+    for subnet in subnets:
+        subnet_children = tfdata["graphdict"].get(subnet, [])[:]
+        for child in subnet_children:
+            if "azurerm_network_interface" in child and "~" not in child and "association" not in child:
+                # Check if this base NIC has numbered instances
+                # Handle both formats: base~1 and base[0]~1 (from count)
+                child_prefix = child.rsplit(".", 1)[0]  # Get resource type prefix
+                child_name = child.rsplit(".", 1)[1] if "." in child else ""  # Get resource name
+
+                numbered_versions = [
+                    k for k in tfdata["graphdict"].keys()
+                    if "~" in k and child_name in k and "azurerm_network_interface" in k
+                ]
+                # If numbered versions exist, remove the base node reference
+                if numbered_versions:
+                    tfdata["graphdict"][subnet].remove(child)
+
+    return tfdata
+
+
+def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Connect Load Balancers and Application Gateways to backend VMs.
+
+    This function runs AFTER create_multiple_resources so numbered VMs and NICs exist.
+    It creates direct connections from LB/AppGW to backend VMs, bypassing association
+    resources which are implementation details.
+
+    The connection path is: LB → Association → NIC → VM
+    We want to show: LB → VM (direct logical connection)
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with LB connections to backend VMs
+    """
+    # Find all Load Balancers (consolidated from azurerm_lb and azurerm_lb_backend_address_pool)
+    load_balancers = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "azurerm_lb"
+    )
+    load_balancers = [lb for lb in load_balancers if "association" not in lb and "probe" not in lb and "rule" not in lb]
+
+    # Find all Application Gateways
+    app_gateways = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "azurerm_application_gateway"
+    )
+
+    # Find all association resources (numbered and base)
+    associations = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "azurerm_network_interface_backend_address_pool_association"
+    )
+
+    # Find all VMs (numbered)
+    vms = []
+    for vm_type in ["azurerm_virtual_machine", "azurerm_linux_virtual_machine", "azurerm_windows_virtual_machine"]:
+        vms.extend(helpers.list_of_dictkeys_containing(tfdata["graphdict"], vm_type))
+
+    # Find all NICs
+    nics = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "azurerm_network_interface"
+    )
+    nics = [nic for nic in nics if "association" not in nic]
+
+    # Process each Load Balancer
+    for lb in load_balancers:
+        lb_connections = tfdata["graphdict"].get(lb, [])
+        backend_vms = []
+
+        # Check if LB connects to any association resources
+        lb_associations = [conn for conn in lb_connections if "association" in conn]
+
+        # Find backend VMs using the original Terraform metadata
+        # Association resources link NICs to backend pools via count index
+        # We need to find which VMs use which NICs
+
+        # Get the backend pool metadata to understand the relationship
+        # Look in all_resource for the association definition
+        for file_path, resources in tfdata.get("all_resource", {}).items():
+            if not isinstance(resources, list):
+                continue
+            for res_block in resources:
+                # Check if this block defines an association resource
+                if "azurerm_network_interface_backend_address_pool_association" in res_block:
+                    assoc_configs = res_block.get("azurerm_network_interface_backend_address_pool_association", {})
+
+                    # Iterate through each association resource definition (e.g., "main")
+                    for assoc_name, assoc_config in assoc_configs.items():
+                        nic_ref = assoc_config.get("network_interface_id", "")
+
+                        # Extract the NIC resource name from the reference
+                        # Format: ${azurerm_network_interface.backend[count.index].id}
+                        nic_match = re.search(r'azurerm_network_interface\.(\w+)', str(nic_ref))
+                        if nic_match:
+                            nic_base_name = nic_match.group(1)
+
+                            # Find all NICs matching this base name
+                            matching_nics = [nic for nic in nics if f".{nic_base_name}" in nic]
+
+                            # For each NIC, find the VM that uses it
+                            # Match by index pattern - NIC backend[0]~1 matches VM backend[0]~1
+                            for nic in matching_nics:
+                                nic_pattern = nic.split("azurerm_network_interface.")[-1]  # Get "backend[0]~1"
+
+                                for vm in vms:
+                                    vm_pattern = vm.split("azurerm_linux_virtual_machine.")[-1] if "linux" in vm else \
+                                                vm.split("azurerm_windows_virtual_machine.")[-1] if "windows" in vm else \
+                                                vm.split("azurerm_virtual_machine.")[-1]
+
+                                    # Match if they have the same index pattern (e.g., backend[0]~1)
+                                    if nic_pattern == vm_pattern:
+                                        if vm not in backend_vms:
+                                            backend_vms.append(vm)
+                                        break
+
+        # Add direct connections from LB to VMs
+        for vm in backend_vms:
+            if vm not in tfdata["graphdict"][lb]:
+                tfdata["graphdict"][lb].append(vm)
+
+        # Remove association connections (they're implementation details)
+        for assoc in lb_associations:
+            if assoc in tfdata["graphdict"][lb]:
+                tfdata["graphdict"][lb].remove(assoc)
+
+    # Process Application Gateways - convert NIC connections to VM connections
+    for appgw in app_gateways:
+        appgw_connections = tfdata["graphdict"].get(appgw, [])
+        backend_vms = []
+
+        # Find NICs that AppGW connects to
+        appgw_nics = [conn for conn in appgw_connections if "azurerm_network_interface" in conn]
+
+        # For each NIC, find the VM that uses it
+        for nic in appgw_nics:
+            nic_pattern = nic.split("azurerm_network_interface.")[-1]  # Get "backend[0]~1"
+
+            for vm in vms:
+                vm_pattern = vm.split("azurerm_linux_virtual_machine.")[-1] if "linux" in vm else \
+                            vm.split("azurerm_windows_virtual_machine.")[-1] if "windows" in vm else \
+                            vm.split("azurerm_virtual_machine.")[-1]
+
+                # Match if they have the same index pattern (e.g., backend[0]~1)
+                if nic_pattern == vm_pattern:
+                    if vm not in backend_vms:
+                        backend_vms.append(vm)
+                    break
+
+        # Add direct connections from AppGW to VMs
+        for vm in backend_vms:
+            if vm not in tfdata["graphdict"][appgw]:
+                tfdata["graphdict"][appgw].append(vm)
+
+        # Remove NIC connections (replace with VM connections)
+        for nic in appgw_nics:
+            if nic in tfdata["graphdict"][appgw]:
+                tfdata["graphdict"][appgw].remove(nic)
+
+    # Clean up association resources from the graph entirely
+    for assoc in associations:
+        tfdata["graphdict"].pop(assoc, None)
+        tfdata["meta_data"].pop(assoc, None)
+
+        # Remove from any parent connections
+        for node in list(tfdata["graphdict"].keys()):
+            if assoc in tfdata["graphdict"].get(node, []):
+                tfdata["graphdict"][node].remove(assoc)
 
     return tfdata
 

@@ -486,8 +486,8 @@ class TestAzureSubnetHandling:
         tfdata = {
             "graphdict": {
                 "azurerm_subnet.web": ["azurerm_network_interface.nic"],
-                "azurerm_network_interface.nic": ["azurerm_virtual_machine.vm"],
-                "azurerm_virtual_machine.vm": [],
+                "azurerm_network_interface.nic": [],
+                "azurerm_virtual_machine.vm": ["azurerm_network_interface.nic"],  # VM -> NIC (correct direction)
             },
             "meta_data": {
                 "azurerm_subnet.web": {},
@@ -495,12 +495,17 @@ class TestAzureSubnetHandling:
                     "ip_configuration": "subnet_id = azurerm_subnet.web.id"
                 },
                 "azurerm_virtual_machine.vm": {
-                    "network_interface_ids": "azurerm_network_interface.nic.id"
+                    "network_interface_ids": ["azurerm_network_interface.nic.id"]
                 },
             },
         }
 
+        # First link NICs to subnet
         result = azure_handle_subnet(tfdata)
+
+        # Then place VMs into subnets (happens after numbering in real pipeline)
+        from modules.resource_handlers_azure import place_vms_in_subnets
+        result = place_vms_in_subnets(result)
 
         # VM should be linked to subnet (through NIC relationship)
         assert "azurerm_virtual_machine.vm" in result["graphdict"]["azurerm_subnet.web"]
