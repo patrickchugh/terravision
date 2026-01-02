@@ -376,7 +376,9 @@ def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
             if provider_counts:
                 return max(provider_counts, key=provider_counts.get)
 
-        logger.error("Could not detect provider - provider detection must run before calling this function")
+        logger.error(
+            "Could not detect provider - provider detection must run before calling this function"
+        )
         raise ProviderDetectionError(
             "Provider detection has not been run or failed. "
             "Ensure detect_providers(tfdata) is called before using provider-specific functionality."

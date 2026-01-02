@@ -348,7 +348,11 @@ def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
     normalized_param = param.replace("[count.index]", "")
 
     # Handle list references (e.g., resource[0])
-    if re.search(r"\[\d+\]", normalized_param) and "[*]" not in normalized_param and normalized_param != "[]":
+    if (
+        re.search(r"\[\d+\]", normalized_param)
+        and "[*]" not in normalized_param
+        and normalized_param != "[]"
+    ):
         matching = list(
             {s for s in nodes if s.split("~")[0] in normalized_param.replace(".*", "")}
         )
@@ -828,7 +832,9 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             connected_resource = resource
         for index, connection in enumerate(tfdata["graphdict"][connected_resource]):
             if helpers.consolidated_node_check(connection, tfdata):
-                consolidated_connection = helpers.consolidated_node_check(connection, tfdata)
+                consolidated_connection = helpers.consolidated_node_check(
+                    connection, tfdata
+                )
                 if consolidated_connection and consolidated_connection != connection:
                     if (
                         not consolidated_connection
@@ -1676,7 +1682,11 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     if "_subnet" in node:
                         # Get all subnets sorted to determine position
                         all_subnets = sorted(
-                            [k for k in tfdata["graphdict"].keys() if "_subnet" in k and "association" not in k]
+                            [
+                                k
+                                for k in tfdata["graphdict"].keys()
+                                if "_subnet" in k and "association" not in k
+                            ]
                         )
                         try:
                             subnet_position = all_subnets.index(node) + 1

@@ -403,7 +403,9 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     network_profile = metadata.get("network_profile", "")
                     for subnet in subnets:
                         subnet_name = subnet.split(".")[-1]
-                        if subnet in str(network_profile) or subnet_name in str(network_profile):
+                        if subnet in str(network_profile) or subnet_name in str(
+                            network_profile
+                        ):
                             parent_subnet = subnet
                             break
 
@@ -420,7 +422,7 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                     tfdata["graphdict"][zone_node] = []
                                     tfdata["meta_data"][zone_node] = {
                                         "zone_id": zone_id,
-                                        "name": f"Availability Zone {zone_id}"
+                                        "name": f"Availability Zone {zone_id}",
                                     }
 
                                 # Place VMSS instance inside zone
@@ -428,11 +430,17 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                     tfdata["graphdict"][zone_node].append(vmss_instance)
 
                                 # Remove VMSS instance from subnet direct children
-                                if vmss_instance in tfdata["graphdict"].get(parent_subnet, []):
-                                    tfdata["graphdict"][parent_subnet].remove(vmss_instance)
+                                if vmss_instance in tfdata["graphdict"].get(
+                                    parent_subnet, []
+                                ):
+                                    tfdata["graphdict"][parent_subnet].remove(
+                                        vmss_instance
+                                    )
 
                                 # Add zone to subnet if not already there
-                                if zone_node not in tfdata["graphdict"].get(parent_subnet, []):
+                                if zone_node not in tfdata["graphdict"].get(
+                                    parent_subnet, []
+                                ):
                                     tfdata["graphdict"][parent_subnet].append(zone_node)
 
     return tfdata
@@ -584,10 +592,14 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Find all numbered VM instances (individual VMs, not VMSS)
     numbered_vms = [
-        k for k in tfdata["graphdict"].keys()
-        if ("azurerm_linux_virtual_machine" in k or
-            "azurerm_windows_virtual_machine" in k or
-            "azurerm_virtual_machine" in k) and "~" in k
+        k
+        for k in tfdata["graphdict"].keys()
+        if (
+            "azurerm_linux_virtual_machine" in k
+            or "azurerm_windows_virtual_machine" in k
+            or "azurerm_virtual_machine" in k
+        )
+        and "~" in k
         and "scale_set" not in k  # Exclude VMSS
     ]
 
@@ -596,7 +608,8 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Find subnets
     subnets = [
-        s for s in helpers.list_of_dictkeys_containing(
+        s
+        for s in helpers.list_of_dictkeys_containing(
             tfdata["graphdict"], "azurerm_subnet"
         )
         if "association" not in s
@@ -665,7 +678,7 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][zone_name] = []
                 tfdata["meta_data"][zone_name] = {
                     "zone_id": zone_id,
-                    "type": "tv_azurerm_zone"
+                    "type": "tv_azurerm_zone",
                 }
 
             # Move VMs from subnet to zone
@@ -698,10 +711,14 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Find all numbered VMSS instances
     numbered_vmss = [
-        k for k in tfdata["graphdict"].keys()
-        if ("azurerm_linux_virtual_machine_scale_set" in k or
-            "azurerm_windows_virtual_machine_scale_set" in k or
-            "azurerm_virtual_machine_scale_set" in k) and "~" in k
+        k
+        for k in tfdata["graphdict"].keys()
+        if (
+            "azurerm_linux_virtual_machine_scale_set" in k
+            or "azurerm_windows_virtual_machine_scale_set" in k
+            or "azurerm_virtual_machine_scale_set" in k
+        )
+        and "~" in k
     ]
 
     if not numbered_vmss:
@@ -726,7 +743,9 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     for base_name, instances in vmss_by_base.items():
         # Get zones from metadata
-        metadata = tfdata["meta_data"].get(base_name) or tfdata.get("original_metadata", {}).get(base_name, {})
+        metadata = tfdata["meta_data"].get(base_name) or tfdata.get(
+            "original_metadata", {}
+        ).get(base_name, {})
         if not metadata:
             metadata = tfdata["meta_data"].get(instances[0], {})
 
@@ -741,7 +760,6 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         else:
             zones_attr = zones_attr_raw
 
-
         # Get subnet reference from all_resource (original Terraform config)
         subnet_ref = None
         vmss_type_parts = base_name.split(".")
@@ -753,7 +771,9 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if not isinstance(resources, list):
                     continue
                 for res_block in resources:
-                    if vmss_type in res_block and vmss_name in res_block.get(vmss_type, {}):
+                    if vmss_type in res_block and vmss_name in res_block.get(
+                        vmss_type, {}
+                    ):
                         vmss_data = res_block[vmss_type][vmss_name]
                         # Extract subnet from network_interface.ip_configuration.subnet_id
                         ni = vmss_data.get("network_interface", [{}])
@@ -763,7 +783,10 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 subnet_id_raw = ipc[0].get("subnet_id", "")
                                 # Extract subnet name from ${azurerm_subnet.main.id}
                                 import re
-                                match = re.search(r'\$\{([^.]+\.[^.]+)', str(subnet_id_raw))
+
+                                match = re.search(
+                                    r"\$\{([^.]+\.[^.]+)", str(subnet_id_raw)
+                                )
                                 if match:
                                     subnet_ref = match.group(1)
                         break
@@ -800,7 +823,7 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 tfdata["graphdict"][zone_node] = []
                                 tfdata["meta_data"][zone_node] = {
                                     "zone_id": zone_id,
-                                    "name": f"Availability Zone {zone_id}"
+                                    "name": f"Availability Zone {zone_id}",
                                 }
 
                             # Place VMSS instance inside zone
@@ -808,11 +831,15 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 tfdata["graphdict"][zone_node].append(vmss_instance)
 
                             # Remove VMSS instance from subnet direct children
-                            if vmss_instance in tfdata["graphdict"].get(parent_subnet, []):
+                            if vmss_instance in tfdata["graphdict"].get(
+                                parent_subnet, []
+                            ):
                                 tfdata["graphdict"][parent_subnet].remove(vmss_instance)
 
                             # Add zone to subnet if not already there
-                            if zone_node not in tfdata["graphdict"].get(parent_subnet, []):
+                            if zone_node not in tfdata["graphdict"].get(
+                                parent_subnet, []
+                            ):
                                 tfdata["graphdict"][parent_subnet].append(zone_node)
 
                     # Remove the base VMSS node after creating numbered instances in zones
@@ -857,7 +884,9 @@ def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Find all subnets
     subnets = [
         s
-        for s in helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_subnet")
+        for s in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], "azurerm_subnet"
+        )
         if "association" not in s
     ]
 
@@ -871,7 +900,9 @@ def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         vms.extend(helpers.list_of_dictkeys_containing(tfdata["graphdict"], vm_type))
 
     # Find all NICs
-    nics = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "azurerm_network_interface")
+    nics = helpers.list_of_dictkeys_containing(
+        tfdata["graphdict"], "azurerm_network_interface"
+    )
     nics = [n for n in nics if "association" not in n]
 
     # For each subnet, find VMs whose NICs are in that subnet
@@ -899,14 +930,21 @@ def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     for subnet in subnets:
         subnet_children = tfdata["graphdict"].get(subnet, [])[:]
         for child in subnet_children:
-            if "azurerm_network_interface" in child and "~" not in child and "association" not in child:
+            if (
+                "azurerm_network_interface" in child
+                and "~" not in child
+                and "association" not in child
+            ):
                 # Check if this base NIC has numbered instances
                 # Handle both formats: base~1 and base[0]~1 (from count)
                 child_prefix = child.rsplit(".", 1)[0]  # Get resource type prefix
-                child_name = child.rsplit(".", 1)[1] if "." in child else ""  # Get resource name
+                child_name = (
+                    child.rsplit(".", 1)[1] if "." in child else ""
+                )  # Get resource name
 
                 numbered_versions = [
-                    k for k in tfdata["graphdict"].keys()
+                    k
+                    for k in tfdata["graphdict"].keys()
                     if "~" in k and child_name in k and "azurerm_network_interface" in k
                 ]
                 # If numbered versions exist, remove the base node reference
@@ -936,7 +974,11 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     load_balancers = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "azurerm_lb"
     )
-    load_balancers = [lb for lb in load_balancers if "association" not in lb and "probe" not in lb and "rule" not in lb]
+    load_balancers = [
+        lb
+        for lb in load_balancers
+        if "association" not in lb and "probe" not in lb and "rule" not in lb
+    ]
 
     # Find all Application Gateways
     app_gateways = helpers.list_of_dictkeys_containing(
@@ -945,12 +987,17 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Find all association resources (numbered and base)
     associations = helpers.list_of_dictkeys_containing(
-        tfdata["graphdict"], "azurerm_network_interface_backend_address_pool_association"
+        tfdata["graphdict"],
+        "azurerm_network_interface_backend_address_pool_association",
     )
 
     # Find all VMs (numbered)
     vms = []
-    for vm_type in ["azurerm_virtual_machine", "azurerm_linux_virtual_machine", "azurerm_windows_virtual_machine"]:
+    for vm_type in [
+        "azurerm_virtual_machine",
+        "azurerm_linux_virtual_machine",
+        "azurerm_windows_virtual_machine",
+    ]:
         vms.extend(helpers.list_of_dictkeys_containing(tfdata["graphdict"], vm_type))
 
     # Find all NICs
@@ -978,8 +1025,13 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 continue
             for res_block in resources:
                 # Check if this block defines an association resource
-                if "azurerm_network_interface_backend_address_pool_association" in res_block:
-                    assoc_configs = res_block.get("azurerm_network_interface_backend_address_pool_association", {})
+                if (
+                    "azurerm_network_interface_backend_address_pool_association"
+                    in res_block
+                ):
+                    assoc_configs = res_block.get(
+                        "azurerm_network_interface_backend_address_pool_association", {}
+                    )
 
                     # Iterate through each association resource definition (e.g., "main")
                     for assoc_name, assoc_config in assoc_configs.items():
@@ -987,22 +1039,38 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
                         # Extract the NIC resource name from the reference
                         # Format: ${azurerm_network_interface.backend[count.index].id}
-                        nic_match = re.search(r'azurerm_network_interface\.(\w+)', str(nic_ref))
+                        nic_match = re.search(
+                            r"azurerm_network_interface\.(\w+)", str(nic_ref)
+                        )
                         if nic_match:
                             nic_base_name = nic_match.group(1)
 
                             # Find all NICs matching this base name
-                            matching_nics = [nic for nic in nics if f".{nic_base_name}" in nic]
+                            matching_nics = [
+                                nic for nic in nics if f".{nic_base_name}" in nic
+                            ]
 
                             # For each NIC, find the VM that uses it
                             # Match by index pattern - NIC backend[0]~1 matches VM backend[0]~1
                             for nic in matching_nics:
-                                nic_pattern = nic.split("azurerm_network_interface.")[-1]  # Get "backend[0]~1"
+                                nic_pattern = nic.split("azurerm_network_interface.")[
+                                    -1
+                                ]  # Get "backend[0]~1"
 
                                 for vm in vms:
-                                    vm_pattern = vm.split("azurerm_linux_virtual_machine.")[-1] if "linux" in vm else \
-                                                vm.split("azurerm_windows_virtual_machine.")[-1] if "windows" in vm else \
-                                                vm.split("azurerm_virtual_machine.")[-1]
+                                    vm_pattern = (
+                                        vm.split("azurerm_linux_virtual_machine.")[-1]
+                                        if "linux" in vm
+                                        else (
+                                            vm.split(
+                                                "azurerm_windows_virtual_machine."
+                                            )[-1]
+                                            if "windows" in vm
+                                            else vm.split("azurerm_virtual_machine.")[
+                                                -1
+                                            ]
+                                        )
+                                    )
 
                                     # Match if they have the same index pattern (e.g., backend[0]~1)
                                     if nic_pattern == vm_pattern:
@@ -1026,16 +1094,26 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         backend_vms = []
 
         # Find NICs that AppGW connects to
-        appgw_nics = [conn for conn in appgw_connections if "azurerm_network_interface" in conn]
+        appgw_nics = [
+            conn for conn in appgw_connections if "azurerm_network_interface" in conn
+        ]
 
         # For each NIC, find the VM that uses it
         for nic in appgw_nics:
-            nic_pattern = nic.split("azurerm_network_interface.")[-1]  # Get "backend[0]~1"
+            nic_pattern = nic.split("azurerm_network_interface.")[
+                -1
+            ]  # Get "backend[0]~1"
 
             for vm in vms:
-                vm_pattern = vm.split("azurerm_linux_virtual_machine.")[-1] if "linux" in vm else \
-                            vm.split("azurerm_windows_virtual_machine.")[-1] if "windows" in vm else \
-                            vm.split("azurerm_virtual_machine.")[-1]
+                vm_pattern = (
+                    vm.split("azurerm_linux_virtual_machine.")[-1]
+                    if "linux" in vm
+                    else (
+                        vm.split("azurerm_windows_virtual_machine.")[-1]
+                        if "windows" in vm
+                        else vm.split("azurerm_virtual_machine.")[-1]
+                    )
+                )
 
                 # Match if they have the same index pattern (e.g., backend[0]~1)
                 if nic_pattern == vm_pattern:

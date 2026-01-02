@@ -590,7 +590,10 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Replace consolidated nodes with their consolidated names
     if tfdata["graphdict"].get("aws_group.shared_services"):
         for service in sorted(list(tfdata["graphdict"]["aws_group.shared_services"])):
-            if helpers.consolidated_node_check(service, tfdata) and "cluster" not in service:
+            if (
+                helpers.consolidated_node_check(service, tfdata)
+                and "cluster" not in service
+            ):
                 tfdata["graphdict"]["aws_group.shared_services"] = list(
                     map(
                         lambda x: x.replace(
@@ -627,29 +630,41 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if lb not in tfdata["meta_data"]:
             continue
 
-        lb_type = helpers.check_variant(lb,  tfdata["meta_data"][lb], tfdata)
+        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb], tfdata)
         renamed_node = str(lb_type) + "." + "elb"
-        print(f"[DEBUG aws_handle_lb] lb={lb}, lb_type={lb_type}, renamed_node={renamed_node}")
-        print(f"[DEBUG aws_handle_lb] lb metadata count={tfdata['meta_data'][lb].get('count')}")
+        print(
+            f"[DEBUG aws_handle_lb] lb={lb}, lb_type={lb_type}, renamed_node={renamed_node}"
+        )
+        print(
+            f"[DEBUG aws_handle_lb] lb metadata count={tfdata['meta_data'][lb].get('count')}"
+        )
         # Initialize renamed node metadata
         if not tfdata["meta_data"].get(renamed_node):
             tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
             print(f"[DEBUG aws_handle_lb] Copied metadata from {lb} to {renamed_node}")
-            print(f"[DEBUG aws_handle_lb] renamed_node metadata count={tfdata['meta_data'][renamed_node].get('count')}")
+            print(
+                f"[DEBUG aws_handle_lb] renamed_node metadata count={tfdata['meta_data'][renamed_node].get('count')}"
+            )
 
         # CRITICAL: Create renamed node in graphdict BEFORE processing connections
         # Otherwise, if lb has no connections, renamed_node is never created
         if not tfdata["graphdict"].get(renamed_node):
             tfdata["graphdict"][renamed_node] = list()
-            print(f"[DEBUG aws_handle_lb] Created {renamed_node} in graphdict (before loop)")
+            print(
+                f"[DEBUG aws_handle_lb] Created {renamed_node} in graphdict (before loop)"
+            )
 
-        print(f"[DEBUG aws_handle_lb] lb connections before loop: {tfdata['graphdict'][lb]}")
+        print(
+            f"[DEBUG aws_handle_lb] lb connections before loop: {tfdata['graphdict'][lb]}"
+        )
         for connection in sorted(list(tfdata["graphdict"][lb])):
             c_type = connection.split(".")[0]
             if c_type not in SHARED_SERVICES:
                 tfdata["graphdict"][renamed_node].append(connection)
                 tfdata["graphdict"][lb].remove(connection)
-                print(f"[DEBUG aws_handle_lb] Moved connection {connection} from {lb} to {renamed_node}")
+                print(
+                    f"[DEBUG aws_handle_lb] Moved connection {connection} from {lb} to {renamed_node}"
+                )
             if (
                 tfdata["meta_data"].get(connection)
                 and tfdata["meta_data"][connection].get("count")

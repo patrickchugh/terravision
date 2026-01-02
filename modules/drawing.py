@@ -432,11 +432,11 @@ def handle_group(
     drawn_resources.append(resource)
 
     # Create separate label node for Azure clusters that have label metadata
-    if hasattr(newGroup, 'label_text'):
+    if hasattr(newGroup, "label_text"):
         # Build HTML table label with icon and text (or just text if no icon)
-        if hasattr(newGroup, 'label_icon') and newGroup.label_icon is not None:
+        if hasattr(newGroup, "label_icon") and newGroup.label_icon is not None:
             # Label with icon
-            icon_first = getattr(newGroup, 'label_icon_first', True)
+            icon_first = getattr(newGroup, "label_icon_first", True)
             if icon_first:
                 label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{newGroup.label_icon}"/></TD><TD>{newGroup.label_text}</TD></TR></TABLE>>'
             else:
@@ -447,7 +447,9 @@ def handle_group(
 
         # Create label node with special attributes for gvpr positioning
         label_node_id = f"_label_{newGroup.dot.name}"
-        cluster_type = newGroup.__class__.__name__  # Get cluster class name (ResourceGroupCluster, SubnetGroup, etc.)
+        cluster_type = (
+            newGroup.__class__.__name__
+        )  # Get cluster class name (ResourceGroupCluster, SubnetGroup, etc.)
         newGroup.dot.node(
             label_node_id,
             label=label_html,
@@ -456,7 +458,7 @@ def handle_group(
             _clusterlabel="1",
             _clusterid=newGroup.dot.name,
             _clustertype=cluster_type,
-            _labelposition=newGroup.label_position
+            _labelposition=newGroup.label_position,
         )
 
     # Add child nodes and subgroups
@@ -635,8 +637,12 @@ def render_diagram(
     )
     # Use 'neato' engine for all providers with neato_no_op=2
     myDiagram = Canvas(
-        "", filename=outfile, outformat=format, show=picshow, direction="TB",
-        engine="neato"
+        "",
+        filename=outfile,
+        outformat=format,
+        show=picshow,
+        direction="TB",
+        engine="neato",
     )
     setdiagram(myDiagram)
 
@@ -740,11 +746,11 @@ def render_diagram(
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
     # Create label node for cloud group if it has label metadata
-    if hasattr(cloudGroup, 'label_text'):
+    if hasattr(cloudGroup, "label_text"):
         # Build HTML table label with icon and text (or just text if no icon)
-        if hasattr(cloudGroup, 'label_icon') and cloudGroup.label_icon is not None:
+        if hasattr(cloudGroup, "label_icon") and cloudGroup.label_icon is not None:
             # Label with icon
-            icon_first = getattr(cloudGroup, 'label_icon_first', True)
+            icon_first = getattr(cloudGroup, "label_icon_first", True)
             if icon_first:
                 label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{cloudGroup.label_icon}"/></TD><TD>{cloudGroup.label_text}</TD></TR></TABLE>>'
             else:
@@ -764,7 +770,7 @@ def render_diagram(
             _clusterlabel="1",
             _clusterid=cloudGroup.dot.name,
             _clustertype=cluster_type,
-            _labelposition=cloudGroup.label_position
+            _labelposition=cloudGroup.label_position,
         )
 
     # Add cloud group to main canvas
