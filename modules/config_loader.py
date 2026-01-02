@@ -72,6 +72,7 @@ def load_config(provider: str) -> Any:
         - Module must exist at modules/config/cloud_config_{provider}.py
         - Each config module must define standard constants (see cloud_config_aws.py)
     """
+    provider = provider.lower()
     # Validate provider
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(
@@ -199,7 +200,7 @@ def validate_config_module(config_module: Any, provider: str) -> bool:
     return True
 
 
-def get_config_with_fallback(provider: str, fallback_provider: str = "aws") -> Any:
+def get_config_with_fallback(provider: str, fallback_provider: str) -> Any:
     """
     Load provider configuration with fallback to another provider.
 
@@ -207,14 +208,21 @@ def get_config_with_fallback(provider: str, fallback_provider: str = "aws") -> A
 
     Args:
         provider: Primary provider to load
-        fallback_provider: Fallback provider if primary fails (default: 'aws')
+        fallback_provider: Fallback provider if primary fails (MUST be explicitly specified)
 
     Returns:
         Configuration module (primary or fallback)
 
+    Raises:
+        ConfigurationError: If both primary and fallback providers fail to load
+
     Examples:
         >>> # Try to load Azure, fallback to AWS if missing
         >>> config = get_config_with_fallback('azure', fallback_provider='aws')
+
+    Note:
+        No default fallback provider - caller must explicitly specify fallback.
+        This prevents hidden AWS assumptions.
     """
     try:
         config = load_config(provider)

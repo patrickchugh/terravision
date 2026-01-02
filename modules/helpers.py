@@ -17,24 +17,9 @@ import click
 
 import modules.config_loader as config_loader
 import modules.helpers as helpers
-
-
-# NOTE: These module-level constants are AWS-specific defaults for backward compatibility.
-# Functions that receive tfdata should use _get_provider_config_constants() to load
-# provider-specific constants dynamically. Functions without tfdata access use these defaults.
-def _get_aws_defaults():
-    """Get AWS configuration constants as defaults."""
-    aws_config = config_loader.load_config("aws")
-    return {
-        "REVERSE_ARROW_LIST": aws_config.AWS_REVERSE_ARROW_LIST,
-        "IMPLIED_CONNECTIONS": aws_config.AWS_IMPLIED_CONNECTIONS,
-        "GROUP_NODES": aws_config.AWS_GROUP_NODES,
-        "CONSOLIDATED_NODES": aws_config.AWS_CONSOLIDATED_NODES,
-        "NODE_VARIANTS": aws_config.AWS_NODE_VARIANTS,
-        "SPECIAL_RESOURCES": aws_config.AWS_SPECIAL_RESOURCES,
-        "ACRONYMS_LIST": aws_config.AWS_ACRONYMS_LIST,
-        "NAME_REPLACEMENTS": aws_config.AWS_NAME_REPLACEMENTS,
-    }
+from modules.provider_detector import PROVIDER_PREFIXES
+from modules.config_loader import load_config
+from modules.provider_detector import get_provider_for_resource
 
 
 def _get_provider_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -70,16 +55,27 @@ def _get_provider_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# AWS defaults for functions that don't have tfdata access
-_defaults = _get_aws_defaults()
-REVERSE_ARROW_LIST = _defaults["REVERSE_ARROW_LIST"]
-IMPLIED_CONNECTIONS = _defaults["IMPLIED_CONNECTIONS"]
-GROUP_NODES = _defaults["GROUP_NODES"]
-CONSOLIDATED_NODES = _defaults["CONSOLIDATED_NODES"]
-NODE_VARIANTS = _defaults["NODE_VARIANTS"]
-SPECIAL_RESOURCES = _defaults["SPECIAL_RESOURCES"]
-ACRONYMS_LIST = _defaults["ACRONYMS_LIST"]
-NAME_REPLACEMENTS = _defaults["NAME_REPLACEMENTS"]
+# DEPRECATED: Module-level AWS defaults removed to prevent hidden AWS assumptions
+# These constants are NO LONGER available at module level.
+# All functions MUST receive tfdata and use _get_provider_config_constants(tfdata)
+# to load provider-specific constants dynamically.
+#
+# DO NOT re-enable these defaults - they caused bugs where Azure/GCP resources
+# were processed with AWS config because provider detection wasn't run early enough.
+#
+# If you need provider-specific constants, use:
+#   config_constants = helpers._get_provider_config_constants(tfdata)
+#   reverse_arrow_list = config_constants["REVERSE_ARROW_LIST"]
+#
+# _defaults = _get_aws_defaults()  # REMOVED
+# REVERSE_ARROW_LIST = _defaults["REVERSE_ARROW_LIST"]  # REMOVED
+# IMPLIED_CONNECTIONS = _defaults["IMPLIED_CONNECTIONS"]  # REMOVED
+# GROUP_NODES = _defaults["GROUP_NODES"]  # REMOVED
+# CONSOLIDATED_NODES = _defaults["CONSOLIDATED_NODES"]  # REMOVED
+# NODE_VARIANTS = _defaults["NODE_VARIANTS"]  # REMOVED
+# SPECIAL_RESOURCES = _defaults["SPECIAL_RESOURCES"]  # REMOVED
+# ACRONYMS_LIST = _defaults["ACRONYMS_LIST"]  # REMOVED
+# NAME_REPLACEMENTS = _defaults["NAME_REPLACEMENTS"]  # REMOVED
 
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data", "output"]
@@ -492,7 +488,7 @@ def remove_brackets_and_numbers(input_string: str) -> str:
 
 def pretty_name(name: str, show_title=True) -> str:
     """
-    Generate clean, human-readable labels for Terraform AWS resource names.
+    Generate clean, human-readable labels for Terraform resource names.
 
     Examples:
       - aws_cloudfront_distribution.this -> "Cloudfront Distribution"
@@ -500,8 +496,10 @@ def pretty_name(name: str, show_title=True) -> str:
       - aws_subnet.cache_a                -> "Subnet - Cache A"
       - aws_efs_mount_target.this         -> "EFS Mount Target"
       - aws_alb.elb~1                     -> "App Load Balancer - ELB"
+      - azurerm_virtual_machine.vm        -> "Virtual Machine - VM"
+      - google_compute_instance.web       -> "Compute Instance - Web"
 
-    Changed: max output length increased to 40 chars with a soft line-break
+    Trimming: max output length is 40 chars with a soft line-break
     inserted after ~21 characters when the label is longer than that.
     """
     if not name:
@@ -511,9 +509,24 @@ def pretty_name(name: str, show_title=True) -> str:
     if any(k in name for k in skip_keywords):
         return " "
 
+    # Get provider - if unknown, return simple formatted name without config
+    provider = get_provider_for_resource(name)
+    if provider == "unknown":
+        # For non-cloud resources, return a simple formatted name
+        simple_name = name.split(".")[-1] if "." in name else name
+        return simple_name.replace("_", " ").title()
+
+    # Load provider-specific config for cloud resources
+    provider = provider.upper()
+    config_constants = load_config(provider)
+    NAME_REPLACEMENTS = getattr(config_constants, f"{provider}_NAME_REPLACEMENTS")
+    ACRONYMS_LIST = getattr(config_constants, f"{provider}_ACRONYMS_LIST")
+
     # normalize and remove module prefixes / numbered suffixes and array indices
-    name = name.replace("tv_aws_", "")
-    name = name.replace("tv_", "").replace("aws_", "")
+
+    name = name.replace("tv_", "")
+    for prefix in PROVIDER_PREFIXES.keys():
+        name = name.replace(prefix, "")
 
     name = get_no_module_no_number_name(name)
     name = name.split("~", 1)[0]
@@ -906,16 +919,27 @@ def remove_recursive(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]:
     return graphdict
 
 
-def check_variant(resource: str, metadata: Dict[str, Any]) -> Union[str, bool]:
+def check_variant(
+    resource: str, metadata: Dict[str, Any], tfdata: Dict[str, Any]
+) -> Union[str, bool]:
     """Check if resource has a variant suffix based on metadata.
 
     Args:
         resource: Resource name
         metadata: Resource metadata
+        tfdata: Terraform data dictionary (required for provider-specific config)
 
     Returns:
         Variant name or False
+
+    Note:
+        This function now REQUIRES tfdata to load provider-specific NODE_VARIANTS.
+        It no longer uses module-level defaults.
     """
+    # Load provider-specific constants
+    config_constants = _get_provider_config_constants(tfdata)
+    NODE_VARIANTS = config_constants["NODE_VARIANTS"]
+
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):
             for keyword in NODE_VARIANTS[variant_service]:
@@ -1041,15 +1065,26 @@ def any_parent_has_count(tfdata: Dict[str, Any], target_resource: str) -> bool:
     return any_parent_has_count
 
 
-def consolidated_node_check(resource_type: str) -> Union[str, bool]:
+def consolidated_node_check(
+    resource_type: str, tfdata: Dict[str, Any]
+) -> Union[str, bool]:
     """Check if resource should be consolidated into a standard node.
 
     Args:
         resource_type: Resource type to check
+        tfdata: Terraform data dictionary (required for provider-specific config)
 
     Returns:
         Consolidated node name or False
+
+    Note:
+        This function now REQUIRES tfdata to load provider-specific CONSOLIDATED_NODES.
+        It no longer uses module-level defaults.
     """
+    # Load provider-specific constants
+    config_constants = _get_provider_config_constants(tfdata)
+    CONSOLIDATED_NODES = config_constants["CONSOLIDATED_NODES"]
+
     for checknode in CONSOLIDATED_NODES:
         prefix = str(list(checknode.keys())[0])
         if get_no_module_name(resource_type).startswith(prefix) and resource_type:

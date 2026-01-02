@@ -1,0 +1,166 @@
+{
+    "codepath": ".",
+    "workdir": "/azure-demo",
+    "all_resource": {
+        "azurerm_resource_group.production": {
+            "type": "azurerm_resource_group",
+            "name": "production"
+        },
+        "azurerm_virtual_network.vnet_prod": {
+            "type": "azurerm_virtual_network",
+            "name": "vnet_prod"
+        },
+        "azurerm_subnet.subnet_web": {
+            "type": "azurerm_subnet",
+            "name": "subnet_web"
+        },
+        "azurerm_subnet.subnet_data": {
+            "type": "azurerm_subnet",
+            "name": "subnet_data"
+        },
+        "azurerm_subnet.subnet_app": {
+            "type": "azurerm_subnet",
+            "name": "subnet_app"
+        },
+        "azurerm_linux_virtual_machine.vm_web~1": {
+            "type": "azurerm_linux_virtual_machine",
+            "name": "vm_web~1"
+        },
+        "azurerm_linux_virtual_machine.vm_web~2": {
+            "type": "azurerm_linux_virtual_machine",
+            "name": "vm_web~2"
+        },
+        "azurerm_mssql_database.sqldb_primary": {
+            "type": "azurerm_mssql_database",
+            "name": "sqldb_primary"
+        },
+        "azurerm_mssql_database.sqldb_replica": {
+            "type": "azurerm_mssql_database",
+            "name": "sqldb_replica"
+        },
+        "azurerm_virtual_machine_scale_set.vmss_app": {
+            "type": "azurerm_virtual_machine_scale_set",
+            "name": "vmss_app"
+        },
+        "azurerm_lb.load_balancer": {
+            "type": "azurerm_lb",
+            "name": "load_balancer"
+        },
+        "azurerm_application_gateway.appgw": {
+            "type": "azurerm_application_gateway",
+            "name": "appgw"
+        },
+        "azurerm_key_vault.keyvault_prod": {
+            "type": "azurerm_key_vault",
+            "name": "keyvault_prod"
+        },
+        "azurerm_storage_account.storage_logs": {
+            "type": "azurerm_storage_account",
+            "name": "storage_logs"
+        },
+        "azurerm_network_security_group.nsg_web": {
+            "type": "azurerm_network_security_group",
+            "name": "nsg_web"
+        },
+        "azurerm_network_security_group.nsg_data": {
+            "type": "azurerm_network_security_group",
+            "name": "nsg_data"
+        }
+    },
+    "original_graphdict": {
+        "azurerm_resource_group.production": [
+            "azurerm_virtual_network.vnet_prod",
+            "azurerm_application_gateway.appgw",
+            "azurerm_lb.load_balancer"
+        ],
+        "azurerm_virtual_network.vnet_prod": [
+            "azurerm_subnet.subnet_web",
+            "azurerm_subnet.subnet_data",
+            "azurerm_subnet.subnet_app"
+        ],
+        "azurerm_subnet.subnet_web": [],
+        "azurerm_subnet.subnet_data": [],
+        "azurerm_subnet.subnet_app": [],
+        "azurerm_linux_virtual_machine.vm_web~1": [],
+        "azurerm_linux_virtual_machine.vm_web~2": [],
+        "azurerm_mssql_database.sqldb_primary": [],
+        "azurerm_mssql_database.sqldb_replica": [],
+        "azurerm_virtual_machine_scale_set.vmss_app": [],
+        "azurerm_lb.load_balancer": [
+            "azurerm_linux_virtual_machine.vm_web~1",
+            "azurerm_linux_virtual_machine.vm_web~2"
+        ],
+        "azurerm_application_gateway.appgw": [
+            "azurerm_lb.load_balancer"
+        ],
+        "azurerm_key_vault.keyvault_prod": [],
+        "azurerm_storage_account.storage_logs": [],
+        "azurerm_network_security_group.nsg_web": [],
+        "azurerm_network_security_group.nsg_data": []
+    },
+    "graphdict": {
+        "azurerm_resource_group.production": [
+            "azurerm_virtual_network.vnet_prod",
+            "azurerm_application_gateway.appgw",
+            "azurerm_lb.load_balancer"
+        ],
+        "azurerm_virtual_network.vnet_prod": [
+            "azurerm_subnet.subnet_web",
+            "azurerm_subnet.subnet_data",
+            "azurerm_subnet.subnet_app"
+        ],
+        "azurerm_subnet.subnet_web": [
+            "azure_az.zone_1_web",
+            "azure_az.zone_2_web"
+        ],
+        "azure_az.zone_1_web": [
+            "azurerm_linux_virtual_machine.vm_web~1"
+        ],
+        "azure_az.zone_2_web": [
+            "azurerm_linux_virtual_machine.vm_web~2"
+        ],
+        "azurerm_linux_virtual_machine.vm_web~1": [
+            "azurerm_mssql_database.sqldb_primary"
+        ],
+        "azurerm_linux_virtual_machine.vm_web~2": [
+            "azurerm_mssql_database.sqldb_replica"
+        ],
+        "azurerm_subnet.subnet_data": [
+            "azure_az.zone_1_data",
+            "azure_az.zone_2_data"
+        ],
+        "azure_az.zone_1_data": [
+            "azurerm_mssql_database.sqldb_primary"
+        ],
+        "azure_az.zone_2_data": [
+            "azurerm_mssql_database.sqldb_replica"
+        ],
+        "azurerm_mssql_database.sqldb_primary": [],
+        "azurerm_mssql_database.sqldb_replica": [],
+        "azurerm_subnet.subnet_app": [
+            "azurerm_virtual_machine_scale_set.vmss_app"
+        ],
+        "azurerm_virtual_machine_scale_set.vmss_app": [
+            "azurerm_key_vault.keyvault_prod"
+        ],
+        "azurerm_lb.load_balancer": [
+            "azurerm_linux_virtual_machine.vm_web~1",
+            "azurerm_linux_virtual_machine.vm_web~2"
+        ],
+        "azurerm_application_gateway.appgw": [
+            "azurerm_lb.load_balancer"
+        ],
+        "azure_group.shared_services": [
+            "azurerm_key_vault.keyvault_prod",
+            "azurerm_storage_account.storage_logs"
+        ],
+        "azurerm_key_vault.keyvault_prod": [],
+        "azurerm_storage_account.storage_logs": [],
+        "azurerm_network_security_group.nsg_web": [
+            "azurerm_subnet.subnet_web"
+        ],
+        "azurerm_network_security_group.nsg_data": [
+            "azurerm_subnet.subnet_data"
+        ]
+    }
+}

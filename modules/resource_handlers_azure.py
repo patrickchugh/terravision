@@ -476,44 +476,9 @@ def azure_handle_appgw(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def azure_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Group shared Azure services into a shared services group.
-
-    Shared services include Key Vault, Monitor, Log Analytics, ACR, etc.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with shared services grouped
-    """
-    # Find all shared services and group them
-    for node in sorted(tfdata["graphdict"].keys()):
-        substring_match = [s for s in SHARED_SERVICES if s in node]
-        if substring_match:
-            # Create shared services group if needed
-            if not tfdata["graphdict"].get("azurerm_group.shared_services"):
-                tfdata["graphdict"]["azurerm_group.shared_services"] = []
-                tfdata["meta_data"]["azurerm_group.shared_services"] = {}
-            # Add node to shared services group
-            if node not in tfdata["graphdict"]["azurerm_group.shared_services"]:
-                tfdata["graphdict"]["azurerm_group.shared_services"].append(node)
-
-    # Replace consolidated nodes with their consolidated names
-    if tfdata["graphdict"].get("azurerm_group.shared_services"):
-        for service in sorted(
-            list(tfdata["graphdict"]["azurerm_group.shared_services"])
-        ):
-            if helpers.consolidated_node_check(service):
-                tfdata["graphdict"]["azurerm_group.shared_services"] = list(
-                    map(
-                        lambda x: x.replace(
-                            service, helpers.consolidated_node_check(service)
-                        ),
-                        tfdata["graphdict"]["azurerm_group.shared_services"],
-                    )
-                )
-    return tfdata
+# azure_handle_sharedgroup REMOVED - Decision 9: Shared services grouping
+# is now core functionality in graphmaker.py (group_shared_services_core)
+# instead of a handler. This eliminates per-provider duplication.
 
 
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:

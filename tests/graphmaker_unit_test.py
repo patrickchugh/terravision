@@ -16,7 +16,10 @@ from modules.graphmaker import (
 
 class TestReverseRelations(unittest.TestCase):
     def test_reverse_relations_basic(self):
-        tfdata = {"graphdict": {"node1": ["node2"], "node2": []}}
+        tfdata = {
+            "graphdict": {"node1": ["node2"], "node2": []},
+            "provider_detection": {"primary_provider": "aws"},
+        }
         result = reverse_relations(tfdata)
         self.assertIsInstance(result["graphdict"], dict)
 
@@ -27,6 +30,7 @@ class TestCheckRelationship(unittest.TestCase):
             "node_list": ["node1", "node2"],
             "graphdict": {"node1": [], "node2": []},
             "hidden": [],
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = check_relationship("node1", ["value"], tfdata)
         self.assertEqual(result, [])
@@ -36,6 +40,7 @@ class TestCheckRelationship(unittest.TestCase):
             "node_list": ["node1", "node2"],
             "graphdict": {"node1": [], "node2": []},
             "hidden": [],
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = check_relationship("node1", ["node2"], tfdata)
         self.assertIsInstance(result, list)
@@ -53,6 +58,7 @@ class TestAddRelations(unittest.TestCase):
                 "node2": {"param2": "value2"},
             },
             "hidden": [],
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = add_relations(tfdata)
         self.assertIn("graphdict", result)
@@ -69,6 +75,7 @@ class TestAddRelations(unittest.TestCase):
                 "node2": {"param2": "value2"},
             },
             "hidden": [],
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = add_relations(tfdata)
         self.assertEqual(len(result["graphdict"]["node1"]), 0)
@@ -116,12 +123,17 @@ class TestCleanupOriginals(unittest.TestCase):
         tfdata = {
             "graphdict": {"resource1": [], "resource2": []},
             "meta_data": {"resource1": {}, "resource2": {}},
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = cleanup_originals(["resource1"], tfdata)
         self.assertNotIn("resource1", result["graphdict"])
 
     def test_cleanup_originals_empty_list(self):
-        tfdata = {"graphdict": {"resource1": []}, "meta_data": {"resource1": {}}}
+        tfdata = {
+            "graphdict": {"resource1": []},
+            "meta_data": {"resource1": {}},
+            "provider_detection": {"primary_provider": "aws"},
+        }
         result = cleanup_originals([], tfdata)
         self.assertIn("resource1", result["graphdict"])
 

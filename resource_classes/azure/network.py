@@ -147,3 +147,4 @@ azurerm_virtual_network_gateway = VirtualNetworkGateways
 # Note: azurerm_virtual_network alias is defined in groups.py as a Cluster class
 azurerm_virtual_wan = VirtualWans
 azurerm_vpn_gateway = VirtualNetworkGateways
+azurerm_network_security_group = NetworkSecurityGroupsClassic

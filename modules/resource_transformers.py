@@ -663,7 +663,7 @@ def group_shared_services(
     # Replace consolidated nodes with their consolidated names
     updated_services = []
     for service in tfdata["graphdict"][group_name]:
-        consolidated = helpers.consolidated_node_check(service)
+        consolidated = helpers.consolidated_node_check(service, tfdata)
         if consolidated and "cluster" not in service:
             if consolidated not in updated_services:
                 updated_services.append(consolidated)

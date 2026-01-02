@@ -12,6 +12,7 @@ class TestAddAnnotations(unittest.TestCase):
         tfdata = {
             "graphdict": {"aws_lambda_function.test": []},
             "meta_data": {"aws_lambda_function.test": {}},
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = add_annotations(tfdata)
         self.assertIn("graphdict", result)
@@ -22,6 +23,7 @@ class TestAddAnnotations(unittest.TestCase):
             "graphdict": {"node1": []},
             "meta_data": {"node1": {}},
             "annotations": {"add": {"node2": {}}},
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = add_annotations(tfdata)
         self.assertIn("node2", result["graphdict"])
@@ -30,6 +32,7 @@ class TestAddAnnotations(unittest.TestCase):
         tfdata = {
             "graphdict": {"aws_lambda_function.test": []},
             "meta_data": {"aws_lambda_function.test": {}},
+            "provider_detection": {"primary_provider": "aws"},
         }
         result = add_annotations(tfdata)
         self.assertIsInstance(result["graphdict"], dict)

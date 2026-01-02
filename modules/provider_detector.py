@@ -144,14 +144,10 @@ def detect_providers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     resource_names = _extract_resource_names(all_resources)
 
     if not resource_names:
-        logger.warning("No resources found in tfdata, defaulting to AWS")
-        return {
-            "providers": ["aws"],
-            "primary_provider": "aws",
-            "resource_counts": {"aws": 0},
-            "detection_method": "default",
-            "confidence": 0.3,
-        }
+        logger.error("No resources found in tfdata - cannot detect provider")
+        raise ProviderDetectionError(
+            "No resources found in Terraform project. Cannot detect cloud provider without resources."
+        )
 
     # Count resources per provider
     resource_counts: Dict[str, int] = {}
@@ -345,16 +341,20 @@ def validate_provider_detection(result: Dict[str, Any], tfdata: Dict[str, Any]) 
 
 def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
     """
-    Get primary provider from tfdata or return default (AWS).
-
-    Useful for backward compatibility with existing code that doesn't
-    use provider detection.
+    Get primary provider from tfdata or raise error if not detectable.
 
     Args:
         tfdata: Terraform data (may or may not have provider_detection)
 
     Returns:
         Primary provider name ('aws' | 'azure' | 'gcp')
+
+    Raises:
+        ProviderDetectionError: If provider cannot be detected
+
+    Note:
+        This function NO LONGER defaults to AWS. If provider detection hasn't
+        run or fails, it will raise an error. This prevents incorrect assumptions.
     """
     if "provider_detection" in tfdata:
         return tfdata["provider_detection"]["primary_provider"]
@@ -364,5 +364,20 @@ def get_primary_provider_or_default(tfdata: Dict[str, Any]) -> str:
         result = detect_providers(tfdata)
         return result["primary_provider"]
     except (ValueError, ProviderDetectionError):
-        # logger.warning("Could not detect provider, defaulting to AWS")
-        return "aws"
+        # For simple JSON sources (graphdict only), infer from resource names
+        if "graphdict" in tfdata and not "all_resource" in tfdata:
+            resource_names = list(tfdata["graphdict"].keys())
+            provider_counts = {}
+            for resource_name in resource_names:
+                provider = get_provider_for_resource(resource_name)
+                if provider in SUPPORTED_PROVIDERS:
+                    provider_counts[provider] = provider_counts.get(provider, 0) + 1
+
+            if provider_counts:
+                return max(provider_counts, key=provider_counts.get)
+
+        logger.error("Could not detect provider - provider detection must run before calling this function")
+        raise ProviderDetectionError(
+            "Provider detection has not been run or failed. "
+            "Ensure detect_providers(tfdata) is called before using provider-specific functionality."
+        )

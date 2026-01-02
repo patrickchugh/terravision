@@ -34,6 +34,7 @@ Example usage:
         badge_label='<<TABLE BORDER="0"><TR><TD><img src="/path/to/shield.png"/></TD><TD>Compliant</TD></TR></TABLE>>'
     )
 """
+
 import sys
 import os
 from pathlib import Path
@@ -81,7 +82,9 @@ class ResourceGroupCluster(Cluster):
         }
         # Store label info for creating separate label node at bottom
         self.label_text = label
-        self.label_icon = f"{base_path}/resource_images/azure/general/resource-groups.png"
+        self.label_icon = (
+            f"{base_path}/resource_images/azure/general/resource-groups.png"
+        )
         self.label_position = "bottom-left"  # Position for label node
 
         # Optional top badge label (graphviz cluster label at top)
@@ -102,7 +105,9 @@ class VNetGroup(Cluster):
         }
         # Store label info for creating separate label node at bottom
         self.label_text = label
-        self.label_icon = f"{base_path}/resource_images/azure/network/virtual-networks.png"
+        self.label_icon = (
+            f"{base_path}/resource_images/azure/network/virtual-networks.png"
+        )
         self.label_position = "bottom-right"  # Position for label node
         self.label_icon_first = False  # Icon after text for right alignment
 
@@ -124,7 +129,9 @@ class SubnetGroup(Cluster):
         # Store label info for creating separate label node at bottom
         self.label_text = label
         self.label_icon = f"{base_path}/resource_images/azure/networking/subnet.png"
-        self.label_position = "bottom-left"  # Position at bottom-left like Resource Group
+        self.label_position = (
+            "bottom-left"  # Position at bottom-left like Resource Group
+        )
         self.label_icon_first = True  # Icon before text
 
         # Optional top badge label (graphviz cluster label at top)
@@ -151,12 +158,12 @@ class AvailabilityZone(Cluster):
     def __init__(self, label="Zone 1", badge_label=None, **kwargs):
         graph_attrs = {
             "style": "rounded,filled",  # Rounded rectangle with fill
-            "fillcolor": "#FAFAFA",     # Off-white/light gray
+            "fillcolor": "#FAFAFA",  # Off-white/light gray
             "margin": "30",
-            "pencolor": "#FFB900",      # Azure yellow/orange
+            "pencolor": "#FFB900",  # Azure yellow/orange
             "penwidth": "2",
             "labeljust": "c",
-            "labelloc": "b",            # Label at bottom
+            "labelloc": "b",  # Label at bottom
             "_shift": "0",
         }
         # Store label info for creating separate label node at bottom
@@ -198,7 +205,6 @@ class SharedServicesGroup(Cluster):
 azurerm_resource_group = ResourceGroupCluster
 azurerm_virtual_network = VNetGroup
 azurerm_subnet = SubnetGroup
-azurerm_network_security_group = NSGGroup
 azure_az = AvailabilityZone
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup

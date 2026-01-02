@@ -28,22 +28,33 @@ def get_handler_module(tfdata: Dict[str, Any]):
     """Get the appropriate handler module based on provider detection.
 
     Args:
-        tfdata: Terraform data dictionary (may contain provider_detection)
+        tfdata: Terraform data dictionary (must contain provider_detection)
 
     Returns:
         Provider-specific handler module (aws_handlers, azure_handlers, or gcp_handlers)
+
+    Raises:
+        ValueError: If provider detection not found or provider not supported
+
+    Note:
+        This function NO LONGER defaults to AWS. Provider detection must be run
+        before calling this function.
     """
-    # Detect primary provider from tfdata
+    # Detect primary provider from tfdata (will raise error if not detected)
     provider = get_primary_provider_or_default(tfdata)
 
     # Get handler module for provider
     handler_module = HANDLER_MODULES.get(provider)
 
     if not handler_module:
-        logger.warning(
-            f"No handler module found for provider '{provider}', defaulting to AWS"
+        logger.error(
+            f"No handler module found for provider '{provider}'. "
+            f"Supported providers: {list(HANDLER_MODULES.keys())}"
         )
-        handler_module = aws_handlers
+        raise ValueError(
+            f"No handler module available for provider '{provider}'. "
+            f"Please ensure a handler module exists for this provider."
+        )
 
     logger.info(f"Using {provider.upper()} resource handlers")
     return handler_module

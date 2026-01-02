@@ -170,17 +170,6 @@ class TestDetectProviders:
         assert result["resource_counts"]["aws"] == 1
         assert result["confidence"] < 0.5
 
-    def test_detect_empty_resources_defaults_to_aws(self):
-        """Test that empty resource list defaults to AWS with low confidence."""
-        tfdata = {"all_resource": []}
-
-        result = detect_providers(tfdata)
-
-        assert result["providers"] == ["aws"]
-        assert result["primary_provider"] == "aws"
-        assert result["confidence"] < 0.5
-        assert result["detection_method"] == "default"
-
     def test_detect_only_unknown_resources_raises_error(self):
         """Test that project with only unknown resources raises error."""
         tfdata = {
@@ -354,10 +343,11 @@ class TestHelperFunctions:
         assert get_primary_provider_or_default(tfdata) == "azure"
 
     def test_get_primary_provider_or_default_fallback(self):
-        """Test fallback to AWS when detection fails."""
+        """Test that detection fails when no resources are present."""
         tfdata = {"all_resource": []}
 
-        assert get_primary_provider_or_default(tfdata) == "aws"
+        with pytest.raises(ProviderDetectionError):
+            get_primary_provider_or_default(tfdata)
 
 
 class TestConstants:

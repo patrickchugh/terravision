@@ -800,7 +800,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             resdata = copy.deepcopy(tfdata["meta_data"][resource])
         else:
             continue
-        consolidated_name = helpers.consolidated_node_check(resource)
+        consolidated_name = helpers.consolidated_node_check(resource, tfdata)
         if consolidated_name:
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
@@ -823,8 +823,8 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         else:
             connected_resource = resource
         for index, connection in enumerate(tfdata["graphdict"][connected_resource]):
-            if helpers.consolidated_node_check(connection):
-                consolidated_connection = helpers.consolidated_node_check(connection)
+            if helpers.consolidated_node_check(connection, tfdata):
+                consolidated_connection = helpers.consolidated_node_check(connection, tfdata)
                 if consolidated_connection and consolidated_connection != connection:
                     if (
                         not consolidated_connection
@@ -887,7 +887,7 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         )
         if is_provider_resource:
             renamed_node = helpers.check_variant(
-                node, tfdata["meta_data"].get(node_name)
+                node, tfdata["meta_data"].get(node_name), tfdata
             )
         else:
             renamed_node = False
@@ -916,7 +916,7 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             )
             if is_provider_connection:
                 variant_suffix = helpers.check_variant(
-                    resource, tfdata["meta_data"].get(connection_resource_name)
+                    resource, tfdata["meta_data"].get(connection_resource_name), tfdata
                 )
                 variant_label = resource.split(".")[1]
             # Build shared services group name based on provider
@@ -966,8 +966,8 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     target_resource = (
-        helpers.consolidated_node_check(resource)
-        if helpers.consolidated_node_check(resource)
+        helpers.consolidated_node_check(resource, tfdata)
+        if helpers.consolidated_node_check(resource, tfdata)
         and tfdata["meta_data"].get(resource)
         else resource
     )
@@ -992,7 +992,7 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     else:
         security_group_with_count = False
     has_variant = (
-        helpers.check_variant(resource, tfdata["meta_data"][resource])
+        helpers.check_variant(resource, tfdata["meta_data"][resource], tfdata)
         if resource in tfdata["meta_data"]
         else False
     )
@@ -1469,7 +1469,7 @@ def handle_count_resources(
                             tfdata["graphdict"], original_name
                         )
                         and original_name not in multi_resources
-                        and not helpers.consolidated_node_check(original_name)
+                        and not helpers.consolidated_node_check(original_name, tfdata)
                     ):
                         # Handle first instance
                         if i == 0:
@@ -1536,7 +1536,7 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Also skip if node is a subnet - subnets should keep their specific numbered instances
             if (
                 "~" in c
-                and helpers.consolidated_node_check(node)
+                and helpers.consolidated_node_check(node, tfdata)
                 and "aws_subnet" not in node
             ):
                 # Check if connection should skip automatic expansion
@@ -1639,7 +1639,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 or tfdata["meta_data"][n].get("max_capacity")
                 or tfdata["meta_data"][n].get("for_each")
             )
-            and not helpers.consolidated_node_check(n)
+            and not helpers.consolidated_node_check(n, tfdata)
         )
     ]
 

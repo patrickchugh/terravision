@@ -24,21 +24,25 @@ def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
     Returns:
         List of auto-annotation rules for the detected provider
 
+    Raises:
+        ValueError: If provider detection not found in tfdata
+        config_loader.ConfigurationError: If provider config cannot be loaded
+
     Note:
-        Falls back to AWS annotations if provider detection is missing or fails.
+        This function NO LONGER falls back to AWS. Provider detection must
+        be run before calling this function.
     """
     # Extract provider from tfdata (set by provider_detector)
-    provider = "aws"  # Default fallback
-    if tfdata.get("provider_detection"):
-        provider = tfdata["provider_detection"].get("primary_provider", "aws")
+    if not tfdata.get("provider_detection"):
+        raise ValueError(
+            "provider_detection not found in tfdata. "
+            "Ensure detect_providers(tfdata) is called before add_annotations()."
+        )
+
+    provider = tfdata["provider_detection"]["primary_provider"]
 
     # Load provider-specific config
-    try:
-        config = config_loader.load_config(provider)
-    except (ValueError, config_loader.ConfigurationError):
-        # Fallback to AWS if provider config fails to load
-        config = config_loader.load_config("aws")
-        provider = "aws"
+    config = config_loader.load_config(provider)
 
     # Get the provider-specific AUTO_ANNOTATIONS constant
     # Convention: {PROVIDER}_AUTO_ANNOTATIONS (e.g., AWS_AUTO_ANNOTATIONS)
@@ -48,9 +52,10 @@ def _get_provider_auto_annotations(tfdata: Dict[str, Any]) -> List[Dict]:
     if hasattr(config, annotations_attr):
         return getattr(config, annotations_attr)
     else:
-        # Fallback to AWS if provider doesn't have AUTO_ANNOTATIONS
-        aws_config = config_loader.load_config("aws")
-        return aws_config.AWS_AUTO_ANNOTATIONS
+        raise config_loader.ConfigurationError(
+            f"Provider config for '{provider}' does not define {annotations_attr}. "
+            f"Please add {annotations_attr} to cloud_config_{provider}.py"
+        )
 
 
 def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
