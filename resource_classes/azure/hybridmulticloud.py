@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Hybridmulticloud(_Azure):
     _type = "hybridmulticloud"
-    _icon_dir = "resources/azure/hybridmulticloud"
+    _icon_dir = "resource_images/azure/hybridmulticloud"
 
 
 class AzureOperator5GCore(_Hybridmulticloud):

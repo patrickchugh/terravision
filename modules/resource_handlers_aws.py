@@ -341,7 +341,7 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Replace EFS file system references with mount target
     for node in sorted(tfdata["graphdict"].keys()):
         connections = tfdata["graphdict"][node]
-        if helpers.consolidated_node_check(node):
+        if helpers.consolidated_node_check(node, tfdata):
             for connection in list(connections):
                 if helpers.get_no_module_name(connection).startswith(
                     "aws_efs_file_system"
@@ -590,11 +590,14 @@ def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Replace consolidated nodes with their consolidated names
     if tfdata["graphdict"].get("aws_group.shared_services"):
         for service in sorted(list(tfdata["graphdict"]["aws_group.shared_services"])):
-            if helpers.consolidated_node_check(service) and "cluster" not in service:
+            if (
+                helpers.consolidated_node_check(service, tfdata)
+                and "cluster" not in service
+            ):
                 tfdata["graphdict"]["aws_group.shared_services"] = list(
                     map(
                         lambda x: x.replace(
-                            service, helpers.consolidated_node_check(service)
+                            service, helpers.consolidated_node_check(service, tfdata)
                         ),
                         tfdata["graphdict"]["aws_group.shared_services"],
                     )
@@ -625,18 +628,24 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if lb not in tfdata["meta_data"]:
             continue
 
-        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb])
+        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb], tfdata)
         renamed_node = str(lb_type) + "." + "elb"
+
         # Initialize renamed node metadata
         if not tfdata["meta_data"].get(renamed_node):
             tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
+
+        # CRITICAL: Create renamed node in graphdict BEFORE processing connections
+        # Otherwise, if lb has no connections, renamed_node is never created
+        if not tfdata["graphdict"].get(renamed_node):
+            tfdata["graphdict"][renamed_node] = list()
+
         for connection in sorted(list(tfdata["graphdict"][lb])):
-            if not tfdata["graphdict"].get(renamed_node):
-                tfdata["graphdict"][renamed_node] = list()
             c_type = connection.split(".")[0]
             if c_type not in SHARED_SERVICES:
                 tfdata["graphdict"][renamed_node].append(connection)
                 tfdata["graphdict"][lb].remove(connection)
+
             if (
                 tfdata["meta_data"].get(connection)
                 and tfdata["meta_data"][connection].get("count")
@@ -679,6 +688,7 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             tfdata["graphdict"][lb] = list()
         if renamed_node not in tfdata["graphdict"][lb]:
             tfdata["graphdict"][lb].append(renamed_node)
+
     return tfdata
 
 

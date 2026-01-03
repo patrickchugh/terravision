@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Azureecosystem(_Azure):
     _type = "azureecosystem"
-    _icon_dir = "resources/azure/azureecosystem"
+    _icon_dir = "resource_images/azure/azureecosystem"
 
 
 class Applens(_Azureecosystem):

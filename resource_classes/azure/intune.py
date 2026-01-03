@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Intune(_Azure):
     _type = "intune"
-    _icon_dir = "resources/azure/intune"
+    _icon_dir = "resource_images/azure/intune"
 
 
 class AzureADRolesAndAdministrators(_Intune):

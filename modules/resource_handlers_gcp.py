@@ -183,11 +183,11 @@ def gcp_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for service in sorted(
             list(tfdata["graphdict"]["google_group.shared_services"])
         ):
-            if helpers.consolidated_node_check(service):
+            if helpers.consolidated_node_check(service, tfdata):
                 tfdata["graphdict"]["google_group.shared_services"] = list(
                     map(
                         lambda x: x.replace(
-                            service, helpers.consolidated_node_check(service)
+                            service, helpers.consolidated_node_check(service, tfdata)
                         ),
                         tfdata["graphdict"]["google_group.shared_services"],
                     )

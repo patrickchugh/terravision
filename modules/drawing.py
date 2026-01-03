@@ -395,6 +395,43 @@ def ok_to_connect(origin: str, destination: str) -> bool:
     return True
 
 
+def create_cluster_label_node(cluster_obj: Cluster) -> None:
+    """Create a label node for clusters that have label metadata.
+
+    Generates HTML table labels with optional icons and adds special
+    attributes for gvpr positioning.
+
+    Args:
+        cluster_obj: Cluster object with label_text attribute
+    """
+    if not hasattr(cluster_obj, "label_text"):
+        return
+
+    # Build HTML table label with icon and text (or just text if no icon)
+    if hasattr(cluster_obj, "label_icon") and cluster_obj.label_icon is not None:
+        icon_first = getattr(cluster_obj, "label_icon_first", True)
+        if icon_first:
+            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{cluster_obj.label_icon}"/></TD><TD>{cluster_obj.label_text}</TD></TR></TABLE>>'
+        else:
+            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD>{cluster_obj.label_text}</TD><TD><img src="{cluster_obj.label_icon}"/></TD></TR></TABLE>>'
+    else:
+        label_html = cluster_obj.label_text
+
+    # Create label node with special attributes for gvpr positioning
+    label_node_id = f"_label_{cluster_obj.dot.name}"
+    cluster_type = cluster_obj.__class__.__name__
+    cluster_obj.dot.node(
+        label_node_id,
+        label=label_html,
+        shape="plaintext",
+        pin="true",
+        _clusterlabel="1",
+        _clusterid=cluster_obj.dot.name,
+        _clustertype=cluster_type,
+        _labelposition=cluster_obj.label_position,
+    )
+
+
 def handle_group(
     inGroup: Cluster,
     cloudGroup: Cluster,
@@ -430,6 +467,9 @@ def handle_group(
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
+
+    # Create separate label node for clusters that have label metadata
+    create_cluster_label_node(newGroup)
 
     # Add child nodes and subgroups
     if tfdata["graphdict"].get(resource):
@@ -605,8 +645,14 @@ def render_diagram(
         if not tfdata["annotations"].get("title")
         else tfdata["annotations"]["title"]
     )
+    # Use 'neato' engine for all providers with neato_no_op=2
     myDiagram = Canvas(
-        "", filename=outfile, outformat=format, show=picshow, direction="TB"
+        "",
+        filename=outfile,
+        outformat=format,
+        show=picshow,
+        direction="TB",
+        engine="neato",
     )
     setdiagram(myDiagram)
 
@@ -624,7 +670,7 @@ def render_diagram(
         )
         exit()
 
-    # Add title as a node at the top
+    # Add title as a node at the top (positioned by gvpr for all providers)
     setcluster(myDiagram)
     title_style = {
         "_titlenode": "1",
@@ -697,6 +743,8 @@ def render_diagram(
 
     # Set context to main diagram so footer is outside all clusters
     setcluster(myDiagram)
+
+    # Add footer node (positioned by gvpr for all providers)
     footer_style = {
         "_footernode": "1",
         "shape": "record",
@@ -706,6 +754,9 @@ def render_diagram(
         "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
+
+    # Create label node for cloud group if it has label metadata
+    create_cluster_label_node(cloudGroup)
 
     # Add cloud group to main canvas
     myDiagram.subgraph(cloudGroup.dot)

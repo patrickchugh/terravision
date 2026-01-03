@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Analytics(_Azure):
     _type = "analytics"
-    _icon_dir = "resources/azure/analytics"
+    _icon_dir = "resource_images/azure/analytics"
 
 
 class AnalysisServices(_Analytics):

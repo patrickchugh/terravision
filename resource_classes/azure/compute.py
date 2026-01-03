@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Compute(_Azure):
     _type = "compute"
-    _icon_dir = "resources/azure/compute"
+    _icon_dir = "resource_images/azure/compute"
 
 
 class AppServices(_Compute):

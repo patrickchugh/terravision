@@ -1,10 +1,21 @@
+
+
 # TerraVision
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams and solves the problem of keeping the most important document in cloud projects, the architecture diagram, up to date. With high velocity releases the norm now, code is the new source of truth so machine generated architecture diagrams are more accurate than relying on the freestyle diagram drawn by the cloud architect that probably doesn't match the reality of what is actually deployed in the cloud anymore. 
 
 TerraVision securely runs 100% Client Side without any dependency or access to your Cloud environment, dynamically parses your conditionally created resources and variables and generates an automatic visual of your architecture. TerraVision is designed to be a 'Docs as Code' (DaC) tool that can be included in your CI/CD pipeline to update architecture diagrams after your build/test/release pipeline phases and supplement other document generators like readthedocs.io alongside it. 
+<<<<<<< HEAD
 
 ## Status
+=======
+
+
+## Status
+
+
+[![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
+>>>>>>> 003-azure-handler-implementation
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 
@@ -32,10 +43,17 @@ into this...
    - Doesn't require any cost incurring cloud resources to be spun up, it works instantly from your local machine
    - Regularly updating diagrams aligning, connecting dots and laying out icons is not the best use of your architect staff costs
 2. Accelerate and Automate
+<<<<<<< HEAD
    - Use TF variable files as inputs to create multiple variant diagrams from the same TF code
      - Doesn't require infrastructure to exist to document it. Terravision works off your terraform plan not your remote statefile
    - Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
    - YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
+=======
+	- Use TF variable files as inputs to create multiple variant diagrams from the same TF code
+   - Doesn't require infrastructure to exist to document it. Terravision works off your terraform plan not your remote statefile
+	- Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
+	- YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
+>>>>>>> 003-azure-handler-implementation
 3. Consistency across organisation
    - Auto downloads your organisational / external modules to ensure the latest view of downstream Terraform modules
    - Consistent design of architecture diagrams using industry standard icons and AWS/GCP/Azure approved style across teams 
@@ -44,10 +62,17 @@ into this...
    - Helps in third party architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
    - Custom Diagram code and output images can be put into source/version control for better maintainability and discoverability
 5. Security
+<<<<<<< HEAD
    - Don't need to give access to your AWS account, credentials or CLI to draw diagram
    - Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
      - All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
      - Only metatdata is sent to LLM models with only minimal aggregate data saved in external files, not any sensitive code or runtime environment values
+=======
+	- Don't need to give access to your AWS account, credentials or CLI to draw diagram
+	- Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
+  	- All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
+   - Only metatdata is sent to LLM models with only minimal aggregate data saved in external files, not any sensitive code or runtime environment values
+>>>>>>> 003-azure-handler-implementation
 
 # CI/CD Pipeline Integration
 
@@ -64,16 +89,27 @@ graph TD
     G --> H[Deploy Stage]
     H --> I[Update Docs]
     I --> J[Publish to<br/>Confluence/ReadTheDocs]
+<<<<<<< HEAD
 
     style G fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#fff
     style A fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
     style J fill:#36b37e,stroke:#1f7a54,stroke-width:2px,color:#fff
 ```
+=======
+    
+    style G fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#fff
+    style A fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
+    style J fill:#36b37e,stroke:#1f7a54,stroke-width:2px,color:#fff
+``` 
+>>>>>>> 003-azure-handler-implementation
 
 # Installation and Usage
 
 ## System Requirements
+<<<<<<< HEAD
 
+=======
+>>>>>>> 003-azure-handler-implementation
 - **Python 3.10+** 
 - **Terraform 1.x**   
 - **Git**  
@@ -229,6 +265,7 @@ terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.js
 
 ## Advanced Features
 
+<<<<<<< HEAD
 ### Use with annotations
 
 ```bash
@@ -239,6 +276,17 @@ terravision draw --source https://github.com/your-repo/terraform-examples.git --
 ### Working with Pre-generated JSON from previous terravision run (faster)
 
 ```bash
+=======
+
+### Use with annotations
+```bash
+# Add your own custom annotations such as labels, resources or new connections
+terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
+```
+
+### Working with Pre-generated JSON from previous terravision run (faster)
+```bash
+>>>>>>> 003-azure-handler-implementation
 # Export and reuse graph data
 terravision graphdata --source ~/src/terraform --outfile graph.json
 
@@ -265,12 +313,16 @@ TerraVision can use AI models to automatically refine and improve your architect
 ### Supported AI Backends
 
 #### AWS Bedrock (Default)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 003-azure-handler-implementation
 Uses AWS Bedrock API via API Gateway for cloud-based AI refinement.
 
 ```bash
 # Use Bedrock backend (default)
 terravision draw --source ~/src/my-terraform-code --aibackend bedrock
+<<<<<<< HEAD
 ```
 
 **Configuration:**
@@ -373,7 +425,102 @@ After deployment, update `modules/cloud_config.py` with the output endpoint:
 
 ```python
 BEDROCK_API_ENDPOINT = "<your-api-endpoint-from-terraform-output>"
+=======
+>>>>>>> 003-azure-handler-implementation
 ```
+
+**Configuration:**
+Edit `modules/cloud_config.py` to set your Bedrock API endpoint:
+```python
+BEDROCK_API_ENDPOINT = "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat"
+```
+
+#### Ollama (Local)
+Uses a local Ollama server for privacy-focused, offline AI refinement.
+
+```bash
+# Use Ollama backend
+terravision draw --source ~/src/my-terraform-code --aibackend ollama
+```
+
+**Setup:**
+1. Install Ollama from https://ollama.ai/download
+2. Start Ollama server and pull a model:
+   ```bash
+   # Start Ollama (runs automatically on macOS/Linux after install)
+   ollama serve
+   
+   # Pull the llama3 model
+   ollama pull llama3
+   
+   # Set model to stay loaded longer (optional, prevents premature unloading)
+   # Default timeout is 5 minutes, extend to 1 hour:
+   export OLLAMA_KEEP_ALIVE=1h
+   ```
+3. Edit `modules/cloud_config.py` to set your Ollama server (default is localhost):
+   ```python
+   OLLAMA_HOST = "http://localhost:11434"
+   ```
+
+### AI Refinement Prompts
+
+The AI models use specialized prompts defined in `modules/cloud_config.py`:
+
+- **AWS_REFINEMENT_PROMPT**: Guides the AI to fix resource groupings, connections, and ensure AWS best practices
+- **AWS_DOCUMENTATION_PROMPT**: Generates architecture summaries and documentation
+
+### Setting Up AWS Bedrock Backend
+
+TerraVision includes Terraform code to deploy a serverless AWS Bedrock proxy with API Gateway:
+
+```bash
+# Navigate to the Terraform directory
+cd ai-backend-terraform
+
+# Configure your settings
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your settings
+
+# Deploy the infrastructure
+terraform init
+terraform apply
+
+# Get your API endpoint
+terraform output api_endpoint
+```
+
+**Infrastructure Components:**
+- **API Gateway**: REST API with streaming support for real-time responses
+- **Lambda Function**: Node.js 20.x function with response streaming
+- **DynamoDB**: Rate limiting and usage tracking
+- **CloudWatch**: Monitoring, logging, and cost alerts
+- **IAM Roles**: Least-privilege access for Lambda to invoke Bedrock
+
+**Terraform Variables:**
+```hcl
+variable "bedrock_model_id" {
+  description = "Bedrock model ID"
+  type        = string
+}
+
+variable "rate_limit_per_hour" {
+  description = "Maximum requests per client per hour"
+  type        = number
+  default     = 100
+}
+
+variable "cost_alert_threshold" {
+  description = "Cost alert threshold in USD"
+  type        = number
+  default     = 50
+}
+```
+
+After deployment, update `modules/cloud_config.py` with the output endpoint:
+```python
+BEDROCK_API_ENDPOINT = "<your-api-endpoint-from-terraform-output>"
+```
+ 
 
 # Annotating generated diagrams
 
@@ -480,6 +627,64 @@ jobs:
             --data @confluence-update.json
 ```
 
+# Example Pipeline Configuration
+
+```yaml
+# .github/workflows/infrastructure-docs.yml
+name: Update Architecture Diagrams
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+
+jobs:
+  update-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
+        
+      - name: Install TerraVision
+        run: |
+          git clone https://github.com/patrickchugh/terravision.git
+          cd terravision
+          pip install -r requirements.txt
+          
+      - name: Generate Architecture Diagrams
+        run: |
+          terravision draw --source ./terraform --format svg --outfile architecture-${{ github.sha }}
+          terravision draw --source ./terraform --format png --outfile architecture-${{ github.sha }}
+          
+      - name: Update Documentation Site
+        run: |
+          cp architecture-*.svg docs/images/
+          cp architecture-*.png docs/images/
+          # Update your docs (ReadTheDocs, MkDocs, etc.)
+          
+      - name: Publish to Confluence
+        env:
+          CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
+        run: |
+          # Upload diagrams to Confluence page
+          curl -X PUT "https://your-domain.atlassian.net/wiki/rest/api/content/$PAGE_ID" \
+            -H "Authorization: Bearer $CONFLUENCE_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @confluence-update.json
+```
+
 ## Command Reference
 
 ### Main Commands
@@ -571,10 +776,15 @@ Exports resource relationships and metadata as JSON.
    - Check that source path contains `.tf` files
 
 5. **"Cannot reach Ollama server"**
+<<<<<<< HEAD
    
    - Verify Ollama is running: `curl http://localhost:11434/api/tags`
    - If server is unresponsive, kill existing processes:
      
+=======
+   - Verify Ollama is running: `curl http://localhost:11434/api/tags`
+   - If server is unresponsive, kill existing processes:
+>>>>>>> 003-azure-handler-implementation
      ```bash
      lsof -ti:11434 | xargs kill -9
      ollama serve
@@ -582,9 +792,13 @@ Exports resource relationships and metadata as JSON.
    - Ensure llama3 model is installed: `ollama pull llama3`
 
 6. **"Stale or cached module issues"**
+<<<<<<< HEAD
    
    - Clear the terravision cache folder:
      
+=======
+   - Clear the terravision cache folder:
+>>>>>>> 003-azure-handler-implementation
      ```bash
      rm -rf ~/.terravision
      ```
@@ -599,7 +813,10 @@ terravision draw --source ~/src/terraform --debug
 ```
 
 This will:
+<<<<<<< HEAD
 
+=======
+>>>>>>> 003-azure-handler-implementation
 - Show detailed processing steps
 - Export intermediate JSON files
 - Display full error traces

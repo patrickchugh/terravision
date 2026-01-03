@@ -98,6 +98,7 @@ class Canvas:
         graph_attr: dict = {},
         node_attr: dict = {},
         edge_attr: dict = {},
+        engine: str = "neato",
     ):
         """Diagram represents a global resource_classes context.
 
@@ -112,8 +113,10 @@ class Canvas:
         :param graph_attr: Provide graph_attr dot config attributes.
         :param node_attr: Provide node_attr dot config attributes.
         :param edge_attr: Provide edge_attr dot config attributes.
+        :param engine: Graphviz engine to use. Default is 'neato'.
         """
         self.name = name
+        self.engine = engine
         if not name and not filename:
             filename = "resource_classes_image"
         elif not filename:
@@ -212,16 +215,23 @@ class Canvas:
 
     def render(self) -> str:
         dotsource = Source.from_file(
-            self.filename + ".dot", engine="neato", directory=Path.cwd()
+            self.filename + ".dot", engine=self.engine, directory=Path.cwd()
         )
-        filename = dotsource.render(
-            neato_no_op=2,
-            format=self.outformat,
-            view=self.show,
-            quiet=True,
-            engine="neato",
-            directory=Path.cwd(),
-        )
+
+        # Rendering configuration
+        render_kwargs = {
+            "format": self.outformat,
+            "view": self.show,
+            "quiet": True,
+            "engine": self.engine,
+            "directory": Path.cwd(),
+        }
+
+        # Use neato_no_op=2 for neato engine to preserve node positions
+        if self.engine == "neato":
+            render_kwargs["neato_no_op"] = 2
+
+        filename = dotsource.render(**render_kwargs)
         return filename
 
 

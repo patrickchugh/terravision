@@ -1,649 +1,375 @@
 # TerraVision
 
-TerraVision is an AI-powered CLI tool that converts Terraform code into Professional Cloud Architecture Diagrams and solves the problem of keeping the most important document in cloud projects, the architecture diagram, up to date. With high velocity releases the norm now, code is the new source of truth so machine generated architecture diagrams are more accurate than relying on the freestyle diagram drawn by the cloud architect that probably doesn't match the reality of what is actually deployed in the cloud anymore. 
-
-TerraVision securely runs 100% Client Side without any dependency or access to your Cloud environment, dynamically parses your conditionally created resources and variables and generates an automatic visual of your architecture. TerraVision is designed to be a 'Docs as Code' (DaC) tool that can be included in your CI/CD pipeline to update architecture diagrams after your build/test/release pipeline phases and supplement other document generators like readthedocs.io alongside it. 
-
-## Status
+**AI-Powered Terraform to Architecture Diagram Generator**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 
-## Supported Cloud Providers
+> **⚠️ Alpha Software Notice**  
+> This software is in alpha testing. Code is shared "AS IS" without warranties. Use at your own risk.
 
-- ✅ **AWS** (Full support with 200+ services)
-- 🔄 **Google Cloud Platform** (Partial Support)
-- 🔄 **Microsoft Azure** (Partial Support)
+---
 
-Turn this... 
+## Table of Contents
 
-![Terraform Code](./images/code.png "Turn Terraform code")
+- [What is TerraVision?](#what-is-terravision)
+- [Quick Start](#quick-start)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Documentation](#documentation)
+- [Supported Cloud Providers](#supported-cloud-providers)
+- [Contributing](#contributing)
+- [License](#license)
 
-into this...
+---
+
+## What is TerraVision?
+
+TerraVision automatically converts your Terraform code into professional cloud architecture diagrams. Quickly visualise any Terraform code to analyse what would be created in the cloud, AND keep your documentation in sync with your infrastructure. No more outdated diagrams!
+
+**Turn this Terraform code:**
+
+![Terraform Code](./images/code.png)
+
+**Into this architecture diagram:**
 
 <img src="./images/architecture.png" width="640" height="580">
 
-> **⚠️ Alpha Software Notice**  
-> This software is still in alpha testing and **code is shared on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND**, either express or implied. Use at your own risk.
+### Why TerraVision?
 
-# Benefits of terravision
+- ✅ **Always Up-to-Date**: Diagrams generated from actual Terraform code as the single source of truth
+- ✅ **100% Client-Side**: No cloud access required, runs locally to keep your data secure
+- ✅ **CI/CD Ready**: Automate diagram generation in your pipeline with simple CLI interface
+- ✅ **Free & Open Source**: No expensive diagramming tool licenses
+- ✅ **Multi-Cloud**: Supports AWS, GCP, and Azure
 
-1. Cost
-   - Save Visio/Drawing software licenses - terravision is free and open source
-   - Doesn't require any cost incurring cloud resources to be spun up, it works instantly from your local machine
-   - Regularly updating diagrams aligning, connecting dots and laying out icons is not the best use of your architect staff costs
-2. Accelerate and Automate
-   - Use TF variable files as inputs to create multiple variant diagrams from the same TF code
-     - Doesn't require infrastructure to exist to document it. Terravision works off your terraform plan not your remote statefile
-   - Automate creation of architecture diagrams by running terravision as part of CI/CD pipelines
-   - YAML based Diagrams as code allows you to Annotate generated diagrams with additional custom labels and resources  e.g. unmanaged resources or external systems not captured in TF code
-3. Consistency across organisation
-   - Auto downloads your organisational / external modules to ensure the latest view of downstream Terraform modules
-   - Consistent design of architecture diagrams using industry standard icons and AWS/GCP/Azure approved style across teams 
-4. Accurate Visibility 
-   - Real time state of diagram shows current infrastructure that matches exactly what is deployed in production today
-   - Helps in third party architecture reviews, auditing, monitoring, reporting and debugging of the stack in a visual way
-   - Custom Diagram code and output images can be put into source/version control for better maintainability and discoverability
-5. Security
-   - Don't need to give access to your AWS account, credentials or CLI to draw diagram
-   - Doesn't create intrusive cloud resources  e.g. scanning instances or metadata tables which enterprises would need to approve
-     - All source code stays in your local environment, diagrams are generated on your machines without calling out to external APIs
-     - Only metatdata is sent to LLM models with only minimal aggregate data saved in external files, not any sensitive code or runtime environment values
+---
 
-# CI/CD Pipeline Integration
+## Key Features
 
-TerraVision seamlessly integrates into your CI/CD pipeline to automatically keep architecture diagrams synchronized with your infrastructure code:
+### 🎨 Professional Diagrams
 
-```mermaid
-graph TD
-    A[Developer Commits<br/>Terraform Code] --> B[Git Push]
-    B --> C[CI/CD Pipeline<br/>Triggered]
-    C --> D[Build Stage]
-    D --> E[Test Stage]
-    E --> F[Terraform Plan]
-    F --> G[🎨 TerraVision<br/>Generate Diagrams]
-    G --> H[Deploy Stage]
-    H --> I[Update Docs]
-    I --> J[Publish to<br/>Confluence/ReadTheDocs]
+- Industry-standard cloud provider icons (AWS, GCP, Azure)
+- Automatic resource grouping (VPCs, subnets, security groups)
+- Clean, readable layouts
+- Multiple output formats (PNG, SVG, PDF and DOT)
 
-    style G fill:#ff9900,stroke:#232f3e,stroke-width:3px,color:#fff
-    style A fill:#4a90e2,stroke:#2e5c8a,stroke-width:2px,color:#fff
-    style J fill:#36b37e,stroke:#1f7a54,stroke-width:2px,color:#fff
-```
+### 🤖 AI-Powered Refinement
 
-# Installation and Usage
+- Automatically fixes resource relationships
+- Adds missing logical connections, labels, titles and icons as needed
+- Ensures architectural diagramming best practices
 
-## System Requirements
+### 📝 Customizable Annotations
 
-- **Python 3.10+** 
-- **Terraform 1.x**   
-- **Git**  
-- **Graphviz**
-- **Ollama** (Optional - only required if using `--aibackend ollama`)
+- Add custom labels and titles
+- Include external resources not in Terraform
+- Override automatic connections
 
-## 1. Install External Dependencies
+### 🔄 CI/CD Integration
 
-### Required Dependencies
+- GitHub Actions, GitLab CI, Jenkins support
+- Show multiple environments using TF Variables to document variants of your infrastructure (e.g. prod vs dev)
 
-1. **Graphviz** - https://graphviz.org/download/
-   
-   ```bash
-   # macOS
-   brew install graphviz
-   
-   # Ubuntu/Debian
-   sudo apt-get install graphviz
-   
-   # Windows
-   # Download from https://graphviz.org/download/
-   ```
+### 🔒 Secure & Private
 
-2. **Git** - https://git-scm.com/downloads
-   
-   ```bash
-   # Most systems have git pre-installed
-   git --version
-   ```
+- No cloud credentials required
+- Runs entirely on your local machine
+- No external API calls (except optional AI features)
 
-3. **Terraform** - https://developer.hashicorp.com/terraform/downloads
-   
-   ```bash
-   # Verify installation
-   terraform version
-   # Must be v1.0.0 or higher
-   ```
+---
 
-## 2. Install TerraVision
+## Quick Start
 
-### Method 1: Quick Install in MacOS/Linux (For Casual Users - will install packages globally)
+### Prerequisites
+
+Before installing TerraVision, ensure you have:
+
+- **Python 3.10+** - [Download Python](https://www.python.org/downloads/)
+- **Terraform 1.x** - [Install Terraform](https://developer.hashicorp.com/terraform/downloads)
+- **Graphviz** - [Install Graphviz](https://graphviz.org/download/)
+- **Git** - [Install Git](https://git-scm.com/downloads)
+- **Ollama** (Optional - for local AI refinement) - [Install Ollama](https://ollama.ai/download)
+
+### Install TerraVision
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
 
-# Install Python dependencies
+# Install dependencies
 pip install -r requirements.txt
+```
 
-# Make script executable in Linux
+### Verify Terraform Setup
+
+Before generating diagrams, ensure Terraform is working:
+
+```bash
+# Verify Terraform is installed
+terraform version
+# Should show v1.0.0 or higher
+
+# Configure cloud provider credentials
+# AWS:
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+# Or: aws configure
+
+# Azure:
+export ARM_CLIENT_ID="your-client-id"
+export ARM_CLIENT_SECRET="your-client-secret"
+export ARM_TENANT_ID="your-tenant-id"
+export ARM_SUBSCRIPTION_ID="your-subscription-id"
+# Or: az login
+
+# GCP:
+export GOOGLE_CREDENTIALS="path/to/service-account-key.json"
+# Or: gcloud auth application-default login
+
+# Test Terraform can initialize and plan
+cd tests/fixtures/aws_terraform/static-website  # or azure_terraform/ or gcp_terraform/
+terraform init
+terraform plan
+# Should complete without errors
+cd -
+```
+
+**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for Terraform to validate resources, but TerraVision itself never accesses your cloud account.
+
+**Important for Terraform Enterprise Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
+
+### Try It Out!
+
+Generate your first diagram using our example Terraform code:
+
+```bash
+# Example 1: EKS cluster with managed nodes and OIDC
+./terravision.py draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
+
+# Example 2: Step Functions orchestrating multiple services
+./terravision.py draw --source tests/fixtures/aws_terraform/stepfunctions_multi_service --show
+
+# Example 3: SageMaker notebook in VPC with security
+./terravision.py draw --source tests/fixtures/aws_terraform/sagemaker_notebook_vpc --show
+
+# Example 4: From a public Git repository and only look at subfolder /aws/wordpress_fargate (note double slash)
+./terravision.py draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
+```
+
+**That's it!** Your diagram is saved as `architecture.png` and automatically opened.
+
+### Use Your Own Terraform Code
+
+```bash
+# Generate diagram from your Terraform directory
+./terravision.py draw --source /path/to/your/terraform/code
+```
+
+---
+
+## Installation
+
+### Method 1: Quick Install (Recommended for Users)
+
+**macOS/Linux:**
+
+```bash
+git clone https://github.com/patrickchugh/terravision.git
+cd terravision
+pip install -r requirements.txt
 chmod +x terravision.py
-
-# Create symbolic link without extension (Unix/Linux/macOS)
 ln -s $(pwd)/terravision.py $(pwd)/terravision
-
-# Add to PATH
 export PATH=$PATH:$(pwd)
 ```
 
-**For Windows:**
+**Windows:**
 
 ```powershell
-# Clone the repository
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
-
-# Install Python dependencies
 pip install -r requirements.txt
-
-# Create batch file wrapper
 echo @python "%~dp0terravision.py" %* > terravision.bat
-
-# Add current directory to PATH or copy terravision.bat to a directory in PATH
 copy terravision.bat C:\Windows\System32\
 ```
 
-### Method 2: Poetry Install (Recommended for Developers and Power Users)
+### Method 2: Poetry Install (Recommended for Developers)
 
 ```bash
-# MacOS or Linux users - Install Poetry if not already installed
+# Install Poetry
 curl -sSL https://install.python-poetry.org | python3 -
 
-# For Windows Users
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
-
-# Clone and install with Poetry
+# Install TerraVision
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
 poetry install
-
-# Activate virtual environment
 source $(poetry env info --path)/bin/activate
-
-# Create symbolic link without extension
-ln -s $(pwd)/terravision.py $(pwd)/terravision
-
-# Add current terravision directory to PATH
-export PATH=$PATH:$(pwd)
 ```
+
+**Detailed installation instructions**: See [docs/INSTALLATION.md](docs/INSTALLATION.md)
+
+---
 
 ## Basic Usage
 
-### Generate Architecture Diagram
+### Generate a Diagram
 
 ```bash
-# Basic usage - analyze current directory
-terravision draw
+# From local Terraform directory
+terravision draw --source ./terraform
 
-# Specify source directory
-terravision draw --source ~/src/my-terraform-code
+# From Git repository
+terravision draw --source https://github.com/user/repo.git
 
-# Use specific Terraform workspace
-terravision draw --source ~/src/my-terraform-code --workspace production
+# With custom output format
+terravision draw --source ./terraform --format svg --outfile my-architecture
 
-# Use variable files
-terravision draw --source ~/src/my-terraform-code --varfile prod.tfvars
-
-# Generate different formats
-terravision draw --source ~/src/my-terraform-code --format svg
-terravision draw --source ~/src/my-terraform-code --format pdf
-
-# Show diagram after generation
-terravision draw --source ~/src/my-terraform-code --show
-
-# Use AI backend for diagram refinement (default: bedrock)
-terravision draw --source ~/src/my-terraform-code --aibackend bedrock
-terravision draw --source ~/src/my-terraform-code --aibackend ollama
+# Open diagram automatically
+terravision draw --source ./terraform --show
 ```
 
-### Remote Git Repository Support
+### Common Options
 
-```bash
-# Analyze Git repository
-terravision draw --source https://github.com/your-repo/terraform-examples.git
-
-# Analyze specific subfolder in Git repo
-terravision draw --source https://github.com/your-repo/terraform-examples.git//aws/vpc
-```
+| Option        | Description                   | Example                    |
+| ------------- | ----------------------------- | -------------------------- |
+| `--source`    | Terraform code location       | `./terraform` or Git URL   |
+| `--format`    | Output format                 | `png`, `svg`, `pdf`, `bmp` |
+| `--outfile`   | Output filename               | `architecture` (default)   |
+| `--workspace` | Terraform workspace           | `production`, `staging`    |
+| `--varfile`   | Variable file                 | `prod.tfvars`              |
+| `--show`      | Open diagram after generation | (flag)                     |
+| `--debug`     | Enable debug output           | (flag)                     |
 
 ### Export Graph Data
 
 ```bash
 # Export resource relationships as JSON
-terravision graphdata --source ~/src/my-terraform-code
-
-# Show only unique services used
-terravision graphdata --source ~/src/my-terraform-code --show_services
-
-# Export to custom filename
-terravision graphdata --source ~/src/my-terraform-code --outfile my-resources.json
+terravision graphdata --source ./terraform --outfile resources.json
 ```
 
-## Advanced Features
+**More examples**: See [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)
 
-### Use with annotations
+---
 
-```bash
-# Add your own custom annotations such as labels, resources or new connections
-terravision draw --source https://github.com/your-repo/terraform-examples.git --annotate ./custom-annotations.yml
+## Documentation
+
+### For Users
+
+- **[Installation Guide](docs/INSTALLATION.md)** - Detailed setup instructions
+- **[Usage Guide](docs/USAGE_GUIDE.md)** - Commands, options, and examples
+- **[Annotations Guide](docs/ANNOTATIONS.md)** - Customize your diagrams
+- **[CI/CD Integration](docs/CICD_INTEGRATION.md)** - Automate diagram generation
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+### For Developers
+
+- **[Resource Handler Guide](docs/RESOURCE_HANDLER_GUIDE.md)** - Handler architecture
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[Developer Guide](docs/developer_guide.md)** - Development setup
+
+### Advanced Topics
+
+- **[AI-Powered Refinement](docs/AI_REFINEMENT.md)** - Using AI to improve diagrams
+- **[Performance Optimization](docs/PERFORMANCE.md)** - Tips for large projects
+
+---
+
+## Supported Cloud Providers
+
+| Provider         | Status             | Resources Supported |
+| ---------------- | ------------------ | ------------------- |
+| **AWS**          | ✅ Full Support     | 200+ services       |
+| **Google Cloud** | 🔄 Coming Soon     | Core services       |
+| **Azure**        | 🔄 Partial Support | Core services       |
+
+---
+
+## CI/CD Integration Example
+
+### Pipeline Workflow
+
+```mermaid
+graph LR
+    A["📝 Source Code<br/>Checked into Git"] --> B["🧪 Test"]
+    B --> C["🔨 Build/Deploy"]
+    C --> D["📊 Generate Diagrams<br/>TerraVision"]
+    D --> E["📚 Document"]
+
+    style A fill:#e1f5ff
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e9
+    style E fill:#fce4ec
 ```
-
-### Working with Pre-generated JSON from previous terravision run (faster)
-
-```bash
-# Export and reuse graph data
-terravision graphdata --source ~/src/terraform --outfile graph.json
-
-# Use previously exported JSON data (just the graph dict)
-terravision draw --source ./graph.json
-terravision draw --source ./graph.json --format svg
-
-# Reprocess and replay from previous debug (for troubleshooting without calling slow terraform init/plan/analayse again)
-terravision draw --source /your_source_files --debug  # createas a tfdata.json in current folder
-terravision draw --source tfdata.json
-```
-
-### Debug Mode
-
-```bash
-# Enable debug output for troubleshooting and which will dump all state info into tfdata.json
-terravision draw --source ~/src/my-terraform-code --debug
-```
-
-## AI-Powered Diagram Refinement
-
-TerraVision can use AI models to automatically refine and improve your architecture diagrams by fixing resource groupings, adding missing connections, and ensuring proper AWS architectural conventions.
-
-### Supported AI Backends
-
-#### AWS Bedrock (Default)
-
-Uses AWS Bedrock API via API Gateway for cloud-based AI refinement.
-
-```bash
-# Use Bedrock backend (default)
-terravision draw --source ~/src/my-terraform-code --aibackend bedrock
-```
-
-**Configuration:**
-Edit `modules/cloud_config.py` to set your Bedrock API endpoint:
-
-```python
-BEDROCK_API_ENDPOINT = "https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat"
-```
-
-#### Ollama (Local)
-
-Uses a local Ollama server for privacy-focused, offline AI refinement.
-
-```bash
-# Use Ollama backend
-terravision draw --source ~/src/my-terraform-code --aibackend ollama
-```
-
-**Setup:**
-
-1. Install Ollama from https://ollama.ai/download
-
-2. Start Ollama server and pull a model:
-   
-   ```bash
-   # Start Ollama (runs automatically on macOS/Linux after install)
-   ollama serve
-   
-   # Pull the llama3 model
-   ollama pull llama3
-   
-   # Set model to stay loaded longer (optional, prevents premature unloading)
-   # Default timeout is 5 minutes, extend to 1 hour:
-   export OLLAMA_KEEP_ALIVE=1h
-   ```
-
-3. Edit `modules/cloud_config.py` to set your Ollama server (default is localhost):
-   
-   ```python
-   OLLAMA_HOST = "http://localhost:11434"
-   ```
-
-### AI Refinement Prompts
-
-The AI models use specialized prompts defined in `modules/cloud_config.py`:
-
-- **AWS_REFINEMENT_PROMPT**: Guides the AI to fix resource groupings, connections, and ensure AWS best practices
-- **AWS_DOCUMENTATION_PROMPT**: Generates architecture summaries and documentation
-
-### Setting Up AWS Bedrock Backend
-
-TerraVision includes Terraform code to deploy a serverless AWS Bedrock proxy with API Gateway:
-
-```bash
-# Navigate to the Terraform directory
-cd ai-backend-terraform
-
-# Configure your settings
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your settings
-
-# Deploy the infrastructure
-terraform init
-terraform apply
-
-# Get your API endpoint
-terraform output api_endpoint
-```
-
-**Infrastructure Components:**
-
-- **API Gateway**: REST API with streaming support for real-time responses
-- **Lambda Function**: Node.js 20.x function with response streaming
-- **DynamoDB**: Rate limiting and usage tracking
-- **CloudWatch**: Monitoring, logging, and cost alerts
-- **IAM Roles**: Least-privilege access for Lambda to invoke Bedrock
-
-**Terraform Variables:**
-
-```hcl
-variable "bedrock_model_id" {
-  description = "Bedrock model ID"
-  type        = string
-}
-
-variable "rate_limit_per_hour" {
-  description = "Maximum requests per client per hour"
-  type        = number
-  default     = 100
-}
-
-variable "cost_alert_threshold" {
-  description = "Cost alert threshold in USD"
-  type        = number
-  default     = 50
-}
-```
-
-After deployment, update `modules/cloud_config.py` with the output endpoint:
-
-```python
-BEDROCK_API_ENDPOINT = "<your-api-endpoint-from-terraform-output>"
-```
-
-# Annotating generated diagrams
-
-No automatically generated diagram is going to have all the detail you need, at best it will get you 80-90% of the way there. To add custom annotations such as a main diagram title, additional labels on arrows or additional resources created outside your Terraform, include a `terravision.yml` file in the source code folder and it will be automatically loaded. Alternatively, specify a path to the annotations file as a parameter to terravision. 
-
-```bash
-terravision --source https://github.com/your-repo/terraform-examples.git --annotate /Users/me/MyDocuments/annotations.yml
-```
-
-The .yml file is a standard YAML configuration file that is similar to the example below with one or more headings called `title`, `connect`, `disconnect`, `add`, `remove` or `update`. The node names follow the same conventions as Terraform resource names https://registry.terraform.io/providers/hashicorp/aws/latest/docs and support wildcards. You can add a custom label to any TF resource by modifying the attributes of the resource and adding the `label` attribute (doesn't exist in Terraform). For lines/connections, you can modify the resource attributes by adding terravision specific `edge_labels` to add text to the connection line to a specific resource node. See the example below:
 
 ```yaml
-format: 0.1
-# Main Diagram heading
-title: Serverless Wordpress Site
-# Draw new connection lines that are not apparent from the Terraforms
-connect:
-  aws_rds_cluster.this:
-    - aws_ssm_parameter.db_master_user : Retrieve credentials from SSM
-# Remove connections between nodes that are currently shown
-disconnect:
-  # Wildcards mean these disconnections apply to any cloudwatch type resource called logs
-  aws_cloudwatch*.logs:
-    - aws_ecs_service.this
-    - aws_ecs_cluster.this
-# Delete the following nodes
-remove:
-  - aws_iam_role.task_execution_role
-# Add the following nodes
-add:
-  aws_subnet.another_one :
-    # Specify Terraform attributes for a resource like this 
-    cidr_block: "123.123.1.1"
-# Modify attributes of existing node
-update:
-  aws_ecs_service.this:
-    # Add custom labels to the connection lines that already exist between ECS->RDS
-    edge_labels:
-      - aws_rds_cluster.this: Database Queries
-  # Wildcards save you listing multiple resources of the same type. This edge label is added to all CF->ACM connections.
-  aws_cloudfront* :
-    edge_labels:
-      - aws_acm_certificate.this: SSL Cert
- # Add a custom label to a resource node. Overrides default label
-  aws_ecs_service.this :
-   label: "My Custom Label"
-```
-
-# Example Pipeline Configuration
-
-```yaml
-# .github/workflows/infrastructure-docs.yml
+# .github/workflows/architecture-diagrams.yml
 name: Update Architecture Diagrams
 
 on:
   push:
-    branches: [main, develop]
-    paths:
-      - '**.tf'
-      - '**.tfvars'
+    branches: [main]
+    paths: ['**.tf']
 
 jobs:
-  update-diagrams:
+  generate-diagrams:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: Install Graphviz
-        run: sudo apt-get install -y graphviz
-
-      - name: Install TerraVision
+      - name: Install Dependencies
         run: |
-          git clone https://github.com/patrickchugh/terravision.git
-          cd terravision
+          sudo apt-get install -y graphviz
           pip install -r requirements.txt
-
-      - name: Generate Architecture Diagrams
+      - name: Generate Diagrams
         run: |
-          terravision draw --source ./terraform --format svg --outfile architecture-${{ github.sha }}
-          terravision draw --source ./terraform --format png --outfile architecture-${{ github.sha }}
-
-      - name: Update Documentation Site
+          terravision draw --source ./terraform --format svg
+          terravision draw --source ./terraform --format png
+      - name: Commit Diagrams
         run: |
-          cp architecture-*.svg docs/images/
-          cp architecture-*.png docs/images/
-          # Update your docs (ReadTheDocs, MkDocs, etc.)
-
-      - name: Publish to Confluence
-        env:
-          CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
-        run: |
-          # Upload diagrams to Confluence page
-          curl -X PUT "https://your-domain.atlassian.net/wiki/rest/api/content/$PAGE_ID" \
-            -H "Authorization: Bearer $CONFLUENCE_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data @confluence-update.json
+          git config user.name "GitHub Actions"
+          git add docs/images/*.{svg,png}
+          git commit -m "Update architecture diagrams" || exit 0
+          git push
 ```
 
-## Command Reference
+**More CI/CD examples**: See [docs/CICD_INTEGRATION.md](docs/CICD_INTEGRATION.md)
 
-### Main Commands
+---
 
-#### `terravision draw`
+## Contributing
 
-Generates architecture diagrams from Terraform code.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-**Options:**
+- Code of conduct
+- Development setup
+- Pull request process
+- Coding standards
 
-- `--source` - Source location (folder, Git URL, or JSON file)
-- `--workspace` - Terraform workspace (default: "default")
-- `--varfile` - Path to .tfvars file (can be used multiple times)
-- `--outfile` - Output filename (default: "architecture")
-- `--format` - Output format: png, pdf, svg, bmp (default: png)
-- `--show` - Automatically open diagram after generation
-- `--simplified` - Generate simplified high-level diagram
-- `--annotate` - Path to custom annotations YAML file
-- `--aibackend` - AI backend for diagram refinement: bedrock, ollama (default: bedrock)
-- `--debug` - Enable debug output
+---
 
-#### `terravision graphdata`
+## Support
 
-Exports resource relationships and metadata as JSON.
+- **Issues**: [GitHub Issues](https://github.com/patrickchugh/terravision/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/patrickchugh/terravision/discussions)
+- **Documentation**: [docs/](docs/)
 
-**Options:**
+---
 
-- `--source` - Source location (folder, Git URL, or JSON file)
-- `--workspace` - Terraform workspace (default: "default")
-- `--varfile` - Path to .tfvars file (can be used multiple times)
-- `--outfile` - Output JSON filename (default: "architecture.json")
-- `--show_services` - Show only unique services list
-- `--annotate` - Path to custom annotations YAML file
-- `--aibackend` - AI backend for diagram refinement: bedrock, ollama
-- `--debug` - Enable debug output
+## License
 
-### Global Options
+Refer to LICENSE text file
 
-- `--version` - Show version information
-- `--help` - Show help message
+---
 
-## Supported File Types
+## Acknowledgments
 
-### Input Sources
+TerraVision uses:
 
-- **Terraform files** (`.tf`, `.tf.json`)
-- **Variable files** (`.tfvars`, `.tfvars.json`)
-- **Git repositories** (HTTPS URLs)
-- **Pre-generated JSON** (`.json` graph data)
-- **Annotation files** (`.yml`, `.yaml`)
-
-### Output Formats
-
-- **PNG** (default) - Raster image format
-- **SVG** - Scalable vector graphics
-- **PDF** - Portable document format
-- **BMP** - Bitmap image format
-- **JSON** - Graph data export
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"terraform command not found"**
-   
-   ```bash
-   # Verify Terraform installation
-   terraform version
-   # Should show v1.x.x
-   ```
-
-2. **"dot command not found"**
-   
-   ```bash
-   # Install Graphviz
-   brew install graphviz  # macOS
-   sudo apt-get install graphviz  # Ubuntu
-   ```
-
-3. **"Terraform version not supported"**
-   
-   - terravision requires Terraform v1.0.0 or higher
-   - Upgrade Terraform: https://developer.hashicorp.com/terraform/downloads
-
-4. **"No resources found"**
-   
-   - Ensure your Terraform code is valid
-   - Run `terraform plan` to verify configuration
-   - Check that source path contains `.tf` files
-
-5. **"Cannot reach Ollama server"**
-   
-   - Verify Ollama is running: `curl http://localhost:11434/api/tags`
-   - If server is unresponsive, kill existing processes:
-     
-     ```bash
-     lsof -ti:11434 | xargs kill -9
-     ollama serve
-     ```
-   - Ensure llama3 model is installed: `ollama pull llama3`
-
-6. **"Stale or cached module issues"**
-   
-   - Clear the terravision cache folder:
-     
-     ```bash
-     rm -rf ~/.terravision
-     ```
-   - This removes all cached modules and temporary files
-
-### Debug Mode
-
-Use `--debug` flag for detailed troubleshooting information:
-
-```bash
-terravision draw --source ~/src/terraform --debug
-```
-
-This will:
-
-- Show detailed processing steps
-- Export intermediate JSON files
-- Display full error traces
-- Show detailed intermediate variable information
-
-### Getting Help
-
-For detailed help on any command:
-
-```bash
-terravision --help
-terravision draw --help
-terravision graphdata --help
-```
-
-## Performance Tips
-
-1. **Large Terraform Projects**
-   
-   - Use `--simplified` for overview diagrams
-   - Export to JSON first, then generate multiple diagram variants
-   - Use specific workspaces to reduce scope
-
-2. **CI/CD Integration**
-   
-   ```bash
-   # Example CI pipeline step
-   terravision draw --source . --format svg --outfile architecture-${BUILD_NUMBER}
-   ```
-
-3. **Batch Processing**
-   
-   ```bash
-   # Generate multiple formats
-   for format in png svg pdf; do
-     terravision draw --source . --format $format --outfile arch-$format
-   done
-   ```
-
-## Version Information
-
-**Recent Updates:**
-
-- Enhanced cloud provider support
-- Improved JSON export capabilities
-- Better error handling and debugging
-- Performance optimizations for large projects
+- [Graphviz](https://graphviz.org/) for diagram rendering
+- [Terraform](https://www.terraform.io/) for infrastructure parsing
+- Cloud provider icons from official sources

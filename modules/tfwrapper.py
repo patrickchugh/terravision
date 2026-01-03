@@ -53,8 +53,13 @@ def tf_initplan(
     for sourceloc in source:
         # Handle local directory source
         if os.path.isdir(sourceloc):
-            os.chdir(sourceloc)
-            codepath = sourceloc
+            codepath = os.path.abspath(sourceloc)
+            # Copy override file to force local backend (ignores TFE remote state)
+            ovpath = os.path.join(basedir, "override.tf")
+            override_dest = os.path.join(codepath, "override.tf")
+            if not os.path.exists(override_dest):
+                shutil.copy(ovpath, override_dest)
+            os.chdir(codepath)
         # Handle Git repository source
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
@@ -75,6 +80,7 @@ def tf_initplan(
                 )
                 exit()
         click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
+        click.echo("  (Forcing local backend to generate full infrastructure plan)")
         # Initialize terraform with providers
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],
@@ -301,8 +307,30 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with initialized graph structures
     """
-    # Detect cloud provider and load appropriate config
-    detected_provider = provider_detector.get_primary_provider_or_default(tfdata)
+    # Detect cloud provider from tf_resources_created (early detection before all_resource exists)
+    detected_provider = None
+    if "tf_resources_created" in tfdata:
+        resource_addresses = [
+            obj["address"]
+            for obj in tfdata["tf_resources_created"]
+            if obj.get("mode") == "managed"
+        ]
+        provider_counts = {}
+        for resource_addr in resource_addresses:
+            provider = provider_detector.get_provider_for_resource(resource_addr)
+            if provider in provider_detector.SUPPORTED_PROVIDERS:
+                provider_counts[provider] = provider_counts.get(provider, 0) + 1
+
+        if provider_counts:
+            detected_provider = max(provider_counts, key=provider_counts.get)
+
+    if not detected_provider:
+        # Cannot detect provider at this stage - this is fatal
+        raise provider_detector.ProviderDetectionError(
+            "Could not detect cloud provider from Terraform plan. "
+            "Ensure your Terraform code contains cloud resources (aws_, azurerm_, google_, etc.)"
+        )
+
     cloud_config = config_loader.load_config(detected_provider)
     HIDDEN_NODES = getattr(cloud_config, f"{detected_provider.upper()}_HIDE_NODES", [])
     # Initialize graph data structures
@@ -396,8 +424,31 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
     Returns:
         Updated tfdata with populated graphdict connections
     """
-    # Detect cloud provider and load appropriate config
-    detected_provider = provider_detector.get_primary_provider_or_default(tfdata)
+    # Detect cloud provider from tf_resources_created (early detection before all_resource exists)
+    # At this stage, all_resource hasn't been populated yet, so we detect from terraform plan resources
+    detected_provider = None
+    if "tf_resources_created" in tfdata:
+        resource_addresses = [
+            obj["address"]
+            for obj in tfdata["tf_resources_created"]
+            if obj.get("mode") == "managed"
+        ]
+        provider_counts = {}
+        for resource_addr in resource_addresses:
+            provider = provider_detector.get_provider_for_resource(resource_addr)
+            if provider in provider_detector.SUPPORTED_PROVIDERS:
+                provider_counts[provider] = provider_counts.get(provider, 0) + 1
+
+        if provider_counts:
+            detected_provider = max(provider_counts, key=provider_counts.get)
+
+    if not detected_provider:
+        # Cannot detect provider at this stage - this is fatal
+        raise provider_detector.ProviderDetectionError(
+            "Could not detect cloud provider from Terraform plan. "
+            "Ensure your Terraform code contains cloud resources (aws_, azurerm_, google_, etc.)"
+        )
+
     cloud_config = config_loader.load_config(detected_provider)
     REVERSE_ARROW_LIST = getattr(
         cloud_config, f"{detected_provider.upper()}_REVERSE_ARROW_LIST", []

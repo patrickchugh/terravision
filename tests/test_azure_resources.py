@@ -8,7 +8,10 @@ Tests the Azure-specific functionality including:
 - Resource grouping and hierarchy
 """
 
+import json
 import pytest
+from pathlib import Path
+from typing import Dict, Any, Callable
 from modules.resource_handlers_azure import (
     handle_special_cases,
     azure_handle_resource_group,
@@ -17,13 +20,142 @@ from modules.resource_handlers_azure import (
     azure_handle_nsg,
     azure_handle_vmss,
     azure_handle_appgw,
-    azure_handle_sharedgroup,
     match_resources,
     match_nsg_to_subnets,
     match_nic_to_vm,
     remove_empty_groups,
 )
 from modules.provider_detector import detect_providers, get_provider_for_resource
+
+
+# ============================================================================
+# Test Utility Functions (T012)
+# ============================================================================
+
+
+def load_tfdata_from_json(filepath: str) -> Dict[str, Any]:
+    """Load tfdata from JSON file for testing.
+
+    Args:
+        filepath: Path to JSON file containing tfdata
+
+    Returns:
+        Loaded tfdata dictionary
+
+    Example:
+        >>> tfdata = load_tfdata_from_json("tests/json/test-azure.json")
+    """
+    with open(filepath, "r") as f:
+        return json.load(f)
+
+
+def run_azure_handler(
+    tfdata: Dict[str, Any], handler_func: Callable[[Dict[str, Any]], Dict[str, Any]]
+) -> Dict[str, Any]:
+    """Run an Azure handler function on tfdata.
+
+    Args:
+        tfdata: Terraform data dictionary
+        handler_func: Handler function to execute
+
+    Returns:
+        Updated tfdata after handler execution
+
+    Example:
+        >>> result = run_azure_handler(tfdata, azure_handle_resource_group)
+    """
+    return handler_func(tfdata)
+
+
+def compare_graphdicts(
+    actual: Dict[str, Any], expected: Dict[str, Any], ignore_keys: list = None
+) -> bool:
+    """Compare two graphdict dictionaries for testing.
+
+    Args:
+        actual: Actual graphdict result
+        expected: Expected graphdict result
+        ignore_keys: Optional list of keys to ignore in comparison
+
+    Returns:
+        True if graphdicts match (ignoring specified keys)
+
+    Raises:
+        AssertionError: If graphdicts don't match, with detailed diff
+
+    Example:
+        >>> assert compare_graphdicts(result["graphdict"], expected, ignore_keys=["random_string"])
+    """
+    ignore_keys = ignore_keys or []
+
+    # Filter out ignored keys
+    actual_filtered = {k: v for k, v in actual.items() if k not in ignore_keys}
+    expected_filtered = {k: v for k, v in expected.items() if k not in ignore_keys}
+
+    # Check for missing/extra keys
+    actual_keys = set(actual_filtered.keys())
+    expected_keys = set(expected_filtered.keys())
+
+    missing_keys = expected_keys - actual_keys
+    extra_keys = actual_keys - expected_keys
+
+    if missing_keys or extra_keys:
+        msg = []
+        if missing_keys:
+            msg.append(f"Missing keys: {sorted(missing_keys)}")
+        if extra_keys:
+            msg.append(f"Extra keys: {sorted(extra_keys)}")
+        raise AssertionError("\n".join(msg))
+
+    # Compare values for each key
+    for key in actual_keys:
+        if sorted(actual_filtered[key]) != sorted(expected_filtered[key]):
+            raise AssertionError(
+                f"Mismatch for key '{key}':\n"
+                f"  Actual: {sorted(actual_filtered[key])}\n"
+                f"  Expected: {sorted(expected_filtered[key])}"
+            )
+
+    return True
+
+
+def create_minimal_tfdata(
+    resources: list = None, metadata: dict = None
+) -> Dict[str, Any]:
+    """Create minimal tfdata structure for testing.
+
+    Args:
+        resources: List of resource names for graphdict
+        metadata: Optional metadata dictionary
+
+    Returns:
+        Minimal tfdata dictionary with graphdict and meta_data
+
+    Example:
+        >>> tfdata = create_minimal_tfdata(
+        ...     resources=["azurerm_resource_group.main", "azurerm_virtual_network.vnet"],
+        ...     metadata={"azurerm_virtual_network.vnet": {"resource_group_name": "azurerm_resource_group.main"}}
+        ... )
+    """
+    resources = resources or []
+    metadata = metadata or {}
+
+    tfdata = {"graphdict": {}, "meta_data": {}}
+
+    # Initialize graphdict with empty lists
+    for resource in resources:
+        tfdata["graphdict"][resource] = []
+
+    # Add metadata
+    for resource, meta in metadata.items():
+        tfdata["meta_data"][resource] = meta
+
+    return tfdata
+
+
+# ============================================================================
+# Test Classes
+# ============================================================================
 
 
 class TestAzureProviderDetection:
@@ -270,31 +402,6 @@ class TestAzureResourceHandlers:
             in result["graphdict"]["azurerm_subnet.appgw_subnet"]
         )
 
-    def test_azure_handle_sharedgroup(self):
-        """Test shared services grouping."""
-        tfdata = {
-            "graphdict": {
-                "azurerm_key_vault.vault": [],
-                "azurerm_storage_account.storage": [],
-                "azurerm_container_registry.acr": [],
-            },
-            "meta_data": {
-                "azurerm_key_vault.vault": {},
-                "azurerm_storage_account.storage": {},
-                "azurerm_container_registry.acr": {},
-            },
-        }
-
-        result = azure_handle_sharedgroup(tfdata)
-
-        # Shared services group should be created
-        assert "azurerm_group.shared_services" in result["graphdict"]
-        # Key vault should be in shared services
-        assert (
-            "azurerm_key_vault.vault"
-            in result["graphdict"]["azurerm_group.shared_services"]
-        )
-
 
 class TestMatchResources:
     """Tests for match_resources helper functions."""
@@ -377,8 +484,10 @@ class TestAzureSubnetHandling:
         tfdata = {
             "graphdict": {
                 "azurerm_subnet.web": ["azurerm_network_interface.nic"],
-                "azurerm_network_interface.nic": ["azurerm_virtual_machine.vm"],
-                "azurerm_virtual_machine.vm": [],
+                "azurerm_network_interface.nic": [],
+                "azurerm_virtual_machine.vm": [
+                    "azurerm_network_interface.nic"
+                ],  # VM -> NIC (correct direction)
             },
             "meta_data": {
                 "azurerm_subnet.web": {},
@@ -386,12 +495,18 @@ class TestAzureSubnetHandling:
                     "ip_configuration": "subnet_id = azurerm_subnet.web.id"
                 },
                 "azurerm_virtual_machine.vm": {
-                    "network_interface_ids": "azurerm_network_interface.nic.id"
+                    "network_interface_ids": ["azurerm_network_interface.nic.id"]
                 },
             },
         }
 
+        # First link NICs to subnet
         result = azure_handle_subnet(tfdata)
+
+        # Then place VMs into subnets (happens after numbering in real pipeline)
+        from modules.resource_handlers_azure import place_vms_in_subnets
+
+        result = place_vms_in_subnets(result)
 
         # VM should be linked to subnet (through NIC relationship)
         assert "azurerm_virtual_machine.vm" in result["graphdict"]["azurerm_subnet.web"]

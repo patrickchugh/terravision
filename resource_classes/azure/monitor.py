@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Monitor(_Azure):
     _type = "monitor"
-    _icon_dir = "resources/azure/monitor"
+    _icon_dir = "resource_images/azure/monitor"
 
 
 class ActivityLog(_Monitor):

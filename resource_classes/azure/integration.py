@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Integration(_Azure):
     _type = "integration"
-    _icon_dir = "resources/azure/integration"
+    _icon_dir = "resource_images/azure/integration"
 
 
 class APIConnections(_Integration):

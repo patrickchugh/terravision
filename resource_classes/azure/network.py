@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Network(_Azure):
     _type = "network"
-    _icon_dir = "resources/azure/network"
+    _icon_dir = "resource_images/azure/network"
 
 
 class ApplicationGateway(_Network):
@@ -135,7 +135,6 @@ azurerm_frontdoor = FrontDoors
 azurerm_lb = LoadBalancers
 azurerm_local_network_gateway = LocalNetworkGateways
 azurerm_network_interface = NetworkInterfaces
-# Note: azurerm_network_security_group alias is defined in groups.py as a Cluster class
 azurerm_network_watcher = NetworkWatcher
 azurerm_private_endpoint = PrivateEndpoint
 azurerm_public_ip = PublicIpAddresses
@@ -147,3 +146,4 @@ azurerm_virtual_network_gateway = VirtualNetworkGateways
 # Note: azurerm_virtual_network alias is defined in groups.py as a Cluster class
 azurerm_virtual_wan = VirtualWans
 azurerm_vpn_gateway = VirtualNetworkGateways
+azurerm_network_security_group = NetworkSecurityGroupsClassic

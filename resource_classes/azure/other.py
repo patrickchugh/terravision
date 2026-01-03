@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Other(_Azure):
     _type = "other"
-    _icon_dir = "resources/azure/other"
+    _icon_dir = "resource_images/azure/other"
 
 
 class AadLicenses(_Other):

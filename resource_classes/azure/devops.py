@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Devops(_Azure):
     _type = "devops"
-    _icon_dir = "resources/azure/devops"
+    _icon_dir = "resource_images/azure/devops"
 
 
 class APIConnections(_Devops):

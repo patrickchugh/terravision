@@ -1,0 +1,20 @@
+{
+    "azure_group.shared_services": [],
+    "azurerm_linux_virtual_machine.main": [],
+    "azurerm_linux_virtual_machine_scale_set.main~1": [],
+    "azurerm_linux_virtual_machine_scale_set.main~2": [],
+    "azurerm_linux_virtual_machine_scale_set.main~3": [],
+    "azurerm_network_security_group.main": [],
+    "azurerm_resource_group.main": [
+        "azurerm_network_security_group.main",
+        "azurerm_virtual_network.main"
+    ],
+    "azurerm_subnet.main": [
+        "azurerm_linux_virtual_machine_scale_set.main~1",
+        "azurerm_linux_virtual_machine_scale_set.main~2",
+        "azurerm_linux_virtual_machine_scale_set.main~3"
+    ],
+    "azurerm_virtual_network.main": [
+        "azurerm_subnet.main"
+    ]
+}

@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Iot(_Azure):
     _type = "iot"
-    _icon_dir = "resources/azure/iot"
+    _icon_dir = "resource_images/azure/iot"
 
 
 class AzureCosmosDb(_Iot):

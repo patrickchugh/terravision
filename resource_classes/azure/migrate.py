@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Migrate(_Azure):
     _type = "migrate"
-    _icon_dir = "resources/azure/migrate"
+    _icon_dir = "resource_images/azure/migrate"
 
 
 class AzureDataboxGateway(_Migrate):

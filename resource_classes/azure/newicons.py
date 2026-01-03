@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Newicons(_Azure):
     _type = "newicons"
-    _icon_dir = "resources/azure/newicons"
+    _icon_dir = "resource_images/azure/newicons"
 
 
 class AzureSustainability(_Newicons):

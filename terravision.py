@@ -55,7 +55,10 @@ def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) 
         exc_value: Exception instance
         exc_traceback: Traceback object
     """
-    print(f"Unhandled error: {exc_type}, {exc_value}, {exc_traceback}")
+    import traceback
+
+    print(f"Unhandled error: {exc_type}, {exc_value}")
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
 
 
 def _show_banner() -> None:

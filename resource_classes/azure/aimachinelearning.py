@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Aimachinelearning(_Azure):
     _type = "aimachinelearning"
-    _icon_dir = "resources/azure/aimachinelearning"
+    _icon_dir = "resource_images/azure/aimachinelearning"
 
 
 class AIStudio(_Aimachinelearning):
