@@ -66,3 +66,4 @@ ai-backend-terraform/lambda/node_modules/*
 .claude/
 specs/
 CLAUDE.md
+compare_branches.sh
