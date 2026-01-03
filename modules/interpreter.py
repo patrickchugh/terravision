@@ -249,7 +249,11 @@ def replace_local_values(
 
 
 def replace_module_vars(
-    found_list: List[str], value: str, module: str, tfdata: Dict[str, Any]
+    found_list: List[str],
+    value: str,
+    module: str,
+    tfdata: Dict[str, Any],
+    recursion_depth: int = 0,
 ) -> str:
     """Replace module output references with actual values.
 
@@ -258,6 +262,7 @@ def replace_module_vars(
         value: String containing module references
         module: Current module name
         tfdata: Terraform data dictionary
+        recursion_depth: Current recursion depth to prevent infinite loops
 
     Returns:
         String with module variables resolved
@@ -310,7 +315,9 @@ def replace_module_vars(
                                 or "var." in i[outputname]["value"]
                                 or "local." in i[outputname]["value"]
                             ):
-                                value = find_replace_values(value, mod, tfdata)
+                                value = find_replace_values(
+                                    value, mod, tfdata, recursion_depth + 1
+                                )
                                 continue
                             else:
                                 # Direct replacement with output value
@@ -451,17 +458,27 @@ def replace_var_values(
     return value
 
 
-def find_replace_values(varstring: str, module: str, tfdata: Dict[str, Any]) -> str:
+def find_replace_values(
+    varstring: str, module: str, tfdata: Dict[str, Any], recursion_depth: int = 0
+) -> str:
     """Find and replace all variable types in a string.
 
     Args:
         varstring: String containing variable references
         module: Module name for variable lookup
         tfdata: Terraform data dictionary
+        recursion_depth: Current recursion depth to prevent infinite loops
 
     Returns:
         String with all variables resolved
     """
+    # Check for infinite loop - prevent excessive recursion
+    if recursion_depth >= 50:
+        click.echo(
+            f"   WARNING: Cannot resolve variable after 50 iterations: {varstring}"
+        )
+        return varstring
+
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
     # Find all variable types using regex patterns
@@ -474,7 +491,9 @@ def find_replace_values(varstring: str, module: str, tfdata: Dict[str, Any]) -> 
     ]
     # Replace found variable strings with actual values in order
     value = replace_data_values(data_found_list, value, tfdata)
-    value = replace_module_vars(modulevar_found_list, value, module, tfdata)
+    value = replace_module_vars(
+        modulevar_found_list, value, module, tfdata, recursion_depth
+    )
     value = replace_var_values(
         var_found_list, varobject_found_list, value, module, tfdata
     )
@@ -714,7 +733,13 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
                 omd.update(md)
-                # Clean up metadata by removing empty or True values which add no info and clutter metadata
+                # Replace True values with original Terraform source expressions
+                # True indicates "known after apply" - preserve the original HCL expression
+                for k, v in list(omd.items()):
+                    if v is True and k in md and md[k] is not True:
+                        # Use the original HCL expression from all_resource
+                        omd[k] = md[k]
+                # Clean up metadata by removing empty values which add no info and clutter metadata
                 omd = {
                     k: v
                     for k, v in omd.items()
