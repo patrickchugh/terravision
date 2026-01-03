@@ -477,7 +477,7 @@ def find_replace_values(
         click.echo(
             f"   WARNING: Cannot resolve variable after 50 iterations: {varstring}"
         )
-        return varstring
+        return "UNKNOWN"
 
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
