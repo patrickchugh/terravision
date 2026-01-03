@@ -395,6 +395,43 @@ def ok_to_connect(origin: str, destination: str) -> bool:
     return True
 
 
+def create_cluster_label_node(cluster_obj: Cluster) -> None:
+    """Create a label node for clusters that have label metadata.
+
+    Generates HTML table labels with optional icons and adds special
+    attributes for gvpr positioning.
+
+    Args:
+        cluster_obj: Cluster object with label_text attribute
+    """
+    if not hasattr(cluster_obj, "label_text"):
+        return
+
+    # Build HTML table label with icon and text (or just text if no icon)
+    if hasattr(cluster_obj, "label_icon") and cluster_obj.label_icon is not None:
+        icon_first = getattr(cluster_obj, "label_icon_first", True)
+        if icon_first:
+            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{cluster_obj.label_icon}"/></TD><TD>{cluster_obj.label_text}</TD></TR></TABLE>>'
+        else:
+            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD>{cluster_obj.label_text}</TD><TD><img src="{cluster_obj.label_icon}"/></TD></TR></TABLE>>'
+    else:
+        label_html = cluster_obj.label_text
+
+    # Create label node with special attributes for gvpr positioning
+    label_node_id = f"_label_{cluster_obj.dot.name}"
+    cluster_type = cluster_obj.__class__.__name__
+    cluster_obj.dot.node(
+        label_node_id,
+        label=label_html,
+        shape="plaintext",
+        pin="true",
+        _clusterlabel="1",
+        _clusterid=cluster_obj.dot.name,
+        _clustertype=cluster_type,
+        _labelposition=cluster_obj.label_position,
+    )
+
+
 def handle_group(
     inGroup: Cluster,
     cloudGroup: Cluster,
@@ -431,35 +468,8 @@ def handle_group(
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
 
-    # Create separate label node for Azure clusters that have label metadata
-    if hasattr(newGroup, "label_text"):
-        # Build HTML table label with icon and text (or just text if no icon)
-        if hasattr(newGroup, "label_icon") and newGroup.label_icon is not None:
-            # Label with icon
-            icon_first = getattr(newGroup, "label_icon_first", True)
-            if icon_first:
-                label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{newGroup.label_icon}"/></TD><TD>{newGroup.label_text}</TD></TR></TABLE>>'
-            else:
-                label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD>{newGroup.label_text}</TD><TD><img src="{newGroup.label_icon}"/></TD></TR></TABLE>>'
-        else:
-            # Label without icon (just text)
-            label_html = newGroup.label_text
-
-        # Create label node with special attributes for gvpr positioning
-        label_node_id = f"_label_{newGroup.dot.name}"
-        cluster_type = (
-            newGroup.__class__.__name__
-        )  # Get cluster class name (ResourceGroupCluster, SubnetGroup, etc.)
-        newGroup.dot.node(
-            label_node_id,
-            label=label_html,
-            shape="plaintext",
-            pin="true",  # Prevent neato from repositioning
-            _clusterlabel="1",
-            _clusterid=newGroup.dot.name,
-            _clustertype=cluster_type,
-            _labelposition=newGroup.label_position,
-        )
+    # Create separate label node for clusters that have label metadata
+    create_cluster_label_node(newGroup)
 
     # Add child nodes and subgroups
     if tfdata["graphdict"].get(resource):
@@ -746,32 +756,7 @@ def render_diagram(
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
     # Create label node for cloud group if it has label metadata
-    if hasattr(cloudGroup, "label_text"):
-        # Build HTML table label with icon and text (or just text if no icon)
-        if hasattr(cloudGroup, "label_icon") and cloudGroup.label_icon is not None:
-            # Label with icon
-            icon_first = getattr(cloudGroup, "label_icon_first", True)
-            if icon_first:
-                label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{cloudGroup.label_icon}"/></TD><TD>{cloudGroup.label_text}</TD></TR></TABLE>>'
-            else:
-                label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD>{cloudGroup.label_text}</TD><TD><img src="{cloudGroup.label_icon}"/></TD></TR></TABLE>>'
-        else:
-            # Label without icon (just text)
-            label_html = cloudGroup.label_text
-
-        # Create label node with special attributes for gvpr positioning
-        label_node_id = f"_label_{cloudGroup.dot.name}"
-        cluster_type = cloudGroup.__class__.__name__
-        cloudGroup.dot.node(
-            label_node_id,
-            label=label_html,
-            shape="plaintext",
-            pin="true",
-            _clusterlabel="1",
-            _clusterid=cloudGroup.dot.name,
-            _clustertype=cluster_type,
-            _labelposition=cloudGroup.label_position,
-        )
+    create_cluster_label_node(cloudGroup)
 
     # Add cloud group to main canvas
     myDiagram.subgraph(cloudGroup.dot)

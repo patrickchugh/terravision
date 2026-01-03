@@ -55,28 +55,6 @@ def _get_provider_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# DEPRECATED: Module-level AWS defaults removed to prevent hidden AWS assumptions
-# These constants are NO LONGER available at module level.
-# All functions MUST receive tfdata and use _get_provider_config_constants(tfdata)
-# to load provider-specific constants dynamically.
-#
-# DO NOT re-enable these defaults - they caused bugs where Azure/GCP resources
-# were processed with AWS config because provider detection wasn't run early enough.
-#
-# If you need provider-specific constants, use:
-#   config_constants = helpers._get_provider_config_constants(tfdata)
-#   reverse_arrow_list = config_constants["REVERSE_ARROW_LIST"]
-#
-# _defaults = _get_aws_defaults()  # REMOVED
-# REVERSE_ARROW_LIST = _defaults["REVERSE_ARROW_LIST"]  # REMOVED
-# IMPLIED_CONNECTIONS = _defaults["IMPLIED_CONNECTIONS"]  # REMOVED
-# GROUP_NODES = _defaults["GROUP_NODES"]  # REMOVED
-# CONSOLIDATED_NODES = _defaults["CONSOLIDATED_NODES"]  # REMOVED
-# NODE_VARIANTS = _defaults["NODE_VARIANTS"]  # REMOVED
-# SPECIAL_RESOURCES = _defaults["SPECIAL_RESOURCES"]  # REMOVED
-# ACRONYMS_LIST = _defaults["ACRONYMS_LIST"]  # REMOVED
-# NAME_REPLACEMENTS = _defaults["NAME_REPLACEMENTS"]  # REMOVED
-
 # List of dictionary sections to output in log
 output_sections = ["locals", "module", "resource", "data", "output"]
 
@@ -530,6 +508,7 @@ def pretty_name(name: str, show_title=True) -> str:
 
     name = get_no_module_no_number_name(name)
     name = name.split("~", 1)[0]
+    name = name.replace("-", "_")
 
     m = re.match(r"^([a-z0-9_]+)(?:\.([a-z0-9_]+))?$", name)
     if not m:

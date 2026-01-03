@@ -67,3 +67,4 @@ ai-backend-terraform/lambda/node_modules/*
 specs/
 CLAUDE.md
 architecture-azure.dot.png
+compare_branches.sh
