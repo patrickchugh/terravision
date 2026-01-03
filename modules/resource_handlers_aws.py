@@ -1625,8 +1625,10 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with resources matched
     """
-    # Match AZs to subnets by suffix
-    tfdata["graphdict"] = match_az_to_subnets(tfdata["graphdict"])
+    # NOTE: match_az_to_subnets was removed - the modern config-driven subnet
+    # handler (insert_intermediate_node) already correctly places subnets in AZ
+    # nodes based on availability_zone metadata, not suffix matching.
+
     # Match security groups to subnets by suffix
     tfdata["graphdict"] = match_sg_to_subnets(tfdata["graphdict"])
     # Link EC2 instances to IAM roles
@@ -1806,57 +1808,6 @@ def link_sqs_queue_policy(terraform_data: Dict[str, List[str]]) -> Dict[str, Lis
                 sqs_queue = policy_to_queue[dep]
                 if sqs_queue not in result[resource]:
                     result[resource].append(sqs_queue)
-    return result
-
-
-def match_az_to_subnets(terraform_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
-    """Match availability zones to subnets by suffix pattern.
-
-    Args:
-        terraform_data: Resource graph dictionary
-
-    Returns:
-        Updated graph with AZ-subnet matches
-    """
-    result = dict(terraform_data)
-
-    # Pattern to extract suffix from resource names
-    suffix_pattern = r"~(\d+)$"
-
-    # Find all availability zone resources
-    az_resources = sorted(
-        [
-            key
-            for key in terraform_data.keys()
-            if key.startswith("aws_az.availability_zone")
-        ]
-    )
-
-    # Match each AZ to subnets with same suffix
-    for az in az_resources:
-        # Extract numeric suffix from AZ name
-        az_match = re.search(suffix_pattern, az)
-        if not az_match:
-            continue
-
-        az_suffix = az_match.group(1)
-
-        # Get all dependencies of this AZ
-        az_dependencies = terraform_data.get(az, [])
-
-        # Filter subnets with matching suffix
-        matched_subnets = []
-        for dep in az_dependencies:
-            if "subnet" in dep.lower():
-                dep_match = re.search(suffix_pattern, dep)
-                if dep_match and dep_match.group(1) == az_suffix:
-                    matched_subnets.append(dep)
-
-        # Update AZ with matched subnets if found, otherwise preserve original
-        if matched_subnets:
-            result[az] = matched_subnets
-        # Otherwise keep the original dependencies (don't replace with empty list)
-
     return result
 
 
