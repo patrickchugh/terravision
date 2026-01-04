@@ -236,9 +236,14 @@ def compile_tfdata(
                 )
             )
         except Exception as e:
-            pass
-            # # If detection fails, default to AWS (backward compatibility)
-            # click.echo(f"Warning: Provider detection failed ({e}), defaulting to AWS")
+            click.echo(
+                click.style(
+                    f"\nERROR: Failed to detect cloud provider: {e}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            sys.exit()
 
     if "all_resource" in tfdata:
         _print_graph_debug(tfdata["graphdict"], "Terraform JSON graph dictionary")
@@ -730,10 +735,14 @@ def graphdata(
     click.echo("\nCompleted!")
 
 
-if __name__ == "__main__":
+def main():
     cli(
         default_map={
             "draw": {"avl_classes": dir()},
             "graphdata": {"avl_classes": dir()},
         }
     )
+
+
+if __name__ == "__main__":
+    main()

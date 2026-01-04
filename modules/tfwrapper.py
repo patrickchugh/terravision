@@ -66,7 +66,9 @@ def tf_initplan(
             codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
             # Copy override file to cloned directory
             ovpath = os.path.join(basedir, "override.tf")
-            shutil.copy(ovpath, codepath)
+            override_dest = os.path.join(codepath, "override.tf")
+            if not os.path.exists(override_dest):
+                shutil.copy(ovpath, override_dest)
             os.chdir(codepath)
             codepath = [codepath]
             # Verify files were cloned
@@ -180,6 +182,8 @@ def tf_initplan(
         click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
         # Convert binary plan to JSON format
         if os.path.exists(tfplan_path):
+            if os.path.exists(override_dest):
+                os.remove(override_dest)
             with open(tfplan_json_path, "w") as f:
                 result = subprocess.run(
                     ["terraform", "show", "-json", tfplan_path],
