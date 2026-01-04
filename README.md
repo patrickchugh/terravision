@@ -94,12 +94,7 @@ Before installing TerraVision, ensure you have:
 ### Install TerraVision
 
 ```bash
-# Clone repository
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-
-# Install dependencies
-pip install -r requirements.txt
+pip install terravision
 ```
 
 ### Verify Terraform Setup
@@ -129,16 +124,16 @@ export GOOGLE_CREDENTIALS="path/to/service-account-key.json"
 # Or: gcloud auth application-default login
 
 # Test Terraform can initialize and plan
-cd tests/fixtures/aws_terraform/static-website  # or azure_terraform/ or gcp_terraform/
+cd tests/fixtures/aws_terraform/static-website  # or azure_terraform/test_vm_vmss
 terraform init
 terraform plan
 # Should complete without errors
 cd -
 ```
 
-**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for Terraform to validate resources, but TerraVision itself never accesses your cloud account.
+**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for TERRAFORM to validate resources and resolve functions, but TerraVision itself never accesses your cloud account.
 
-**Important for Terraform Enterprise Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
+**Important for Terraform Enterprise and Remote Backend Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
 
 ### Try It Out!
 
@@ -148,13 +143,10 @@ Generate your first diagram using our example Terraform code:
 # Example 1: EKS cluster with managed nodes and OIDC
 ./terravision.py draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
 
-# Example 2: Step Functions orchestrating multiple services
-./terravision.py draw --source tests/fixtures/aws_terraform/stepfunctions_multi_service --show
+# Example 2: Azure VM stack set
+./terravision.py draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
 
-# Example 3: SageMaker notebook in VPC with security
-./terravision.py draw --source tests/fixtures/aws_terraform/sagemaker_notebook_vpc --show
-
-# Example 4: From a public Git repository and only look at subfolder /aws/wordpress_fargate (note double slash)
+# Example 3: From a public Git repository and only look at subfolder /aws/wordpress_fargate (note double slash)
 ./terravision.py draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
 ```
 
@@ -169,43 +161,7 @@ Generate your first diagram using our example Terraform code:
 
 ---
 
-## Installation
-
-### Method 1: Quick Install (Recommended for Users)
-
-**macOS/Linux:**
-
-```bash
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-pip install -r requirements.txt
-chmod +x terravision.py
-ln -s $(pwd)/terravision.py $(pwd)/terravision
-export PATH=$PATH:$(pwd)
-```
-
-**Windows:**
-
-```powershell
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-pip install -r requirements.txt
-echo @python "%~dp0terravision.py" %* > terravision.bat
-copy terravision.bat C:\Windows\System32\
-```
-
-### Method 2: Poetry Install (Recommended for Developers)
-
-```bash
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Install TerraVision
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-poetry install
-source $(poetry env info --path)/bin/activate
-```
+## Installation for Developers / Power Users
 
 **Detailed installation instructions**: See [docs/INSTALLATION.md](docs/INSTALLATION.md)
 
@@ -279,8 +235,8 @@ terravision graphdata --source ./terraform --outfile resources.json
 
 | Provider         | Status             | Resources Supported |
 | ---------------- | ------------------ | ------------------- |
-| **AWS**          | ✅ Full Support     | 200+ services       |
-| **Google Cloud** | 🔄 Coming Soon     | Core services       |
+| **AWS**          | ✅ Full Support    | 200+ services       |
+| **Google Cloud** | 🔄 Coming Soon     | None                |
 | **Azure**        | 🔄 Partial Support | Core services       |
 
 ---
