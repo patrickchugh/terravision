@@ -25,7 +25,12 @@ dependencies = [
 terravision = "terravision:main"
 
 [tool.poetry]
+name = "terravision"
 version = "0.9.6"
+description = "Terraform Architecture Visualizer"
+authors = ["Patrick Chugh <terravisionapp@gmail.com>"]
+license = "AGPL-3.0-only"
+readme = "README.md"
 exclude = []
 packages = [
     { include = "modules" },
