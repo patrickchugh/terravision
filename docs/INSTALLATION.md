@@ -144,7 +144,8 @@ cd terravision
 poetry install
 
 # Activate virtual environment
-poetry shell
+eval $(poetry env activate)
+terravision
 
 # Or use poetry run for individual commands
 poetry run terravision --version

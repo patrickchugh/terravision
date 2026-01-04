@@ -334,6 +334,7 @@ terravision/
 │   │   ├── cloud_config_azure.py
 │   │   └── cloud_config_gcp.py
 │   ├── resource_handlers_*.py  # Provider resource handlers
+│   ├── resource_transformers.py  # Reusable Core graph transformers for all providers
 │   ├── provider_detector.py    # Provider detection logic
 │   ├── config_loader.py        # Dynamic config loading
 │   ├── graphmaker.py           # Core graph construction

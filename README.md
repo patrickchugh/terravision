@@ -141,13 +141,13 @@ Generate your first diagram using our example Terraform code:
 
 ```bash
 # Example 1: EKS cluster with managed nodes and OIDC
-./terravision.py draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
+terravision draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
 
 # Example 2: Azure VM stack set
-./terravision.py draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
+terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
 
 # Example 3: From a public Git repository and only look at subfolder /aws/wordpress_fargate (note double slash)
-./terravision.py draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
+terravision draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
 ```
 
 **That's it!** Your diagram is saved as `architecture.png` and automatically opened.
@@ -156,8 +156,15 @@ Generate your first diagram using our example Terraform code:
 
 ```bash
 # Generate diagram from your Terraform directory
-./terravision.py draw --source /path/to/your/terraform/code
+terravision draw --source /path/to/your/terraform/code
 ```
+
+### Use TerraVision simply as a drawing engine with a simple JSON dict
+```bash
+# Generate diagram from a simple JSON file
+terravision draw --source tests/json/bastion-expected.json
+```
+
 
 ---
 
@@ -299,7 +306,7 @@ jobs:
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+We welcome contributions! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
 
 - Code of conduct
 - Development setup
