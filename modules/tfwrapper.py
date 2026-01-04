@@ -182,8 +182,6 @@ def tf_initplan(
         click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
         # Convert binary plan to JSON format
         if os.path.exists(tfplan_path):
-            if os.path.exists(override_dest):
-                os.remove(override_dest)
             with open(tfplan_json_path, "w") as f:
                 result = subprocess.run(
                     ["terraform", "show", "-json", tfplan_path],
@@ -204,6 +202,9 @@ def tf_initplan(
                         stderr=None if debug else subprocess.PIPE,
                         text=True,
                     )
+                # Remove override.tf after all terraform commands complete
+                if os.path.exists(override_dest):
+                    os.remove(override_dest)
                 tfdata["plandata"] = dict(plandata)
                 click.echo(
                     click.style(
