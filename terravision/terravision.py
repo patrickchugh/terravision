@@ -21,17 +21,16 @@ import modules.tfwrapper as tfwrapper
 import modules.resource_handlers as resource_handlers
 from modules.config_loader import load_config
 from modules.provider_detector import detect_providers, get_primary_provider_or_default
+from importlib.metadata import version
 
+# def _get_version() -> str:
+# """Read version from pyproject.toml."""
+# pyproject_path = Path(__file__).parent / "pyproject.toml"
+# with open(pyproject_path, "rb") as f:
+#     pyproject = tomli.load(f)
+# return pyproject["tool"]["poetry"]["version"]
 
-def _get_version() -> str:
-    """Read version from pyproject.toml."""
-    pyproject_path = Path(__file__).parent / "pyproject.toml"
-    with open(pyproject_path, "rb") as f:
-        pyproject = tomli.load(f)
-    return pyproject["tool"]["poetry"]["version"]
-
-
-__version__ = _get_version()
+__version__ = version("terravision")
 
 
 def _get_provider_config(tfdata: Dict[str, Any]) -> Any:
