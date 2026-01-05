@@ -947,7 +947,12 @@ def insert_intermediate_node(
         # Create intermediate node if needed
         if create_if_missing and intermediate not in tfdata["graphdict"]:
             tfdata["graphdict"][intermediate] = []
-            tfdata["meta_data"][intermediate] = copy.deepcopy(child_metadata)
+            # Copy metadata but exclude count-related attributes that would trigger numbering
+            intermediate_metadata = copy.deepcopy(child_metadata)
+            # Remove attributes that trigger create_multiple_resources
+            for attr in ["count", "desired_count", "max_capacity", "for_each"]:
+                intermediate_metadata.pop(attr, None)
+            tfdata["meta_data"][intermediate] = intermediate_metadata
 
         # Rewire connections: parent→child becomes parent→intermediate→child
         for parent in child_parents:
