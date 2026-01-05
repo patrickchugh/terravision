@@ -102,7 +102,7 @@ Before installing TerraVision, ensure you have:
 ### Install TerraVision
 
 ```bash
-pip install terravision
+pipx install terravision # only if in a virtual env, you can use pip install terravision instead
 ```
 
 ### Verify Terraform Setup
@@ -148,6 +148,10 @@ cd -
 Generate your first diagram using our example Terraform code:
 
 ```bash
+
+git clone https://github.com/patrickchugh/terravision.git
+cd terravision
+
 # Example 1: EKS cluster with managed nodes and OIDC
 terravision draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
 
