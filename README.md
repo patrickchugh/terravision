@@ -47,7 +47,7 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 - ✅ **Always Up-to-Date**: Diagrams generated from actual Terraform code as the single source of truth
 - ✅ **100% Client-Side**: No cloud access required, runs locally to keep your data secure
-- ✅ **CI/CD Ready**: Automate diagram generation in your pipeline with simple CLI interface
+- ✅ **CI/CD Ready**: Automate diagram generation in a pipeline whenever a PR is merged
 - ✅ **Free & Open Source**: No expensive diagramming tool licenses
 - ✅ **Multi-Cloud**: Supports AWS, GCP, and Azure
 
