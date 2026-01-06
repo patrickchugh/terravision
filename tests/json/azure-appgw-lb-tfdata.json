@@ -1,0 +1,68 @@
+{
+    "azurerm_application_gateway.appgw": [
+        "azurerm_linux_virtual_machine.backend[0]~1",
+        "azurerm_linux_virtual_machine.backend[1]~2",
+        "azurerm_linux_virtual_machine.backend[2]~3",
+        "azurerm_public_ip.public_ip"
+    ],
+    "azurerm_lb.lb": [
+        "azurerm_linux_virtual_machine.backend[0]~1",
+        "azurerm_linux_virtual_machine.backend[1]~2",
+        "azurerm_linux_virtual_machine.backend[2]~3",
+        "azurerm_public_ip.public_ip"
+    ],
+    "azurerm_linux_virtual_machine.backend[0]~1": [
+        "azurerm_network_interface.backend[0]~1"
+    ],
+    "azurerm_linux_virtual_machine.backend[1]~2": [
+        "azurerm_network_interface.backend[1]~2"
+    ],
+    "azurerm_linux_virtual_machine.backend[2]~3": [
+        "azurerm_network_interface.backend[2]~3"
+    ],
+    "azurerm_network_interface.backend[0]~1": [],
+    "azurerm_network_interface.backend[1]~2": [],
+    "azurerm_network_interface.backend[2]~3": [],
+    "azurerm_public_ip.public_ip": [
+        "tv_azurerm_internet.internet",
+        "tv_azurerm_users.users"
+    ],
+    "azurerm_resource_group.main": [
+        "azurerm_application_gateway.appgw",
+        "azurerm_lb.lb",
+        "azurerm_linux_virtual_machine.backend[0]~1",
+        "azurerm_linux_virtual_machine.backend[1]~2",
+        "azurerm_linux_virtual_machine.backend[2]~3",
+        "azurerm_network_interface.backend[0]~1",
+        "azurerm_network_interface.backend[1]~2",
+        "azurerm_network_interface.backend[2]~3",
+        "azurerm_public_ip.public_ip",
+        "azurerm_virtual_network.main"
+    ],
+    "azurerm_subnet.appgw": [
+        "azurerm_application_gateway.appgw"
+    ],
+    "azurerm_subnet.backend": [
+        "azurerm_network_interface.backend[0]~1",
+        "azurerm_network_interface.backend[1]~2",
+        "azurerm_network_interface.backend[2]~3",
+        "tv_azurerm_zone.zone1",
+        "tv_azurerm_zone.zone2",
+        "tv_azurerm_zone.zone3"
+    ],
+    "azurerm_virtual_network.main": [
+        "azurerm_subnet.appgw",
+        "azurerm_subnet.backend"
+    ],
+    "tv_azurerm_internet.internet": [],
+    "tv_azurerm_users.users": [],
+    "tv_azurerm_zone.zone1": [
+        "azurerm_linux_virtual_machine.backend[0]~1"
+    ],
+    "tv_azurerm_zone.zone2": [
+        "azurerm_linux_virtual_machine.backend[1]~2"
+    ],
+    "tv_azurerm_zone.zone3": [
+        "azurerm_linux_virtual_machine.backend[2]~3"
+    ]
+}

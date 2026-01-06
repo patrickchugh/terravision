@@ -204,6 +204,7 @@ AZURE_ALWAYS_DRAW_LINE = [
     "azurerm_application_gateway",
     "azurerm_network_interface",
     "azurerm_virtual_machine_scale_set",
+    "azurerm_kubernetes_cluster",
 ]
 
 AZURE_NEVER_DRAW_LINE = ["azurerm_role_assignment"]
@@ -301,6 +302,13 @@ AZURE_MULTI_INSTANCE_PATTERNS = [
         "also_expand_attributes": [],
         "resource_pattern": r"^(.+)$",  # Match plain zone strings ["1", "2", "3"]
         "description": "Azure VM Scale Set with multiple zones",
+    },
+    {
+        "resource_types": ["azurerm_kubernetes_cluster_node_pool"],
+        "trigger_attributes": ["zones"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"^(.+)$",  # Match plain zone strings ["1", "2", "3"]
+        "description": "Azure Kubernetes Service node pool with multiple zones",
     },
     # Add more Azure patterns as needed
 ]

@@ -566,7 +566,7 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     # Create availability zone containers for numbered VMSS instances
     # This must run AFTER create_multiple_resources so numbered instances exist
-    tfdata = create_vmss_zone_containers(tfdata)
+    tfdata = create_zone_containers(tfdata)
 
     # Connect Load Balancers and Application Gateways to backend VMs
     tfdata = connect_lb_to_backend_vms(tfdata)
@@ -696,12 +696,18 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Create availability zone containers for numbered VMSS instances.
+def create_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Create availability zone containers for numbered zonal resources (VMSS, AKS node pools).
 
     This function runs AFTER create_multiple_resources, so numbered instances
-    like vmss~1, vmss~2, vmss~3 already exist. It creates zone containers and
-    places each instance in its corresponding zone.
+    like vmss~1, vmss~2, vmss~3 or node_pool~1, node_pool~2, node_pool~3 already exist.
+    It creates zone containers and places each instance in its corresponding zone.
+
+    Supported resource types:
+    - azurerm_linux_virtual_machine_scale_set
+    - azurerm_windows_virtual_machine_scale_set
+    - azurerm_virtual_machine_scale_set
+    - azurerm_kubernetes_cluster_node_pool
 
     Args:
         tfdata: Terraform data dictionary
@@ -709,19 +715,22 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with zone containers created
     """
-    # Find all numbered VMSS instances
-    numbered_vmss = [
-        k
-        for k in tfdata["graphdict"].keys()
-        if (
-            "azurerm_linux_virtual_machine_scale_set" in k
-            or "azurerm_windows_virtual_machine_scale_set" in k
-            or "azurerm_virtual_machine_scale_set" in k
-        )
-        and "~" in k
+    # Resource types that support zones
+    ZONAL_RESOURCE_TYPES = [
+        "azurerm_linux_virtual_machine_scale_set",
+        "azurerm_windows_virtual_machine_scale_set",
+        "azurerm_virtual_machine_scale_set",
+        "azurerm_kubernetes_cluster_node_pool",
     ]
 
-    if not numbered_vmss:
+    # Find all numbered zonal instances
+    numbered_zonal = [
+        k
+        for k in tfdata["graphdict"].keys()
+        if any(res_type in k for res_type in ZONAL_RESOURCE_TYPES) and "~" in k
+    ]
+
+    if not numbered_zonal:
         return tfdata
 
     # Find subnets
@@ -733,15 +742,15 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if "association" not in s
     ]
 
-    # Group numbered VMSS by base name
-    vmss_by_base = {}
-    for vmss in numbered_vmss:
-        base_name = vmss.split("~")[0]
-        if base_name not in vmss_by_base:
-            vmss_by_base[base_name] = []
-        vmss_by_base[base_name].append(vmss)
+    # Group numbered resources by base name
+    resources_by_base = {}
+    for resource in numbered_zonal:
+        base_name = resource.split("~")[0]
+        if base_name not in resources_by_base:
+            resources_by_base[base_name] = []
+        resources_by_base[base_name].append(resource)
 
-    for base_name, instances in vmss_by_base.items():
+    for base_name, instances in resources_by_base.items():
         # Get zones from metadata
         metadata = tfdata["meta_data"].get(base_name) or tfdata.get(
             "original_metadata", {}
@@ -762,33 +771,42 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Get subnet reference from all_resource (original Terraform config)
         subnet_ref = None
-        vmss_type_parts = base_name.split(".")
-        vmss_type = vmss_type_parts[0]
-        vmss_name = vmss_type_parts[1] if len(vmss_type_parts) > 1 else None
+        res_type_parts = base_name.split(".")
+        res_type = res_type_parts[0]
+        res_name = res_type_parts[1] if len(res_type_parts) > 1 else None
 
-        if vmss_name:
+        if res_name:
             for file_path, resources in tfdata.get("all_resource", {}).items():
                 if not isinstance(resources, list):
                     continue
                 for res_block in resources:
-                    if vmss_type in res_block and vmss_name in res_block.get(
-                        vmss_type, {}
+                    if res_type in res_block and res_name in res_block.get(
+                        res_type, {}
                     ):
-                        vmss_data = res_block[vmss_type][vmss_name]
-                        # Extract subnet from network_interface.ip_configuration.subnet_id
-                        ni = vmss_data.get("network_interface", [{}])
-                        if ni and isinstance(ni, list) and len(ni) > 0:
-                            ipc = ni[0].get("ip_configuration", [{}])
-                            if ipc and isinstance(ipc, list) and len(ipc) > 0:
-                                subnet_id_raw = ipc[0].get("subnet_id", "")
-                                # Extract subnet name from ${azurerm_subnet.main.id}
-                                import re
+                        res_data = res_block[res_type][res_name]
 
-                                match = re.search(
-                                    r"\$\{([^.]+\.[^.]+)", str(subnet_id_raw)
-                                )
-                                if match:
-                                    subnet_ref = match.group(1)
+                        # Try different subnet reference patterns based on resource type
+                        subnet_id_raw = None
+
+                        # AKS node pools use vnet_subnet_id directly
+                        if "kubernetes_cluster_node_pool" in res_type:
+                            subnet_id_raw = res_data.get("vnet_subnet_id", "")
+
+                        # VMSS uses network_interface.ip_configuration.subnet_id
+                        if not subnet_id_raw:
+                            ni = res_data.get("network_interface", [{}])
+                            if ni and isinstance(ni, list) and len(ni) > 0:
+                                ipc = ni[0].get("ip_configuration", [{}])
+                                if ipc and isinstance(ipc, list) and len(ipc) > 0:
+                                    subnet_id_raw = ipc[0].get("subnet_id", "")
+
+                        # Extract subnet name from ${azurerm_subnet.main.id}
+                        if subnet_id_raw:
+                            match = re.search(
+                                r"\$?\{?([^.]+\.[^.}]+)", str(subnet_id_raw)
+                            )
+                            if match:
+                                subnet_ref = match.group(1)
                         break
                 if subnet_ref:
                     break
@@ -812,7 +830,7 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
                 if parent_subnet:
                     # Create zone container for each instance
-                    for i, vmss_instance in enumerate(sorted(instances), start=1):
+                    for i, res_instance in enumerate(sorted(instances), start=1):
                         if i <= len(zones_attr):
                             zone_id = zones_attr[i - 1]
                             # Create zone node name
@@ -826,15 +844,15 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                     "name": f"Availability Zone {zone_id}",
                                 }
 
-                            # Place VMSS instance inside zone
-                            if vmss_instance not in tfdata["graphdict"][zone_node]:
-                                tfdata["graphdict"][zone_node].append(vmss_instance)
+                            # Place instance inside zone
+                            if res_instance not in tfdata["graphdict"][zone_node]:
+                                tfdata["graphdict"][zone_node].append(res_instance)
 
-                            # Remove VMSS instance from subnet direct children
-                            if vmss_instance in tfdata["graphdict"].get(
+                            # Remove instance from subnet direct children
+                            if res_instance in tfdata["graphdict"].get(
                                 parent_subnet, []
                             ):
-                                tfdata["graphdict"][parent_subnet].remove(vmss_instance)
+                                tfdata["graphdict"][parent_subnet].remove(res_instance)
 
                             # Add zone to subnet if not already there
                             if zone_node not in tfdata["graphdict"].get(
@@ -842,7 +860,7 @@ def create_vmss_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             ):
                                 tfdata["graphdict"][parent_subnet].append(zone_node)
 
-                    # Remove the base VMSS node after creating numbered instances in zones
+                    # Remove the base node after creating numbered instances in zones
                     if base_name in tfdata["graphdict"]:
                         # Check if any resources connect TO the base node
                         base_connections = tfdata["graphdict"][base_name]
