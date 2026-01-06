@@ -20,7 +20,7 @@ dependencies = [
     "debugpy>=1.8.0",
     "ipaddr>=2.2.0",
     "ollama>=0.6.1",
-    "requests>=2.32.3",
+    "requests>=2.32.3", 
     "typing-extensions>=4.0.0",
     "tomli>=2.0.1"
 ]
