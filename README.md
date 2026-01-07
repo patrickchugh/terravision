@@ -152,8 +152,8 @@ Generate your first diagram using our example Terraform code:
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
 
-# Example 1: EKS cluster with managed nodes and OIDC
-terravision draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
+# Example 1: EKS cluster with fully managed nodes (auto)
+terravision draw --source tests/fixtures/aws_terraform/eks_automode --show
 
 # Example 2: Azure VM stack set
 terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
