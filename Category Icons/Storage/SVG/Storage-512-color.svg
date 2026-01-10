@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="standard_product_icon" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 512">
+  <!-- Generator: Adobe Illustrator 29.1.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 142)  -->
+  <g id="bounding_box">
+    <rect width="512" height="512" fill="none"/>
+  </g>
+  <g id="art">
+    <path d="M410,272H102c-8.837,0-16-7.163-16-16V53c0-17.121,13.879-31,31-31h278c17.121,0,31,13.879,31,31v203c0,8.837-7.163,16-16,16ZM118,240h276V54H118v186Z" fill="#9aa0a6"/>
+    <path d="M395,490H117c-17.121,0-31-13.879-31-31v-203c0-8.837,7.163-16,16-16h308c8.837,0,16,7.163,16,16v203c0,17.121-13.879,31-31,31ZM118,458h276v-186H118v186Z" fill="#9aa0a6"/>
+    <path d="M426,240H86v32h154v74c0,8.837,7.163,16,16,16s16-7.163,16-16v-74h154v-32Z" fill="#4285f4"/>
+    <path d="M426,53c0-17.121-13.879-31-31-31H117c-17.121,0-31,13.879-31,31v1h154v74c0,8.837,7.163,16,16,16s16-7.163,16-16V54h154v-1Z" fill="#4285f4"/>
+  </g>
+</svg>

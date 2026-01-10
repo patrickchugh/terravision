@@ -5,10 +5,7 @@ from pathlib import Path
 from resource_classes import Cluster
 
 defaultdir = "LR"
-try:
-    base_path = sys._MEIPASS
-except AttributeError:
-    base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
+base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
 
 
 class VPCgroup(Cluster):

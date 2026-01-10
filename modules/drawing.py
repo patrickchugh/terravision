@@ -462,7 +462,7 @@ def handle_group(
 
     # Create new group/cluster
     newGroup = getattr(sys.modules[__name__], resource_type)(
-        label=helpers.pretty_name(resource)
+        label=helpers.pretty_name(resource, is_group=True)
     )
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
@@ -511,9 +511,11 @@ def handle_group(
                     drawn_resources,
                 )
                 if newNode is not None:
-                    newGroup.add_node(
-                        newNode._id, label=helpers.pretty_name(node_connection)
+                    # Don't overwrite HTML labels (GCP nodes have custom HTML tables)
+                    node_label = newNode._attrs.get(
+                        "label", helpers.pretty_name(node_connection)
                     )
+                    newGroup.add_node(newNode._id, label=node_label)
 
     return newGroup, drawn_resources
 

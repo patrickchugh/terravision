@@ -451,7 +451,32 @@ class Node:
 
     def _load_icon(self):
         basedir = Path(os.path.abspath(os.path.dirname(__file__)))
-        # basedir = shutil.which("terravision") or os.path.isfile("terravision")
+
+        # For GCP provider, implement 3-tier icon priority fallback:
+        # 1. Unique icons (4-color flagship products)
+        # 2. Category icons (2-color service families)
+        # 3. Generic placeholder
+        if self._provider == "gcp":
+            # Try unique icon first
+            unique_path = os.path.join(
+                basedir.parent, "resource_images/gcp/unique", self._icon
+            )
+            if os.path.exists(unique_path):
+                return unique_path
+
+            # Try category icon (via _icon_dir which defaults to category)
+            category_path = os.path.join(basedir.parent, self._icon_dir, self._icon)
+            if os.path.exists(category_path):
+                return category_path
+
+            # Fall back to generic placeholder
+            generic_path = os.path.join(
+                basedir.parent, "resource_images/generic/generic.png"
+            )
+            if os.path.exists(generic_path):
+                return generic_path
+
+        # Default behavior for other providers
         return os.path.join(basedir.parent, self._icon_dir, self._icon)
 
 

@@ -1,0 +1,119 @@
+BEGIN{
+  double bbMinX, bbMinY, bbMaxX, bbMaxY, lpX, lpY, lpMinX, lpMaxY, newX, newY, centerX;
+  double fudgeX, fudgeY;
+  double cloudMinX, cloudMinY, cloudMaxX, cloudMaxY, cloudCenterX;
+  double clusterMinX, clusterMinY, clusterMaxX, clusterMaxY, clusterCenterX;
+  double labelX, labelY;
+  double topMostY;
+  string fld[int];
+  node_t n;
+
+  // recursive routine, processing from the top (root) down
+  graph_t labelShift (graph_t Gr) {
+    graph_t thisG;
+
+    // First recurse into subgraphs
+    for (thisG = fstsubg(Gr); thisG; thisG=nxtsubg(thisG)) {
+          thisG = labelShift(thisG);
+    }
+
+    if (match(Gr.name,"cluster")==0 ){
+      // Check for main cloud provider group using _cloudgroup flag
+      if (hasAttr(Gr, "_cloudgroup") && Gr._cloudgroup=="1"){
+        sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &cloudMinX, &cloudMinY, &cloudMaxX, &cloudMaxY);
+        cloudCenterX = (cloudMinX + cloudMaxX) / 2.0;
+      }
+
+      // Position cluster label nodes within this cluster
+      sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &clusterMinX, &clusterMinY, &clusterMaxX, &clusterMaxY);
+      clusterCenterX = (clusterMinX + clusterMaxX) / 2.0;
+
+      for (n = fstnode(Gr); n; n = nxtnode_sg(Gr, n)) {
+        if (hasAttr(n, "_clusterlabel") && n._clusterlabel == "1") {
+          // Only position label nodes that belong to THIS cluster (not nested subgraphs)
+          if (hasAttr(n, "_clusterid") && hasAttr(n, "_labelposition")) {
+            if (n._clusterid == Gr.name) {
+              // Calculate position based on label_position attribute
+              // Position inside cluster at bottom with X offset to prevent neato from moving them
+              if (n._labelposition == "bottom-left") {
+                // Different X offsets for different cluster types
+                labelY = clusterMinY + 40.0;
+                if (hasAttr(n, "_clustertype") && n._clustertype == "SubnetGroup") {
+                  labelX = clusterMinX + 50.0;  // Smaller offset for Subnets (icon at corner)
+                } else if (hasAttr(n, "_clustertype") && n._clustertype == "AZUREGroup") {
+                  labelX = clusterMinX + 200.0;  // medium offset for Azure Cloud (outermost container)
+                  labelY = clusterMinY -20;
+                } else {
+                  labelX = clusterMinX + 70.0;  // Standard offset for Resource Groups
+                }
+                
+              } else if (n._labelposition == "bottom-right") {
+                labelX = clusterMaxX - 50.0;  // Shifted left from right edge
+                labelY = clusterMinY + 45.0;
+              } else if (n._labelposition == "bottom-center") {
+                labelX = clusterCenterX;
+                labelY = clusterMinY + 50.0;
+              }
+
+              // Pin the node position
+              n.pos = sprintf("%.1f,%.1f!", labelX, labelY);
+            }
+          }
+        }
+      }
+
+      // Handle top positioning for AWS clusters (original logic)
+      if (hasAttr(Gr, "_shift") && Gr._shift!="" && Gr._shift!="0"){
+        fudgeX=2.;  // aim for just inside periphery  - increase to shift left
+        fudgeY=1.;  // aim for just inside periphery  - increase to shift up
+      if (index(Gr._shift,",")>0){
+        split(Gr._shift,fld,",");
+        fudgeX=(double)fld[0];
+        fudgeY=(double)fld[1];
+      }
+      sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &bbMinX, &bbMinY, &bbMaxX, &bbMaxY);
+      lpX=xOf(Gr.lp);
+      lpY=yOf(Gr.lp);
+      lpMinX=lpX-((Gr.lwidth*72.)/2.);
+      lpMaxY=lpY+((Gr.lheight*72.)/2.);
+      //print("  // bb: ", Gr.bb, "  lpMinX: ", lpMinX, "  lpMaxY: ", lpMaxY);
+      Gr._oldlp=Gr.lp;
+      newX=lpX-(lpMinX-bbMinX)-fudgeX;
+      newY=lpY+(bbMaxY-lpMaxY)+fudgeY;
+      Gr.lp=sprintf("%.1f,%.1f", newX, newY);
+      }
+    }
+    return Gr;
+  } // end of labelShift
+}
+BEG_G{
+  double nodeY;
+  topMostY = 0;
+
+  labelShift($G);
+
+  // Find topmost node position
+  for (n = fstnode($G); n; n = nxtnode(n)) {
+    if (hasAttr(n, "_titlenode") && n._titlenode == "1") continue;
+    if (hasAttr(n, "_footernode") && n._footernode == "1") continue;
+    nodeY = yOf(n.pos);
+    if (nodeY > topMostY) topMostY = nodeY;
+  }
+
+  // Use higher of cloudMaxY or topMostY
+  if (cloudMaxY > topMostY) topMostY = cloudMaxY;
+}
+END_G{
+  double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
+  // Center root graph label at the END after all processing
+  sscanf ($G.bb, "%lf,%lf,%lf,%lf", &gbbMinX, &gbbMinY, &gbbMaxX, &gbbMaxY);
+  gcenterX = (gbbMinX + gbbMaxX) / 2.0;
+  glpY = yOf($G.lp);
+  $G.lp = sprintf("%.1f,%.1f", gcenterX, glpY);
+}
+N[_titlenode=="1"]{
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, topMostY + 200);
+}
+N[_footernode=="1"]{
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMinY - 150);
+}

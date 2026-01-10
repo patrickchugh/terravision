@@ -49,14 +49,42 @@ GCP_CONSOLIDATED_NODES = [
 ]
 
 # List of Group type nodes and order to draw them in
-# GCP hierarchy: Project > VPC (Global) > Subnet (Regional) > Zone
+# GCP 2024 hierarchy: Account > Project > VPC/Region > Zone > Subnet/Firewall > InstanceGroup > Resources
+# See research.md for complete nesting hierarchy
+# NOTE: tv_ prefix = TerraVision synthetic nodes (not real Terraform resources)
 GCP_GROUP_NODES = [
+    # Top-level zones
+    "tv_gcp_account",
     "google_project",
-    "google_compute_network",
-    "google_compute_subnetwork",
-    "google_compute_region",
-    "google_compute_zone",
+    "tv_gcp_users",
+    "tv_gcp_system",
+    # Within User/System
+    "tv_gcp_infra_system2",
     "tv_gcp_onprem",
+    # Within System (external services)
+    "tv_gcp_external_saas",
+    "tv_gcp_external_data",
+    "tv_gcp_external_3p",
+    "tv_gcp_external_1p",
+    # Within Project
+    "google_compute_network",
+    "tv_gcp_logical_group",
+    "tv_gcp_region",  # Synthetic - created by resource handlers from subnet metadata
+    "google_container_cluster",
+    # Within Region/LogicalGroup
+    "tv_gcp_zone",  # Synthetic - created by resource handlers from instance metadata
+    # Within Zone
+    "google_compute_subnetwork",
+    "google_compute_firewall",
+    # Within Firewall/InstanceGroup
+    "google_compute_instance_group",
+    # Note: IGMs are NOT groups - they're management nodes that point to instances (like load balancers)
+    "tv_gcp_replica_pool",
+    # Within K8s cluster
+    "google_container_node_pool",
+    "tv_gcp_k8s_pod",
+    # Any level (special)
+    "tv_gcp_optional",
 ]
 
 # Nodes to be drawn first inside the GCP Cloud but outside any VPCs
@@ -140,7 +168,7 @@ GCP_REVERSE_ARROW_LIST = [
 # Force certain resources to be a destination connection only - original TF node relationships only
 GCP_FORCED_DEST = [
     "google_sql_database_instance",
-    "google_compute_instance",
+    "google_compute_instance.",  # Note: trailing dot to avoid matching instance_group_manager
     "google_storage_bucket",
 ]
 
@@ -210,6 +238,15 @@ GCP_ACRONYMS_LIST = [
     "iam",
     "api",
     "vm",
+    "db",
+    "sql",
+    "cpu",
+    "gpu",
+    "ssl",
+    "us",
+    "eu",
+    "url",
+    "http",
 ]
 
 GCP_NAME_REPLACEMENTS = {

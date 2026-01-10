@@ -1648,6 +1648,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 or tfdata["meta_data"][n].get("desired_count")
                 or tfdata["meta_data"][n].get("max_capacity")
                 or tfdata["meta_data"][n].get("for_each")
+                or tfdata["meta_data"][n].get("target_size")  # GCP IGM target_size
             )
             and not helpers.consolidated_node_check(n, tfdata)
         )
