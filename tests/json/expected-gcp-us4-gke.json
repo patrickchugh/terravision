@@ -1,0 +1,20 @@
+{
+    "google_compute_network.vpc": [
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.gke_subnet": [
+        "google_container_cluster.primary"
+    ],
+    "google_container_cluster.primary": [
+        "google_container_node_pool.general",
+        "google_container_node_pool.highmem",
+        "google_container_registry.gcr"
+    ],
+    "google_container_node_pool.general": [],
+    "google_container_node_pool.highmem": [],
+    "google_container_registry.gcr": [],
+    "tv_gcp_region.us_central1": [
+        "google_compute_subnetwork.gke_subnet",
+        "google_container_cluster.primary"
+    ]
+}

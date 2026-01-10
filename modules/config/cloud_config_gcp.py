@@ -49,7 +49,9 @@ GCP_CONSOLIDATED_NODES = [
 ]
 
 # List of Group type nodes and order to draw them in
-# GCP 2024 hierarchy: Account > Project > VPC/Region > Zone > Subnet/Firewall > InstanceGroup > Resources
+# TerraVision GCP hierarchy: Account > Project > VPC > Region > Subnet > Zone > InstanceGroup > Resources
+# NOTE: This differs from GCP 2024 official guidelines (Zone > Subnet) to match Terraform's
+# natural structure where subnets are regional and contain resources across zones.
 # See research.md for complete nesting hierarchy
 # NOTE: tv_ prefix = TerraVision synthetic nodes (not real Terraform resources)
 GCP_GROUP_NODES = [
@@ -71,10 +73,10 @@ GCP_GROUP_NODES = [
     "tv_gcp_logical_group",
     "tv_gcp_region",  # Synthetic - created by resource handlers from subnet metadata
     "google_container_cluster",
-    # Within Region/LogicalGroup
-    "tv_gcp_zone",  # Synthetic - created by resource handlers from instance metadata
-    # Within Zone
+    # Within Region/LogicalGroup - Subnet is regional, contains zones
     "google_compute_subnetwork",
+    # Within Subnet - Zone contains instances
+    "tv_gcp_zone",  # Synthetic - created by resource handlers from instance metadata
     "google_compute_firewall",
     # Within Firewall/InstanceGroup
     "google_compute_instance_group",
@@ -157,11 +159,12 @@ GCP_NODE_VARIANTS = {
 }
 
 # Automatically reverse arrow direction for these resources when discovered through source
+# NOTE: Do NOT add google_project to this list - Projects are containers that should be drawn
+# first and contain VPCs/resources, not have reversed arrows pointing into them.
 GCP_REVERSE_ARROW_LIST = [
     "google_dns_managed_zone",
     "google_compute_network.",
     "google_compute_subnetwork.",
-    "google_project.",
     "google_compute_firewall.",
 ]
 
@@ -181,9 +184,8 @@ GCP_IMPLIED_CONNECTIONS = {
 }
 
 # Special resources that need custom handling
-# TODO: Migrate to config-driven approach like AWS (see resource_handler_configs_google.py)
-# For now, keeping manual dict until GCP handlers are refactored
-from modules.config.resource_handler_configs_google import RESOURCE_HANDLER_CONFIGS
+# Config-driven approach using resource_handler_configs_gcp.py
+from modules.config.resource_handler_configs_gcp import RESOURCE_HANDLER_CONFIGS
 
 # Generate from config if available, otherwise use manual dict
 if RESOURCE_HANDLER_CONFIGS:
@@ -245,6 +247,7 @@ GCP_ACRONYMS_LIST = [
     "ssl",
     "us",
     "eu",
+    "igm",
     "url",
     "http",
 ]
@@ -264,6 +267,8 @@ GCP_NAME_REPLACEMENTS = {
     "cloud_run_service": "Cloud Run",
     "cloudfunctions_function": "Cloud Function",
     "service_account": "Service Account",
+    "compute_instance_group_manager": "Instance Group Manager",
+    "compute": "",
     "this": "",
 }
 

@@ -1,5 +1,13 @@
 """
-GCP Grouping Zones following Google Cloud Architecture 2024 Guidelines.
+GCP Grouping Zones following TerraVision's Terraform-centric hierarchy.
+
+NOTE: TerraVision uses a Terraform-centric hierarchy that differs from GCP's
+official 2024 guidelines. In Terraform, subnets are regional resources that
+contain instances across multiple zones. Our hierarchy reflects this:
+  Project > VPC > Region > Subnet > Zone > Resources
+
+GCP's 2024 guidelines use Zone > Subnet, but this doesn't match how
+Terraform resources are naturally structured.
 
 All zones use:
 - 2px rounded corners (style="rounded,filled")
@@ -13,8 +21,8 @@ Zone Types (20 total):
 - Within User/System: InfraSystem, OnPremises
 - Within System: ExternalSaaS, ExternalData, External3rdParty, External1stParty
 - Within Project: LogicalGroup, Region, KubernetesCluster, VPCNetwork
-- Within Region/LogicalGroup: Zone (Availability Zone)
-- Within Zone: SubNetwork, Firewall
+- Within Region/LogicalGroup: SubNetwork (regional resource)
+- Within SubNetwork: Zone (Availability Zone), Firewall
 - Within Firewall: InstanceGroup
 - Within InstanceGroup: ReplicaPool
 - Within K8s: Pod

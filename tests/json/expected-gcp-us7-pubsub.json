@@ -1,0 +1,25 @@
+{
+    "google_bigquery_dataset.analytics": [
+        "google_bigquery_table.events"
+    ],
+    "google_bigquery_table.events": [
+        "google_pubsub_subscription.bigquery_sink"
+    ],
+    "google_cloud_run_service.event_handler": [
+        "google_storage_bucket.artifacts"
+    ],
+    "google_pubsub_subscription.batch_processor": [
+        "google_pubsub_topic.dead_letter",
+        "google_pubsub_topic.events"
+    ],
+    "google_pubsub_subscription.bigquery_sink": [
+        "google_bigquery_dataset.analytics",
+        "google_pubsub_topic.events"
+    ],
+    "google_pubsub_subscription.push_to_api": [
+        "google_pubsub_topic.events"
+    ],
+    "google_pubsub_topic.dead_letter": [],
+    "google_pubsub_topic.events": [],
+    "google_storage_bucket.artifacts": []
+}

@@ -1029,6 +1029,10 @@ def add_multiples_to_parents(
     parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
     # Add numbered name to all original parents which may have been missed due to no count property
     for parent in parents_list:
+        # Skip synthetic TerraVision nodes (tv_ prefix) - they represent
+        # logical groupings (zones, regions) not resources to be numbered
+        if parent.startswith("tv_"):
+            continue
         if parent not in multi_resources:
             if "~" in parent:
                 # We have a suffix so check it matches the i count
@@ -1375,6 +1379,10 @@ def add_multiples_to_parents(
     parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
     # Add numbered name to all original parents which may have been missed due to no count property
     for parent in parents_list:
+        # Skip synthetic TerraVision nodes (tv_ prefix) - they represent
+        # logical groupings (zones, regions) not resources to be numbered
+        if parent.startswith("tv_"):
+            continue
         if parent not in multi_resources:
             if "~" in parent:
                 # We have a suffix so check it matches the i count
@@ -1473,6 +1481,9 @@ def handle_count_resources(
                 # Create numbered instances for connections if needed
                 for numbered_node in resource_i:
                     original_name = numbered_node.split("~")[0]
+                    # Skip synthetic TerraVision nodes (tv_ prefix) - they represent
+                    # logical groupings (zones, regions) not resources to be numbered
+                    is_synthetic_node = original_name.startswith("tv_")
                     if (
                         "~" in numbered_node
                         and helpers.list_of_dictkeys_containing(
@@ -1480,6 +1491,7 @@ def handle_count_resources(
                         )
                         and original_name not in multi_resources
                         and not helpers.consolidated_node_check(original_name, tfdata)
+                        and not is_synthetic_node
                     ):
                         # Handle first instance
                         if i == 0:
@@ -1637,11 +1649,14 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     SHARED_SERVICES = constants["SHARED_SERVICES"]
 
     # Identify resources with count/for_each attributes
+    # Skip synthetic TerraVision nodes (tv_ prefix) - they represent
+    # logical groupings (zones, regions) not resources to be numbered
     multi_resources = [
         n
         for n in tfdata["graphdict"]
         if (
             "~" not in n
+            and not n.startswith("tv_")  # Skip synthetic nodes
             and tfdata["meta_data"].get(n)
             and (
                 tfdata["meta_data"][n].get("count")

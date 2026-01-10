@@ -294,8 +294,12 @@ def gcp_prepare_subnet_region_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]
             tfdata["meta_data"][resource] = {}
 
         # Copy region for region name generation
+        # Some resources use "region", others use "location" (e.g., GKE clusters)
         if "region" in original_meta:
             tfdata["meta_data"][resource]["region"] = original_meta["region"]
+        elif "location" in original_meta:
+            # GKE clusters and some other resources use "location" instead of "region"
+            tfdata["meta_data"][resource]["region"] = original_meta["location"]
 
     return tfdata
 
@@ -456,6 +460,18 @@ def gcp_link_igms_to_subnet_zones(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Generate zone node name
         zone_node = f"tv_gcp_zone.{zone}"
         zone_node = zone_node.replace("-", "_")
+
+        # CRITICAL: Handler guard to prevent hierarchy gaps (FR-008a)
+        # Verify subnet exists in graphdict before creating zone
+        if subnet not in tfdata["graphdict"]:
+            # Subnet missing - skip zone creation to prevent orphaned zone
+            import logging
+
+            logging.warning(
+                f"Skipping zone creation for IGM {igm}: subnet {subnet} not found in graphdict. "
+                f"This prevents FR-008a violation (zones without subnet parent)"
+            )
+            continue
 
         # Create zone node if it doesn't exist
         if zone_node not in tfdata["graphdict"]:

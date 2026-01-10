@@ -1,0 +1,37 @@
+{
+    "google_compute_firewall.firewall": [],
+    "google_compute_forwarding_rule.lb": [],
+    "google_compute_instance.nlb-backend~1": [],
+    "google_compute_instance.nlb-backend~2": [],
+    "google_compute_instance_group_manager.backend~1": [
+        "google_compute_instance.nlb-backend~1",
+        "google_compute_instance.nlb-backend~2",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_instance_template.backend": [
+        "google_compute_instance_group_manager.backend~1",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_network.vpc": [
+        "google_compute_firewall.firewall",
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.subnet": [
+        "tv_gcp_zone.us_central1_a"
+    ],
+    "google_compute_target_pool.backend": [],
+    "google_logging_project_sink.logging": [],
+    "module.gce-nlb.google_compute_http_health_check.default[0]~1": [],
+    "module.gce-nlb.google_compute_target_pool.default": [
+        "google_compute_forwarding_rule.lb"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_instance_template.backend",
+        "google_compute_subnetwork.subnet"
+    ],
+    "tv_gcp_zone.us_central1_a": [
+        "google_compute_instance.nlb-backend~1",
+        "google_compute_instance.nlb-backend~2",
+        "google_compute_instance_group_manager.backend~1"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "google_cloud_run_service.api": [
+        "google_cloud_run_service_iam_member.public",
+        "google_storage_bucket.artifacts",
+        "google_storage_bucket.data_bucket"
+    ],
+    "google_cloud_run_service_iam_member.public": [
+        "google_storage_bucket.artifacts"
+    ],
+    "google_cloudfunctions2_function.http_function": [
+        "google_storage_bucket.function_source"
+    ],
+    "google_cloudfunctions2_function.pubsub_function": [
+        "google_pubsub_topic.events",
+        "google_storage_bucket.function_source"
+    ],
+    "google_pubsub_topic.events": [],
+    "google_storage_bucket.artifacts": [],
+    "google_storage_bucket.data_bucket": [],
+    "google_storage_bucket.function_source": []
+}

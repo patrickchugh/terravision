@@ -1,0 +1,29 @@
+{
+    "google_compute_firewall.firewall": [],
+    "google_compute_instance.app": [],
+    "google_compute_instance.web": [],
+    "google_compute_network.main": [
+        "google_compute_firewall.firewall",
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.app": [
+        "tv_gcp_zone.us_central1_a"
+    ],
+    "google_compute_subnetwork.db": [],
+    "google_compute_subnetwork.web": [
+        "tv_gcp_zone.us_central1_a"
+    ],
+    "google_logging_project_sink.logging": [
+        "google_compute_instance.app",
+        "google_compute_instance.web"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_subnetwork.app",
+        "google_compute_subnetwork.db",
+        "google_compute_subnetwork.web"
+    ],
+    "tv_gcp_zone.us_central1_a": [
+        "google_compute_instance.app",
+        "google_compute_instance.web"
+    ]
+}

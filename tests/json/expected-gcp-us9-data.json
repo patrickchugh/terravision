@@ -1,0 +1,40 @@
+{
+    "google_bigquery_dataset.analytics": [
+        "google_bigquery_table.events"
+    ],
+    "google_bigquery_table.events": [],
+    "google_compute_instance.app": [],
+    "google_compute_network.main": [
+        "google_redis_instance.cache",
+        "google_sql_postgres.postgres",
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.app": [
+        "tv_gcp_zone.us_central1_a"
+    ],
+    "google_logging_project_sink.logging": [
+        "google_compute_instance.app"
+    ],
+    "google_redis_instance.cache": [
+        "google_compute_instance.app"
+    ],
+    "google_spanner_database.app": [
+        "google_spanner_instance.main"
+    ],
+    "google_spanner_instance.main": [],
+    "google_sql_database.app_db": [
+        "google_sql_postgres.postgres"
+    ],
+    "google_sql_postgres.postgres": [
+        "google_compute_instance.app"
+    ],
+    "google_sql_user.app_user": [
+        "google_sql_postgres.postgres"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_subnetwork.app"
+    ],
+    "tv_gcp_zone.us_central1_a": [
+        "google_compute_instance.app"
+    ]
+}
