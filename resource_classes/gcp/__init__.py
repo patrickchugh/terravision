@@ -103,8 +103,11 @@ class _GCP(Node):
                 ]  # Remove ~1, ~2 suffixes
 
                 # Convert instance name to title case to match pretty_name format
-                # template1 -> Template1, my_bucket -> My Bucket
-                tf_instance_formatted = tf_instance_name.replace("_", " ").title()
+                # template1 -> Template1, my_bucket -> My Bucket, web-server -> Web Server
+                # Replace both underscores and hyphens with spaces to match pretty_name behavior
+                tf_instance_formatted = (
+                    tf_instance_name.replace("_", " ").replace("-", " ").title()
+                )
 
                 # Find where this instance name appears in the label (case-insensitive)
                 # This handles cases where pretty_name might add/remove words or use acronyms
@@ -147,7 +150,7 @@ class _GCP(Node):
                 text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="24">{formatted_label}</FONT>"""
 
             html_label = f"""<
-<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="16" WIDTH="360" HEIGHT="140" COLOR="#999999">
+<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" WIDTH="360" COLOR="#999999">
   <TR>
     <TD FIXEDSIZE="TRUE" WIDTH="100" HEIGHT="100"><IMG SRC="{icon_path}"/></TD>
     <TD ALIGN="LEFT" VALIGN="MIDDLE">{text_table}</TD>
@@ -158,15 +161,11 @@ class _GCP(Node):
             node_fontsize = "24"
 
             # Set attributes for HTML-based node (no image attribute)
-            # Use width to force spacing, table WIDTH/HEIGHT attributes ensure it fills the space
-            padding = 0.4 * (label.count("\n"))
+            # Use width to force spacing, no fixed height to let content determine it
             self._attrs = {
                 "shape": "plaintext",
                 "tf_resource_name": "unknown",
-                "width": "5.0",  # 360 points / 72 dpi = 5.0 inches (was 3.5)
-                "height": str(
-                    1.95 + padding
-                ),  # 140 points / 72 dpi ≈ 1.95 inches (was 1.3)
+                "width": "5.0",  # 360 points / 72 dpi = 5.0 inches
                 "label": html_label,
                 "fontsize": node_fontsize,  # Set font size for the label
                 "margin": "0",
