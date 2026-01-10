@@ -287,14 +287,3 @@ class TestGCPSharedConnectionValidation:
 
 class TestIntegrationWithExistingFixtures:
     """Integration tests using existing GCP test fixtures."""
-
-    def test_three_tier_webapp_fixture_valid(self):
-        """
-        Test against existing three_tier_webapp fixture.
-        This is a smoke test - if the fixture is valid, validation should pass.
-        """
-        # Note: This test requires the actual fixture to be processed
-        # through TerraVision's pipeline. For now, it's a placeholder.
-        # In implementation, we'd load expected-gcp-three-tier-webapp.json
-        # and validate it.
-        pytest.skip("Integration test - requires full pipeline execution")

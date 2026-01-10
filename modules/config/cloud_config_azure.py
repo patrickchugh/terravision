@@ -242,6 +242,7 @@ AZURE_NAME_REPLACEMENTS = {
     "key_vault": "Key Vault",
     "app_service": "App Service",
     "function_app": "Function",
+    "lb": "Load Balancer",
     "this": "",
 }
 

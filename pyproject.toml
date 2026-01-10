@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "terravision"
-version = "0.9.13"
+version = "0.10.0"
 description = "Terraform Architecture Visualizer"
 readme = "README.md"
 authors = [{ name = "Patrick Chugh", email = "terravisionapp@gmail.com" }]
@@ -30,7 +30,7 @@ terravision = "terravision.terravision:main"
 
 [tool.poetry]
 name = "terravision"
-version = "0.9.13"
+version = "0.10.0"
 description = "Terraform Architecture Visualizer"
 authors = ["Patrick Chugh <terravisionapp@gmail.com>"]
 license = "AGPL-3.0-only"
