@@ -241,11 +241,19 @@ def handle_nodes(
         newNode = tfdata["meta_data"][resource]["node"]
     else:
         # Create new node and add to appropriate group
-        targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
+        is_outer = resource_type in OUTER_NODES
+        targetGroup = diagramCanvas if is_outer else inGroup
         node_label = helpers.pretty_name(resource)
         setcluster(targetGroup)
         nodeClass = getattr(sys.modules[__name__], resource_type)
-        newNode = nodeClass(label=node_label, tf_resource_name=resource)
+        # Only pass outer_node for GCP nodes (they use it for border styling)
+        provider = get_primary_provider_or_default(tfdata)
+        if provider == "gcp":
+            newNode = nodeClass(
+                label=node_label, tf_resource_name=resource, outer_node=is_outer
+            )
+        else:
+            newNode = nodeClass(label=node_label, tf_resource_name=resource)
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
 

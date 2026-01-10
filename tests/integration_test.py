@@ -147,6 +147,28 @@ def test_help() -> None:
             "azure-aks-tfdata.json",
             "expected-azure-aks.json",
         ),
+        # GCP patterns
+        (
+            "gcp-us1-compute-tfdata.json",
+            "expected-gcp-us1-compute.json",
+        ),
+        (
+            "gcp-us2-igm-tfdata.json",
+            "expected-gcp-us2-igm.json",
+        ),
+        (
+            "gcp-us4-gke-tfdata.json",
+            "expected-gcp-us4-gke.json",
+        ),
+        (
+            "gcp-us8-vpc-tfdata.json",
+            "expected-gcp-us8-vpc.json",
+        ),
+        # GCP Terraform Registry Module pattern
+        (
+            "gcp-us10-lb-http-tfdata.json",
+            "expected-gcp-us10-lb-http.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:

@@ -9,33 +9,6 @@ Icon Resolution (3-tier priority fallback):
 The _load_icon() method in resource_classes/__init__.py handles this fallback
 automatically for all GCP resources.
 
-Category Modules (Google 2025 Icon System):
-- compute.py: VMs, instance groups (unique: compute-engine)
-- containers.py: GKE, Anthos (unique: gke, anthos)
-- serverless.py: Cloud Run, Functions (unique: cloud-run)
-- databases.py: Cloud SQL, Spanner, AlloyDB (unique: cloud-sql, cloud-spanner, alloydb)
-- storage.py: Cloud Storage, Hyperdisk (unique: cloud-storage, hyperdisk)
-- networking.py: VPC, Load Balancing, DNS
-- ai_ml.py: Vertex AI, AI Hypercomputer (unique: vertex-ai, ai-hypercomputer)
-- analytics.py: BigQuery, Looker (unique: bigquery, looker)
-- security.py: IAM, SCC, Mandiant (unique: security-command-center, mandiant, secops, threat-intelligence)
-- management.py: Console, Shell, Deployment Manager
-- observability.py: Monitoring, Logging, Trace
-- devops.py: Cloud Build, Deploy, Artifact Registry
-- developer_tools.py: Cloud Code, Workstations
-- hybrid_multicloud.py: Anthos, Distributed Cloud (unique: anthos, distributed-cloud)
-- integration.py: Apigee, API Gateway (unique: apigee)
-- migration.py: Database Migration, Transfer Service
-- business_intelligence.py: Looker, Looker Studio (unique: looker)
-- agents.py: Dialogflow, Agent Builder
-- collaboration.py: Workspace, Chat, Meet
-- media.py: Transcoder, Live Stream
-- maps.py: Maps Platform, Earth Engine
-- marketplace.py: Cloud Marketplace
-- mixed_reality.py: ARCore, Immersive Stream
-- web_mobile.py: Firebase, App Engine
-- web3.py: Blockchain Node Engine
-- groups.py: GCP 2024 grouping zones (Project, Region, Zone, etc.)
 """
 
 from resource_classes import Node
@@ -73,6 +46,9 @@ class _GCP(Node):
             raise EnvironmentError("Global resource_classes context not set up")
         self._cluster = getcluster()
 
+        # Extract custom TerraVision attributes (not passed to graphviz)
+        is_outer_node = attrs.pop("outer_node", False)
+
         # Build attributes for GCP node with HTML table layout
         if self._icon:
             # Load icon path
@@ -93,14 +69,18 @@ class _GCP(Node):
 
             # Try to split based on the dot in the Terraform resource name
             if tf_resource_name and "." in tf_resource_name:
-                # Extract instance name from terraform resource (after the dot)
+                # Extract instance name from terraform resource (the LAST part after the last dot)
                 # google_compute_instance_template.template1 -> template1
-                tf_instance_name = tf_resource_name.split(".", 1)[1].strip()
+                # module.gce-lb-http.google_compute_global_address.default[0]~1 -> default[0]~1
+                tf_instance_name = tf_resource_name.rsplit(".", 1)[-1].strip()
 
-                # Remove module prefixes and numbered suffixes
-                tf_instance_name = tf_instance_name.split("~")[
-                    0
-                ]  # Remove ~1, ~2 suffixes
+                # Remove array indices like [0], ["default"], etc.
+                if "[" in tf_instance_name:
+                    tf_instance_name = tf_instance_name.split("[")[0]
+
+                # Remove numbered suffixes like ~1, ~2
+                if "~" in tf_instance_name:
+                    tf_instance_name = tf_instance_name.split("~")[0]
 
                 # Convert instance name to title case to match pretty_name format
                 # template1 -> Template1, my_bucket -> My Bucket, web-server -> Web Server
@@ -149,8 +129,12 @@ class _GCP(Node):
                 # Single-line label
                 text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="24">{formatted_label}</FONT>"""
 
+            # Outer nodes have no border (already extracted from attrs above)
+            border = "0" if is_outer_node else "1"
+            color_attr = "" if is_outer_node else ' COLOR="#999999"'
+
             html_label = f"""<
-<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" WIDTH="360" COLOR="#999999">
+<TABLE BORDER="{border}" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" WIDTH="360"{color_attr}>
   <TR>
     <TD FIXEDSIZE="TRUE" WIDTH="100" HEIGHT="100"><IMG SRC="{icon_path}"/></TD>
     <TD ALIGN="LEFT" VALIGN="MIDDLE">{text_table}</TD>
@@ -218,4 +202,5 @@ from . import (
     web_mobile,
     web3,
     groups,
+    generic,
 )

@@ -7,8 +7,7 @@
     "google_compute_instance_group_manager.backend~1": [
         "google_compute_instance.backend~1",
         "google_compute_instance.backend~2",
-        "google_logging_project_sink.logging",
-        "module.gce-lb-http.google_compute_health_check.default[\"default\"][default]~1"
+        "google_logging_project_sink.logging"
     ],
     "google_compute_instance_template.backend": [
         "google_compute_instance_group_manager.backend~1",
@@ -28,18 +27,32 @@
     ],
     "module.gce-lb-http.google_compute_global_address.default[0]~1": [],
     "module.gce-lb-http.google_compute_global_forwarding_rule.http[0]~1": [
-        "module.gce-lb-http.google_compute_global_address.default[0]~1"
+        "module.gce-lb-http.google_compute_global_address.default[0]~1",
+        "module.gce-lb-http.google_compute_target_http_proxy.default[0]~1"
     ],
-    "module.gce-lb-http.google_compute_health_check.default[\"default\"][default]~1": [],
+    "module.gce-lb-http.google_compute_health_check.default[\"default\"][default]~1": [
+        "google_compute_instance_group_manager.backend~1"
+    ],
     "module.gce-lb-http.google_compute_target_http_proxy.default[0]~1": [
         "module.gce-lb-http.google_compute_url_map.default[0]~1"
     ],
     "module.gce-lb-http.google_compute_url_map.default[0]~1": [
         "google_compute_instance_group_manager.backend~1"
     ],
+    "tv_gcp_load_balancer.http_load_balancer": [
+        "module.gce-lb-http.google_compute_backend_service.default[\"default\"][default]~1",
+        "module.gce-lb-http.google_compute_global_address.default[0]~1",
+        "module.gce-lb-http.google_compute_global_forwarding_rule.http[0]~1",
+        "module.gce-lb-http.google_compute_health_check.default[\"default\"][default]~1",
+        "module.gce-lb-http.google_compute_target_http_proxy.default[0]~1",
+        "module.gce-lb-http.google_compute_url_map.default[0]~1"
+    ],
     "tv_gcp_region.us_central1": [
         "google_compute_instance_template.backend",
         "google_compute_subnetwork.subnet"
+    ],
+    "tv_gcp_users_icon.users": [
+        "module.gce-lb-http.google_compute_global_forwarding_rule.http[0]~1"
     ],
     "tv_gcp_zone.us_central1_a": [
         "google_compute_instance.backend~1",

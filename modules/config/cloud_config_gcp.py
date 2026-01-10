@@ -48,10 +48,26 @@ GCP_CONSOLIDATED_NODES = [
     },
 ]
 
+# Resources that should be grouped together into a "Load Balancer" zone
+# These form a logical load balancer unit
+GCP_LOAD_BALANCER_COMPONENTS = [
+    # Global HTTP(S) LB components
+    "google_compute_global_forwarding_rule",
+    "google_compute_target_http_proxy",
+    "google_compute_target_https_proxy",
+    "google_compute_url_map",
+    "google_compute_backend_service",
+    "google_compute_health_check",
+    "google_compute_global_address",
+    # Regional/Network LB components
+    "google_compute_region_backend_service",
+    "google_compute_target_pool",
+    "google_compute_http_health_check",
+]
+
 # List of Group type nodes and order to draw them in
 # TerraVision GCP hierarchy: Account > Project > VPC > Region > Subnet > Zone > InstanceGroup > Resources
-# NOTE: This differs from GCP 2024 official guidelines (Zone > Subnet) to match Terraform's
-# natural structure where subnets are regional and contain resources across zones.
+# NOTE: GCP subnets are regional resources. This means a single subnet can span across all zones within its parent region
 # See research.md for complete nesting hierarchy
 # NOTE: tv_ prefix = TerraVision synthetic nodes (not real Terraform resources)
 GCP_GROUP_NODES = [
@@ -68,7 +84,8 @@ GCP_GROUP_NODES = [
     "tv_gcp_external_data",
     "tv_gcp_external_3p",
     "tv_gcp_external_1p",
-    # Within Project
+    # Within Project - Load Balancer group is at project level (edge service)
+    "tv_gcp_load_balancer",  # Synthetic - groups LB components (forwarding_rule, proxy, url_map, backend_service, health_check)
     "google_compute_network",
     "tv_gcp_logical_group",
     "tv_gcp_region",  # Synthetic - created by resource handlers from subnet metadata
@@ -98,7 +115,7 @@ GCP_EDGE_NODES = [
 ]
 
 # Nodes outside Cloud boundary
-GCP_OUTER_NODES = ["tv_gcp_users", "tv_gcp_internet"]
+GCP_OUTER_NODES = ["tv_gcp_users", "tv_gcp_users_icon", "tv_gcp_internet"]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 GCP_DRAW_ORDER = [
@@ -111,7 +128,12 @@ GCP_DRAW_ORDER = [
 
 # List of prefixes where additional nodes should be created automatically
 GCP_AUTO_ANNOTATIONS = [
-    {"google_dns_managed_zone": {"link": ["tv_gcp_users.users"], "arrow": "reverse"}},
+    {
+        "google_dns_managed_zone": {
+            "link": ["tv_gcp_users_icon.users"],
+            "arrow": "reverse",
+        }
+    },
     {
         "google_compute_vpn_gateway": {
             "link": [
@@ -142,6 +164,12 @@ GCP_AUTO_ANNOTATIONS = [
         "google_compute_instance": {
             "link": ["google_logging_project_sink.logging"],
             "arrow": "forward",
+        }
+    },
+    {
+        "google_compute_global_forwarding_rule": {
+            "link": ["tv_gcp_users_icon.users"],
+            "arrow": "reverse",
         }
     },
 ]
@@ -256,7 +284,7 @@ GCP_NAME_REPLACEMENTS = {
     "compute_instance": "VM Instance",
     "compute_network": "VPC",
     "compute_subnetwork": "Subnet",
-    "compute_firewall": "Firewall Rule",
+    "compute_firewall": "Firewall",
     "compute_address": "External IP",
     "container_cluster": "GKE Cluster",
     "storage_bucket": "Cloud Storage",

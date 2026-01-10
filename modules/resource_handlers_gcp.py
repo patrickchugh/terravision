@@ -599,3 +599,108 @@ def gcp_move_templates_to_region(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][resource] = [c for c in children if c != zone]
 
     return tfdata
+
+
+def gcp_group_load_balancer_components(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Group load balancer components into a tv_gcp_load_balancer zone.
+
+    GCP load balancers are composed of multiple resources that work together:
+    - google_compute_global_forwarding_rule (entry point)
+    - google_compute_target_http_proxy / google_compute_target_https_proxy
+    - google_compute_url_map (routing)
+    - google_compute_backend_service (backend config)
+    - google_compute_health_check (health checking)
+    - google_compute_global_address (IP address)
+
+    This handler creates a synthetic tv_gcp_load_balancer group node and
+    moves all LB components inside it for cleaner visualization.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with LB components grouped
+    """
+    lb_component_prefixes = cloud_config.GCP_LOAD_BALANCER_COMPONENTS
+
+    # Find all load balancer components in the graph
+    lb_components = []
+    for resource in tfdata["graphdict"]:
+        resource_type = helpers.get_no_module_name(resource)
+        for prefix in lb_component_prefixes:
+            if resource_type.startswith(prefix):
+                lb_components.append(resource)
+                break
+
+    if not lb_components:
+        return tfdata
+
+    # Create the load balancer group node
+    lb_group_name = "tv_gcp_load_balancer.http_load_balancer"
+
+    if lb_group_name not in tfdata["graphdict"]:
+        tfdata["graphdict"][lb_group_name] = []
+    if lb_group_name not in tfdata["meta_data"]:
+        tfdata["meta_data"][lb_group_name] = {"type": "load_balancer_group"}
+
+    # Move LB components into the group
+    for component in lb_components:
+        # Add component as child of LB group
+        if component not in tfdata["graphdict"][lb_group_name]:
+            tfdata["graphdict"][lb_group_name].append(component)
+
+        # Remove component from other parent nodes (except within the LB group itself)
+        for parent, children in list(tfdata["graphdict"].items()):
+            if parent == lb_group_name:
+                continue
+            if parent.startswith("tv_gcp_load_balancer"):
+                continue
+            # Keep LB components pointing to each other within the group
+            if parent in lb_components:
+                continue
+            # Keep connections from synthetic TV nodes (like tv_gcp_users_icon.users)
+            # These are auto-annotation connections that should be preserved
+            if helpers.get_no_module_name(parent).startswith("tv_"):
+                continue
+            if component in children:
+                tfdata["graphdict"][parent] = [c for c in children if c != component]
+
+    # Preserve connections from LB components to non-LB resources (e.g., backend_service → IGM)
+    # These connections should remain as the LB group will have arrows pointing out
+
+    # Add missing connections within the LB group based on known GCP LB hierarchy:
+    # Forwarding Rule → Target Proxy → URL Map → Backend Service
+    # (These connections may be missing if terraform plan shows computed values as 'true')
+    forwarding_rules = [
+        c for c in lb_components if "forwarding_rule" in helpers.get_no_module_name(c)
+    ]
+    target_proxies = [
+        c
+        for c in lb_components
+        if "target_http_proxy" in helpers.get_no_module_name(c)
+        or "target_https_proxy" in helpers.get_no_module_name(c)
+    ]
+
+    # Connect forwarding rules to target proxies
+    # Extract module path (everything before the resource type)
+    def get_module_path(resource: str) -> str:
+        """Extract module path from resource name like 'module.foo.google_xxx.name'."""
+        parts = resource.split(".")
+        # Find where the google_ resource type starts
+        for i, part in enumerate(parts):
+            if part.startswith("google_"):
+                return ".".join(parts[:i]) if i > 0 else ""
+        return ""
+
+    for fr in forwarding_rules:
+        for tp in target_proxies:
+            # Only connect if they share the same module path (belong to same LB)
+            fr_module = get_module_path(fr)
+            tp_module = get_module_path(tp)
+            if fr_module == tp_module:
+                if tp not in tfdata["graphdict"].get(fr, []):
+                    if fr not in tfdata["graphdict"]:
+                        tfdata["graphdict"][fr] = []
+                    tfdata["graphdict"][fr].append(tp)
+
+    return tfdata

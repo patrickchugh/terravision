@@ -101,4 +101,12 @@ RESOURCE_HANDLER_CONFIGS = {
     # NOTE: google_compute_firewall is in GROUP_NODES list in cloud_config_gcp.py
     # It renders as a grouping zone with hex color #FBE9E7 (peach)
     # No special handler needed - standard group rendering applies
+    #
+    # Load Balancer grouping - groups all LB components into a tv_gcp_load_balancer zone
+    "google_compute_global_forwarding_rule": {
+        "description": "Group load balancer components into tv_gcp_load_balancer zone",
+        "handler_execution_order": "after",  # Run after other handlers
+        "additional_handler_function": "gcp_group_load_balancer_components",
+        "transformations": [],
+    },
 }

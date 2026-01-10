@@ -39,9 +39,11 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 ![Terraform Code](./images/code.png)
 
-**Into this architecture diagram:**
+**Into these architecture diagrams:**
 
-<img src="./images/architecture.png" width="640" height="580">
+<a href="./images/architecture.png"><img src="./images/architecture.png" height="250"></a>
+<a href="./images/architecture-azure.dot.png"><img src="./images/architecture-azure.dot.png" height="250"></a>
+<a href="./images/architecture-gcp.dot.png"><img src="./images/architecture-gcp.dot.png" height="250"></a>
 
 ### Why TerraVision?
 

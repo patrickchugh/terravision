@@ -287,6 +287,8 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["graphdict"][n].remove(c)
 
             # Reverse if connection is a forced origin
+            # Skip reversal for synthetic grouping nodes (tv_ prefix) - these are
+            # TerraVision-generated hierarchy nodes that should contain their children
             reverse_origin = (
                 len(
                     [
@@ -294,6 +296,9 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         for s in FORCED_ORIGIN
                         if helpers.get_no_module_name(c).startswith(s)
                         and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
+                        and not node.startswith(
+                            "tv_"
+                        )  # Don't reverse synthetic group containment
                     ]
                 )
                 > 0

@@ -61,7 +61,7 @@ def _gcp_2024_attrs(fillcolor: str, dashed: bool = False) -> dict:
         "penwidth": "0",
         "labeljust": "l",
         "labelloc": "t",
-        "margin": "30",
+        "margin": "70",  # Padding between nodes and cluster edges
         "rank": "same",
         "fontsize": "18",
         "fontname": "Sans-Serif",
@@ -342,6 +342,7 @@ tv_gcp_external_1p = External1stPartyZone
 tv_gcp_logical_group = LogicalGroupZone
 tv_gcp_replica_pool = ReplicaPoolZone
 tv_gcp_optional = OptionalComponentZone
+tv_gcp_load_balancer = SystemZone  # Groups LB components (forwarding_rule, proxy, url_map, backend_service, health_check)
 
 # Legacy compatibility aliases (internal use only)
 gcp_group = GCPGroup

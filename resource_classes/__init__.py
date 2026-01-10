@@ -54,13 +54,13 @@ class Canvas:
         # "pad": "2.0",
         "splines": "true",
         "overlap" : "false",
-        "nodesep": "2",
+        "nodesep": "3",  # Horizontal spacing between nodes
         "fontname": "Sans-Serif",
         "fontsize": "30",
         "fontcolor": "#2D3436",
         "labelloc" : "t",
         "concentrate": 'true',
-        "ranksep": "5",
+        "ranksep": "5",  # Vertical spacing between ranks
         "center": "true",
         "pad" : "1.5",
     }
