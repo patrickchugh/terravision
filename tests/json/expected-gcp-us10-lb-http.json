@@ -18,7 +18,7 @@
         "tv_gcp_region.us_central1"
     ],
     "google_compute_subnetwork.subnet": [
-        "tv_gcp_zone.us_central1_a"
+        "tv_gcp_zone.us_central1_a~2"
     ],
     "google_logging_project_sink.logging": [],
     "module.gce-lb-http.google_compute_backend_service.default[\"default\"][default]~1": [
@@ -54,7 +54,7 @@
     "tv_gcp_users_icon.users": [
         "module.gce-lb-http.google_compute_global_forwarding_rule.http[0]~1"
     ],
-    "tv_gcp_zone.us_central1_a": [
+    "tv_gcp_zone.us_central1_a~2": [
         "google_compute_instance.backend~1",
         "google_compute_instance.backend~2",
         "google_compute_instance_group_manager.backend~1"

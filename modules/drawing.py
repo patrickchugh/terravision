@@ -468,6 +468,11 @@ def handle_group(
     if resource_type not in avl_classes or resource_type in tfdata["hidden"]:
         return None, drawn_resources
 
+    # Skip empty groups (groups with no children)
+    # Empty subnets/groups cause layout issues where they get huge bounding boxes
+    if not tfdata["graphdict"].get(resource):
+        return None, drawn_resources
+
     # Create new group/cluster
     newGroup = getattr(sys.modules[__name__], resource_type)(
         label=helpers.pretty_name(resource, is_group=True)
@@ -579,7 +584,8 @@ def draw_objects(
                         tfdata,
                         all_drawn_resources_list,
                     )
-                    targetGroup.subgraph(node_groups.dot)
+                    if node_groups is not None:
+                        targetGroup.subgraph(node_groups.dot)
 
                 # Draw standalone node resources
                 elif (

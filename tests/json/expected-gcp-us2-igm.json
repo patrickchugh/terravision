@@ -16,14 +16,14 @@
         "tv_gcp_region.us_central1"
     ],
     "google_compute_subnetwork.subnet": [
-        "tv_gcp_zone.us_central1_a"
+        "tv_gcp_zone.us_central1_a~2"
     ],
     "google_logging_project_sink.logging": [],
     "tv_gcp_region.us_central1": [
         "google_compute_instance_template.web",
         "google_compute_subnetwork.subnet"
     ],
-    "tv_gcp_zone.us_central1_a": [
+    "tv_gcp_zone.us_central1_a~2": [
         "google_compute_instance.web~1",
         "google_compute_instance.web~2",
         "google_compute_instance.web~3",

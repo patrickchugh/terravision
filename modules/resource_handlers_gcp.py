@@ -406,6 +406,12 @@ def gcp_link_igms_to_subnet_zones(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with IGMs linked to subnet zones and populated with synthetic VMs
     """
+    # Deduplication: Mark handler as already run to prevent duplicate processing
+    # Since this handler processes ALL IGMs at once, it should only run once total
+    if tfdata.get("_gcp_igm_zones_processed"):
+        return tfdata
+    tfdata["_gcp_igm_zones_processed"] = True
+
     # Build subnet→template mapping from original_graphdict
     # We must use the unmodified Terraform graph because handlers execute in an
     # undefined order based on which resource types are encountered during processing.
@@ -457,9 +463,35 @@ def gcp_link_igms_to_subnet_zones(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         original_meta = tfdata.get("original_metadata", {}).get(igm, {})
         zone = original_meta.get("zone", "unknown-zone")
 
-        # Generate zone node name
-        zone_node = f"tv_gcp_zone.{zone}"
-        zone_node = zone_node.replace("-", "_")
+        # Generate zone node name unique to this subnet
+        # IMPORTANT: Multiple subnets can have resources in the same physical GCP zone.
+        # For diagram clarity, we create separate zone instances per subnet (e.g., zone~1, zone~2)
+        # to avoid the issue where one zone node can't be drawn in multiple subnet parents.
+        zone_base = f"tv_gcp_zone.{zone}".replace("-", "_")
+
+        # Find or create a unique zone instance for THIS SPECIFIC SUBNET
+        # Look for existing zone instances already linked to this subnet
+        existing_zones = [
+            child
+            for child in tfdata["graphdict"].get(subnet, [])
+            if child.startswith(zone_base)
+        ]
+
+        if existing_zones:
+            # Reuse existing zone for this subnet
+            zone_node = existing_zones[0]
+        else:
+            # Create new numbered zone instance unique to this subnet
+            # Count how many instances of this zone already exist globally
+            existing_zone_count = len(
+                [k for k in tfdata["graphdict"] if k.startswith(zone_base)]
+            )
+            if existing_zone_count == 0:
+                # First instance - use base name without number
+                zone_node = zone_base
+            else:
+                # Subsequent instances - use numbered format
+                zone_node = f"{zone_base}~{existing_zone_count + 1}"
 
         # CRITICAL: Handler guard to prevent hierarchy gaps (FR-008a)
         # Verify subnet exists in graphdict before creating zone
@@ -520,6 +552,27 @@ def gcp_link_igms_to_subnet_zones(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             except (ValueError, TypeError):
                 # If target_size is not a valid integer, skip synthetic VM creation
                 pass
+
+    # Cleanup: Remove orphaned zones (zones not linked from any subnet)
+    # This can happen if zones were created but then IGMs were moved elsewhere
+    all_zones = [k for k in tfdata["graphdict"] if k.startswith("tv_gcp_zone.")]
+    for zone in all_zones:
+        # Check if this zone is a child of any subnet
+        is_linked = False
+        for resource, children in tfdata["graphdict"].items():
+            if helpers.get_no_module_name(resource).startswith(
+                "google_compute_subnetwork"
+            ):
+                if zone in children:
+                    is_linked = True
+                    break
+
+        # If zone is not linked from any subnet, remove it
+        if not is_linked:
+            if zone in tfdata["graphdict"]:
+                del tfdata["graphdict"][zone]
+            if zone in tfdata["meta_data"]:
+                del tfdata["meta_data"][zone]
 
     return tfdata
 

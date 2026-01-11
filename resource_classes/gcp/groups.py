@@ -245,6 +245,8 @@ class SubNetworkZone(Cluster):
 
     def __init__(self, label="Subnet", **kwargs):
         attrs = _gcp_2024_attrs("#EDE7F6")
+        # Don't use _shift - it causes label position conflicts for sibling subnets
+        # Instead rely on Graphviz's default label positioning with explicit labeljust/labelloc
         super().__init__(LABEL_PADDING + label, defaultdir, attrs)
 
 

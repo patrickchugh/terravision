@@ -169,6 +169,11 @@ def test_help() -> None:
             "gcp-us10-lb-http-tfdata.json",
             "expected-gcp-us10-lb-http.json",
         ),
+        # GCP Three-Tier Web Application (comprehensive pattern with VPC, subnets, zones, IGM, Cloud SQL, Memorystore)
+        (
+            "gcp-three-tier-webapp-tfdata.json",
+            "expected-gcp-three-tier-webapp.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
