@@ -102,9 +102,11 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         if not annotation_node:
                             annotation_node = new_node.split(".")[0] + ".this"
                     else:
-                        # Create new node if it doesn't exist
-                        tfdata["graphdict"][new_node] = list()
+                        # Use literal node name, don't overwrite if exists
                         annotation_node = new_node
+                        # Only create node if it doesn't exist
+                        if annotation_node not in tfdata["graphdict"]:
+                            tfdata["graphdict"][annotation_node] = list()
 
                     # Determine connection direction
                     if auto_node[node_prefix]["arrow"] == "forward":
@@ -132,8 +134,9 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         else:
                             graphdict[annotation_node] = [node]
 
-                    # Initialize metadata for annotation node
-                    tfdata["meta_data"][annotation_node] = dict()
+                    # Initialize metadata for annotation node only if it doesn't exist
+                    if annotation_node not in tfdata["meta_data"]:
+                        tfdata["meta_data"][annotation_node] = dict()
 
     tfdata["graphdict"] = graphdict
 

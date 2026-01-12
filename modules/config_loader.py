@@ -5,9 +5,6 @@ This module provides dynamic loading of provider-specific configuration files.
 It replaces direct imports of cloud_config.py with runtime provider detection
 and configuration loading.
 
-API Version: 1.0.0
-Author: TerraVision Multi-Cloud Feature
-Date: 2025-12-07
 """
 
 from typing import Dict, Any, Optional

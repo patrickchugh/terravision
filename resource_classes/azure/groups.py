@@ -41,10 +41,7 @@ from pathlib import Path
 from resource_classes import Cluster
 
 defaultdir = "LR"
-try:
-    base_path = sys._MEIPASS
-except AttributeError:
-    base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
+base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
 
 
 class AZUREGroup(Cluster):
@@ -104,6 +101,8 @@ class VNetGroup(Cluster):
             "rank": "same",
         }
         # Store label info for creating separate label node at bottom
+        # Note: Native labelloc/labeljust don't work with neato for nested subgraphs,
+        # so we use gvpr post-processing to position the label node
         self.label_text = label
         self.label_icon = (
             f"{base_path}/resource_images/azure/network/virtual-networks.png"

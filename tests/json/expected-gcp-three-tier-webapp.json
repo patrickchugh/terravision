@@ -1,0 +1,104 @@
+{
+    "google_compute_backend_bucket.static": [
+        "google_storage_bucket.static_assets"
+    ],
+    "google_compute_backend_service.web": [
+        "google_compute_health_check.http",
+        "google_compute_instance_group_manager.web~1",
+        "google_compute_url_map.web"
+    ],
+    "google_compute_firewall.firewall": [],
+    "google_compute_global_address.lb": [
+        "google_monitoring_uptime_check_config.http"
+    ],
+    "google_compute_global_forwarding_rule.http": [
+        "google_compute_global_address.lb",
+        "google_compute_target_http_proxy.web"
+    ],
+    "google_compute_health_check.http": [],
+    "google_compute_instance.app~1": [],
+    "google_compute_instance.app~2": [],
+    "google_compute_instance.web~1": [],
+    "google_compute_instance.web~2": [],
+    "google_compute_instance_group_manager.app~1": [
+        "google_compute_instance.app~1",
+        "google_compute_instance.app~2",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_instance_group_manager.web~1": [
+        "google_compute_instance.web~1",
+        "google_compute_instance.web~2",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_instance_template.app": [
+        "google_compute_instance_group_manager.app~1",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_instance_template.web": [
+        "google_compute_instance_group_manager.web~1",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_network.main": [
+        "google_compute_firewall.firewall",
+        "google_redis_instance.cache",
+        "google_sql_database_instance.main",
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.app": [
+        "tv_gcp_zone.us_central1_a~2"
+    ],
+    "google_compute_subnetwork.db": [],
+    "google_compute_subnetwork.web": [
+        "tv_gcp_zone.us_central1_a~3"
+    ],
+    "google_compute_target_http_proxy.web": [
+        "google_compute_url_map.web"
+    ],
+    "google_compute_url_map.web": [],
+    "google_logging_project_sink.logging": [
+        "google_storage_bucket.logs",
+        "google_storage_bucket_iam_member.logs_writer"
+    ],
+    "google_monitoring_uptime_check_config.http": [],
+    "google_redis_instance.cache": [],
+    "google_sql_database.app_db": [
+        "google_sql_database_instance.main"
+    ],
+    "google_sql_database_instance.main": [],
+    "google_sql_user.app_user": [
+        "google_sql_database_instance.main"
+    ],
+    "google_storage_bucket.logs": [
+        "google_storage_bucket_iam_member.logs_writer"
+    ],
+    "google_storage_bucket.static_assets": [],
+    "google_storage_bucket_iam_member.logs_writer": [],
+    "tv_gcp_load_balancer.http_load_balancer": [
+        "google_compute_backend_service.web",
+        "google_compute_global_address.lb",
+        "google_compute_global_forwarding_rule.http",
+        "google_compute_health_check.http",
+        "google_compute_target_http_proxy.web",
+        "google_compute_url_map.web"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_instance_template.app",
+        "google_compute_instance_template.web",
+        "google_compute_subnetwork.app",
+        "google_compute_subnetwork.db",
+        "google_compute_subnetwork.web"
+    ],
+    "tv_gcp_users_icon.users": [
+        "google_compute_global_forwarding_rule.http"
+    ],
+    "tv_gcp_zone.us_central1_a~2": [
+        "google_compute_instance.app~1",
+        "google_compute_instance.app~2",
+        "google_compute_instance_group_manager.app~1"
+    ],
+    "tv_gcp_zone.us_central1_a~3": [
+        "google_compute_instance.web~1",
+        "google_compute_instance.web~2",
+        "google_compute_instance_group_manager.web~1"
+    ]
+}

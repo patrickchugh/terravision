@@ -1,0 +1,2027 @@
+{
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us1_compute_instances",
+    "workdir": "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us1_compute_instances",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "outputs": {
+                "instance_a_zone": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "us-central1-a"
+                },
+                "instance_b_zone": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "us-central1-b"
+                },
+                "subnet_id": {
+                    "sensitive": false
+                },
+                "vpc_id": {
+                    "sensitive": false
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "google_compute_instance.web_server_a",
+                        "mode": "managed",
+                        "type": "google_compute_instance",
+                        "name": "web_server_a",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 6,
+                        "values": {
+                            "advanced_machine_features": [],
+                            "allow_stopping_for_update": null,
+                            "attached_disk": [],
+                            "boot_disk": [
+                                {
+                                    "auto_delete": true,
+                                    "disk_encryption_key_raw": null,
+                                    "initialize_params": [
+                                        {
+                                            "enable_confidential_compute": null,
+                                            "image": "debian-cloud/debian-11",
+                                            "resource_manager_tags": null,
+                                            "storage_pool": null
+                                        }
+                                    ],
+                                    "mode": "READ_WRITE"
+                                }
+                            ],
+                            "can_ip_forward": false,
+                            "deletion_protection": false,
+                            "description": null,
+                            "desired_status": null,
+                            "enable_display": null,
+                            "hostname": null,
+                            "labels": null,
+                            "machine_type": "e2-medium",
+                            "metadata": {
+                                "startup-script": "#!/bin/bash\necho 'Web Server A' > /var/www/html/index.html"
+                            },
+                            "metadata_startup_script": null,
+                            "name": "web-server-a",
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": [],
+                                    "nic_type": null,
+                                    "queue_count": null
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "params": [],
+                            "project": "terravision-test-project",
+                            "resource_policies": null,
+                            "scratch_disk": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                "web",
+                                "zone-a"
+                            ],
+                            "timeouts": null,
+                            "zone": "us-central1-a"
+                        },
+                        "sensitive_values": {
+                            "advanced_machine_features": [],
+                            "attached_disk": [],
+                            "boot_disk": [
+                                {
+                                    "disk_encryption_key_raw": true,
+                                    "initialize_params": [
+                                        {
+                                            "labels": {}
+                                        }
+                                    ]
+                                }
+                            ],
+                            "confidential_instance_config": [],
+                            "effective_labels": {},
+                            "guest_accelerator": [],
+                            "metadata": {},
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": []
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "params": [],
+                            "reservation_affinity": [],
+                            "scheduling": [],
+                            "scratch_disk": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                false,
+                                false
+                            ],
+                            "terraform_labels": {}
+                        }
+                    },
+                    {
+                        "address": "google_compute_instance.web_server_b",
+                        "mode": "managed",
+                        "type": "google_compute_instance",
+                        "name": "web_server_b",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 6,
+                        "values": {
+                            "advanced_machine_features": [],
+                            "allow_stopping_for_update": null,
+                            "attached_disk": [],
+                            "boot_disk": [
+                                {
+                                    "auto_delete": true,
+                                    "disk_encryption_key_raw": null,
+                                    "initialize_params": [
+                                        {
+                                            "enable_confidential_compute": null,
+                                            "image": "debian-cloud/debian-11",
+                                            "resource_manager_tags": null,
+                                            "storage_pool": null
+                                        }
+                                    ],
+                                    "mode": "READ_WRITE"
+                                }
+                            ],
+                            "can_ip_forward": false,
+                            "deletion_protection": false,
+                            "description": null,
+                            "desired_status": null,
+                            "enable_display": null,
+                            "hostname": null,
+                            "labels": null,
+                            "machine_type": "e2-medium",
+                            "metadata": {
+                                "startup-script": "#!/bin/bash\necho 'Web Server B' > /var/www/html/index.html"
+                            },
+                            "metadata_startup_script": null,
+                            "name": "web-server-b",
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": [],
+                                    "nic_type": null,
+                                    "queue_count": null
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "params": [],
+                            "project": "terravision-test-project",
+                            "resource_policies": null,
+                            "scratch_disk": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                "web",
+                                "zone-b"
+                            ],
+                            "timeouts": null,
+                            "zone": "us-central1-b"
+                        },
+                        "sensitive_values": {
+                            "advanced_machine_features": [],
+                            "attached_disk": [],
+                            "boot_disk": [
+                                {
+                                    "disk_encryption_key_raw": true,
+                                    "initialize_params": [
+                                        {
+                                            "labels": {}
+                                        }
+                                    ]
+                                }
+                            ],
+                            "confidential_instance_config": [],
+                            "effective_labels": {},
+                            "guest_accelerator": [],
+                            "metadata": {},
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": []
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "params": [],
+                            "reservation_affinity": [],
+                            "scheduling": [],
+                            "scratch_disk": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                false,
+                                false
+                            ],
+                            "terraform_labels": {}
+                        }
+                    },
+                    {
+                        "address": "google_compute_network.main_vpc",
+                        "mode": "managed",
+                        "type": "google_compute_network",
+                        "name": "main_vpc",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "auto_create_subnetworks": false,
+                            "delete_default_routes_on_create": false,
+                            "description": null,
+                            "enable_ula_internal_ipv6": null,
+                            "name": "main-vpc",
+                            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                            "project": "terravision-test-project",
+                            "timeouts": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "google_compute_subnetwork.main_subnet",
+                        "mode": "managed",
+                        "type": "google_compute_subnetwork",
+                        "name": "main_subnet",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "description": null,
+                            "ip_cidr_range": "10.0.1.0/24",
+                            "ipv6_access_type": null,
+                            "log_config": [],
+                            "name": "main-subnet",
+                            "project": "terravision-test-project",
+                            "region": "us-central1",
+                            "role": null,
+                            "send_secondary_ip_range_if_empty": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "log_config": [],
+                            "secondary_ip_range": []
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "google_compute_instance.web_server_a",
+                "mode": "managed",
+                "type": "google_compute_instance",
+                "name": "web_server_a",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "advanced_machine_features": [],
+                        "allow_stopping_for_update": null,
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "disk_encryption_key_raw": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": {}
+                                    }
+                                ]
+                            }
+                        ],
+                        "can_ip_forward": false,
+                        "deletion_protection": false,
+                        "description": null,
+                        "desired_status": null,
+                        "enable_display": null,
+                        "hostname": null,
+                        "labels": null,
+                        "machine_type": "e2-medium",
+                        "metadata": {},
+                        "metadata_startup_script": null,
+                        "name": "web-server-a",
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "project": "terravision-test-project",
+                        "resource_policies": null,
+                        "scratch_disk": [],
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "timeouts": null,
+                        "zone": "us-central1-a",
+                        "confidential_instance_config": [],
+                        "cpu_platform": true,
+                        "current_status": true,
+                        "effective_labels": {},
+                        "guest_accelerator": [],
+                        "id": true,
+                        "instance_id": true,
+                        "label_fingerprint": true,
+                        "metadata_fingerprint": true,
+                        "min_cpu_platform": true,
+                        "reservation_affinity": [],
+                        "scheduling": [],
+                        "self_link": true,
+                        "tags_fingerprint": true,
+                        "terraform_labels": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "advanced_machine_features": [],
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "device_name": true,
+                                "disk_encryption_key_sha256": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": true,
+                                        "provisioned_iops": true,
+                                        "provisioned_throughput": true,
+                                        "size": true,
+                                        "type": true
+                                    }
+                                ],
+                                "kms_key_self_link": true,
+                                "source": true
+                            }
+                        ],
+                        "confidential_instance_config": true,
+                        "cpu_platform": true,
+                        "current_status": true,
+                        "effective_labels": true,
+                        "guest_accelerator": true,
+                        "id": true,
+                        "instance_id": true,
+                        "label_fingerprint": true,
+                        "metadata": {},
+                        "metadata_fingerprint": true,
+                        "min_cpu_platform": true,
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "internal_ipv6_prefix_length": true,
+                                "ipv6_access_config": [],
+                                "ipv6_access_type": true,
+                                "ipv6_address": true,
+                                "name": true,
+                                "network": true,
+                                "network_ip": true,
+                                "stack_type": true,
+                                "subnetwork": true,
+                                "subnetwork_project": true
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "reservation_affinity": true,
+                        "scheduling": true,
+                        "scratch_disk": [],
+                        "self_link": true,
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "tags_fingerprint": true,
+                        "terraform_labels": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "advanced_machine_features": [],
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "disk_encryption_key_raw": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": {}
+                                    }
+                                ]
+                            }
+                        ],
+                        "confidential_instance_config": [],
+                        "effective_labels": {},
+                        "guest_accelerator": [],
+                        "metadata": {},
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "reservation_affinity": [],
+                        "scheduling": [],
+                        "scratch_disk": [],
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "terraform_labels": {}
+                    }
+                }
+            },
+            {
+                "address": "google_compute_instance.web_server_b",
+                "mode": "managed",
+                "type": "google_compute_instance",
+                "name": "web_server_b",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "advanced_machine_features": [],
+                        "allow_stopping_for_update": null,
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "disk_encryption_key_raw": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": {}
+                                    }
+                                ]
+                            }
+                        ],
+                        "can_ip_forward": false,
+                        "deletion_protection": false,
+                        "description": null,
+                        "desired_status": null,
+                        "enable_display": null,
+                        "hostname": null,
+                        "labels": null,
+                        "machine_type": "e2-medium",
+                        "metadata": {},
+                        "metadata_startup_script": null,
+                        "name": "web-server-b",
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "project": "terravision-test-project",
+                        "resource_policies": null,
+                        "scratch_disk": [],
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "timeouts": null,
+                        "zone": "us-central1-b",
+                        "confidential_instance_config": [],
+                        "cpu_platform": true,
+                        "current_status": true,
+                        "effective_labels": {},
+                        "guest_accelerator": [],
+                        "id": true,
+                        "instance_id": true,
+                        "label_fingerprint": true,
+                        "metadata_fingerprint": true,
+                        "min_cpu_platform": true,
+                        "reservation_affinity": [],
+                        "scheduling": [],
+                        "self_link": true,
+                        "tags_fingerprint": true,
+                        "terraform_labels": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "advanced_machine_features": [],
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "device_name": true,
+                                "disk_encryption_key_sha256": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": true,
+                                        "provisioned_iops": true,
+                                        "provisioned_throughput": true,
+                                        "size": true,
+                                        "type": true
+                                    }
+                                ],
+                                "kms_key_self_link": true,
+                                "source": true
+                            }
+                        ],
+                        "confidential_instance_config": true,
+                        "cpu_platform": true,
+                        "current_status": true,
+                        "effective_labels": true,
+                        "guest_accelerator": true,
+                        "id": true,
+                        "instance_id": true,
+                        "label_fingerprint": true,
+                        "metadata": {},
+                        "metadata_fingerprint": true,
+                        "min_cpu_platform": true,
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "internal_ipv6_prefix_length": true,
+                                "ipv6_access_config": [],
+                                "ipv6_access_type": true,
+                                "ipv6_address": true,
+                                "name": true,
+                                "network": true,
+                                "network_ip": true,
+                                "stack_type": true,
+                                "subnetwork": true,
+                                "subnetwork_project": true
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "reservation_affinity": true,
+                        "scheduling": true,
+                        "scratch_disk": [],
+                        "self_link": true,
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "tags_fingerprint": true,
+                        "terraform_labels": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "advanced_machine_features": [],
+                        "attached_disk": [],
+                        "boot_disk": [
+                            {
+                                "disk_encryption_key_raw": true,
+                                "initialize_params": [
+                                    {
+                                        "labels": {}
+                                    }
+                                ]
+                            }
+                        ],
+                        "confidential_instance_config": [],
+                        "effective_labels": {},
+                        "guest_accelerator": [],
+                        "metadata": {},
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "params": [],
+                        "reservation_affinity": [],
+                        "scheduling": [],
+                        "scratch_disk": [],
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "terraform_labels": {}
+                    }
+                }
+            },
+            {
+                "address": "google_compute_network.main_vpc",
+                "mode": "managed",
+                "type": "google_compute_network",
+                "name": "main_vpc",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "auto_create_subnetworks": false,
+                        "delete_default_routes_on_create": false,
+                        "description": null,
+                        "enable_ula_internal_ipv6": null,
+                        "name": "main-vpc",
+                        "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                        "project": "terravision-test-project",
+                        "timeouts": null,
+                        "gateway_ipv4": true,
+                        "id": true,
+                        "internal_ipv6_range": true,
+                        "mtu": true,
+                        "numeric_id": true,
+                        "routing_mode": true,
+                        "self_link": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "gateway_ipv4": true,
+                        "id": true,
+                        "internal_ipv6_range": true,
+                        "mtu": true,
+                        "numeric_id": true,
+                        "routing_mode": true,
+                        "self_link": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "google_compute_subnetwork.main_subnet",
+                "mode": "managed",
+                "type": "google_compute_subnetwork",
+                "name": "main_subnet",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": null,
+                        "ip_cidr_range": "10.0.1.0/24",
+                        "ipv6_access_type": null,
+                        "log_config": [],
+                        "name": "main-subnet",
+                        "project": "terravision-test-project",
+                        "region": "us-central1",
+                        "role": null,
+                        "send_secondary_ip_range_if_empty": null,
+                        "timeouts": null,
+                        "creation_timestamp": true,
+                        "external_ipv6_prefix": true,
+                        "fingerprint": true,
+                        "gateway_address": true,
+                        "id": true,
+                        "internal_ipv6_prefix": true,
+                        "ipv6_cidr_range": true,
+                        "network": true,
+                        "private_ip_google_access": true,
+                        "private_ipv6_google_access": true,
+                        "purpose": true,
+                        "secondary_ip_range": [],
+                        "self_link": true,
+                        "stack_type": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "creation_timestamp": true,
+                        "external_ipv6_prefix": true,
+                        "fingerprint": true,
+                        "gateway_address": true,
+                        "id": true,
+                        "internal_ipv6_prefix": true,
+                        "ipv6_cidr_range": true,
+                        "log_config": [],
+                        "network": true,
+                        "private_ip_google_access": true,
+                        "private_ipv6_google_access": true,
+                        "purpose": true,
+                        "secondary_ip_range": true,
+                        "self_link": true,
+                        "stack_type": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "log_config": [],
+                        "secondary_ip_range": []
+                    }
+                }
+            }
+        ],
+        "output_changes": {
+            "instance_a_zone": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "us-central1-a",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "instance_b_zone": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "us-central1-b",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "subnet_id": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after_unknown": true,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "vpc_id": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after_unknown": true,
+                "before_sensitive": false,
+                "after_sensitive": false
+            }
+        },
+        "prior_state": {
+            "format_version": "1.0",
+            "terraform_version": "1.13.3",
+            "values": {
+                "outputs": {
+                    "instance_a_zone": {
+                        "sensitive": false,
+                        "value": "us-central1-a",
+                        "type": "string"
+                    },
+                    "instance_b_zone": {
+                        "sensitive": false,
+                        "value": "us-central1-b",
+                        "type": "string"
+                    }
+                },
+                "root_module": {}
+            }
+        },
+        "configuration": {
+            "provider_config": {
+                "google": {
+                    "name": "google",
+                    "full_name": "registry.terraform.io/hashicorp/google",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "project": {
+                            "constant_value": "terravision-test-project"
+                        },
+                        "region": {
+                            "constant_value": "us-central1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "outputs": {
+                    "instance_a_zone": {
+                        "expression": {
+                            "references": [
+                                "google_compute_instance.web_server_a.zone",
+                                "google_compute_instance.web_server_a"
+                            ]
+                        },
+                        "description": "Instance A zone"
+                    },
+                    "instance_b_zone": {
+                        "expression": {
+                            "references": [
+                                "google_compute_instance.web_server_b.zone",
+                                "google_compute_instance.web_server_b"
+                            ]
+                        },
+                        "description": "Instance B zone"
+                    },
+                    "subnet_id": {
+                        "expression": {
+                            "references": [
+                                "google_compute_subnetwork.main_subnet.id",
+                                "google_compute_subnetwork.main_subnet"
+                            ]
+                        },
+                        "description": "Subnet ID"
+                    },
+                    "vpc_id": {
+                        "expression": {
+                            "references": [
+                                "google_compute_network.main_vpc.id",
+                                "google_compute_network.main_vpc"
+                            ]
+                        },
+                        "description": "VPC network ID"
+                    }
+                },
+                "resources": [
+                    {
+                        "address": "google_compute_instance.web_server_a",
+                        "mode": "managed",
+                        "type": "google_compute_instance",
+                        "name": "web_server_a",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "boot_disk": [
+                                {
+                                    "initialize_params": [
+                                        {
+                                            "image": {
+                                                "constant_value": "debian-cloud/debian-11"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            "machine_type": {
+                                "constant_value": "e2-medium"
+                            },
+                            "metadata": {
+                                "constant_value": {
+                                    "startup-script": "#!/bin/bash\necho 'Web Server A' > /var/www/html/index.html"
+                                }
+                            },
+                            "name": {
+                                "constant_value": "web-server-a"
+                            },
+                            "network_interface": [
+                                {
+                                    "subnetwork": {
+                                        "references": [
+                                            "google_compute_subnetwork.main_subnet.id",
+                                            "google_compute_subnetwork.main_subnet"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "tags": {
+                                "constant_value": [
+                                    "web",
+                                    "zone-a"
+                                ]
+                            },
+                            "zone": {
+                                "constant_value": "us-central1-a"
+                            }
+                        },
+                        "schema_version": 6
+                    },
+                    {
+                        "address": "google_compute_instance.web_server_b",
+                        "mode": "managed",
+                        "type": "google_compute_instance",
+                        "name": "web_server_b",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "boot_disk": [
+                                {
+                                    "initialize_params": [
+                                        {
+                                            "image": {
+                                                "constant_value": "debian-cloud/debian-11"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ],
+                            "machine_type": {
+                                "constant_value": "e2-medium"
+                            },
+                            "metadata": {
+                                "constant_value": {
+                                    "startup-script": "#!/bin/bash\necho 'Web Server B' > /var/www/html/index.html"
+                                }
+                            },
+                            "name": {
+                                "constant_value": "web-server-b"
+                            },
+                            "network_interface": [
+                                {
+                                    "subnetwork": {
+                                        "references": [
+                                            "google_compute_subnetwork.main_subnet.id",
+                                            "google_compute_subnetwork.main_subnet"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "tags": {
+                                "constant_value": [
+                                    "web",
+                                    "zone-b"
+                                ]
+                            },
+                            "zone": {
+                                "constant_value": "us-central1-b"
+                            }
+                        },
+                        "schema_version": 6
+                    },
+                    {
+                        "address": "google_compute_network.main_vpc",
+                        "mode": "managed",
+                        "type": "google_compute_network",
+                        "name": "main_vpc",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "auto_create_subnetworks": {
+                                "constant_value": false
+                            },
+                            "name": {
+                                "constant_value": "main-vpc"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "google_compute_subnetwork.main_subnet",
+                        "mode": "managed",
+                        "type": "google_compute_subnetwork",
+                        "name": "main_subnet",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "ip_cidr_range": {
+                                "constant_value": "10.0.1.0/24"
+                            },
+                            "name": {
+                                "constant_value": "main-subnet"
+                            },
+                            "network": {
+                                "references": [
+                                    "google_compute_network.main_vpc.id",
+                                    "google_compute_network.main_vpc"
+                                ]
+                            },
+                            "region": {
+                                "constant_value": "us-central1"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "google_compute_network.main_vpc",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "google_compute_instance.web_server_a",
+                "attribute": [
+                    "zone"
+                ]
+            },
+            {
+                "resource": "google_compute_instance.web_server_b",
+                "attribute": [
+                    "zone"
+                ]
+            },
+            {
+                "resource": "google_compute_subnetwork.main_subnet",
+                "attribute": [
+                    "id"
+                ]
+            }
+        ],
+        "timestamp": "2026-01-10T17:27:02Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "google_compute_instance.web_server_a",
+            "mode": "managed",
+            "type": "google_compute_instance",
+            "name": "web_server_a",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "advanced_machine_features": [],
+                    "allow_stopping_for_update": null,
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "disk_encryption_key_raw": true,
+                            "initialize_params": [
+                                {
+                                    "labels": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "can_ip_forward": false,
+                    "deletion_protection": false,
+                    "description": null,
+                    "desired_status": null,
+                    "enable_display": null,
+                    "hostname": null,
+                    "labels": null,
+                    "machine_type": "e2-medium",
+                    "metadata": {},
+                    "metadata_startup_script": null,
+                    "name": "web-server-a",
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "project": "terravision-test-project",
+                    "resource_policies": null,
+                    "scratch_disk": [],
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "timeouts": null,
+                    "zone": "us-central1-a",
+                    "confidential_instance_config": [],
+                    "cpu_platform": true,
+                    "current_status": true,
+                    "effective_labels": {},
+                    "guest_accelerator": [],
+                    "id": true,
+                    "instance_id": true,
+                    "label_fingerprint": true,
+                    "metadata_fingerprint": true,
+                    "min_cpu_platform": true,
+                    "reservation_affinity": [],
+                    "scheduling": [],
+                    "self_link": true,
+                    "tags_fingerprint": true,
+                    "terraform_labels": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "advanced_machine_features": [],
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "device_name": true,
+                            "disk_encryption_key_sha256": true,
+                            "initialize_params": [
+                                {
+                                    "labels": true,
+                                    "provisioned_iops": true,
+                                    "provisioned_throughput": true,
+                                    "size": true,
+                                    "type": true
+                                }
+                            ],
+                            "kms_key_self_link": true,
+                            "source": true
+                        }
+                    ],
+                    "confidential_instance_config": true,
+                    "cpu_platform": true,
+                    "current_status": true,
+                    "effective_labels": true,
+                    "guest_accelerator": true,
+                    "id": true,
+                    "instance_id": true,
+                    "label_fingerprint": true,
+                    "metadata": {},
+                    "metadata_fingerprint": true,
+                    "min_cpu_platform": true,
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "internal_ipv6_prefix_length": true,
+                            "ipv6_access_config": [],
+                            "ipv6_access_type": true,
+                            "ipv6_address": true,
+                            "name": true,
+                            "network": true,
+                            "network_ip": true,
+                            "stack_type": true,
+                            "subnetwork": true,
+                            "subnetwork_project": true
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "reservation_affinity": true,
+                    "scheduling": true,
+                    "scratch_disk": [],
+                    "self_link": true,
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "tags_fingerprint": true,
+                    "terraform_labels": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "advanced_machine_features": [],
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "disk_encryption_key_raw": true,
+                            "initialize_params": [
+                                {
+                                    "labels": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "confidential_instance_config": [],
+                    "effective_labels": {},
+                    "guest_accelerator": [],
+                    "metadata": {},
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "reservation_affinity": [],
+                    "scheduling": [],
+                    "scratch_disk": [],
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "terraform_labels": {}
+                }
+            }
+        },
+        {
+            "address": "google_compute_instance.web_server_b",
+            "mode": "managed",
+            "type": "google_compute_instance",
+            "name": "web_server_b",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "advanced_machine_features": [],
+                    "allow_stopping_for_update": null,
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "disk_encryption_key_raw": true,
+                            "initialize_params": [
+                                {
+                                    "labels": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "can_ip_forward": false,
+                    "deletion_protection": false,
+                    "description": null,
+                    "desired_status": null,
+                    "enable_display": null,
+                    "hostname": null,
+                    "labels": null,
+                    "machine_type": "e2-medium",
+                    "metadata": {},
+                    "metadata_startup_script": null,
+                    "name": "web-server-b",
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "project": "terravision-test-project",
+                    "resource_policies": null,
+                    "scratch_disk": [],
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "timeouts": null,
+                    "zone": "us-central1-b",
+                    "confidential_instance_config": [],
+                    "cpu_platform": true,
+                    "current_status": true,
+                    "effective_labels": {},
+                    "guest_accelerator": [],
+                    "id": true,
+                    "instance_id": true,
+                    "label_fingerprint": true,
+                    "metadata_fingerprint": true,
+                    "min_cpu_platform": true,
+                    "reservation_affinity": [],
+                    "scheduling": [],
+                    "self_link": true,
+                    "tags_fingerprint": true,
+                    "terraform_labels": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "advanced_machine_features": [],
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "device_name": true,
+                            "disk_encryption_key_sha256": true,
+                            "initialize_params": [
+                                {
+                                    "labels": true,
+                                    "provisioned_iops": true,
+                                    "provisioned_throughput": true,
+                                    "size": true,
+                                    "type": true
+                                }
+                            ],
+                            "kms_key_self_link": true,
+                            "source": true
+                        }
+                    ],
+                    "confidential_instance_config": true,
+                    "cpu_platform": true,
+                    "current_status": true,
+                    "effective_labels": true,
+                    "guest_accelerator": true,
+                    "id": true,
+                    "instance_id": true,
+                    "label_fingerprint": true,
+                    "metadata": {},
+                    "metadata_fingerprint": true,
+                    "min_cpu_platform": true,
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "internal_ipv6_prefix_length": true,
+                            "ipv6_access_config": [],
+                            "ipv6_access_type": true,
+                            "ipv6_address": true,
+                            "name": true,
+                            "network": true,
+                            "network_ip": true,
+                            "stack_type": true,
+                            "subnetwork": true,
+                            "subnetwork_project": true
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "reservation_affinity": true,
+                    "scheduling": true,
+                    "scratch_disk": [],
+                    "self_link": true,
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "tags_fingerprint": true,
+                    "terraform_labels": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "advanced_machine_features": [],
+                    "attached_disk": [],
+                    "boot_disk": [
+                        {
+                            "disk_encryption_key_raw": true,
+                            "initialize_params": [
+                                {
+                                    "labels": {}
+                                }
+                            ]
+                        }
+                    ],
+                    "confidential_instance_config": [],
+                    "effective_labels": {},
+                    "guest_accelerator": [],
+                    "metadata": {},
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "params": [],
+                    "reservation_affinity": [],
+                    "scheduling": [],
+                    "scratch_disk": [],
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "terraform_labels": {}
+                }
+            }
+        },
+        {
+            "address": "google_compute_network.main_vpc",
+            "mode": "managed",
+            "type": "google_compute_network",
+            "name": "main_vpc",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "auto_create_subnetworks": false,
+                    "delete_default_routes_on_create": false,
+                    "description": null,
+                    "enable_ula_internal_ipv6": null,
+                    "name": "main-vpc",
+                    "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                    "project": "terravision-test-project",
+                    "timeouts": null,
+                    "gateway_ipv4": true,
+                    "id": true,
+                    "internal_ipv6_range": true,
+                    "mtu": true,
+                    "numeric_id": true,
+                    "routing_mode": true,
+                    "self_link": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "gateway_ipv4": true,
+                    "id": true,
+                    "internal_ipv6_range": true,
+                    "mtu": true,
+                    "numeric_id": true,
+                    "routing_mode": true,
+                    "self_link": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "google_compute_subnetwork.main_subnet",
+            "mode": "managed",
+            "type": "google_compute_subnetwork",
+            "name": "main_subnet",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": null,
+                    "ip_cidr_range": "10.0.1.0/24",
+                    "ipv6_access_type": null,
+                    "log_config": [],
+                    "name": "main-subnet",
+                    "project": "terravision-test-project",
+                    "region": "us-central1",
+                    "role": null,
+                    "send_secondary_ip_range_if_empty": null,
+                    "timeouts": null,
+                    "creation_timestamp": true,
+                    "external_ipv6_prefix": true,
+                    "fingerprint": true,
+                    "gateway_address": true,
+                    "id": true,
+                    "internal_ipv6_prefix": true,
+                    "ipv6_cidr_range": true,
+                    "network": true,
+                    "private_ip_google_access": true,
+                    "private_ipv6_google_access": true,
+                    "purpose": true,
+                    "secondary_ip_range": [],
+                    "self_link": true,
+                    "stack_type": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "creation_timestamp": true,
+                    "external_ipv6_prefix": true,
+                    "fingerprint": true,
+                    "gateway_address": true,
+                    "id": true,
+                    "internal_ipv6_prefix": true,
+                    "ipv6_cidr_range": true,
+                    "log_config": [],
+                    "network": true,
+                    "private_ip_google_access": true,
+                    "private_ipv6_google_access": true,
+                    "purpose": true,
+                    "secondary_ip_range": true,
+                    "self_link": true,
+                    "stack_type": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "log_config": [],
+                    "secondary_ip_range": []
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "google_compute_instance.web_server_a",
+                "fontname": "sans-serif",
+                "label": "google_compute_instance.web_server_a",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "google_compute_instance.web_server_b",
+                "fontname": "sans-serif",
+                "label": "google_compute_instance.web_server_b",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "google_compute_network.main_vpc",
+                "fontname": "sans-serif",
+                "label": "google_compute_network.main_vpc",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "google_compute_subnetwork.main_subnet",
+                "fontname": "sans-serif",
+                "label": "google_compute_subnetwork.main_subnet",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 3
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 3
+            },
+            {
+                "_gvid": 2,
+                "tail": 3,
+                "head": 2
+            }
+        ]
+    },
+    "graphdict": {
+        "google_compute_instance.web_server_a": [],
+        "google_compute_instance.web_server_b": [],
+        "google_compute_network.main_vpc": [
+            "google_compute_subnetwork.main_subnet"
+        ],
+        "google_compute_subnetwork.main_subnet": [
+            "google_compute_instance.web_server_a",
+            "google_compute_instance.web_server_b"
+        ]
+    },
+    "meta_data": {
+        "google_compute_instance.web_server_a": {
+            "advanced_machine_features": [],
+            "allow_stopping_for_update": null,
+            "attached_disk": [],
+            "boot_disk": [
+                {
+                    "disk_encryption_key_raw": true,
+                    "initialize_params": [
+                        {
+                            "labels": {}
+                        }
+                    ]
+                }
+            ],
+            "can_ip_forward": false,
+            "deletion_protection": false,
+            "description": null,
+            "desired_status": null,
+            "enable_display": null,
+            "hostname": null,
+            "labels": null,
+            "machine_type": "e2-medium",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "name": "web-server-a",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "params": [],
+            "project": "terravision-test-project",
+            "resource_policies": null,
+            "scratch_disk": [],
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "zone": "us-central1-a",
+            "confidential_instance_config": [],
+            "cpu_platform": true,
+            "current_status": true,
+            "effective_labels": {},
+            "guest_accelerator": [],
+            "id": true,
+            "instance_id": true,
+            "label_fingerprint": true,
+            "metadata_fingerprint": true,
+            "min_cpu_platform": true,
+            "reservation_affinity": [],
+            "scheduling": [],
+            "self_link": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_instance.web_server_b": {
+            "advanced_machine_features": [],
+            "allow_stopping_for_update": null,
+            "attached_disk": [],
+            "boot_disk": [
+                {
+                    "disk_encryption_key_raw": true,
+                    "initialize_params": [
+                        {
+                            "labels": {}
+                        }
+                    ]
+                }
+            ],
+            "can_ip_forward": false,
+            "deletion_protection": false,
+            "description": null,
+            "desired_status": null,
+            "enable_display": null,
+            "hostname": null,
+            "labels": null,
+            "machine_type": "e2-medium",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "name": "web-server-b",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "params": [],
+            "project": "terravision-test-project",
+            "resource_policies": null,
+            "scratch_disk": [],
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "zone": "us-central1-b",
+            "confidential_instance_config": [],
+            "cpu_platform": true,
+            "current_status": true,
+            "effective_labels": {},
+            "guest_accelerator": [],
+            "id": true,
+            "instance_id": true,
+            "label_fingerprint": true,
+            "metadata_fingerprint": true,
+            "min_cpu_platform": true,
+            "reservation_affinity": [],
+            "scheduling": [],
+            "self_link": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_network.main_vpc": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": null,
+            "enable_ula_internal_ipv6": null,
+            "name": "main-vpc",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "project": "terravision-test-project",
+            "timeouts": null,
+            "gateway_ipv4": true,
+            "id": true,
+            "internal_ipv6_range": true,
+            "mtu": true,
+            "numeric_id": true,
+            "routing_mode": true,
+            "self_link": true,
+            "module": "main"
+        },
+        "google_compute_subnetwork.main_subnet": {
+            "description": null,
+            "ip_cidr_range": "10.0.1.0/24",
+            "ipv6_access_type": null,
+            "log_config": [],
+            "name": "main-subnet",
+            "project": "terravision-test-project",
+            "region": "us-central1",
+            "role": null,
+            "send_secondary_ip_range_if_empty": null,
+            "timeouts": null,
+            "creation_timestamp": true,
+            "external_ipv6_prefix": true,
+            "fingerprint": true,
+            "gateway_address": true,
+            "id": true,
+            "internal_ipv6_prefix": true,
+            "ipv6_cidr_range": true,
+            "network": true,
+            "private_ip_google_access": true,
+            "private_ipv6_google_access": true,
+            "purpose": true,
+            "secondary_ip_range": [],
+            "self_link": true,
+            "stack_type": true,
+            "module": "main"
+        }
+    },
+    "all_output": {
+        "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us1_compute_instances/main.tf": [
+            {
+                "vpc_id": {
+                    "value": "${google_compute_network.main_vpc.id}",
+                    "description": "VPC network ID"
+                }
+            },
+            {
+                "subnet_id": {
+                    "value": "${google_compute_subnetwork.main_subnet.id}",
+                    "description": "Subnet ID"
+                }
+            },
+            {
+                "instance_a_zone": {
+                    "value": "${google_compute_instance.web_server_a.zone}",
+                    "description": "Instance A zone"
+                }
+            },
+            {
+                "instance_b_zone": {
+                    "value": "${google_compute_instance.web_server_b.zone}",
+                    "description": "Instance B zone"
+                }
+            }
+        ]
+    },
+    "node_list": [
+        "google_compute_instance.web_server_a",
+        "google_compute_instance.web_server_b",
+        "google_compute_network.main_vpc",
+        "google_compute_subnetwork.main_subnet"
+    ],
+    "hidden": [],
+    "annotations": {},
+    "original_graphdict": {
+        "google_compute_instance.web_server_a": [],
+        "google_compute_instance.web_server_b": [],
+        "google_compute_network.main_vpc": [
+            "google_compute_subnetwork.main_subnet"
+        ],
+        "google_compute_subnetwork.main_subnet": [
+            "google_compute_instance.web_server_a",
+            "google_compute_instance.web_server_b"
+        ]
+    },
+    "original_metadata": {
+        "google_compute_instance.web_server_a": {
+            "advanced_machine_features": [],
+            "allow_stopping_for_update": null,
+            "attached_disk": [],
+            "boot_disk": [
+                {
+                    "disk_encryption_key_raw": true,
+                    "initialize_params": [
+                        {
+                            "labels": {}
+                        }
+                    ]
+                }
+            ],
+            "can_ip_forward": false,
+            "deletion_protection": false,
+            "description": null,
+            "desired_status": null,
+            "enable_display": null,
+            "hostname": null,
+            "labels": null,
+            "machine_type": "e2-medium",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "name": "web-server-a",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "params": [],
+            "project": "terravision-test-project",
+            "resource_policies": null,
+            "scratch_disk": [],
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "zone": "us-central1-a",
+            "confidential_instance_config": [],
+            "cpu_platform": true,
+            "current_status": true,
+            "effective_labels": {},
+            "guest_accelerator": [],
+            "id": true,
+            "instance_id": true,
+            "label_fingerprint": true,
+            "metadata_fingerprint": true,
+            "min_cpu_platform": true,
+            "reservation_affinity": [],
+            "scheduling": [],
+            "self_link": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_instance.web_server_b": {
+            "advanced_machine_features": [],
+            "allow_stopping_for_update": null,
+            "attached_disk": [],
+            "boot_disk": [
+                {
+                    "disk_encryption_key_raw": true,
+                    "initialize_params": [
+                        {
+                            "labels": {}
+                        }
+                    ]
+                }
+            ],
+            "can_ip_forward": false,
+            "deletion_protection": false,
+            "description": null,
+            "desired_status": null,
+            "enable_display": null,
+            "hostname": null,
+            "labels": null,
+            "machine_type": "e2-medium",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "name": "web-server-b",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "params": [],
+            "project": "terravision-test-project",
+            "resource_policies": null,
+            "scratch_disk": [],
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "zone": "us-central1-b",
+            "confidential_instance_config": [],
+            "cpu_platform": true,
+            "current_status": true,
+            "effective_labels": {},
+            "guest_accelerator": [],
+            "id": true,
+            "instance_id": true,
+            "label_fingerprint": true,
+            "metadata_fingerprint": true,
+            "min_cpu_platform": true,
+            "reservation_affinity": [],
+            "scheduling": [],
+            "self_link": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_network.main_vpc": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": null,
+            "enable_ula_internal_ipv6": null,
+            "name": "main-vpc",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "project": "terravision-test-project",
+            "timeouts": null,
+            "gateway_ipv4": true,
+            "id": true,
+            "internal_ipv6_range": true,
+            "mtu": true,
+            "numeric_id": true,
+            "routing_mode": true,
+            "self_link": true,
+            "module": "main"
+        },
+        "google_compute_subnetwork.main_subnet": {
+            "description": null,
+            "ip_cidr_range": "10.0.1.0/24",
+            "ipv6_access_type": null,
+            "log_config": [],
+            "name": "main-subnet",
+            "project": "terravision-test-project",
+            "region": "us-central1",
+            "role": null,
+            "send_secondary_ip_range_if_empty": null,
+            "timeouts": null,
+            "creation_timestamp": true,
+            "external_ipv6_prefix": true,
+            "fingerprint": true,
+            "gateway_address": true,
+            "id": true,
+            "internal_ipv6_prefix": true,
+            "ipv6_cidr_range": true,
+            "network": true,
+            "private_ip_google_access": true,
+            "private_ipv6_google_access": true,
+            "purpose": true,
+            "secondary_ip_range": [],
+            "self_link": true,
+            "stack_type": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us1_compute_instances/main.tf": [
+            {
+                "google_compute_network": {
+                    "main_vpc": {
+                        "name": "main-vpc",
+                        "auto_create_subnetworks": false
+                    }
+                }
+            },
+            {
+                "google_compute_subnetwork": {
+                    "main_subnet": {
+                        "name": "main-subnet",
+                        "ip_cidr_range": "10.0.1.0/24",
+                        "region": "us-central1",
+                        "network": "${google_compute_network.main_vpc.id}"
+                    }
+                }
+            },
+            {
+                "google_compute_instance": {
+                    "web_server_a": {
+                        "name": "web-server-a",
+                        "machine_type": "e2-medium",
+                        "zone": "us-central1-a",
+                        "boot_disk": [
+                            {
+                                "initialize_params": [
+                                    {
+                                        "image": "debian-cloud/debian-11"
+                                    }
+                                ]
+                            }
+                        ],
+                        "network_interface": [
+                            {
+                                "subnetwork": "${google_compute_subnetwork.main_subnet.id}"
+                            }
+                        ],
+                        "metadata": {
+                            "startup-script": "#!/bin/bash\\necho 'Web Server A' > /var/www/html/index.html"
+                        },
+                        "tags": [
+                            "web",
+                            "zone-a"
+                        ]
+                    }
+                }
+            },
+            {
+                "google_compute_instance": {
+                    "web_server_b": {
+                        "name": "web-server-b",
+                        "machine_type": "e2-medium",
+                        "zone": "us-central1-b",
+                        "boot_disk": [
+                            {
+                                "initialize_params": [
+                                    {
+                                        "image": "debian-cloud/debian-11"
+                                    }
+                                ]
+                            }
+                        ],
+                        "network_interface": [
+                            {
+                                "subnetwork": "${google_compute_subnetwork.main_subnet.id}"
+                            }
+                        ],
+                        "metadata": {
+                            "startup-script": "#!/bin/bash\\necho 'Web Server B' > /var/www/html/index.html"
+                        },
+                        "tags": [
+                            "web",
+                            "zone-b"
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us1_compute_instances/main.tf": [
+            {
+                "google": {
+                    "project": "terravision-test-project",
+                    "region": "us-central1"
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpmcj2m5kt'>"
+}

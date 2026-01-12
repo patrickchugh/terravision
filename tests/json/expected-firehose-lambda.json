@@ -1,5 +1,7 @@
 {
-    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_kinesis_firehose_delivery_stream.main"
+    ],
     "aws_group.shared_services": [
         "aws_cloudwatch_log_group.cloudwatch",
         "aws_iam_group.of_services"

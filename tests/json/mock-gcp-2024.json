@@ -1,0 +1,26 @@
+{
+  "google_project.my-project": ["google_compute_network.vpc"],
+  "google_compute_network.vpc": ["tv_gcp_region.us-central1"],
+  "tv_gcp_region.us-central1": ["google_compute_subnetwork.subnet"],
+  "google_compute_subnetwork.subnet": ["tv_gcp_zone.us-central1-a"],
+  "tv_gcp_zone.us-central1-a": [
+    "google_compute_instance.web-server",
+    "google_compute_instance.app-server",
+    "google_container_cluster.gke-cluster",
+    "google_sql_database_instance.postgres",
+    "google_storage_bucket.data-bucket",
+    "google_bigquery_dataset.analytics",
+    "google_cloud_run_service.api",
+    "google_spanner_instance.global-db",
+    "google_alloydb_cluster.alloydb"
+  ],
+  "google_compute_instance.web-server": ["google_storage_bucket.data-bucket"],
+  "google_compute_instance.app-server": ["google_sql_database_instance.postgres"],
+  "google_container_cluster.gke-cluster": ["google_alloydb_cluster.alloydb"],
+  "google_sql_database_instance.postgres": [],
+  "google_storage_bucket.data-bucket": ["google_bigquery_dataset.analytics"],
+  "google_bigquery_dataset.analytics": [],
+  "google_cloud_run_service.api": ["google_spanner_instance.global-db"],
+  "google_spanner_instance.global-db": [],
+  "google_alloydb_cluster.alloydb": []
+}

@@ -464,7 +464,7 @@ def remove_brackets_and_numbers(input_string: str) -> str:
     return output_string
 
 
-def pretty_name(name: str, show_title=True) -> str:
+def pretty_name(name: str, show_title=True, is_group=False) -> str:
     """
     Generate clean, human-readable labels for Terraform resource names.
 
@@ -477,8 +477,14 @@ def pretty_name(name: str, show_title=True) -> str:
       - azurerm_virtual_machine.vm        -> "Virtual Machine - VM"
       - google_compute_instance.web       -> "Compute Instance - Web"
 
+    Args:
+        name: The Terraform resource name to format
+        show_title: Whether to include instance name after dash
+        is_group: If True, skip truncation (for group/cluster labels)
+
     Trimming: max output length is 40 chars with a soft line-break
     inserted after ~21 characters when the label is longer than that.
+    Group labels (is_group=True) are never truncated.
     """
     if not name:
         return ""
@@ -512,7 +518,7 @@ def pretty_name(name: str, show_title=True) -> str:
 
     m = re.match(r"^([a-z0-9_]+)(?:\.([a-z0-9_]+))?$", name)
     if not m:
-        return (name or "")[:40]
+        return (name or "") if is_group else (name or "")[:40]
 
     resource_type = m.group(1) or ""
     instance_raw = (m.group(2) or "").strip()
@@ -568,8 +574,9 @@ def pretty_name(name: str, show_title=True) -> str:
             formatted_parts.append(p.title())
         region_part = " ".join(formatted_parts)
         az_label = f"Availability Zone {region_part}"
-        # soft-break and truncate to new limits
-        az_label = _soft_break(az_label, soft_at=21, max_len=40)
+        # soft-break and truncate to new limits (skip for groups)
+        if not is_group:
+            az_label = _soft_break(az_label, soft_at=21, max_len=40)
         return az_label
 
     # Prefer a full replacement for the whole resource_type (e.g. alb -> application_load_balancer)
@@ -625,8 +632,9 @@ def pretty_name(name: str, show_title=True) -> str:
 
     final = " ".join(processed_words).strip()
 
-    # Soft break after ~21 chars and increase max length to 40
-    final = _soft_break(final, soft_at=21, max_len=40)
+    # Soft break after ~21 chars and increase max length to 40 (skip for groups)
+    if not is_group:
+        final = _soft_break(final, soft_at=21, max_len=40)
 
     return final
 

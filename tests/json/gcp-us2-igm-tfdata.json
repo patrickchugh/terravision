@@ -1,0 +1,1516 @@
+{
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us2_igm_synthetic",
+    "workdir": "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us2_igm_synthetic",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "google_compute_instance_group_manager.igm",
+                        "mode": "managed",
+                        "type": "google_compute_instance_group_manager",
+                        "name": "igm",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "all_instances_config": [],
+                            "auto_healing_policies": [],
+                            "base_instance_name": "web",
+                            "description": null,
+                            "list_managed_instances_results": "PAGELESS",
+                            "name": "web-igm",
+                            "named_port": [
+                                {
+                                    "name": "http",
+                                    "port": 80
+                                }
+                            ],
+                            "project": "test-project",
+                            "stateful_disk": [],
+                            "stateful_external_ip": [],
+                            "stateful_internal_ip": [],
+                            "target_pools": null,
+                            "target_size": 3,
+                            "timeouts": null,
+                            "version": [
+                                {
+                                    "name": null,
+                                    "target_size": []
+                                }
+                            ],
+                            "wait_for_instances": false,
+                            "wait_for_instances_status": "STABLE",
+                            "zone": "us-central1-a"
+                        },
+                        "sensitive_values": {
+                            "all_instances_config": [],
+                            "auto_healing_policies": [],
+                            "instance_lifecycle_policy": [],
+                            "named_port": [
+                                {}
+                            ],
+                            "stateful_disk": [],
+                            "stateful_external_ip": [],
+                            "stateful_internal_ip": [],
+                            "status": [],
+                            "update_policy": [],
+                            "version": [
+                                {
+                                    "target_size": []
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "address": "google_compute_instance_template.web",
+                        "mode": "managed",
+                        "type": "google_compute_instance_template",
+                        "name": "web",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 1,
+                        "values": {
+                            "advanced_machine_features": [],
+                            "can_ip_forward": false,
+                            "description": null,
+                            "disk": [
+                                {
+                                    "auto_delete": true,
+                                    "boot": true,
+                                    "disk_encryption_key": [],
+                                    "disk_name": null,
+                                    "labels": null,
+                                    "resource_manager_tags": null,
+                                    "resource_policies": null,
+                                    "source": null,
+                                    "source_image": "debian-cloud/debian-11",
+                                    "source_image_encryption_key": [],
+                                    "source_snapshot": null,
+                                    "source_snapshot_encryption_key": []
+                                }
+                            ],
+                            "guest_accelerator": [],
+                            "instance_description": null,
+                            "labels": null,
+                            "machine_type": "n1-standard-2",
+                            "metadata": {
+                                "startup-script": "echo 'Hello, World!'"
+                            },
+                            "metadata_startup_script": null,
+                            "min_cpu_platform": null,
+                            "name": "web-template",
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": [],
+                                    "network_ip": null,
+                                    "nic_type": null,
+                                    "queue_count": null
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "project": "test-project",
+                            "region": "us-central1",
+                            "reservation_affinity": [],
+                            "resource_manager_tags": null,
+                            "resource_policies": null,
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                "http-server",
+                                "web"
+                            ],
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "advanced_machine_features": [],
+                            "confidential_instance_config": [],
+                            "disk": [
+                                {
+                                    "disk_encryption_key": [],
+                                    "source_image_encryption_key": [],
+                                    "source_snapshot_encryption_key": []
+                                }
+                            ],
+                            "effective_labels": {},
+                            "guest_accelerator": [],
+                            "metadata": {},
+                            "network_interface": [
+                                {
+                                    "access_config": [],
+                                    "alias_ip_range": [],
+                                    "ipv6_access_config": []
+                                }
+                            ],
+                            "network_performance_config": [],
+                            "reservation_affinity": [],
+                            "scheduling": [],
+                            "service_account": [],
+                            "shielded_instance_config": [],
+                            "tags": [
+                                false,
+                                false
+                            ],
+                            "terraform_labels": {}
+                        }
+                    },
+                    {
+                        "address": "google_compute_network.vpc",
+                        "mode": "managed",
+                        "type": "google_compute_network",
+                        "name": "vpc",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "auto_create_subnetworks": false,
+                            "delete_default_routes_on_create": false,
+                            "description": null,
+                            "enable_ula_internal_ipv6": null,
+                            "name": "test-vpc",
+                            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                            "project": "test-project",
+                            "timeouts": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "google_compute_subnetwork.subnet",
+                        "mode": "managed",
+                        "type": "google_compute_subnetwork",
+                        "name": "subnet",
+                        "provider_name": "registry.terraform.io/hashicorp/google",
+                        "schema_version": 0,
+                        "values": {
+                            "description": null,
+                            "ip_cidr_range": "10.0.0.0/24",
+                            "ipv6_access_type": null,
+                            "log_config": [],
+                            "name": "test-subnet",
+                            "project": "test-project",
+                            "region": "us-central1",
+                            "role": null,
+                            "send_secondary_ip_range_if_empty": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "log_config": [],
+                            "secondary_ip_range": []
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "google_compute_instance_group_manager.igm",
+                "mode": "managed",
+                "type": "google_compute_instance_group_manager",
+                "name": "igm",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "all_instances_config": [],
+                        "auto_healing_policies": [],
+                        "base_instance_name": "web",
+                        "description": null,
+                        "list_managed_instances_results": "PAGELESS",
+                        "name": "web-igm",
+                        "named_port": [
+                            {}
+                        ],
+                        "project": "test-project",
+                        "stateful_disk": [],
+                        "stateful_external_ip": [],
+                        "stateful_internal_ip": [],
+                        "target_pools": null,
+                        "target_size": 3,
+                        "timeouts": null,
+                        "version": [
+                            {
+                                "target_size": []
+                            }
+                        ],
+                        "wait_for_instances": false,
+                        "wait_for_instances_status": "STABLE",
+                        "zone": "us-central1-a",
+                        "creation_timestamp": true,
+                        "fingerprint": true,
+                        "id": true,
+                        "instance_group": true,
+                        "instance_lifecycle_policy": [],
+                        "operation": true,
+                        "self_link": true,
+                        "status": [],
+                        "update_policy": [],
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "all_instances_config": [],
+                        "auto_healing_policies": [],
+                        "creation_timestamp": true,
+                        "fingerprint": true,
+                        "id": true,
+                        "instance_group": true,
+                        "instance_lifecycle_policy": true,
+                        "named_port": [
+                            {}
+                        ],
+                        "operation": true,
+                        "self_link": true,
+                        "stateful_disk": [],
+                        "stateful_external_ip": [],
+                        "stateful_internal_ip": [],
+                        "status": true,
+                        "update_policy": true,
+                        "version": [
+                            {
+                                "instance_template": true,
+                                "target_size": []
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "all_instances_config": [],
+                        "auto_healing_policies": [],
+                        "instance_lifecycle_policy": [],
+                        "named_port": [
+                            {}
+                        ],
+                        "stateful_disk": [],
+                        "stateful_external_ip": [],
+                        "stateful_internal_ip": [],
+                        "status": [],
+                        "update_policy": [],
+                        "version": [
+                            {
+                                "target_size": []
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "google_compute_instance_template.web",
+                "mode": "managed",
+                "type": "google_compute_instance_template",
+                "name": "web",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "advanced_machine_features": [],
+                        "can_ip_forward": false,
+                        "description": null,
+                        "disk": [
+                            {
+                                "disk_encryption_key": [],
+                                "source_image_encryption_key": [],
+                                "source_snapshot_encryption_key": []
+                            }
+                        ],
+                        "guest_accelerator": [],
+                        "instance_description": null,
+                        "labels": null,
+                        "machine_type": "n1-standard-2",
+                        "metadata": {},
+                        "metadata_startup_script": null,
+                        "min_cpu_platform": null,
+                        "name": "web-template",
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "project": "test-project",
+                        "region": "us-central1",
+                        "reservation_affinity": [],
+                        "resource_manager_tags": null,
+                        "resource_policies": null,
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "timeouts": null,
+                        "confidential_instance_config": [],
+                        "effective_labels": {},
+                        "id": true,
+                        "metadata_fingerprint": true,
+                        "name_prefix": true,
+                        "scheduling": [],
+                        "self_link": true,
+                        "self_link_unique": true,
+                        "tags_fingerprint": true,
+                        "terraform_labels": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "advanced_machine_features": [],
+                        "confidential_instance_config": true,
+                        "disk": [
+                            {
+                                "device_name": true,
+                                "disk_encryption_key": [],
+                                "disk_size_gb": true,
+                                "disk_type": true,
+                                "interface": true,
+                                "mode": true,
+                                "provisioned_iops": true,
+                                "source_image_encryption_key": [],
+                                "source_snapshot_encryption_key": [],
+                                "type": true
+                            }
+                        ],
+                        "effective_labels": true,
+                        "guest_accelerator": [],
+                        "id": true,
+                        "metadata": {},
+                        "metadata_fingerprint": true,
+                        "name_prefix": true,
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "internal_ipv6_prefix_length": true,
+                                "ipv6_access_config": [],
+                                "ipv6_access_type": true,
+                                "ipv6_address": true,
+                                "name": true,
+                                "network": true,
+                                "stack_type": true,
+                                "subnetwork": true,
+                                "subnetwork_project": true
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "reservation_affinity": [],
+                        "scheduling": true,
+                        "self_link": true,
+                        "self_link_unique": true,
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "tags_fingerprint": true,
+                        "terraform_labels": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "advanced_machine_features": [],
+                        "confidential_instance_config": [],
+                        "disk": [
+                            {
+                                "disk_encryption_key": [],
+                                "source_image_encryption_key": [],
+                                "source_snapshot_encryption_key": []
+                            }
+                        ],
+                        "effective_labels": {},
+                        "guest_accelerator": [],
+                        "metadata": {},
+                        "network_interface": [
+                            {
+                                "access_config": [],
+                                "alias_ip_range": [],
+                                "ipv6_access_config": []
+                            }
+                        ],
+                        "network_performance_config": [],
+                        "reservation_affinity": [],
+                        "scheduling": [],
+                        "service_account": [],
+                        "shielded_instance_config": [],
+                        "tags": [
+                            false,
+                            false
+                        ],
+                        "terraform_labels": {}
+                    }
+                }
+            },
+            {
+                "address": "google_compute_network.vpc",
+                "mode": "managed",
+                "type": "google_compute_network",
+                "name": "vpc",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "auto_create_subnetworks": false,
+                        "delete_default_routes_on_create": false,
+                        "description": null,
+                        "enable_ula_internal_ipv6": null,
+                        "name": "test-vpc",
+                        "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                        "project": "test-project",
+                        "timeouts": null,
+                        "gateway_ipv4": true,
+                        "id": true,
+                        "internal_ipv6_range": true,
+                        "mtu": true,
+                        "numeric_id": true,
+                        "routing_mode": true,
+                        "self_link": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "gateway_ipv4": true,
+                        "id": true,
+                        "internal_ipv6_range": true,
+                        "mtu": true,
+                        "numeric_id": true,
+                        "routing_mode": true,
+                        "self_link": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "google_compute_subnetwork.subnet",
+                "mode": "managed",
+                "type": "google_compute_subnetwork",
+                "name": "subnet",
+                "provider_name": "registry.terraform.io/hashicorp/google",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": null,
+                        "ip_cidr_range": "10.0.0.0/24",
+                        "ipv6_access_type": null,
+                        "log_config": [],
+                        "name": "test-subnet",
+                        "project": "test-project",
+                        "region": "us-central1",
+                        "role": null,
+                        "send_secondary_ip_range_if_empty": null,
+                        "timeouts": null,
+                        "creation_timestamp": true,
+                        "external_ipv6_prefix": true,
+                        "fingerprint": true,
+                        "gateway_address": true,
+                        "id": true,
+                        "internal_ipv6_prefix": true,
+                        "ipv6_cidr_range": true,
+                        "network": true,
+                        "private_ip_google_access": true,
+                        "private_ipv6_google_access": true,
+                        "purpose": true,
+                        "secondary_ip_range": [],
+                        "self_link": true,
+                        "stack_type": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "creation_timestamp": true,
+                        "external_ipv6_prefix": true,
+                        "fingerprint": true,
+                        "gateway_address": true,
+                        "id": true,
+                        "internal_ipv6_prefix": true,
+                        "ipv6_cidr_range": true,
+                        "log_config": [],
+                        "network": true,
+                        "private_ip_google_access": true,
+                        "private_ipv6_google_access": true,
+                        "purpose": true,
+                        "secondary_ip_range": true,
+                        "self_link": true,
+                        "stack_type": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "log_config": [],
+                        "secondary_ip_range": []
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "google": {
+                    "name": "google",
+                    "full_name": "registry.terraform.io/hashicorp/google",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "project": {
+                            "constant_value": "test-project"
+                        },
+                        "region": {
+                            "constant_value": "us-central1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "google_compute_instance_group_manager.igm",
+                        "mode": "managed",
+                        "type": "google_compute_instance_group_manager",
+                        "name": "igm",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "base_instance_name": {
+                                "constant_value": "web"
+                            },
+                            "name": {
+                                "constant_value": "web-igm"
+                            },
+                            "named_port": [
+                                {
+                                    "name": {
+                                        "constant_value": "http"
+                                    },
+                                    "port": {
+                                        "constant_value": 80
+                                    }
+                                }
+                            ],
+                            "target_size": {
+                                "constant_value": 3
+                            },
+                            "version": [
+                                {
+                                    "instance_template": {
+                                        "references": [
+                                            "google_compute_instance_template.web.id",
+                                            "google_compute_instance_template.web"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "zone": {
+                                "constant_value": "us-central1-a"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "google_compute_instance_template.web",
+                        "mode": "managed",
+                        "type": "google_compute_instance_template",
+                        "name": "web",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "disk": [
+                                {
+                                    "boot": {
+                                        "constant_value": true
+                                    },
+                                    "source_image": {
+                                        "constant_value": "debian-cloud/debian-11"
+                                    }
+                                }
+                            ],
+                            "machine_type": {
+                                "constant_value": "n1-standard-2"
+                            },
+                            "metadata": {
+                                "constant_value": {
+                                    "startup-script": "echo 'Hello, World!'"
+                                }
+                            },
+                            "name": {
+                                "constant_value": "web-template"
+                            },
+                            "network_interface": [
+                                {
+                                    "subnetwork": {
+                                        "references": [
+                                            "google_compute_subnetwork.subnet.id",
+                                            "google_compute_subnetwork.subnet"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "region": {
+                                "constant_value": "us-central1"
+                            },
+                            "tags": {
+                                "constant_value": [
+                                    "web",
+                                    "http-server"
+                                ]
+                            }
+                        },
+                        "schema_version": 1
+                    },
+                    {
+                        "address": "google_compute_network.vpc",
+                        "mode": "managed",
+                        "type": "google_compute_network",
+                        "name": "vpc",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "auto_create_subnetworks": {
+                                "constant_value": false
+                            },
+                            "name": {
+                                "constant_value": "test-vpc"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "google_compute_subnetwork.subnet",
+                        "mode": "managed",
+                        "type": "google_compute_subnetwork",
+                        "name": "subnet",
+                        "provider_config_key": "google",
+                        "expressions": {
+                            "ip_cidr_range": {
+                                "constant_value": "10.0.0.0/24"
+                            },
+                            "name": {
+                                "constant_value": "test-subnet"
+                            },
+                            "network": {
+                                "references": [
+                                    "google_compute_network.vpc.id",
+                                    "google_compute_network.vpc"
+                                ]
+                            },
+                            "region": {
+                                "constant_value": "us-central1"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "google_compute_instance_template.web",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "google_compute_network.vpc",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "google_compute_subnetwork.subnet",
+                "attribute": [
+                    "id"
+                ]
+            }
+        ],
+        "timestamp": "2026-01-10T17:27:26Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "google_compute_instance_group_manager.igm",
+            "mode": "managed",
+            "type": "google_compute_instance_group_manager",
+            "name": "igm",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "all_instances_config": [],
+                    "auto_healing_policies": [],
+                    "base_instance_name": "web",
+                    "description": null,
+                    "list_managed_instances_results": "PAGELESS",
+                    "name": "web-igm",
+                    "named_port": [
+                        {}
+                    ],
+                    "project": "test-project",
+                    "stateful_disk": [],
+                    "stateful_external_ip": [],
+                    "stateful_internal_ip": [],
+                    "target_pools": null,
+                    "target_size": 3,
+                    "timeouts": null,
+                    "version": [
+                        {
+                            "target_size": []
+                        }
+                    ],
+                    "wait_for_instances": false,
+                    "wait_for_instances_status": "STABLE",
+                    "zone": "us-central1-a",
+                    "creation_timestamp": true,
+                    "fingerprint": true,
+                    "id": true,
+                    "instance_group": true,
+                    "instance_lifecycle_policy": [],
+                    "operation": true,
+                    "self_link": true,
+                    "status": [],
+                    "update_policy": [],
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "all_instances_config": [],
+                    "auto_healing_policies": [],
+                    "creation_timestamp": true,
+                    "fingerprint": true,
+                    "id": true,
+                    "instance_group": true,
+                    "instance_lifecycle_policy": true,
+                    "named_port": [
+                        {}
+                    ],
+                    "operation": true,
+                    "self_link": true,
+                    "stateful_disk": [],
+                    "stateful_external_ip": [],
+                    "stateful_internal_ip": [],
+                    "status": true,
+                    "update_policy": true,
+                    "version": [
+                        {
+                            "instance_template": true,
+                            "target_size": []
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "all_instances_config": [],
+                    "auto_healing_policies": [],
+                    "instance_lifecycle_policy": [],
+                    "named_port": [
+                        {}
+                    ],
+                    "stateful_disk": [],
+                    "stateful_external_ip": [],
+                    "stateful_internal_ip": [],
+                    "status": [],
+                    "update_policy": [],
+                    "version": [
+                        {
+                            "target_size": []
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "address": "google_compute_instance_template.web",
+            "mode": "managed",
+            "type": "google_compute_instance_template",
+            "name": "web",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "advanced_machine_features": [],
+                    "can_ip_forward": false,
+                    "description": null,
+                    "disk": [
+                        {
+                            "disk_encryption_key": [],
+                            "source_image_encryption_key": [],
+                            "source_snapshot_encryption_key": []
+                        }
+                    ],
+                    "guest_accelerator": [],
+                    "instance_description": null,
+                    "labels": null,
+                    "machine_type": "n1-standard-2",
+                    "metadata": {},
+                    "metadata_startup_script": null,
+                    "min_cpu_platform": null,
+                    "name": "web-template",
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "project": "test-project",
+                    "region": "us-central1",
+                    "reservation_affinity": [],
+                    "resource_manager_tags": null,
+                    "resource_policies": null,
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "timeouts": null,
+                    "confidential_instance_config": [],
+                    "effective_labels": {},
+                    "id": true,
+                    "metadata_fingerprint": true,
+                    "name_prefix": true,
+                    "scheduling": [],
+                    "self_link": true,
+                    "self_link_unique": true,
+                    "tags_fingerprint": true,
+                    "terraform_labels": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "advanced_machine_features": [],
+                    "confidential_instance_config": true,
+                    "disk": [
+                        {
+                            "device_name": true,
+                            "disk_encryption_key": [],
+                            "disk_size_gb": true,
+                            "disk_type": true,
+                            "interface": true,
+                            "mode": true,
+                            "provisioned_iops": true,
+                            "source_image_encryption_key": [],
+                            "source_snapshot_encryption_key": [],
+                            "type": true
+                        }
+                    ],
+                    "effective_labels": true,
+                    "guest_accelerator": [],
+                    "id": true,
+                    "metadata": {},
+                    "metadata_fingerprint": true,
+                    "name_prefix": true,
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "internal_ipv6_prefix_length": true,
+                            "ipv6_access_config": [],
+                            "ipv6_access_type": true,
+                            "ipv6_address": true,
+                            "name": true,
+                            "network": true,
+                            "stack_type": true,
+                            "subnetwork": true,
+                            "subnetwork_project": true
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "reservation_affinity": [],
+                    "scheduling": true,
+                    "self_link": true,
+                    "self_link_unique": true,
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "tags_fingerprint": true,
+                    "terraform_labels": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "advanced_machine_features": [],
+                    "confidential_instance_config": [],
+                    "disk": [
+                        {
+                            "disk_encryption_key": [],
+                            "source_image_encryption_key": [],
+                            "source_snapshot_encryption_key": []
+                        }
+                    ],
+                    "effective_labels": {},
+                    "guest_accelerator": [],
+                    "metadata": {},
+                    "network_interface": [
+                        {
+                            "access_config": [],
+                            "alias_ip_range": [],
+                            "ipv6_access_config": []
+                        }
+                    ],
+                    "network_performance_config": [],
+                    "reservation_affinity": [],
+                    "scheduling": [],
+                    "service_account": [],
+                    "shielded_instance_config": [],
+                    "tags": [
+                        false,
+                        false
+                    ],
+                    "terraform_labels": {}
+                }
+            }
+        },
+        {
+            "address": "google_compute_network.vpc",
+            "mode": "managed",
+            "type": "google_compute_network",
+            "name": "vpc",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "auto_create_subnetworks": false,
+                    "delete_default_routes_on_create": false,
+                    "description": null,
+                    "enable_ula_internal_ipv6": null,
+                    "name": "test-vpc",
+                    "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+                    "project": "test-project",
+                    "timeouts": null,
+                    "gateway_ipv4": true,
+                    "id": true,
+                    "internal_ipv6_range": true,
+                    "mtu": true,
+                    "numeric_id": true,
+                    "routing_mode": true,
+                    "self_link": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "gateway_ipv4": true,
+                    "id": true,
+                    "internal_ipv6_range": true,
+                    "mtu": true,
+                    "numeric_id": true,
+                    "routing_mode": true,
+                    "self_link": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "google_compute_subnetwork.subnet",
+            "mode": "managed",
+            "type": "google_compute_subnetwork",
+            "name": "subnet",
+            "provider_name": "registry.terraform.io/hashicorp/google",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": null,
+                    "ip_cidr_range": "10.0.0.0/24",
+                    "ipv6_access_type": null,
+                    "log_config": [],
+                    "name": "test-subnet",
+                    "project": "test-project",
+                    "region": "us-central1",
+                    "role": null,
+                    "send_secondary_ip_range_if_empty": null,
+                    "timeouts": null,
+                    "creation_timestamp": true,
+                    "external_ipv6_prefix": true,
+                    "fingerprint": true,
+                    "gateway_address": true,
+                    "id": true,
+                    "internal_ipv6_prefix": true,
+                    "ipv6_cidr_range": true,
+                    "network": true,
+                    "private_ip_google_access": true,
+                    "private_ipv6_google_access": true,
+                    "purpose": true,
+                    "secondary_ip_range": [],
+                    "self_link": true,
+                    "stack_type": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "creation_timestamp": true,
+                    "external_ipv6_prefix": true,
+                    "fingerprint": true,
+                    "gateway_address": true,
+                    "id": true,
+                    "internal_ipv6_prefix": true,
+                    "ipv6_cidr_range": true,
+                    "log_config": [],
+                    "network": true,
+                    "private_ip_google_access": true,
+                    "private_ipv6_google_access": true,
+                    "purpose": true,
+                    "secondary_ip_range": true,
+                    "self_link": true,
+                    "stack_type": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "log_config": [],
+                    "secondary_ip_range": []
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "google_compute_instance_group_manager.igm",
+                "fontname": "sans-serif",
+                "label": "google_compute_instance_group_manager.igm",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "google_compute_instance_template.web",
+                "fontname": "sans-serif",
+                "label": "google_compute_instance_template.web",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "google_compute_network.vpc",
+                "fontname": "sans-serif",
+                "label": "google_compute_network.vpc",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "google_compute_subnetwork.subnet",
+                "fontname": "sans-serif",
+                "label": "google_compute_subnetwork.subnet",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 1
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 3
+            },
+            {
+                "_gvid": 2,
+                "tail": 3,
+                "head": 2
+            }
+        ]
+    },
+    "graphdict": {
+        "google_compute_instance_group_manager.igm": [],
+        "google_compute_instance_template.web": [
+            "google_compute_instance_group_manager.igm"
+        ],
+        "google_compute_network.vpc": [
+            "google_compute_subnetwork.subnet"
+        ],
+        "google_compute_subnetwork.subnet": [
+            "google_compute_instance_template.web"
+        ]
+    },
+    "meta_data": {
+        "google_compute_instance_group_manager.igm": {
+            "all_instances_config": [],
+            "auto_healing_policies": [],
+            "base_instance_name": "web",
+            "description": null,
+            "list_managed_instances_results": "PAGELESS",
+            "name": "web-igm",
+            "named_port": [
+                {}
+            ],
+            "project": "test-project",
+            "stateful_disk": [],
+            "stateful_external_ip": [],
+            "stateful_internal_ip": [],
+            "target_pools": null,
+            "target_size": 3,
+            "timeouts": null,
+            "version": [
+                {
+                    "target_size": []
+                }
+            ],
+            "wait_for_instances": false,
+            "wait_for_instances_status": "STABLE",
+            "zone": "us-central1-a",
+            "creation_timestamp": true,
+            "fingerprint": true,
+            "id": true,
+            "instance_group": true,
+            "instance_lifecycle_policy": [],
+            "operation": true,
+            "self_link": true,
+            "status": [],
+            "update_policy": [],
+            "module": "main"
+        },
+        "google_compute_instance_template.web": {
+            "advanced_machine_features": [],
+            "can_ip_forward": false,
+            "description": null,
+            "disk": [
+                {
+                    "disk_encryption_key": [],
+                    "source_image_encryption_key": [],
+                    "source_snapshot_encryption_key": []
+                }
+            ],
+            "guest_accelerator": [],
+            "instance_description": null,
+            "labels": null,
+            "machine_type": "n1-standard-2",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "min_cpu_platform": null,
+            "name": "web-template",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "project": "test-project",
+            "region": "us-central1",
+            "reservation_affinity": [],
+            "resource_manager_tags": null,
+            "resource_policies": null,
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "confidential_instance_config": [],
+            "effective_labels": {},
+            "id": true,
+            "metadata_fingerprint": true,
+            "name_prefix": true,
+            "scheduling": [],
+            "self_link": true,
+            "self_link_unique": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_network.vpc": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": null,
+            "enable_ula_internal_ipv6": null,
+            "name": "test-vpc",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "project": "test-project",
+            "timeouts": null,
+            "gateway_ipv4": true,
+            "id": true,
+            "internal_ipv6_range": true,
+            "mtu": true,
+            "numeric_id": true,
+            "routing_mode": true,
+            "self_link": true,
+            "module": "main"
+        },
+        "google_compute_subnetwork.subnet": {
+            "description": null,
+            "ip_cidr_range": "10.0.0.0/24",
+            "ipv6_access_type": null,
+            "log_config": [],
+            "name": "test-subnet",
+            "project": "test-project",
+            "region": "us-central1",
+            "role": null,
+            "send_secondary_ip_range_if_empty": null,
+            "timeouts": null,
+            "creation_timestamp": true,
+            "external_ipv6_prefix": true,
+            "fingerprint": true,
+            "gateway_address": true,
+            "id": true,
+            "internal_ipv6_prefix": true,
+            "ipv6_cidr_range": true,
+            "network": true,
+            "private_ip_google_access": true,
+            "private_ipv6_google_access": true,
+            "purpose": true,
+            "secondary_ip_range": [],
+            "self_link": true,
+            "stack_type": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "google_compute_instance_group_manager.igm",
+        "google_compute_instance_template.web",
+        "google_compute_network.vpc",
+        "google_compute_subnetwork.subnet"
+    ],
+    "hidden": [],
+    "annotations": {},
+    "original_graphdict": {
+        "google_compute_instance_group_manager.igm": [],
+        "google_compute_instance_template.web": [
+            "google_compute_instance_group_manager.igm"
+        ],
+        "google_compute_network.vpc": [
+            "google_compute_subnetwork.subnet"
+        ],
+        "google_compute_subnetwork.subnet": [
+            "google_compute_instance_template.web"
+        ]
+    },
+    "original_metadata": {
+        "google_compute_instance_group_manager.igm": {
+            "all_instances_config": [],
+            "auto_healing_policies": [],
+            "base_instance_name": "web",
+            "description": null,
+            "list_managed_instances_results": "PAGELESS",
+            "name": "web-igm",
+            "named_port": [
+                {}
+            ],
+            "project": "test-project",
+            "stateful_disk": [],
+            "stateful_external_ip": [],
+            "stateful_internal_ip": [],
+            "target_pools": null,
+            "target_size": 3,
+            "timeouts": null,
+            "version": [
+                {
+                    "target_size": []
+                }
+            ],
+            "wait_for_instances": false,
+            "wait_for_instances_status": "STABLE",
+            "zone": "us-central1-a",
+            "creation_timestamp": true,
+            "fingerprint": true,
+            "id": true,
+            "instance_group": true,
+            "instance_lifecycle_policy": [],
+            "operation": true,
+            "self_link": true,
+            "status": [],
+            "update_policy": [],
+            "module": "main"
+        },
+        "google_compute_instance_template.web": {
+            "advanced_machine_features": [],
+            "can_ip_forward": false,
+            "description": null,
+            "disk": [
+                {
+                    "disk_encryption_key": [],
+                    "source_image_encryption_key": [],
+                    "source_snapshot_encryption_key": []
+                }
+            ],
+            "guest_accelerator": [],
+            "instance_description": null,
+            "labels": null,
+            "machine_type": "n1-standard-2",
+            "metadata": {},
+            "metadata_startup_script": null,
+            "min_cpu_platform": null,
+            "name": "web-template",
+            "network_interface": [
+                {
+                    "access_config": [],
+                    "alias_ip_range": [],
+                    "ipv6_access_config": []
+                }
+            ],
+            "network_performance_config": [],
+            "project": "test-project",
+            "region": "us-central1",
+            "reservation_affinity": [],
+            "resource_manager_tags": null,
+            "resource_policies": null,
+            "service_account": [],
+            "shielded_instance_config": [],
+            "tags": [
+                false,
+                false
+            ],
+            "timeouts": null,
+            "confidential_instance_config": [],
+            "effective_labels": {},
+            "id": true,
+            "metadata_fingerprint": true,
+            "name_prefix": true,
+            "scheduling": [],
+            "self_link": true,
+            "self_link_unique": true,
+            "tags_fingerprint": true,
+            "terraform_labels": {},
+            "module": "main"
+        },
+        "google_compute_network.vpc": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": null,
+            "enable_ula_internal_ipv6": null,
+            "name": "test-vpc",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "project": "test-project",
+            "timeouts": null,
+            "gateway_ipv4": true,
+            "id": true,
+            "internal_ipv6_range": true,
+            "mtu": true,
+            "numeric_id": true,
+            "routing_mode": true,
+            "self_link": true,
+            "module": "main"
+        },
+        "google_compute_subnetwork.subnet": {
+            "description": null,
+            "ip_cidr_range": "10.0.0.0/24",
+            "ipv6_access_type": null,
+            "log_config": [],
+            "name": "test-subnet",
+            "project": "test-project",
+            "region": "us-central1",
+            "role": null,
+            "send_secondary_ip_range_if_empty": null,
+            "timeouts": null,
+            "creation_timestamp": true,
+            "external_ipv6_prefix": true,
+            "fingerprint": true,
+            "gateway_address": true,
+            "id": true,
+            "internal_ipv6_prefix": true,
+            "ipv6_cidr_range": true,
+            "network": true,
+            "private_ip_google_access": true,
+            "private_ipv6_google_access": true,
+            "purpose": true,
+            "secondary_ip_range": [],
+            "self_link": true,
+            "stack_type": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us2_igm_synthetic/main.tf": [
+            {
+                "google_compute_network": {
+                    "vpc": {
+                        "name": "test-vpc",
+                        "auto_create_subnetworks": false
+                    }
+                }
+            },
+            {
+                "google_compute_subnetwork": {
+                    "subnet": {
+                        "name": "test-subnet",
+                        "network": "${google_compute_network.vpc.id}",
+                        "region": "us-central1",
+                        "ip_cidr_range": "10.0.0.0/24"
+                    }
+                }
+            },
+            {
+                "google_compute_instance_template": {
+                    "web": {
+                        "name": "web-template",
+                        "machine_type": "n1-standard-2",
+                        "region": "us-central1",
+                        "disk": [
+                            {
+                                "source_image": "debian-cloud/debian-11",
+                                "boot": true
+                            }
+                        ],
+                        "network_interface": [
+                            {
+                                "subnetwork": "${google_compute_subnetwork.subnet.id}"
+                            }
+                        ],
+                        "metadata": {
+                            "startup-script": "echo 'Hello, World!'"
+                        },
+                        "tags": [
+                            "web",
+                            "http-server"
+                        ]
+                    }
+                }
+            },
+            {
+                "google_compute_instance_group_manager": {
+                    "igm": {
+                        "name": "web-igm",
+                        "base_instance_name": "web",
+                        "zone": "us-central1-a",
+                        "target_size": 3,
+                        "version": [
+                            {
+                                "instance_template": "${google_compute_instance_template.web.id}"
+                            }
+                        ],
+                        "named_port": [
+                            {
+                                "name": "http",
+                                "port": 80
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/gcp_terraform/us2_igm_synthetic/main.tf": [
+            {
+                "google": {
+                    "project": "test-project",
+                    "region": "us-central1"
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpfijditn2'>"
+}

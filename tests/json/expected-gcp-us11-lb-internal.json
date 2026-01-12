@@ -1,0 +1,45 @@
+{
+    "google_compute_firewall.firewall": [],
+    "google_compute_forwarding_rule.lb": [],
+    "google_compute_health_check.internal": [
+        "google_compute_region_backend_service.internal"
+    ],
+    "google_compute_instance.client": [],
+    "google_compute_instance.ilb-backend~1": [],
+    "google_compute_instance.ilb-backend~2": [],
+    "google_compute_instance_group_manager.backend~1": [
+        "google_compute_instance.ilb-backend~1",
+        "google_compute_instance.ilb-backend~2",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_instance_template.backend": [
+        "google_compute_instance_group_manager.backend~1",
+        "google_logging_project_sink.logging"
+    ],
+    "google_compute_network.vpc": [
+        "google_compute_firewall.firewall",
+        "google_compute_forwarding_rule.lb",
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_region_backend_service.internal": [
+        "google_compute_forwarding_rule.lb",
+        "google_compute_instance_group_manager.backend~1"
+    ],
+    "google_compute_subnetwork.subnet": [
+        "google_compute_forwarding_rule.lb",
+        "tv_gcp_zone.us_central1_a"
+    ],
+    "google_logging_project_sink.logging": [
+        "google_compute_instance.client"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_instance_template.backend",
+        "google_compute_subnetwork.subnet"
+    ],
+    "tv_gcp_zone.us_central1_a": [
+        "google_compute_instance.client",
+        "google_compute_instance.ilb-backend~1",
+        "google_compute_instance.ilb-backend~2",
+        "google_compute_instance_group_manager.backend~1"
+    ]
+}

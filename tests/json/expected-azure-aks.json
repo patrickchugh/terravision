@@ -1,0 +1,49 @@
+{
+    "azurerm_container_registry.acr": [
+        "azurerm_role_assignment.aks_acr"
+    ],
+    "azurerm_kubernetes_cluster.aks": [
+        "azurerm_container_registry.acr",
+        "azurerm_kubernetes_cluster_node_pool.workload~1",
+        "azurerm_kubernetes_cluster_node_pool.workload~2",
+        "azurerm_kubernetes_cluster_node_pool.workload~3",
+        "azurerm_role_assignment.aks_acr"
+    ],
+    "azurerm_kubernetes_cluster_node_pool.workload~1": [
+        "azurerm_container_registry.acr"
+    ],
+    "azurerm_kubernetes_cluster_node_pool.workload~2": [
+        "azurerm_container_registry.acr"
+    ],
+    "azurerm_kubernetes_cluster_node_pool.workload~3": [
+        "azurerm_container_registry.acr"
+    ],
+    "azurerm_log_analytics_workspace.aks": [],
+    "azurerm_resource_group.aks": [
+        "azurerm_container_registry.acr",
+        "azurerm_kubernetes_cluster.aks",
+        "azurerm_log_analytics_workspace.aks",
+        "azurerm_storage_account.aks",
+        "azurerm_virtual_network.aks"
+    ],
+    "azurerm_role_assignment.aks_acr": [],
+    "azurerm_storage_account.aks": [],
+    "azurerm_subnet.aks_nodes": [
+        "azurerm_kubernetes_cluster.aks",
+        "tv_azurerm_zone.zone_1",
+        "tv_azurerm_zone.zone_2",
+        "tv_azurerm_zone.zone_3"
+    ],
+    "azurerm_virtual_network.aks": [
+        "azurerm_subnet.aks_nodes"
+    ],
+    "tv_azurerm_zone.zone_1": [
+        "azurerm_kubernetes_cluster_node_pool.workload~1"
+    ],
+    "tv_azurerm_zone.zone_2": [
+        "azurerm_kubernetes_cluster_node_pool.workload~2"
+    ],
+    "tv_azurerm_zone.zone_3": [
+        "azurerm_kubernetes_cluster_node_pool.workload~3"
+    ]
+}

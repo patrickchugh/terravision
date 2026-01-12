@@ -34,7 +34,7 @@ def run_terravision(
     if WINDOWS:
         cmd = ["poetry", "run", "python", str(PARENT_DIR / "terravision.py")] + args
     else:
-        cmd = [str(PARENT_DIR / "terravision.py")] + args
+        cmd = [str(PARENT_DIR / "terravision/terravision.py")] + args
 
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     return result
@@ -58,7 +58,7 @@ def test_help() -> None:
             "api-gateway-rest-lambda-tfdata.json",
             "expected-api-gateway-rest-lambda.json",
         ),
-        # Phase 4: Event-Driven Architecture patterns
+        # Event-Driven Architecture patterns
         (
             "eventbridge-lambda-tfdata.json",
             "expected-eventbridge-lambda.json",
@@ -79,17 +79,17 @@ def test_help() -> None:
             "elasticache-replication-tfdata.json",
             "expected-elasticache-replication.json",
         ),
-        # Phase 6: Authentication (Cognito) patterns
+        # Authentication (Cognito) patterns
         (
             "cognito-api-gateway-tfdata.json",
             "expected-cognito-api-gateway.json",
         ),
-        # Phase 7: WAF Security patterns
+        # WAF Security patterns
         (
             "waf-alb-tfdata.json",
             "expected-waf-alb.json",
         ),
-        # Phase 8: SageMaker ML patterns
+        # SageMaker ML patterns
         (
             "sagemaker-endpoint-tfdata.json",
             "expected-sagemaker-endpoint.json",
@@ -98,7 +98,7 @@ def test_help() -> None:
             "sagemaker-notebook-vpc-tfdata.json",
             "expected-sagemaker-notebook-vpc.json",
         ),
-        # Phase 9: Step Functions patterns
+        # Step Functions patterns
         (
             "stepfunctions-lambda-tfdata.json",
             "expected-stepfunctions-lambda.json",
@@ -107,7 +107,7 @@ def test_help() -> None:
             "stepfunctions-multi-service-tfdata.json",
             "expected-stepfunctions-multi-service.json",
         ),
-        # Phase 10: S3 Notifications patterns
+        # S3 Notifications patterns
         (
             "s3-notification-lambda-tfdata.json",
             "expected-s3-notification-lambda.json",
@@ -116,7 +116,7 @@ def test_help() -> None:
             "s3-replication-tfdata.json",
             "expected-s3-replication.json",
         ),
-        # Phase 11: Secrets Manager patterns
+        # Secrets Manager patterns
         (
             "secretsmanager-lambda-tfdata.json",
             "expected-secretsmanager-lambda.json",
@@ -125,7 +125,7 @@ def test_help() -> None:
             "secretsmanager-rds-tfdata.json",
             "expected-secretsmanager-rds.json",
         ),
-        # Phase 12: Data Processing (Glue/Firehose) patterns
+        # Data Processing (Glue/Firehose) patterns
         (
             "glue-s3-tfdata.json",
             "expected-glue-s3.json",
@@ -133,6 +133,46 @@ def test_help() -> None:
         (
             "firehose-lambda-tfdata.json",
             "expected-firehose-lambda.json",
+        ),
+        # Azure patterns
+        (
+            "azure-vm-vmss-tfdata.json",
+            "expected-azure-vm-vmss.json",
+        ),
+        (
+            "azure-appgw-lb-tfdata.json",
+            "expected-azure-appgw-lb.json",
+        ),
+        (
+            "azure-aks-tfdata.json",
+            "expected-azure-aks.json",
+        ),
+        # GCP patterns
+        (
+            "gcp-us1-compute-tfdata.json",
+            "expected-gcp-us1-compute.json",
+        ),
+        (
+            "gcp-us2-igm-tfdata.json",
+            "expected-gcp-us2-igm.json",
+        ),
+        (
+            "gcp-us4-gke-tfdata.json",
+            "expected-gcp-us4-gke.json",
+        ),
+        (
+            "gcp-us8-vpc-tfdata.json",
+            "expected-gcp-us8-vpc.json",
+        ),
+        # GCP Terraform Registry Module pattern
+        (
+            "gcp-us10-lb-http-tfdata.json",
+            "expected-gcp-us10-lb-http.json",
+        ),
+        # GCP Three-Tier Web Application (comprehensive pattern with VPC, subnets, zones, IGM, Cloud SQL, Memorystore)
+        (
+            "gcp-three-tier-webapp-tfdata.json",
+            "expected-gcp-three-tier-webapp.json",
         ),
     ],
 )

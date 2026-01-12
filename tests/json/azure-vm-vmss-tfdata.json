@@ -1,0 +1,3855 @@
+{
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss",
+    "workdir": "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "outputs": {
+                "resource_group_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "rg-terravision-test"
+                },
+                "vm_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "vm-terravision-test"
+                },
+                "vmss_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "vmss-terravision-test"
+                },
+                "vnet_name": {
+                    "sensitive": false,
+                    "type": "string",
+                    "value": "vnet-terravision-test"
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "azurerm_lb.main",
+                        "mode": "managed",
+                        "type": "azurerm_lb",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "edge_zone": null,
+                            "frontend_ip_configuration": [
+                                {
+                                    "name": "frontend",
+                                    "zones": null
+                                }
+                            ],
+                            "location": "eastus",
+                            "name": "lb-terravision-test",
+                            "resource_group_name": "rg-terravision-test",
+                            "sku": "Standard",
+                            "sku_tier": "Regional",
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "frontend_ip_configuration": [
+                                {
+                                    "inbound_nat_rules": [],
+                                    "load_balancer_rules": [],
+                                    "outbound_rules": []
+                                }
+                            ],
+                            "private_ip_addresses": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_lb_backend_address_pool.main",
+                        "mode": "managed",
+                        "type": "azurerm_lb_backend_address_pool",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "vmss-backend-pool",
+                            "synchronous_mode": null,
+                            "timeouts": null,
+                            "tunnel_interface": [],
+                            "virtual_network_id": null
+                        },
+                        "sensitive_values": {
+                            "backend_ip_configurations": [],
+                            "inbound_nat_rules": [],
+                            "load_balancing_rules": [],
+                            "outbound_rules": [],
+                            "tunnel_interface": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_linux_virtual_machine.main",
+                        "mode": "managed",
+                        "type": "azurerm_linux_virtual_machine",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "additional_capabilities": [],
+                            "admin_password": null,
+                            "admin_ssh_key": [
+                                {
+                                    "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test",
+                                    "username": "adminuser"
+                                }
+                            ],
+                            "admin_username": "adminuser",
+                            "allow_extension_operations": true,
+                            "availability_set_id": null,
+                            "boot_diagnostics": [],
+                            "bypass_platform_safety_checks_on_user_schedule_enabled": false,
+                            "capacity_reservation_group_id": null,
+                            "custom_data": null,
+                            "dedicated_host_group_id": null,
+                            "dedicated_host_id": null,
+                            "disable_password_authentication": true,
+                            "edge_zone": null,
+                            "encryption_at_host_enabled": null,
+                            "eviction_policy": null,
+                            "extensions_time_budget": "PT1H30M",
+                            "gallery_application": [],
+                            "identity": [],
+                            "license_type": null,
+                            "location": "eastus",
+                            "max_bid_price": -1,
+                            "name": "vm-terravision-test",
+                            "os_disk": [
+                                {
+                                    "caching": "ReadWrite",
+                                    "diff_disk_settings": [],
+                                    "disk_encryption_set_id": null,
+                                    "secure_vm_disk_encryption_set_id": null,
+                                    "security_encryption_type": null,
+                                    "storage_account_type": "Standard_LRS",
+                                    "write_accelerator_enabled": false
+                                }
+                            ],
+                            "os_image_notification": [],
+                            "patch_assessment_mode": "ImageDefault",
+                            "patch_mode": "ImageDefault",
+                            "plan": [],
+                            "platform_fault_domain": -1,
+                            "priority": "Regular",
+                            "provision_vm_agent": true,
+                            "proximity_placement_group_id": null,
+                            "reboot_setting": null,
+                            "resource_group_name": "rg-terravision-test",
+                            "secret": [],
+                            "secure_boot_enabled": null,
+                            "size": "Standard_B1s",
+                            "source_image_id": null,
+                            "source_image_reference": [
+                                {
+                                    "offer": "UbuntuServer",
+                                    "publisher": "Canonical",
+                                    "sku": "18.04-LTS",
+                                    "version": "latest"
+                                }
+                            ],
+                            "tags": null,
+                            "timeouts": null,
+                            "user_data": null,
+                            "virtual_machine_scale_set_id": null,
+                            "vm_agent_platform_updates_enabled": false,
+                            "vtpm_enabled": null,
+                            "zone": null
+                        },
+                        "sensitive_values": {
+                            "additional_capabilities": [],
+                            "admin_password": true,
+                            "admin_ssh_key": [
+                                {}
+                            ],
+                            "boot_diagnostics": [],
+                            "custom_data": true,
+                            "gallery_application": [],
+                            "identity": [],
+                            "network_interface_ids": [],
+                            "os_disk": [
+                                {
+                                    "diff_disk_settings": []
+                                }
+                            ],
+                            "os_image_notification": [],
+                            "plan": [],
+                            "private_ip_addresses": [],
+                            "public_ip_addresses": [],
+                            "secret": [],
+                            "source_image_reference": [
+                                {}
+                            ],
+                            "termination_notification": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_linux_virtual_machine_scale_set.main",
+                        "mode": "managed",
+                        "type": "azurerm_linux_virtual_machine_scale_set",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "additional_capabilities": [],
+                            "admin_password": null,
+                            "admin_ssh_key": [
+                                {
+                                    "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test",
+                                    "username": "adminuser"
+                                }
+                            ],
+                            "admin_username": "adminuser",
+                            "automatic_os_upgrade_policy": [],
+                            "boot_diagnostics": [],
+                            "capacity_reservation_group_id": null,
+                            "custom_data": null,
+                            "data_disk": [],
+                            "disable_password_authentication": true,
+                            "do_not_run_extensions_on_overprovisioned_machines": false,
+                            "edge_zone": null,
+                            "encryption_at_host_enabled": null,
+                            "eviction_policy": null,
+                            "extensions_time_budget": "PT1H30M",
+                            "health_probe_id": null,
+                            "host_group_id": null,
+                            "identity": [],
+                            "instances": 3,
+                            "location": "eastus",
+                            "max_bid_price": -1,
+                            "name": "vmss-terravision-test",
+                            "network_interface": [
+                                {
+                                    "dns_servers": null,
+                                    "enable_accelerated_networking": false,
+                                    "enable_ip_forwarding": false,
+                                    "ip_configuration": [
+                                        {
+                                            "application_gateway_backend_address_pool_ids": null,
+                                            "application_security_group_ids": null,
+                                            "load_balancer_inbound_nat_rules_ids": null,
+                                            "name": "internal",
+                                            "primary": true,
+                                            "public_ip_address": [],
+                                            "version": "IPv4"
+                                        }
+                                    ],
+                                    "name": "vmss-nic",
+                                    "network_security_group_id": null,
+                                    "primary": true
+                                }
+                            ],
+                            "os_disk": [
+                                {
+                                    "caching": "ReadWrite",
+                                    "diff_disk_settings": [],
+                                    "disk_encryption_set_id": null,
+                                    "secure_vm_disk_encryption_set_id": null,
+                                    "security_encryption_type": null,
+                                    "storage_account_type": "Standard_LRS",
+                                    "write_accelerator_enabled": false
+                                }
+                            ],
+                            "overprovision": true,
+                            "plan": [],
+                            "priority": "Regular",
+                            "provision_vm_agent": true,
+                            "proximity_placement_group_id": null,
+                            "resource_group_name": "rg-terravision-test",
+                            "rolling_upgrade_policy": [],
+                            "secret": [],
+                            "secure_boot_enabled": null,
+                            "single_placement_group": true,
+                            "sku": "Standard_B1s",
+                            "source_image_id": null,
+                            "source_image_reference": [
+                                {
+                                    "offer": "UbuntuServer",
+                                    "publisher": "Canonical",
+                                    "sku": "18.04-LTS",
+                                    "version": "latest"
+                                }
+                            ],
+                            "tags": null,
+                            "timeouts": null,
+                            "upgrade_mode": "Manual",
+                            "user_data": null,
+                            "vtpm_enabled": null,
+                            "zone_balance": false,
+                            "zones": [
+                                "1",
+                                "2",
+                                "3"
+                            ]
+                        },
+                        "sensitive_values": {
+                            "additional_capabilities": [],
+                            "admin_password": true,
+                            "admin_ssh_key": [
+                                {}
+                            ],
+                            "automatic_instance_repair": [],
+                            "automatic_os_upgrade_policy": [],
+                            "boot_diagnostics": [],
+                            "custom_data": true,
+                            "data_disk": [],
+                            "extension": [],
+                            "gallery_application": [],
+                            "gallery_applications": [],
+                            "identity": [],
+                            "network_interface": [
+                                {
+                                    "ip_configuration": [
+                                        {
+                                            "load_balancer_backend_address_pool_ids": [],
+                                            "public_ip_address": []
+                                        }
+                                    ]
+                                }
+                            ],
+                            "os_disk": [
+                                {
+                                    "diff_disk_settings": []
+                                }
+                            ],
+                            "plan": [],
+                            "rolling_upgrade_policy": [],
+                            "scale_in": [],
+                            "secret": [],
+                            "source_image_reference": [
+                                {}
+                            ],
+                            "spot_restore": [],
+                            "terminate_notification": [],
+                            "termination_notification": [],
+                            "zones": [
+                                false,
+                                false,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "address": "azurerm_network_interface.vm",
+                        "mode": "managed",
+                        "type": "azurerm_network_interface",
+                        "name": "vm",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "auxiliary_mode": null,
+                            "auxiliary_sku": null,
+                            "edge_zone": null,
+                            "internal_dns_name_label": null,
+                            "ip_configuration": [
+                                {
+                                    "name": "internal",
+                                    "private_ip_address_allocation": "Dynamic",
+                                    "private_ip_address_version": "IPv4",
+                                    "public_ip_address_id": null
+                                }
+                            ],
+                            "location": "eastus",
+                            "name": "nic-vm-test",
+                            "resource_group_name": "rg-terravision-test",
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "applied_dns_servers": [],
+                            "dns_servers": [],
+                            "ip_configuration": [
+                                {}
+                            ],
+                            "private_ip_addresses": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_network_security_group.main",
+                        "mode": "managed",
+                        "type": "azurerm_network_security_group",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "location": "eastus",
+                            "name": "nsg-terravision-test",
+                            "resource_group_name": "rg-terravision-test",
+                            "security_rule": [
+                                {
+                                    "access": "Allow",
+                                    "description": "",
+                                    "destination_address_prefix": "*",
+                                    "destination_address_prefixes": [],
+                                    "destination_application_security_group_ids": [],
+                                    "destination_port_range": "22",
+                                    "destination_port_ranges": [],
+                                    "direction": "Inbound",
+                                    "name": "allow-ssh",
+                                    "priority": 100,
+                                    "protocol": "Tcp",
+                                    "source_address_prefix": "*",
+                                    "source_address_prefixes": [],
+                                    "source_application_security_group_ids": [],
+                                    "source_port_range": "*",
+                                    "source_port_ranges": []
+                                }
+                            ],
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "security_rule": [
+                                {
+                                    "destination_address_prefixes": [],
+                                    "destination_application_security_group_ids": [],
+                                    "destination_port_ranges": [],
+                                    "source_address_prefixes": [],
+                                    "source_application_security_group_ids": [],
+                                    "source_port_ranges": []
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "address": "azurerm_public_ip.lb",
+                        "mode": "managed",
+                        "type": "azurerm_public_ip",
+                        "name": "lb",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "allocation_method": "Static",
+                            "ddos_protection_mode": "VirtualNetworkInherited",
+                            "ddos_protection_plan_id": null,
+                            "domain_name_label": null,
+                            "edge_zone": null,
+                            "idle_timeout_in_minutes": 4,
+                            "ip_tags": null,
+                            "ip_version": "IPv4",
+                            "location": "eastus",
+                            "name": "pip-lb-test",
+                            "public_ip_prefix_id": null,
+                            "resource_group_name": "rg-terravision-test",
+                            "reverse_fqdn": null,
+                            "sku": "Standard",
+                            "sku_tier": "Regional",
+                            "tags": null,
+                            "timeouts": null,
+                            "zones": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "azurerm_resource_group.main",
+                        "mode": "managed",
+                        "type": "azurerm_resource_group",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "location": "eastus",
+                            "managed_by": null,
+                            "name": "rg-terravision-test",
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "azurerm_subnet.main",
+                        "mode": "managed",
+                        "type": "azurerm_subnet",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "address_prefixes": [
+                                "10.0.1.0/24"
+                            ],
+                            "default_outbound_access_enabled": true,
+                            "delegation": [],
+                            "name": "subnet-main",
+                            "resource_group_name": "rg-terravision-test",
+                            "service_endpoint_policy_ids": null,
+                            "service_endpoints": null,
+                            "timeouts": null,
+                            "virtual_network_name": "vnet-terravision-test"
+                        },
+                        "sensitive_values": {
+                            "address_prefixes": [
+                                false
+                            ],
+                            "delegation": []
+                        }
+                    },
+                    {
+                        "address": "azurerm_subnet_network_security_group_association.main",
+                        "mode": "managed",
+                        "type": "azurerm_subnet_network_security_group_association",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "timeouts": null
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "azurerm_virtual_network.main",
+                        "mode": "managed",
+                        "type": "azurerm_virtual_network",
+                        "name": "main",
+                        "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                        "schema_version": 0,
+                        "values": {
+                            "address_space": [
+                                "10.0.0.0/16"
+                            ],
+                            "bgp_community": null,
+                            "ddos_protection_plan": [],
+                            "edge_zone": null,
+                            "encryption": [],
+                            "flow_timeout_in_minutes": null,
+                            "location": "eastus",
+                            "name": "vnet-terravision-test",
+                            "resource_group_name": "rg-terravision-test",
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "address_space": [
+                                false
+                            ],
+                            "ddos_protection_plan": [],
+                            "dns_servers": [],
+                            "encryption": [],
+                            "subnet": []
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "azurerm_lb.main",
+                "mode": "managed",
+                "type": "azurerm_lb",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "edge_zone": null,
+                        "frontend_ip_configuration": [
+                            {
+                                "inbound_nat_rules": [],
+                                "load_balancer_rules": [],
+                                "outbound_rules": []
+                            }
+                        ],
+                        "location": "eastus",
+                        "name": "lb-terravision-test",
+                        "resource_group_name": "rg-terravision-test",
+                        "sku": "Standard",
+                        "sku_tier": "Regional",
+                        "tags": null,
+                        "timeouts": null,
+                        "id": true,
+                        "private_ip_address": true,
+                        "private_ip_addresses": [],
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "frontend_ip_configuration": [
+                            {
+                                "gateway_load_balancer_frontend_ip_configuration_id": true,
+                                "id": true,
+                                "inbound_nat_rules": true,
+                                "load_balancer_rules": true,
+                                "outbound_rules": true,
+                                "private_ip_address": true,
+                                "private_ip_address_allocation": true,
+                                "private_ip_address_version": true,
+                                "public_ip_address_id": true,
+                                "public_ip_prefix_id": true,
+                                "subnet_id": true
+                            }
+                        ],
+                        "id": true,
+                        "private_ip_address": true,
+                        "private_ip_addresses": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "frontend_ip_configuration": [
+                            {
+                                "inbound_nat_rules": [],
+                                "load_balancer_rules": [],
+                                "outbound_rules": []
+                            }
+                        ],
+                        "private_ip_addresses": []
+                    }
+                }
+            },
+            {
+                "address": "azurerm_lb_backend_address_pool.main",
+                "mode": "managed",
+                "type": "azurerm_lb_backend_address_pool",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "vmss-backend-pool",
+                        "synchronous_mode": null,
+                        "timeouts": null,
+                        "tunnel_interface": [],
+                        "virtual_network_id": null,
+                        "backend_ip_configurations": [],
+                        "id": true,
+                        "inbound_nat_rules": [],
+                        "load_balancing_rules": [],
+                        "loadbalancer_id": true,
+                        "outbound_rules": [],
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "backend_ip_configurations": true,
+                        "id": true,
+                        "inbound_nat_rules": true,
+                        "load_balancing_rules": true,
+                        "loadbalancer_id": true,
+                        "outbound_rules": true,
+                        "tunnel_interface": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "backend_ip_configurations": [],
+                        "inbound_nat_rules": [],
+                        "load_balancing_rules": [],
+                        "outbound_rules": [],
+                        "tunnel_interface": []
+                    }
+                }
+            },
+            {
+                "address": "azurerm_linux_virtual_machine.main",
+                "mode": "managed",
+                "type": "azurerm_linux_virtual_machine",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "additional_capabilities": [],
+                        "admin_password": true,
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "admin_username": "adminuser",
+                        "allow_extension_operations": true,
+                        "availability_set_id": null,
+                        "boot_diagnostics": [],
+                        "bypass_platform_safety_checks_on_user_schedule_enabled": false,
+                        "capacity_reservation_group_id": null,
+                        "custom_data": true,
+                        "dedicated_host_group_id": null,
+                        "dedicated_host_id": null,
+                        "disable_password_authentication": true,
+                        "edge_zone": null,
+                        "encryption_at_host_enabled": null,
+                        "eviction_policy": null,
+                        "extensions_time_budget": "PT1H30M",
+                        "gallery_application": [],
+                        "identity": [],
+                        "license_type": null,
+                        "location": "eastus",
+                        "max_bid_price": -1,
+                        "name": "vm-terravision-test",
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": []
+                            }
+                        ],
+                        "os_image_notification": [],
+                        "patch_assessment_mode": "ImageDefault",
+                        "patch_mode": "ImageDefault",
+                        "plan": [],
+                        "platform_fault_domain": -1,
+                        "priority": "Regular",
+                        "provision_vm_agent": true,
+                        "proximity_placement_group_id": null,
+                        "reboot_setting": null,
+                        "resource_group_name": "rg-terravision-test",
+                        "secret": [],
+                        "secure_boot_enabled": null,
+                        "size": "Standard_B1s",
+                        "source_image_id": null,
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "tags": null,
+                        "timeouts": null,
+                        "user_data": null,
+                        "virtual_machine_scale_set_id": null,
+                        "vm_agent_platform_updates_enabled": false,
+                        "vtpm_enabled": null,
+                        "zone": null,
+                        "computer_name": true,
+                        "disk_controller_type": true,
+                        "id": true,
+                        "network_interface_ids": [],
+                        "private_ip_address": true,
+                        "private_ip_addresses": [],
+                        "public_ip_address": true,
+                        "public_ip_addresses": [],
+                        "termination_notification": [],
+                        "virtual_machine_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "additional_capabilities": [],
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "boot_diagnostics": [],
+                        "computer_name": true,
+                        "disk_controller_type": true,
+                        "gallery_application": [],
+                        "id": true,
+                        "identity": [],
+                        "network_interface_ids": true,
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": [],
+                                "disk_size_gb": true,
+                                "name": true
+                            }
+                        ],
+                        "os_image_notification": [],
+                        "plan": [],
+                        "private_ip_address": true,
+                        "private_ip_addresses": true,
+                        "public_ip_address": true,
+                        "public_ip_addresses": true,
+                        "secret": [],
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "termination_notification": true,
+                        "virtual_machine_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "additional_capabilities": [],
+                        "admin_password": true,
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "boot_diagnostics": [],
+                        "custom_data": true,
+                        "gallery_application": [],
+                        "identity": [],
+                        "network_interface_ids": [],
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": []
+                            }
+                        ],
+                        "os_image_notification": [],
+                        "plan": [],
+                        "private_ip_addresses": [],
+                        "public_ip_addresses": [],
+                        "secret": [],
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "termination_notification": []
+                    }
+                }
+            },
+            {
+                "address": "azurerm_linux_virtual_machine_scale_set.main",
+                "mode": "managed",
+                "type": "azurerm_linux_virtual_machine_scale_set",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "additional_capabilities": [],
+                        "admin_password": true,
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "admin_username": "adminuser",
+                        "automatic_os_upgrade_policy": [],
+                        "boot_diagnostics": [],
+                        "capacity_reservation_group_id": null,
+                        "custom_data": true,
+                        "data_disk": [],
+                        "disable_password_authentication": true,
+                        "do_not_run_extensions_on_overprovisioned_machines": false,
+                        "edge_zone": null,
+                        "encryption_at_host_enabled": null,
+                        "eviction_policy": null,
+                        "extensions_time_budget": "PT1H30M",
+                        "health_probe_id": null,
+                        "host_group_id": null,
+                        "identity": [],
+                        "instances": 3,
+                        "location": "eastus",
+                        "max_bid_price": -1,
+                        "name": "vmss-terravision-test",
+                        "network_interface": [
+                            {
+                                "ip_configuration": [
+                                    {
+                                        "load_balancer_backend_address_pool_ids": [],
+                                        "public_ip_address": []
+                                    }
+                                ]
+                            }
+                        ],
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": []
+                            }
+                        ],
+                        "overprovision": true,
+                        "plan": [],
+                        "priority": "Regular",
+                        "provision_vm_agent": true,
+                        "proximity_placement_group_id": null,
+                        "resource_group_name": "rg-terravision-test",
+                        "rolling_upgrade_policy": [],
+                        "secret": [],
+                        "secure_boot_enabled": null,
+                        "single_placement_group": true,
+                        "sku": "Standard_B1s",
+                        "source_image_id": null,
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "tags": null,
+                        "timeouts": null,
+                        "upgrade_mode": "Manual",
+                        "user_data": null,
+                        "vtpm_enabled": null,
+                        "zone_balance": false,
+                        "zones": [
+                            false,
+                            false,
+                            false
+                        ],
+                        "automatic_instance_repair": [],
+                        "computer_name_prefix": true,
+                        "extension": [],
+                        "extension_operations_enabled": true,
+                        "gallery_application": [],
+                        "gallery_applications": [],
+                        "id": true,
+                        "platform_fault_domain_count": true,
+                        "scale_in": [],
+                        "scale_in_policy": true,
+                        "spot_restore": [],
+                        "terminate_notification": [],
+                        "termination_notification": [],
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "additional_capabilities": [],
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "automatic_instance_repair": true,
+                        "automatic_os_upgrade_policy": [],
+                        "boot_diagnostics": [],
+                        "computer_name_prefix": true,
+                        "data_disk": [],
+                        "extension": true,
+                        "extension_operations_enabled": true,
+                        "gallery_application": true,
+                        "gallery_applications": true,
+                        "id": true,
+                        "identity": [],
+                        "network_interface": [
+                            {
+                                "ip_configuration": [
+                                    {
+                                        "load_balancer_backend_address_pool_ids": true,
+                                        "public_ip_address": [],
+                                        "subnet_id": true
+                                    }
+                                ]
+                            }
+                        ],
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": [],
+                                "disk_size_gb": true
+                            }
+                        ],
+                        "plan": [],
+                        "platform_fault_domain_count": true,
+                        "rolling_upgrade_policy": [],
+                        "scale_in": true,
+                        "scale_in_policy": true,
+                        "secret": [],
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "spot_restore": true,
+                        "terminate_notification": true,
+                        "termination_notification": true,
+                        "unique_id": true,
+                        "zones": [
+                            false,
+                            false,
+                            false
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "additional_capabilities": [],
+                        "admin_password": true,
+                        "admin_ssh_key": [
+                            {}
+                        ],
+                        "automatic_instance_repair": [],
+                        "automatic_os_upgrade_policy": [],
+                        "boot_diagnostics": [],
+                        "custom_data": true,
+                        "data_disk": [],
+                        "extension": [],
+                        "gallery_application": [],
+                        "gallery_applications": [],
+                        "identity": [],
+                        "network_interface": [
+                            {
+                                "ip_configuration": [
+                                    {
+                                        "load_balancer_backend_address_pool_ids": [],
+                                        "public_ip_address": []
+                                    }
+                                ]
+                            }
+                        ],
+                        "os_disk": [
+                            {
+                                "diff_disk_settings": []
+                            }
+                        ],
+                        "plan": [],
+                        "rolling_upgrade_policy": [],
+                        "scale_in": [],
+                        "secret": [],
+                        "source_image_reference": [
+                            {}
+                        ],
+                        "spot_restore": [],
+                        "terminate_notification": [],
+                        "termination_notification": [],
+                        "zones": [
+                            false,
+                            false,
+                            false
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "azurerm_network_interface.vm",
+                "mode": "managed",
+                "type": "azurerm_network_interface",
+                "name": "vm",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "auxiliary_mode": null,
+                        "auxiliary_sku": null,
+                        "edge_zone": null,
+                        "internal_dns_name_label": null,
+                        "ip_configuration": [
+                            {}
+                        ],
+                        "location": "eastus",
+                        "name": "nic-vm-test",
+                        "resource_group_name": "rg-terravision-test",
+                        "tags": null,
+                        "timeouts": null,
+                        "accelerated_networking_enabled": true,
+                        "applied_dns_servers": [],
+                        "dns_servers": [],
+                        "enable_accelerated_networking": true,
+                        "enable_ip_forwarding": true,
+                        "id": true,
+                        "internal_domain_name_suffix": true,
+                        "ip_forwarding_enabled": true,
+                        "mac_address": true,
+                        "private_ip_address": true,
+                        "private_ip_addresses": [],
+                        "virtual_machine_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "accelerated_networking_enabled": true,
+                        "applied_dns_servers": true,
+                        "dns_servers": true,
+                        "enable_accelerated_networking": true,
+                        "enable_ip_forwarding": true,
+                        "id": true,
+                        "internal_domain_name_suffix": true,
+                        "ip_configuration": [
+                            {
+                                "gateway_load_balancer_frontend_ip_configuration_id": true,
+                                "primary": true,
+                                "private_ip_address": true,
+                                "subnet_id": true
+                            }
+                        ],
+                        "ip_forwarding_enabled": true,
+                        "mac_address": true,
+                        "private_ip_address": true,
+                        "private_ip_addresses": true,
+                        "virtual_machine_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "applied_dns_servers": [],
+                        "dns_servers": [],
+                        "ip_configuration": [
+                            {}
+                        ],
+                        "private_ip_addresses": []
+                    }
+                }
+            },
+            {
+                "address": "azurerm_network_security_group.main",
+                "mode": "managed",
+                "type": "azurerm_network_security_group",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "location": "eastus",
+                        "name": "nsg-terravision-test",
+                        "resource_group_name": "rg-terravision-test",
+                        "security_rule": [
+                            {
+                                "destination_address_prefixes": [],
+                                "destination_application_security_group_ids": [],
+                                "destination_port_ranges": [],
+                                "source_address_prefixes": [],
+                                "source_application_security_group_ids": [],
+                                "source_port_ranges": []
+                            }
+                        ],
+                        "tags": null,
+                        "timeouts": null,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "security_rule": [
+                            {
+                                "destination_address_prefixes": [],
+                                "destination_application_security_group_ids": [],
+                                "destination_port_ranges": [],
+                                "source_address_prefixes": [],
+                                "source_application_security_group_ids": [],
+                                "source_port_ranges": []
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "security_rule": [
+                            {
+                                "destination_address_prefixes": [],
+                                "destination_application_security_group_ids": [],
+                                "destination_port_ranges": [],
+                                "source_address_prefixes": [],
+                                "source_application_security_group_ids": [],
+                                "source_port_ranges": []
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "azurerm_public_ip.lb",
+                "mode": "managed",
+                "type": "azurerm_public_ip",
+                "name": "lb",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "allocation_method": "Static",
+                        "ddos_protection_mode": "VirtualNetworkInherited",
+                        "ddos_protection_plan_id": null,
+                        "domain_name_label": null,
+                        "edge_zone": null,
+                        "idle_timeout_in_minutes": 4,
+                        "ip_tags": null,
+                        "ip_version": "IPv4",
+                        "location": "eastus",
+                        "name": "pip-lb-test",
+                        "public_ip_prefix_id": null,
+                        "resource_group_name": "rg-terravision-test",
+                        "reverse_fqdn": null,
+                        "sku": "Standard",
+                        "sku_tier": "Regional",
+                        "tags": null,
+                        "timeouts": null,
+                        "zones": null,
+                        "fqdn": true,
+                        "id": true,
+                        "ip_address": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "fqdn": true,
+                        "id": true,
+                        "ip_address": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "azurerm_resource_group.main",
+                "mode": "managed",
+                "type": "azurerm_resource_group",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "location": "eastus",
+                        "managed_by": null,
+                        "name": "rg-terravision-test",
+                        "tags": null,
+                        "timeouts": null,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "azurerm_subnet.main",
+                "mode": "managed",
+                "type": "azurerm_subnet",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "address_prefixes": [
+                            false
+                        ],
+                        "default_outbound_access_enabled": true,
+                        "delegation": [],
+                        "name": "subnet-main",
+                        "resource_group_name": "rg-terravision-test",
+                        "service_endpoint_policy_ids": null,
+                        "service_endpoints": null,
+                        "timeouts": null,
+                        "virtual_network_name": "vnet-terravision-test",
+                        "enforce_private_link_endpoint_network_policies": true,
+                        "enforce_private_link_service_network_policies": true,
+                        "id": true,
+                        "private_endpoint_network_policies": true,
+                        "private_endpoint_network_policies_enabled": true,
+                        "private_link_service_network_policies_enabled": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "address_prefixes": [
+                            false
+                        ],
+                        "delegation": [],
+                        "enforce_private_link_endpoint_network_policies": true,
+                        "enforce_private_link_service_network_policies": true,
+                        "id": true,
+                        "private_endpoint_network_policies": true,
+                        "private_endpoint_network_policies_enabled": true,
+                        "private_link_service_network_policies_enabled": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "address_prefixes": [
+                            false
+                        ],
+                        "delegation": []
+                    }
+                }
+            },
+            {
+                "address": "azurerm_subnet_network_security_group_association.main",
+                "mode": "managed",
+                "type": "azurerm_subnet_network_security_group_association",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "timeouts": null,
+                        "id": true,
+                        "network_security_group_id": true,
+                        "subnet_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "network_security_group_id": true,
+                        "subnet_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "azurerm_virtual_network.main",
+                "mode": "managed",
+                "type": "azurerm_virtual_network",
+                "name": "main",
+                "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "address_space": [
+                            false
+                        ],
+                        "bgp_community": null,
+                        "ddos_protection_plan": [],
+                        "edge_zone": null,
+                        "encryption": [],
+                        "flow_timeout_in_minutes": null,
+                        "location": "eastus",
+                        "name": "vnet-terravision-test",
+                        "resource_group_name": "rg-terravision-test",
+                        "tags": null,
+                        "timeouts": null,
+                        "dns_servers": [],
+                        "guid": true,
+                        "id": true,
+                        "subnet": [],
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "address_space": [
+                            false
+                        ],
+                        "ddos_protection_plan": [],
+                        "dns_servers": true,
+                        "encryption": [],
+                        "guid": true,
+                        "id": true,
+                        "subnet": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "address_space": [
+                            false
+                        ],
+                        "ddos_protection_plan": [],
+                        "dns_servers": [],
+                        "encryption": [],
+                        "subnet": []
+                    }
+                }
+            }
+        ],
+        "output_changes": {
+            "resource_group_name": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "rg-terravision-test",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "vm_name": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "vm-terravision-test",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "vmss_name": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "vmss-terravision-test",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            },
+            "vnet_name": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": "vnet-terravision-test",
+                "after_unknown": false,
+                "before_sensitive": false,
+                "after_sensitive": false
+            }
+        },
+        "prior_state": {
+            "format_version": "1.0",
+            "terraform_version": "1.13.3",
+            "values": {
+                "outputs": {
+                    "resource_group_name": {
+                        "sensitive": false,
+                        "value": "rg-terravision-test",
+                        "type": "string"
+                    },
+                    "vm_name": {
+                        "sensitive": false,
+                        "value": "vm-terravision-test",
+                        "type": "string"
+                    },
+                    "vmss_name": {
+                        "sensitive": false,
+                        "value": "vmss-terravision-test",
+                        "type": "string"
+                    },
+                    "vnet_name": {
+                        "sensitive": false,
+                        "value": "vnet-terravision-test",
+                        "type": "string"
+                    }
+                },
+                "root_module": {}
+            }
+        },
+        "configuration": {
+            "provider_config": {
+                "azurerm": {
+                    "name": "azurerm",
+                    "full_name": "registry.terraform.io/hashicorp/azurerm",
+                    "version_constraint": "~> 3.0",
+                    "expressions": {
+                        "features": [
+                            {}
+                        ],
+                        "skip_provider_registration": {
+                            "constant_value": true
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "outputs": {
+                    "resource_group_name": {
+                        "expression": {
+                            "references": [
+                                "azurerm_resource_group.main.name",
+                                "azurerm_resource_group.main"
+                            ]
+                        }
+                    },
+                    "vm_name": {
+                        "expression": {
+                            "references": [
+                                "azurerm_linux_virtual_machine.main.name",
+                                "azurerm_linux_virtual_machine.main"
+                            ]
+                        }
+                    },
+                    "vmss_name": {
+                        "expression": {
+                            "references": [
+                                "azurerm_linux_virtual_machine_scale_set.main.name",
+                                "azurerm_linux_virtual_machine_scale_set.main"
+                            ]
+                        }
+                    },
+                    "vnet_name": {
+                        "expression": {
+                            "references": [
+                                "azurerm_virtual_network.main.name",
+                                "azurerm_virtual_network.main"
+                            ]
+                        }
+                    }
+                },
+                "resources": [
+                    {
+                        "address": "azurerm_lb.main",
+                        "mode": "managed",
+                        "type": "azurerm_lb",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "frontend_ip_configuration": [
+                                {
+                                    "name": {
+                                        "constant_value": "frontend"
+                                    },
+                                    "public_ip_address_id": {
+                                        "references": [
+                                            "azurerm_public_ip.lb.id",
+                                            "azurerm_public_ip.lb"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "lb-terravision-test"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "sku": {
+                                "constant_value": "Standard"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_lb_backend_address_pool.main",
+                        "mode": "managed",
+                        "type": "azurerm_lb_backend_address_pool",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "loadbalancer_id": {
+                                "references": [
+                                    "azurerm_lb.main.id",
+                                    "azurerm_lb.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "vmss-backend-pool"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_linux_virtual_machine.main",
+                        "mode": "managed",
+                        "type": "azurerm_linux_virtual_machine",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "admin_ssh_key": [
+                                {
+                                    "public_key": {
+                                        "constant_value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test"
+                                    },
+                                    "username": {
+                                        "constant_value": "adminuser"
+                                    }
+                                }
+                            ],
+                            "admin_username": {
+                                "constant_value": "adminuser"
+                            },
+                            "disable_password_authentication": {
+                                "constant_value": true
+                            },
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "vm-terravision-test"
+                            },
+                            "network_interface_ids": {
+                                "references": [
+                                    "azurerm_network_interface.vm.id",
+                                    "azurerm_network_interface.vm"
+                                ]
+                            },
+                            "os_disk": [
+                                {
+                                    "caching": {
+                                        "constant_value": "ReadWrite"
+                                    },
+                                    "storage_account_type": {
+                                        "constant_value": "Standard_LRS"
+                                    }
+                                }
+                            ],
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "size": {
+                                "constant_value": "Standard_B1s"
+                            },
+                            "source_image_reference": [
+                                {
+                                    "offer": {
+                                        "constant_value": "UbuntuServer"
+                                    },
+                                    "publisher": {
+                                        "constant_value": "Canonical"
+                                    },
+                                    "sku": {
+                                        "constant_value": "18.04-LTS"
+                                    },
+                                    "version": {
+                                        "constant_value": "latest"
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_linux_virtual_machine_scale_set.main",
+                        "mode": "managed",
+                        "type": "azurerm_linux_virtual_machine_scale_set",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "admin_ssh_key": [
+                                {
+                                    "public_key": {
+                                        "constant_value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test"
+                                    },
+                                    "username": {
+                                        "constant_value": "adminuser"
+                                    }
+                                }
+                            ],
+                            "admin_username": {
+                                "constant_value": "adminuser"
+                            },
+                            "disable_password_authentication": {
+                                "constant_value": true
+                            },
+                            "instances": {
+                                "constant_value": 3
+                            },
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "vmss-terravision-test"
+                            },
+                            "network_interface": [
+                                {
+                                    "ip_configuration": [
+                                        {
+                                            "load_balancer_backend_address_pool_ids": {
+                                                "references": [
+                                                    "azurerm_lb_backend_address_pool.main.id",
+                                                    "azurerm_lb_backend_address_pool.main"
+                                                ]
+                                            },
+                                            "name": {
+                                                "constant_value": "internal"
+                                            },
+                                            "primary": {
+                                                "constant_value": true
+                                            },
+                                            "subnet_id": {
+                                                "references": [
+                                                    "azurerm_subnet.main.id",
+                                                    "azurerm_subnet.main"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "name": {
+                                        "constant_value": "vmss-nic"
+                                    },
+                                    "primary": {
+                                        "constant_value": true
+                                    }
+                                }
+                            ],
+                            "os_disk": [
+                                {
+                                    "caching": {
+                                        "constant_value": "ReadWrite"
+                                    },
+                                    "storage_account_type": {
+                                        "constant_value": "Standard_LRS"
+                                    }
+                                }
+                            ],
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "sku": {
+                                "constant_value": "Standard_B1s"
+                            },
+                            "source_image_reference": [
+                                {
+                                    "offer": {
+                                        "constant_value": "UbuntuServer"
+                                    },
+                                    "publisher": {
+                                        "constant_value": "Canonical"
+                                    },
+                                    "sku": {
+                                        "constant_value": "18.04-LTS"
+                                    },
+                                    "version": {
+                                        "constant_value": "latest"
+                                    }
+                                }
+                            ],
+                            "zones": {
+                                "constant_value": [
+                                    "1",
+                                    "2",
+                                    "3"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_network_interface.vm",
+                        "mode": "managed",
+                        "type": "azurerm_network_interface",
+                        "name": "vm",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "ip_configuration": [
+                                {
+                                    "name": {
+                                        "constant_value": "internal"
+                                    },
+                                    "private_ip_address_allocation": {
+                                        "constant_value": "Dynamic"
+                                    },
+                                    "subnet_id": {
+                                        "references": [
+                                            "azurerm_subnet.main.id",
+                                            "azurerm_subnet.main"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "nic-vm-test"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_network_security_group.main",
+                        "mode": "managed",
+                        "type": "azurerm_network_security_group",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "nsg-terravision-test"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "security_rule": {
+                                "constant_value": [
+                                    {
+                                        "access": "Allow",
+                                        "description": null,
+                                        "destination_address_prefix": "*",
+                                        "destination_address_prefixes": null,
+                                        "destination_application_security_group_ids": null,
+                                        "destination_port_range": "22",
+                                        "destination_port_ranges": null,
+                                        "direction": "Inbound",
+                                        "name": "allow-ssh",
+                                        "priority": 100,
+                                        "protocol": "Tcp",
+                                        "source_address_prefix": "*",
+                                        "source_address_prefixes": null,
+                                        "source_application_security_group_ids": null,
+                                        "source_port_range": "*",
+                                        "source_port_ranges": null
+                                    }
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_public_ip.lb",
+                        "mode": "managed",
+                        "type": "azurerm_public_ip",
+                        "name": "lb",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "allocation_method": {
+                                "constant_value": "Static"
+                            },
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "pip-lb-test"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "sku": {
+                                "constant_value": "Standard"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_resource_group.main",
+                        "mode": "managed",
+                        "type": "azurerm_resource_group",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "location": {
+                                "constant_value": "East US"
+                            },
+                            "name": {
+                                "constant_value": "rg-terravision-test"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_subnet.main",
+                        "mode": "managed",
+                        "type": "azurerm_subnet",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "address_prefixes": {
+                                "constant_value": [
+                                    "10.0.1.0/24"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "subnet-main"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "virtual_network_name": {
+                                "references": [
+                                    "azurerm_virtual_network.main.name",
+                                    "azurerm_virtual_network.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_subnet_network_security_group_association.main",
+                        "mode": "managed",
+                        "type": "azurerm_subnet_network_security_group_association",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "network_security_group_id": {
+                                "references": [
+                                    "azurerm_network_security_group.main.id",
+                                    "azurerm_network_security_group.main"
+                                ]
+                            },
+                            "subnet_id": {
+                                "references": [
+                                    "azurerm_subnet.main.id",
+                                    "azurerm_subnet.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "azurerm_virtual_network.main",
+                        "mode": "managed",
+                        "type": "azurerm_virtual_network",
+                        "name": "main",
+                        "provider_config_key": "azurerm",
+                        "expressions": {
+                            "address_space": {
+                                "constant_value": [
+                                    "10.0.0.0/16"
+                                ]
+                            },
+                            "location": {
+                                "references": [
+                                    "azurerm_resource_group.main.location",
+                                    "azurerm_resource_group.main"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "vnet-terravision-test"
+                            },
+                            "resource_group_name": {
+                                "references": [
+                                    "azurerm_resource_group.main.name",
+                                    "azurerm_resource_group.main"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "azurerm_lb_backend_address_pool.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_linux_virtual_machine.main",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "azurerm_linux_virtual_machine_scale_set.main",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "azurerm_network_security_group.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_resource_group.main",
+                "attribute": [
+                    "location"
+                ]
+            },
+            {
+                "resource": "azurerm_resource_group.main",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "azurerm_public_ip.lb",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_virtual_network.main",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "azurerm_lb.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_subnet.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_network_interface.vm",
+                "attribute": [
+                    "id"
+                ]
+            }
+        ],
+        "timestamp": "2026-01-02T18:59:45Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "azurerm_lb.main",
+            "mode": "managed",
+            "type": "azurerm_lb",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "edge_zone": null,
+                    "frontend_ip_configuration": [
+                        {
+                            "inbound_nat_rules": [],
+                            "load_balancer_rules": [],
+                            "outbound_rules": []
+                        }
+                    ],
+                    "location": "eastus",
+                    "name": "lb-terravision-test",
+                    "resource_group_name": "rg-terravision-test",
+                    "sku": "Standard",
+                    "sku_tier": "Regional",
+                    "tags": null,
+                    "timeouts": null,
+                    "id": true,
+                    "private_ip_address": true,
+                    "private_ip_addresses": [],
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "frontend_ip_configuration": [
+                        {
+                            "gateway_load_balancer_frontend_ip_configuration_id": true,
+                            "id": true,
+                            "inbound_nat_rules": true,
+                            "load_balancer_rules": true,
+                            "outbound_rules": true,
+                            "private_ip_address": true,
+                            "private_ip_address_allocation": true,
+                            "private_ip_address_version": true,
+                            "public_ip_address_id": true,
+                            "public_ip_prefix_id": true,
+                            "subnet_id": true
+                        }
+                    ],
+                    "id": true,
+                    "private_ip_address": true,
+                    "private_ip_addresses": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "frontend_ip_configuration": [
+                        {
+                            "inbound_nat_rules": [],
+                            "load_balancer_rules": [],
+                            "outbound_rules": []
+                        }
+                    ],
+                    "private_ip_addresses": []
+                }
+            }
+        },
+        {
+            "address": "azurerm_lb_backend_address_pool.main",
+            "mode": "managed",
+            "type": "azurerm_lb_backend_address_pool",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "vmss-backend-pool",
+                    "synchronous_mode": null,
+                    "timeouts": null,
+                    "tunnel_interface": [],
+                    "virtual_network_id": null,
+                    "backend_ip_configurations": [],
+                    "id": true,
+                    "inbound_nat_rules": [],
+                    "load_balancing_rules": [],
+                    "loadbalancer_id": true,
+                    "outbound_rules": [],
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "backend_ip_configurations": true,
+                    "id": true,
+                    "inbound_nat_rules": true,
+                    "load_balancing_rules": true,
+                    "loadbalancer_id": true,
+                    "outbound_rules": true,
+                    "tunnel_interface": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "backend_ip_configurations": [],
+                    "inbound_nat_rules": [],
+                    "load_balancing_rules": [],
+                    "outbound_rules": [],
+                    "tunnel_interface": []
+                }
+            }
+        },
+        {
+            "address": "azurerm_linux_virtual_machine.main",
+            "mode": "managed",
+            "type": "azurerm_linux_virtual_machine",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "additional_capabilities": [],
+                    "admin_password": true,
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "admin_username": "adminuser",
+                    "allow_extension_operations": true,
+                    "availability_set_id": null,
+                    "boot_diagnostics": [],
+                    "bypass_platform_safety_checks_on_user_schedule_enabled": false,
+                    "capacity_reservation_group_id": null,
+                    "custom_data": true,
+                    "dedicated_host_group_id": null,
+                    "dedicated_host_id": null,
+                    "disable_password_authentication": true,
+                    "edge_zone": null,
+                    "encryption_at_host_enabled": null,
+                    "eviction_policy": null,
+                    "extensions_time_budget": "PT1H30M",
+                    "gallery_application": [],
+                    "identity": [],
+                    "license_type": null,
+                    "location": "eastus",
+                    "max_bid_price": -1,
+                    "name": "vm-terravision-test",
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": []
+                        }
+                    ],
+                    "os_image_notification": [],
+                    "patch_assessment_mode": "ImageDefault",
+                    "patch_mode": "ImageDefault",
+                    "plan": [],
+                    "platform_fault_domain": -1,
+                    "priority": "Regular",
+                    "provision_vm_agent": true,
+                    "proximity_placement_group_id": null,
+                    "reboot_setting": null,
+                    "resource_group_name": "rg-terravision-test",
+                    "secret": [],
+                    "secure_boot_enabled": null,
+                    "size": "Standard_B1s",
+                    "source_image_id": null,
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "tags": null,
+                    "timeouts": null,
+                    "user_data": null,
+                    "virtual_machine_scale_set_id": null,
+                    "vm_agent_platform_updates_enabled": false,
+                    "vtpm_enabled": null,
+                    "zone": null,
+                    "computer_name": true,
+                    "disk_controller_type": true,
+                    "id": true,
+                    "network_interface_ids": [],
+                    "private_ip_address": true,
+                    "private_ip_addresses": [],
+                    "public_ip_address": true,
+                    "public_ip_addresses": [],
+                    "termination_notification": [],
+                    "virtual_machine_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "additional_capabilities": [],
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "boot_diagnostics": [],
+                    "computer_name": true,
+                    "disk_controller_type": true,
+                    "gallery_application": [],
+                    "id": true,
+                    "identity": [],
+                    "network_interface_ids": true,
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": [],
+                            "disk_size_gb": true,
+                            "name": true
+                        }
+                    ],
+                    "os_image_notification": [],
+                    "plan": [],
+                    "private_ip_address": true,
+                    "private_ip_addresses": true,
+                    "public_ip_address": true,
+                    "public_ip_addresses": true,
+                    "secret": [],
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "termination_notification": true,
+                    "virtual_machine_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "additional_capabilities": [],
+                    "admin_password": true,
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "boot_diagnostics": [],
+                    "custom_data": true,
+                    "gallery_application": [],
+                    "identity": [],
+                    "network_interface_ids": [],
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": []
+                        }
+                    ],
+                    "os_image_notification": [],
+                    "plan": [],
+                    "private_ip_addresses": [],
+                    "public_ip_addresses": [],
+                    "secret": [],
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "termination_notification": []
+                }
+            }
+        },
+        {
+            "address": "azurerm_linux_virtual_machine_scale_set.main",
+            "mode": "managed",
+            "type": "azurerm_linux_virtual_machine_scale_set",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "additional_capabilities": [],
+                    "admin_password": true,
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "admin_username": "adminuser",
+                    "automatic_os_upgrade_policy": [],
+                    "boot_diagnostics": [],
+                    "capacity_reservation_group_id": null,
+                    "custom_data": true,
+                    "data_disk": [],
+                    "disable_password_authentication": true,
+                    "do_not_run_extensions_on_overprovisioned_machines": false,
+                    "edge_zone": null,
+                    "encryption_at_host_enabled": null,
+                    "eviction_policy": null,
+                    "extensions_time_budget": "PT1H30M",
+                    "health_probe_id": null,
+                    "host_group_id": null,
+                    "identity": [],
+                    "instances": 3,
+                    "location": "eastus",
+                    "max_bid_price": -1,
+                    "name": "vmss-terravision-test",
+                    "network_interface": [
+                        {
+                            "ip_configuration": [
+                                {
+                                    "load_balancer_backend_address_pool_ids": [],
+                                    "public_ip_address": []
+                                }
+                            ]
+                        }
+                    ],
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": []
+                        }
+                    ],
+                    "overprovision": true,
+                    "plan": [],
+                    "priority": "Regular",
+                    "provision_vm_agent": true,
+                    "proximity_placement_group_id": null,
+                    "resource_group_name": "rg-terravision-test",
+                    "rolling_upgrade_policy": [],
+                    "secret": [],
+                    "secure_boot_enabled": null,
+                    "single_placement_group": true,
+                    "sku": "Standard_B1s",
+                    "source_image_id": null,
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "tags": null,
+                    "timeouts": null,
+                    "upgrade_mode": "Manual",
+                    "user_data": null,
+                    "vtpm_enabled": null,
+                    "zone_balance": false,
+                    "zones": [
+                        false,
+                        false,
+                        false
+                    ],
+                    "automatic_instance_repair": [],
+                    "computer_name_prefix": true,
+                    "extension": [],
+                    "extension_operations_enabled": true,
+                    "gallery_application": [],
+                    "gallery_applications": [],
+                    "id": true,
+                    "platform_fault_domain_count": true,
+                    "scale_in": [],
+                    "scale_in_policy": true,
+                    "spot_restore": [],
+                    "terminate_notification": [],
+                    "termination_notification": [],
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "additional_capabilities": [],
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "automatic_instance_repair": true,
+                    "automatic_os_upgrade_policy": [],
+                    "boot_diagnostics": [],
+                    "computer_name_prefix": true,
+                    "data_disk": [],
+                    "extension": true,
+                    "extension_operations_enabled": true,
+                    "gallery_application": true,
+                    "gallery_applications": true,
+                    "id": true,
+                    "identity": [],
+                    "network_interface": [
+                        {
+                            "ip_configuration": [
+                                {
+                                    "load_balancer_backend_address_pool_ids": true,
+                                    "public_ip_address": [],
+                                    "subnet_id": true
+                                }
+                            ]
+                        }
+                    ],
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": [],
+                            "disk_size_gb": true
+                        }
+                    ],
+                    "plan": [],
+                    "platform_fault_domain_count": true,
+                    "rolling_upgrade_policy": [],
+                    "scale_in": true,
+                    "scale_in_policy": true,
+                    "secret": [],
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "spot_restore": true,
+                    "terminate_notification": true,
+                    "termination_notification": true,
+                    "unique_id": true,
+                    "zones": [
+                        false,
+                        false,
+                        false
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "additional_capabilities": [],
+                    "admin_password": true,
+                    "admin_ssh_key": [
+                        {}
+                    ],
+                    "automatic_instance_repair": [],
+                    "automatic_os_upgrade_policy": [],
+                    "boot_diagnostics": [],
+                    "custom_data": true,
+                    "data_disk": [],
+                    "extension": [],
+                    "gallery_application": [],
+                    "gallery_applications": [],
+                    "identity": [],
+                    "network_interface": [
+                        {
+                            "ip_configuration": [
+                                {
+                                    "load_balancer_backend_address_pool_ids": [],
+                                    "public_ip_address": []
+                                }
+                            ]
+                        }
+                    ],
+                    "os_disk": [
+                        {
+                            "diff_disk_settings": []
+                        }
+                    ],
+                    "plan": [],
+                    "rolling_upgrade_policy": [],
+                    "scale_in": [],
+                    "secret": [],
+                    "source_image_reference": [
+                        {}
+                    ],
+                    "spot_restore": [],
+                    "terminate_notification": [],
+                    "termination_notification": [],
+                    "zones": [
+                        false,
+                        false,
+                        false
+                    ]
+                }
+            }
+        },
+        {
+            "address": "azurerm_network_interface.vm",
+            "mode": "managed",
+            "type": "azurerm_network_interface",
+            "name": "vm",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "auxiliary_mode": null,
+                    "auxiliary_sku": null,
+                    "edge_zone": null,
+                    "internal_dns_name_label": null,
+                    "ip_configuration": [
+                        {}
+                    ],
+                    "location": "eastus",
+                    "name": "nic-vm-test",
+                    "resource_group_name": "rg-terravision-test",
+                    "tags": null,
+                    "timeouts": null,
+                    "accelerated_networking_enabled": true,
+                    "applied_dns_servers": [],
+                    "dns_servers": [],
+                    "enable_accelerated_networking": true,
+                    "enable_ip_forwarding": true,
+                    "id": true,
+                    "internal_domain_name_suffix": true,
+                    "ip_forwarding_enabled": true,
+                    "mac_address": true,
+                    "private_ip_address": true,
+                    "private_ip_addresses": [],
+                    "virtual_machine_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "accelerated_networking_enabled": true,
+                    "applied_dns_servers": true,
+                    "dns_servers": true,
+                    "enable_accelerated_networking": true,
+                    "enable_ip_forwarding": true,
+                    "id": true,
+                    "internal_domain_name_suffix": true,
+                    "ip_configuration": [
+                        {
+                            "gateway_load_balancer_frontend_ip_configuration_id": true,
+                            "primary": true,
+                            "private_ip_address": true,
+                            "subnet_id": true
+                        }
+                    ],
+                    "ip_forwarding_enabled": true,
+                    "mac_address": true,
+                    "private_ip_address": true,
+                    "private_ip_addresses": true,
+                    "virtual_machine_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "applied_dns_servers": [],
+                    "dns_servers": [],
+                    "ip_configuration": [
+                        {}
+                    ],
+                    "private_ip_addresses": []
+                }
+            }
+        },
+        {
+            "address": "azurerm_network_security_group.main",
+            "mode": "managed",
+            "type": "azurerm_network_security_group",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "location": "eastus",
+                    "name": "nsg-terravision-test",
+                    "resource_group_name": "rg-terravision-test",
+                    "security_rule": [
+                        {
+                            "destination_address_prefixes": [],
+                            "destination_application_security_group_ids": [],
+                            "destination_port_ranges": [],
+                            "source_address_prefixes": [],
+                            "source_application_security_group_ids": [],
+                            "source_port_ranges": []
+                        }
+                    ],
+                    "tags": null,
+                    "timeouts": null,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "security_rule": [
+                        {
+                            "destination_address_prefixes": [],
+                            "destination_application_security_group_ids": [],
+                            "destination_port_ranges": [],
+                            "source_address_prefixes": [],
+                            "source_application_security_group_ids": [],
+                            "source_port_ranges": []
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "security_rule": [
+                        {
+                            "destination_address_prefixes": [],
+                            "destination_application_security_group_ids": [],
+                            "destination_port_ranges": [],
+                            "source_address_prefixes": [],
+                            "source_application_security_group_ids": [],
+                            "source_port_ranges": []
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "address": "azurerm_public_ip.lb",
+            "mode": "managed",
+            "type": "azurerm_public_ip",
+            "name": "lb",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "allocation_method": "Static",
+                    "ddos_protection_mode": "VirtualNetworkInherited",
+                    "ddos_protection_plan_id": null,
+                    "domain_name_label": null,
+                    "edge_zone": null,
+                    "idle_timeout_in_minutes": 4,
+                    "ip_tags": null,
+                    "ip_version": "IPv4",
+                    "location": "eastus",
+                    "name": "pip-lb-test",
+                    "public_ip_prefix_id": null,
+                    "resource_group_name": "rg-terravision-test",
+                    "reverse_fqdn": null,
+                    "sku": "Standard",
+                    "sku_tier": "Regional",
+                    "tags": null,
+                    "timeouts": null,
+                    "zones": null,
+                    "fqdn": true,
+                    "id": true,
+                    "ip_address": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "fqdn": true,
+                    "id": true,
+                    "ip_address": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "azurerm_resource_group.main",
+            "mode": "managed",
+            "type": "azurerm_resource_group",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "location": "eastus",
+                    "managed_by": null,
+                    "name": "rg-terravision-test",
+                    "tags": null,
+                    "timeouts": null,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "azurerm_subnet.main",
+            "mode": "managed",
+            "type": "azurerm_subnet",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "address_prefixes": [
+                        false
+                    ],
+                    "default_outbound_access_enabled": true,
+                    "delegation": [],
+                    "name": "subnet-main",
+                    "resource_group_name": "rg-terravision-test",
+                    "service_endpoint_policy_ids": null,
+                    "service_endpoints": null,
+                    "timeouts": null,
+                    "virtual_network_name": "vnet-terravision-test",
+                    "enforce_private_link_endpoint_network_policies": true,
+                    "enforce_private_link_service_network_policies": true,
+                    "id": true,
+                    "private_endpoint_network_policies": true,
+                    "private_endpoint_network_policies_enabled": true,
+                    "private_link_service_network_policies_enabled": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "address_prefixes": [
+                        false
+                    ],
+                    "delegation": [],
+                    "enforce_private_link_endpoint_network_policies": true,
+                    "enforce_private_link_service_network_policies": true,
+                    "id": true,
+                    "private_endpoint_network_policies": true,
+                    "private_endpoint_network_policies_enabled": true,
+                    "private_link_service_network_policies_enabled": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "address_prefixes": [
+                        false
+                    ],
+                    "delegation": []
+                }
+            }
+        },
+        {
+            "address": "azurerm_subnet_network_security_group_association.main",
+            "mode": "managed",
+            "type": "azurerm_subnet_network_security_group_association",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "timeouts": null,
+                    "id": true,
+                    "network_security_group_id": true,
+                    "subnet_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "network_security_group_id": true,
+                    "subnet_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "azurerm_virtual_network.main",
+            "mode": "managed",
+            "type": "azurerm_virtual_network",
+            "name": "main",
+            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "address_space": [
+                        false
+                    ],
+                    "bgp_community": null,
+                    "ddos_protection_plan": [],
+                    "edge_zone": null,
+                    "encryption": [],
+                    "flow_timeout_in_minutes": null,
+                    "location": "eastus",
+                    "name": "vnet-terravision-test",
+                    "resource_group_name": "rg-terravision-test",
+                    "tags": null,
+                    "timeouts": null,
+                    "dns_servers": [],
+                    "guid": true,
+                    "id": true,
+                    "subnet": [],
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "address_space": [
+                        false
+                    ],
+                    "ddos_protection_plan": [],
+                    "dns_servers": true,
+                    "encryption": [],
+                    "guid": true,
+                    "id": true,
+                    "subnet": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "address_space": [
+                        false
+                    ],
+                    "ddos_protection_plan": [],
+                    "dns_servers": [],
+                    "encryption": [],
+                    "subnet": []
+                }
+            }
+        }
+    ],
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "azurerm_lb.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_lb.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "azurerm_lb_backend_address_pool.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_lb_backend_address_pool.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "azurerm_linux_virtual_machine.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_linux_virtual_machine.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "azurerm_linux_virtual_machine_scale_set.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_linux_virtual_machine_scale_set.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "azurerm_network_interface.vm",
+                "fontname": "sans-serif",
+                "label": "azurerm_network_interface.vm",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "azurerm_network_security_group.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_network_security_group.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "azurerm_public_ip.lb",
+                "fontname": "sans-serif",
+                "label": "azurerm_public_ip.lb",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "azurerm_resource_group.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_resource_group.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "azurerm_subnet.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_subnet.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 9,
+                "name": "azurerm_subnet_network_security_group_association.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_subnet_network_security_group_association.main",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 10,
+                "name": "azurerm_virtual_network.main",
+                "fontname": "sans-serif",
+                "label": "azurerm_virtual_network.main",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 6
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 0
+            },
+            {
+                "_gvid": 2,
+                "tail": 2,
+                "head": 4
+            },
+            {
+                "_gvid": 3,
+                "tail": 3,
+                "head": 1
+            },
+            {
+                "_gvid": 4,
+                "tail": 3,
+                "head": 8
+            },
+            {
+                "_gvid": 5,
+                "tail": 4,
+                "head": 8
+            },
+            {
+                "_gvid": 6,
+                "tail": 5,
+                "head": 7
+            },
+            {
+                "_gvid": 7,
+                "tail": 6,
+                "head": 7
+            },
+            {
+                "_gvid": 8,
+                "tail": 8,
+                "head": 10
+            },
+            {
+                "_gvid": 9,
+                "tail": 9,
+                "head": 5
+            },
+            {
+                "_gvid": 10,
+                "tail": 9,
+                "head": 8
+            },
+            {
+                "_gvid": 11,
+                "tail": 10,
+                "head": 7
+            }
+        ]
+    },
+    "graphdict": {
+        "azurerm_lb.main": [
+            "azurerm_lb_backend_address_pool.main"
+        ],
+        "azurerm_lb_backend_address_pool.main": [
+            "azurerm_linux_virtual_machine_scale_set.main"
+        ],
+        "azurerm_linux_virtual_machine.main": [],
+        "azurerm_linux_virtual_machine_scale_set.main": [],
+        "azurerm_network_interface.vm": [
+            "azurerm_linux_virtual_machine.main"
+        ],
+        "azurerm_network_security_group.main": [
+            "azurerm_subnet_network_security_group_association.main"
+        ],
+        "azurerm_public_ip.lb": [
+            "azurerm_lb.main"
+        ],
+        "azurerm_resource_group.main": [
+            "azurerm_network_security_group.main",
+            "azurerm_public_ip.lb",
+            "azurerm_virtual_network.main"
+        ],
+        "azurerm_subnet.main": [
+            "azurerm_linux_virtual_machine_scale_set.main",
+            "azurerm_network_interface.vm",
+            "azurerm_subnet_network_security_group_association.main"
+        ],
+        "azurerm_subnet_network_security_group_association.main": [],
+        "azurerm_virtual_network.main": [
+            "azurerm_subnet.main"
+        ]
+    },
+    "meta_data": {
+        "azurerm_lb.main": {
+            "edge_zone": null,
+            "frontend_ip_configuration": [
+                {
+                    "inbound_nat_rules": [],
+                    "load_balancer_rules": [],
+                    "outbound_rules": []
+                }
+            ],
+            "location": "eastus",
+            "name": "lb-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "sku": "Standard",
+            "sku_tier": "Regional",
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "module": "main"
+        },
+        "azurerm_lb_backend_address_pool.main": {
+            "name": "vmss-backend-pool",
+            "synchronous_mode": null,
+            "timeouts": null,
+            "tunnel_interface": [],
+            "virtual_network_id": null,
+            "backend_ip_configurations": [],
+            "id": true,
+            "inbound_nat_rules": [],
+            "load_balancing_rules": [],
+            "loadbalancer_id": true,
+            "outbound_rules": [],
+            "module": "main"
+        },
+        "azurerm_linux_virtual_machine.main": {
+            "additional_capabilities": [],
+            "admin_password": true,
+            "admin_ssh_key": [
+                {}
+            ],
+            "admin_username": "adminuser",
+            "allow_extension_operations": true,
+            "availability_set_id": null,
+            "boot_diagnostics": [],
+            "bypass_platform_safety_checks_on_user_schedule_enabled": false,
+            "capacity_reservation_group_id": null,
+            "custom_data": true,
+            "dedicated_host_group_id": null,
+            "dedicated_host_id": null,
+            "disable_password_authentication": true,
+            "edge_zone": null,
+            "encryption_at_host_enabled": null,
+            "eviction_policy": null,
+            "extensions_time_budget": "PT1H30M",
+            "gallery_application": [],
+            "identity": [],
+            "license_type": null,
+            "location": "eastus",
+            "max_bid_price": -1,
+            "name": "vm-terravision-test",
+            "os_disk": [
+                {
+                    "diff_disk_settings": []
+                }
+            ],
+            "os_image_notification": [],
+            "patch_assessment_mode": "ImageDefault",
+            "patch_mode": "ImageDefault",
+            "plan": [],
+            "platform_fault_domain": -1,
+            "priority": "Regular",
+            "provision_vm_agent": true,
+            "proximity_placement_group_id": null,
+            "reboot_setting": null,
+            "resource_group_name": "rg-terravision-test",
+            "secret": [],
+            "secure_boot_enabled": null,
+            "size": "Standard_B1s",
+            "source_image_id": null,
+            "source_image_reference": [
+                {}
+            ],
+            "tags": null,
+            "timeouts": null,
+            "user_data": null,
+            "virtual_machine_scale_set_id": null,
+            "vm_agent_platform_updates_enabled": false,
+            "vtpm_enabled": null,
+            "zone": null,
+            "computer_name": true,
+            "disk_controller_type": true,
+            "id": true,
+            "network_interface_ids": [],
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "public_ip_address": true,
+            "public_ip_addresses": [],
+            "termination_notification": [],
+            "virtual_machine_id": true,
+            "module": "main"
+        },
+        "azurerm_linux_virtual_machine_scale_set.main": {
+            "additional_capabilities": [],
+            "admin_password": true,
+            "admin_ssh_key": [
+                {}
+            ],
+            "admin_username": "adminuser",
+            "automatic_os_upgrade_policy": [],
+            "boot_diagnostics": [],
+            "capacity_reservation_group_id": null,
+            "custom_data": true,
+            "data_disk": [],
+            "disable_password_authentication": true,
+            "do_not_run_extensions_on_overprovisioned_machines": false,
+            "edge_zone": null,
+            "encryption_at_host_enabled": null,
+            "eviction_policy": null,
+            "extensions_time_budget": "PT1H30M",
+            "health_probe_id": null,
+            "host_group_id": null,
+            "identity": [],
+            "instances": 3,
+            "location": "eastus",
+            "max_bid_price": -1,
+            "name": "vmss-terravision-test",
+            "network_interface": [
+                {
+                    "ip_configuration": [
+                        {
+                            "load_balancer_backend_address_pool_ids": [],
+                            "public_ip_address": []
+                        }
+                    ]
+                }
+            ],
+            "os_disk": [
+                {
+                    "diff_disk_settings": []
+                }
+            ],
+            "overprovision": true,
+            "plan": [],
+            "priority": "Regular",
+            "provision_vm_agent": true,
+            "proximity_placement_group_id": null,
+            "resource_group_name": "rg-terravision-test",
+            "rolling_upgrade_policy": [],
+            "secret": [],
+            "secure_boot_enabled": null,
+            "single_placement_group": true,
+            "sku": "Standard_B1s",
+            "source_image_id": null,
+            "source_image_reference": [
+                {}
+            ],
+            "tags": null,
+            "timeouts": null,
+            "upgrade_mode": "Manual",
+            "user_data": null,
+            "vtpm_enabled": null,
+            "zone_balance": false,
+            "zones": [
+                false,
+                false,
+                false
+            ],
+            "automatic_instance_repair": [],
+            "computer_name_prefix": true,
+            "extension": [],
+            "extension_operations_enabled": true,
+            "gallery_application": [],
+            "gallery_applications": [],
+            "id": true,
+            "platform_fault_domain_count": true,
+            "scale_in": [],
+            "scale_in_policy": true,
+            "spot_restore": [],
+            "terminate_notification": [],
+            "termination_notification": [],
+            "unique_id": true,
+            "module": "main"
+        },
+        "azurerm_network_interface.vm": {
+            "auxiliary_mode": null,
+            "auxiliary_sku": null,
+            "edge_zone": null,
+            "internal_dns_name_label": null,
+            "ip_configuration": [
+                {}
+            ],
+            "location": "eastus",
+            "name": "nic-vm-test",
+            "resource_group_name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "accelerated_networking_enabled": true,
+            "applied_dns_servers": [],
+            "dns_servers": [],
+            "enable_accelerated_networking": true,
+            "enable_ip_forwarding": true,
+            "id": true,
+            "internal_domain_name_suffix": true,
+            "ip_forwarding_enabled": true,
+            "mac_address": true,
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "virtual_machine_id": true,
+            "module": "main"
+        },
+        "azurerm_network_security_group.main": {
+            "location": "eastus",
+            "name": "nsg-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "security_rule": [
+                {
+                    "destination_address_prefixes": [],
+                    "destination_application_security_group_ids": [],
+                    "destination_port_ranges": [],
+                    "source_address_prefixes": [],
+                    "source_application_security_group_ids": [],
+                    "source_port_ranges": []
+                }
+            ],
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "module": "main"
+        },
+        "azurerm_public_ip.lb": {
+            "allocation_method": "Static",
+            "ddos_protection_mode": "VirtualNetworkInherited",
+            "ddos_protection_plan_id": null,
+            "domain_name_label": null,
+            "edge_zone": null,
+            "idle_timeout_in_minutes": 4,
+            "ip_tags": null,
+            "ip_version": "IPv4",
+            "location": "eastus",
+            "name": "pip-lb-test",
+            "public_ip_prefix_id": null,
+            "resource_group_name": "rg-terravision-test",
+            "reverse_fqdn": null,
+            "sku": "Standard",
+            "sku_tier": "Regional",
+            "tags": null,
+            "timeouts": null,
+            "zones": null,
+            "fqdn": true,
+            "id": true,
+            "ip_address": true,
+            "module": "main"
+        },
+        "azurerm_resource_group.main": {
+            "location": "eastus",
+            "managed_by": null,
+            "name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "module": "main"
+        },
+        "azurerm_subnet.main": {
+            "address_prefixes": [
+                false
+            ],
+            "default_outbound_access_enabled": true,
+            "delegation": [],
+            "name": "subnet-main",
+            "resource_group_name": "rg-terravision-test",
+            "service_endpoint_policy_ids": null,
+            "service_endpoints": null,
+            "timeouts": null,
+            "virtual_network_name": "vnet-terravision-test",
+            "enforce_private_link_endpoint_network_policies": true,
+            "enforce_private_link_service_network_policies": true,
+            "id": true,
+            "private_endpoint_network_policies": true,
+            "private_endpoint_network_policies_enabled": true,
+            "private_link_service_network_policies_enabled": true,
+            "module": "main"
+        },
+        "azurerm_subnet_network_security_group_association.main": {
+            "timeouts": null,
+            "id": true,
+            "network_security_group_id": true,
+            "subnet_id": true,
+            "module": "main"
+        },
+        "azurerm_virtual_network.main": {
+            "address_space": [
+                false
+            ],
+            "bgp_community": null,
+            "ddos_protection_plan": [],
+            "edge_zone": null,
+            "encryption": [],
+            "flow_timeout_in_minutes": null,
+            "location": "eastus",
+            "name": "vnet-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "dns_servers": [],
+            "guid": true,
+            "id": true,
+            "subnet": [],
+            "module": "main"
+        }
+    },
+    "all_output": {
+        "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss/main.tf": [
+            {
+                "resource_group_name": {
+                    "value": "${azurerm_resource_group.main.name}"
+                }
+            },
+            {
+                "vnet_name": {
+                    "value": "${azurerm_virtual_network.main.name}"
+                }
+            },
+            {
+                "vm_name": {
+                    "value": "${azurerm_linux_virtual_machine.main.name}"
+                }
+            },
+            {
+                "vmss_name": {
+                    "value": "${azurerm_linux_virtual_machine_scale_set.main.name}"
+                }
+            }
+        ]
+    },
+    "node_list": [
+        "azurerm_lb.main",
+        "azurerm_lb_backend_address_pool.main",
+        "azurerm_linux_virtual_machine.main",
+        "azurerm_linux_virtual_machine_scale_set.main",
+        "azurerm_network_interface.vm",
+        "azurerm_network_security_group.main",
+        "azurerm_public_ip.lb",
+        "azurerm_resource_group.main",
+        "azurerm_subnet.main",
+        "azurerm_subnet_network_security_group_association.main",
+        "azurerm_virtual_network.main"
+    ],
+    "hidden": [],
+    "annotations": {},
+    "original_graphdict": {
+        "azurerm_lb.main": [
+            "azurerm_lb_backend_address_pool.main"
+        ],
+        "azurerm_lb_backend_address_pool.main": [
+            "azurerm_linux_virtual_machine_scale_set.main"
+        ],
+        "azurerm_linux_virtual_machine.main": [],
+        "azurerm_linux_virtual_machine_scale_set.main": [],
+        "azurerm_network_interface.vm": [
+            "azurerm_linux_virtual_machine.main"
+        ],
+        "azurerm_network_security_group.main": [
+            "azurerm_subnet_network_security_group_association.main"
+        ],
+        "azurerm_public_ip.lb": [
+            "azurerm_lb.main"
+        ],
+        "azurerm_resource_group.main": [
+            "azurerm_network_security_group.main",
+            "azurerm_public_ip.lb",
+            "azurerm_virtual_network.main"
+        ],
+        "azurerm_subnet.main": [
+            "azurerm_linux_virtual_machine_scale_set.main",
+            "azurerm_network_interface.vm",
+            "azurerm_subnet_network_security_group_association.main"
+        ],
+        "azurerm_subnet_network_security_group_association.main": [],
+        "azurerm_virtual_network.main": [
+            "azurerm_subnet.main"
+        ]
+    },
+    "original_metadata": {
+        "azurerm_lb.main": {
+            "edge_zone": null,
+            "frontend_ip_configuration": [
+                {
+                    "inbound_nat_rules": [],
+                    "load_balancer_rules": [],
+                    "outbound_rules": []
+                }
+            ],
+            "location": "eastus",
+            "name": "lb-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "sku": "Standard",
+            "sku_tier": "Regional",
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "module": "main"
+        },
+        "azurerm_lb_backend_address_pool.main": {
+            "name": "vmss-backend-pool",
+            "synchronous_mode": null,
+            "timeouts": null,
+            "tunnel_interface": [],
+            "virtual_network_id": null,
+            "backend_ip_configurations": [],
+            "id": true,
+            "inbound_nat_rules": [],
+            "load_balancing_rules": [],
+            "loadbalancer_id": true,
+            "outbound_rules": [],
+            "module": "main"
+        },
+        "azurerm_linux_virtual_machine.main": {
+            "additional_capabilities": [],
+            "admin_password": true,
+            "admin_ssh_key": [
+                {}
+            ],
+            "admin_username": "adminuser",
+            "allow_extension_operations": true,
+            "availability_set_id": null,
+            "boot_diagnostics": [],
+            "bypass_platform_safety_checks_on_user_schedule_enabled": false,
+            "capacity_reservation_group_id": null,
+            "custom_data": true,
+            "dedicated_host_group_id": null,
+            "dedicated_host_id": null,
+            "disable_password_authentication": true,
+            "edge_zone": null,
+            "encryption_at_host_enabled": null,
+            "eviction_policy": null,
+            "extensions_time_budget": "PT1H30M",
+            "gallery_application": [],
+            "identity": [],
+            "license_type": null,
+            "location": "eastus",
+            "max_bid_price": -1,
+            "name": "vm-terravision-test",
+            "os_disk": [
+                {
+                    "diff_disk_settings": []
+                }
+            ],
+            "os_image_notification": [],
+            "patch_assessment_mode": "ImageDefault",
+            "patch_mode": "ImageDefault",
+            "plan": [],
+            "platform_fault_domain": -1,
+            "priority": "Regular",
+            "provision_vm_agent": true,
+            "proximity_placement_group_id": null,
+            "reboot_setting": null,
+            "resource_group_name": "rg-terravision-test",
+            "secret": [],
+            "secure_boot_enabled": null,
+            "size": "Standard_B1s",
+            "source_image_id": null,
+            "source_image_reference": [
+                {}
+            ],
+            "tags": null,
+            "timeouts": null,
+            "user_data": null,
+            "virtual_machine_scale_set_id": null,
+            "vm_agent_platform_updates_enabled": false,
+            "vtpm_enabled": null,
+            "zone": null,
+            "computer_name": true,
+            "disk_controller_type": true,
+            "id": true,
+            "network_interface_ids": [],
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "public_ip_address": true,
+            "public_ip_addresses": [],
+            "termination_notification": [],
+            "virtual_machine_id": true,
+            "module": "main"
+        },
+        "azurerm_linux_virtual_machine_scale_set.main": {
+            "additional_capabilities": [],
+            "admin_password": true,
+            "admin_ssh_key": [
+                {}
+            ],
+            "admin_username": "adminuser",
+            "automatic_os_upgrade_policy": [],
+            "boot_diagnostics": [],
+            "capacity_reservation_group_id": null,
+            "custom_data": true,
+            "data_disk": [],
+            "disable_password_authentication": true,
+            "do_not_run_extensions_on_overprovisioned_machines": false,
+            "edge_zone": null,
+            "encryption_at_host_enabled": null,
+            "eviction_policy": null,
+            "extensions_time_budget": "PT1H30M",
+            "health_probe_id": null,
+            "host_group_id": null,
+            "identity": [],
+            "instances": 3,
+            "location": "eastus",
+            "max_bid_price": -1,
+            "name": "vmss-terravision-test",
+            "network_interface": [
+                {
+                    "ip_configuration": [
+                        {
+                            "load_balancer_backend_address_pool_ids": [],
+                            "public_ip_address": []
+                        }
+                    ]
+                }
+            ],
+            "os_disk": [
+                {
+                    "diff_disk_settings": []
+                }
+            ],
+            "overprovision": true,
+            "plan": [],
+            "priority": "Regular",
+            "provision_vm_agent": true,
+            "proximity_placement_group_id": null,
+            "resource_group_name": "rg-terravision-test",
+            "rolling_upgrade_policy": [],
+            "secret": [],
+            "secure_boot_enabled": null,
+            "single_placement_group": true,
+            "sku": "Standard_B1s",
+            "source_image_id": null,
+            "source_image_reference": [
+                {}
+            ],
+            "tags": null,
+            "timeouts": null,
+            "upgrade_mode": "Manual",
+            "user_data": null,
+            "vtpm_enabled": null,
+            "zone_balance": false,
+            "zones": [
+                false,
+                false,
+                false
+            ],
+            "automatic_instance_repair": [],
+            "computer_name_prefix": true,
+            "extension": [],
+            "extension_operations_enabled": true,
+            "gallery_application": [],
+            "gallery_applications": [],
+            "id": true,
+            "platform_fault_domain_count": true,
+            "scale_in": [],
+            "scale_in_policy": true,
+            "spot_restore": [],
+            "terminate_notification": [],
+            "termination_notification": [],
+            "unique_id": true,
+            "module": "main"
+        },
+        "azurerm_network_interface.vm": {
+            "auxiliary_mode": null,
+            "auxiliary_sku": null,
+            "edge_zone": null,
+            "internal_dns_name_label": null,
+            "ip_configuration": [
+                {}
+            ],
+            "location": "eastus",
+            "name": "nic-vm-test",
+            "resource_group_name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "accelerated_networking_enabled": true,
+            "applied_dns_servers": [],
+            "dns_servers": [],
+            "enable_accelerated_networking": true,
+            "enable_ip_forwarding": true,
+            "id": true,
+            "internal_domain_name_suffix": true,
+            "ip_forwarding_enabled": true,
+            "mac_address": true,
+            "private_ip_address": true,
+            "private_ip_addresses": [],
+            "virtual_machine_id": true,
+            "module": "main"
+        },
+        "azurerm_network_security_group.main": {
+            "location": "eastus",
+            "name": "nsg-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "security_rule": [
+                {
+                    "destination_address_prefixes": [],
+                    "destination_application_security_group_ids": [],
+                    "destination_port_ranges": [],
+                    "source_address_prefixes": [],
+                    "source_application_security_group_ids": [],
+                    "source_port_ranges": []
+                }
+            ],
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "module": "main"
+        },
+        "azurerm_public_ip.lb": {
+            "allocation_method": "Static",
+            "ddos_protection_mode": "VirtualNetworkInherited",
+            "ddos_protection_plan_id": null,
+            "domain_name_label": null,
+            "edge_zone": null,
+            "idle_timeout_in_minutes": 4,
+            "ip_tags": null,
+            "ip_version": "IPv4",
+            "location": "eastus",
+            "name": "pip-lb-test",
+            "public_ip_prefix_id": null,
+            "resource_group_name": "rg-terravision-test",
+            "reverse_fqdn": null,
+            "sku": "Standard",
+            "sku_tier": "Regional",
+            "tags": null,
+            "timeouts": null,
+            "zones": null,
+            "fqdn": true,
+            "id": true,
+            "ip_address": true,
+            "module": "main"
+        },
+        "azurerm_resource_group.main": {
+            "location": "eastus",
+            "managed_by": null,
+            "name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "id": true,
+            "module": "main"
+        },
+        "azurerm_subnet.main": {
+            "address_prefixes": [
+                false
+            ],
+            "default_outbound_access_enabled": true,
+            "delegation": [],
+            "name": "subnet-main",
+            "resource_group_name": "rg-terravision-test",
+            "service_endpoint_policy_ids": null,
+            "service_endpoints": null,
+            "timeouts": null,
+            "virtual_network_name": "vnet-terravision-test",
+            "enforce_private_link_endpoint_network_policies": true,
+            "enforce_private_link_service_network_policies": true,
+            "id": true,
+            "private_endpoint_network_policies": true,
+            "private_endpoint_network_policies_enabled": true,
+            "private_link_service_network_policies_enabled": true,
+            "module": "main"
+        },
+        "azurerm_subnet_network_security_group_association.main": {
+            "timeouts": null,
+            "id": true,
+            "network_security_group_id": true,
+            "subnet_id": true,
+            "module": "main"
+        },
+        "azurerm_virtual_network.main": {
+            "address_space": [
+                false
+            ],
+            "bgp_community": null,
+            "ddos_protection_plan": [],
+            "edge_zone": null,
+            "encryption": [],
+            "flow_timeout_in_minutes": null,
+            "location": "eastus",
+            "name": "vnet-terravision-test",
+            "resource_group_name": "rg-terravision-test",
+            "tags": null,
+            "timeouts": null,
+            "dns_servers": [],
+            "guid": true,
+            "id": true,
+            "subnet": [],
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss/main.tf": [
+            {
+                "azurerm_resource_group": {
+                    "main": {
+                        "name": "rg-terravision-test",
+                        "location": "East US"
+                    }
+                }
+            },
+            {
+                "azurerm_virtual_network": {
+                    "main": {
+                        "name": "vnet-terravision-test",
+                        "address_space": [
+                            "10.0.0.0/16"
+                        ],
+                        "location": "${azurerm_resource_group.main.location}",
+                        "resource_group_name": "${azurerm_resource_group.main.name}"
+                    }
+                }
+            },
+            {
+                "azurerm_subnet": {
+                    "main": {
+                        "name": "subnet-main",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "virtual_network_name": "${azurerm_virtual_network.main.name}",
+                        "address_prefixes": [
+                            "10.0.1.0/24"
+                        ]
+                    }
+                }
+            },
+            {
+                "azurerm_network_security_group": {
+                    "main": {
+                        "name": "nsg-terravision-test",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "security_rule": [
+                            {
+                                "name": "allow-ssh",
+                                "priority": 100,
+                                "direction": "Inbound",
+                                "access": "Allow",
+                                "protocol": "Tcp",
+                                "source_port_range": "*",
+                                "destination_port_range": "22",
+                                "source_address_prefix": "*",
+                                "destination_address_prefix": "*"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "azurerm_subnet_network_security_group_association": {
+                    "main": {
+                        "subnet_id": "${azurerm_subnet.main.id}",
+                        "network_security_group_id": "${azurerm_network_security_group.main.id}"
+                    }
+                }
+            },
+            {
+                "azurerm_network_interface": {
+                    "vm": {
+                        "name": "nic-vm-test",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "ip_configuration": [
+                            {
+                                "name": "internal",
+                                "subnet_id": "${azurerm_subnet.main.id}",
+                                "private_ip_address_allocation": "Dynamic"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "azurerm_linux_virtual_machine": {
+                    "main": {
+                        "name": "vm-terravision-test",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "size": "Standard_B1s",
+                        "admin_username": "adminuser",
+                        "network_interface_ids": [
+                            "${azurerm_network_interface.vm.id}"
+                        ],
+                        "admin_ssh_key": [
+                            {
+                                "username": "adminuser",
+                                "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test"
+                            }
+                        ],
+                        "os_disk": [
+                            {
+                                "caching": "ReadWrite",
+                                "storage_account_type": "Standard_LRS"
+                            }
+                        ],
+                        "source_image_reference": [
+                            {
+                                "publisher": "Canonical",
+                                "offer": "UbuntuServer",
+                                "sku": "18.04-LTS",
+                                "version": "latest"
+                            }
+                        ],
+                        "disable_password_authentication": true
+                    }
+                }
+            },
+            {
+                "azurerm_public_ip": {
+                    "lb": {
+                        "name": "pip-lb-test",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "allocation_method": "Static",
+                        "sku": "Standard"
+                    }
+                }
+            },
+            {
+                "azurerm_lb": {
+                    "main": {
+                        "name": "lb-terravision-test",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "sku": "Standard",
+                        "frontend_ip_configuration": [
+                            {
+                                "name": "frontend",
+                                "public_ip_address_id": "${azurerm_public_ip.lb.id}"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "azurerm_lb_backend_address_pool": {
+                    "main": {
+                        "loadbalancer_id": "${azurerm_lb.main.id}",
+                        "name": "vmss-backend-pool"
+                    }
+                }
+            },
+            {
+                "azurerm_linux_virtual_machine_scale_set": {
+                    "main": {
+                        "name": "vmss-terravision-test",
+                        "resource_group_name": "${azurerm_resource_group.main.name}",
+                        "location": "${azurerm_resource_group.main.location}",
+                        "sku": "Standard_B1s",
+                        "instances": 3,
+                        "admin_username": "adminuser",
+                        "zones": [
+                            "1",
+                            "2",
+                            "3"
+                        ],
+                        "admin_ssh_key": [
+                            {
+                                "username": "adminuser",
+                                "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyFrHcRkppkmMfc2CD7UJO0lzdwauQU5GRfI94aDbf12rsSvsGROLp38JCj/2DofcJhxfzyT9i8+TXpv2t6o25Ql3J9j8zphOxGvMzNa7ekjxZI50P9YPTSP2VY98wH6oPTi2grR1IaUG9vvOufCS8qnQLSiJXOLFHLf/1tl/whhOvBU2B46l5XwC8RXfFk82i/3uRU8Bn5Xv9f6fzxV2Wi+eLuJkDiMrhp/+fEThC/Fwdz0QL3nw1vR/krrQx4mPLh5GacaGzi1y3R3p+s8rJ7bFIYwpyZqKq0ECIzlE9OLWu3ZlfnWzQbpOXatwJ63O0PUU1p+0uDtkMFqvuujnt terravision-test"
+                            }
+                        ],
+                        "source_image_reference": [
+                            {
+                                "publisher": "Canonical",
+                                "offer": "UbuntuServer",
+                                "sku": "18.04-LTS",
+                                "version": "latest"
+                            }
+                        ],
+                        "os_disk": [
+                            {
+                                "storage_account_type": "Standard_LRS",
+                                "caching": "ReadWrite"
+                            }
+                        ],
+                        "network_interface": [
+                            {
+                                "name": "vmss-nic",
+                                "primary": true,
+                                "ip_configuration": [
+                                    {
+                                        "name": "internal",
+                                        "primary": true,
+                                        "subnet_id": "${azurerm_subnet.main.id}",
+                                        "load_balancer_backend_address_pool_ids": [
+                                            "${azurerm_lb_backend_address_pool.main.id}"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "disable_password_authentication": true
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss/main.tf": [
+            {
+                "azurerm": {
+                    "features": [
+                        {}
+                    ],
+                    "skip_provider_registration": true
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpvcz2z7sl'>"
+}

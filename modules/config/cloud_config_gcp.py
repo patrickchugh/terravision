@@ -48,15 +48,62 @@ GCP_CONSOLIDATED_NODES = [
     },
 ]
 
+# Resources that should be grouped together into a "Load Balancer" zone
+# These form a logical load balancer unit
+GCP_LOAD_BALANCER_COMPONENTS = [
+    # Global HTTP(S) LB components
+    "google_compute_global_forwarding_rule",
+    "google_compute_target_http_proxy",
+    "google_compute_target_https_proxy",
+    "google_compute_url_map",
+    "google_compute_backend_service",
+    "google_compute_health_check",
+    "google_compute_global_address",
+    # Regional/Network LB components
+    "google_compute_region_backend_service",
+    "google_compute_target_pool",
+    "google_compute_http_health_check",
+]
+
 # List of Group type nodes and order to draw them in
-# GCP hierarchy: Project > VPC (Global) > Subnet (Regional) > Zone
+# TerraVision GCP hierarchy: Account > Project > VPC > Region > Subnet > Zone > InstanceGroup > Resources
+# NOTE: GCP subnets are regional resources. This means a single subnet can span across all zones within its parent region
+# See research.md for complete nesting hierarchy
+# NOTE: tv_ prefix = TerraVision synthetic nodes (not real Terraform resources)
 GCP_GROUP_NODES = [
+    # Top-level zones
+    "tv_gcp_account",
     "google_project",
-    "google_compute_network",
-    "google_compute_subnetwork",
-    "google_compute_region",
-    "google_compute_zone",
+    "tv_gcp_users",
+    "tv_gcp_system",
+    # Within User/System
+    "tv_gcp_infra_system2",
     "tv_gcp_onprem",
+    # Within System (external services)
+    "tv_gcp_external_saas",
+    "tv_gcp_external_data",
+    "tv_gcp_external_3p",
+    "tv_gcp_external_1p",
+    # Within Project - Load Balancer group is at project level (edge service)
+    "tv_gcp_load_balancer",  # Synthetic - groups LB components (forwarding_rule, proxy, url_map, backend_service, health_check)
+    "google_compute_network",
+    "tv_gcp_logical_group",
+    "tv_gcp_region",  # Synthetic - created by resource handlers from subnet metadata
+    "google_container_cluster",
+    # Within Region/LogicalGroup - Subnet is regional, contains zones
+    "google_compute_subnetwork",
+    # Within Subnet - Zone contains instances
+    "tv_gcp_zone",  # Synthetic - created by resource handlers from instance metadata
+    "google_compute_firewall",
+    # Within Firewall/InstanceGroup
+    "google_compute_instance_group",
+    # Note: IGMs are NOT groups - they're management nodes that point to instances (like load balancers)
+    "tv_gcp_replica_pool",
+    # Within K8s cluster
+    "google_container_node_pool",
+    "tv_gcp_k8s_pod",
+    # Any level (special)
+    "tv_gcp_optional",
 ]
 
 # Nodes to be drawn first inside the GCP Cloud but outside any VPCs
@@ -68,7 +115,7 @@ GCP_EDGE_NODES = [
 ]
 
 # Nodes outside Cloud boundary
-GCP_OUTER_NODES = ["tv_gcp_users", "tv_gcp_internet"]
+GCP_OUTER_NODES = ["tv_gcp_users", "tv_gcp_users_icon", "tv_gcp_internet"]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 GCP_DRAW_ORDER = [
@@ -81,7 +128,12 @@ GCP_DRAW_ORDER = [
 
 # List of prefixes where additional nodes should be created automatically
 GCP_AUTO_ANNOTATIONS = [
-    {"google_dns_managed_zone": {"link": ["tv_gcp_users.users"], "arrow": "reverse"}},
+    {
+        "google_dns_managed_zone": {
+            "link": ["tv_gcp_users_icon.users"],
+            "arrow": "reverse",
+        }
+    },
     {
         "google_compute_vpn_gateway": {
             "link": [
@@ -114,6 +166,12 @@ GCP_AUTO_ANNOTATIONS = [
             "arrow": "forward",
         }
     },
+    {
+        "google_compute_global_forwarding_rule": {
+            "link": ["tv_gcp_users_icon.users"],
+            "arrow": "reverse",
+        }
+    },
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type
@@ -129,18 +187,19 @@ GCP_NODE_VARIANTS = {
 }
 
 # Automatically reverse arrow direction for these resources when discovered through source
+# NOTE: Do NOT add google_project to this list - Projects are containers that should be drawn
+# first and contain VPCs/resources, not have reversed arrows pointing into them.
 GCP_REVERSE_ARROW_LIST = [
     "google_dns_managed_zone",
     "google_compute_network.",
     "google_compute_subnetwork.",
-    "google_project.",
     "google_compute_firewall.",
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
 GCP_FORCED_DEST = [
     "google_sql_database_instance",
-    "google_compute_instance",
+    "google_compute_instance.",  # Note: trailing dot to avoid matching instance_group_manager
     "google_storage_bucket",
 ]
 
@@ -153,9 +212,8 @@ GCP_IMPLIED_CONNECTIONS = {
 }
 
 # Special resources that need custom handling
-# TODO: Migrate to config-driven approach like AWS (see resource_handler_configs_google.py)
-# For now, keeping manual dict until GCP handlers are refactored
-from modules.config.resource_handler_configs_google import RESOURCE_HANDLER_CONFIGS
+# Config-driven approach using resource_handler_configs_gcp.py
+from modules.config.resource_handler_configs_gcp import RESOURCE_HANDLER_CONFIGS
 
 # Generate from config if available, otherwise use manual dict
 if RESOURCE_HANDLER_CONFIGS:
@@ -210,13 +268,23 @@ GCP_ACRONYMS_LIST = [
     "iam",
     "api",
     "vm",
+    "db",
+    "sql",
+    "cpu",
+    "gpu",
+    "ssl",
+    "us",
+    "eu",
+    "igm",
+    "url",
+    "http",
 ]
 
 GCP_NAME_REPLACEMENTS = {
     "compute_instance": "VM Instance",
     "compute_network": "VPC",
     "compute_subnetwork": "Subnet",
-    "compute_firewall": "Firewall Rule",
+    "compute_firewall": "Firewall",
     "compute_address": "External IP",
     "container_cluster": "GKE Cluster",
     "storage_bucket": "Cloud Storage",
@@ -227,6 +295,8 @@ GCP_NAME_REPLACEMENTS = {
     "cloud_run_service": "Cloud Run",
     "cloudfunctions_function": "Cloud Function",
     "service_account": "Service Account",
+    "compute_instance_group_manager": "Instance Group Manager",
+    "compute": "",
     "this": "",
 }
 

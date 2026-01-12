@@ -39,15 +39,17 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 ![Terraform Code](./images/code.png)
 
-**Into this architecture diagram:**
+**Into these architecture diagrams:**
 
-<img src="./images/architecture.png" width="640" height="580">
+<a href="./images/architecture.png"><img src="./images/architecture.png" height="250"></a>
+<a href="./images/architecture-azure.dot.png"><img src="./images/architecture-azure.dot.png" height="250"></a>
+<a href="./images/architecture-gcp.dot.png"><img src="./images/architecture-gcp.dot.png" height="250"></a>
 
 ### Why TerraVision?
 
 - ✅ **Always Up-to-Date**: Diagrams generated from actual Terraform code as the single source of truth
 - ✅ **100% Client-Side**: No cloud access required, runs locally to keep your data secure
-- ✅ **CI/CD Ready**: Automate diagram generation in your pipeline with simple CLI interface
+- ✅ **CI/CD Ready**: Automate diagram generation in a pipeline whenever a PR is merged
 - ✅ **Free & Open Source**: No expensive diagramming tool licenses
 - ✅ **Multi-Cloud**: Supports AWS, GCP, and Azure
 
@@ -102,7 +104,7 @@ Before installing TerraVision, ensure you have:
 ### Install TerraVision
 
 ```bash
-pip install terravision
+pipx install terravision # only if in a virtual env, you can use pip install terravision instead
 ```
 
 ### Verify Terraform Setup
@@ -148,8 +150,12 @@ cd -
 Generate your first diagram using our example Terraform code:
 
 ```bash
-# Example 1: EKS cluster with managed nodes and OIDC
-terravision draw --source tests/fixtures/aws_terraform/eks_managed_nodes --show
+
+git clone https://github.com/patrickchugh/terravision.git
+cd terravision
+
+# Example 1: EKS cluster with fully managed nodes (auto)
+terravision draw --source tests/fixtures/aws_terraform/eks_automode --show
 
 # Example 2: Azure VM stack set
 terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show

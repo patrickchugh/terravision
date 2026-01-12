@@ -1,0 +1,24 @@
+{
+    "google_compute_instance.web_server_a": [],
+    "google_compute_instance.web_server_b": [],
+    "google_compute_network.main_vpc": [
+        "tv_gcp_region.us_central1"
+    ],
+    "google_compute_subnetwork.main_subnet": [
+        "tv_gcp_zone.us_central1_a",
+        "tv_gcp_zone.us_central1_b"
+    ],
+    "google_logging_project_sink.logging": [
+        "google_compute_instance.web_server_a",
+        "google_compute_instance.web_server_b"
+    ],
+    "tv_gcp_region.us_central1": [
+        "google_compute_subnetwork.main_subnet"
+    ],
+    "tv_gcp_zone.us_central1_a": [
+        "google_compute_instance.web_server_a"
+    ],
+    "tv_gcp_zone.us_central1_b": [
+        "google_compute_instance.web_server_b"
+    ]
+}

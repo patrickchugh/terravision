@@ -245,20 +245,31 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
     """
     _ = subnet_name  # Unused but required by transformer signature
 
-    # Build AZ node name from subnet metadata
-    az = "aws_az.availability_zone_" + str(
-        subnet_metadata.get("availability_zone", "unknown")
-    )
-    az = az.replace("-", "_")
+    # Prefer availability_zone_id when available (more specific than availability_zone)
+    az_value = subnet_metadata.get("availability_zone", "unknown")
+    az_id = subnet_metadata.get("availability_zone_id", "")
     region = subnet_metadata.get("region")
 
-    # Replace placeholder with actual region
-    if region:
-        az = az.replace("True", region)
+    # Use availability_zone_id if availability_zone is "True" or generic
+    if az_id and (az_value == True or str(az_value) == "True"):
+        # Use availability_zone_id directly - it's already unique per AZ
+        az = "aws_az.availability_zone_" + str(az_id)
+        az = az.replace("-", "_")
+        # Don't add suffix - the zone ID is already unique
     else:
-        az = az.replace(".True", ".availability_zone")
+        # Legacy path: use availability_zone and add suffix for zone letter
+        az = "aws_az.availability_zone_" + str(az_value)
+        az = az.replace("-", "_")
 
-    az = _add_suffix(az)
+        # Replace placeholder with actual region (for legacy cases)
+        if region and "True" in az:
+            az = az.replace("True", region)
+        elif ".True" in az:
+            az = az.replace(".True", ".availability_zone")
+
+        # Add suffix based on zone letter (e.g., 'a' -> ~1, 'b' -> ~2)
+        az = _add_suffix(az)
+
     return az
 
 
@@ -292,10 +303,14 @@ def aws_prepare_subnet_az_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if subnet not in tfdata["meta_data"]:
             tfdata["meta_data"][subnet] = {}
 
-        # Copy availability_zone and region for AZ name generation
+        # Copy availability_zone, availability_zone_id, and region for AZ name generation
         if "availability_zone" in original_meta:
             tfdata["meta_data"][subnet]["availability_zone"] = original_meta[
                 "availability_zone"
+            ]
+        if "availability_zone_id" in original_meta:
+            tfdata["meta_data"][subnet]["availability_zone_id"] = original_meta[
+                "availability_zone_id"
             ]
         if "region" in original_meta:
             tfdata["meta_data"][subnet]["region"] = original_meta["region"]
@@ -1625,9 +1640,6 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with resources matched
     """
-    # NOTE: match_az_to_subnets was removed - the modern config-driven subnet
-    # handler (insert_intermediate_node) already correctly places subnets in AZ
-    # nodes based on availability_zone metadata, not suffix matching.
 
     # Match security groups to subnets by suffix
     tfdata["graphdict"] = match_sg_to_subnets(tfdata["graphdict"])

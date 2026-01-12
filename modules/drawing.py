@@ -241,11 +241,19 @@ def handle_nodes(
         newNode = tfdata["meta_data"][resource]["node"]
     else:
         # Create new node and add to appropriate group
-        targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
+        is_outer = resource_type in OUTER_NODES
+        targetGroup = diagramCanvas if is_outer else inGroup
         node_label = helpers.pretty_name(resource)
         setcluster(targetGroup)
         nodeClass = getattr(sys.modules[__name__], resource_type)
-        newNode = nodeClass(label=node_label, tf_resource_name=resource)
+        # Only pass outer_node for GCP nodes (they use it for border styling)
+        provider = get_primary_provider_or_default(tfdata)
+        if provider == "gcp":
+            newNode = nodeClass(
+                label=node_label, tf_resource_name=resource, outer_node=is_outer
+            )
+        else:
+            newNode = nodeClass(label=node_label, tf_resource_name=resource)
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
 
@@ -460,9 +468,14 @@ def handle_group(
     if resource_type not in avl_classes or resource_type in tfdata["hidden"]:
         return None, drawn_resources
 
+    # Skip empty groups (groups with no children)
+    # Empty subnets/groups cause layout issues where they get huge bounding boxes
+    if not tfdata["graphdict"].get(resource):
+        return None, drawn_resources
+
     # Create new group/cluster
     newGroup = getattr(sys.modules[__name__], resource_type)(
-        label=helpers.pretty_name(resource)
+        label=helpers.pretty_name(resource, is_group=True)
     )
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
@@ -511,9 +524,11 @@ def handle_group(
                     drawn_resources,
                 )
                 if newNode is not None:
-                    newGroup.add_node(
-                        newNode._id, label=helpers.pretty_name(node_connection)
+                    # Don't overwrite HTML labels (GCP nodes have custom HTML tables)
+                    node_label = newNode._attrs.get(
+                        "label", helpers.pretty_name(node_connection)
                     )
+                    newGroup.add_node(newNode._id, label=node_label)
 
     return newGroup, drawn_resources
 
@@ -569,7 +584,8 @@ def draw_objects(
                         tfdata,
                         all_drawn_resources_list,
                     )
-                    targetGroup.subgraph(node_groups.dot)
+                    if node_groups is not None:
+                        targetGroup.subgraph(node_groups.dot)
 
                 # Draw standalone node resources
                 elif (
