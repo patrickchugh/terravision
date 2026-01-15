@@ -273,7 +273,7 @@ $ docker run --rm -it -v $(pwd):/project terravision draw --source https://githu
 | Provider         | Status             | Resources Supported |
 | ---------------- | ------------------ | ------------------- |
 | **AWS**          | ✅ Full Support    | 200+ services       |
-| **Google Cloud** | 🔄 Coming Soon     | None                |
+| **Google Cloud** | 🔄 Partial Support | Core Services       |
 | **Azure**        | 🔄 Partial Support | Core services       |
 
 ---
