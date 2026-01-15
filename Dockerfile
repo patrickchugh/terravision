@@ -15,25 +15,17 @@ USER terravision
 
 FROM base
 
-# Copy and Install terravision dependencies
-COPY --chown=terravision:terravision requirements.txt /opt/terravision/requirements.txt
+ENV PATH=/home/terravision/.local/bin:$PATH
 
-RUN export PATH=$PATH:/home/terravision/.local/bin && \
-    cd /opt/terravision && \
-    pip install -r requirements.txt
-
-ENV PATH=$PATH:/opt/terravision
-
-# Install terravision
+# Install terravision and dependencies
 COPY --chown=terravision:terravision . /opt/terravision
-
-RUN chmod +x /opt/terravision/terravision
+RUN cd /opt/terravision && pip install .
 
 USER root
 
 RUN mkdir -p /project && \
     chown -R terravision:terravision /project
-    
+
 USER terravision
 
 WORKDIR /project

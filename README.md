@@ -91,7 +91,36 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 ## Quick Start
 
-### Prerequisites
+### Option 1 - Docker
+
+You can run `terravision` from within a Docker container. All you need to do is to build the image:
+
+```sh
+git clone https://github.com/patrickchugh/terravision.git && cd terravision
+docker build -t terravision .
+```
+
+and then use it with any of your terraform files by mounting your local directory to the container:
+
+```sh
+# Local Terraform files example
+$ docker run --rm -it -v $(pwd):/project terravision draw --source /yourproject/ --varfile /project/your.tfvars
+# Git Repo example
+$ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
+```
+
+Depending on your cloud provider, you may need to pass your credentials so that OpenTofu/Terraform can run terraform plan commands 
+
+For example, for AWS:
+
+```sh
+# Example 1 Mount AWS Credentials folder
+docker run -it --rm  -v $(pwd):/project  -v ~/.aws:/home/terravision/.aws:ro  terravision draw --source /path/to/terraform_source
+# Example 2 Pass credentials as environment variables
+docker run -it --rm  -v $(pwd):/project  -e AWS_ACCESS_KEY_ID=your-access-key -e AWS_SECRET_ACCESS_KEY=your-secret-key  terravision draw --source /path/to/terraform_source
+```
+
+### Option 2 - Local Install
 
 Before installing TerraVision, ensure you have:
 
@@ -227,21 +256,6 @@ terravision graphdata --source ./terraform --outfile resources.json
 
 **More examples**: See [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)
 
-## Docker
-
-You can run `terravision` as a Docker Container. All you need to do is to build the image:
-
-```sh
-docker build -t terravision .
-```
-
-and then use it within you project, like:
-
-```sh
-$ docker run --rm -it -v $(pwd):/project terravision graphdata --source /project/ --varfile /project/your.tfvars
-
-$ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
-```
 
 ---
 
