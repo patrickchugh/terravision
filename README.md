@@ -93,31 +93,42 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 ### Option 1 - Docker
 
-You can run `terravision` from within a Docker container. All you need to do is to build the image:
+You can run `terravision` from within a Docker container. Pull the pre-built image from Docker Hub:
+
+```sh
+docker pull patrickchugh/terravision:latest
+```
+
+Or build it yourself from source:
 
 ```sh
 git clone https://github.com/patrickchugh/terravision.git && cd terravision
-docker build -t terravision .
+docker build -t patrickchugh/terravision .
 ```
 
-and then use it with any of your terraform files by mounting your local directory to the container:
+Then use it with any of your terraform files by mounting your local directory to the container:
+
+If you pulled from Docker Hub, use `patrickchugh/terravision` as the image name. If you built locally, use `terravision` (or whatever tag you chose).
 
 ```sh
-# Local Terraform files example
+# Using Docker Hub image
+$ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source /yourproject/ --varfile /project/your.tfvars
+$ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
+
+# Using self-built image
 $ docker run --rm -it -v $(pwd):/project terravision draw --source /yourproject/ --varfile /project/your.tfvars
-# Git Repo example
 $ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
 
-Depending on your cloud provider, you may need to pass your credentials so that OpenTofu/Terraform can run terraform plan commands 
+Depending on your cloud provider, you may need to pass your credentials so that OpenTofu/Terraform can run terraform plan commands
 
 For example, for AWS:
 
 ```sh
 # Example 1 Mount AWS Credentials folder
-docker run -it --rm  -v $(pwd):/project  -v ~/.aws:/home/terravision/.aws:ro  terravision draw --source /path/to/terraform_source
+docker run -it --rm  -v $(pwd):/project  -v ~/.aws:/home/terravision/.aws:ro  patrickchugh/terravision draw --source /path/to/terraform_source
 # Example 2 Pass credentials as environment variables
-docker run -it --rm  -v $(pwd):/project  -e AWS_ACCESS_KEY_ID=your-access-key -e AWS_SECRET_ACCESS_KEY=your-secret-key  terravision draw --source /path/to/terraform_source
+docker run -it --rm  -v $(pwd):/project  -e AWS_ACCESS_KEY_ID=your-access-key -e AWS_SECRET_ACCESS_KEY=your-secret-key  patrickchugh/terravision draw --source /path/to/terraform_source
 ```
 
 ### Option 2 - Local Install
