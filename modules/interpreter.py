@@ -164,7 +164,10 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 value = find_replace_values(value, mod, tfdata)
                 if value == old_value:
                     click.echo(
-                        f"   WARNING: Cannot fully resolve {resource}.{key}, unresolved references remain"
+                        click.style(
+                            f"   WARNING: Cannot fully resolve {resource}.{key}, unresolved references remain",
+                            fg="yellow",
+                        )
                     )
                     break
             # Update metadata with resolved value
