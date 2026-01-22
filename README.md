@@ -174,6 +174,21 @@ cd -
 
 **Important for Terraform Enterprise and Remote Backend Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
 
+### Option 3 - Nix
+
+If you have [Nix](https://nixos.org/download/) installed with flakes enabled, you can enter a development shell with `terravision` and all dependencies available:
+
+```bash
+git clone https://github.com/patrickchugh/terravision.git && cd terravision
+nix develop
+```
+
+This provides `terravision`, `graphviz`, `terraform`, and `git` in your shell. You can also run it directly without cloning:
+
+```bash
+nix run github:patrickchugh/terravision -- draw --source /path/to/terraform --show
+```
+
 ### Try It Out!
 
 Generate your first diagram using our example Terraform code:
