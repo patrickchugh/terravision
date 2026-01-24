@@ -354,25 +354,37 @@ on:
 jobs:
   generate-diagrams:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: hashicorp/setup-terraform@v3
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          role-to-assume: arn:aws:iam::1xxxxxxx8090:role/githubactions
+          role-session-name: ghasession
+          aws-region: us-east-1
+
       - uses: patrickchugh/terravision-action@v1
         with:
-          source: ./infrastructure
-          outfile: docs/architecture
-          format: both
+          source: .
+          format: png
 
       - name: Commit Diagrams
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/architecture.*
+          git add architecture.dot.*
           git commit -m "Update architecture diagrams [skip ci]" || exit 0
           git push
+
 ```
+* AWS Example - You will need an IAM role the action can assume and a Trust policy granting github to assume it
 
 ### GitLab CI / Jenkins / Other
 
