@@ -78,6 +78,157 @@ def find_matching_node_in_graphdict(
     return matching_nodes
 
 
+def _check_instance_for_multi_refs(
+    instance_data: Dict[str, Any],
+    pattern: Dict[str, Any],
+    resource_key: str,
+    resources_to_expand: Dict[str, tuple],
+) -> None:
+    """Check a resource instance for multi-reference trigger attributes.
+
+    If trigger attributes contain multiple references, marks the resource
+    for expansion and collects associated resources.
+
+    Args:
+        instance_data: The resource instance attributes
+        pattern: The matching multi-instance pattern config
+        resource_key: Fully qualified resource key (type.name)
+        resources_to_expand: Dict to update with discovered expansions (mutated)
+    """
+    for trigger_attr in pattern["trigger_attributes"]:
+        attr_value = instance_data.get(trigger_attr)
+        if not attr_value:
+            continue
+
+        references = extract_resource_references(
+            attr_value, pattern["resource_pattern"]
+        )
+        if len(references) <= 1:
+            continue
+
+        if resource_key not in resources_to_expand:
+            resources_to_expand[resource_key] = (len(references), set())
+
+        for assoc_attr in pattern["also_expand_attributes"]:
+            assoc_value = instance_data.get(assoc_attr)
+            if assoc_value:
+                assoc_refs = extract_resource_references(
+                    assoc_value, pattern["resource_pattern"]
+                )
+                resources_to_expand[resource_key][1].update(assoc_refs)
+
+
+def _scan_resources_for_patterns(
+    all_resource: Dict[str, Any], patterns: List[Dict[str, Any]]
+) -> Dict[str, tuple]:
+    """Scan all Terraform resources for multi-instance patterns.
+
+    Args:
+        all_resource: Dict of terraform file -> resource blocks
+        patterns: List of multi-instance pattern configurations
+
+    Returns:
+        Dict mapping resource_key -> (count, set_of_associated_resources)
+    """
+    resources_to_expand: Dict[str, tuple[int, Set[str]]] = {}
+
+    for resources in all_resource.values():
+        if not isinstance(resources, list):
+            continue
+
+        for resource_block in resources:
+            for resource_type, instances in resource_block.items():
+                if not isinstance(instances, dict):
+                    continue
+
+                matching_patterns = [
+                    p for p in patterns if resource_type in p["resource_types"]
+                ]
+                for pattern in matching_patterns:
+                    for instance_name, instance_data in instances.items():
+                        resource_key = f"{resource_type}.{instance_name}"
+                        _check_instance_for_multi_refs(
+                            instance_data, pattern, resource_key, resources_to_expand
+                        )
+
+    return resources_to_expand
+
+
+def _find_associated_node(
+    assoc_resource: str,
+    graphdict: Dict[str, Any],
+    meta_data: Dict[str, Any],
+    count: int,
+) -> None:
+    """Find and set count for a single associated resource in the graph.
+
+    Args:
+        assoc_resource: The associated resource reference to find
+        graphdict: The graph dictionary
+        meta_data: Resource metadata (mutated to set count)
+        count: The count to set
+    """
+    assoc_type = assoc_resource.split(".")[0]
+    assoc_base = assoc_resource.split(".")[1] if "." in assoc_resource else ""
+    if not assoc_base:
+        return
+
+    for node in graphdict.keys():
+        if "~" in node:
+            continue
+
+        node_type = node.split(".")[0]
+        node_base = node.split(".")[1] if "." in node else ""
+
+        type_matches = (
+            node_type == assoc_type
+            or node_type in assoc_type
+            or assoc_type in node_type
+        )
+        name_matches = assoc_base in node_base or node_base in assoc_base
+
+        if name_matches and type_matches:
+            if node not in meta_data:
+                meta_data[node] = {}
+            if not meta_data[node].get("count"):
+                meta_data[node]["count"] = count
+
+
+def _apply_counts_to_graph(
+    resources_to_expand: Dict[str, tuple],
+    patterns: List[Dict[str, Any]],
+    graphdict: Dict[str, Any],
+    meta_data: Dict[str, Any],
+) -> None:
+    """Apply detected counts to graph nodes and their associated resources.
+
+    Args:
+        resources_to_expand: Dict mapping resource_key -> (count, associated_set)
+        patterns: Multi-instance pattern configurations
+        graphdict: The graph dictionary
+        meta_data: Resource metadata (mutated to set counts)
+    """
+    for resource_key, (count, associated_resources) in resources_to_expand.items():
+        resource_type = resource_key.split(".")[0]
+
+        matching_pattern = next(
+            (p for p in patterns if resource_type in p["resource_types"]), {}
+        )
+
+        matching_nodes = find_matching_node_in_graphdict(
+            resource_key, graphdict, matching_pattern
+        )
+
+        for node in matching_nodes:
+            if node not in meta_data:
+                meta_data[node] = {}
+            if not meta_data[node].get("count"):
+                meta_data[node]["count"] = count
+
+        for assoc_resource in associated_resources:
+            _find_associated_node(assoc_resource, graphdict, meta_data, count)
+
+
 def detect_and_set_counts(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Detect multi-instance resources and set synthetic count attributes.
 
@@ -90,131 +241,25 @@ def detect_and_set_counts(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with count attributes set for detected resources
     """
-    all_resource = tfdata.get("all_resource", {})
-    graphdict = tfdata.get("graphdict", {})
-    meta_data = tfdata.get("meta_data", {})
-
-    # Determine cloud provider from tfdata
-    provider_detection = tfdata.get("provider_detection", {})
-    primary_provider = provider_detection.get("primary_provider", "aws")
-
-    # Load provider-specific configuration
+    primary_provider = get_primary_provider_or_default(tfdata)
     config = _get_provider_config(tfdata)
-    provider_upper = primary_provider.upper()
-
-    # Get patterns from provider config (e.g., AWS_MULTI_INSTANCE_PATTERNS)
-    pattern_attr = f"{provider_upper}_MULTI_INSTANCE_PATTERNS"
+    pattern_attr = f"{primary_provider.upper()}_MULTI_INSTANCE_PATTERNS"
     patterns = getattr(config, pattern_attr, [])
 
     if not patterns:
-        # No patterns defined for this provider, return unchanged
         return tfdata
 
-    # Track resources to expand: {resource_key: (count, [associated_resources])}
-    resources_to_expand: Dict[str, tuple[int, Set[str]]] = {}
+    resources_to_expand = _scan_resources_for_patterns(
+        tfdata.get("all_resource", {}), patterns
+    )
 
-    # Scan all_resource for matching patterns
-    for tf_file, resources in all_resource.items():
-        if not isinstance(resources, list):
-            continue
+    _apply_counts_to_graph(
+        resources_to_expand,
+        patterns,
+        tfdata.get("graphdict", {}),
+        tfdata.get("meta_data", {}),
+    )
 
-        for resource_block in resources:
-            for resource_type, instances in resource_block.items():
-                if not isinstance(instances, dict):
-                    continue
-
-                # Check if this resource type matches any pattern
-                for pattern in patterns:
-                    if resource_type not in pattern["resource_types"]:
-                        continue
-
-                    # Found matching resource type, check trigger attributes
-                    for instance_name, instance_data in instances.items():
-                        resource_key = f"{resource_type}.{instance_name}"
-
-                        # Check trigger attributes
-                        for trigger_attr in pattern["trigger_attributes"]:
-                            attr_value = instance_data.get(trigger_attr)
-                            if not attr_value:
-                                continue
-
-                            # Extract references from attribute
-                            references = extract_resource_references(
-                                attr_value, pattern["resource_pattern"]
-                            )
-
-                            if len(references) > 1:
-                                # Found multi-instance resource!
-                                if resource_key not in resources_to_expand:
-                                    resources_to_expand[resource_key] = (
-                                        len(references),
-                                        set(),
-                                    )
-
-                                # Extract associated resources to also expand
-                                for assoc_attr in pattern["also_expand_attributes"]:
-                                    assoc_value = instance_data.get(assoc_attr)
-                                    if assoc_value:
-                                        assoc_refs = extract_resource_references(
-                                            assoc_value, pattern["resource_pattern"]
-                                        )
-                                        resources_to_expand[resource_key][1].update(
-                                            assoc_refs
-                                        )
-
-    # Set count for detected resources
-    for resource_key, (count, associated_resources) in resources_to_expand.items():
-        resource_type = resource_key.split(".")[0]
-
-        # Find matching pattern for type matching logic
-        matching_pattern = None
-        for pattern in patterns:
-            if resource_type in pattern["resource_types"]:
-                matching_pattern = pattern
-                break
-
-        # Find corresponding nodes in graphdict (handles consolidation)
-        matching_nodes = find_matching_node_in_graphdict(
-            resource_key, graphdict, matching_pattern or {}
-        )
-
-        # Set count for main resource
-        for node in matching_nodes:
-            if node not in meta_data:
-                meta_data[node] = {}
-            if not meta_data[node].get("count"):
-                meta_data[node]["count"] = count
-
-        # Set count for associated resources
-        for assoc_resource in associated_resources:
-            # Find matching nodes in graphdict for associated resource
-            for node in graphdict.keys():
-                if "~" in node:  # Skip already-numbered
-                    continue
-
-                # Match by checking if original resource name is related to node
-                assoc_base = (
-                    assoc_resource.split(".")[1] if "." in assoc_resource else ""
-                )
-                node_base = node.split(".")[1] if "." in node else ""
-
-                # Check if this is the associated resource
-                if assoc_base and (assoc_base in node_base or node_base in assoc_base):
-                    node_type = node.split(".")[0]
-                    assoc_type = assoc_resource.split(".")[0]
-
-                    # Verify type matches
-                    if (
-                        node_type == assoc_type
-                        or node_type in assoc_type
-                        or assoc_type in node_type
-                    ):
-                        if node not in meta_data:
-                            meta_data[node] = {}
-                        if not meta_data[node].get("count"):
-                            meta_data[node]["count"] = count
-
-    tfdata["meta_data"] = meta_data
     return tfdata
 
 
@@ -1434,6 +1479,40 @@ def add_multiples_to_parents(
     return tfdata
 
 
+def _parse_count_value(value) -> int:
+    """Parse a count-like value to integer, handling both string and numeric types.
+
+    Args:
+        value: The value to parse (may be int, float, or string with quotes)
+
+    Returns:
+        Integer count value, or 1 if parsing fails
+    """
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        return int(value.replace('"', "").strip())
+    return 1
+
+
+def _get_instance_count(metadata: Dict[str, Any]) -> int:
+    """Determine the number of instances for a resource from its metadata.
+
+    Checks count, max_capacity, and desired_count attributes in priority order.
+
+    Args:
+        metadata: Resource metadata dictionary
+
+    Returns:
+        Number of instances to create (minimum 1)
+    """
+    for attr in ("count", "max_capacity", "desired_count"):
+        value = metadata.get(attr)
+        if value:
+            return _parse_count_value(value)
+    return 1
+
+
 def handle_count_resources(
     multi_resources: List[str], tfdata: Dict[str, Any]
 ) -> Dict[str, Any]:
@@ -1456,18 +1535,7 @@ def handle_count_resources(
     # Process each resource with count attribute
     for resource in multi_resources:
         # Determine number of instances to create
-        if tfdata["meta_data"][resource].get("count"):
-            max_i = int(tfdata["meta_data"][resource].get("count"))
-        elif tfdata["meta_data"][resource].get("max_capacity"):
-            max_i = int(
-                tfdata["meta_data"][resource].get("max_capacity").replace('"', "")
-            )
-        elif tfdata["meta_data"][resource].get("desired_count"):
-            max_i = int(
-                tfdata["meta_data"][resource].get("desired_count").replace('"', "")
-            )
-        else:
-            max_i = 1
+        max_i = _get_instance_count(tfdata["meta_data"][resource])
 
         # Create numbered instances
         for i in range(max_i):
