@@ -1,11 +1,16 @@
 FROM alpine:3.23 AS base
 
-# Install required packages, create zser
+ARG TERRAFORM_VERSION=1.10.5
+ARG TARGETARCH=amd64
+
+# Install required packages
 RUN apk update && \
-    apk add --no-cache git python3 py3-pip graphviz opentofu binutils && \
-    ln -s /usr/bin/tofu /usr/bin/terraform && \
+    apk add --no-cache git python3 py3-pip graphviz binutils curl unzip && \
     rm /usr/lib/python*/EXTERNALLY-MANAGED && \
     python3 -m ensurepip && \
+    curl -fsSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH}.zip" -o /tmp/terraform.zip && \
+    unzip /tmp/terraform.zip -d /usr/local/bin/ && \
+    rm /tmp/terraform.zip && \
     addgroup -S -g 1000 terravision && \
     adduser -S -u 1000 -G terravision terravision && \
     rm -rf /root/.cache && \

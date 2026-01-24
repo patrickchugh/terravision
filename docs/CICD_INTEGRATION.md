@@ -1,17 +1,28 @@
 # CI/CD Integration Guide
 
-## Overview
-
 Integrate TerraVision into your CI/CD pipeline to automatically generate and update architecture diagrams whenever infrastructure code changes.
 
 ---
 
-## Quick Start
+## Installation Methods
 
-### GitHub Actions
+TerraVision can be integrated into any CI/CD system using one of these methods:
+
+| Method | Best For | Prerequisites |
+|--------|----------|---------------|
+| **GitHub Action** | GitHub workflows | Terraform on PATH |
+| **Docker image** | GitLab, Jenkins, any container-based CI | None (self-contained) |
+| **pip install** | Any CI with Python available | Python 3.10+, Graphviz, Terraform |
+
+---
+
+## GitHub Actions
+
+### Using the TerraVision Action (Recommended)
+
+The [TerraVision Action](https://github.com/patrickchugh/terravision-action) handles installation of TerraVision and Graphviz automatically. You only need to provide Terraform.
 
 ```yaml
-# .github/workflows/architecture-diagrams.yml
 name: Update Architecture Diagrams
 
 on:
@@ -23,227 +34,391 @@ jobs:
   generate-diagrams:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: patrickchugh/terravision-action@v1
         with:
-          python-version: '3.10'
-      
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
-          pip install -r requirements.txt
-      
-      - name: Generate Diagrams
-        run: |
-          python terravision.py draw --source ./terraform --format svg
-          python terravision.py draw --source ./terraform --format png
-      
-      - name: Commit Diagrams
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add docs/images/*.{svg,png}
-          git commit -m "Update architecture diagrams [skip ci]" || exit 0
-          git push
+          source: ./infrastructure
+          outfile: docs/architecture
+          format: both
 ```
 
----
+#### Action Inputs
 
-## Platform-Specific Examples
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `source` | Path to Terraform source directory | Yes | `.` |
+| `outfile` | Output file path (without extension) | No | `architecture` |
+| `format` | Output format: `png`, `svg`, or `both` | No | `png` |
+| `varfile` | Path to `.tfvars` file | No | |
+| `annotate` | Path to `terravision.yml` annotation file | No | |
+| `extra-args` | Additional arguments for `terravision draw` | No | |
 
-### GitHub Actions
+#### With Cloud Credentials
 
-#### Basic Workflow
+If Terraform needs to download remote modules or run `init` with backend access:
 
 ```yaml
-name: Generate Architecture Diagrams
+steps:
+  - uses: actions/checkout@v4
 
-on:
-  push:
-    branches: [main, develop]
-    paths:
-      - '**.tf'
-      - '**.tfvars'
-  pull_request:
-    paths:
-      - '**.tf'
-      - '**.tfvars'
+  - uses: hashicorp/setup-terraform@v3
 
-jobs:
-  diagrams:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
-      
-      - name: Install TerraVision
-        run: |
-          git clone https://github.com/patrickchugh/terravision.git
-          cd terravision
-          pip install -r requirements.txt
-      
-      - name: Generate Diagrams
-        run: |
-          cd terravision
-          python terravision.py draw --source ../terraform --format svg --outfile ../docs/architecture
-          python terravision.py draw --source ../terraform --format png --outfile ../docs/architecture
-      
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: architecture-diagrams
-          path: docs/architecture.*
+  - uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: arn:aws:iam::123456789012:role/diagram-role
+      aws-region: us-east-1
+
+  - uses: patrickchugh/terravision-action@v1
+    with:
+      source: ./infrastructure
+      format: svg
 ```
 
-#### Multi-Environment Workflow
+#### Multi-Environment Matrix
 
 ```yaml
-name: Generate Multi-Environment Diagrams
-
-on:
-  push:
-    branches: [main]
-
 jobs:
   diagrams:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         environment: [dev, staging, prod]
-    
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: patrickchugh/terravision-action@v1
         with:
-          python-version: '3.10'
-      
-      - name: Install Dependencies
-        run: |
-          sudo apt-get install -y graphviz
-          pip install -r requirements.txt
-      
-      - name: Generate Diagram for ${{ matrix.environment }}
-        run: |
-          python terravision.py draw \
-            --source ./terraform \
-            --varfile ./environments/${{ matrix.environment }}.tfvars \
-            --format svg \
-            --outfile docs/architecture-${{ matrix.environment }}
-      
-      - name: Upload Diagram
-        uses: actions/upload-artifact@v3
-        with:
-          name: diagrams-${{ matrix.environment }}
-          path: docs/architecture-${{ matrix.environment }}.svg
+          source: ./terraform
+          outfile: docs/architecture-${{ matrix.environment }}
+          varfile: environments/${{ matrix.environment }}.tfvars
+          format: svg
 ```
 
-### GitLab CI
+#### Commit Diagrams Back to Repository
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: hashicorp/setup-terraform@v3
+
+  - uses: patrickchugh/terravision-action@v1
+    with:
+      source: ./infrastructure
+      outfile: docs/architecture
+      format: both
+
+  - name: Commit Diagrams
+    run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "github-actions[bot]@users.noreply.github.com"
+      git add docs/architecture.*
+      git commit -m "Update architecture diagrams [skip ci]" || exit 0
+      git push
+```
+
+#### Pull Request Diagram Preview
+
+```yaml
+name: PR Architecture Preview
+
+on:
+  pull_request:
+    paths: ['**.tf']
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: patrickchugh/terravision-action@v1
+        with:
+          source: ./infrastructure
+          outfile: pr-architecture
+          format: png
+
+      - name: Upload Diagram
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-diagram
+          path: pr-architecture.png
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## Architecture Diagram\nSee the uploaded artifact for the updated diagram.'
+            })
+```
+
+#### Using Docker Image Directly (No Prerequisites)
+
+Alternatively, use the Docker image for a fully self-contained step:
+
+```yaml
+- name: Generate Diagram
+  uses: docker://patrickchugh/terravision:latest
+  with:
+    args: draw --source ./infrastructure --outfile architecture --format png
+```
+
+---
+
+## GitLab CI
+
+### Using the Docker Image (Recommended)
+
+The `patrickchugh/terravision` Docker image includes Terraform, Graphviz, and TerraVision — no additional setup required.
 
 ```yaml
 # .gitlab-ci.yml
 stages:
   - diagram
 
-generate_diagrams:
+generate-diagram:
   stage: diagram
-  image: python:3.10
-  
-  before_script:
-    - apt-get update
-    - apt-get install -y graphviz git
-    - pip install -r requirements.txt
-  
+  image: patrickchugh/terravision:latest
   script:
-    - python terravision.py draw --source ./terraform --format svg --outfile architecture
-    - python terravision.py draw --source ./terraform --format png --outfile architecture
-  
+    - terravision draw --source ./infrastructure --outfile architecture --format png
+    - terravision draw --source ./infrastructure --outfile architecture --format svg
   artifacts:
     paths:
-      - architecture.svg
       - architecture.png
+      - architecture.svg
     expire_in: 30 days
-  
-  only:
-    changes:
-      - "**/*.tf"
-      - "**/*.tfvars"
+  rules:
+    - changes:
+        - "**/*.tf"
+        - "**/*.tfvars"
 ```
 
-### Jenkins
+### Multi-Environment
+
+```yaml
+generate-diagram:
+  stage: diagram
+  image: patrickchugh/terravision:latest
+  parallel:
+    matrix:
+      - ENVIRONMENT: [dev, staging, prod]
+  script:
+    - terravision draw
+        --source ./terraform
+        --varfile environments/${ENVIRONMENT}.tfvars
+        --outfile architecture-${ENVIRONMENT}
+        --format svg
+  artifacts:
+    paths:
+      - architecture-*.svg
+```
+
+### With Cloud Credentials
+
+```yaml
+generate-diagram:
+  stage: diagram
+  image: patrickchugh/terravision:latest
+  variables:
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION: us-east-1
+  script:
+    - terravision draw --source ./infrastructure --outfile architecture --format png
+  artifacts:
+    paths:
+      - architecture.png
+```
+
+### Commit Diagrams Back
+
+```yaml
+generate-diagram:
+  stage: diagram
+  image: patrickchugh/terravision:latest
+  script:
+    - terravision draw --source ./infrastructure --outfile docs/architecture --format png
+    - git config user.name "GitLab CI"
+    - git config user.email "ci@gitlab.com"
+    - git add docs/architecture.png
+    - git commit -m "Update architecture diagram [skip ci]" || true
+    - git push "https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_BRANCH}
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "**/*.tf"
+```
+
+### As a CI/CD Component
+
+If you host on GitLab, you can create a reusable [CI/CD Component](https://docs.gitlab.com/ee/ci/components/):
+
+```yaml
+# In your component repo: templates/generate-diagram.yml
+spec:
+  inputs:
+    source:
+      default: '.'
+    output:
+      default: 'architecture'
+    format:
+      default: 'png'
+    stage:
+      default: 'build'
+
+---
+
+"generate-diagram":
+  image: patrickchugh/terravision:latest
+  stage: $[[ inputs.stage ]]
+  script:
+    - terravision draw --source $[[ inputs.source ]] --outfile $[[ inputs.output ]] --format $[[ inputs.format ]]
+  artifacts:
+    paths:
+      - $[[ inputs.output ]].$[[ inputs.format ]]
+```
+
+Consumers include it as:
+
+```yaml
+include:
+  - component: gitlab.com/your-org/terravision-component/generate-diagram@v1
+    inputs:
+      source: ./infrastructure
+      format: svg
+```
+
+---
+
+## Jenkins
+
+### Docker Agent (Recommended)
 
 ```groovy
 // Jenkinsfile
 pipeline {
-    agent any
-    
-    triggers {
-        pollSCM('H/5 * * * *')
-    }
-    
-    stages {
-        stage('Setup') {
-            steps {
-                sh '''
-                    apt-get update
-                    apt-get install -y graphviz python3-pip
-                    pip3 install -r requirements.txt
-                '''
-            }
+    agent {
+        docker {
+            image 'patrickchugh/terravision:latest'
         }
-        
+    }
+
+    triggers {
+        pollSCM('H/15 * * * *')
+    }
+
+    stages {
         stage('Generate Diagrams') {
             steps {
                 sh '''
-                    python3 terravision.py draw \
-                        --source ./terraform \
-                        --format svg \
-                        --outfile architecture-${BUILD_NUMBER}
-                    
-                    python3 terravision.py draw \
-                        --source ./terraform \
-                        --format png \
-                        --outfile architecture-${BUILD_NUMBER}
+                    terravision draw \
+                        --source ./infrastructure \
+                        --outfile architecture \
+                        --format png
+
+                    terravision draw \
+                        --source ./infrastructure \
+                        --outfile architecture \
+                        --format svg
                 '''
             }
         }
-        
+
         stage('Archive') {
             steps {
-                archiveArtifacts artifacts: 'architecture-*.{svg,png}', fingerprint: true
-            }
-        }
-        
-        stage('Publish to Confluence') {
-            steps {
-                sh '''
-                    curl -X PUT "https://your-domain.atlassian.net/wiki/rest/api/content/${CONFLUENCE_PAGE_ID}" \
-                        -H "Authorization: Bearer ${CONFLUENCE_TOKEN}" \
-                        -H "Content-Type: application/json" \
-                        --data @confluence-update.json
-                '''
+                archiveArtifacts artifacts: 'architecture.*', fingerprint: true
             }
         }
     }
 }
 ```
 
-### Azure DevOps
+### Multi-Environment with Parameters
+
+```groovy
+pipeline {
+    agent {
+        docker {
+            image 'patrickchugh/terravision:latest'
+        }
+    }
+
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Target environment')
+    }
+
+    stages {
+        stage('Generate Diagram') {
+            steps {
+                sh """
+                    terravision draw \
+                        --source ./terraform \
+                        --varfile environments/${params.ENVIRONMENT}.tfvars \
+                        --outfile architecture-${params.ENVIRONMENT} \
+                        --format png
+                """
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: "architecture-${params.ENVIRONMENT}.png", fingerprint: true
+            }
+        }
+    }
+}
+```
+
+### Without Docker (pip install)
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('Setup') {
+            steps {
+                sh '''
+                    pip install terravision
+                '''
+            }
+        }
+
+        stage('Generate Diagrams') {
+            steps {
+                sh '''
+                    terravision draw \
+                        --source ./infrastructure \
+                        --outfile architecture \
+                        --format png
+                '''
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'architecture.*', fingerprint: true
+            }
+        }
+    }
+}
+```
+
+**Note**: The non-Docker approach requires Python 3.10+, Graphviz, and Terraform pre-installed on the Jenkins agent.
+
+---
+
+## Azure DevOps
+
+### Using Docker
 
 ```yaml
 # azure-pipelines.yml
@@ -259,21 +434,12 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+container: patrickchugh/terravision:latest
+
 steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.10'
-  displayName: 'Use Python 3.10'
-
 - script: |
-    sudo apt-get update
-    sudo apt-get install -y graphviz
-    pip install -r requirements.txt
-  displayName: 'Install Dependencies'
-
-- script: |
-    python terravision.py draw --source ./terraform --format svg --outfile $(Build.ArtifactStagingDirectory)/architecture
-    python terravision.py draw --source ./terraform --format png --outfile $(Build.ArtifactStagingDirectory)/architecture
+    terravision draw --source ./infrastructure --outfile $(Build.ArtifactStagingDirectory)/architecture --format png
+    terravision draw --source ./infrastructure --outfile $(Build.ArtifactStagingDirectory)/architecture --format svg
   displayName: 'Generate Diagrams'
 
 - task: PublishBuildArtifacts@1
@@ -283,254 +449,259 @@ steps:
   displayName: 'Publish Diagrams'
 ```
 
+### Using pip install
+
+```yaml
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '**/*.tf'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.10'
+  displayName: 'Use Python 3.10'
+
+- task: TerraformInstaller@1
+  inputs:
+    terraformVersion: 'latest'
+  displayName: 'Install Terraform'
+
+- script: |
+    sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+    pip install terravision
+  displayName: 'Install TerraVision'
+
+- script: |
+    terravision draw --source ./infrastructure --outfile $(Build.ArtifactStagingDirectory)/architecture --format png
+  displayName: 'Generate Diagram'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'architecture-diagrams'
+```
+
+---
+
+## Generic CI/CD (Any Platform)
+
+For any CI/CD system, you have two options:
+
+### Option 1: Docker (Recommended)
+
+Run the Docker image with your source mounted:
+
+```bash
+docker run --rm \
+  -v $(pwd):/project \
+  patrickchugh/terravision:latest \
+  draw --source ./infrastructure --outfile architecture --format png
+```
+
+This works in any CI system that supports Docker (CircleCI, Bitbucket Pipelines, Drone, etc.).
+
+### Option 2: pip install
+
+```bash
+# Prerequisites: Python 3.10+, Graphviz, Terraform
+pip install terravision
+terravision draw --source ./infrastructure --outfile architecture --format png
+```
+
+### CircleCI Example
+
+```yaml
+# .circleci/config.yml
+version: 2.1
+
+jobs:
+  generate-diagram:
+    docker:
+      - image: patrickchugh/terravision:latest
+    steps:
+      - checkout
+      - run:
+          name: Generate Diagram
+          command: terravision draw --source ./infrastructure --outfile architecture --format png
+      - store_artifacts:
+          path: architecture.png
+
+workflows:
+  diagram:
+    jobs:
+      - generate-diagram:
+          filters:
+            branches:
+              only: main
+```
+
+### Bitbucket Pipelines Example
+
+```yaml
+# bitbucket-pipelines.yml
+image: patrickchugh/terravision:latest
+
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Generate Architecture Diagram
+          script:
+            - terravision draw --source ./infrastructure --outfile architecture --format png
+          artifacts:
+            - architecture.png
+```
+
 ---
 
 ## Integration Patterns
 
 ### Pattern 1: Commit Diagrams to Repository
 
-**Use when**: Diagrams should be version-controlled alongside code
+Diagrams are version-controlled alongside code. Use `[skip ci]` to prevent infinite loops.
 
-```yaml
-- name: Generate and Commit Diagrams
-  run: |
-    python terravision.py draw --source ./terraform --format svg --outfile docs/architecture
-    git config user.name "CI Bot"
-    git config user.email "ci@example.com"
-    git add docs/architecture.svg
-    git commit -m "Update architecture diagram [skip ci]" || exit 0
-    git push
+```bash
+terravision draw --source ./infrastructure --outfile docs/architecture --format png
+git add docs/architecture.png
+git commit -m "Update architecture diagram [skip ci]" || exit 0
+git push
 ```
 
-### Pattern 2: Upload as Artifacts
+### Pattern 2: Upload as Build Artifacts
 
-**Use when**: Diagrams are build artifacts, not source code
+Diagrams are ephemeral build outputs, not source code.
 
-```yaml
-- name: Upload Diagrams
-  uses: actions/upload-artifact@v3
-  with:
-    name: architecture-diagrams
-    path: |
-      architecture.svg
-      architecture.png
-    retention-days: 90
+```bash
+terravision draw --source ./infrastructure --outfile architecture --format png
+# Use your CI's artifact upload mechanism
 ```
 
 ### Pattern 3: Publish to Documentation Site
 
-**Use when**: Diagrams are part of external documentation
-
-```yaml
-- name: Publish to ReadTheDocs
-  run: |
-    python terravision.py draw --source ./terraform --format svg --outfile docs/source/_static/architecture
-    cd docs
-    make html
-    # Deploy to ReadTheDocs
+```bash
+terravision draw --source ./infrastructure --outfile docs/source/_static/architecture --format svg
+# Trigger documentation build/deploy
 ```
 
-### Pattern 4: Publish to Confluence
+### Pattern 4: Multi-Region/Multi-Environment
 
-**Use when**: Using Confluence for documentation
-
-```yaml
-- name: Publish to Confluence
-  env:
-    CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
-  run: |
-    python terravision.py draw --source ./terraform --format png --outfile architecture
-    
-    # Upload to Confluence
-    curl -X POST \
-      "https://your-domain.atlassian.net/wiki/rest/api/content/${PAGE_ID}/child/attachment" \
-      -H "Authorization: Bearer ${CONFLUENCE_TOKEN}" \
-      -H "X-Atlassian-Token: nocheck" \
-      -F "file=@architecture.png"
-```
-
----
-
-## Advanced Configurations
-
-### Multi-Region Diagrams
-
-```yaml
-- name: Generate Multi-Region Diagrams
-  run: |
-    for region in us-east-1 us-west-2 eu-west-1; do
-      python terravision.py draw \
-        --source ./terraform/${region} \
-        --format svg \
-        --outfile docs/architecture-${region}
-    done
-```
-
-### Pull Request Comments
-
-```yaml
-name: PR Architecture Preview
-
-on:
-  pull_request:
-    paths: ['**.tf']
-
-jobs:
-  preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup
-        run: |
-          sudo apt-get install -y graphviz
-          pip install -r requirements.txt
-      
-      - name: Generate Diagram
-        run: |
-          python terravision.py draw --source ./terraform --format svg --outfile pr-diagram
-      
-      - name: Upload to Imgur
-        id: imgur
-        run: |
-          RESPONSE=$(curl -X POST \
-            -H "Authorization: Client-ID ${{ secrets.IMGUR_CLIENT_ID }}" \
-            -F "image=@pr-diagram.svg" \
-            https://api.imgur.com/3/image)
-          echo "url=$(echo $RESPONSE | jq -r '.data.link')" >> $GITHUB_OUTPUT
-      
-      - name: Comment on PR
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## Architecture Diagram Preview\n\n![Architecture](${{ steps.imgur.outputs.url }})`
-            })
-```
-
-### Scheduled Updates
-
-```yaml
-name: Weekly Diagram Update
-
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Every Sunday at midnight
-  workflow_dispatch:  # Manual trigger
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup
-        run: |
-          sudo apt-get install -y graphviz
-          pip install -r requirements.txt
-      
-      - name: Generate Diagrams
-        run: |
-          python terravision.py draw --source ./terraform --format svg
-          python terravision.py draw --source ./terraform --format png
-      
-      - name: Commit and Push
-        run: |
-          git config user.name "Weekly Update Bot"
-          git add docs/architecture.*
-          git commit -m "Weekly architecture diagram update" || exit 0
-          git push
+```bash
+for env in dev staging prod; do
+  terravision draw \
+    --source ./terraform \
+    --varfile environments/${env}.tfvars \
+    --outfile docs/architecture-${env} \
+    --format svg
+done
 ```
 
 ---
 
 ## Best Practices
 
-### 1. Cache Dependencies
+### 1. Only Trigger on Infrastructure Changes
 
 ```yaml
-- name: Cache Python Dependencies
-  uses: actions/cache@v3
-  with:
-    path: ~/.cache/pip
-    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+# GitHub Actions
+paths: ['**.tf', '**.tfvars', 'terravision.yml']
+
+# GitLab CI
+rules:
+  - changes: ["**/*.tf", "**/*.tfvars"]
 ```
 
-### 2. Only Run on Infrastructure Changes
+### 2. Use `[skip ci]` When Committing Diagrams
 
-```yaml
-on:
-  push:
-    paths:
-      - '**.tf'
-      - '**.tfvars'
-      - 'terravision.yml'  # Annotations file
-```
-
-### 3. Use Matrix for Multiple Environments
-
-```yaml
-strategy:
-  matrix:
-    environment: [dev, staging, prod]
-    format: [svg, png, pdf]
-```
-
-### 4. Add Skip CI Tag
-
-Prevent infinite loops when committing diagrams:
+Prevent infinite CI loops when diagram commits trigger the pipeline:
 
 ```bash
-git commit -m "Update diagrams [skip ci]"
+git commit -m "Update architecture diagrams [skip ci]"
 ```
 
-### 5. Use Secrets for Credentials
+### 3. Cache pip Dependencies
 
 ```yaml
-env:
-  CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# GitHub Actions
+- uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    key: ${{ runner.os }}-pip-terravision
 ```
+
+### 4. Pin Versions
+
+```yaml
+# Pin TerraVision version
+pip install terravision==X.Y.Z
+
+# Pin Docker image tag
+image: patrickchugh/terravision:1.0.0
+```
+
+### 5. Use Annotations for Customization
+
+Add a `terravision.yml` file to customize diagrams without changing Terraform code:
+
+```bash
+terravision draw --source ./infrastructure --annotate terravision.yml --format png
+```
+
+See [Annotations Guide](ANNOTATIONS.md) for details.
 
 ---
 
 ## Troubleshooting
 
-### Graphviz Not Found
+### Terraform init fails
 
-```yaml
-- name: Install Graphviz
-  run: |
-    sudo apt-get update
-    sudo apt-get install -y graphviz
+The CI environment may not have access to remote module sources or backends. Ensure cloud credentials are configured before running TerraVision.
+
+### Graphviz not found
+
+If using `pip install` (not Docker), install Graphviz:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install -y graphviz
+
+# macOS
+brew install graphviz
+
+# Alpine
+apk add graphviz
 ```
 
-### Python Version Issues
+### Permission denied on git push
+
+Configure the CI bot with appropriate permissions:
 
 ```yaml
-- name: Setup Python
-  uses: actions/setup-python@v4
-  with:
-    python-version: '3.10'  # Specify exact version
+# GitHub Actions - grant write permission
+permissions:
+  contents: write
 ```
 
-### Git Push Failures
+### Large repositories timeout
 
-```yaml
-- name: Configure Git
-  run: |
-    git config user.name "CI Bot"
-    git config user.email "ci@example.com"
-    git pull --rebase  # Avoid conflicts
+For large Terraform codebases, increase timeout or generate diagrams for specific subdirectories:
+
+```bash
+terravision draw --source ./terraform/networking --outfile network-diagram --format png
+terravision draw --source ./terraform/compute --outfile compute-diagram --format png
 ```
 
 ---
 
 ## Next Steps
 
-- **[Usage Guide](USAGE_GUIDE.md)** - Learn more TerraVision commands
-- **[Annotations Guide](ANNOTATIONS.md)** - Customize diagrams in CI/CD
-- **[Performance Tips](PERFORMANCE.md)** - Optimize for large projects
+- **[Usage Guide](USAGE_GUIDE.md)** - Learn more TerraVision commands and options
+- **[Annotations Guide](ANNOTATIONS.md)** - Customize diagrams with YAML annotations
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions

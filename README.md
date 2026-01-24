@@ -318,7 +318,7 @@ terravision graphdata --source ./terraform --outfile resources.json
 
 ---
 
-## CI/CD Integration Example
+## CI/CD Integration
 
 ### Pipeline Workflow
 
@@ -336,6 +336,10 @@ graph LR
     style E fill:#fce4ec
 ```
 
+### GitHub Actions
+
+Use the official [TerraVision Action](https://github.com/patrickchugh/terravision-action):
+
 ```yaml
 # .github/workflows/architecture-diagrams.yml
 name: Update Architecture Diagrams
@@ -343,34 +347,47 @@ name: Update Architecture Diagrams
 on:
   push:
     branches: [main]
-    paths: ['**.tf']
+    paths: ['**.tf', '**.tfvars']
 
 jobs:
   generate-diagrams:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: patrickchugh/terravision-action@v1
         with:
-          python-version: '3.10'
-      - name: Install Dependencies
-        run: |
-          sudo apt-get install -y graphviz
-          pip install -r requirements.txt
-      - name: Generate Diagrams
-        run: |
-          terravision draw --source ./terraform --format svg
-          terravision draw --source ./terraform --format png
+          source: ./infrastructure
+          outfile: docs/architecture
+          format: both
+
       - name: Commit Diagrams
         run: |
-          git config user.name "GitHub Actions"
-          git add docs/images/*.{svg,png}
-          git commit -m "Update architecture diagrams" || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/architecture.*
+          git commit -m "Update architecture diagrams [skip ci]" || exit 0
           git push
 ```
 
-**More CI/CD examples**: See [docs/CICD_INTEGRATION.md](docs/CICD_INTEGRATION.md)
+### GitLab CI / Jenkins / Other
+
+Use the Docker image directly — no additional setup needed:
+
+```yaml
+# GitLab CI example
+generate-diagram:
+  image: patrickchugh/terravision:latest
+  script:
+    - terravision draw --source ./infrastructure --outfile architecture --format png
+  artifacts:
+    paths:
+      - architecture.png
+```
+
+**Full CI/CD guide (GitHub, GitLab, Jenkins, Azure DevOps, generic)**: See [docs/CICD_INTEGRATION.md](docs/CICD_INTEGRATION.md)
 
 ---
 
