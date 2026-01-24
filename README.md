@@ -230,7 +230,9 @@ terravision draw --source /path/to/your/terraform/code
 
 ### Use TerraVision simply as a drawing engine with a simple JSON dict
 ```bash
-# Generate diagram from a simple JSON file
+# Generate a JSON graph file as output (default file is architecture.json)
+terravision graphdata --source tests/fixtures/aws_terraform/ecs-ec2  
+# Draw a diagram from a simple pre-existing JSON graph file
 terravision draw --source tests/json/bastion-expected.json
 ```
 
