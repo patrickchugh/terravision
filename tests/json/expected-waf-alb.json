@@ -11,6 +11,7 @@
         "aws_iam_group.of_services"
     ],
     "aws_internet_gateway.igw": [
+        "aws_route_table.public",
         "tv_aws_internet.internet"
     ],
     "aws_lb.elb": [
@@ -18,7 +19,6 @@
         "aws_alb.elb~2"
     ],
     "aws_route_table.public": [
-        "aws_internet_gateway.igw",
         "aws_route_table_association.public_a",
         "aws_route_table_association.public_b"
     ],

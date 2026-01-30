@@ -12,7 +12,9 @@
     ],
     "aws_cloudwatch_log_group.cloudwatch": [],
     "aws_ecr_repository.ecr": [],
-    "aws_eip.elastic_ip": [],
+    "aws_eip.elastic_ip": [
+        "aws_nat_gateway.main"
+    ],
     "aws_eks_cluster.main": [
         "aws_ecr_repository.ecr",
         "aws_eks_node_group.main",
@@ -72,10 +74,10 @@
         "aws_eks_node_group.main"
     ],
     "aws_internet_gateway.igw": [
+        "aws_route_table.public",
         "tv_aws_internet.internet"
     ],
     "aws_nat_gateway.main": [
-        "aws_eip.elastic_ip",
         "aws_internet_gateway.igw",
         "aws_route_table.private"
     ],
@@ -83,7 +85,6 @@
         "aws_route_table_association.private"
     ],
     "aws_route_table.public": [
-        "aws_internet_gateway.igw",
         "aws_route_table_association.public"
     ],
     "aws_route_table_association.private[0]~1": [

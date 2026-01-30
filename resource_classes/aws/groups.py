@@ -13,7 +13,7 @@ class VPCgroup(Cluster):
         vpc_graph_attrs = {
             "style": "solid",
             "margin": "50",
-            "pencolor": "darkgreen",
+            "pencolor": "#8c4fff",
             "rank": "same",
         }
         vpc_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/vpc.png"/></TD><TD>{label}</TD></TR></TABLE>>'

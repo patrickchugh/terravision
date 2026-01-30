@@ -1,6 +1,7 @@
 {
     "aws_cloudwatch_log_group.cloudwatch": [
-        "aws_kinesis_firehose_delivery_stream.main"
+        "aws_kinesis_firehose_delivery_stream.main",
+        "aws_lambda_function.transform"
     ],
     "aws_group.shared_services": [
         "aws_cloudwatch_log_group.cloudwatch",
@@ -25,7 +26,6 @@
     "aws_iam_role_policy_attachment.lambda_basic": [],
     "aws_kinesis_firehose_delivery_stream.main": [],
     "aws_lambda_function.transform": [
-        "aws_cloudwatch_log_group.cloudwatch",
         "aws_kinesis_firehose_delivery_stream.main"
     ],
     "aws_s3_bucket.destination": [

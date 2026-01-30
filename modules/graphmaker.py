@@ -871,10 +871,17 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if consolidated_name not in tfdata["graphdict"].keys():
                 tfdata["graphdict"][consolidated_name] = list()
             # Merge connections using set union (deduplicates automatically)
-            tfdata["graphdict"][consolidated_name] = list(
-                set(tfdata["graphdict"][consolidated_name])
-                | set(tfdata["graphdict"][resource])
-            )
+            # BUT skip connections to resources that ALSO consolidate to the same target
+            # (these are internal links within the consolidated group, not external connections)
+            new_connections = set(tfdata["graphdict"][consolidated_name])
+            for conn in tfdata["graphdict"][resource]:
+                # Skip internal connections - where target also consolidates to same node
+                conn_consolidates_to = helpers.consolidated_node_check(conn, tfdata)
+                if conn_consolidates_to == consolidated_name:
+                    # Both source and target consolidate to same node - skip internal link
+                    continue
+                new_connections.add(conn)
+            tfdata["graphdict"][consolidated_name] = list(new_connections)
             del tfdata["graphdict"][resource]
             # del tfdata["meta_data"][res]
             connected_resource = consolidated_name

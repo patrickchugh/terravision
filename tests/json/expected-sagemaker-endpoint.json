@@ -12,19 +12,18 @@
         "aws_iam_role_policy_attachment.sagemaker_full_access",
         "aws_sagemaker_model.xgboost_model"
     ],
-    "aws_iam_role_policy.lambda_sagemaker_policy": [
-        "aws_sagemaker_endpoint.endpoint"
-    ],
+    "aws_iam_role_policy.lambda_sagemaker_policy": [],
     "aws_iam_role_policy_attachment.sagemaker_full_access": [],
     "aws_lambda_function.predictor": [
-        "aws_cloudwatch_log_group.cloudwatch",
-        "aws_sagemaker_endpoint.endpoint"
+        "aws_cloudwatch_log_group.cloudwatch"
     ],
     "aws_s3_bucket.model_artifacts": [
         "aws_sagemaker_model.xgboost_model"
     ],
-    "aws_sagemaker_endpoint.endpoint": [],
-    "aws_sagemaker_model.xgboost_model": [
-        "aws_sagemaker_endpoint.endpoint"
-    ]
+    "aws_sagemaker_endpoint.endpoint": [
+        "aws_iam_role_policy.lambda_sagemaker_policy",
+        "aws_lambda_function.predictor",
+        "aws_sagemaker_model.xgboost_model"
+    ],
+    "aws_sagemaker_model.xgboost_model": []
 }
