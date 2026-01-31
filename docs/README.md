@@ -699,7 +699,7 @@ Generates architecture diagrams from Terraform code.
 - `--workspace` - Terraform workspace (default: "default")
 - `--varfile` - Path to .tfvars file (can be used multiple times)
 - `--outfile` - Output filename (default: "architecture")
-- `--format` - Output format: png, pdf, svg, bmp (default: png)
+- `--format` - Output format: any Graphviz format (png, svg, pdf, jpg, etc.) (default: png)
 - `--show` - Automatically open diagram after generation
 - `--simplified` - Generate simplified high-level diagram
 - `--annotate` - Path to custom annotations YAML file

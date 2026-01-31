@@ -580,7 +580,9 @@ def cli() -> None:
     default="architecture",
     help="Filename for output diagram (default architecture.dot.png)",
 )
-@click.option("--format", default="png", help="File format (png/pdf/svg/bmp)")
+@click.option(
+    "--format", default="png", help="Output format(png, svg, pdf, jpg, dot etc.)"
+)
 @click.option(
     "--show", is_flag=True, default=False, help="Show diagram after generation"
 )
@@ -619,7 +621,7 @@ def draw(
         workspace: Terraform workspace
         varfile: Variable files tuple
         outfile: Output filename
-        format: Output format (png/pdf/svg/bmp/dot)
+        format: Output format (any Graphviz format: png, svg, pdf, jpg, etc.)
         show: Show diagram after generation
         simplified: Generate simplified diagram
         annotate: Path to annotations file

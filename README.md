@@ -62,7 +62,7 @@ TerraVision automatically converts your Terraform code into professional cloud a
 - Industry-standard cloud provider icons (AWS, GCP, Azure)
 - Automatic resource grouping (VPCs, subnets, security groups)
 - Clean, readable layouts
-- Multiple output formats (PNG, SVG, PDF and DOT)
+- Multiple output formats (PNG, SVG, PDF, JPG, and [many more](#supported-output-formats))
 
 ### 🤖 AI-Powered Refinement
 
@@ -268,12 +268,36 @@ terravision draw --source ./terraform --show
 | Option        | Description                   | Example                    |
 | ------------- | ----------------------------- | -------------------------- |
 | `--source`    | Terraform code location       | `./terraform` or Git URL   |
-| `--format`    | Output format                 | `png`, `svg`, `pdf`, `bmp` |
+| `--format`    | Output format (see [Supported Formats](#supported-output-formats)) | `png`, `svg`, `pdf`, `jpg`, etc. |
 | `--outfile`   | Output filename               | `architecture` (default)   |
 | `--workspace` | Terraform workspace           | `production`, `staging`    |
 | `--varfile`   | Variable file                 | `prod.tfvars`              |
 | `--show`      | Open diagram after generation | (flag)                     |
 | `--debug`     | Enable debug output           | (flag)                     |
+
+### Supported Output Formats
+
+TerraVision supports all output formats provided by Graphviz. Use the `--format` option to specify your desired format:
+
+| Format | Description |
+|--------|-------------|
+| `png` | Portable Network Graphics (default) |
+| `svg` | Scalable Vector Graphics - ideal for web |
+| `pdf` | Portable Document Format - ideal for printing |
+| `jpg` / `jpeg` | JPEG image format |
+| `gif` | Graphics Interchange Format |
+| `bmp` | Windows Bitmap |
+| `eps` | Encapsulated PostScript |
+| `ps` / `ps2` | PostScript |
+| `tif` / `tiff` | Tagged Image File Format |
+| `webp` | WebP image format |
+| `dot` | Graphviz DOT source (for further editing in draw.io or other editors) |
+| `json` | Graphviz JSON format with layout info (different from `graphdata` output) |
+| `xdot` | Extended DOT format with layout information |
+
+For the complete list of supported formats, see the [Graphviz Output Formats documentation](https://graphviz.org/docs/outputs/).
+
+**Note**: `--format json` produces Graphviz's JSON format (includes layout coordinates). For TerraVision's simple graph dictionary format, use the `graphdata` command instead.
 
 ### Export Graph Data
 

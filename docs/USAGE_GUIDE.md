@@ -146,6 +146,30 @@ terravision draw --source tfdata.json --format svg
 
 ## Output Formats
 
+TerraVision supports all output formats provided by Graphviz. Use the `--format` option to specify your desired format.
+
+### Common Formats
+
+| Format | Description | Best For |
+|--------|-------------|----------|
+| `png` | Portable Network Graphics (default) | Documentation, wikis, presentations |
+| `svg` | Scalable Vector Graphics | Web pages, scalable diagrams, editing |
+| `pdf` | Portable Document Format | Reports, printing, professional docs |
+| `jpg` / `jpeg` | JPEG image | Photos, web (lossy compression) |
+| `gif` | Graphics Interchange Format | Simple graphics, animations |
+| `bmp` | Windows Bitmap | Windows applications |
+| `eps` | Encapsulated PostScript | Print publishing, LaTeX |
+| `ps` / `ps2` | PostScript | Print publishing |
+| `tif` / `tiff` | Tagged Image File Format | High-quality archival |
+| `webp` | WebP format | Modern web (good compression) |
+| `dot` | Graphviz DOT source | Further editing, custom rendering |
+| `json` | Graphviz JSON with layout info | Advanced programmatic processing (note: different from `graphdata` output) |
+| `xdot` | Extended DOT with layout | Advanced rendering applications |
+
+For the complete list of supported formats, see the [Graphviz Output Formats documentation](https://graphviz.org/docs/outputs/).
+
+**Note**: `--format json` produces Graphviz's internal JSON format with layout coordinates. For TerraVision's simple graph dictionary (just nodes and connections), use the `graphdata` command instead.
+
 ### PNG (Default)
 - **Use for**: Documentation, wikis, presentations
 - **Pros**: Universal support, good quality
