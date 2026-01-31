@@ -10,10 +10,12 @@ import importlib
 import os
 import pkgutil
 import sys
+import warnings
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
 import click
+from graphviz2drawio import graphviz2drawio
 
 import modules.config_loader as config_loader
 import modules.helpers as helpers
@@ -789,12 +791,24 @@ def render_diagram(
     path_to_postdot = Path.cwd() / f"{outfile}.dot"
     os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
 
-    # Generate final output file
-    click.echo(f"  Output file: {myDiagram.render()}")
-
-    # Clean up temporary files
-    os.remove(path_to_predot)
-    os.remove(path_to_postdot)
+    # Handle draw.io format conversion
+    if format == "drawio":
+        drawio_output = Path.cwd() / f"{outfile}.drawio"
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            xml_content = graphviz2drawio.convert(str(path_to_postdot))
+        with open(drawio_output, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+        click.echo(f"  Output file: {drawio_output}")
+        # Clean up temporary files
+        os.remove(path_to_predot)
+        os.remove(path_to_postdot)
+    else:
+        # Generate final output file using graphviz
+        click.echo(f"  Output file: {myDiagram.render()}")
+        # Clean up temporary files
+        os.remove(path_to_predot)
+        os.remove(path_to_postdot)
 
     click.echo(f"  Completed!")
     setdiagram(None)

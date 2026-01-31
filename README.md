@@ -63,6 +63,7 @@ TerraVision automatically converts your Terraform code into professional cloud a
 - Automatic resource grouping (VPCs, subnets, security groups)
 - Clean, readable layouts
 - Multiple output formats (PNG, SVG, PDF, JPG, and [many more](#supported-output-formats))
+- **Editable draw.io export** - open in draw.io, Lucidchart, or your favorite diagram editor
 
 ### 🤖 AI-Powered Refinement
 
@@ -277,13 +278,14 @@ terravision draw --source ./terraform --show
 
 ### Supported Output Formats
 
-TerraVision supports all output formats provided by Graphviz. Use the `--format` option to specify your desired format:
+TerraVision supports all output formats provided by Graphviz, plus native draw.io export. Use the `--format` option to specify your desired format:
 
 | Format | Description |
 |--------|-------------|
 | `png` | Portable Network Graphics (default) |
 | `svg` | Scalable Vector Graphics - ideal for web |
 | `pdf` | Portable Document Format - ideal for printing |
+| `drawio` | **Editable diagram format** - open in draw.io, Lucidchart, or other diagram editors |
 | `jpg` / `jpeg` | JPEG image format |
 | `gif` | Graphics Interchange Format |
 | `bmp` | Windows Bitmap |
@@ -291,11 +293,26 @@ TerraVision supports all output formats provided by Graphviz. Use the `--format`
 | `ps` / `ps2` | PostScript |
 | `tif` / `tiff` | Tagged Image File Format |
 | `webp` | WebP image format |
-| `dot` | Graphviz DOT source (for further editing in draw.io or other editors) |
+| `dot` | Graphviz DOT source |
 | `json` | Graphviz JSON format with layout info (different from `graphdata` output) |
 | `xdot` | Extended DOT format with layout information |
 
-For the complete list of supported formats, see the [Graphviz Output Formats documentation](https://graphviz.org/docs/outputs/).
+For the complete list of Graphviz formats, see the [Graphviz Output Formats documentation](https://graphviz.org/docs/outputs/).
+
+#### Editable Diagrams with draw.io Format
+
+Generate diagrams you can edit in your favorite diagram editor:
+
+```bash
+terravision draw --source ./terraform --format drawio --outfile my-architecture
+```
+
+This creates a `.drawio` file that can be:
+- Opened directly in [draw.io](https://app.diagrams.net/) (desktop or web)
+- Imported into [Lucidchart](https://www.lucidchart.com/) (File → Import → select .drawio file)
+- Edited in any diagram tool that supports the draw.io/mxGraph format
+
+Perfect for adding annotations, adjusting layouts, or incorporating TerraVision output into existing documentation.
 
 **Note**: `--format json` produces Graphviz's JSON format (includes layout coordinates). For TerraVision's simple graph dictionary format, use the `graphdata` command instead.
 

@@ -7,6 +7,7 @@ from random import randint
 from typing import Dict, List, Union
 from graphviz import Digraph, Source
 import shutil
+import click
 
 # Global contexts for a resource_classes and a cluster.
 # Allowing all nodes to draw to one canvas class
@@ -145,8 +146,19 @@ class Canvas:
         #     raise ValueError(f'"{curvestyle}" is not a valid curvestyle')
         self.dot.graph_attr["splines"] = curvestyle
 
-        if not self._validate_outformat(outformat) and outformat != "dot":
-            raise ValueError(f'"{outformat}" is not a valid output format')
+        if not self._validate_outformat(outformat) and outformat not in (
+            "dot",
+            "drawio",
+        ):
+            valid_formats = ", ".join(self.__outformats + ("dot", "drawio"))
+            click.echo(
+                click.style(
+                    f'\nERROR: "{outformat}" is not a valid output format. Valid formats: {valid_formats}',
+                    fg="red",
+                    bold=True,
+                )
+            )
+            sys.exit(1)
         self.outformat = outformat
 
         # Merge passed in attributes

@@ -363,6 +363,23 @@ docs = ["sphinx (>=5)", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
 test = ["coverage", "mock (>=4)", "pytest (>=7)", "pytest-cov", "pytest-mock (>=3)"]
 
 [[package]]
+name = "graphviz2drawio"
+version = "1.1.0"
+description = "Convert graphviz (dot) files to draw.io / lucid (mxGraph) format. Beautiful and editable graphs in your favorite editor."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "graphviz2drawio-1.1.0-py3-none-any.whl", hash = "sha256:e3b039830b39ad380d335fdca2649b77c1700064f6b8d30fdc62f04de8270e04"},
+    {file = "graphviz2drawio-1.1.0.tar.gz", hash = "sha256:8758b9eefbac5d8c03a0358c0158845235c9c3caa99887f0f6026cfecc2895f2"},
+]
+
+[package.dependencies]
+puremagic = "*"
+pygraphviz = "*"
+"svg.path" = "*"
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -624,6 +641,18 @@ pyyaml = ">=5.1"
 virtualenv = ">=20.10.0"
 
 [[package]]
+name = "puremagic"
+version = "1.30"
+description = "Pure python implementation of magic file detection"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "puremagic-1.30-py3-none-any.whl", hash = "sha256:5eeeb2dd86f335b9cfe8e205346612197af3500c6872dffebf26929f56e9d3c1"},
+    {file = "puremagic-1.30.tar.gz", hash = "sha256:f9ff7ac157d54e9cf3bff1addfd97233548e75e685282d84ae11e7ffee1614c9"},
+]
+
+[[package]]
 name = "pydantic"
 version = "2.12.5"
 description = "Data validation using Python type hints"
@@ -780,6 +809,17 @@ files = [
 typing-extensions = ">=4.14.1"
 
 [[package]]
+name = "pygraphviz"
+version = "1.14"
+description = "Python interface to Graphviz"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "pygraphviz-1.14.tar.gz", hash = "sha256:c10df02377f4e39b00ae17c862f4ee7e5767317f1c6b2dfd04cea6acc7fc2bea"},
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.4"
 description = "pytest: simple powerful testing with Python"
@@ -933,6 +973,21 @@ files = [
 ]
 
 [[package]]
+name = "svg-path"
+version = "7.0"
+description = "SVG path objects and parser"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "svg_path-7.0-py2.py3-none-any.whl", hash = "sha256:447cb1e16a95acea2dd867fe737fa99cb75d587b4fc64dbee709a8dd6891ad9c"},
+    {file = "svg_path-7.0.tar.gz", hash = "sha256:9037486957cb1dcf4375ef42206499a47c111b8ffcbac6e3e55f9d079d875bb0"},
+]
+
+[package.extras]
+test = ["Pillow", "black", "check-manifest", "flake8", "mypy", "pyroma", "pytest", "pytest-cov", "zest.releaser[recommended]"]
+
+[[package]]
 name = "tomli"
 version = "2.3.0"
 description = "A lil' TOML parser"
@@ -1074,4 +1129,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "93d27fe564a9307be6b23c86d744f3b9cc448b50169d22c4ae8fccbde20f666f"
+content-hash = "12e9a1c89247d9d257e0d3aa5b1ce3b514a6b52b448ace2d2e2c599f5c0cdf0d"

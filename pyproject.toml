@@ -22,7 +22,8 @@ dependencies = [
     "ollama>=0.6.1",
     "requests>=2.32.3", 
     "typing-extensions>=4.0.0",
-    "tomli>=2.0.1"
+    "tomli>=2.0.1",
+    "graphviz2drawio>=1.1.0"
 ]
 
 [project.scripts]
@@ -65,7 +66,8 @@ ollama = "^0.6.1"
 requests = ">=2.32.3"
 typing-extensions = "^4.0.0"
 tomli = "^2.0.1"
- 
+graphviz2drawio = "^1.0.0"
+
 [tool.poetry.scripts]
 terravision = "terravision.terravision:main"
 
