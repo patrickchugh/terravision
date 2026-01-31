@@ -64,13 +64,13 @@ jobs:
       #----------------------------------------------
       # install dependencies
       #----------------------------------------------
+      - name: Install Graphviz and development headers
+        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev
       - name: Install python dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --with test
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
-      - name: Setup Graphviz
-        uses: ts-graphviz/setup-graphviz@v1
       - name: Mock ssh file
         run :
           touch id_rsa.pub
