@@ -686,21 +686,22 @@ def link_via_shared_child(
     target_pattern: str,
     remove_intermediate: bool = True,
 ) -> Dict[str, Any]:
-    """Create direct links when source and target both connect to same intermediate.
+    """Create direct links when an intermediate node connects to source and target connects to that intermediate.
 
-    Detects pattern where both source and target connect to the same intermediate node,
-    then creates a direct source → target connection.
+    Detects pattern: intermediate → source, target → intermediate
+    Then creates: source → target
 
-    Example: CloudFront → Fargate, ALB → Fargate becomes CloudFront → ALB
+    Example: If node X connects to CloudFront, and ALB connects to node X,
+             creates CloudFront → ALB
 
     Args:
         tfdata: Terraform data dictionary
-        source_pattern: Pattern to match source resources (e.g., "aws_cloudfront")
-        target_pattern: Pattern to match target resources (e.g., "aws_lb")
+        source_pattern: Pattern to match source resources (receives incoming from intermediate)
+        target_pattern: Pattern to match target resources (connects to intermediate)
         remove_intermediate: Whether to remove intermediate connections and clean up
 
     Returns:
-        Updated tfdata with direct links via shared children
+        Updated tfdata with direct links
     """
     from modules.config.cloud_config_aws import AWS_GROUP_NODES
 
@@ -708,14 +709,14 @@ def link_via_shared_child(
     sources = sorted([s for s in graphdict.keys() if source_pattern in s])
     targets = sorted([s for s in graphdict.keys() if target_pattern in s])
 
-    # For each node, check if it connects to both source and target
+    # For each node, check if it connects to source and target connects to it
     for node in sorted(graphdict.keys()):
         connections = graphdict[node]
 
         for source in sources:
-            if source in connections:
+            if source in connections:  # node → source
                 for target in targets:
-                    # Check if node also connects to target (node is parent of target)
+                    # Check if target connects to node (target → node)
                     if node in graphdict.get(target, []):
                         # Create direct source → target link
                         if target not in graphdict[source]:
@@ -734,6 +735,56 @@ def link_via_shared_child(
                                 if parent_type not in AWS_GROUP_NODES:
                                     if target in graphdict[parent]:
                                         graphdict[parent].remove(target)
+
+    return tfdata
+
+
+def link_via_common_connection(
+    tfdata: Dict[str, Any],
+    source_pattern: str,
+    target_pattern: str,
+    remove_shared_connection: bool = False,
+) -> Dict[str, Any]:
+    """Create direct links when source and target both connect TO the same node.
+
+    Detects pattern: source → shared, target → shared
+    Then creates: source → target
+
+    Example: API Gateway → lambda_permission, Lambda → lambda_permission
+             becomes API Gateway → Lambda
+
+    Args:
+        tfdata: Terraform data dictionary
+        source_pattern: Pattern to match source resources (e.g., "aws_api_gateway")
+        target_pattern: Pattern to match target resources (e.g., "aws_lambda_function")
+        remove_shared_connection: Whether to remove the shared connection from source
+
+    Returns:
+        Updated tfdata with direct links via common connections
+    """
+    graphdict = tfdata["graphdict"]
+    sources = sorted([s for s in graphdict.keys() if source_pattern in s])
+    targets = sorted([s for s in graphdict.keys() if target_pattern in s])
+
+    # Find common connections: nodes that both source and target connect TO
+    for source in sources:
+        source_connections = set(graphdict.get(source, []))
+        for target in targets:
+            if source == target:
+                continue
+            target_connections = set(graphdict.get(target, []))
+            # Find nodes that both source and target connect to
+            shared_connections = source_connections & target_connections
+            if shared_connections:
+                # Both connect to same node - create source → target link
+                if target not in graphdict[source]:
+                    graphdict[source].append(target)
+
+                if remove_shared_connection:
+                    # Remove shared connections from source
+                    for conn in shared_connections:
+                        if conn in graphdict[source]:
+                            graphdict[source].remove(conn)
 
     return tfdata
 

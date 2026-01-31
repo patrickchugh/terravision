@@ -136,6 +136,19 @@ RESOURCE_HANDLER_CONFIGS = {
         ],
         "additional_handler_function": "handle_cf_origins",
     },
+    "aws_api_gateway_rest_api": {
+        "description": "Config-Only: Link consolidated API Gateway to Lambda via shared lambda_permission connection",
+        "transformations": [
+            {
+                "operation": "link_via_common_connection",
+                "params": {
+                    "source_pattern": "aws_api_gateway_integration",
+                    "target_pattern": "aws_lambda_function",
+                    "remove_shared_connection": False,
+                },
+            },
+        ],
+    },
     "aws_subnet": {
         "description": "Create availability zone nodes and link to subnets",
         "handler_execution_order": "before",  # Run custom function FIRST to prepare metadata
