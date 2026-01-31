@@ -50,6 +50,8 @@ jobs:
       #----------------------------------------------
       # install dependencies
       #----------------------------------------------
+      - name: Install Graphviz and development headers
+        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev
       - name: Install python dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
