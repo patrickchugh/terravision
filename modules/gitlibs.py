@@ -367,7 +367,29 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     
     # Extract the base URL without subfolder (before //) for cache path generation
     # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly
-    base_source_url = sourceURL.split("//")[0] if "//" in sourceURL else sourceURL
+    base_source_url = sourceURL
+    
+    # Handle git:: prefixed URLs (e.g., git::https://...//subfolder)
+    if sourceURL.startswith("git::"):
+        remaining_after_prefix = sourceURL[5:]  # Remove "git::" prefix
+        if remaining_after_prefix.startswith(("http://", "https://")):
+            # git::https:// URL - find protocol end in remaining part, then check for subfolder //
+            protocol_end = remaining_after_prefix.find("//") + 2
+            after_protocol = remaining_after_prefix[protocol_end:]
+            if "//" in after_protocol:
+                base_source_url = "git::" + remaining_after_prefix[:protocol_end] + after_protocol.split("//", 1)[0]
+        elif "//" in remaining_after_prefix:
+            # git::ssh or other format with subfolder
+            base_source_url = "git::" + remaining_after_prefix.split("//", 1)[0]
+    elif sourceURL.startswith(("http://", "https://")):
+        # For HTTP(S) URLs, find protocol end then check for // in remaining part
+        protocol_end = sourceURL.find("//") + 2
+        remaining = sourceURL[protocol_end:]
+        if "//" in remaining:
+            base_source_url = sourceURL[:protocol_end] + remaining.split("//", 1)[0]
+    elif "//" in sourceURL:
+        # For non-HTTP URLs (registry, etc.), split on //
+        base_source_url = sourceURL.split("//", 1)[0]
     
     # Sanitize repo name for cross-platform filesystem compatibility
     reponame = (
@@ -379,7 +401,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     codepath = os.path.join(MODULE_DIR, reponame) + f";{module};"
 
     # Return cached module if it exists
-    if os.path.exists(codepath) and module != "main":
+    if os.path.exists(codepath):
         return _handle_cached_module(codepath, tempdir, module, reponame, subfolder)
 
     # Clone new module
