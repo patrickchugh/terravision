@@ -655,6 +655,8 @@ def handle_numbered_nodes(
     all_matching_list = helpers.find_all_resources_containing(
         tfdata["node_list"], resource_node.split("[")[0] + "["
     )
+    if not all_matching_list:
+        return meta_data
     resource_count = len(all_matching_list)
     # Copy metadata to each numbered instance
     for actual_name in all_matching_list:

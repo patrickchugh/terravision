@@ -558,11 +558,23 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for k, v in tfdata["graphdict"].items()
         if helpers.get_no_module_name(k).startswith("aws_subnet.")
     ]
-    # Link subnets to VPCs based on CIDR overlap
+    # Link subnets to VPCs based on CIDR overlap (within same module only)
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:
             vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
+            # Extract module prefix (e.g., "module.gitlab_vpc." from "module.gitlab_vpc.aws_vpc.vpc")
+            vpc_module = (
+                ".".join(vpc.split(".")[:2]) + "." if vpc.startswith("module.") else ""
+            )
             for subnet in subnet_resources:
+                # Only connect subnets in the same module as the VPC
+                subnet_module = (
+                    ".".join(subnet.split(".")[:2]) + "."
+                    if subnet.startswith("module.")
+                    else ""
+                )
+                if vpc_module != subnet_module:
+                    continue
                 subnet_cidr = ipaddr.IPNetwork(
                     tfdata["meta_data"][subnet]["cidr_block"]
                 )

@@ -4,12 +4,13 @@ Tests the main commands (draw, graphdata) against real Terraform examples
 from the GitHub repository to ensure end-to-end functionality.
 """
 
+import os
 import subprocess
 import platform
 import json
 import pytest
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 # Platform detection for cross-platform command execution
 WINDOWS = platform.system() == "Windows"
@@ -19,13 +20,16 @@ JSON_DIR = Path(__file__).parent / "json"
 
 
 def run_terravision(
-    args: List[str], cwd: Optional[str] = None
+    args: List[str],
+    cwd: Optional[str] = None,
+    extra_env: Optional[Dict[str, str]] = None,
 ) -> subprocess.CompletedProcess:
     """Execute terravision command consistently across platforms.
 
     Args:
         args: Command line arguments to pass to terravision
         cwd: Working directory for command execution
+        extra_env: Additional environment variables to set for the subprocess
 
     Returns:
         CompletedProcess object with stdout, stderr, and returncode
@@ -36,7 +40,12 @@ def run_terravision(
     else:
         cmd = [str(PARENT_DIR / "terravision/terravision.py")] + args
 
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    env = None
+    if extra_env:
+        env = os.environ.copy()
+        env.update(extra_env)
+
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd, env=env)
     return result
 
 
@@ -252,6 +261,61 @@ def test_draw_command_basic(repo_path: str, tmp_path: Path) -> None:
 
     assert result.returncode == 0, f"Draw command failed: {result.stderr}"
     assert (tmp_path / f"{output_name}.dot.png").exists(), "PNG output not created"
+
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures" / "aws_terraform"
+
+# Terraform Cloud token for module source tests (read from env or use default test token)
+TFC_ENV = {
+    "TF_TOKEN_app_terraform_io": os.environ.get(
+        "TF_TOKEN_app_terraform_io",
+        "0B5XyeGU1NWJBQ.atlasv1.h3D7X0z5k3w6IDYpEsjvmMhdRJIXMsqt9VV80OdkzYXOCIlwk5v94YNOzymlQzrvFX4",
+    )
+}
+
+
+@pytest.mark.slow
+def test_module_sources(tmp_path: Path) -> None:
+    """Test all module source formats are parsed correctly, including from cache.
+
+    Runs graphdata twice: the first run downloads modules and validates output
+    against expected JSON; the second run uses cached modules to catch cache
+    path bugs (e.g., doubled paths causing FileNotFoundError).
+    """
+    source_dir = FIXTURES_DIR / "module_sources"
+    output_file = tmp_path / "output.json"
+    expected_path = JSON_DIR / "expected-module-sources.json"
+
+    with open(expected_path) as f:
+        expected = json.load(f)
+
+    for run_num in range(1, 3):
+        if output_file.exists():
+            output_file.unlink()
+
+        result = run_terravision(
+            [
+                "graphdata",
+                "--source",
+                str(source_dir),
+                "--outfile",
+                output_file.name,
+            ],
+            cwd=str(tmp_path),
+            extra_env=TFC_ENV,
+        )
+
+        assert (
+            result.returncode == 0
+        ), f"graphdata failed on run {run_num}: {result.stderr}"
+        assert output_file.exists(), f"Output file not created on run {run_num}"
+
+        with open(output_file) as f:
+            actual = json.load(f)
+
+        assert (
+            actual == expected
+        ), f"JSON output doesn't match expected on run {run_num}"
 
 
 if __name__ == "__main__":

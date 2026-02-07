@@ -250,24 +250,24 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
     az_id = subnet_metadata.get("availability_zone_id", "")
     region = subnet_metadata.get("region")
 
-    # Use availability_zone_id if availability_zone is "True" or generic
-    if az_id and (az_value == True or str(az_value) == "True"):
+    # Boolean True means "computed after apply" in Terraform plan — not a real value
+    _is_computed = lambda v: v is True or str(v) == "True"
+
+    if az_id and not _is_computed(az_id):
         # Use availability_zone_id directly - it's already unique per AZ
         az = "aws_az.availability_zone_" + str(az_id)
         az = az.replace("-", "_")
         # Don't add suffix - the zone ID is already unique
-    else:
-        # Legacy path: use availability_zone and add suffix for zone letter
+    elif az_value and not _is_computed(az_value):
+        # Use availability_zone value and add suffix for zone letter
         az = "aws_az.availability_zone_" + str(az_value)
         az = az.replace("-", "_")
-
-        # Replace placeholder with actual region (for legacy cases)
-        if region and "True" in az:
-            az = az.replace("True", region)
-        elif ".True" in az:
-            az = az.replace(".True", ".availability_zone")
-
-        # Add suffix based on zone letter (e.g., 'a' -> ~1, 'b' -> ~2)
+        az = _add_suffix(az)
+    else:
+        # No real AZ info - use region if available, else "unknown"
+        fallback = region if region else "unknown"
+        az = "aws_az.availability_zone_" + str(fallback)
+        az = az.replace("-", "_")
         az = _add_suffix(az)
 
     return az
@@ -1663,7 +1663,6 @@ def _fill_empty_groups_with_space(
     Returns:
         Updated graphdict with orphaned group nodes connected to blank nodes
     """
-    suffix_pattern = r"~(\d+)$"
     counter = 1
 
     for resource in list(graphdict.keys()):
@@ -1672,12 +1671,10 @@ def _fill_empty_groups_with_space(
         if resource_type == "aws_subnet" or resource_type == "aws_vpc":
             # Check if resource has any outgoing connections
             if not graphdict.get(resource):
-                # Extract suffix if present, otherwise use sequential counter
-                match = re.search(suffix_pattern, resource)
-                suffix = f"~{match.group(1)}" if match else f"~{counter}"
-                if not match:
-                    counter += 1
-                blank_node = f"tv_blank.empty{suffix}"
+                # Always use a unique counter to avoid shared blank nodes
+                # across multiple VPCs/subnets (causes overlapping clusters)
+                blank_node = f"tv_blank.empty~{counter}"
+                counter += 1
                 graphdict[resource] = [blank_node]
                 # Ensure blank node exists in graph
                 if blank_node not in graphdict:
