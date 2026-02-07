@@ -361,9 +361,39 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     """
     click.echo(click.style("\nLoading Sources..", fg="white", bold=True))
 
+    # Parse the URL to extract subfolder before sanitizing
+    # This is needed to handle registry modules with subfolders (e.g., module//subfolder)
+    githubURL, subfolder, git_tag = get_clone_url(sourceURL)
+    
+    # Extract the base URL without subfolder (before //) for cache path generation
+    # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly
+    base_source_url = sourceURL
+    
+    # Handle git:: prefixed URLs (e.g., git::https://...//subfolder)
+    if sourceURL.startswith("git::"):
+        remaining_after_prefix = sourceURL[5:]  # Remove "git::" prefix
+        if remaining_after_prefix.startswith(("http://", "https://")):
+            # git::https:// URL - find protocol end in remaining part, then check for subfolder //
+            protocol_end = remaining_after_prefix.find("//") + 2
+            after_protocol = remaining_after_prefix[protocol_end:]
+            if "//" in after_protocol:
+                base_source_url = "git::" + remaining_after_prefix[:protocol_end] + after_protocol.split("//", 1)[0]
+        elif "//" in remaining_after_prefix:
+            # git::ssh or other format with subfolder
+            base_source_url = "git::" + remaining_after_prefix.split("//", 1)[0]
+    elif sourceURL.startswith(("http://", "https://")):
+        # For HTTP(S) URLs, find protocol end then check for // in remaining part
+        protocol_end = sourceURL.find("//") + 2
+        remaining = sourceURL[protocol_end:]
+        if "//" in remaining:
+            base_source_url = sourceURL[:protocol_end] + remaining.split("//", 1)[0]
+    elif "//" in sourceURL:
+        # For non-HTTP URLs (registry, etc.), split on //
+        base_source_url = sourceURL.split("//", 1)[0]
+    
     # Sanitize repo name for cross-platform filesystem compatibility
     reponame = (
-        sourceURL.replace("/", "_")
+        base_source_url.replace("/", "_")
         .replace("?", "_")
         .replace(":", "_")
         .replace("=", "_")
@@ -371,8 +401,8 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     codepath = os.path.join(MODULE_DIR, reponame) + f";{module};"
 
     # Return cached module if it exists
-    if os.path.exists(codepath) and module != "main":
-        return _handle_cached_module(codepath, tempdir, module, reponame)
+    if os.path.exists(codepath):
+        return _handle_cached_module(codepath, tempdir, module, reponame, subfolder)
 
     # Clone new module
     if module != "main":
@@ -380,14 +410,11 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
 
     # Determine if source is remote URL or local directory
     if helpers.check_for_domain(str(sourceURL)):
-        # Remote source: parse URL and clone
-        githubURL, subfolder, git_tag = get_clone_url(sourceURL)
+        # Remote source: clone the repository
         _clone_full_repo(githubURL, subfolder, git_tag, codepath)
     else:
-        # Local path: extract subfolder and copy
-        gitelements = helpers.extract_subfolder_from_repo(sourceURL)
-        subfolder = gitelements[1]
-        _clone_full_repo(sourceURL, subfolder, "", codepath)
+        # Local path or registry URL: clone the repository
+        _clone_full_repo(githubURL, subfolder, git_tag, codepath)
         click.echo(
             click.style(
                 f"  Retrieved code from registry source: {sourceURL}", fg="green"
@@ -398,7 +425,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
 
 
 def _handle_cached_module(
-    codepath: str, tempdir: str, module: str, reponame: str
+    codepath: str, tempdir: str, module: str, reponame: str, subfolder: str
 ) -> str:
     """Handle retrieval of cached module.
 
@@ -410,9 +437,10 @@ def _handle_cached_module(
         tempdir: Temporary directory for module copies
         module: Module name
         reponame: Repository name
+        subfolder: Subfolder path within the module (empty string if none)
 
     Returns:
-        Path to cached module directory
+        Path to cached module directory including subfolder
     """
     click.echo(
         f"  Skipping download of module {reponame}, "
@@ -435,7 +463,7 @@ def _handle_cached_module(
             codepath_module = codepath
         shutil.copytree(codepath_module, temp_module_path)
 
-    return os.path.join(codepath_module, "")
+    return os.path.join(codepath_module, subfolder)
 
 
 def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) -> str:
