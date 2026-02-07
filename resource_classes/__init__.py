@@ -48,7 +48,34 @@ def setcluster(cluster):
 class Canvas:
     __directions = ("TB", "BT", "LR", "RL")
     __curvestyles = ("ortho", "curved")
-    __outformats = ("png", "jpg", "svg", "pdf")
+    __outformats = (
+        "bmp",
+        "dot",
+        "dot_json",
+        "eps",
+        "gif",
+        "gv",
+        "imap",
+        "jpeg",
+        "jpg",
+        "json",
+        "json0",
+        "pdf",
+        "plain",
+        "plain-ext",
+        "png",
+        "ps",
+        "ps2",
+        "psd",
+        "svg",
+        "svg_inline",
+        "tif",
+        "tiff",
+        "xdot",
+        "xdot1.2",
+        "xdot1.4",
+        "xdot_json",
+    )
 
     # fmt: off
     _default_graph_attrs = {
@@ -146,14 +173,10 @@ class Canvas:
         #     raise ValueError(f'"{curvestyle}" is not a valid curvestyle')
         self.dot.graph_attr["splines"] = curvestyle
 
-        if not self._validate_outformat(outformat) and outformat not in (
-            "dot",
-            "drawio",
-        ):
-            valid_formats = ", ".join(self.__outformats + ("dot", "drawio"))
+        if not self._validate_outformat(outformat) and outformat != "drawio":
             click.echo(
                 click.style(
-                    f'\nERROR: "{outformat}" is not a valid output format. Valid formats: {valid_formats}',
+                    f'\nERROR: "{outformat}" is not a valid output format. Run "dot -T?" to see supported formats.',
                     fg="red",
                     bold=True,
                 )
