@@ -30,6 +30,7 @@ JSON_DIR = Path(__file__).parent / "json"
         "expected-elasticache-replication.json",
         "expected-cognito-api-gateway.json",
         "expected-waf-alb.json",
+        "expected-module-sources.json",
     ],
 )
 def test_no_shared_connections_in_expected_outputs(expected_file: str) -> None:

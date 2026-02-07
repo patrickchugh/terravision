@@ -92,6 +92,22 @@ def handle_readme_source(resp: requests.Response) -> str:
     return githubURL
 
 
+# Known git hosting domains that should be cloned directly (not via registry API)
+GIT_HOSTING_DOMAINS = ["github.com", "gitlab.com", "bitbucket.org"]
+
+
+def _is_git_hosting_url(sourceURL: str) -> bool:
+    """Check if URL is for a known git hosting service.
+
+    Args:
+        sourceURL: Source URL to check
+
+    Returns:
+        True if URL contains a known git hosting domain
+    """
+    return any(domain in sourceURL for domain in GIT_HOSTING_DOMAINS)
+
+
 def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
     """Parse source URL and extract git clone URL, subfolder, and tag.
 
@@ -113,11 +129,13 @@ def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
     if is_git_prefix:
         return _handle_git_prefix_url(sourceURL)
 
-    # Check for direct domain URLs (GitHub, GitLab, etc.)
-    if helpers.check_for_domain(sourceURL):
+    # Check for direct domain URLs (GitHub, GitLab, Bitbucket, etc.)
+    # Only route to domain handler for known git hosting providers;
+    # other domains (e.g., app.terraform.io) are private registries.
+    if helpers.check_for_domain(sourceURL) and _is_git_hosting_url(sourceURL):
         return _handle_domain_url(sourceURL)
 
-    # Default to Terraform Registry or plain HTTP Module URLs
+    # Default to Terraform Registry (public or private) or plain HTTP Module URLs
     return _handle_registry_url(sourceURL)
 
 
@@ -150,16 +168,30 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
     gitaddress = gitaddress.replace("git@github.com/", "git@github.com:")
     gitaddress = gitaddress.replace("git@gitlab.com/", "git@gitlab.com:")
 
-    # Extract subfolder if present (indicated by //)
-    has_subfolder = "//" in gitaddress and not gitaddress.startswith("https://")
-    if has_subfolder:
-        subfolder_array = gitaddress.split("//")
-        subfolder = subfolder_array[1].split("?")[0]
-        gitaddress = subfolder_array[0]
-    elif "?ref" in gitaddress:
-        # Extract git tag/branch reference
-        gitaddress = gitaddress.split("?ref=")[0]
-        git_tag = sourceURL.split("?ref=")[1]
+    # Extract subfolder if present (indicated by // after protocol)
+    if gitaddress.startswith(("https://", "http://")):
+        # For HTTPS URLs, skip the protocol // and look for subfolder //
+        protocol_end = gitaddress.find("//") + 2
+        remaining = gitaddress[protocol_end:]
+        has_subfolder = "//" in remaining
+        if has_subfolder:
+            repo_part, subfolder_part = remaining.split("//", 1)
+            subfolder = subfolder_part.split("?")[0]
+            gitaddress = gitaddress[:protocol_end] + repo_part
+            if "?ref" in subfolder_part:
+                git_tag = subfolder_part.split("?ref=")[1]
+        elif "?ref" in gitaddress:
+            git_tag = gitaddress.split("?ref=")[1]
+            gitaddress = gitaddress.split("?ref=")[0]
+    else:
+        has_subfolder = "//" in gitaddress
+        if has_subfolder:
+            subfolder_array = gitaddress.split("//")
+            subfolder = subfolder_array[1].split("?")[0]
+            gitaddress = subfolder_array[0]
+        elif "?ref" in gitaddress:
+            gitaddress = gitaddress.split("?ref=")[0]
+            git_tag = sourceURL.split("?ref=")[1]
 
     return gitaddress, subfolder, git_tag
 
@@ -201,24 +233,30 @@ def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
             githubURL = parts[0]
             subfolder = parts[1].split("?")[0] if len(parts) > 1 else ""
     else:
-        # URL with path segments: domain/owner/repo/subfolder/path
-        parts = sourceURL.rstrip("/").split("/")
-        if sourceURL.startswith(("http://", "https://")):
-            # HTTPS URL: https://domain/owner/repo[.git] or https://domain/owner/repo/subfolder
-            if len(parts) > 5:
-                githubURL = "/".join(parts[:5])
-                subfolder = "/".join(parts[5:])
+        # Check for // subfolder in non-HTTP URLs (e.g., github.com/owner/repo//subfolder)
+        if "//" in sourceURL and not sourceURL.startswith(("http://", "https://")):
+            parts = sourceURL.split("//", 1)
+            githubURL = "https://" + parts[0]
+            subfolder = parts[1].split("?")[0]
+        else:
+            # URL with path segments: domain/owner/repo/subfolder/path
+            parts = sourceURL.rstrip("/").split("/")
+            if sourceURL.startswith(("http://", "https://")):
+                # HTTPS URL: https://domain/owner/repo[.git] or https://domain/owner/repo/subfolder
+                if len(parts) > 5:
+                    githubURL = "/".join(parts[:5])
+                    subfolder = "/".join(parts[5:])
+                else:
+                    githubURL = sourceURL
+            elif len(parts) > 3:
+                # Non-HTTP URL: domain/owner/repo/subfolder
+                githubURL = "/".join(parts[:3])
+                subfolder = "/".join(parts[3:])
+                githubURL = "https://" + githubURL
             else:
                 githubURL = sourceURL
-        elif len(parts) > 3:
-            # Non-HTTP URL: domain/owner/repo/subfolder
-            githubURL = "/".join(parts[:3])
-            subfolder = "/".join(parts[3:])
-            githubURL = "https://" + githubURL
-        else:
-            githubURL = sourceURL
-            if "http" not in githubURL:
-                githubURL = "https://" + githubURL
+                if "http" not in githubURL:
+                    githubURL = "https://" + githubURL
 
     return githubURL, subfolder, git_tag
 
@@ -241,26 +279,29 @@ def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
 
     # Determine if using Terraform Enterprise or public registry
     if check_for_domain(sourceURL):
-        # Terraform Enterprise private registry
-        domain = urlparse("https://" + sourceURL).netloc
-        registrypath = sourceURL.split(domain)
+        # Terraform Enterprise / Terraform Cloud private registry
+        hostname = urlparse("https://" + sourceURL).netloc
+        registrypath = sourceURL.split(hostname)
         gitaddress = registrypath[1]
-        domain = "https://" + domain + "/api/registry/v1/modules/"
+        domain = "https://" + hostname + "/api/registry/v1/modules/"
         click.echo(f"    Assuming Terraform Enterprise API Server URL: {domain}")
 
-        # Require authentication token for private registry
-        if "TFE_TOKEN" not in os.environ:
+        # Build TF_TOKEN_* env var name (dots/dashes become underscores)
+        token_env_var = "TF_TOKEN_" + hostname.replace(".", "_").replace("-", "_")
+        token = os.environ.get(token_env_var)
+
+        if not token:
             click.echo(
                 click.style(
-                    "\nERROR: No TFE_TOKEN environment variable set. "
-                    "Unable to authorise with Terraform Enterprise Server",
+                    f"\nERROR: No {token_env_var} environment variable set. "
+                    f"Unable to authorise with {hostname}",
                     fg="red",
                     bold=True,
                 )
             )
             exit()
 
-        headers = {"Authorization": "bearer " + os.environ["TFE_TOKEN"]}
+        headers = {"Authorization": "bearer " + token}
     else:
         # Public Terraform Registry
         domain = "https://registry.terraform.io/v1/modules/"
@@ -364,11 +405,11 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     # Parse the URL to extract subfolder before sanitizing
     # This is needed to handle registry modules with subfolders (e.g., module//subfolder)
     githubURL, subfolder, git_tag = get_clone_url(sourceURL)
-    
+
     # Extract the base URL without subfolder (before //) for cache path generation
     # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly
     base_source_url = sourceURL
-    
+
     # Handle git:: prefixed URLs (e.g., git::https://...//subfolder)
     if sourceURL.startswith("git::"):
         remaining_after_prefix = sourceURL[5:]  # Remove "git::" prefix
@@ -377,7 +418,11 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
             protocol_end = remaining_after_prefix.find("//") + 2
             after_protocol = remaining_after_prefix[protocol_end:]
             if "//" in after_protocol:
-                base_source_url = "git::" + remaining_after_prefix[:protocol_end] + after_protocol.split("//", 1)[0]
+                base_source_url = (
+                    "git::"
+                    + remaining_after_prefix[:protocol_end]
+                    + after_protocol.split("//", 1)[0]
+                )
         elif "//" in remaining_after_prefix:
             # git::ssh or other format with subfolder
             base_source_url = "git::" + remaining_after_prefix.split("//", 1)[0]
@@ -390,7 +435,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
     elif "//" in sourceURL:
         # For non-HTTP URLs (registry, etc.), split on //
         base_source_url = sourceURL.split("//", 1)[0]
-    
+
     # Sanitize repo name for cross-platform filesystem compatibility
     reponame = (
         base_source_url.replace("/", "_")
@@ -463,7 +508,10 @@ def _handle_cached_module(
             codepath_module = codepath
         shutil.copytree(codepath_module, temp_module_path)
 
-    return os.path.join(codepath_module, subfolder)
+    # When subfolder is specified, navigate from codepath root (matches fresh clone behavior)
+    if subfolder:
+        return os.path.join(codepath, subfolder)
+    return codepath_module
 
 
 def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) -> str:

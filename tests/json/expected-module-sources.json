@@ -1,0 +1,116 @@
+{
+    "aws_alb.elb~1": [],
+    "aws_az.availability_zone_eu_west_1a~1": [
+        "module.gitlab_vpc.aws_subnet.private[0]~1",
+        "module.gitlab_vpc.aws_subnet.public[0]~1"
+    ],
+    "aws_az.availability_zone_us_east_1": [
+        "module.local_vpc.aws_subnet.local"
+    ],
+    "aws_group.shared_services": [
+        "aws_iam_group.of_services",
+        "aws_kms_key.kms"
+    ],
+    "aws_internet_gateway.igw": [
+        "module.gitlab_vpc.aws_route.public_internet_gateway~1",
+        "tv_aws_internet.internet"
+    ],
+    "aws_kms_key.kms": [],
+    "aws_lb.elb": [
+        "aws_alb.elb~1"
+    ],
+    "module.git_https_iam_account_ref.aws_iam_account_alias.this": [],
+    "module.git_https_iam_account_ref.aws_iam_account_password_policy.this[0]~1": [],
+    "module.git_https_iam_group.aws_iam_group.this[0]~1": [],
+    "module.git_https_iam_group.aws_iam_group_policy_attachment.this[0]~1": [],
+    "module.git_https_iam_group.aws_iam_policy.this[0]~1": [],
+    "module.git_https_iam_policy.aws_iam_policy.policy[0]~1": [],
+    "module.git_https_readonly_ref.aws_iam_policy.policy[0]~1": [],
+    "module.git_https_vpc_ref.aws_default_network_acl.this[0]~1": [],
+    "module.git_https_vpc_ref.aws_default_route_table.default[0]~1": [],
+    "module.git_https_vpc_ref.aws_default_security_group.this[0]~1": [],
+    "module.git_https_vpc_ref.aws_vpc.this[0]~1": [
+        "tv_blank.empty~1"
+    ],
+    "module.git_https_vpc_ref_v5.aws_default_network_acl.this[0]~1": [],
+    "module.git_https_vpc_ref_v5.aws_default_route_table.default[0]~1": [],
+    "module.git_https_vpc_ref_v5.aws_default_security_group.this[0]~1": [],
+    "module.git_https_vpc_ref_v5.aws_vpc.this[0]~1": [
+        "tv_blank.empty~2"
+    ],
+    "module.github_short.aws_s3_bucket.this[0]~1": [],
+    "module.github_short.aws_s3_bucket_public_access_block.this[0]~1": [],
+    "module.github_short_path.aws_iam_role.this[0]~1": [],
+    "module.github_short_ref.aws_default_network_acl.this[0]~1": [],
+    "module.github_short_ref.aws_default_route_table.default[0]~1": [],
+    "module.github_short_ref.aws_default_security_group.this[0]~1": [],
+    "module.github_short_ref.aws_vpc.this[0]~1": [
+        "tv_blank.empty~3"
+    ],
+    "module.github_short_subfolder.aws_iam_access_key.this[0]~1": [],
+    "module.github_short_subfolder.aws_iam_user.this[0]~1": [],
+    "module.github_short_subfolder.aws_iam_user_login_profile.this[0]~1": [],
+    "module.gitlab_s3.aws_s3_bucket.standard_bucket": [
+        "aws_kms_key.kms",
+        "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access"
+    ],
+    "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access": [],
+    "module.gitlab_vpc.aws_route.public_internet_gateway~1": [
+        "module.gitlab_vpc.aws_route_table.public~1"
+    ],
+    "module.gitlab_vpc.aws_route_table.private[0]~1": [],
+    "module.gitlab_vpc.aws_route_table.public~1": [],
+    "module.gitlab_vpc.aws_route_table_association.private[0]~1": [
+        "module.gitlab_vpc.aws_route_table.private[0]~1"
+    ],
+    "module.gitlab_vpc.aws_route_table_association.public[0]~1": [
+        "module.gitlab_vpc.aws_route_table.public~1"
+    ],
+    "module.gitlab_vpc.aws_subnet.private[0]~1": [
+        "module.gitlab_vpc.aws_route_table_association.private[0]~1"
+    ],
+    "module.gitlab_vpc.aws_subnet.public[0]~1": [
+        "aws_lb.elb",
+        "module.gitlab_vpc.aws_route_table_association.public[0]~1"
+    ],
+    "module.gitlab_vpc.aws_vpc.vpc": [
+        "aws_az.availability_zone_eu_west_1a~1",
+        "aws_internet_gateway.igw",
+        "module.gitlab_vpc.aws_route_table.private[0]~1",
+        "module.gitlab_vpc.aws_route_table.public~1",
+        "module.gitlab_vpc.aws_vpc_dhcp_options_association.vpc_dhcp"
+    ],
+    "module.gitlab_vpc.aws_vpc_dhcp_options.vpc": [
+        "module.gitlab_vpc.aws_vpc_dhcp_options_association.vpc_dhcp"
+    ],
+    "module.gitlab_vpc.aws_vpc_dhcp_options_association.vpc_dhcp": [],
+    "module.iam-group.aws_iam_group.this[0]~1": [],
+    "module.iam-group.aws_iam_group_policy_attachment.this[0]~1": [],
+    "module.iam-group.aws_iam_policy.this[0]~1": [],
+    "module.iam-policy.aws_iam_policy.policy[0]~1": [],
+    "module.iam-user.aws_iam_access_key.this[0]~1": [],
+    "module.iam-user.aws_iam_user.this[0]~1": [],
+    "module.iam-user.aws_iam_user_login_profile.this[0]~1": [],
+    "module.local_vpc.aws_subnet.local": [
+        "tv_blank.empty~4"
+    ],
+    "module.local_vpc.aws_vpc.local": [
+        "aws_az.availability_zone_us_east_1"
+    ],
+    "module.registry_subfolder.aws_iam_access_key.this[0]~1": [],
+    "module.registry_subfolder.aws_iam_user.this[0]~1": [],
+    "module.registry_subfolder.aws_iam_user_login_profile.this[0]~1": [],
+    "module.registry_vpc.aws_default_network_acl.this[0]~1": [],
+    "module.registry_vpc.aws_default_route_table.default[0]~1": [],
+    "module.registry_vpc.aws_default_security_group.this[0]~1": [],
+    "module.registry_vpc.aws_vpc.this[0]~1": [
+        "tv_blank.empty~5"
+    ],
+    "module.tfc_test.aws_s3_bucket.this~1": [],
+    "tv_aws_internet.internet": [],
+    "tv_blank.empty~1": [],
+    "tv_blank.empty~2": [],
+    "tv_blank.empty~3": [],
+    "tv_blank.empty~4": [],
+    "tv_blank.empty~5": []
+}

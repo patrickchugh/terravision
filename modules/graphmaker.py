@@ -1491,7 +1491,10 @@ def _parse_count_value(value) -> int:
     if isinstance(value, (int, float)):
         return int(value)
     if isinstance(value, str):
-        return int(value.replace('"', "").strip())
+        try:
+            return int(value.replace('"', "").strip())
+        except ValueError:
+            return 1
     return 1
 
 
