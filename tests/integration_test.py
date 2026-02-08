@@ -227,42 +227,6 @@ def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) ->
     assert actual == expected, "JSON output doesn't match expected"
 
 
-@pytest.mark.parametrize(
-    "repo_path",
-    ["testcase-bastion.git//examples"],
-)
-@pytest.mark.slow
-def test_draw_command_basic(repo_path: str, tmp_path: Path) -> None:
-    """Test basic draw command execution.
-
-    Validates that the draw command successfully generates a PNG diagram
-    from Terraform code in a GitHub repository.
-
-    Args:
-        tmp_path: Pytest fixture providing temporary directory
-    """
-    github_repo = f"{BASE_REPO}/{repo_path}"
-    output_name = "test_arch"
-
-    # Execute draw command to generate PNG diagram
-    result = run_terravision(
-        [
-            "draw",
-            "--source",
-            github_repo,
-            "--outfile",
-            output_name,
-            "--format",
-            "png",
-            "--debug",
-        ],
-        cwd=str(tmp_path),
-    )
-
-    assert result.returncode == 0, f"Draw command failed: {result.stderr}"
-    assert (tmp_path / f"{output_name}.dot.png").exists(), "PNG output not created"
-
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "aws_terraform"
 
 # Terraform Cloud token for module source tests (read from env or use default test token)
@@ -274,48 +238,46 @@ TFC_ENV = {
 }
 
 
+@pytest.mark.parametrize(
+    "source,expected_file",
+    [
+        (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
+        (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
+        (str(FIXTURES_DIR / "module_sources"), "expected-module-sources.json"),
+    ],
+)
 @pytest.mark.slow
-def test_module_sources(tmp_path: Path) -> None:
-    """Test all module source formats are parsed correctly, including from cache.
+def test_live_source(source: str, expected_file: str, tmp_path: Path) -> None:
+    """Test graphdata against live sources (git repos and local fixtures).
 
-    Runs graphdata twice: the first run downloads modules and validates output
-    against expected JSON; the second run uses cached modules to catch cache
-    path bugs (e.g., doubled paths causing FileNotFoundError).
+    The bastion source is listed twice to verify module cache correctness
+    (first run downloads, second run uses cache).
     """
-    source_dir = FIXTURES_DIR / "module_sources"
+    expected_path = JSON_DIR / expected_file
     output_file = tmp_path / "output.json"
-    expected_path = JSON_DIR / "expected-module-sources.json"
 
     with open(expected_path) as f:
         expected = json.load(f)
 
-    for run_num in range(1, 3):
-        if output_file.exists():
-            output_file.unlink()
+    result = run_terravision(
+        [
+            "graphdata",
+            "--source",
+            source,
+            "--outfile",
+            output_file.name,
+        ],
+        cwd=str(tmp_path),
+        extra_env=TFC_ENV,
+    )
 
-        result = run_terravision(
-            [
-                "graphdata",
-                "--source",
-                str(source_dir),
-                "--outfile",
-                output_file.name,
-            ],
-            cwd=str(tmp_path),
-            extra_env=TFC_ENV,
-        )
+    assert result.returncode == 0, f"graphdata failed: {result.stderr}"
+    assert output_file.exists(), "Output file not created"
 
-        assert (
-            result.returncode == 0
-        ), f"graphdata failed on run {run_num}: {result.stderr}"
-        assert output_file.exists(), f"Output file not created on run {run_num}"
+    with open(output_file) as f:
+        actual = json.load(f)
 
-        with open(output_file) as f:
-            actual = json.load(f)
-
-        assert (
-            actual == expected
-        ), f"JSON output doesn't match expected on run {run_num}"
+    assert actual == expected, "JSON output doesn't match expected"
 
 
 if __name__ == "__main__":

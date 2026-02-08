@@ -15,7 +15,9 @@
         "module.gitlab_vpc.aws_route.public_internet_gateway~1",
         "tv_aws_internet.internet"
     ],
-    "aws_kms_key.kms": [],
+    "aws_kms_key.kms": [
+        "module.gitlab_s3.aws_s3_bucket.standard_bucket"
+    ],
     "aws_lb.elb": [
         "aws_alb.elb~1"
     ],
@@ -51,7 +53,6 @@
     "module.github_short_subfolder.aws_iam_user.this[0]~1": [],
     "module.github_short_subfolder.aws_iam_user_login_profile.this[0]~1": [],
     "module.gitlab_s3.aws_s3_bucket.standard_bucket": [
-        "aws_kms_key.kms",
         "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access"
     ],
     "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access": [],

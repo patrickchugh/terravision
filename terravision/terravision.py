@@ -76,18 +76,34 @@ def _show_banner() -> None:
 
 
 def _validate_source(source: List[str]) -> None:
-    """Validate source input is not a .tf file.
+    """Validate source input before processing.
 
     Args:
         source: List of source paths
 
     Raises:
-        SystemExit: If source is a .tf file
+        SystemExit: If source is invalid
     """
-    if source[0].endswith(".tf"):
+    src = source[0]
+    if src.endswith(".tf"):
         click.echo(
             click.style(
                 "\nERROR: You have passed a .tf file as source. Please pass a folder containing .tf files or a git URL.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit()
+    # Check if source looks like a local path (not a URL or JSON file)
+    if (
+        not src.endswith(".json")
+        and not helpers.check_for_domain(src)
+        and not src.startswith("git::")
+        and not os.path.exists(src)
+    ):
+        click.echo(
+            click.style(
+                f"\nERROR: Source directory not found: {src}\n",
                 fg="red",
                 bold=True,
             )
