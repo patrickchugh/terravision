@@ -19,6 +19,35 @@ BASE_REPO = "https://github.com/patrickchugh"
 JSON_DIR = Path(__file__).parent / "json"
 
 
+def assert_graphs_equal_az_independent(actual: dict, expected: dict) -> None:
+    """Compare graph dicts treating AZ-to-subnet assignments as permutable.
+
+    AWS maps logical AZ names to physical AZ IDs differently per account,
+    so subnet[0] might be in euw1-az1 locally but euw1-az2 in CI.
+    The graph structure is identical — each AZ has the same shape of children —
+    just the specific AZ-to-subnet binding may be rotated.
+    """
+    az_prefix = "aws_az."
+
+    actual_az = {k: sorted(v) for k, v in actual.items() if k.startswith(az_prefix)}
+    actual_rest = {k: v for k, v in actual.items() if not k.startswith(az_prefix)}
+
+    expected_az = {k: sorted(v) for k, v in expected.items() if k.startswith(az_prefix)}
+    expected_rest = {k: v for k, v in expected.items() if not k.startswith(az_prefix)}
+
+    assert actual_rest == expected_rest, "Non-AZ graph entries don't match"
+    assert set(actual_az.keys()) == set(expected_az.keys()), "AZ node names don't match"
+
+    # The multiset of children lists must match (AZ assignment order doesn't matter)
+    actual_children = sorted(actual_az.values())
+    expected_children = sorted(expected_az.values())
+    assert actual_children == expected_children, (
+        f"AZ-to-subnet structure doesn't match.\n"
+        f"Actual AZ mapping: {actual_az}\n"
+        f"Expected AZ mapping: {expected_az}"
+    )
+
+
 def run_terravision(
     args: List[str],
     cwd: Optional[str] = None,
@@ -277,7 +306,7 @@ def test_live_source(source: str, expected_file: str, tmp_path: Path) -> None:
     with open(output_file) as f:
         actual = json.load(f)
 
-    assert actual == expected, "JSON output doesn't match expected"
+    assert_graphs_equal_az_independent(actual, expected)
 
 
 if __name__ == "__main__":
