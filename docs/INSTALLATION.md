@@ -3,10 +3,12 @@
 ## System Requirements
 
 - **Python 3.10+**
-- **Terraform 1.x** (v1.0.0 or higher)
+- **Terraform 1.x** (v1.0.0 or higher) — not required when using `--planfile` mode
 - **Git**
 - **Graphviz**
 - **Ollama** (Optional - only for local AI refinement)
+
+> **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](USAGE_GUIDE.md#pre-generated-plan-input) for details.
 
 ---
 

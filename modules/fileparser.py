@@ -310,7 +310,7 @@ def read_tfsource(
 
     # Parse each source location
     for source in source_list:
-        tf_file_paths = find_tf_files(source, [], False)
+        tf_file_paths = find_tf_files(source, paths=[], recursive=False)
         tf_mod_dir = os.path.join(Path.home(), ".terraform", "modules")
 
         # Load custom annotation file if provided

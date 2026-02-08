@@ -31,6 +31,44 @@ dname = os.path.dirname(abspath)
 MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 
 
+def convert_dot_to_json(dot_file: str) -> dict:
+    """Convert a Graphviz DOT file to a JSON dictionary.
+
+    Uses the `dot` command-line tool to convert a DOT format graph file
+    into xdot JSON format, then parses and returns the result.
+
+    Args:
+        dot_file: Path to the input DOT file.
+
+    Returns:
+        Parsed JSON dictionary of the graph data.
+    """
+    json_file = tempfile.NamedTemporaryFile(suffix=".json", delete=False).name
+    try:
+        result = subprocess.run(
+            ["dot", "-Txdot_json", "-o", json_file, dot_file],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            click.echo(
+                click.style(
+                    f"\nERROR: Failed to convert graph with Graphviz.",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            if result.stderr:
+                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+            exit(result.returncode)
+        with open(json_file) as f:
+            graphdata = json.load(f)
+        return graphdata
+    finally:
+        if os.path.exists(json_file):
+            os.remove(json_file)
+
+
 def tf_initplan(
     source: Tuple[str, ...], varfile: List[str], workspace: str, debug: bool = True
 ) -> Dict[str, Any]:
@@ -215,26 +253,7 @@ def tf_initplan(
                 )
                 # Convert DOT graph to JSON using Graphviz
                 if os.path.exists(tfgraph_path):
-                    result = subprocess.run(
-                        ["dot", "-Txdot_json", "-o", tfgraph_json_path, tfgraph_path],
-                        capture_output=not debug,
-                        text=True,
-                    )
-                    if result.returncode != 0:
-                        click.echo(
-                            click.style(
-                                f"\nERROR: Failed to convert graph with Graphviz.",
-                                fg="red",
-                                bold=True,
-                            )
-                        )
-                        if not debug and result.stderr:
-                            click.echo(
-                                click.style(f"Details: {result.stderr}", fg="red")
-                            )
-                        exit(result.returncode)
-                    with open(tfgraph_json_path) as f:
-                        graphdata = json.load(f)
+                    graphdata = convert_dot_to_json(tfgraph_path)
                 else:
                     click.echo(
                         click.style(

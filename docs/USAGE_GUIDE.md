@@ -41,6 +41,8 @@ terravision draw [OPTIONS]
 | `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
 | `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
 | `--aibackend` | AI backend (bedrock, ollama) | `bedrock` | `--aibackend ollama` |
+| `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
+| `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
 
 ### `terravision graphdata`
@@ -59,6 +61,8 @@ terravision graphdata [OPTIONS]
 | `--source` | Source location | Current directory | `./terraform` |
 | `--outfile` | Output JSON filename | `architecture.json` | `--outfile resources.json` |
 | `--show_services` | Show only unique services list | False | `--show_services` |
+| `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
+| `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 
 ---
 
@@ -196,6 +200,51 @@ terravision draw --source ./terraform --format svg
 ```bash
 terravision draw --source ./terraform --format pdf
 ```
+
+### Pre-Generated Plan Input
+
+If you already have Terraform plan and graph output files (e.g. from a CI/CD pipeline), you can generate diagrams without running Terraform. This is useful when:
+
+- Terraform runs in a separate pipeline step or environment
+- Cloud credentials are not available in the diagram generation environment
+- You want to generate diagrams from archived plan files
+
+**Step 1: Generate plan and graph files** (in your Terraform environment):
+
+```bash
+cd /path/to/terraform
+terraform init
+terraform plan -out=tfplan.bin
+terraform show -json tfplan.bin > plan.json
+terraform graph > graph.dot
+```
+
+**Step 2: Generate diagrams** (no Terraform or cloud credentials needed):
+
+```bash
+# Draw diagram from pre-generated files
+terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
+
+# Export graph data from pre-generated files
+terravision graphdata --planfile plan.json --graphfile graph.dot --source ./terraform --outfile resources.json
+
+# Combine with other options
+terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform \
+  --format svg --outfile my-architecture --annotate custom.yml
+```
+
+**Requirements**:
+- `--planfile` must be a JSON file from `terraform show -json` (not a binary `.tfplan` file)
+- `--graphfile` must be a DOT file from `terraform graph`
+- `--source` must point to the Terraform source directory (for HCL parsing)
+- All three options (`--planfile`, `--graphfile`, `--source`) are required together
+
+**Notes**:
+- `--workspace` and `--varfile` are ignored when `--planfile` is used (a warning is printed)
+- Terraform does not need to be installed when using `--planfile` mode
+- The plan JSON must contain `resource_changes` with at least one resource
+
+See [CI/CD Integration](CICD_INTEGRATION.md) for pipeline examples using pre-generated plan files.
 
 ---
 

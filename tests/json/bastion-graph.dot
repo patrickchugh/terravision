@@ -1,0 +1,71 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  subgraph "cluster_module.bastion-host" {
+    label = "module.bastion-host"
+    fontname = "sans-serif"
+    "module.bastion-host.data.template_cloudinit_config.bastion_host" [label="data.template_cloudinit_config.bastion_host"];
+    "module.bastion-host.aws_instance.bastion_host" [label="aws_instance.bastion_host"];
+  }
+  subgraph "cluster_module.ec2-instance" {
+    label = "module.ec2-instance"
+    fontname = "sans-serif"
+    "module.ec2-instance.data.aws_iam_policy.AmazonSSMManagedInstanceCore" [label="data.aws_iam_policy.AmazonSSMManagedInstanceCore"];
+    "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile" [label="aws_iam_instance_profile.ec2_instance_profile"];
+    "module.ec2-instance.aws_iam_role.ec2_iam_role" [label="aws_iam_role.ec2_iam_role"];
+    "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy" [label="aws_iam_role_policy_attachment.attach_ssm_policy"];
+    "module.ec2-instance.aws_instance.ec2_instance" [label="aws_instance.ec2_instance"];
+  }
+  subgraph "cluster_module.private-vpc" {
+    label = "module.private-vpc"
+    fontname = "sans-serif"
+    "module.private-vpc.data.aws_availability_zones.available_az" [label="data.aws_availability_zones.available_az"];
+    "module.private-vpc.aws_eip.nat_eip" [label="aws_eip.nat_eip"];
+    "module.private-vpc.aws_internet_gateway.vpc_gw" [label="aws_internet_gateway.vpc_gw"];
+    "module.private-vpc.aws_nat_gateway.nat_gw" [label="aws_nat_gateway.nat_gw"];
+    "module.private-vpc.aws_route.private_nat_gateway" [label="aws_route.private_nat_gateway"];
+    "module.private-vpc.aws_route.public_internet_gateway" [label="aws_route.public_internet_gateway"];
+    "module.private-vpc.aws_route_table.vpc_private_rt" [label="aws_route_table.vpc_private_rt"];
+    "module.private-vpc.aws_route_table.vpc_public_rt" [label="aws_route_table.vpc_public_rt"];
+    "module.private-vpc.aws_route_table_association.private" [label="aws_route_table_association.private"];
+    "module.private-vpc.aws_route_table_association.public" [label="aws_route_table_association.public"];
+    "module.private-vpc.aws_security_group.allow-strict" [label="aws_security_group.allow-strict"];
+    "module.private-vpc.aws_security_group_rule.ingress_ssh" [label="aws_security_group_rule.ingress_ssh"];
+    "module.private-vpc.aws_subnet.private_subnets" [label="aws_subnet.private_subnets"];
+    "module.private-vpc.aws_subnet.public_subnets" [label="aws_subnet.public_subnets"];
+    "module.private-vpc.aws_vpc.main_vpc" [label="aws_vpc.main_vpc"];
+    "module.private-vpc.aws_vpc_dhcp_options.vpc_dhcp" [label="aws_vpc_dhcp_options.vpc_dhcp"];
+    "module.private-vpc.aws_vpc_dhcp_options_association.dns_resolver" [label="aws_vpc_dhcp_options_association.dns_resolver"];
+  }
+  "module.bastion-host.aws_instance.bastion_host" -> "module.bastion-host.data.template_cloudinit_config.bastion_host";
+  "module.bastion-host.aws_instance.bastion_host" -> "module.private-vpc.aws_security_group.allow-strict";
+  "module.bastion-host.aws_instance.bastion_host" -> "module.private-vpc.aws_subnet.public_subnets";
+  "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile" -> "module.ec2-instance.aws_iam_role.ec2_iam_role";
+  "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy" -> "module.ec2-instance.data.aws_iam_policy.AmazonSSMManagedInstanceCore";
+  "module.ec2-instance.aws_iam_role_policy_attachment.attach_ssm_policy" -> "module.ec2-instance.aws_iam_role.ec2_iam_role";
+  "module.ec2-instance.aws_instance.ec2_instance" -> "module.ec2-instance.aws_iam_instance_profile.ec2_instance_profile";
+  "module.ec2-instance.aws_instance.ec2_instance" -> "module.private-vpc.aws_security_group.allow-strict";
+  "module.ec2-instance.aws_instance.ec2_instance" -> "module.private-vpc.aws_subnet.private_subnets";
+  "module.private-vpc.aws_eip.nat_eip" -> "module.private-vpc.aws_internet_gateway.vpc_gw";
+  "module.private-vpc.aws_internet_gateway.vpc_gw" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_nat_gateway.nat_gw" -> "module.private-vpc.aws_eip.nat_eip";
+  "module.private-vpc.aws_nat_gateway.nat_gw" -> "module.private-vpc.aws_subnet.public_subnets";
+  "module.private-vpc.aws_route.private_nat_gateway" -> "module.private-vpc.aws_nat_gateway.nat_gw";
+  "module.private-vpc.aws_route.private_nat_gateway" -> "module.private-vpc.aws_route_table.vpc_private_rt";
+  "module.private-vpc.aws_route.public_internet_gateway" -> "module.private-vpc.aws_internet_gateway.vpc_gw";
+  "module.private-vpc.aws_route.public_internet_gateway" -> "module.private-vpc.aws_route_table.vpc_public_rt";
+  "module.private-vpc.aws_route_table.vpc_private_rt" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_route_table.vpc_public_rt" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_route_table_association.private" -> "module.private-vpc.aws_route_table.vpc_private_rt";
+  "module.private-vpc.aws_route_table_association.private" -> "module.private-vpc.aws_subnet.private_subnets";
+  "module.private-vpc.aws_route_table_association.public" -> "module.private-vpc.aws_route_table.vpc_public_rt";
+  "module.private-vpc.aws_route_table_association.public" -> "module.private-vpc.aws_subnet.public_subnets";
+  "module.private-vpc.aws_security_group.allow-strict" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_security_group_rule.ingress_ssh" -> "module.private-vpc.aws_security_group.allow-strict";
+  "module.private-vpc.aws_subnet.private_subnets" -> "module.private-vpc.data.aws_availability_zones.available_az";
+  "module.private-vpc.aws_subnet.private_subnets" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_subnet.public_subnets" -> "module.private-vpc.data.aws_availability_zones.available_az";
+  "module.private-vpc.aws_subnet.public_subnets" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_vpc_dhcp_options_association.dns_resolver" -> "module.private-vpc.aws_vpc.main_vpc";
+  "module.private-vpc.aws_vpc_dhcp_options_association.dns_resolver" -> "module.private-vpc.aws_vpc_dhcp_options.vpc_dhcp";
+}

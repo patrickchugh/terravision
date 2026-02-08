@@ -81,6 +81,7 @@ TerraVision automatically converts your Terraform code into professional cloud a
 
 - GitHub Actions, GitLab CI, Jenkins support
 - Show multiple environments using TF Variables to document variants of your infrastructure (e.g. prod vs dev)
+- **Pre-generated plan mode**: Use `--planfile` and `--graphfile` to skip Terraform execution entirely — no cloud credentials needed in the diagram step
 
 ### 🔒 Secure & Private
 
@@ -182,7 +183,7 @@ terraform plan
 cd -
 ```
 
-**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for TERRAFORM to validate resources and resolve functions, but TerraVision itself never accesses your cloud account.
+**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for TERRAFORM to validate resources and resolve functions, but TerraVision itself never accesses your cloud account. Alternatively, use `--planfile` and `--graphfile` to provide pre-generated Terraform outputs, bypassing Terraform execution entirely.
 
 **Important for Terraform Enterprise and Remote Backend Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
 
@@ -229,10 +230,26 @@ terravision draw --source https://github.com/patrickchugh/terraform-examples.git
 terravision draw --source /path/to/your/terraform/code
 ```
 
+### Use Pre-Generated Terraform Plan (No Cloud Credentials Needed)
+
+If you already have Terraform plan output (e.g. from a CI pipeline), you can generate diagrams without running Terraform:
+
+```bash
+# Step 1: Generate plan and graph files (in your Terraform environment)
+terraform plan -out=tfplan.bin
+terraform show -json tfplan.bin > plan.json
+terraform graph > graph.dot
+
+# Step 2: Generate diagram (no Terraform or cloud credentials needed)
+terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
+```
+
+This is especially useful in CI/CD pipelines where Terraform runs in one step and diagram generation happens in another. See [CI/CD Integration](docs/CICD_INTEGRATION.md) for examples.
+
 ### Use TerraVision simply as a drawing engine with a simple JSON dict
 ```bash
 # Generate a JSON graph file as output (default file is architecture.json)
-terravision graphdata --source tests/fixtures/aws_terraform/ecs-ec2  
+terravision graphdata --source tests/fixtures/aws_terraform/ecs-ec2
 # Draw a diagram from a simple pre-existing JSON graph file
 terravision draw --source tests/json/bastion-expected.json
 ```
@@ -273,6 +290,8 @@ terravision draw --source ./terraform --show
 | `--outfile`   | Output filename               | `architecture` (default)   |
 | `--workspace` | Terraform workspace           | `production`, `staging`    |
 | `--varfile`   | Variable file                 | `prod.tfvars`              |
+| `--planfile`  | Pre-generated plan JSON file  | `plan.json`                |
+| `--graphfile` | Pre-generated graph DOT file  | `graph.dot`                |
 | `--show`      | Open diagram after generation | (flag)                     |
 | `--debug`     | Enable debug output           | (flag)                     |
 
@@ -426,6 +445,50 @@ jobs:
 
 ```
 * AWS Example - You will need an IAM role the action can assume and a Trust policy granting github to assume it
+
+### Without Cloud Credentials (Pre-Generated Plan)
+
+If Terraform runs in a separate pipeline step, pass the plan and graph files to TerraVision:
+
+```yaml
+# .github/workflows/architecture-diagrams.yml
+name: Update Architecture Diagrams
+
+on:
+  push:
+    branches: [main]
+    paths: ['**.tf', '**.tfvars']
+
+jobs:
+  generate-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/terraform-role
+          aws-region: us-east-1
+
+      - name: Terraform Plan
+        run: |
+          cd infrastructure
+          terraform init
+          terraform plan -out=tfplan.bin
+          terraform show -json tfplan.bin > plan.json
+          terraform graph > graph.dot
+
+      - name: Generate Diagram (no credentials needed)
+        run: |
+          pip install terravision
+          terravision draw \
+            --planfile infrastructure/plan.json \
+            --graphfile infrastructure/graph.dot \
+            --source ./infrastructure \
+            --format png
+```
 
 ### GitLab CI / Jenkins / Other
 

@@ -111,6 +111,218 @@ def _validate_source(source: List[str]) -> None:
         sys.exit()
 
 
+def _validate_planfile(planfile: str) -> dict:
+    """Load and validate a Terraform plan JSON file.
+
+    Args:
+        planfile: Path to the plan JSON file
+
+    Returns:
+        Parsed plan data dictionary
+
+    Raises:
+        SystemExit: If the file is invalid
+    """
+    try:
+        with open(planfile, "r") as f:
+            first_bytes = f.read(4)
+            f.seek(0)
+            # Detect binary .tfplan file
+            if not first_bytes.strip().startswith("{"):
+                click.echo(
+                    click.style(
+                        "\nERROR: File is not valid JSON. If this is a binary .tfplan file, "
+                        "convert it with: terraform show -json tfplan.bin > plan.json\n",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+                sys.exit(1)
+            plandata = json.load(f)
+    except json.JSONDecodeError as e:
+        click.echo(
+            click.style(
+                f"\nERROR: File is not valid JSON: {e}\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+
+    if "resource_changes" not in plandata:
+        click.echo(
+            click.style(
+                "\nERROR: Not a Terraform plan JSON. Missing 'resource_changes' key. "
+                "Generate with: terraform show -json tfplan.bin > plan.json\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+
+    if len(plandata["resource_changes"]) == 0:
+        click.echo(
+            click.style(
+                "\nERROR: No resources found in plan. The plan contains zero resource changes.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+
+    format_version = plandata.get("format_version", "")
+    if format_version and not format_version.startswith("1."):
+        click.echo(
+            click.style(
+                f"WARNING: Unrecognized plan format version '{format_version}'. "
+                "Proceeding with best-effort processing.",
+                fg="yellow",
+            )
+        )
+
+    return plandata
+
+
+def _validate_consistency(tfdata: Dict[str, Any]) -> None:
+    """Validate consistency across plan, graph, and source inputs.
+
+    Performs two lightweight checks per FR-014:
+    1. Provider prefix matches across plan resources and source resources
+    2. First managed resource in plan exists in graph and source
+
+    Args:
+        tfdata: Terraform data dictionary with plan, graph, and source data
+
+    Raises:
+        SystemExit: If consistency checks fail
+    """
+    # Find first managed resource from plan
+    first_resource = None
+    first_resource_type = None
+    for rc in tfdata.get("tf_resources_created", []):
+        if rc.get("mode") == "managed":
+            first_resource = rc["address"]
+            first_resource_type = rc["type"]
+            break
+
+    if not first_resource:
+        return
+
+    # Check 1: Provider prefix from plan matches source resources
+    prefix = first_resource_type.split("_")[0] + "_"
+    all_resource = tfdata.get("all_resource", {})
+    if all_resource:
+        # all_resource keys are file paths; extract actual resource type names
+        # from the nested structure: {filepath: [{"aws_vpc": {...}}, ...]}
+        resource_type_names = []
+        for _filepath, resource_list in all_resource.items():
+            if isinstance(resource_list, list):
+                for item in resource_list:
+                    if isinstance(item, dict):
+                        resource_type_names.extend(item.keys())
+        source_has_prefix = any(name.startswith(prefix) for name in resource_type_names)
+        if not source_has_prefix:
+            click.echo(
+                click.style(
+                    f"\nERROR: Inputs appear to be from different projects. "
+                    f"Plan resources use '{prefix}' prefix but source directory "
+                    f"contains no matching resource types.\n",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            sys.exit(1)
+
+    # Check 2: First plan resource exists in graph
+    graphdict = tfdata.get("graphdict", {})
+    if graphdict:
+        resource_in_graph = any(
+            first_resource in k or first_resource.split(".")[-1] in k
+            for k in graphdict.keys()
+        )
+        if not resource_in_graph:
+            click.echo(
+                click.style(
+                    f"\nERROR: Inputs appear to be from different projects. "
+                    f"Plan resource '{first_resource}' not found in graph.\n",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            sys.exit(1)
+
+
+def _validate_pregenerated_inputs(
+    planfile: str, graphfile: str, source: List[str]
+) -> None:
+    """Validate that all required inputs are provided for pre-generated mode.
+
+    Args:
+        planfile: Path to plan JSON file
+        graphfile: Path to graph DOT file
+        source: List of source paths
+
+    Raises:
+        SystemExit: If required inputs are missing or invalid
+    """
+    if graphfile and not planfile:
+        click.echo(
+            click.style(
+                "\nERROR: --graphfile requires --planfile.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+    if planfile and not graphfile:
+        click.echo(
+            click.style(
+                "\nERROR: --planfile requires --graphfile and --source.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+    if planfile and (
+        not source or source == (".",) or source == ["."] or not source[0]
+    ):
+        click.echo(
+            click.style(
+                "\nERROR: --planfile requires --graphfile and --source.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+    if planfile and source[0].endswith(".json"):
+        click.echo(
+            click.style(
+                "\nERROR: --source must be a directory when using --planfile.\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+    if planfile and not os.path.isfile(planfile):
+        click.echo(
+            click.style(
+                f"\nERROR: Plan file not found: {planfile}\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+    if graphfile and not os.path.isfile(graphfile):
+        click.echo(
+            click.style(
+                f"\nERROR: Graph file not found: {graphfile}\n",
+                fg="red",
+                bold=True,
+            )
+        )
+        sys.exit(1)
+
+
 def _load_json_source(source: str) -> Dict[str, Any]:
     """Load and parse JSON source file.
 
@@ -135,6 +347,79 @@ def _load_json_source(source: str) -> Dict[str, Any]:
             "Source is a pre-generated JSON tfgraph file. Will not call terraform binary or AI model."
         )
         tfdata["graphdict"] = jsondata
+    return tfdata
+
+
+def _process_pregenerated_source(
+    planfile: str,
+    graphfile: str,
+    source: List[str],
+    annotate: str,
+    debug: bool,
+) -> Dict[str, Any]:
+    """Process pre-generated Terraform plan and graph files with source directory.
+
+    Loads plan JSON and graph DOT, builds tfdata using existing pipeline functions,
+    then enriches with HCL parsing from source directory. No Terraform CLI execution.
+
+    Args:
+        planfile: Path to Terraform plan JSON file
+        graphfile: Path to Terraform graph DOT file
+        source: List of source directory paths
+        annotate: Path to annotations file
+        debug: Enable debug mode
+
+    Returns:
+        Dictionary containing parsed Terraform data
+    """
+    click.echo(
+        click.style(
+            "\nUsing pre-generated plan and graph files. "
+            "No Terraform commands will be executed.\n",
+            fg="cyan",
+            bold=True,
+        )
+    )
+
+    # Load and validate plan JSON
+    plandata = _validate_planfile(planfile)
+
+    # Convert DOT graph to JSON using Graphviz
+    click.echo(
+        click.style("Converting TF Graph Connections..\n", fg="white", bold=True)
+    )
+    graphdata = tfwrapper.convert_dot_to_json(graphfile)
+
+    # Build tfdata from plan and graph data
+    tfdata = dict()
+    tfdata["codepath"] = list()
+    tfdata["workdir"] = os.getcwd()
+    tfdata["plandata"] = dict(plandata)
+    # Keep URLs as-is so read_tfsource can clone them; only resolve local paths
+    codepath = (
+        source[0]
+        if helpers.check_for_domain(source[0]) or source[0].startswith("git::")
+        else os.path.abspath(source[0])
+    )
+    tfdata = tfwrapper.make_tf_data(tfdata, plandata, graphdata, codepath)
+
+    # Build resource dependency graph
+    tfdata = tfwrapper.tf_makegraph(tfdata, debug)
+
+    # Parse source directory for HCL metadata
+    codepath_list = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
+    tfdata = fileparser.read_tfsource(codepath_list, [], annotate, tfdata)
+
+    # Validate consistency across inputs
+    _validate_consistency(tfdata)
+
+    if debug:
+        helpers.export_tfdata(tfdata)
+
     return tfdata
 
 
@@ -214,6 +499,8 @@ def compile_tfdata(
     workspace: str,
     debug: bool,
     annotate: str = "",
+    planfile: str = "",
+    graphfile: str = "",
 ) -> Dict[str, Any]:
     """Compile Terraform data from source files into enriched graph dictionary.
 
@@ -223,18 +510,26 @@ def compile_tfdata(
         workspace: Terraform workspace name
         debug: Enable debug output and export tracedata
         annotate: Path to custom annotations YAML file
+        planfile: Path to pre-generated Terraform plan JSON file
+        graphfile: Path to pre-generated Terraform graph DOT file
 
     Returns:
         Enriched tfdata dictionary with graphdict and metadata
     """
-    _validate_source(source)
     already_processed = False
-    if source[0].endswith(".json"):
+    if planfile:
+        _validate_pregenerated_inputs(planfile, graphfile, source)
+        tfdata = _process_pregenerated_source(
+            planfile, graphfile, source, annotate, debug
+        )
+    elif source[0].endswith(".json"):
+        _validate_source(source)
         tfdata = _load_json_source(source[0])
         already_processed = True
         if "all_resource" not in tfdata:
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:
+        _validate_source(source)
         tfdata = _process_terraform_source(source, varfile, workspace, annotate, debug)
 
     # Detect cloud provider and store in tfdata (multi-cloud support)
@@ -616,6 +911,18 @@ def cli() -> None:
     help="AI backend to use (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
+@click.option(
+    "--planfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform plan JSON (terraform show -json)",
+)
+@click.option(
+    "--graphfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform graph DOT (terraform graph)",
+)
 def draw(
     debug: bool,
     source: tuple,
@@ -628,6 +935,8 @@ def draw(
     annotate: str,
     aibackend: str,
     avl_classes: Any,
+    planfile: str,
+    graphfile: str,
 ) -> None:
     """Draw architecture diagram from Terraform code.
 
@@ -643,12 +952,23 @@ def draw(
         annotate: Path to annotations file
         aibackend: AI backend to use
         avl_classes: Available classes (hidden)
+        planfile: Path to pre-generated Terraform plan JSON file
+        graphfile: Path to pre-generated Terraform graph DOT file
     """
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
-    preflight_check(aibackend)
-    tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
+    if planfile and (workspace != "default" or varfile):
+        click.echo(
+            click.style(
+                "WARNING: --workspace and --varfile are ignored when --planfile is provided.",
+                fg="yellow",
+            )
+        )
+    preflight_check(aibackend if not planfile else None)
+    tfdata = compile_tfdata(
+        source, varfile, workspace, debug, annotate, planfile, graphfile
+    )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend:
         tfdata = _refine_with_llm(tfdata, aibackend, debug)
@@ -698,6 +1018,18 @@ def draw(
     help="AI backend to use (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
+@click.option(
+    "--planfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform plan JSON (terraform show -json)",
+)
+@click.option(
+    "--graphfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform graph DOT (terraform graph)",
+)
 def graphdata(
     debug: bool,
     source: tuple,
@@ -708,6 +1040,8 @@ def graphdata(
     aibackend: str,
     avl_classes: Any,
     outfile: str = "graphdata.json",
+    planfile: str = "",
+    graphfile: str = "",
 ) -> None:
     """List cloud resources and relations as JSON.
 
@@ -721,12 +1055,23 @@ def graphdata(
         aibackend: AI backend to use
         avl_classes: Available classes (hidden)
         outfile: Output JSON filename
+        planfile: Path to pre-generated Terraform plan JSON file
+        graphfile: Path to pre-generated Terraform graph DOT file
     """
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
-    preflight_check(aibackend)
-    tfdata = compile_tfdata(source, varfile, workspace, debug, annotate)
+    if planfile and (workspace != "default" or varfile):
+        click.echo(
+            click.style(
+                "WARNING: --workspace and --varfile are ignored when --planfile is provided.",
+                fg="yellow",
+            )
+        )
+    preflight_check(aibackend if not planfile else None)
+    tfdata = compile_tfdata(
+        source, varfile, workspace, debug, annotate, planfile, graphfile
+    )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend and (not show_services):
         tfdata = _refine_with_llm(tfdata, aibackend, debug)

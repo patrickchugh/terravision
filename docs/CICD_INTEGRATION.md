@@ -13,6 +13,7 @@ TerraVision can be integrated into any CI/CD system using one of these methods:
 | **GitHub Action** | GitHub workflows | Terraform on PATH |
 | **Docker image** | GitLab, Jenkins, any container-based CI | None (self-contained) |
 | **pip install** | Any CI with Python available | Python 3.10+, Graphviz, Terraform |
+| **pip install + `--planfile`** | Diagram step without Terraform | Python 3.10+, Graphviz (no Terraform needed) |
 
 ---
 
@@ -54,6 +55,8 @@ jobs:
 | `format` | Output format: `png`, `svg`, or `both` | No | `png` |
 | `varfile` | Path to `.tfvars` file | No | |
 | `annotate` | Path to `terravision.yml` annotation file | No | |
+| `planfile` | Pre-generated plan JSON from `terraform show -json` (skips Terraform requirement) | No | |
+| `graphfile` | Pre-generated graph DOT from `terraform graph` (required with `planfile`) | No | |
 | `extra-args` | Additional arguments for `terravision draw` | No | |
 
 #### With Cloud Credentials
@@ -74,6 +77,34 @@ steps:
   - uses: patrickchugh/terravision-action@v1
     with:
       source: ./infrastructure
+      format: svg
+```
+
+#### With Pre-Generated Plan (No Terraform in Diagram Step)
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: hashicorp/setup-terraform@v3
+
+  - uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: arn:aws:iam::123456789012:role/terraform-role
+      aws-region: us-east-1
+
+  - name: Terraform Plan
+    run: |
+      cd infrastructure
+      terraform init
+      terraform plan -out=tfplan.bin
+      terraform show -json tfplan.bin > plan.json
+      terraform graph > graph.dot
+
+  - uses: patrickchugh/terravision-action@v1
+    with:
+      source: ./infrastructure
+      planfile: infrastructure/plan.json
+      graphfile: infrastructure/graph.dot
       format: svg
 ```
 
@@ -562,6 +593,240 @@ pipelines:
 
 ---
 
+## Pre-Generated Plan Mode (No Credentials in Diagram Step)
+
+In many CI/CD setups, Terraform runs in a secured step with cloud credentials, while diagram generation should happen separately without credential access. The `--planfile` and `--graphfile` options enable this separation.
+
+### How It Works
+
+1. **Terraform step** (with credentials): Run `terraform plan`, export plan JSON and graph DOT
+2. **Diagram step** (no credentials): Run `terravision` with the exported files
+
+### GitHub Actions — Separate Jobs
+
+```yaml
+name: Infrastructure Diagrams
+
+on:
+  push:
+    branches: [main]
+    paths: ['**.tf', '**.tfvars']
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/terraform-role
+          aws-region: us-east-1
+
+      - name: Terraform Plan
+        run: |
+          cd infrastructure
+          terraform init
+          terraform plan -out=tfplan.bin
+          terraform show -json tfplan.bin > plan.json
+          terraform graph > graph.dot
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs
+          path: |
+            infrastructure/plan.json
+            infrastructure/graph.dot
+
+  generate-diagram:
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: terraform-outputs
+          path: infrastructure
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install -y graphviz
+          pip install terravision
+
+      - name: Generate Diagram
+        run: |
+          terravision draw \
+            --planfile infrastructure/plan.json \
+            --graphfile infrastructure/graph.dot \
+            --source ./infrastructure \
+            --format png
+
+      - name: Commit Diagram
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add architecture.*
+          git commit -m "Update architecture diagram [skip ci]" || exit 0
+          git push
+```
+
+### GitLab CI — Separate Stages
+
+```yaml
+stages:
+  - plan
+  - diagram
+
+terraform-plan:
+  stage: plan
+  image: hashicorp/terraform:latest
+  variables:
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  script:
+    - cd infrastructure
+    - terraform init
+    - terraform plan -out=tfplan.bin
+    - terraform show -json tfplan.bin > plan.json
+    - terraform graph > graph.dot
+  artifacts:
+    paths:
+      - infrastructure/plan.json
+      - infrastructure/graph.dot
+    expire_in: 1 hour
+
+generate-diagram:
+  stage: diagram
+  image: patrickchugh/terravision:latest
+  needs: [terraform-plan]
+  script:
+    - terravision draw
+        --planfile infrastructure/plan.json
+        --graphfile infrastructure/graph.dot
+        --source ./infrastructure
+        --outfile architecture
+        --format png
+  artifacts:
+    paths:
+      - architecture.png
+    expire_in: 30 days
+```
+
+### Jenkins — Separate Stages
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('Terraform Plan') {
+            agent {
+                docker { image 'hashicorp/terraform:latest' }
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'aws-creds']]) {
+                    sh '''
+                        cd infrastructure
+                        terraform init
+                        terraform plan -out=tfplan.bin
+                        terraform show -json tfplan.bin > plan.json
+                        terraform graph > graph.dot
+                    '''
+                }
+                stash includes: 'infrastructure/plan.json,infrastructure/graph.dot', name: 'tf-outputs'
+            }
+        }
+
+        stage('Generate Diagram') {
+            agent {
+                docker { image 'patrickchugh/terravision:latest' }
+            }
+            steps {
+                unstash 'tf-outputs'
+                sh '''
+                    terravision draw \
+                        --planfile infrastructure/plan.json \
+                        --graphfile infrastructure/graph.dot \
+                        --source ./infrastructure \
+                        --format png
+                '''
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: 'architecture.*', fingerprint: true
+            }
+        }
+    }
+}
+```
+
+### Azure DevOps — Separate Jobs
+
+```yaml
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include: ['**/*.tf']
+
+stages:
+- stage: Plan
+  jobs:
+  - job: TerraformPlan
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+
+    - script: |
+        cd infrastructure
+        terraform init
+        terraform plan -out=tfplan.bin
+        terraform show -json tfplan.bin > plan.json
+        terraform graph > graph.dot
+      displayName: 'Terraform Plan'
+
+    - publish: infrastructure/plan.json
+      artifact: plan-json
+    - publish: infrastructure/graph.dot
+      artifact: graph-dot
+
+- stage: Diagram
+  dependsOn: Plan
+  jobs:
+  - job: GenerateDiagram
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: patrickchugh/terravision:latest
+    steps:
+    - download: current
+      artifact: plan-json
+    - download: current
+      artifact: graph-dot
+
+    - script: |
+        terravision draw \
+          --planfile $(Pipeline.Workspace)/plan-json/plan.json \
+          --graphfile $(Pipeline.Workspace)/graph-dot/graph.dot \
+          --source ./infrastructure \
+          --format png
+      displayName: 'Generate Diagram'
+
+    - publish: architecture.png
+      artifact: architecture-diagram
+```
+
+---
+
 ## Integration Patterns
 
 ### Pattern 1: Commit Diagrams to Repository
@@ -591,7 +856,31 @@ terravision draw --source ./infrastructure --outfile docs/source/_static/archite
 # Trigger documentation build/deploy
 ```
 
-### Pattern 4: Multi-Region/Multi-Environment
+### Pattern 4: Pre-Generated Plan Files
+
+Separate Terraform execution from diagram generation for better security and flexibility:
+
+```bash
+# Step 1: In Terraform environment (with credentials)
+terraform plan -out=tfplan.bin
+terraform show -json tfplan.bin > plan.json
+terraform graph > graph.dot
+
+# Step 2: In diagram environment (no credentials needed)
+terravision draw \
+  --planfile plan.json \
+  --graphfile graph.dot \
+  --source ./infrastructure \
+  --format png
+```
+
+This pattern is ideal when:
+- Cloud credentials should not be shared with the diagram generation step
+- Terraform runs in a different CI job, stage, or pipeline
+- You want to archive plan files and regenerate diagrams later
+- Diagram generation runs on a machine without Terraform installed
+
+### Pattern 5: Multi-Region/Multi-Environment
 
 ```bash
 for env in dev staging prod; do

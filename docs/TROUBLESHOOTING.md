@@ -194,6 +194,62 @@ pip install -r requirements.txt
 
 ---
 
+### Pre-Generated Plan File Issues
+
+#### "This appears to be a binary Terraform plan file"
+
+**Problem**: You passed a binary `.tfplan` file instead of JSON
+
+**Solution**: Convert the binary plan to JSON first:
+```bash
+terraform show -json tfplan.bin > plan.json
+terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
+```
+
+#### "Plan file does not contain 'resource_changes'"
+
+**Problem**: The JSON file is not a valid Terraform plan output
+
+**Solution**: Ensure you use `terraform show -json` to export the plan:
+```bash
+terraform plan -out=tfplan.bin
+terraform show -json tfplan.bin > plan.json
+```
+
+Do not use `terraform plan -json` (streaming output) — use `terraform show -json` on a saved plan file.
+
+#### "Plan file contains no resource changes"
+
+**Problem**: The Terraform plan has no resources to create, update, or destroy
+
+**Solution**: Verify that `terraform plan` shows resources:
+```bash
+terraform plan
+# Should show resources to create/update/destroy
+```
+
+If no resources appear, check your Terraform code and variable files.
+
+#### "--planfile requires --graphfile and --source"
+
+**Problem**: You must provide all three options together
+
+**Solution**: Always provide `--planfile`, `--graphfile`, and `--source`:
+```bash
+terravision draw \
+  --planfile plan.json \
+  --graphfile graph.dot \
+  --source ./terraform
+```
+
+#### "WARNING: --workspace/--varfile ignored with --planfile"
+
+**Problem**: These options are irrelevant when using pre-generated plan files
+
+**Explanation**: When you provide a `--planfile`, TerraVision skips Terraform execution entirely. The workspace and variable file were already applied when the plan was originally generated. This warning is informational — your diagram will still be generated correctly.
+
+---
+
 ### Diagram Generation Issues
 
 #### Empty or Incomplete Diagrams
