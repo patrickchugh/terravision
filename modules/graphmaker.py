@@ -329,8 +329,7 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][c] = list()
                 if n not in tfdata["graphdict"][c]:
                     tfdata["graphdict"][c].append(n)
-                if c in tfdata["graphdict"].get(n, []):
-                    tfdata["graphdict"][n].remove(c)
+                helpers.safe_remove_connection(tfdata, n, c)
 
             # Reverse if connection is a forced origin
             # Skip reversal for synthetic grouping nodes (tv_ prefix) - these are
@@ -360,8 +359,7 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][c] = list()
                 if n not in tfdata["graphdict"][c]:
                     tfdata["graphdict"][c].append(n)
-                if c in tfdata["graphdict"].get(n, []):
-                    tfdata["graphdict"][n].remove(c)
+                helpers.safe_remove_connection(tfdata, n, c)
 
     return tfdata
 
@@ -854,7 +852,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     for resource in dict(tfdata["graphdict"]):
         if "null_resource" in resource:
-            del tfdata["graphdict"][resource]
+            helpers.delete_node(tfdata, resource, remove_from_connections=False)
             continue
         if resource not in tfdata["meta_data"].keys():
             res = resource.split("~")[0]
@@ -892,7 +890,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     continue
                 new_connections.add(conn)
             tfdata["graphdict"][consolidated_name] = list(new_connections)
-            del tfdata["graphdict"][resource]
+            helpers.delete_node(tfdata, resource, remove_from_connections=False)
             # del tfdata["meta_data"][res]
             connected_resource = consolidated_name
         else:
@@ -917,7 +915,8 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         in tfdata["graphdict"][connected_resource]
                     ):
                         tfdata["graphdict"][connected_resource].insert(index, "null")
-                        tfdata["graphdict"][connected_resource].remove(connection)
+                        if connection in tfdata["graphdict"][connected_resource]:
+                            tfdata["graphdict"][connected_resource].remove(connection)
         if "null" in tfdata["graphdict"][connected_resource]:
             tfdata["graphdict"][connected_resource] = list(
                 filter(lambda a: a != "null", tfdata["graphdict"][connected_resource])
@@ -974,8 +973,7 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             not in SPECIAL_RESOURCES.keys()
         ):
             renamed_node = renamed_node + "." + node_title
-            tfdata["graphdict"][renamed_node] = list(tfdata["graphdict"][node])
-            del tfdata["graphdict"][node]
+            helpers.rename_node(tfdata, node, renamed_node, update_connections=False)
         else:
             renamed_node = node
         # Go through each connection and rename
@@ -1011,14 +1009,16 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 and resource.split(".")[0] != node.split(".")[0]
             ):
                 new_list = list(tfdata["graphdict"][renamed_node])
-                new_list.remove(resource)
+                if resource in new_list:
+                    new_list.remove(resource)
                 node_title = resource.split(".")[1]
                 new_variant_name = variant_suffix + "." + variant_label
                 new_list.append(new_variant_name)
                 tfdata["graphdict"][renamed_node] = new_list
-                tfdata["meta_data"][new_variant_name] = copy.deepcopy(
-                    tfdata["meta_data"][resource]
-                )
+                if resource in tfdata["meta_data"]:
+                    tfdata["meta_data"][new_variant_name] = copy.deepcopy(
+                        tfdata["meta_data"][resource]
+                    )
     return tfdata
 
 
@@ -1152,20 +1152,26 @@ def add_multiples_to_parents(
                             tfdata["graphdict"][parent + "~" + str(i + 1)].append(
                                 suffixed_name
                             )
-                        if resource in tfdata["graphdict"][parent + "~" + str(i + 1)]:
-                            tfdata["graphdict"][parent + "~" + str(i + 1)].remove(
-                                resource
-                            )
+                        suffixed_parent = parent + "~" + str(i + 1)
+                        if (
+                            suffixed_parent in tfdata["graphdict"]
+                            and resource in tfdata["graphdict"][suffixed_parent]
+                        ):
+                            tfdata["graphdict"][suffixed_parent].remove(resource)
                         tfdata["meta_data"][parent + "~" + str(i + 1)] = copy.deepcopy(
                             tfdata["meta_data"][parent]
                         )
                 else:
-                    if resource in tfdata["graphdict"][parent]:
-                        tfdata["graphdict"][parent].remove(resource)
-                    for sim in tfdata["graphdict"][parent]:
-                        if sim.split("~")[0] == suffixed_name.split("~")[0]:
+                    helpers.safe_remove_connection(tfdata, parent, resource)
+                    if parent in tfdata["graphdict"]:
+                        sims_to_remove = [
+                            sim
+                            for sim in tfdata["graphdict"][parent]
+                            if sim.split("~")[0] == suffixed_name.split("~")[0]
+                        ]
+                        for sim in sims_to_remove:
                             tfdata["graphdict"][parent].remove(sim)
-                    tfdata["graphdict"][parent].append(suffixed_name)
+                        tfdata["graphdict"][parent].append(suffixed_name)
 
     return tfdata
 
@@ -1195,15 +1201,14 @@ def cleanup_originals(
             helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
             and not resource.split(".")[0] in SHARED_SERVICES
         ):
-            del tfdata["graphdict"][resource]
+            helpers.delete_node(tfdata, resource, remove_from_connections=False)
         parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
         for parent in parents_list:
             if (
-                resource in tfdata["graphdict"][parent]
-                and not parent.startswith("aws_group.shared")
-                and not "~" in parent
+                not parent.startswith("aws_group.shared")
+                and "~" not in parent
             ):
-                tfdata["graphdict"][parent].remove(resource)
+                helpers.safe_remove_connection(tfdata, parent, resource)
     # Delete any original security group nodes that have been replaced with numbered suffixes
     security_group_list = [
         k
@@ -1212,8 +1217,7 @@ def cleanup_originals(
     ]
     for security_group in security_group_list:
         check_original = security_group.split("~")[0]
-        if check_original in tfdata["graphdict"].keys():
-            del tfdata["graphdict"][check_original]
+        helpers.delete_node(tfdata, check_original, remove_from_connections=False)
     return tfdata
 
 
@@ -1412,14 +1416,13 @@ def extend_sg_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 expanded = True
                 suffixed_sg = sg + "~" + connection.split("~")[1]
                 tfdata["graphdict"][suffixed_sg] = list([connection])
-                tfdata["graphdict"][sg].remove(connection)
+                helpers.safe_remove_connection(tfdata, sg, connection)
         if expanded:
             also_connected = helpers.list_of_parents(tfdata["graphdict"], sg)
             for node in also_connected:
                 if "~" in node:
                     suffixed_sg = sg + "~" + node.split("~")[1]
-                    if sg in tfdata["graphdict"][node]:
-                        tfdata["graphdict"][node].remove(sg)
+                    if helpers.safe_remove_connection(tfdata, node, sg):
                         tfdata["graphdict"][node].append(suffixed_sg)
                     # check if other multiples of the node also have the relationship, if not, add it
                     if "~1" in node:
@@ -1435,7 +1438,7 @@ def extend_sg_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             i = i + 1
                             next_node = node.split("~")[0] + "~" + str(i)
                             next_sg = sg + "~" + str(i)
-            del tfdata["graphdict"][sg]
+            helpers.delete_node(tfdata, sg, remove_from_connections=False)
 
     return tfdata
 
@@ -1491,8 +1494,7 @@ def add_multiples_to_parents(
                 and "aws_route_table." not in resource
             ):
                 tfdata["graphdict"][parent].append(suffixed_name)
-                if resource in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].remove(resource)
+                helpers.safe_remove_connection(tfdata, parent, resource)
     return tfdata
 
 
@@ -1599,7 +1601,11 @@ def handle_count_resources(
                                 tfdata = add_multiples_to_parents(
                                     i, original_name, multi_resources, tfdata
                                 )
-                                del tfdata["graphdict"][original_name]
+                                helpers.delete_node(
+                                    tfdata,
+                                    original_name,
+                                    remove_from_connections=False,
+                                )
                         else:
                             if (original_name + "~" + str(i)) in tfdata[
                                 "graphdict"
@@ -1645,7 +1651,7 @@ def handle_singular_references(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if suffixed_node in tfdata["graphdict"]:
                     if suffixed_node not in tfdata["graphdict"][node]:
                         tfdata["graphdict"][node].append(suffixed_node)
-                    tfdata["graphdict"][node].remove(c)
+                    helpers.safe_remove_connection(tfdata, node, c)
             # If consolidated node, add all connections to node
             # Skip resources that are manually matched to subnets by suffix in their handlers
             # Also skip if node is a subnet - subnets should keep their specific numbered instances
@@ -1720,7 +1726,7 @@ def cleanup_cross_subnet_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # If the numbered resource and unnumbered resource don't share any common subnet,
             # remove the connection
             if target_subnets and not set(source_subnets) & set(target_subnets):
-                tfdata["graphdict"][resource_name].remove(connection)
+                helpers.safe_remove_connection(tfdata, resource_name, connection)
 
     return tfdata
 
@@ -1784,9 +1790,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
             # Update any nodes that point to this resource to point to numbered instances instead
             for node in list(tfdata["graphdict"].keys()):
-                if node != resource and resource in tfdata["graphdict"][node]:
-                    tfdata["graphdict"][node].remove(resource)
-
+                if node != resource and helpers.safe_remove_connection(tfdata, node, resource):
                     # For subnets: only add the numbered instance matching the subnet's position
                     if "_subnet" in node:
                         # Get all subnets sorted to determine position
@@ -1817,25 +1821,24 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
             # Delete the original resource after updating references
             if resource.split(".")[0] not in SHARED_SERVICES:
-                del tfdata["graphdict"][resource]
+                helpers.delete_node(tfdata, resource, remove_from_connections=False)
 
         # Remove original resource if not shared service and no numbered instances to link to
         elif (
             helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
             and resource.split(".")[0] not in SHARED_SERVICES
         ):
-            del tfdata["graphdict"][resource]
+            helpers.delete_node(tfdata, resource, remove_from_connections=False)
 
         # Remove from parent connections
         if resource not in tfdata["graphdict"]:
             parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
             for parent in parents_list:
                 if (
-                    resource in tfdata["graphdict"][parent]
-                    and not parent.startswith("aws_group.shared")
+                    not parent.startswith("aws_group.shared")
                     and "~" not in parent
                 ):
-                    tfdata["graphdict"][parent].remove(resource)
+                    helpers.safe_remove_connection(tfdata, parent, resource)
 
     # Clean up original security group nodes
     security_group_list = [
@@ -1845,8 +1848,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     ]
     for security_group in security_group_list:
         check_original = security_group.split("~")[0]
-        if check_original in tfdata["graphdict"].keys():
-            del tfdata["graphdict"][check_original]
+        helpers.delete_node(tfdata, check_original, remove_from_connections=False)
 
     # Extend security groups for numbered instances
     tfdata = extend_sg_groups(tfdata)

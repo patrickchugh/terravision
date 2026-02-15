@@ -132,8 +132,7 @@ def aws_handle_autoscaling(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for subnet in subnets_to_change:
                 if asg not in tfdata["graphdict"][subnet]:
                     tfdata["graphdict"][subnet].append(asg)
-                if connection in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].remove(connection)
+                helpers.safe_remove_connection(tfdata, subnet, connection)
 
     return tfdata
 
@@ -348,11 +347,11 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     "aws_efs_mount_target"
                 ):
                     # Remove mount target from file system
-                    tfdata["graphdict"][fs].remove(fs_connection)
+                    helpers.safe_remove_connection(tfdata, fs, fs_connection)
                 else:
                     # Move other connections to file system
                     tfdata["graphdict"][fs_connection].append(fs)
-                    tfdata["graphdict"][fs].remove(fs_connection)
+                    helpers.safe_remove_connection(tfdata, fs, fs_connection)
     # Replace EFS file system references with mount target
     for node in sorted(tfdata["graphdict"].keys()):
         connections = tfdata["graphdict"][node]
@@ -364,7 +363,7 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     # Use first mount target as replacement
                     target = efs_mount_targets[0].split("~")[0]
                     target = helpers.remove_brackets_and_numbers(target)
-                    tfdata["graphdict"][node].remove(connection)
+                    helpers.safe_remove_connection(tfdata, node, connection)
                     tfdata["graphdict"][node].append(target)
     return tfdata
 
@@ -395,7 +394,7 @@ def handle_indirect_sg_rules(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 # Replace rule with actual resource connection
                 if matched_resource and len(tfdata["graphdict"][matched_resource]) > 0:
-                    tfdata["graphdict"][sg].remove(sg_connection)
+                    helpers.safe_remove_connection(tfdata, sg, sg_connection)
                     tfdata["graphdict"][sg].append(
                         tfdata["graphdict"][matched_resource][0]
                     )
@@ -447,9 +446,10 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         if len(tfdata["graphdict"][connection]) > 0:
                             unique_name = connection + "_" + target.split(".")[-1]
                             tfdata["graphdict"][unique_name] = newlist
-                            tfdata["meta_data"][unique_name] = copy.deepcopy(
-                                tfdata["meta_data"][connection]
-                            )
+                            if connection in tfdata["meta_data"]:
+                                tfdata["meta_data"][unique_name] = copy.deepcopy(
+                                    tfdata["meta_data"][connection]
+                                )
                             sg_to_purge.append(connection)
                         else:
                             tfdata["graphdict"][connection] = newlist
@@ -465,7 +465,7 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and len(tfdata["graphdict"][connection]) == 0
                     and target not in tfdata["graphdict"][connection]
                 ):
-                    tfdata["graphdict"][target].remove(connection)
+                    helpers.safe_remove_connection(tfdata, target, connection)
                     tfdata["graphdict"][connection].append(target)
         # Remove Security Group Rules from associations with the security group
         # This will ensure only nodes that are protected with a security group are drawn with the red boundary
@@ -475,10 +475,10 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     connection in tfdata["graphdict"].keys()
                     and len(tfdata["graphdict"][connection]) == 0
                 ):
-                    del tfdata["graphdict"][connection]
+                    helpers.delete_node(tfdata, connection, remove_from_connections=False)
                 plist = helpers.list_of_parents(tfdata["graphdict"], connection)
                 for p in plist:
-                    tfdata["graphdict"][p].remove(connection)
+                    helpers.safe_remove_connection(tfdata, p, connection)
         # Replace any references to nodes within the security group with the security group
         references = sorted(list(helpers.list_of_parents(tfdata["graphdict"], target)))
         if sg_to_purge:
@@ -523,8 +523,7 @@ def duplicate_sg_connections(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     for i in range(0, len(results)):
         sg2 = results[i][1]
         common = results[i][2]
-        if common in tfdata["graphdict"][sg2]:
-            tfdata["graphdict"][sg2].remove(common)
+        if helpers.safe_remove_connection(tfdata, sg2, common):
             tfdata["graphdict"][sg2].append(common + str(i))
     return tfdata
 
@@ -559,8 +558,7 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and sg + "~1" not in parent_list
                 ):
                     tfdata["graphdict"][parent].append(sg)
-                    if sg_connection in tfdata["graphdict"][parent]:
-                        tfdata["graphdict"][parent].remove(sg_connection)
+                    helpers.safe_remove_connection(tfdata, parent, sg_connection)
     # Remove SGs from VPC level (they belong in subnets)
     for sg in list_of_sgs:
         parent_list = sorted(helpers.list_of_parents(tfdata["graphdict"], sg))
@@ -569,16 +567,16 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 helpers.get_no_module_name(parent).startswith("aws_vpc")
                 and sg in tfdata["graphdict"][parent]
             ):
-                tfdata["graphdict"][parent].remove(sg)
+                helpers.safe_remove_connection(tfdata, parent, sg)
     # Remove orphan security groups with no connections or parents
     for sg in sorted(list_of_sgs):
         if sg in tfdata["graphdict"] and len(tfdata["graphdict"][sg]) == 0:
-            del tfdata["graphdict"][sg]
+            helpers.delete_node(tfdata, sg)
         if (
             helpers.list_of_parents(tfdata["graphdict"], sg, True) == []
             and sg in tfdata["graphdict"]
         ):
-            del tfdata["graphdict"][sg]
+            helpers.delete_node(tfdata, sg)
     return tfdata
 
 
@@ -647,7 +645,7 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         renamed_node = str(lb_type) + "." + "elb"
 
         # Initialize renamed node metadata
-        if not tfdata["meta_data"].get(renamed_node):
+        if not tfdata["meta_data"].get(renamed_node) and lb in tfdata["meta_data"]:
             tfdata["meta_data"][renamed_node] = copy.deepcopy(tfdata["meta_data"][lb])
 
         # CRITICAL: Create renamed node in graphdict BEFORE processing connections
@@ -659,26 +657,33 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             c_type = connection.split(".")[0]
             if c_type not in SHARED_SERVICES:
                 tfdata["graphdict"][renamed_node].append(connection)
-                tfdata["graphdict"][lb].remove(connection)
+                helpers.safe_remove_connection(tfdata, lb, connection)
 
             if (
                 tfdata["meta_data"].get(connection)
-                and tfdata["meta_data"][connection].get("count")
-                or tfdata["meta_data"][connection].get("desired_count")
+                and (
+                    tfdata["meta_data"][connection].get("count")
+                    or tfdata["meta_data"][connection].get("desired_count")
+                )
             ) and connection.split(".")[0] not in SHARED_SERVICES:
                 # Sets LB count to the max of the count of any dependencies
                 conn_count = tfdata["meta_data"][connection].get("count")
-                if conn_count and int(conn_count) > int(
-                    tfdata["meta_data"][renamed_node]["count"]
+                if (
+                    conn_count
+                    and tfdata["meta_data"].get(renamed_node)
+                    and tfdata["meta_data"][renamed_node].get("count")
+                    and int(conn_count)
+                    > int(tfdata["meta_data"][renamed_node]["count"])
                 ):
                     tfdata["meta_data"][renamed_node]["count"] = int(conn_count)
                     plist = sorted(
                         helpers.list_of_parents(tfdata["graphdict"], renamed_node)
                     )
                     for p in plist:
-                        tfdata["meta_data"][p]["count"] = int(
-                            tfdata["meta_data"][connection]["count"]
-                        )
+                        if p in tfdata["meta_data"]:
+                            tfdata["meta_data"][p]["count"] = int(
+                                tfdata["meta_data"][connection]["count"]
+                            )
             parents = sorted(helpers.list_of_parents(tfdata["graphdict"], lb))
             # Replace any parent references to original LB instance to the renamed node with LB type
             for p in parents:
@@ -691,13 +696,11 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][p].append(renamed_node)
                     # Defensive check: only remove if lb is actually in parent
                     # (SG handler may have already modified structure for multi-subnet LBs)
-                    if lb in tfdata["graphdict"][p]:
-                        tfdata["graphdict"][p].remove(lb)
+                    helpers.safe_remove_connection(tfdata, p, lb)
                 elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
                     # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
                     # Traffic should flow LB → ALB → Compute, not Compute → LB
-                    if lb in tfdata["graphdict"][p]:
-                        tfdata["graphdict"][p].remove(lb)
+                    helpers.safe_remove_connection(tfdata, p, lb)
         # ELB service points TO ALB instances (correct direction)
         if lb not in tfdata["graphdict"]:
             tfdata["graphdict"][lb] = list()
@@ -726,7 +729,7 @@ def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Move DB subnet group from subnet to VPC level
             for subnet in db_grouping:
                 if helpers.get_no_module_name(subnet).startswith("aws_subnet"):
-                    tfdata["graphdict"][subnet].remove(dbsubnet)
+                    helpers.safe_remove_connection(tfdata, subnet, dbsubnet)
                     # Navigate up to VPC through AZ
                     az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
                     vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
@@ -739,7 +742,7 @@ def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     if helpers.get_no_module_name(check_sg).startswith(
                         "aws_security_group"
                     ):
-                        tfdata["graphdict"][vpc].remove(dbsubnet)
+                        helpers.safe_remove_connection(tfdata, vpc, dbsubnet)
                         tfdata["graphdict"][vpc].append(check_sg)
                         break
     return tfdata
@@ -763,7 +766,7 @@ def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Move endpoints into VPC and remove as separate nodes
     for vpc_endpoint in vpc_endpoints:
         tfdata["graphdict"][vpc].append(vpc_endpoint)
-        del tfdata["graphdict"][vpc_endpoint]
+        helpers.delete_node(tfdata, vpc_endpoint, remove_from_connections=False)
     return tfdata
 
 
@@ -909,19 +912,17 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
             tfdata["graphdict"][matching_subnets[i - 1]].append(numbered_asg)
 
         for subnet in subnets:
-            if asg in tfdata["graphdict"][subnet]:
-                tfdata["graphdict"][subnet].remove(asg)
-        tfdata["graphdict"].pop(asg, None)
-        tfdata["meta_data"].pop(asg, None)
+            helpers.safe_remove_connection(tfdata, subnet, asg)
+        helpers.delete_node(tfdata, asg, remove_from_connections=False, delete_meta_data=True)
 
         for lt in launch_templates:
-            tfdata["graphdict"].pop(lt, None)
+            helpers.delete_node(tfdata, lt, remove_from_connections=False)
 
         for policy in policies:
-            tfdata["graphdict"].pop(policy, None)
+            helpers.delete_node(tfdata, policy, remove_from_connections=False)
 
         for cluster in ecs_clusters:
-            tfdata["graphdict"].pop(cluster, None)
+            helpers.delete_node(tfdata, cluster, remove_from_connections=False)
 
     return tfdata
 
@@ -1042,7 +1043,7 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             and auto_cluster in tfdata["graphdict"][parent]
         ):
             idx = tfdata["graphdict"][parent].index(auto_cluster)
-            tfdata["graphdict"][parent].remove(auto_cluster)
+            helpers.safe_remove_connection(tfdata, parent, auto_cluster)
             for i in range(1, counter):
                 tfdata["graphdict"][parent].insert(idx, f"{auto_cluster}_{i}")
 
@@ -1051,11 +1052,10 @@ def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         eks_group in tfdata["graphdict"]
         and auto_cluster in tfdata["graphdict"][eks_group]
     ):
-        tfdata["graphdict"][eks_group].remove(auto_cluster)
+        helpers.safe_remove_connection(tfdata, eks_group, auto_cluster)
         tfdata["graphdict"][eks_group].append(eks_service)
 
-    del tfdata["graphdict"][auto_cluster]
-    del tfdata["meta_data"][auto_cluster]
+    helpers.delete_node(tfdata, auto_cluster, delete_meta_data=True)
 
     return tfdata
 
@@ -1113,8 +1113,7 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             for node in sorted(tfdata["graphdict"].keys()):
                 node_type = helpers.get_no_module_name(node).split(".")[0]
                 if node_type in ["aws_vpc", "aws_subnet", "aws_az"]:
-                    if cluster in tfdata["graphdict"][node]:
-                        tfdata["graphdict"][node].remove(cluster)
+                    helpers.safe_remove_connection(tfdata, node, cluster)
         else:
             # For Karpenter (no node groups/Fargate), expand cluster into numbered instances per subnet
             subnets_with_cluster = sorted(
@@ -1133,11 +1132,11 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["meta_data"][cluster]
                     )
 
-                    tfdata["graphdict"][subnet].remove(cluster)
+                    helpers.safe_remove_connection(tfdata, subnet, cluster)
                     tfdata["graphdict"][subnet].append(numbered_cluster)
 
                 # Update EKS group to link to cluster via existing cluster node
-                tfdata["graphdict"][eks_group_name].remove(cluster)
+                helpers.safe_remove_connection(tfdata, eks_group_name, cluster)
 
                 # Link numbered clusters to existing cluster node
                 tfdata["graphdict"][cluster] = []
@@ -1302,14 +1301,10 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
             # Remove original from all subnets
             for subnet in subnets:
-                if node_group in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].remove(node_group)
+                helpers.safe_remove_connection(tfdata, subnet, node_group)
 
             # Delete original
-            if node_group in tfdata["graphdict"]:
-                del tfdata["graphdict"][node_group]
-            if node_group in tfdata["meta_data"]:
-                del tfdata["meta_data"][node_group]
+            helpers.delete_node(tfdata, node_group, remove_from_connections=False, delete_meta_data=True)
 
         elif len(matching_subnets) == 1:
             subnet = matching_subnets[0]
@@ -1476,16 +1471,14 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][subnet].append(numbered_profile)
 
                 # Remove unnumbered profile from subnet if present
-                if profile in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].remove(profile)
+                helpers.safe_remove_connection(tfdata, subnet, profile)
 
             # Update EKS cluster to reference numbered profiles
             eks_clusters = helpers.list_of_dictkeys_containing(
                 tfdata["graphdict"], "aws_eks_cluster"
             )
             for cluster in eks_clusters:
-                if profile in tfdata["graphdict"].get(cluster, []):
-                    tfdata["graphdict"][cluster].remove(profile)
+                if helpers.safe_remove_connection(tfdata, cluster, profile):
                     # Add all numbered profiles to cluster
                     for i in range(1, len(matching_subnets) + 1):
                         numbered_profile = f"{profile}~{i}"
@@ -1495,8 +1488,7 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Update other resources that reference the Fargate profile
             # (e.g., IAM roles for Fargate pod execution)
             for resource in list(tfdata["graphdict"].keys()):
-                if profile in tfdata["graphdict"][resource]:
-                    tfdata["graphdict"][resource].remove(profile)
+                if helpers.safe_remove_connection(tfdata, resource, profile):
                     # Add all numbered profiles
                     for i in range(1, len(matching_subnets) + 1):
                         numbered_profile = f"{profile}~{i}"
@@ -1504,10 +1496,7 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             tfdata["graphdict"][resource].append(numbered_profile)
 
             # Remove original unnumbered profile
-            if profile in tfdata["graphdict"]:
-                del tfdata["graphdict"][profile]
-            if profile in tfdata["meta_data"]:
-                del tfdata["meta_data"][profile]
+            helpers.delete_node(tfdata, profile, remove_from_connections=False, delete_meta_data=True)
 
         elif len(matching_subnets) == 1:
             # Single subnet - keep as is
@@ -1560,8 +1549,7 @@ def _handle_karpenter_release(tfdata: Dict[str, Any], release: str) -> None:
         release: Karpenter release resource name
     """
     new_name = release.replace("helm_release", "tv_karpenter")
-    tfdata["graphdict"][new_name] = tfdata["graphdict"].pop(release)
-    tfdata["meta_data"][new_name] = tfdata["meta_data"].pop(release)
+    helpers.rename_node(tfdata, release, new_name, update_connections=False, rename_meta_data=True)
 
     node_groups = [k for k in tfdata["graphdict"] if "eks_node_group" in k]
     private_subnets = sorted(
@@ -1601,19 +1589,14 @@ def _handle_karpenter_release(tfdata: Dict[str, Any], release: str) -> None:
     unnumbered = [ng for ng in node_groups if "~" not in ng]
     for cluster in eks_clusters:
         for ng in unnumbered:
-            (
-                tfdata["graphdict"][cluster].remove(ng)
-                if ng in tfdata["graphdict"][cluster]
-                else None
-            )
+            helpers.safe_remove_connection(tfdata, cluster, ng)
 
     for key in (
         [new_name]
         + unnumbered
         + [lt for lt in launch_templates if not tfdata["graphdict"].get(lt)]
     ):
-        tfdata["graphdict"].pop(key, None)
-        tfdata["meta_data"].pop(key, None)
+        helpers.delete_node(tfdata, key, remove_from_connections=False, delete_meta_data=True)
 
 
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -1627,7 +1610,7 @@ def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     randoms = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "random_string.")
     for r in list(randoms):
-        del tfdata["graphdict"][r]
+        helpers.delete_node(tfdata, r)
     return tfdata
 
 
@@ -1983,7 +1966,8 @@ def aws_handle_waf_associations(tfdata: dict) -> dict:
                     # We only want WAF → protected resource (WAF protects resources)
                     for key in list(graphdict.keys()):
                         if waf_resource in graphdict.get(key, []):
-                            graphdict[key].remove(waf_resource)
+                            if waf_resource in graphdict[key]:
+                                graphdict[key].remove(waf_resource)
 
     tfdata["graphdict"] = graphdict
     return tfdata

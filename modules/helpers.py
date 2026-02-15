@@ -1446,3 +1446,83 @@ def validate_graphdict(
     # - etc.
 
     return (len(all_errors) == 0, all_errors)
+
+
+def delete_node(
+    tfdata: Dict[str, Any],
+    node_name: str,
+    remove_from_connections: bool = True,
+    delete_meta_data: bool = False,
+) -> None:
+    """Remove a node from graphdict and optionally from meta_data.
+
+    Args:
+        tfdata: Terraform data dictionary containing 'graphdict' and 'meta_data'
+        node_name: The node to delete
+        remove_from_connections: If True, also remove node_name from all
+            connection lists in graphdict. Set to False when the caller
+            handles connection cleanup separately.
+        delete_meta_data: If True, also remove from meta_data. Defaults to
+            False because later pipeline stages often need meta_data for
+            nodes that have been removed from graphdict.
+    """
+    tfdata["graphdict"].pop(node_name, None)
+    if delete_meta_data:
+        tfdata["meta_data"].pop(node_name, None)
+    if remove_from_connections:
+        for connections in tfdata["graphdict"].values():
+            if isinstance(connections, list) and node_name in connections:
+                connections.remove(node_name)
+
+
+def rename_node(
+    tfdata: Dict[str, Any],
+    old_name: str,
+    new_name: str,
+    update_connections: bool = True,
+    rename_meta_data: bool = False,
+) -> None:
+    """Rename a node in graphdict and optionally meta_data.
+
+    Args:
+        tfdata: Terraform data dictionary
+        old_name: Current node name
+        new_name: Desired new node name
+        update_connections: If True, replace old_name with new_name in all
+            connection lists using in-place index replacement to preserve ordering.
+        rename_meta_data: If True, also move meta_data from old_name to new_name.
+            Defaults to False because many callers only rename the graphdict key
+            while later pipeline stages still need meta_data at the old key.
+    """
+    if old_name not in tfdata["graphdict"]:
+        return
+    tfdata["graphdict"][new_name] = tfdata["graphdict"].pop(old_name)
+    if rename_meta_data and old_name in tfdata["meta_data"]:
+        tfdata["meta_data"][new_name] = tfdata["meta_data"].pop(old_name)
+    if update_connections:
+        for connections in tfdata["graphdict"].values():
+            if isinstance(connections, list) and old_name in connections:
+                idx = connections.index(old_name)
+                connections[idx] = new_name
+
+
+def safe_remove_connection(
+    tfdata: Dict[str, Any],
+    parent_node: str,
+    child_node: str,
+) -> bool:
+    """Safely remove child_node from parent_node's connection list.
+
+    Args:
+        tfdata: Terraform data dictionary
+        parent_node: The node whose connection list to modify
+        child_node: The node to remove from parent_node's connections
+
+    Returns:
+        True if the connection was found and removed, False otherwise.
+    """
+    connections = tfdata["graphdict"].get(parent_node)
+    if connections is not None and child_node in connections:
+        connections.remove(child_node)
+        return True
+    return False

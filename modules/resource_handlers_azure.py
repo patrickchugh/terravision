@@ -149,7 +149,7 @@ def azure_handle_vnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         parent_type = helpers.get_no_module_name(parent).split(".")[0]
                         if parent != vnet and parent_type != "azurerm_virtual_network":
                             if subnet in tfdata["graphdict"].get(parent, []):
-                                tfdata["graphdict"][parent].remove(subnet)
+                                helpers.safe_remove_connection(tfdata, parent, subnet)
 
     return tfdata
 
@@ -275,11 +275,11 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         tfdata["graphdict"][target_nsg].append(resource)
                     # Remove from direct subnet connection
                     if resource in tfdata["graphdict"].get(target_subnet, []):
-                        tfdata["graphdict"][target_subnet].remove(resource)
+                        helpers.safe_remove_connection(tfdata, target_subnet, resource)
 
         # Remove the association resource from graph (it's a linking resource)
         if assoc in tfdata["graphdict"]:
-            del tfdata["graphdict"][assoc]
+            helpers.delete_node(tfdata, assoc)
 
     # Process NIC-NSG associations
     for assoc in nic_nsg_associations:
@@ -312,7 +312,7 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Remove the association resource from graph
         if assoc in tfdata["graphdict"]:
-            del tfdata["graphdict"][assoc]
+            helpers.delete_node(tfdata, assoc)
 
     return tfdata
 
@@ -433,8 +433,8 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 if vmss_instance in tfdata["graphdict"].get(
                                     parent_subnet, []
                                 ):
-                                    tfdata["graphdict"][parent_subnet].remove(
-                                        vmss_instance
+                                    helpers.safe_remove_connection(
+                                        tfdata, parent_subnet, vmss_instance
                                     )
 
                                 # Add zone to subnet if not already there
@@ -536,7 +536,7 @@ def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     randoms = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "random_string.")
     for r in list(randoms):
-        del tfdata["graphdict"][r]
+        helpers.delete_node(tfdata, r)
     return tfdata
 
 
@@ -684,7 +684,7 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Move VMs from subnet to zone
             for vm in zone_vms:
                 if vm in tfdata["graphdict"].get(subnet, []):
-                    tfdata["graphdict"][subnet].remove(vm)
+                    helpers.safe_remove_connection(tfdata, subnet, vm)
 
                 if vm not in tfdata["graphdict"][zone_name]:
                     tfdata["graphdict"][zone_name].append(vm)
@@ -852,7 +852,7 @@ def create_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             if res_instance in tfdata["graphdict"].get(
                                 parent_subnet, []
                             ):
-                                tfdata["graphdict"][parent_subnet].remove(res_instance)
+                                helpers.safe_remove_connection(tfdata, parent_subnet, res_instance)
 
                             # Add zone to subnet if not already there
                             if zone_node not in tfdata["graphdict"].get(
@@ -863,15 +863,10 @@ def create_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     # Remove the base node after creating numbered instances in zones
                     if base_name in tfdata["graphdict"]:
                         # Check if any resources connect TO the base node
-                        base_connections = tfdata["graphdict"][base_name]
+                        base_connections = list(tfdata["graphdict"][base_name])
 
-                        # Delete the base node from graphdict
-                        del tfdata["graphdict"][base_name]
-
-                        # Remove base node from any parent's children list
-                        for node in tfdata["graphdict"]:
-                            if base_name in tfdata["graphdict"][node]:
-                                tfdata["graphdict"][node].remove(base_name)
+                        # Delete the base node from graphdict/meta_data and all connection lists
+                        helpers.delete_node(tfdata, base_name)
 
                         # If the base node had connections, expand them to numbered instances
                         # For example, if base VMSS → Load Balancer, then vmss~1 → LB, vmss~2 → LB, vmss~3 → LB
@@ -967,7 +962,7 @@ def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 ]
                 # If numbered versions exist, remove the base node reference
                 if numbered_versions:
-                    tfdata["graphdict"][subnet].remove(child)
+                    helpers.safe_remove_connection(tfdata, subnet, child)
 
     return tfdata
 
@@ -1103,8 +1098,8 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Remove association connections (they're implementation details)
         for assoc in lb_associations:
-            if assoc in tfdata["graphdict"][lb]:
-                tfdata["graphdict"][lb].remove(assoc)
+            if assoc in tfdata["graphdict"].get(lb, []):
+                helpers.safe_remove_connection(tfdata, lb, assoc)
 
     # Process Application Gateways - convert NIC connections to VM connections
     for appgw in app_gateways:
@@ -1146,18 +1141,12 @@ def connect_lb_to_backend_vms(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # Remove NIC connections (replace with VM connections)
         for nic in appgw_nics:
-            if nic in tfdata["graphdict"][appgw]:
-                tfdata["graphdict"][appgw].remove(nic)
+            if nic in tfdata["graphdict"].get(appgw, []):
+                helpers.safe_remove_connection(tfdata, appgw, nic)
 
     # Clean up association resources from the graph entirely
     for assoc in associations:
-        tfdata["graphdict"].pop(assoc, None)
-        tfdata["meta_data"].pop(assoc, None)
-
-        # Remove from any parent connections
-        for node in list(tfdata["graphdict"].keys()):
-            if assoc in tfdata["graphdict"].get(node, []):
-                tfdata["graphdict"][node].remove(assoc)
+        helpers.delete_node(tfdata, assoc, delete_meta_data=True)
 
     return tfdata
 

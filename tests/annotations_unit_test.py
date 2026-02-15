@@ -73,8 +73,8 @@ class TestModifyNodes(unittest.TestCase):
     def test_modify_nodes_disconnect(self, mock_echo):
         graphdict = {"node1": ["node2"], "node2": []}
         annotate = {"disconnect": {"node1": ["node2"]}}
-        with self.assertRaises(AttributeError):
-            modify_nodes(graphdict, annotate)
+        result = modify_nodes(graphdict, annotate)
+        self.assertNotIn("node2", result["node1"])
 
     @patch("modules.annotations.click.echo")
     def test_modify_nodes_disconnect_wildcard(self, mock_echo):

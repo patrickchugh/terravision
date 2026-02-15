@@ -206,7 +206,7 @@ def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     randoms = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "random_string.")
     for r in list(randoms):
-        del tfdata["graphdict"][r]
+        helpers.delete_node(tfdata, r, remove_from_connections=False)
     return tfdata
 
 
@@ -569,10 +569,7 @@ def gcp_link_igms_to_subnet_zones(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
         # If zone is not linked from any subnet, remove it
         if not is_linked:
-            if zone in tfdata["graphdict"]:
-                del tfdata["graphdict"][zone]
-            if zone in tfdata["meta_data"]:
-                del tfdata["meta_data"][zone]
+            helpers.delete_node(tfdata, zone, delete_meta_data=True)
 
     return tfdata
 
@@ -642,9 +639,7 @@ def gcp_move_templates_to_region(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     ]
     for zone in empty_zones:
         # Remove empty zone from graphdict
-        del tfdata["graphdict"][zone]
-        if zone in tfdata["meta_data"]:
-            del tfdata["meta_data"][zone]
+        helpers.delete_node(tfdata, zone, remove_from_connections=False, delete_meta_data=True)
 
         # Remove references to empty zone from parent nodes
         for resource, children in tfdata["graphdict"].items():

@@ -77,12 +77,10 @@ def expand_to_numbered_instances(
                     tfdata["graphdict"][subnet].append(numbered)
 
                 # Remove unnumbered from subnet
-                if resource in tfdata["graphdict"][subnet]:
-                    tfdata["graphdict"][subnet].remove(resource)
+                helpers.safe_remove_connection(tfdata, subnet, resource)
 
             # Delete original
-            tfdata["graphdict"].pop(resource, None)
-            tfdata["meta_data"].pop(resource, None)
+            helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
 
         elif len(matching_subnets) == 1:
             # Single subnet - add if not present
@@ -104,7 +102,7 @@ def expand_to_numbered_instances(
 
                 # If this numbered instance doesn't match the subnet's position, remove it
                 if instance_num != subnet_idx:
-                    tfdata["graphdict"][subnet].remove(connection)
+                    helpers.safe_remove_connection(tfdata, subnet, connection)
 
     return tfdata
 
@@ -160,13 +158,12 @@ def apply_resource_variants(
 
             # Update parent references
             for parent in helpers.list_of_parents(tfdata["graphdict"], resource):
-                if resource in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].remove(resource)
-                    if renamed not in tfdata["graphdict"][parent]:
-                        tfdata["graphdict"][parent].append(renamed)
+                helpers.safe_remove_connection(tfdata, parent, resource)
+                if renamed not in tfdata["graphdict"].get(parent, []):
+                    tfdata["graphdict"].setdefault(parent, []).append(renamed)
 
             # Delete original
-            del tfdata["graphdict"][resource]
+            helpers.delete_node(tfdata, resource, remove_from_connections=False)
 
     return tfdata
 
@@ -234,9 +231,9 @@ def move_to_parent(
     for resource in resources:
         for from_parent in from_parents:
             if resource in tfdata["graphdict"].get(from_parent, []):
-                tfdata["graphdict"][from_parent].remove(resource)
-                if resource not in tfdata["graphdict"][to_parent]:
-                    tfdata["graphdict"][to_parent].append(resource)
+                helpers.safe_remove_connection(tfdata, from_parent, resource)
+                if resource not in tfdata["graphdict"].get(to_parent, []):
+                    tfdata["graphdict"].setdefault(to_parent, []).append(resource)
 
     return tfdata
 
@@ -292,8 +289,7 @@ def unlink_resources(
 
     for source in sources:
         for target in targets:
-            if target in tfdata["graphdict"].get(source, []):
-                tfdata["graphdict"][source].remove(target)
+            helpers.safe_remove_connection(tfdata, source, target)
 
     return tfdata
 
@@ -321,11 +317,9 @@ def delete_nodes(
         if remove_from_parents:
             parents = helpers.list_of_parents(tfdata["graphdict"], resource)
             for parent in parents:
-                if resource in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].remove(resource)
+                helpers.safe_remove_connection(tfdata, parent, resource)
 
-        tfdata["graphdict"].pop(resource, None)
-        tfdata["meta_data"].pop(resource, None)
+        helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
 
     return tfdata
 
@@ -402,10 +396,10 @@ def redirect_connections(
             parents = [p for p in parents if parent_pattern in p]
 
         for parent in parents:
-            if from_resource in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(from_resource)
-                if to_resource not in tfdata["graphdict"][parent]:
-                    tfdata["graphdict"][parent].append(to_resource)
+            if from_resource in tfdata["graphdict"].get(parent, []):
+                helpers.safe_remove_connection(tfdata, parent, from_resource)
+                if to_resource not in tfdata["graphdict"].get(parent, []):
+                    tfdata["graphdict"].setdefault(parent, []).append(to_resource)
 
     return tfdata
 
@@ -441,8 +435,7 @@ def clone_with_suffix(
             )
 
         # Delete original
-        tfdata["graphdict"].pop(resource, None)
-        tfdata["meta_data"].pop(resource, None)
+        helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
 
     return tfdata
 
@@ -504,7 +497,7 @@ def apply_all_variants(
             tfdata["meta_data"][renamed_node] = copy.deepcopy(
                 tfdata["meta_data"].get(node, {})
             )
-            del tfdata["graphdict"][node]
+            helpers.delete_node(tfdata, node, remove_from_connections=False)
             node = renamed_node
 
         # Process connections
@@ -548,8 +541,9 @@ def apply_all_variants(
                 variant_label = resource.split(".")[1]
                 new_variant_name = f"{variant_suffix}.{variant_label}"
 
-                tfdata["graphdict"][node].remove(resource)
-                tfdata["graphdict"][node].append(new_variant_name)
+                helpers.safe_remove_connection(tfdata, node, resource)
+                if node in tfdata["graphdict"]:
+                    tfdata["graphdict"][node].append(new_variant_name)
                 tfdata["meta_data"][new_variant_name] = copy.deepcopy(
                     tfdata["meta_data"].get(resource, {})
                 )
@@ -579,8 +573,8 @@ def move_to_vpc_parent(
         subnets = [p for p in parents if "aws_subnet" in p]
 
         for subnet in subnets:
-            if resource in tfdata["graphdict"][subnet]:
-                tfdata["graphdict"][subnet].remove(resource)
+            if resource in tfdata["graphdict"].get(subnet, []):
+                helpers.safe_remove_connection(tfdata, subnet, resource)
 
                 # Navigate to VPC through AZ
                 az_parents = helpers.list_of_parents(tfdata["graphdict"], subnet)
@@ -624,8 +618,8 @@ def redirect_to_security_group(
             if security_groups:
                 # Replace resource with security group in VPC
                 for vpc in vpcs:
-                    if resource in tfdata["graphdict"][vpc]:
-                        tfdata["graphdict"][vpc].remove(resource)
+                    if resource in tfdata["graphdict"].get(vpc, []):
+                        helpers.safe_remove_connection(tfdata, vpc, resource)
                         for sg in security_groups:
                             if sg not in tfdata["graphdict"][vpc]:
                                 tfdata["graphdict"][vpc].append(sg)
@@ -724,7 +718,7 @@ def link_via_shared_child(
 
                         if remove_intermediate:
                             # Remove source from intermediate node
-                            graphdict[node].remove(source)
+                            helpers.safe_remove_connection(tfdata, node, source)
 
                             # Remove target from non-group parents
                             target_parents = helpers.list_of_parents(graphdict, target)
@@ -733,8 +727,7 @@ def link_via_shared_child(
                                     "."
                                 )[0]
                                 if parent_type not in AWS_GROUP_NODES:
-                                    if target in graphdict[parent]:
-                                        graphdict[parent].remove(target)
+                                    helpers.safe_remove_connection(tfdata, parent, target)
 
     return tfdata
 
@@ -783,8 +776,7 @@ def link_via_common_connection(
                 if remove_shared_connection:
                     # Remove shared connections from source
                     for conn in shared_connections:
-                        if conn in graphdict[source]:
-                            graphdict[source].remove(conn)
+                        helpers.safe_remove_connection(tfdata, source, conn)
 
     return tfdata
 
@@ -856,10 +848,9 @@ def create_transitive_links(
 
                         if remove_intermediate:
                             # Remove intermediate from source
-                            graphdict[source].remove(intermediate)
+                            helpers.safe_remove_connection(tfdata, source, intermediate)
                             # Remove intermediate node entirely
-                            graphdict.pop(intermediate, None)
-                            tfdata["meta_data"].pop(intermediate, None)
+                            helpers.delete_node(tfdata, intermediate, remove_from_connections=False, delete_meta_data=True)
 
     return tfdata
 
@@ -919,13 +910,11 @@ def link_peers_via_intermediary(
         # Remove intermediary node if requested (only if we created links)
         if remove_intermediary:
             # Remove the intermediary node itself
-            graphdict.pop(intermediary, None)
-            tfdata["meta_data"].pop(intermediary, None)
+            helpers.delete_node(tfdata, intermediary, remove_from_connections=False, delete_meta_data=True)
 
             # Clean up dangling references to the deleted intermediary from all other nodes
             for node in list(graphdict.keys()):
-                if intermediary in graphdict[node]:
-                    graphdict[node].remove(intermediary)
+                helpers.safe_remove_connection(tfdata, node, intermediary)
 
     return tfdata
 
@@ -957,8 +946,7 @@ def unlink_from_parents(
             parents = [p for p in parents if parent_filter in p]
 
         for parent in parents:
-            if resource in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(resource)
+            helpers.safe_remove_connection(tfdata, parent, resource)
 
     return tfdata
 
@@ -1008,12 +996,11 @@ def insert_intermediate_node(
         # Rewire connections: parent→child becomes parent→intermediate→child
         for parent in child_parents:
             # Remove direct parent→child link
-            if child in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].remove(child)
+            helpers.safe_remove_connection(tfdata, parent, child)
 
             # Add parent→intermediate link
-            if intermediate not in tfdata["graphdict"][parent]:
-                tfdata["graphdict"][parent].append(intermediate)
+            if intermediate not in tfdata["graphdict"].get(parent, []):
+                tfdata["graphdict"].setdefault(parent, []).append(intermediate)
 
         # Add intermediate→child link
         if child not in tfdata["graphdict"][intermediate]:
@@ -1049,8 +1036,8 @@ def bidirectional_link(
                 tfdata["graphdict"][source].append(target)
 
             # Optionally clean up reverse link
-            if cleanup_reverse and source in tfdata["graphdict"].get(target, []):
-                tfdata["graphdict"][target].remove(source)
+            if cleanup_reverse:
+                helpers.safe_remove_connection(tfdata, target, source)
 
     return tfdata
 
@@ -1173,9 +1160,9 @@ def replace_connection_targets(
     for source in sources:
         for old_target in old_targets:
             if old_target in tfdata["graphdict"].get(source, []):
-                tfdata["graphdict"][source].remove(old_target)
-                if new_target not in tfdata["graphdict"][source]:
-                    tfdata["graphdict"][source].append(new_target)
+                helpers.safe_remove_connection(tfdata, source, old_target)
+                if new_target not in tfdata["graphdict"].get(source, []):
+                    tfdata["graphdict"].setdefault(source, []).append(new_target)
 
     return tfdata
 

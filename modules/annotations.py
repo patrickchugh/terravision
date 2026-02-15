@@ -117,11 +117,15 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         # Remove specified connections if delete_nodes defined
                         if delete_nodes:
                             for delnode in delete_nodes:
-                                for conn in graphdict[node]:
+                                conns_to_remove = [
+                                    conn
+                                    for conn in graphdict.get(node, [])
                                     if helpers.get_no_module_name(conn).startswith(
                                         delnode
-                                    ):
-                                        graphdict[node].remove(conn)
+                                    )
+                                ]
+                                for conn in conns_to_remove:
+                                    graphdict[node].remove(conn)
                         # Ensure annotation node exists in graph
                         if not graphdict.get(annotation_node):
                             graphdict[annotation_node] = list()
@@ -218,11 +222,12 @@ def modify_nodes(
                     for node in graphdict:
                         if (
                             helpers.get_no_module_name(node).startswith(prefix)
-                            and connection in graphdict[node]
+                            and connection in graphdict.get(node, [])
                         ):
                             graphdict[node].remove(connection)
                 else:
-                    graphdict[startnode].delete(connection)
+                    if connection in graphdict.get(startnode, []):
+                        graphdict[startnode].remove(connection)
 
     # Delete nodes from the graph
     if annotate.get("remove"):
@@ -231,10 +236,17 @@ def modify_nodes(
                 click.echo(f"~ {node}")
                 prefix = node.split("*")[0]
                 # Handle wildcard deletion
-                if "*" in node and helpers.get_no_module_name(node).startswith(prefix):
-                    del graphdict[node]
+                if "*" in node:
+                    # Delete all nodes matching prefix
+                    matching = [
+                        k
+                        for k in list(graphdict.keys())
+                        if helpers.get_no_module_name(k).startswith(prefix)
+                    ]
+                    for m in matching:
+                        graphdict.pop(m, None)
                 else:
-                    del graphdict[node]
+                    graphdict.pop(node, None)
 
     return graphdict
 
