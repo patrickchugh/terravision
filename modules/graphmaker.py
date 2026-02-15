@@ -329,25 +329,34 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     tfdata["graphdict"][c] = list()
                 if n not in tfdata["graphdict"][c]:
                     tfdata["graphdict"][c].append(n)
-                tfdata["graphdict"][n].remove(c)
+                if c in tfdata["graphdict"].get(n, []):
+                    tfdata["graphdict"][n].remove(c)
 
             # Reverse if connection is a forced origin
             # Skip reversal for synthetic grouping nodes (tv_ prefix) - these are
             # TerraVision-generated hierarchy nodes that should contain their children
-            reverse_origin = (
-                len(
-                    [
-                        s
-                        for s in FORCED_ORIGIN
-                        if helpers.get_no_module_name(c).startswith(s)
-                        and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
-                        and not node.startswith(
-                            "tv_"
-                        )  # Don't reverse synthetic group containment
-                    ]
-                )
-                > 0
-            )
+            conn_origin_matches = [
+                s
+                for s in FORCED_ORIGIN
+                if helpers.get_no_module_name(c).startswith(s)
+                and node.split(".")[0] not in str(AUTO_ANNOTATIONS)
+                and not node.startswith(
+                    "tv_"
+                )  # Don't reverse synthetic group containment
+            ]
+            reverse_origin = len(conn_origin_matches) > 0
+            # When both source and connection are FORCED_ORIGIN, use list
+            # ordering as priority: only reverse if the connection has a
+            # higher index (lower priority) than the source node
+            if reverse_origin:
+                node_origin_matches = [
+                    s for s in FORCED_ORIGIN if node.startswith(s)
+                ]
+                if node_origin_matches and conn_origin_matches:
+                    n_idx = FORCED_ORIGIN.index(node_origin_matches[0])
+                    c_idx = FORCED_ORIGIN.index(conn_origin_matches[0])
+                    if c_idx <= n_idx:
+                        reverse_origin = False
             if reverse_origin:
                 if not tfdata["graphdict"].get(c):
                     tfdata["graphdict"][c] = list()
