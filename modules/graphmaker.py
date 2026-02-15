@@ -349,9 +349,7 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # ordering as priority: only reverse if the connection has a
             # higher index (lower priority) than the source node
             if reverse_origin:
-                node_origin_matches = [
-                    s for s in FORCED_ORIGIN if node.startswith(s)
-                ]
+                node_origin_matches = [s for s in FORCED_ORIGIN if node.startswith(s)]
                 if node_origin_matches and conn_origin_matches:
                     n_idx = FORCED_ORIGIN.index(node_origin_matches[0])
                     c_idx = FORCED_ORIGIN.index(conn_origin_matches[0])
