@@ -475,7 +475,9 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     connection in tfdata["graphdict"].keys()
                     and len(tfdata["graphdict"][connection]) == 0
                 ):
-                    helpers.delete_node(tfdata, connection, remove_from_connections=False)
+                    helpers.delete_node(
+                        tfdata, connection, remove_from_connections=False
+                    )
                 plist = helpers.list_of_parents(tfdata["graphdict"], connection)
                 for p in plist:
                     helpers.safe_remove_connection(tfdata, p, connection)
@@ -913,7 +915,9 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
 
         for subnet in subnets:
             helpers.safe_remove_connection(tfdata, subnet, asg)
-        helpers.delete_node(tfdata, asg, remove_from_connections=False, delete_meta_data=True)
+        helpers.delete_node(
+            tfdata, asg, remove_from_connections=False, delete_meta_data=True
+        )
 
         for lt in launch_templates:
             helpers.delete_node(tfdata, lt, remove_from_connections=False)
@@ -1304,7 +1308,9 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 helpers.safe_remove_connection(tfdata, subnet, node_group)
 
             # Delete original
-            helpers.delete_node(tfdata, node_group, remove_from_connections=False, delete_meta_data=True)
+            helpers.delete_node(
+                tfdata, node_group, remove_from_connections=False, delete_meta_data=True
+            )
 
         elif len(matching_subnets) == 1:
             subnet = matching_subnets[0]
@@ -1496,7 +1502,9 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             tfdata["graphdict"][resource].append(numbered_profile)
 
             # Remove original unnumbered profile
-            helpers.delete_node(tfdata, profile, remove_from_connections=False, delete_meta_data=True)
+            helpers.delete_node(
+                tfdata, profile, remove_from_connections=False, delete_meta_data=True
+            )
 
         elif len(matching_subnets) == 1:
             # Single subnet - keep as is
@@ -1549,7 +1557,9 @@ def _handle_karpenter_release(tfdata: Dict[str, Any], release: str) -> None:
         release: Karpenter release resource name
     """
     new_name = release.replace("helm_release", "tv_karpenter")
-    helpers.rename_node(tfdata, release, new_name, update_connections=False, rename_meta_data=True)
+    helpers.rename_node(
+        tfdata, release, new_name, update_connections=False, rename_meta_data=True
+    )
 
     node_groups = [k for k in tfdata["graphdict"] if "eks_node_group" in k]
     private_subnets = sorted(
@@ -1596,7 +1606,9 @@ def _handle_karpenter_release(tfdata: Dict[str, Any], release: str) -> None:
         + unnumbered
         + [lt for lt in launch_templates if not tfdata["graphdict"].get(lt)]
     ):
-        helpers.delete_node(tfdata, key, remove_from_connections=False, delete_meta_data=True)
+        helpers.delete_node(
+            tfdata, key, remove_from_connections=False, delete_meta_data=True
+        )
 
 
 def random_string_handler(tfdata: Dict[str, Any]) -> Dict[str, Any]:

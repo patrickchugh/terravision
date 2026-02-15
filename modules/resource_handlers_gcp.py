@@ -639,7 +639,9 @@ def gcp_move_templates_to_region(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     ]
     for zone in empty_zones:
         # Remove empty zone from graphdict
-        helpers.delete_node(tfdata, zone, remove_from_connections=False, delete_meta_data=True)
+        helpers.delete_node(
+            tfdata, zone, remove_from_connections=False, delete_meta_data=True
+        )
 
         # Remove references to empty zone from parent nodes
         for resource, children in tfdata["graphdict"].items():

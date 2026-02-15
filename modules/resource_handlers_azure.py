@@ -852,7 +852,9 @@ def create_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             if res_instance in tfdata["graphdict"].get(
                                 parent_subnet, []
                             ):
-                                helpers.safe_remove_connection(tfdata, parent_subnet, res_instance)
+                                helpers.safe_remove_connection(
+                                    tfdata, parent_subnet, res_instance
+                                )
 
                             # Add zone to subnet if not already there
                             if zone_node not in tfdata["graphdict"].get(

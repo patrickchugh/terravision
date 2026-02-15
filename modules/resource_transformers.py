@@ -80,7 +80,9 @@ def expand_to_numbered_instances(
                 helpers.safe_remove_connection(tfdata, subnet, resource)
 
             # Delete original
-            helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
+            helpers.delete_node(
+                tfdata, resource, remove_from_connections=False, delete_meta_data=True
+            )
 
         elif len(matching_subnets) == 1:
             # Single subnet - add if not present
@@ -319,7 +321,9 @@ def delete_nodes(
             for parent in parents:
                 helpers.safe_remove_connection(tfdata, parent, resource)
 
-        helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
+        helpers.delete_node(
+            tfdata, resource, remove_from_connections=False, delete_meta_data=True
+        )
 
     return tfdata
 
@@ -435,7 +439,9 @@ def clone_with_suffix(
             )
 
         # Delete original
-        helpers.delete_node(tfdata, resource, remove_from_connections=False, delete_meta_data=True)
+        helpers.delete_node(
+            tfdata, resource, remove_from_connections=False, delete_meta_data=True
+        )
 
     return tfdata
 
@@ -727,7 +733,9 @@ def link_via_shared_child(
                                     "."
                                 )[0]
                                 if parent_type not in AWS_GROUP_NODES:
-                                    helpers.safe_remove_connection(tfdata, parent, target)
+                                    helpers.safe_remove_connection(
+                                        tfdata, parent, target
+                                    )
 
     return tfdata
 
@@ -850,7 +858,12 @@ def create_transitive_links(
                             # Remove intermediate from source
                             helpers.safe_remove_connection(tfdata, source, intermediate)
                             # Remove intermediate node entirely
-                            helpers.delete_node(tfdata, intermediate, remove_from_connections=False, delete_meta_data=True)
+                            helpers.delete_node(
+                                tfdata,
+                                intermediate,
+                                remove_from_connections=False,
+                                delete_meta_data=True,
+                            )
 
     return tfdata
 
@@ -910,7 +923,12 @@ def link_peers_via_intermediary(
         # Remove intermediary node if requested (only if we created links)
         if remove_intermediary:
             # Remove the intermediary node itself
-            helpers.delete_node(tfdata, intermediary, remove_from_connections=False, delete_meta_data=True)
+            helpers.delete_node(
+                tfdata,
+                intermediary,
+                remove_from_connections=False,
+                delete_meta_data=True,
+            )
 
             # Clean up dangling references to the deleted intermediary from all other nodes
             for node in list(graphdict.keys()):

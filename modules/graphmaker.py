@@ -1204,10 +1204,7 @@ def cleanup_originals(
             helpers.delete_node(tfdata, resource, remove_from_connections=False)
         parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
         for parent in parents_list:
-            if (
-                not parent.startswith("aws_group.shared")
-                and "~" not in parent
-            ):
+            if not parent.startswith("aws_group.shared") and "~" not in parent:
                 helpers.safe_remove_connection(tfdata, parent, resource)
     # Delete any original security group nodes that have been replaced with numbered suffixes
     security_group_list = [
@@ -1790,7 +1787,9 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
             # Update any nodes that point to this resource to point to numbered instances instead
             for node in list(tfdata["graphdict"].keys()):
-                if node != resource and helpers.safe_remove_connection(tfdata, node, resource):
+                if node != resource and helpers.safe_remove_connection(
+                    tfdata, node, resource
+                ):
                     # For subnets: only add the numbered instance matching the subnet's position
                     if "_subnet" in node:
                         # Get all subnets sorted to determine position
@@ -1834,10 +1833,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if resource not in tfdata["graphdict"]:
             parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
             for parent in parents_list:
-                if (
-                    not parent.startswith("aws_group.shared")
-                    and "~" not in parent
-                ):
+                if not parent.startswith("aws_group.shared") and "~" not in parent:
                     helpers.safe_remove_connection(tfdata, parent, resource)
 
     # Clean up original security group nodes

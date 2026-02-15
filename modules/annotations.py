@@ -220,10 +220,9 @@ def modify_nodes(
                 if "*" in startnode:
                     prefix = startnode.split("*")[0]
                     for node in graphdict:
-                        if (
-                            helpers.get_no_module_name(node).startswith(prefix)
-                            and connection in graphdict.get(node, [])
-                        ):
+                        if helpers.get_no_module_name(node).startswith(
+                            prefix
+                        ) and connection in graphdict.get(node, []):
                             graphdict[node].remove(connection)
                 else:
                     if connection in graphdict.get(startnode, []):
