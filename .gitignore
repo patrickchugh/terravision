@@ -65,7 +65,6 @@ ai-backend-terraform/lambda/node_modules/*
 .terraform.lock.hcl
 .claude/
 specs/
-CLAUDE.md
 compare_branches.sh
 ./architecture*.dot.png
 
