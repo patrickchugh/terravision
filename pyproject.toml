@@ -46,7 +46,6 @@ include = [
     { path = "terravision.py", format = ["sdist", "wheel"] },
     { path = "pyproject.toml", format = ["sdist", "wheel"] },
     { path = "shiftLabel.gvpr", format = ["sdist", "wheel"] },
-    { path = "override.tf", format = ["sdist", "wheel"] },
     { path = "terravision.bat", format = ["sdist", "wheel"] },
     { path = "resource_images/**/*", format = ["sdist", "wheel"] },
     { path = "hcl2/**/*", format = ["sdist", "wheel"] }

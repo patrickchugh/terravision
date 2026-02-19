@@ -13,11 +13,23 @@ import click
 import modules.gitlibs as gitlibs
 import modules.helpers as helpers
 import tempfile
-import shutil
 import json
 import ipaddr
 import modules.config_loader as config_loader
 import modules.provider_detector as provider_detector
+
+# HCL content for override.tf to force local backend (ignores remote state)
+OVERRIDE_TF_CONTENT = 'terraform {\n  backend "local" {\n\n  }\n}\n'
+
+
+def _write_override(codepath):
+    """Write override.tf to force local backend if it doesn't already exist."""
+    dest = os.path.join(codepath, "override.tf")
+    if not os.path.exists(dest):
+        with open(dest, "w") as f:
+            f.write(OVERRIDE_TF_CONTENT)
+    return dest
+
 
 # Create Tempdir and Module Cache Directories
 annotations = dict()
@@ -92,21 +104,15 @@ def tf_initplan(
         # Handle local directory source
         if os.path.isdir(sourceloc):
             codepath = os.path.abspath(sourceloc)
-            # Copy override file to force local backend (ignores TFE remote state)
-            ovpath = os.path.join(basedir, "override.tf")
-            override_dest = os.path.join(codepath, "override.tf")
-            if not os.path.exists(override_dest):
-                shutil.copy(ovpath, override_dest)
+            # Force local backend so full infra plan is created with override.tf
+            override_dest = _write_override(codepath)
             os.chdir(codepath)
         # Handle Git repository source
         else:
             githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
             codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
-            # Copy override file to cloned directory
-            ovpath = os.path.join(basedir, "override.tf")
-            override_dest = os.path.join(codepath, "override.tf")
-            if not os.path.exists(override_dest):
-                shutil.copy(ovpath, override_dest)
+            # Force local backend so full infra plan is created with override.tf
+            override_dest = _write_override(codepath)
             os.chdir(codepath)
             codepath = [codepath]
             # Verify files were cloned
@@ -120,7 +126,7 @@ def tf_initplan(
                 )
                 exit()
         click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
-        click.echo("  (Forcing local backend to generate full infrastructure plan)")
+        click.echo("  Forcing temporary local backend to generate full infrastructure plan")
         # Initialize terraform with providers
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],
@@ -243,6 +249,15 @@ def tf_initplan(
                 # Remove override.tf after all terraform commands complete
                 if os.path.exists(override_dest):
                     os.remove(override_dest)
+                if result.returncode != 0:
+                    click.echo(
+                        click.style(
+                            f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                            fg="red",
+                            bold=True,
+                        )
+                    )
+                    exit(result.returncode)
                 tfdata["plandata"] = dict(plandata)
                 click.echo(
                     click.style(
@@ -252,9 +267,7 @@ def tf_initplan(
                     )
                 )
                 # Convert DOT graph to JSON using Graphviz
-                if os.path.exists(tfgraph_path):
-                    graphdata = convert_dot_to_json(tfgraph_path)
-                else:
+                if not os.path.exists(tfgraph_path):
                     click.echo(
                         click.style(
                             f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
@@ -263,6 +276,7 @@ def tf_initplan(
                         )
                     )
                     exit(1)
+                graphdata = convert_dot_to_json(tfgraph_path)
             else:
                 click.echo(
                     click.style(
