@@ -18,8 +18,7 @@
         "azurerm_subnet_network_security_group_association.main"
     ],
     "azurerm_public_ip.public_ip": [
-        "tv_azurerm_internet.internet",
-        "tv_azurerm_users.users"
+        "tv_azurerm_internet.internet"
     ],
     "azurerm_resource_group.main": [
         "azurerm_lb.lb",
@@ -45,7 +44,9 @@
         "azurerm_subnet.main"
     ],
     "tv_azurerm_internet.internet": [],
-    "tv_azurerm_users.users": [],
+    "tv_azurerm_users.users": [
+        "azurerm_public_ip.public_ip"
+    ],
     "tv_azurerm_zone.zone_1": [
         "azurerm_linux_virtual_machine_scale_set.main~1"
     ],

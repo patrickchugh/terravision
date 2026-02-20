@@ -126,7 +126,9 @@ def tf_initplan(
                 )
                 exit()
         click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
-        click.echo("  Forcing temporary local backend to generate full infrastructure plan")
+        click.echo(
+            "  Forcing temporary local backend to generate full infrastructure plan"
+        )
         # Initialize terraform with providers
         result = subprocess.run(
             ["terraform", "init", "--upgrade", "-reconfigure"],

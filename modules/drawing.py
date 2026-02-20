@@ -244,18 +244,28 @@ def handle_nodes(
     else:
         # Create new node and add to appropriate group
         is_outer = resource_type in OUTER_NODES
+        is_edge = any(resource_type.startswith(e) for e in EDGE_NODES)
         targetGroup = diagramCanvas if is_outer else inGroup
         node_label = helpers.pretty_name(resource)
         setcluster(targetGroup)
         nodeClass = getattr(sys.modules[__name__], resource_type)
+        # Build extra node attrs
+        extra_attrs = {}
+        if is_edge:
+            extra_attrs["_edgenode"] = "1"
         # Only pass outer_node for GCP nodes (they use it for border styling)
         provider = get_primary_provider_or_default(tfdata)
         if provider == "gcp":
             newNode = nodeClass(
-                label=node_label, tf_resource_name=resource, outer_node=is_outer
+                label=node_label,
+                tf_resource_name=resource,
+                outer_node=is_outer,
+                **extra_attrs,
             )
         else:
-            newNode = nodeClass(label=node_label, tf_resource_name=resource)
+            newNode = nodeClass(
+                label=node_label, tf_resource_name=resource, **extra_attrs
+            )
         drawn_resources.append(resource)
         tfdata["meta_data"].update({resource: {"node": newNode}})
 
@@ -610,7 +620,6 @@ def draw_objects(
 def render_diagram(
     tfdata: Dict[str, Any],
     picshow: bool,
-    simplified: bool,
     outfile: str,
     format: str,
     source: str,
@@ -623,7 +632,6 @@ def render_diagram(
     Args:
         tfdata: Terraform data dictionary with graphdict, meta_data, annotations
         picshow: Whether to automatically open the diagram after generation
-        simplified: Whether to generate a simplified high-level diagram
         outfile: Output filename without extension
         format: Output format (png, svg, pdf, bmp)
         source: Source path or URL for footer attribution

@@ -71,6 +71,30 @@ AZURE_GROUP_NODES = [
     "tv_azure_onprem",
 ]
 
+# Nodes to remove in simplified mode for a high-level services-only view
+AZURE_SIMPLIFIED_REMOVE_NODES = [
+    # Group/container nodes
+    "azurerm_resource_group",
+    "azurerm_virtual_network",
+    "azurerm_subnet",
+    "tv_azurerm_zone",
+    # Networking plumbing
+    "azurerm_route_table",
+    "azurerm_network_security_group",
+    "azurerm_network_security_rule",
+    "azurerm_network_interface",
+    "azurerm_public_ip",
+    "azurerm_nat_gateway",
+    "azurerm_subnet_route_table_association",
+    "azurerm_subnet_network_security_group_association",
+    # IAM
+    "azurerm_role_assignment",
+    "azurerm_user_assigned_identity",
+]
+
+AZURE_SIMPLIFIED_GATEWAY_TYPES = []
+AZURE_SIMPLIFIED_COMPUTE_TYPES = []
+
 # Nodes to be drawn first inside the Azure Cloud but outside any VNets
 AZURE_EDGE_NODES = [
     "azurerm_dns_zone",
@@ -105,8 +129,14 @@ AZURE_AUTO_ANNOTATIONS = [
     },
     {
         "azurerm_public_ip": {
-            "link": ["tv_azurerm_internet.internet", "tv_azurerm_users.users"],
+            "link": ["tv_azurerm_internet.internet"],
             "arrow": "forward",
+        }
+    },
+    {
+        "azurerm_public_ip": {
+            "link": ["tv_azurerm_users.users"],
+            "arrow": "reverse",
         }
     },
     {

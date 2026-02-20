@@ -106,6 +106,32 @@ GCP_GROUP_NODES = [
     "tv_gcp_optional",
 ]
 
+# Nodes to remove in simplified mode for a high-level services-only view
+GCP_SIMPLIFIED_REMOVE_NODES = [
+    # Group/container nodes
+    "tv_gcp_account",
+    "google_project",
+    "google_compute_network",
+    "tv_gcp_region",
+    "google_compute_subnetwork",
+    "tv_gcp_zone",
+    "google_compute_firewall",
+    # Networking plumbing
+    "google_compute_route",
+    "google_compute_router",
+    "google_compute_router_nat",
+    "google_compute_address",
+    "google_compute_global_address",
+    # IAM
+    "google_project_iam_member",
+    "google_project_iam_binding",
+    "google_service_account",
+    "google_service_account_iam_member",
+]
+
+GCP_SIMPLIFIED_GATEWAY_TYPES = []
+GCP_SIMPLIFIED_COMPUTE_TYPES = []
+
 # Nodes to be drawn first inside the GCP Cloud but outside any VPCs
 GCP_EDGE_NODES = [
     "google_dns_managed_zone",

@@ -176,6 +176,52 @@ AWS_GROUP_NODES = [
     "tv_aws_region",
 ]
 
+# Nodes to remove in simplified mode for a high-level services-only view
+AWS_SIMPLIFIED_REMOVE_NODES = [
+    # Group/container nodes
+    "aws_vpc",
+    "aws_az",
+    "aws_subnet",
+    "aws_security_group",
+    "aws_account",
+    "tv_aws_region",
+    # Networking plumbing
+    "aws_route_table",
+    "aws_route_table_association",
+    "aws_route",
+    "aws_eip",
+    "aws_db_subnet_group",
+    "aws_default_network_acl",
+    "aws_default_route_table",
+    "aws_default_security_group",
+    "aws_security_group_rule",
+    "aws_network_interface",
+    # IAM chains
+    "aws_iam_role",
+    "aws_iam_policy",
+    "aws_iam_role_policy_attachment",
+    "aws_iam_role_policy",
+    "aws_iam_instance_profile",
+    "aws_iam_group",
+]
+
+# Gateway types that surviving siblings should connect to when their shared
+# parent group (VPC/subnet) is removed in simplified mode.
+# e.g. Fargate in a private subnet routes through a NAT Gateway in the public
+# subnet of the same VPC - removing subnets loses this implied relationship.
+AWS_SIMPLIFIED_GATEWAY_TYPES = [
+    "aws_nat_gateway",
+]
+
+# Compute resource types that should get connected to gateway types above
+AWS_SIMPLIFIED_COMPUTE_TYPES = [
+    "aws_instance",
+    "aws_fargate",
+    "aws_ecs_service",
+    "aws_lambda_function",
+    "aws_eks_cluster",
+]
+
 # Nodes to be drawn first inside the AWS Cloud but outside any subnets or VPCs
 AWS_EDGE_NODES = [
     "aws_route53",

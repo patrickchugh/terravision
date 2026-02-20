@@ -133,7 +133,7 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         # Reverse arrow: annotation node -> current node
                         if graphdict.get(annotation_node):
                             new_connections = list(graphdict[annotation_node])
-                            new_connections.append(annotation_node)
+                            new_connections.append(node)
                             graphdict[annotation_node] = list(new_connections)
                         else:
                             graphdict[annotation_node] = [node]

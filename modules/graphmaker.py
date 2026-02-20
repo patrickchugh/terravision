@@ -1850,3 +1850,149 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata = extend_sg_groups(tfdata)
 
     return tfdata
+
+
+def simplify_graphdict(tfdata: Dict[str, Any]) -> None:
+    """Remove networking group nodes from graphdict for simplified diagrams.
+
+    Strips VPC, Subnet, Security Group, and other networking container nodes
+    while preserving connectivity by bridging connections through removed nodes.
+    For example, CloudFront -> VPC -> Subnet -> EC2 becomes CloudFront -> EC2.
+
+    Mutates tfdata['graphdict'] in-place.
+
+    Args:
+        tfdata: Terraform data dictionary with graphdict and provider_detection
+    """
+    constants = _load_config_constants(tfdata)
+    remove_types = set(constants.get("SIMPLIFIED_REMOVE_NODES", []))
+    if not remove_types:
+        return
+    graphdict = tfdata.get("graphdict", {})
+
+    def _should_remove(resource_name: str) -> bool:
+        base_name = helpers.get_no_module_name(resource_name)
+        if not base_name:
+            return False
+        return base_name.split(".")[0] in remove_types
+
+    def _resolve_successors(node, visited=None):
+        """Follow connections through removable nodes to find kept endpoints."""
+        if visited is None:
+            visited = set()
+        if node in visited:
+            return []
+        visited.add(node)
+        result = []
+        for successor in graphdict.get(node, []):
+            if _should_remove(successor):
+                result.extend(_resolve_successors(successor, visited))
+            else:
+                result.append(successor)
+        return result
+
+    nodes_to_remove = {k for k in graphdict if _should_remove(k)}
+    gateway_types = set(constants.get("SIMPLIFIED_GATEWAY_TYPES", []))
+
+    def _is_gateway(resource_name: str) -> bool:
+        base_name = helpers.get_no_module_name(resource_name)
+        if not base_name:
+            return False
+        return base_name.split(".")[0] in gateway_types
+
+    compute_types = set(constants.get("SIMPLIFIED_COMPUTE_TYPES", []))
+
+    def _is_compute(resource_name: str) -> bool:
+        base_name = helpers.get_no_module_name(resource_name)
+        if not base_name:
+            return False
+        return base_name.split(".")[0] in compute_types
+
+    # Bridge connections: for kept nodes pointing to a removed node,
+    # replace with the removed node's resolved (non-removed) successors
+    for key in graphdict:
+        if key in nodes_to_remove:
+            continue
+        new_connections = []
+        for conn in graphdict[key]:
+            if _should_remove(conn):
+                for resolved in _resolve_successors(conn):
+                    if resolved not in new_connections:
+                        new_connections.append(resolved)
+            else:
+                if conn not in new_connections:
+                    new_connections.append(conn)
+        graphdict[key] = new_connections
+
+    # Remove the group nodes themselves
+    for node in nodes_to_remove:
+        del graphdict[node]
+
+    # Collapse numbered instances into a single resource.
+    # Strip both ~N (terravision suffix) and [N] (terraform count index).
+    # e.g. aws_nat_gateway.this[0]~1, aws_nat_gateway.this[1]~2 -> aws_nat_gateway.this
+    def _base_name(name: str) -> str:
+        """Strip [N] terraform indices and ~N terravision suffixes."""
+        name = name.split("~")[0]
+        return re.sub(r"\[\d+\]", "", name)
+
+    # Group all keys by their simplified base name
+    base_groups: Dict[str, list] = {}
+    for node in list(graphdict.keys()):
+        base = _base_name(node)
+        base_groups.setdefault(base, []).append(node)
+
+    for base, instances in base_groups.items():
+        if len(instances) == 1 and instances[0] == base:
+            continue  # Already a clean base name, nothing to collapse
+        # Merge all connections from instances into the base
+        merged_connections: list = []
+        for inst in instances:
+            for conn in graphdict.get(inst, []):
+                conn_base = _base_name(conn)
+                if conn_base not in merged_connections:
+                    merged_connections.append(conn_base)
+            if inst != base:
+                del graphdict[inst]
+        merged_connections = [c for c in merged_connections if c != base]
+        graphdict[base] = merged_connections
+
+    # Update all connection lists to use base names
+    for key in list(graphdict.keys()):
+        graphdict[key] = list(
+            dict.fromkeys(_base_name(conn) for conn in graphdict[key])
+        )
+        graphdict[key] = [c for c in graphdict[key] if c != key]
+
+    # Connect compute resources to gateway resources in the final simplified graph.
+    # When networking groups (VPC/subnets) are removed, the implied relationship
+    # between compute (e.g. Fargate in private subnet) and gateways (e.g. NAT in
+    # public subnet) is lost. Restore it by directly connecting compute -> gateway.
+    if gateway_types and compute_types:
+        all_gateways = [k for k in graphdict if _is_gateway(k)]
+        if all_gateways:
+            for node in graphdict:
+                if _is_compute(node):
+                    for gw in all_gateways:
+                        if gw not in graphdict[node]:
+                            graphdict[node].append(gw)
+
+    # Clean up shared_services group: connection bridging may have replaced removed
+    # children (e.g. EIP) with their successors (e.g. IGW, NAT gateway). Remove
+    # any children that were themselves removed or that aren't shared service types.
+    provider = get_primary_provider_or_default(tfdata)
+    shared_group = f"{provider}_group.shared_services"
+    if shared_group in graphdict:
+        shared_types = set(constants.get("SHARED_SERVICES", []))
+
+        def _is_shared_service(name: str) -> bool:
+            base = helpers.get_no_module_name(name)
+            if not base:
+                return False
+            return base.split(".")[0] in shared_types
+
+        graphdict[shared_group] = [
+            child
+            for child in graphdict[shared_group]
+            if not _should_remove(child) and _is_shared_service(child)
+        ]

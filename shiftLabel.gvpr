@@ -4,7 +4,7 @@ BEGIN{
   double cloudMinX, cloudMinY, cloudMaxX, cloudMaxY, cloudCenterX;
   double clusterMinX, clusterMinY, clusterMaxX, clusterMaxY, clusterCenterX;
   double labelX, labelY;
-  double topMostY;
+  double topMostY, bottomMostY;
   string fld[int];
   node_t n;
 
@@ -46,7 +46,7 @@ BEGIN{
                 } else {
                   labelX = clusterMinX + 70.0;  // Standard offset for Resource Groups
                 }
-                
+
               } else if (n._labelposition == "bottom-right") {
                 labelX = clusterMaxX - 50.0;  // Shifted left from right edge
                 labelY = clusterMinY + 45.0;
@@ -89,19 +89,76 @@ BEGIN{
 BEG_G{
   double nodeY;
   topMostY = 0;
+  bottomMostY = 999999.0;
 
   labelShift($G);
 
-  // Find topmost node position
+  // Center edge nodes (CDN, API GW, etc.) among their targets so ortho edges
+  // fan out in multiple directions instead of all routing in parallel.
+  // Only nodes tagged with _edgenode="1" by drawing.py are candidates.
+  edge_t e;
+  node_t src, tgt;
+  int fanoutCount;
+  double sumX, avgX, srcX, srcY;
+  int centeredCount;
+  centeredCount = 0;
+
+  for (src = fstnode($G); src; src = nxtnode(src)) {
+    if (!hasAttr(src, "_edgenode") || src._edgenode != "1") continue;
+
+    fanoutCount = 0;
+    sumX = 0.0;
+    for (e = fstout(src); e; e = nxtout(e)) {
+      tgt = e.head;
+      if (hasAttr(tgt, "_titlenode") && tgt._titlenode == "1") continue;
+      if (hasAttr(tgt, "_footernode") && tgt._footernode == "1") continue;
+      if (hasAttr(tgt, "_clusterlabel") && tgt._clusterlabel == "1") continue;
+      sumX = sumX + xOf(tgt.pos);
+      fanoutCount = fanoutCount + 1;
+    }
+
+    if (fanoutCount > 3) {
+      avgX = sumX / (double)fanoutCount;
+      srcX = xOf(src.pos);
+      srcY = yOf(src.pos);
+      // Only center if significantly off-center from targets (>1000pt ~14in)
+      double xDist = srcX - avgX;
+      if (xDist < 0) xDist = -xDist;
+      if (xDist > 1000.0) {
+        // Clamp avgX within cloud group bounds
+        if (cloudMaxX > 0) {
+          if (avgX < cloudMinX + 50.0) avgX = cloudMinX + 50.0;
+          if (avgX > cloudMaxX - 50.0) avgX = cloudMaxX - 50.0;
+        }
+
+        // Position just inside cloud group top — well above VPC/sub-clusters
+        src.pos = sprintf("%.1f,%.1f!", avgX, cloudMaxY - 60.0);
+        // Clear edge positions so neato -n2 re-routes them from the new location
+        edge_t oe;
+        for (oe = fstout(src); oe; oe = nxtout(oe)) {
+          oe.pos = "";
+        }
+        for (oe = fstin(src); oe; oe = nxtin(oe)) {
+          oe.pos = "";
+        }
+        centeredCount = centeredCount + 1;
+      }
+    }
+  }
+
+  // Find topmost and bottommost node positions (including outer nodes)
   for (n = fstnode($G); n; n = nxtnode(n)) {
     if (hasAttr(n, "_titlenode") && n._titlenode == "1") continue;
     if (hasAttr(n, "_footernode") && n._footernode == "1") continue;
     nodeY = yOf(n.pos);
     if (nodeY > topMostY) topMostY = nodeY;
+    if (nodeY < bottomMostY) bottomMostY = nodeY;
   }
 
   // Use higher of cloudMaxY or topMostY
   if (cloudMaxY > topMostY) topMostY = cloudMaxY;
+  // Use lower of cloudMinY or bottomMostY
+  if (cloudMinY < bottomMostY) bottomMostY = cloudMinY;
 }
 END_G{
   double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
@@ -115,5 +172,5 @@ N[_titlenode=="1"]{
   pos=sprintf("%.0f,%.0f!", cloudCenterX, topMostY + 200);
 }
 N[_footernode=="1"]{
-  pos=sprintf("%.0f,%.0f!", cloudCenterX, cloudMinY - 150);
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 180);
 }

@@ -253,6 +253,7 @@
     ],
     "tv_aws_internet.internet": [],
     "tv_aws_users.users": [
-        "aws_cloudfront_distribution.this"
+        "aws_cloudfront_distribution.this",
+        "aws_route53_record.route_53"
     ]
 }

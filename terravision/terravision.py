@@ -973,6 +973,11 @@ def draw(
     if "all_resource" in tfdata and aibackend:
         tfdata = _refine_with_llm(tfdata, aibackend, debug)
 
+    # Strip networking groups for simplified diagrams, bridging connections
+    if simplified:
+        graphmaker.simplify_graphdict(tfdata)
+        _print_graph_debug(tfdata["graphdict"], "Simplified graphviz dictionary")
+
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
     if tfdata.get("provider_detection"):
@@ -980,7 +985,7 @@ def draw(
         if provider != "aws" and not outfile.endswith(f"-{provider}"):
             final_outfile = f"{outfile}-{provider}"
 
-    drawing.render_diagram(tfdata, show, simplified, final_outfile, format, source)
+    drawing.render_diagram(tfdata, show, final_outfile, format, source)
 
 
 @cli.command()
@@ -1013,6 +1018,12 @@ def draw(
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
+    "--simplified",
+    is_flag=True,
+    default=False,
+    help="Simplified high level services shown only",
+)
+@click.option(
     "--aibackend",
     # type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
     help="AI backend to use (bedrock or ollama)",
@@ -1036,6 +1047,7 @@ def graphdata(
     varfile: tuple,
     workspace: str,
     show_services: bool,
+    simplified: bool,
     annotate: str,
     aibackend: str,
     avl_classes: Any,
@@ -1051,6 +1063,7 @@ def graphdata(
         varfile: Variable files tuple
         workspace: Terraform workspace
         show_services: Show only unique services
+        simplified: Generate simplified graph data
         annotate: Path to annotations file
         aibackend: AI backend to use
         avl_classes: Available classes (hidden)
@@ -1075,6 +1088,8 @@ def graphdata(
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend and (not show_services):
         tfdata = _refine_with_llm(tfdata, aibackend, debug)
+    if simplified:
+        graphmaker.simplify_graphdict(tfdata)
     click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
     click.echo(

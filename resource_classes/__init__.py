@@ -87,7 +87,7 @@ class Canvas:
         "fontsize": "30",
         "fontcolor": "#2D3436",
         "labelloc" : "t",
-        "concentrate": 'true',
+        "concentrate": 'false',
         "ranksep": "5",  # Vertical spacing between ranks
         "center": "true",
         "pad" : "1.5",
