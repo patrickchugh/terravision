@@ -161,7 +161,7 @@ module "git_https_readonly_ref" {
 
 # 16. GitLab - bare git::https
 module "gitlab_vpc" {
-  source = "git::https://gitlab.com/claranet-pcp/terraform/aws/tf-aws-vpc.git"
+  source = "git::https://gitlab.com/claranet-pcp/terraform/aws/tf-aws-vpc.git?ref=v1.0.0"
 
   customer        = "test"
   envname         = "dev"
