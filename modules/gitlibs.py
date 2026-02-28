@@ -23,6 +23,69 @@ from tqdm import tqdm
 import modules.helpers as helpers
 from modules.helpers import *
 
+
+def _parse_version(version_str: str) -> Tuple[int, ...]:
+    """Parse a version string like '5.48.0' into a tuple of ints."""
+    return tuple(int(x) for x in version_str.split("."))
+
+
+def _resolve_version_constraint(constraint: str, versions: List[str]) -> Optional[str]:
+    """Resolve a Terraform version constraint against available versions.
+
+    Supports ~>, >=, <=, >, <, = operators and comma-separated constraints.
+    Returns the latest version satisfying all constraints, or None.
+    """
+    constraint = constraint.strip()
+    if not constraint or not versions:
+        return None
+
+    # Parse individual constraints from comma-separated string
+    constraints = [c.strip() for c in constraint.split(",")]
+
+    def matches(ver_str: str) -> bool:
+        ver = _parse_version(ver_str)
+        for cons in constraints:
+            cons = cons.strip()
+            if cons.startswith("~>"):
+                bound = cons[2:].strip()
+                bound_parts = bound.split(".")
+                min_ver = _parse_version(bound)
+                # ~> X.Y means >= X.Y, < (X+1).0
+                # ~> X.Y.Z means >= X.Y.Z, < X.(Y+1).0
+                if len(bound_parts) <= 2:
+                    max_ver = (min_ver[0] + 1, 0, 0)
+                else:
+                    max_ver = (min_ver[0], min_ver[1] + 1, 0)
+                if not (min_ver <= ver < max_ver):
+                    return False
+            elif cons.startswith(">="):
+                if ver < _parse_version(cons[2:].strip()):
+                    return False
+            elif cons.startswith("<="):
+                if ver > _parse_version(cons[2:].strip()):
+                    return False
+            elif cons.startswith(">"):
+                if ver <= _parse_version(cons[1:].strip()):
+                    return False
+            elif cons.startswith("<"):
+                if ver >= _parse_version(cons[1:].strip()):
+                    return False
+            elif cons.startswith("="):
+                if ver != _parse_version(cons[1:].strip()):
+                    return False
+            else:
+                # Bare version string
+                if ver != _parse_version(cons):
+                    return False
+        return True
+
+    matching = [v for v in versions if matches(v)]
+    if not matching:
+        return None
+    matching.sort(key=_parse_version)
+    return matching[-1]
+
+
 # Global module-level variables
 all_repos: List[str] = list()
 annotations: Dict[str, Any] = dict()
@@ -108,7 +171,7 @@ def _is_git_hosting_url(sourceURL: str) -> bool:
     return any(domain in sourceURL for domain in GIT_HOSTING_DOMAINS)
 
 
-def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
+def get_clone_url(sourceURL: str, version_constraint: str = "") -> Tuple[str, str, str]:
     """Parse source URL and extract git clone URL, subfolder, and tag.
 
     Determines URL type and delegates to appropriate handler function.
@@ -116,6 +179,7 @@ def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
 
     Args:
         sourceURL: Source URL in various formats (git::, registry, or direct URL)
+        version_constraint: Terraform version constraint (e.g., "~> 5.0")
 
     Returns:
         Tuple of (git_url, subfolder, git_tag)
@@ -136,7 +200,7 @@ def get_clone_url(sourceURL: str) -> Tuple[str, str, str]:
         return _handle_domain_url(sourceURL)
 
     # Default to Terraform Registry (public or private) or plain HTTP Module URLs
-    return _handle_registry_url(sourceURL)
+    return _handle_registry_url(sourceURL, version_constraint)
 
 
 def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
@@ -261,7 +325,9 @@ def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
     return githubURL, subfolder, git_tag
 
 
-def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
+def _handle_registry_url(
+    sourceURL: str, version_constraint: str = ""
+) -> Tuple[str, str, str]:
     """Handle Terraform Registry Module URLs.
 
     Resolves Terraform Registry or Terraform Enterprise module URLs to their
@@ -269,6 +335,7 @@ def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
 
     Args:
         sourceURL: Terraform Registry module URL
+        version_constraint: Terraform version constraint (e.g., "~> 5.0")
 
     Returns:
         Tuple of (github_url, subfolder, git_tag)
@@ -322,7 +389,8 @@ def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
     # Fetch module source URL from registry API
     try:
         r = requests.get(domain + gitaddress, headers=headers)
-        githubURL = r.json()["source"]
+        resp_json = r.json()
+        githubURL = resp_json["source"]
     except Exception:
         click.echo(
             click.style(
@@ -339,7 +407,30 @@ def _handle_registry_url(sourceURL: str) -> Tuple[str, str, str]:
     if githubURL == "":
         githubURL = handle_readme_source(r)
 
-    return githubURL, subfolder, ""
+    # Resolve version constraint to a git tag
+    git_tag = ""
+    if version_constraint:
+        available_versions = resp_json.get("versions", [])
+        resolved = _resolve_version_constraint(version_constraint, available_versions)
+        if resolved:
+            # Fetch the specific version to get its git tag
+            try:
+                ver_resp = requests.get(
+                    domain + gitaddress + "/" + resolved, headers=headers
+                )
+                ver_tag = ver_resp.json().get("tag", "")
+                if ver_tag:
+                    git_tag = ver_tag
+                    click.echo(
+                        f"  Resolved version constraint '{version_constraint}' "
+                        f"to {resolved} (tag: {git_tag})"
+                    )
+            except Exception:
+                click.echo(
+                    f"  WARNING: Could not resolve version {resolved}, " f"using latest"
+                )
+
+    return githubURL, subfolder, git_tag
 
 
 def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> str:
@@ -386,7 +477,9 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
     return repo_url
 
 
-def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
+def clone_files(
+    sourceURL: str, tempdir: str, module: str = "main", version: str = ""
+) -> str:
     """Clone git repository or retrieve from cache.
 
     Main entry point for retrieving Terraform module code. Checks cache first,
@@ -396,6 +489,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
         sourceURL: Source URL of the module (git URL, registry URL, or local path)
         tempdir: Temporary directory for cloning
         module: Module name for cache organization (default: "main")
+        version: Terraform version constraint (e.g., "~> 5.0")
 
     Returns:
         Path to cloned module code directory
@@ -404,7 +498,7 @@ def clone_files(sourceURL: str, tempdir: str, module: str = "main") -> str:
 
     # Parse the URL to extract subfolder before sanitizing
     # This is needed to handle registry modules with subfolders (e.g., module//subfolder)
-    githubURL, subfolder, git_tag = get_clone_url(sourceURL)
+    githubURL, subfolder, git_tag = get_clone_url(sourceURL, version)
 
     # Extract the base URL without subfolder (before //) for cache path generation
     # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly

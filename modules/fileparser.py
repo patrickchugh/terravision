@@ -50,6 +50,7 @@ def find_tf_files(
     paths: Optional[List[str]] = None,
     mod: str = "main",
     recursive: bool = False,
+    version: str = "",
 ) -> List[str]:
     """Discover Terraform files in local directory or Git repository.
 
@@ -61,6 +62,7 @@ def find_tf_files(
         paths: Existing list of file paths to append to (default: empty list)
         mod: Module name for organizing cloned repositories (default: 'main')
         recursive: Whether to recursively search subdirectories (default: False)
+        version: Terraform version constraint (e.g., "~> 5.0")
 
     Returns:
         List of absolute paths to discovered Terraform files
@@ -74,7 +76,7 @@ def find_tf_files(
 
     # Clone Git repository or use local directory
     if not os.path.isdir(source):
-        source_location = gitlibs.clone_files(source, temp_dir.name, mod)
+        source_location = gitlibs.clone_files(source, temp_dir.name, mod, version)
     else:
         source_location = source.strip()
 
@@ -246,6 +248,7 @@ def iterative_parse(
                         module_name = next(iter(mod_dict))
                         modpath = os.path.join(tf_mod_dir, module_name)
                         sourcemod = mod_dict[module_name]["source"]
+                        version_constraint = mod_dict[module_name].get("version", "")
 
                         # Handle relative module paths
                         if sourcemod.startswith("."):
@@ -259,7 +262,9 @@ def iterative_parse(
                             modpath = mod_dict[module_name]["source"]
 
                         # Recursively find files in module directory
-                        source_files_list = find_tf_files(modpath, [], module_name)
+                        source_files_list = find_tf_files(
+                            modpath, [], module_name, version=version_constraint
+                        )
                         existing_files = list(tf_file_paths)
                         tf_file_paths.extend(
                             x for x in source_files_list if x not in existing_files
