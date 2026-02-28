@@ -31,6 +31,20 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_iam_instance_profile": {
+        "description": "Config-Only: Bridge IAM role connections through instance profiles to target resources (launch templates, EC2, etc.)",
+        "transformations": [
+            {
+                "operation": "create_transitive_links",
+                "params": {
+                    "source_pattern": "aws_iam_role",
+                    "intermediate_pattern": "aws_iam_instance_profile",
+                    "target_pattern": "aws_",
+                    "remove_intermediate": False,
+                },
+            },
+        ],
+    },
     "aws_autoscaling_group": {
         "description": "Expand autoscaling groups, launch templates and policies to numbered instances per subnet",
         "additional_handler_function": "expand_autoscaling_groups_to_subnets",
@@ -379,20 +393,6 @@ RESOURCE_HANDLER_CONFIGS = {
         "description": "Pure Function: Parse Firehose configuration for S3/Redshift/Elasticsearch destinations",
         # TEMPORARILY COMMENTED OUT FOR FUTURE IMPLEMENTATION
         # "additional_handler_function": "aws_handle_firehose",
-    },
-    "aws_iam_instance_profile": {
-        "description": "Config-Only: Bridge IAM role connections through instance profiles to target resources (launch templates, EC2, etc.)",
-        "transformations": [
-            {
-                "operation": "create_transitive_links",
-                "params": {
-                    "source_pattern": "aws_iam_role",
-                    "intermediate_pattern": "aws_iam_instance_profile",
-                    "target_pattern": "aws_",
-                    "remove_intermediate": True,
-                },
-            },
-        ],
     },
     "aws_lambda_event_source_mapping": {
         "description": "Pure Function: Create direct connections from event sources (SQS, Kinesis, DynamoDB) to Lambda functions",
