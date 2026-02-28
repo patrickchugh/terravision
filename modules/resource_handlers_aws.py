@@ -788,9 +788,8 @@ def aws_handle_ecs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with EC2 ECS services linked to autoscaling targets
     """
-    # Expand autoscaling groups and launch templates to numbered instances per subnet
-    tfdata = expand_autoscaling_groups_to_subnets(tfdata)
-
+    # ASG expansion is now handled by the aws_autoscaling_group config handler
+    # which calls expand_autoscaling_groups_to_subnets directly.
     return tfdata
 
 

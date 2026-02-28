@@ -292,6 +292,7 @@ terravision draw --source ./terraform --show
 | `--varfile`   | Variable file                 | `prod.tfvars`              |
 | `--planfile`  | Pre-generated plan JSON file  | `plan.json`                |
 | `--graphfile` | Pre-generated graph DOT file  | `graph.dot`                |
+| `--simplified` | Simplified high-level view   | (flag)                     |
 | `--show`      | Open diagram after generation | (flag)                     |
 | `--debug`     | Enable debug output           | (flag)                     |
 
@@ -344,6 +345,27 @@ terravision graphdata --source ./terraform --outfile resources.json
 
 **More examples**: See [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)
 
+### Simplified Diagrams
+
+Use the `--simplified` flag to generate a high-level overview that strips away networking infrastructure (VPCs, subnets, availability zones, security groups, route tables, etc.) and focuses on the core cloud services. Duplicate resource instances are collapsed into a single node, and connections are bridged through removed nodes to preserve the overall data flow.
+
+```bash
+# Detailed diagram (default) - shows full networking topology
+terravision draw --source ./terraform
+
+# Simplified diagram - high-level services only
+terravision draw --source ./terraform --simplified
+```
+
+**Detailed view** (default) — includes VPCs, subnets, availability zones, IAM roles, and networking plumbing:
+
+<a href="./images/architecture-detailed.dot.png"><img src="./images/architecture-detailed.dot.png" height="300"></a>
+
+**Simplified view** (`--simplified`) — same infrastructure, focused on core services:
+
+<a href="./images/architecture-simplified.dot.png"><img src="./images/architecture-simplified.dot.png" height="300"></a>
+
+The `--simplified` flag works with both `draw` and `graphdata` commands and is supported across all cloud providers (AWS, GCP, Azure). It is useful for executive presentations, high-level documentation, or when the full networking detail makes diagrams hard to read.
 
 ---
 
