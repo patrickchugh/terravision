@@ -146,7 +146,7 @@ Before installing TerraVision, ensure you have:
 ### Install TerraVision
 
 ```bash
-pipx install terravision # only if in a virtual env, you can use pip install terravision instead
+pip install terravision # only if in a virtual env, if not you can use pipx install terravision instead
 ```
 
 ### Verify Terraform Setup
