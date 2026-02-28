@@ -1,36 +1,2845 @@
 {
-    "aws_cloudwatch_log_group.cloudwatch": [],
-    "aws_glue_catalog_database.etl_database": [
-        "aws_glue_crawler.source_crawler"
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/glue_s3",
+    "workdir": "/private/tmp/tv_glue_s3",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_log_group.glue_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "glue_logs",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "kms_key_id": null,
+                            "name": "/aws-glue/jobs/data-transformation-job",
+                            "retention_in_days": 7,
+                            "skip_destroy": false,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_glue_catalog_database.etl_database",
+                        "mode": "managed",
+                        "type": "aws_glue_catalog_database",
+                        "name": "etl_database",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "description": null,
+                            "federated_database": [],
+                            "name": "etl_database",
+                            "parameters": null,
+                            "tags": null,
+                            "target_database": []
+                        },
+                        "sensitive_values": {
+                            "create_table_default_permission": [],
+                            "federated_database": [],
+                            "tags_all": {},
+                            "target_database": []
+                        }
+                    },
+                    {
+                        "address": "aws_glue_crawler.source_crawler",
+                        "mode": "managed",
+                        "type": "aws_glue_crawler",
+                        "name": "source_crawler",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "catalog_target": [],
+                            "classifiers": null,
+                            "configuration": null,
+                            "database_name": "etl_database",
+                            "delta_target": [],
+                            "description": null,
+                            "dynamodb_target": [],
+                            "hudi_target": [],
+                            "iceberg_target": [],
+                            "jdbc_target": [],
+                            "lake_formation_configuration": [],
+                            "lineage_configuration": [],
+                            "mongodb_target": [],
+                            "name": "source-data-crawler",
+                            "recrawl_policy": [],
+                            "s3_target": [
+                                {
+                                    "connection_name": null,
+                                    "dlq_event_queue_arn": null,
+                                    "event_queue_arn": null,
+                                    "exclusions": null,
+                                    "path": "s3://glue-etl-source/input/",
+                                    "sample_size": null
+                                }
+                            ],
+                            "schedule": null,
+                            "schema_change_policy": [],
+                            "security_configuration": null,
+                            "table_prefix": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "catalog_target": [],
+                            "delta_target": [],
+                            "dynamodb_target": [],
+                            "hudi_target": [],
+                            "iceberg_target": [],
+                            "jdbc_target": [],
+                            "lake_formation_configuration": [],
+                            "lineage_configuration": [],
+                            "mongodb_target": [],
+                            "recrawl_policy": [],
+                            "s3_target": [
+                                {}
+                            ],
+                            "schema_change_policy": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_glue_job.etl_job",
+                        "mode": "managed",
+                        "type": "aws_glue_job",
+                        "name": "etl_job",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "command": [
+                                {
+                                    "name": "glueetl",
+                                    "python_version": "3",
+                                    "script_location": "s3://glue-scripts/scripts/transform.py"
+                                }
+                            ],
+                            "connections": null,
+                            "default_arguments": {
+                                "--enable-job-insights": "true",
+                                "--enable-metrics": "true",
+                                "--enable-spark-ui": "true",
+                                "--job-language": "python"
+                            },
+                            "description": null,
+                            "execution_class": null,
+                            "glue_version": "4.0",
+                            "job_run_queuing_enabled": null,
+                            "maintenance_window": null,
+                            "max_retries": 1,
+                            "name": "data-transformation-job",
+                            "non_overridable_arguments": null,
+                            "number_of_workers": 2,
+                            "security_configuration": null,
+                            "source_control_details": [],
+                            "tags": null,
+                            "timeout": 60,
+                            "worker_type": "G.1X"
+                        },
+                        "sensitive_values": {
+                            "command": [
+                                {}
+                            ],
+                            "default_arguments": {},
+                            "execution_property": [],
+                            "notification_property": [],
+                            "source_control_details": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role.glue_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "glue_role",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "glue-etl-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy.glue_s3_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "glue_s3_policy",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "glue-s3-access"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.glue_service",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "glue_service",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+                            "role": "glue-etl-role"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "glue-etl-destination",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.scripts",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "scripts",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "glue-scripts",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "source",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "glue-etl-source",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_object.etl_script",
+                        "mode": "managed",
+                        "type": "aws_s3_object",
+                        "name": "etl_script",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "cache_control": null,
+                            "checksum_algorithm": null,
+                            "content": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n",
+                            "content_base64": null,
+                            "content_disposition": null,
+                            "content_encoding": null,
+                            "content_language": null,
+                            "force_destroy": false,
+                            "key": "scripts/transform.py",
+                            "metadata": null,
+                            "object_lock_legal_hold_status": null,
+                            "object_lock_mode": null,
+                            "object_lock_retain_until_date": null,
+                            "override_provider": [],
+                            "source": null,
+                            "source_hash": null,
+                            "tags": null,
+                            "website_redirect": null
+                        },
+                        "sensitive_values": {
+                            "override_provider": [],
+                            "tags_all": {}
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_cloudwatch_log_group.glue_logs",
+                "mode": "managed",
+                "type": "aws_cloudwatch_log_group",
+                "name": "glue_logs",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "kms_key_id": null,
+                        "name": "/aws-glue/jobs/data-transformation-job",
+                        "retention_in_days": 7,
+                        "skip_destroy": false,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "id": true,
+                        "log_group_class": true,
+                        "name_prefix": true,
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_glue_catalog_database.etl_database",
+                "mode": "managed",
+                "type": "aws_glue_catalog_database",
+                "name": "etl_database",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "description": null,
+                        "federated_database": [],
+                        "name": "etl_database",
+                        "parameters": null,
+                        "tags": null,
+                        "target_database": [],
+                        "arn": true,
+                        "catalog_id": true,
+                        "create_table_default_permission": [],
+                        "id": true,
+                        "location_uri": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "catalog_id": true,
+                        "create_table_default_permission": true,
+                        "federated_database": [],
+                        "id": true,
+                        "location_uri": true,
+                        "tags_all": true,
+                        "target_database": []
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "create_table_default_permission": [],
+                        "federated_database": [],
+                        "tags_all": {},
+                        "target_database": []
+                    }
+                }
+            },
+            {
+                "address": "aws_glue_crawler.source_crawler",
+                "mode": "managed",
+                "type": "aws_glue_crawler",
+                "name": "source_crawler",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "catalog_target": [],
+                        "classifiers": null,
+                        "configuration": null,
+                        "database_name": "etl_database",
+                        "delta_target": [],
+                        "description": null,
+                        "dynamodb_target": [],
+                        "hudi_target": [],
+                        "iceberg_target": [],
+                        "jdbc_target": [],
+                        "lake_formation_configuration": [],
+                        "lineage_configuration": [],
+                        "mongodb_target": [],
+                        "name": "source-data-crawler",
+                        "recrawl_policy": [],
+                        "s3_target": [
+                            {}
+                        ],
+                        "schedule": null,
+                        "schema_change_policy": [],
+                        "security_configuration": null,
+                        "table_prefix": null,
+                        "tags": null,
+                        "arn": true,
+                        "id": true,
+                        "role": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "catalog_target": [],
+                        "delta_target": [],
+                        "dynamodb_target": [],
+                        "hudi_target": [],
+                        "iceberg_target": [],
+                        "id": true,
+                        "jdbc_target": [],
+                        "lake_formation_configuration": [],
+                        "lineage_configuration": [],
+                        "mongodb_target": [],
+                        "recrawl_policy": [],
+                        "role": true,
+                        "s3_target": [
+                            {}
+                        ],
+                        "schema_change_policy": [],
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "catalog_target": [],
+                        "delta_target": [],
+                        "dynamodb_target": [],
+                        "hudi_target": [],
+                        "iceberg_target": [],
+                        "jdbc_target": [],
+                        "lake_formation_configuration": [],
+                        "lineage_configuration": [],
+                        "mongodb_target": [],
+                        "recrawl_policy": [],
+                        "s3_target": [
+                            {}
+                        ],
+                        "schema_change_policy": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_glue_job.etl_job",
+                "mode": "managed",
+                "type": "aws_glue_job",
+                "name": "etl_job",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "command": [
+                            {}
+                        ],
+                        "connections": null,
+                        "default_arguments": {},
+                        "description": null,
+                        "execution_class": null,
+                        "glue_version": "4.0",
+                        "job_run_queuing_enabled": null,
+                        "maintenance_window": null,
+                        "max_retries": 1,
+                        "name": "data-transformation-job",
+                        "non_overridable_arguments": null,
+                        "number_of_workers": 2,
+                        "security_configuration": null,
+                        "source_control_details": [],
+                        "tags": null,
+                        "timeout": 60,
+                        "worker_type": "G.1X",
+                        "arn": true,
+                        "execution_property": [],
+                        "id": true,
+                        "max_capacity": true,
+                        "notification_property": [],
+                        "role_arn": true,
+                        "tags_all": {},
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "command": [
+                            {
+                                "runtime": true
+                            }
+                        ],
+                        "default_arguments": {},
+                        "execution_property": true,
+                        "id": true,
+                        "max_capacity": true,
+                        "notification_property": true,
+                        "role_arn": true,
+                        "source_control_details": [],
+                        "tags_all": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "command": [
+                            {}
+                        ],
+                        "default_arguments": {},
+                        "execution_property": [],
+                        "notification_property": [],
+                        "source_control_details": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role.glue_role",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "glue_role",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "glue-etl-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.glue_s3_policy",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "glue_s3_policy",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "glue-s3-access",
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_iam_role_policy_attachment.glue_service",
+                "mode": "managed",
+                "type": "aws_iam_role_policy_attachment",
+                "name": "glue_service",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+                        "role": "glue-etl-role",
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_s3_bucket.destination",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "destination",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "glue-etl-destination",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.scripts",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "scripts",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "glue-scripts",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.source",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "source",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "glue-etl-source",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_object.etl_script",
+                "mode": "managed",
+                "type": "aws_s3_object",
+                "name": "etl_script",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "cache_control": null,
+                        "checksum_algorithm": null,
+                        "content": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n",
+                        "content_base64": null,
+                        "content_disposition": null,
+                        "content_encoding": null,
+                        "content_language": null,
+                        "force_destroy": false,
+                        "key": "scripts/transform.py",
+                        "metadata": null,
+                        "object_lock_legal_hold_status": null,
+                        "object_lock_mode": null,
+                        "object_lock_retain_until_date": null,
+                        "override_provider": [],
+                        "source": null,
+                        "source_hash": null,
+                        "tags": null,
+                        "website_redirect": null,
+                        "acl": true,
+                        "arn": true,
+                        "bucket": true,
+                        "bucket_key_enabled": true,
+                        "checksum_crc32": true,
+                        "checksum_crc32c": true,
+                        "checksum_crc64nvme": true,
+                        "checksum_sha1": true,
+                        "checksum_sha256": true,
+                        "content_type": true,
+                        "etag": true,
+                        "id": true,
+                        "kms_key_id": true,
+                        "server_side_encryption": true,
+                        "storage_class": true,
+                        "tags_all": {},
+                        "version_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acl": true,
+                        "arn": true,
+                        "bucket": true,
+                        "bucket_key_enabled": true,
+                        "checksum_crc32": true,
+                        "checksum_crc32c": true,
+                        "checksum_crc64nvme": true,
+                        "checksum_sha1": true,
+                        "checksum_sha256": true,
+                        "content_type": true,
+                        "etag": true,
+                        "id": true,
+                        "kms_key_id": true,
+                        "override_provider": [],
+                        "server_side_encryption": true,
+                        "storage_class": true,
+                        "tags_all": true,
+                        "version_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "override_provider": [],
+                        "tags_all": {}
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_cloudwatch_log_group.glue_logs",
+                        "mode": "managed",
+                        "type": "aws_cloudwatch_log_group",
+                        "name": "glue_logs",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "references": [
+                                    "aws_glue_job.etl_job.name",
+                                    "aws_glue_job.etl_job"
+                                ]
+                            },
+                            "retention_in_days": {
+                                "constant_value": 7
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_glue_catalog_database.etl_database",
+                        "mode": "managed",
+                        "type": "aws_glue_catalog_database",
+                        "name": "etl_database",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "etl_database"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_glue_crawler.source_crawler",
+                        "mode": "managed",
+                        "type": "aws_glue_crawler",
+                        "name": "source_crawler",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "database_name": {
+                                "references": [
+                                    "aws_glue_catalog_database.etl_database.name",
+                                    "aws_glue_catalog_database.etl_database"
+                                ]
+                            },
+                            "name": {
+                                "constant_value": "source-data-crawler"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.glue_role.arn",
+                                    "aws_iam_role.glue_role"
+                                ]
+                            },
+                            "s3_target": [
+                                {
+                                    "path": {
+                                        "references": [
+                                            "aws_s3_bucket.source.bucket",
+                                            "aws_s3_bucket.source"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_glue_job.etl_job",
+                        "mode": "managed",
+                        "type": "aws_glue_job",
+                        "name": "etl_job",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "command": [
+                                {
+                                    "name": {
+                                        "constant_value": "glueetl"
+                                    },
+                                    "python_version": {
+                                        "constant_value": "3"
+                                    },
+                                    "script_location": {
+                                        "references": [
+                                            "aws_s3_bucket.scripts.bucket",
+                                            "aws_s3_bucket.scripts",
+                                            "aws_s3_object.etl_script.key",
+                                            "aws_s3_object.etl_script"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "default_arguments": {
+                                "constant_value": {
+                                    "--enable-job-insights": "true",
+                                    "--enable-metrics": "true",
+                                    "--enable-spark-ui": "true",
+                                    "--job-language": "python"
+                                }
+                            },
+                            "glue_version": {
+                                "constant_value": "4.0"
+                            },
+                            "max_retries": {
+                                "constant_value": 1
+                            },
+                            "name": {
+                                "constant_value": "data-transformation-job"
+                            },
+                            "number_of_workers": {
+                                "constant_value": 2
+                            },
+                            "role_arn": {
+                                "references": [
+                                    "aws_iam_role.glue_role.arn",
+                                    "aws_iam_role.glue_role"
+                                ]
+                            },
+                            "timeout": {
+                                "constant_value": 60
+                            },
+                            "worker_type": {
+                                "constant_value": "G.1X"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role.glue_role",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "glue_role",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "glue-etl-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.glue_s3_policy",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "glue_s3_policy",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "glue-s3-access"
+                            },
+                            "policy": {
+                                "references": [
+                                    "aws_s3_bucket.source.arn",
+                                    "aws_s3_bucket.source",
+                                    "aws_s3_bucket.destination.arn",
+                                    "aws_s3_bucket.destination",
+                                    "aws_s3_bucket.scripts.arn",
+                                    "aws_s3_bucket.scripts"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.glue_role.id",
+                                    "aws_iam_role.glue_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy_attachment.glue_service",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy_attachment",
+                        "name": "glue_service",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "policy_arn": {
+                                "constant_value": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.glue_role.name",
+                                    "aws_iam_role.glue_role"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "glue-etl-destination"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.scripts",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "scripts",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "glue-scripts"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "source",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "glue-etl-source"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_object.etl_script",
+                        "mode": "managed",
+                        "type": "aws_s3_object",
+                        "name": "etl_script",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "bucket": {
+                                "references": [
+                                    "aws_s3_bucket.scripts.id",
+                                    "aws_s3_bucket.scripts"
+                                ]
+                            },
+                            "content": {
+                                "constant_value": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n"
+                            },
+                            "key": {
+                                "constant_value": "scripts/transform.py"
+                            }
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_glue_catalog_database.etl_database",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.glue_role",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.source",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.scripts",
+                "attribute": [
+                    "bucket"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.source",
+                "attribute": [
+                    "bucket"
+                ]
+            },
+            {
+                "resource": "aws_glue_job.etl_job",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_s3_object.etl_script",
+                "attribute": [
+                    "key"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.glue_role",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.glue_role",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.destination",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.scripts",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.scripts",
+                "attribute": [
+                    "id"
+                ]
+            }
+        ],
+        "timestamp": "2026-02-28T14:26:52Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_cloudwatch_log_group.glue_logs",
+            "mode": "managed",
+            "type": "aws_cloudwatch_log_group",
+            "name": "glue_logs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "kms_key_id": null,
+                    "name": "/aws-glue/jobs/data-transformation-job",
+                    "retention_in_days": 7,
+                    "skip_destroy": false,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "id": true,
+                    "log_group_class": true,
+                    "name_prefix": true,
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_glue_catalog_database.etl_database",
+            "mode": "managed",
+            "type": "aws_glue_catalog_database",
+            "name": "etl_database",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "description": null,
+                    "federated_database": [],
+                    "name": "etl_database",
+                    "parameters": null,
+                    "tags": null,
+                    "target_database": [],
+                    "arn": true,
+                    "catalog_id": true,
+                    "create_table_default_permission": [],
+                    "id": true,
+                    "location_uri": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "catalog_id": true,
+                    "create_table_default_permission": true,
+                    "federated_database": [],
+                    "id": true,
+                    "location_uri": true,
+                    "tags_all": true,
+                    "target_database": []
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "create_table_default_permission": [],
+                    "federated_database": [],
+                    "tags_all": {},
+                    "target_database": []
+                }
+            }
+        },
+        {
+            "address": "aws_glue_crawler.source_crawler",
+            "mode": "managed",
+            "type": "aws_glue_crawler",
+            "name": "source_crawler",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "catalog_target": [],
+                    "classifiers": null,
+                    "configuration": null,
+                    "database_name": "etl_database",
+                    "delta_target": [],
+                    "description": null,
+                    "dynamodb_target": [],
+                    "hudi_target": [],
+                    "iceberg_target": [],
+                    "jdbc_target": [],
+                    "lake_formation_configuration": [],
+                    "lineage_configuration": [],
+                    "mongodb_target": [],
+                    "name": "source-data-crawler",
+                    "recrawl_policy": [],
+                    "s3_target": [
+                        {}
+                    ],
+                    "schedule": null,
+                    "schema_change_policy": [],
+                    "security_configuration": null,
+                    "table_prefix": null,
+                    "tags": null,
+                    "arn": true,
+                    "id": true,
+                    "role": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "catalog_target": [],
+                    "delta_target": [],
+                    "dynamodb_target": [],
+                    "hudi_target": [],
+                    "iceberg_target": [],
+                    "id": true,
+                    "jdbc_target": [],
+                    "lake_formation_configuration": [],
+                    "lineage_configuration": [],
+                    "mongodb_target": [],
+                    "recrawl_policy": [],
+                    "role": true,
+                    "s3_target": [
+                        {}
+                    ],
+                    "schema_change_policy": [],
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "catalog_target": [],
+                    "delta_target": [],
+                    "dynamodb_target": [],
+                    "hudi_target": [],
+                    "iceberg_target": [],
+                    "jdbc_target": [],
+                    "lake_formation_configuration": [],
+                    "lineage_configuration": [],
+                    "mongodb_target": [],
+                    "recrawl_policy": [],
+                    "s3_target": [
+                        {}
+                    ],
+                    "schema_change_policy": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_glue_job.etl_job",
+            "mode": "managed",
+            "type": "aws_glue_job",
+            "name": "etl_job",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "command": [
+                        {}
+                    ],
+                    "connections": null,
+                    "default_arguments": {},
+                    "description": null,
+                    "execution_class": null,
+                    "glue_version": "4.0",
+                    "job_run_queuing_enabled": null,
+                    "maintenance_window": null,
+                    "max_retries": 1,
+                    "name": "data-transformation-job",
+                    "non_overridable_arguments": null,
+                    "number_of_workers": 2,
+                    "security_configuration": null,
+                    "source_control_details": [],
+                    "tags": null,
+                    "timeout": 60,
+                    "worker_type": "G.1X",
+                    "arn": true,
+                    "execution_property": [],
+                    "id": true,
+                    "max_capacity": true,
+                    "notification_property": [],
+                    "role_arn": true,
+                    "tags_all": {},
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "command": [
+                        {
+                            "runtime": true
+                        }
+                    ],
+                    "default_arguments": {},
+                    "execution_property": true,
+                    "id": true,
+                    "max_capacity": true,
+                    "notification_property": true,
+                    "role_arn": true,
+                    "source_control_details": [],
+                    "tags_all": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "command": [
+                        {}
+                    ],
+                    "default_arguments": {},
+                    "execution_property": [],
+                    "notification_property": [],
+                    "source_control_details": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role.glue_role",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "glue_role",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "glue-etl-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.glue_s3_policy",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "glue_s3_policy",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "glue-s3-access",
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_iam_role_policy_attachment.glue_service",
+            "mode": "managed",
+            "type": "aws_iam_role_policy_attachment",
+            "name": "glue_service",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+                    "role": "glue-etl-role",
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_s3_bucket.destination",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "destination",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "glue-etl-destination",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.scripts",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "scripts",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "glue-scripts",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.source",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "source",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "glue-etl-source",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_object.etl_script",
+            "mode": "managed",
+            "type": "aws_s3_object",
+            "name": "etl_script",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "cache_control": null,
+                    "checksum_algorithm": null,
+                    "content": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n",
+                    "content_base64": null,
+                    "content_disposition": null,
+                    "content_encoding": null,
+                    "content_language": null,
+                    "force_destroy": false,
+                    "key": "scripts/transform.py",
+                    "metadata": null,
+                    "object_lock_legal_hold_status": null,
+                    "object_lock_mode": null,
+                    "object_lock_retain_until_date": null,
+                    "override_provider": [],
+                    "source": null,
+                    "source_hash": null,
+                    "tags": null,
+                    "website_redirect": null,
+                    "acl": true,
+                    "arn": true,
+                    "bucket": true,
+                    "bucket_key_enabled": true,
+                    "checksum_crc32": true,
+                    "checksum_crc32c": true,
+                    "checksum_crc64nvme": true,
+                    "checksum_sha1": true,
+                    "checksum_sha256": true,
+                    "content_type": true,
+                    "etag": true,
+                    "id": true,
+                    "kms_key_id": true,
+                    "server_side_encryption": true,
+                    "storage_class": true,
+                    "tags_all": {},
+                    "version_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acl": true,
+                    "arn": true,
+                    "bucket": true,
+                    "bucket_key_enabled": true,
+                    "checksum_crc32": true,
+                    "checksum_crc32c": true,
+                    "checksum_crc64nvme": true,
+                    "checksum_sha1": true,
+                    "checksum_sha256": true,
+                    "content_type": true,
+                    "etag": true,
+                    "id": true,
+                    "kms_key_id": true,
+                    "override_provider": [],
+                    "server_side_encryption": true,
+                    "storage_class": true,
+                    "tags_all": true,
+                    "version_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "override_provider": [],
+                    "tags_all": {}
+                }
+            }
+        }
     ],
-    "aws_glue_crawler.source_crawler": [
-        "aws_s3_bucket.source"
-    ],
-    "aws_glue_job.etl_job": [
-        "aws_cloudwatch_log_group.cloudwatch",
-        "aws_s3_bucket.scripts",
-        "aws_s3_object.etl_script"
-    ],
-    "aws_group.shared_services": [
-        "aws_cloudwatch_log_group.cloudwatch",
-        "aws_iam_group.of_services"
-    ],
-    "aws_iam_role.glue_role": [
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_cloudwatch_log_group.glue_logs",
+                "fontname": "sans-serif",
+                "label": "aws_cloudwatch_log_group.glue_logs",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_glue_catalog_database.etl_database",
+                "fontname": "sans-serif",
+                "label": "aws_glue_catalog_database.etl_database",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_glue_crawler.source_crawler",
+                "fontname": "sans-serif",
+                "label": "aws_glue_crawler.source_crawler",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_glue_job.etl_job",
+                "fontname": "sans-serif",
+                "label": "aws_glue_job.etl_job",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_iam_role.glue_role",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.glue_role",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_iam_role_policy.glue_s3_policy",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.glue_s3_policy",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_iam_role_policy_attachment.glue_service",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy_attachment.glue_service",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 7,
+                "name": "aws_s3_bucket.destination",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.destination",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 8,
+                "name": "aws_s3_bucket.scripts",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.scripts",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 9,
+                "name": "aws_s3_bucket.source",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.source",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 10,
+                "name": "aws_s3_object.etl_script",
+                "fontname": "sans-serif",
+                "label": "aws_s3_object.etl_script",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 0,
+                "head": 3
+            },
+            {
+                "_gvid": 1,
+                "tail": 2,
+                "head": 1
+            },
+            {
+                "_gvid": 2,
+                "tail": 2,
+                "head": 4
+            },
+            {
+                "_gvid": 3,
+                "tail": 2,
+                "head": 9
+            },
+            {
+                "_gvid": 4,
+                "tail": 3,
+                "head": 4
+            },
+            {
+                "_gvid": 5,
+                "tail": 3,
+                "head": 10
+            },
+            {
+                "_gvid": 6,
+                "tail": 5,
+                "head": 4
+            },
+            {
+                "_gvid": 7,
+                "tail": 5,
+                "head": 7
+            },
+            {
+                "_gvid": 8,
+                "tail": 5,
+                "head": 8
+            },
+            {
+                "_gvid": 9,
+                "tail": 5,
+                "head": 9
+            },
+            {
+                "_gvid": 10,
+                "tail": 6,
+                "head": 4
+            },
+            {
+                "_gvid": 11,
+                "tail": 10,
+                "head": 8
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_cloudwatch_log_group.glue_logs": [],
+        "aws_glue_catalog_database.etl_database": [
+            "aws_glue_crawler.source_crawler"
+        ],
+        "aws_glue_crawler.source_crawler": [],
+        "aws_glue_job.etl_job": [
+            "aws_cloudwatch_log_group.glue_logs"
+        ],
+        "aws_iam_role.glue_role": [
+            "aws_glue_crawler.source_crawler",
+            "aws_glue_job.etl_job",
+            "aws_iam_role_policy.glue_s3_policy",
+            "aws_iam_role_policy_attachment.glue_service"
+        ],
+        "aws_iam_role_policy.glue_s3_policy": [],
+        "aws_iam_role_policy_attachment.glue_service": [],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.glue_s3_policy"
+        ],
+        "aws_s3_bucket.scripts": [
+            "aws_iam_role_policy.glue_s3_policy",
+            "aws_s3_object.etl_script"
+        ],
+        "aws_s3_bucket.source": [
+            "aws_glue_crawler.source_crawler",
+            "aws_iam_role_policy.glue_s3_policy"
+        ],
+        "aws_s3_object.etl_script": [
+            "aws_glue_job.etl_job"
+        ]
+    },
+    "meta_data": {
+        "aws_cloudwatch_log_group.glue_logs": {
+            "kms_key_id": null,
+            "name": "/aws-glue/jobs/data-transformation-job",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_catalog_database.etl_database": {
+            "description": null,
+            "federated_database": [],
+            "name": "etl_database",
+            "parameters": null,
+            "tags": null,
+            "target_database": [],
+            "arn": true,
+            "catalog_id": true,
+            "create_table_default_permission": [],
+            "id": true,
+            "location_uri": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_crawler.source_crawler": {
+            "catalog_target": [],
+            "classifiers": null,
+            "configuration": null,
+            "database_name": "etl_database",
+            "delta_target": [],
+            "description": null,
+            "dynamodb_target": [],
+            "hudi_target": [],
+            "iceberg_target": [],
+            "jdbc_target": [],
+            "lake_formation_configuration": [],
+            "lineage_configuration": [],
+            "mongodb_target": [],
+            "name": "source-data-crawler",
+            "recrawl_policy": [],
+            "s3_target": [
+                {}
+            ],
+            "schedule": null,
+            "schema_change_policy": [],
+            "security_configuration": null,
+            "table_prefix": null,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "role": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_job.etl_job": {
+            "command": [
+                {}
+            ],
+            "connections": null,
+            "default_arguments": {},
+            "description": null,
+            "execution_class": null,
+            "glue_version": "4.0",
+            "job_run_queuing_enabled": null,
+            "maintenance_window": null,
+            "max_retries": 1,
+            "name": "data-transformation-job",
+            "non_overridable_arguments": null,
+            "number_of_workers": 2,
+            "security_configuration": null,
+            "source_control_details": [],
+            "tags": null,
+            "timeout": 60,
+            "worker_type": "G.1X",
+            "arn": true,
+            "execution_property": [],
+            "id": true,
+            "max_capacity": true,
+            "notification_property": [],
+            "role_arn": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_iam_role.glue_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "glue-etl-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.glue_s3_policy": {
+            "name": "glue-s3-access",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.glue_service": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+            "role": "glue-etl-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "glue-etl-destination",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.scripts": {
+            "bucket": "glue-scripts",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.source": {
+            "bucket": "glue-etl-source",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_object.etl_script": {
+            "cache_control": null,
+            "checksum_algorithm": null,
+            "content": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n",
+            "content_base64": null,
+            "content_disposition": null,
+            "content_encoding": null,
+            "content_language": null,
+            "force_destroy": false,
+            "key": "scripts/transform.py",
+            "metadata": null,
+            "object_lock_legal_hold_status": null,
+            "object_lock_mode": null,
+            "object_lock_retain_until_date": null,
+            "override_provider": [],
+            "source": null,
+            "source_hash": null,
+            "tags": null,
+            "website_redirect": null,
+            "acl": true,
+            "arn": true,
+            "bucket": true,
+            "bucket_key_enabled": true,
+            "checksum_crc32": true,
+            "checksum_crc32c": true,
+            "checksum_crc64nvme": true,
+            "checksum_sha1": true,
+            "checksum_sha256": true,
+            "content_type": true,
+            "etag": true,
+            "id": true,
+            "kms_key_id": true,
+            "server_side_encryption": true,
+            "storage_class": true,
+            "tags_all": {},
+            "version_id": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_cloudwatch_log_group.glue_logs",
+        "aws_glue_catalog_database.etl_database",
         "aws_glue_crawler.source_crawler",
         "aws_glue_job.etl_job",
+        "aws_iam_role.glue_role",
         "aws_iam_role_policy.glue_s3_policy",
-        "aws_iam_role_policy_attachment.glue_service"
-    ],
-    "aws_iam_role_policy.glue_s3_policy": [
+        "aws_iam_role_policy_attachment.glue_service",
         "aws_s3_bucket.destination",
         "aws_s3_bucket.scripts",
-        "aws_s3_bucket.source"
-    ],
-    "aws_iam_role_policy_attachment.glue_service": [],
-    "aws_s3_bucket.destination": [],
-    "aws_s3_bucket.scripts": [
+        "aws_s3_bucket.source",
         "aws_s3_object.etl_script"
     ],
-    "aws_s3_bucket.source": [],
-    "aws_s3_object.etl_script": []
+    "hidden": [
+        "aws_security_group_rule"
+    ],
+    "annotations": {},
+    "original_graphdict": {
+        "aws_cloudwatch_log_group.glue_logs": [],
+        "aws_glue_catalog_database.etl_database": [
+            "aws_glue_crawler.source_crawler"
+        ],
+        "aws_glue_crawler.source_crawler": [],
+        "aws_glue_job.etl_job": [
+            "aws_cloudwatch_log_group.glue_logs"
+        ],
+        "aws_iam_role.glue_role": [
+            "aws_glue_crawler.source_crawler",
+            "aws_glue_job.etl_job",
+            "aws_iam_role_policy.glue_s3_policy",
+            "aws_iam_role_policy_attachment.glue_service"
+        ],
+        "aws_iam_role_policy.glue_s3_policy": [],
+        "aws_iam_role_policy_attachment.glue_service": [],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.glue_s3_policy"
+        ],
+        "aws_s3_bucket.scripts": [
+            "aws_iam_role_policy.glue_s3_policy",
+            "aws_s3_object.etl_script"
+        ],
+        "aws_s3_bucket.source": [
+            "aws_glue_crawler.source_crawler",
+            "aws_iam_role_policy.glue_s3_policy"
+        ],
+        "aws_s3_object.etl_script": [
+            "aws_glue_job.etl_job"
+        ]
+    },
+    "original_metadata": {
+        "aws_cloudwatch_log_group.glue_logs": {
+            "kms_key_id": null,
+            "name": "/aws-glue/jobs/data-transformation-job",
+            "retention_in_days": 7,
+            "skip_destroy": false,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "log_group_class": true,
+            "name_prefix": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_catalog_database.etl_database": {
+            "description": null,
+            "federated_database": [],
+            "name": "etl_database",
+            "parameters": null,
+            "tags": null,
+            "target_database": [],
+            "arn": true,
+            "catalog_id": true,
+            "create_table_default_permission": [],
+            "id": true,
+            "location_uri": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_crawler.source_crawler": {
+            "catalog_target": [],
+            "classifiers": null,
+            "configuration": null,
+            "database_name": "etl_database",
+            "delta_target": [],
+            "description": null,
+            "dynamodb_target": [],
+            "hudi_target": [],
+            "iceberg_target": [],
+            "jdbc_target": [],
+            "lake_formation_configuration": [],
+            "lineage_configuration": [],
+            "mongodb_target": [],
+            "name": "source-data-crawler",
+            "recrawl_policy": [],
+            "s3_target": [
+                {}
+            ],
+            "schedule": null,
+            "schema_change_policy": [],
+            "security_configuration": null,
+            "table_prefix": null,
+            "tags": null,
+            "arn": true,
+            "id": true,
+            "role": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_glue_job.etl_job": {
+            "command": [
+                {}
+            ],
+            "connections": null,
+            "default_arguments": {},
+            "description": null,
+            "execution_class": null,
+            "glue_version": "4.0",
+            "job_run_queuing_enabled": null,
+            "maintenance_window": null,
+            "max_retries": 1,
+            "name": "data-transformation-job",
+            "non_overridable_arguments": null,
+            "number_of_workers": 2,
+            "security_configuration": null,
+            "source_control_details": [],
+            "tags": null,
+            "timeout": 60,
+            "worker_type": "G.1X",
+            "arn": true,
+            "execution_property": [],
+            "id": true,
+            "max_capacity": true,
+            "notification_property": [],
+            "role_arn": true,
+            "tags_all": {},
+            "module": "main"
+        },
+        "aws_iam_role.glue_role": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"glue.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "glue-etl-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.glue_s3_policy": {
+            "name": "glue-s3-access",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy_attachment.glue_service": {
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole",
+            "role": "glue-etl-role",
+            "id": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "glue-etl-destination",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.scripts": {
+            "bucket": "glue-scripts",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.source": {
+            "bucket": "glue-etl-source",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_object.etl_script": {
+            "cache_control": null,
+            "checksum_algorithm": null,
+            "content": "import sys\nfrom awsglue.transforms import *\nfrom awsglue.utils import getResolvedOptions\nfrom pyspark.context import SparkContext\nfrom awsglue.context import GlueContext\nfrom awsglue.job import Job\n\nargs = getResolvedOptions(sys.argv, ['JOB_NAME'])\nsc = SparkContext()\nglueContext = GlueContext(sc)\nspark = glueContext.spark_session\njob = Job(glueContext)\njob.init(args['JOB_NAME'], args)\n\n# Read from source\ndatasource = glueContext.create_dynamic_frame.from_options(\n    \"s3\",\n    {\"paths\": [\"s3://glue-etl-source/input/\"]},\n    format=\"parquet\"\n)\n\n# Transform data\ntransformed = ApplyMapping.apply(frame=datasource, mappings=[\n    (\"id\", \"string\", \"id\", \"string\"),\n    (\"value\", \"double\", \"value\", \"double\")\n])\n\n# Write to destination\nglueContext.write_dynamic_frame.from_options(\n    transformed,\n    connection_type=\"s3\",\n    connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n    format=\"parquet\"\n)\n\njob.commit()\n",
+            "content_base64": null,
+            "content_disposition": null,
+            "content_encoding": null,
+            "content_language": null,
+            "force_destroy": false,
+            "key": "scripts/transform.py",
+            "metadata": null,
+            "object_lock_legal_hold_status": null,
+            "object_lock_mode": null,
+            "object_lock_retain_until_date": null,
+            "override_provider": [],
+            "source": null,
+            "source_hash": null,
+            "tags": null,
+            "website_redirect": null,
+            "acl": true,
+            "arn": true,
+            "bucket": true,
+            "bucket_key_enabled": true,
+            "checksum_crc32": true,
+            "checksum_crc32c": true,
+            "checksum_crc64nvme": true,
+            "checksum_sha1": true,
+            "checksum_sha256": true,
+            "content_type": true,
+            "etag": true,
+            "id": true,
+            "kms_key_id": true,
+            "server_side_encryption": true,
+            "storage_class": true,
+            "tags_all": {},
+            "version_id": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/glue_s3/main.tf": [
+            {
+                "aws_s3_bucket": {
+                    "source": {
+                        "bucket": "glue-etl-source"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket": {
+                    "destination": {
+                        "bucket": "glue-etl-destination"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket": {
+                    "scripts": {
+                        "bucket": "glue-scripts"
+                    }
+                }
+            },
+            {
+                "aws_s3_object": {
+                    "etl_script": {
+                        "bucket": "${aws_s3_bucket.scripts.id}",
+                        "key": "scripts/transform.py",
+                        "content": "    import sys\n    from awsglue.transforms import *\n    from awsglue.utils import getResolvedOptions\n    from pyspark.context import SparkContext\n    from awsglue.context import GlueContext\n    from awsglue.job import Job\n\n    args = getResolvedOptions(sys.argv, ['JOB_NAME'])\n    sc = SparkContext()\n    glueContext = GlueContext(sc)\n    spark = glueContext.spark_session\n    job = Job(glueContext)\n    job.init(args['JOB_NAME'], args)\n\n    # Read from source\n    datasource = glueContext.create_dynamic_frame.from_options(\n        \"s3\",\n        {\"paths\": [\"s3://glue-etl-source/input/\"]},\n        format=\"parquet\"\n    )\n\n    # Transform data\n    transformed = ApplyMapping.apply(frame=datasource, mappings=[\n        (\"id\", \"string\", \"id\", \"string\"),\n        (\"value\", \"double\", \"value\", \"double\")\n    ])\n\n    # Write to destination\n    glueContext.write_dynamic_frame.from_options(\n        transformed,\n        connection_type=\"s3\",\n        connection_options={\"path\": \"s3://glue-etl-destination/output/\"},\n        format=\"parquet\"\n    )\n\n    job.commit()"
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "glue_role": {
+                        "name": "glue-etl-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'glue.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "glue_s3_policy": {
+                        "name": "glue-s3-access",
+                        "role": "${aws_iam_role.glue_role.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['s3:GetObject', 's3:PutObject'], 'Resource': ['${aws_s3_bucket.source.arn}/*', '${aws_s3_bucket.destination.arn}/*', '${aws_s3_bucket.scripts.arn}/*']}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy_attachment": {
+                    "glue_service": {
+                        "role": "${aws_iam_role.glue_role.name}",
+                        "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+                    }
+                }
+            },
+            {
+                "aws_glue_catalog_database": {
+                    "etl_database": {
+                        "name": "etl_database"
+                    }
+                }
+            },
+            {
+                "aws_glue_crawler": {
+                    "source_crawler": {
+                        "name": "source-data-crawler",
+                        "database_name": "${aws_glue_catalog_database.etl_database.name}",
+                        "role": "${aws_iam_role.glue_role.arn}",
+                        "s3_target": [
+                            {
+                                "path": "s3://${aws_s3_bucket.source.bucket}/input/"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_glue_job": {
+                    "etl_job": {
+                        "name": "data-transformation-job",
+                        "role_arn": "${aws_iam_role.glue_role.arn}",
+                        "command": [
+                            {
+                                "name": "glueetl",
+                                "script_location": "s3://${aws_s3_bucket.scripts.bucket}/${aws_s3_object.etl_script.key}",
+                                "python_version": "3"
+                            }
+                        ],
+                        "default_arguments": {
+                            "--job-language": "python",
+                            "--enable-metrics": "true",
+                            "--enable-spark-ui": "true",
+                            "--enable-job-insights": "true"
+                        },
+                        "max_retries": 1,
+                        "timeout": 60,
+                        "glue_version": "4.0",
+                        "worker_type": "G.1X",
+                        "number_of_workers": 2
+                    }
+                }
+            },
+            {
+                "aws_cloudwatch_log_group": {
+                    "glue_logs": {
+                        "name": "/aws-glue/jobs/${aws_glue_job.etl_job.name}",
+                        "retention_in_days": 7
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/glue_s3/main.tf": [
+            {
+                "aws": {
+                    "region": "us-east-1"
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpx0o3l0dp'>"
 }

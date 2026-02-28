@@ -1,5 +1,7 @@
 {
-    "aws_cloudwatch_log_group.cloudwatch": [],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_glue_job.etl_job"
+    ],
     "aws_glue_catalog_database.etl_database": [
         "aws_glue_crawler.source_crawler"
     ],
@@ -7,7 +9,6 @@
         "aws_s3_bucket.source"
     ],
     "aws_glue_job.etl_job": [
-        "aws_cloudwatch_log_group.cloudwatch",
         "aws_s3_bucket.scripts",
         "aws_s3_object.etl_script"
     ],

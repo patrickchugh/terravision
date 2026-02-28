@@ -137,6 +137,13 @@ AWS_CONSOLIDATED_NODES = [
         }
     },
     {
+        "aws_secretsmanager_secret": {
+            "resource_name": "aws_secretsmanager_secret.secretsmanager",
+            "import_location": "resource_classes.aws.security",
+            "vpc": False,
+        }
+    },
+    {
         "aws_cognito": {
             "resource_name": "aws_cognito_user_pool.cognito",
             "import_location": "resource_classes.aws.security",

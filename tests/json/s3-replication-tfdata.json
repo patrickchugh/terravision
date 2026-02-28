@@ -1,36 +1,1769 @@
 {
-    "aws_group.shared_services": [
-        "aws_iam_group.of_services"
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/s3_replication",
+    "workdir": "/private/tmp/tv_s3_replication",
+    "plandata": {
+        "format_version": "1.2",
+        "terraform_version": "1.13.3",
+        "planned_values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_iam_role.replication",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "replication",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                            "description": null,
+                            "force_detach_policies": false,
+                            "max_session_duration": 3600,
+                            "name": "s3-replication-role",
+                            "path": "/",
+                            "permissions_boundary": null,
+                            "tags": null
+                        },
+                        "sensitive_values": {
+                            "inline_policy": [],
+                            "managed_policy_arns": [],
+                            "tags_all": {}
+                        }
+                    },
+                    {
+                        "address": "aws_iam_role_policy.replication",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "replication",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "name": "s3-replication-policy"
+                        },
+                        "sensitive_values": {}
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "data-replica-bucket",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "source",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "bucket": "data-source-bucket",
+                            "force_destroy": false,
+                            "tags": null,
+                            "timeouts": null
+                        },
+                        "sensitive_values": {
+                            "cors_rule": [],
+                            "grant": [],
+                            "lifecycle_rule": [],
+                            "logging": [],
+                            "object_lock_configuration": [],
+                            "replication_configuration": [],
+                            "server_side_encryption_configuration": [],
+                            "tags_all": {},
+                            "versioning": [],
+                            "website": []
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket_replication_configuration.replication",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_replication_configuration",
+                        "name": "replication",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "rule": [
+                                {
+                                    "delete_marker_replication": [],
+                                    "destination": [
+                                        {
+                                            "access_control_translation": [],
+                                            "account": null,
+                                            "encryption_configuration": [],
+                                            "metrics": [],
+                                            "replication_time": [],
+                                            "storage_class": "STANDARD"
+                                        }
+                                    ],
+                                    "existing_object_replication": [],
+                                    "filter": [],
+                                    "id": "replicate-all",
+                                    "prefix": null,
+                                    "priority": null,
+                                    "source_selection_criteria": [],
+                                    "status": "Enabled"
+                                }
+                            ],
+                            "token": null
+                        },
+                        "sensitive_values": {
+                            "rule": [
+                                {
+                                    "delete_marker_replication": [],
+                                    "destination": [
+                                        {
+                                            "access_control_translation": [],
+                                            "encryption_configuration": [],
+                                            "metrics": [],
+                                            "replication_time": []
+                                        }
+                                    ],
+                                    "existing_object_replication": [],
+                                    "filter": [],
+                                    "source_selection_criteria": []
+                                }
+                            ],
+                            "token": true
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket_versioning.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_versioning",
+                        "name": "destination",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "expected_bucket_owner": null,
+                            "mfa": null,
+                            "versioning_configuration": [
+                                {
+                                    "status": "Enabled"
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "versioning_configuration": [
+                                {}
+                            ]
+                        }
+                    },
+                    {
+                        "address": "aws_s3_bucket_versioning.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_versioning",
+                        "name": "source",
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 0,
+                        "values": {
+                            "expected_bucket_owner": null,
+                            "mfa": null,
+                            "versioning_configuration": [
+                                {
+                                    "status": "Enabled"
+                                }
+                            ]
+                        },
+                        "sensitive_values": {
+                            "versioning_configuration": [
+                                {}
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "resource_changes": [
+            {
+                "address": "aws_iam_role.replication",
+                "mode": "managed",
+                "type": "aws_iam_role",
+                "name": "replication",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                        "description": null,
+                        "force_detach_policies": false,
+                        "max_session_duration": 3600,
+                        "name": "s3-replication-role",
+                        "path": "/",
+                        "permissions_boundary": null,
+                        "tags": null,
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "name_prefix": true,
+                        "tags_all": {},
+                        "unique_id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "arn": true,
+                        "create_date": true,
+                        "id": true,
+                        "inline_policy": true,
+                        "managed_policy_arns": true,
+                        "name_prefix": true,
+                        "tags_all": true,
+                        "unique_id": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "inline_policy": [],
+                        "managed_policy_arns": [],
+                        "tags_all": {}
+                    }
+                }
+            },
+            {
+                "address": "aws_iam_role_policy.replication",
+                "mode": "managed",
+                "type": "aws_iam_role_policy",
+                "name": "replication",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "name": "s3-replication-policy",
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "id": true,
+                        "name_prefix": true,
+                        "policy": true,
+                        "role": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {}
+                }
+            },
+            {
+                "address": "aws_s3_bucket.destination",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "destination",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "data-replica-bucket",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket.source",
+                "mode": "managed",
+                "type": "aws_s3_bucket",
+                "name": "source",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "bucket": "data-source-bucket",
+                        "force_destroy": false,
+                        "tags": null,
+                        "timeouts": null,
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": [],
+                        "grant": [],
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": [],
+                        "request_payer": true,
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": [],
+                        "website_domain": true,
+                        "website_endpoint": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "acceleration_status": true,
+                        "acl": true,
+                        "arn": true,
+                        "bucket_domain_name": true,
+                        "bucket_prefix": true,
+                        "bucket_regional_domain_name": true,
+                        "cors_rule": true,
+                        "grant": true,
+                        "hosted_zone_id": true,
+                        "id": true,
+                        "lifecycle_rule": true,
+                        "logging": true,
+                        "object_lock_configuration": true,
+                        "object_lock_enabled": true,
+                        "policy": true,
+                        "region": true,
+                        "replication_configuration": true,
+                        "request_payer": true,
+                        "server_side_encryption_configuration": true,
+                        "tags_all": true,
+                        "versioning": true,
+                        "website": true,
+                        "website_domain": true,
+                        "website_endpoint": true
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "cors_rule": [],
+                        "grant": [],
+                        "lifecycle_rule": [],
+                        "logging": [],
+                        "object_lock_configuration": [],
+                        "replication_configuration": [],
+                        "server_side_encryption_configuration": [],
+                        "tags_all": {},
+                        "versioning": [],
+                        "website": []
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket_replication_configuration.replication",
+                "mode": "managed",
+                "type": "aws_s3_bucket_replication_configuration",
+                "name": "replication",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "rule": [
+                            {
+                                "delete_marker_replication": [],
+                                "destination": [
+                                    {
+                                        "access_control_translation": [],
+                                        "encryption_configuration": [],
+                                        "metrics": [],
+                                        "replication_time": []
+                                    }
+                                ],
+                                "existing_object_replication": [],
+                                "filter": [],
+                                "source_selection_criteria": []
+                            }
+                        ],
+                        "token": true,
+                        "bucket": true,
+                        "id": true,
+                        "role": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "bucket": true,
+                        "id": true,
+                        "role": true,
+                        "rule": [
+                            {
+                                "delete_marker_replication": [],
+                                "destination": [
+                                    {
+                                        "access_control_translation": [],
+                                        "bucket": true,
+                                        "encryption_configuration": [],
+                                        "metrics": [],
+                                        "replication_time": []
+                                    }
+                                ],
+                                "existing_object_replication": [],
+                                "filter": [],
+                                "source_selection_criteria": []
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "rule": [
+                            {
+                                "delete_marker_replication": [],
+                                "destination": [
+                                    {
+                                        "access_control_translation": [],
+                                        "encryption_configuration": [],
+                                        "metrics": [],
+                                        "replication_time": []
+                                    }
+                                ],
+                                "existing_object_replication": [],
+                                "filter": [],
+                                "source_selection_criteria": []
+                            }
+                        ],
+                        "token": true
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket_versioning.destination",
+                "mode": "managed",
+                "type": "aws_s3_bucket_versioning",
+                "name": "destination",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "expected_bucket_owner": null,
+                        "mfa": null,
+                        "versioning_configuration": [
+                            {}
+                        ],
+                        "bucket": true,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "bucket": true,
+                        "id": true,
+                        "versioning_configuration": [
+                            {
+                                "mfa_delete": true
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "versioning_configuration": [
+                            {}
+                        ]
+                    }
+                }
+            },
+            {
+                "address": "aws_s3_bucket_versioning.source",
+                "mode": "managed",
+                "type": "aws_s3_bucket_versioning",
+                "name": "source",
+                "provider_name": "registry.terraform.io/hashicorp/aws",
+                "change": {
+                    "actions": [
+                        "create"
+                    ],
+                    "before": null,
+                    "after": {
+                        "expected_bucket_owner": null,
+                        "mfa": null,
+                        "versioning_configuration": [
+                            {}
+                        ],
+                        "bucket": true,
+                        "id": true,
+                        "module": "main"
+                    },
+                    "after_unknown": {
+                        "bucket": true,
+                        "id": true,
+                        "versioning_configuration": [
+                            {
+                                "mfa_delete": true
+                            }
+                        ]
+                    },
+                    "before_sensitive": false,
+                    "after_sensitive": {
+                        "versioning_configuration": [
+                            {}
+                        ]
+                    }
+                }
+            }
+        ],
+        "configuration": {
+            "provider_config": {
+                "aws": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "version_constraint": "~> 5.0"
+                },
+                "aws.primary": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "alias": "primary",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-east-1"
+                        }
+                    }
+                },
+                "aws.replica": {
+                    "name": "aws",
+                    "full_name": "registry.terraform.io/hashicorp/aws",
+                    "alias": "replica",
+                    "version_constraint": "~> 5.0",
+                    "expressions": {
+                        "region": {
+                            "constant_value": "us-west-2"
+                        }
+                    }
+                }
+            },
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "aws_iam_role.replication",
+                        "mode": "managed",
+                        "type": "aws_iam_role",
+                        "name": "replication",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "assume_role_policy": {},
+                            "name": {
+                                "constant_value": "s3-replication-role"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_iam_role_policy.replication",
+                        "mode": "managed",
+                        "type": "aws_iam_role_policy",
+                        "name": "replication",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "name": {
+                                "constant_value": "s3-replication-policy"
+                            },
+                            "policy": {
+                                "references": [
+                                    "aws_s3_bucket.source.arn",
+                                    "aws_s3_bucket.source",
+                                    "aws_s3_bucket.source.arn",
+                                    "aws_s3_bucket.source",
+                                    "aws_s3_bucket.destination.arn",
+                                    "aws_s3_bucket.destination"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.replication.id",
+                                    "aws_iam_role.replication"
+                                ]
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "destination",
+                        "provider_config_key": "aws.replica",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "data-replica-bucket"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket",
+                        "name": "source",
+                        "provider_config_key": "aws.primary",
+                        "expressions": {
+                            "bucket": {
+                                "constant_value": "data-source-bucket"
+                            }
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket_replication_configuration.replication",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_replication_configuration",
+                        "name": "replication",
+                        "provider_config_key": "aws.primary",
+                        "expressions": {
+                            "bucket": {
+                                "references": [
+                                    "aws_s3_bucket.source.id",
+                                    "aws_s3_bucket.source"
+                                ]
+                            },
+                            "role": {
+                                "references": [
+                                    "aws_iam_role.replication.arn",
+                                    "aws_iam_role.replication"
+                                ]
+                            },
+                            "rule": [
+                                {
+                                    "destination": [
+                                        {
+                                            "bucket": {
+                                                "references": [
+                                                    "aws_s3_bucket.destination.arn",
+                                                    "aws_s3_bucket.destination"
+                                                ]
+                                            },
+                                            "storage_class": {
+                                                "constant_value": "STANDARD"
+                                            }
+                                        }
+                                    ],
+                                    "id": {
+                                        "constant_value": "replicate-all"
+                                    },
+                                    "status": {
+                                        "constant_value": "Enabled"
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0,
+                        "depends_on": [
+                            "aws_s3_bucket_versioning.source",
+                            "aws_s3_bucket_versioning.destination"
+                        ]
+                    },
+                    {
+                        "address": "aws_s3_bucket_versioning.destination",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_versioning",
+                        "name": "destination",
+                        "provider_config_key": "aws.replica",
+                        "expressions": {
+                            "bucket": {
+                                "references": [
+                                    "aws_s3_bucket.destination.id",
+                                    "aws_s3_bucket.destination"
+                                ]
+                            },
+                            "versioning_configuration": [
+                                {
+                                    "status": {
+                                        "constant_value": "Enabled"
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    },
+                    {
+                        "address": "aws_s3_bucket_versioning.source",
+                        "mode": "managed",
+                        "type": "aws_s3_bucket_versioning",
+                        "name": "source",
+                        "provider_config_key": "aws.primary",
+                        "expressions": {
+                            "bucket": {
+                                "references": [
+                                    "aws_s3_bucket.source.id",
+                                    "aws_s3_bucket.source"
+                                ]
+                            },
+                            "versioning_configuration": [
+                                {
+                                    "status": {
+                                        "constant_value": "Enabled"
+                                    }
+                                }
+                            ]
+                        },
+                        "schema_version": 0
+                    }
+                ]
+            }
+        },
+        "relevant_attributes": [
+            {
+                "resource": "aws_iam_role.replication",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_iam_role.replication",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.destination",
+                "attribute": [
+                    "arn"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.destination",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.source",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_s3_bucket.source",
+                "attribute": [
+                    "arn"
+                ]
+            }
+        ],
+        "timestamp": "2026-02-28T14:29:26Z",
+        "applyable": true,
+        "complete": true,
+        "errored": false
+    },
+    "tf_resources_created": [
+        {
+            "address": "aws_iam_role.replication",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "replication",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+                    "description": null,
+                    "force_detach_policies": false,
+                    "max_session_duration": 3600,
+                    "name": "s3-replication-role",
+                    "path": "/",
+                    "permissions_boundary": null,
+                    "tags": null,
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "name_prefix": true,
+                    "tags_all": {},
+                    "unique_id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "arn": true,
+                    "create_date": true,
+                    "id": true,
+                    "inline_policy": true,
+                    "managed_policy_arns": true,
+                    "name_prefix": true,
+                    "tags_all": true,
+                    "unique_id": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "inline_policy": [],
+                    "managed_policy_arns": [],
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "aws_iam_role_policy.replication",
+            "mode": "managed",
+            "type": "aws_iam_role_policy",
+            "name": "replication",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "name": "s3-replication-policy",
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "id": true,
+                    "name_prefix": true,
+                    "policy": true,
+                    "role": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {}
+            }
+        },
+        {
+            "address": "aws_s3_bucket.destination",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "destination",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "data-replica-bucket",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket.source",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "source",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "bucket": "data-source-bucket",
+                    "force_destroy": false,
+                    "tags": null,
+                    "timeouts": null,
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": [],
+                    "grant": [],
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": [],
+                    "request_payer": true,
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": [],
+                    "website_domain": true,
+                    "website_endpoint": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "acceleration_status": true,
+                    "acl": true,
+                    "arn": true,
+                    "bucket_domain_name": true,
+                    "bucket_prefix": true,
+                    "bucket_regional_domain_name": true,
+                    "cors_rule": true,
+                    "grant": true,
+                    "hosted_zone_id": true,
+                    "id": true,
+                    "lifecycle_rule": true,
+                    "logging": true,
+                    "object_lock_configuration": true,
+                    "object_lock_enabled": true,
+                    "policy": true,
+                    "region": true,
+                    "replication_configuration": true,
+                    "request_payer": true,
+                    "server_side_encryption_configuration": true,
+                    "tags_all": true,
+                    "versioning": true,
+                    "website": true,
+                    "website_domain": true,
+                    "website_endpoint": true
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "cors_rule": [],
+                    "grant": [],
+                    "lifecycle_rule": [],
+                    "logging": [],
+                    "object_lock_configuration": [],
+                    "replication_configuration": [],
+                    "server_side_encryption_configuration": [],
+                    "tags_all": {},
+                    "versioning": [],
+                    "website": []
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket_replication_configuration.replication",
+            "mode": "managed",
+            "type": "aws_s3_bucket_replication_configuration",
+            "name": "replication",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "rule": [
+                        {
+                            "delete_marker_replication": [],
+                            "destination": [
+                                {
+                                    "access_control_translation": [],
+                                    "encryption_configuration": [],
+                                    "metrics": [],
+                                    "replication_time": []
+                                }
+                            ],
+                            "existing_object_replication": [],
+                            "filter": [],
+                            "source_selection_criteria": []
+                        }
+                    ],
+                    "token": true,
+                    "bucket": true,
+                    "id": true,
+                    "role": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "bucket": true,
+                    "id": true,
+                    "role": true,
+                    "rule": [
+                        {
+                            "delete_marker_replication": [],
+                            "destination": [
+                                {
+                                    "access_control_translation": [],
+                                    "bucket": true,
+                                    "encryption_configuration": [],
+                                    "metrics": [],
+                                    "replication_time": []
+                                }
+                            ],
+                            "existing_object_replication": [],
+                            "filter": [],
+                            "source_selection_criteria": []
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "rule": [
+                        {
+                            "delete_marker_replication": [],
+                            "destination": [
+                                {
+                                    "access_control_translation": [],
+                                    "encryption_configuration": [],
+                                    "metrics": [],
+                                    "replication_time": []
+                                }
+                            ],
+                            "existing_object_replication": [],
+                            "filter": [],
+                            "source_selection_criteria": []
+                        }
+                    ],
+                    "token": true
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket_versioning.destination",
+            "mode": "managed",
+            "type": "aws_s3_bucket_versioning",
+            "name": "destination",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "expected_bucket_owner": null,
+                    "mfa": null,
+                    "versioning_configuration": [
+                        {}
+                    ],
+                    "bucket": true,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "bucket": true,
+                    "id": true,
+                    "versioning_configuration": [
+                        {
+                            "mfa_delete": true
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "versioning_configuration": [
+                        {}
+                    ]
+                }
+            }
+        },
+        {
+            "address": "aws_s3_bucket_versioning.source",
+            "mode": "managed",
+            "type": "aws_s3_bucket_versioning",
+            "name": "source",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "create"
+                ],
+                "before": null,
+                "after": {
+                    "expected_bucket_owner": null,
+                    "mfa": null,
+                    "versioning_configuration": [
+                        {}
+                    ],
+                    "bucket": true,
+                    "id": true,
+                    "module": "main"
+                },
+                "after_unknown": {
+                    "bucket": true,
+                    "id": true,
+                    "versioning_configuration": [
+                        {
+                            "mfa_delete": true
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "versioning_configuration": [
+                        {}
+                    ]
+                }
+            }
+        }
     ],
-    "aws_iam_role.replication": [
+    "tfgraph": {
+        "name": "G",
+        "directed": true,
+        "strict": false,
+        "rankdir": "RL",
+        "_subgraph_cnt": 0,
+        "objects": [
+            {
+                "_gvid": 0,
+                "name": "aws_iam_role.replication",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role.replication",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
+                "name": "aws_iam_role_policy.replication",
+                "fontname": "sans-serif",
+                "label": "aws_iam_role_policy.replication",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 2,
+                "name": "aws_s3_bucket.destination",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.destination",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 3,
+                "name": "aws_s3_bucket.source",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket.source",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 4,
+                "name": "aws_s3_bucket_replication_configuration.replication",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket_replication_configuration.replication",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 5,
+                "name": "aws_s3_bucket_versioning.destination",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket_versioning.destination",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 6,
+                "name": "aws_s3_bucket_versioning.source",
+                "fontname": "sans-serif",
+                "label": "aws_s3_bucket_versioning.source",
+                "shape": "rect"
+            }
+        ],
+        "edges": [
+            {
+                "_gvid": 0,
+                "tail": 1,
+                "head": 0
+            },
+            {
+                "_gvid": 1,
+                "tail": 1,
+                "head": 2
+            },
+            {
+                "_gvid": 2,
+                "tail": 1,
+                "head": 3
+            },
+            {
+                "_gvid": 3,
+                "tail": 4,
+                "head": 0
+            },
+            {
+                "_gvid": 4,
+                "tail": 4,
+                "head": 5
+            },
+            {
+                "_gvid": 5,
+                "tail": 4,
+                "head": 6
+            },
+            {
+                "_gvid": 6,
+                "tail": 5,
+                "head": 2
+            },
+            {
+                "_gvid": 7,
+                "tail": 6,
+                "head": 3
+            }
+        ]
+    },
+    "graphdict": {
+        "aws_iam_role.replication": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_replication_configuration.replication"
+        ],
+        "aws_iam_role_policy.replication": [],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_versioning.destination"
+        ],
+        "aws_s3_bucket.source": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_versioning.source"
+        ],
+        "aws_s3_bucket_replication_configuration.replication": [],
+        "aws_s3_bucket_versioning.destination": [
+            "aws_s3_bucket_replication_configuration.replication"
+        ],
+        "aws_s3_bucket_versioning.source": [
+            "aws_s3_bucket_replication_configuration.replication"
+        ]
+    },
+    "meta_data": {
+        "aws_iam_role.replication": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "s3-replication-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.replication": {
+            "name": "s3-replication-policy",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "data-replica-bucket",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.source": {
+            "bucket": "data-source-bucket",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_replication_configuration.replication": {
+            "rule": [
+                {
+                    "delete_marker_replication": [],
+                    "destination": [
+                        {
+                            "access_control_translation": [],
+                            "encryption_configuration": [],
+                            "metrics": [],
+                            "replication_time": []
+                        }
+                    ],
+                    "existing_object_replication": [],
+                    "filter": [],
+                    "source_selection_criteria": []
+                }
+            ],
+            "token": true,
+            "bucket": true,
+            "id": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_versioning.destination": {
+            "expected_bucket_owner": null,
+            "mfa": null,
+            "versioning_configuration": [
+                {}
+            ],
+            "bucket": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_versioning.source": {
+            "expected_bucket_owner": null,
+            "mfa": null,
+            "versioning_configuration": [
+                {}
+            ],
+            "bucket": true,
+            "id": true,
+            "module": "main"
+        }
+    },
+    "all_output": {},
+    "node_list": [
+        "aws_iam_role.replication",
         "aws_iam_role_policy.replication",
-        "aws_s3_bucket_replication_configuration.replication"
-    ],
-    "aws_iam_role_policy.replication": [
-        "aws_s3_bucket.destination",
-        "aws_s3_bucket.source"
-    ],
-    "aws_s3_bucket.destination": [
-        "aws_s3_bucket_versioning.destination"
-    ],
-    "aws_s3_bucket.source": [
-        "aws_s3_bucket.destination",
-        "aws_s3_bucket_versioning.source"
-    ],
-    "aws_s3_bucket_replication_configuration.replication": [
         "aws_s3_bucket.destination",
         "aws_s3_bucket.source",
+        "aws_s3_bucket_replication_configuration.replication",
         "aws_s3_bucket_versioning.destination",
         "aws_s3_bucket_versioning.source"
     ],
-    "aws_s3_bucket_versioning.destination": [],
-    "aws_s3_bucket_versioning.source": [],
-    "tv_aws_region.us-east-1": [
-        "aws_s3_bucket.source",
-        "aws_s3_bucket_versioning.source"
+    "hidden": [
+        "aws_security_group_rule"
     ],
-    "tv_aws_region.us-west-2": [
-        "aws_s3_bucket.destination",
-        "aws_s3_bucket_versioning.destination"
-    ]
+    "annotations": {},
+    "original_graphdict": {
+        "aws_iam_role.replication": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_replication_configuration.replication"
+        ],
+        "aws_iam_role_policy.replication": [],
+        "aws_s3_bucket.destination": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_versioning.destination"
+        ],
+        "aws_s3_bucket.source": [
+            "aws_iam_role_policy.replication",
+            "aws_s3_bucket_versioning.source"
+        ],
+        "aws_s3_bucket_replication_configuration.replication": [],
+        "aws_s3_bucket_versioning.destination": [
+            "aws_s3_bucket_replication_configuration.replication"
+        ],
+        "aws_s3_bucket_versioning.source": [
+            "aws_s3_bucket_replication_configuration.replication"
+        ]
+    },
+    "original_metadata": {
+        "aws_iam_role.replication": {
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "description": null,
+            "force_detach_policies": false,
+            "max_session_duration": 3600,
+            "name": "s3-replication-role",
+            "path": "/",
+            "permissions_boundary": null,
+            "tags": null,
+            "arn": true,
+            "create_date": true,
+            "id": true,
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "name_prefix": true,
+            "tags_all": {},
+            "unique_id": true,
+            "module": "main"
+        },
+        "aws_iam_role_policy.replication": {
+            "name": "s3-replication-policy",
+            "id": true,
+            "name_prefix": true,
+            "policy": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.destination": {
+            "bucket": "data-replica-bucket",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket.source": {
+            "bucket": "data-source-bucket",
+            "force_destroy": false,
+            "tags": null,
+            "timeouts": null,
+            "acceleration_status": true,
+            "acl": true,
+            "arn": true,
+            "bucket_domain_name": true,
+            "bucket_prefix": true,
+            "bucket_regional_domain_name": true,
+            "cors_rule": [],
+            "grant": [],
+            "hosted_zone_id": true,
+            "id": true,
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": true,
+            "policy": true,
+            "region": true,
+            "replication_configuration": [],
+            "request_payer": true,
+            "server_side_encryption_configuration": [],
+            "tags_all": {},
+            "versioning": [],
+            "website": [],
+            "website_domain": true,
+            "website_endpoint": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_replication_configuration.replication": {
+            "rule": [
+                {
+                    "delete_marker_replication": [],
+                    "destination": [
+                        {
+                            "access_control_translation": [],
+                            "encryption_configuration": [],
+                            "metrics": [],
+                            "replication_time": []
+                        }
+                    ],
+                    "existing_object_replication": [],
+                    "filter": [],
+                    "source_selection_criteria": []
+                }
+            ],
+            "token": true,
+            "bucket": true,
+            "id": true,
+            "role": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_versioning.destination": {
+            "expected_bucket_owner": null,
+            "mfa": null,
+            "versioning_configuration": [
+                {}
+            ],
+            "bucket": true,
+            "id": true,
+            "module": "main"
+        },
+        "aws_s3_bucket_versioning.source": {
+            "expected_bucket_owner": null,
+            "mfa": null,
+            "versioning_configuration": [
+                {}
+            ],
+            "bucket": true,
+            "id": true,
+            "module": "main"
+        }
+    },
+    "module_source_dict": {},
+    "all_resource": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/s3_replication/main.tf": [
+            {
+                "aws_s3_bucket": {
+                    "source": {
+                        "provider": "${aws.primary}",
+                        "bucket": "data-source-bucket"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket_versioning": {
+                    "source": {
+                        "provider": "${aws.primary}",
+                        "bucket": "${aws_s3_bucket.source.id}",
+                        "versioning_configuration": [
+                            {
+                                "status": "Enabled"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket": {
+                    "destination": {
+                        "provider": "${aws.replica}",
+                        "bucket": "data-replica-bucket"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket_versioning": {
+                    "destination": {
+                        "provider": "${aws.replica}",
+                        "bucket": "${aws_s3_bucket.destination.id}",
+                        "versioning_configuration": [
+                            {
+                                "status": "Enabled"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aws_iam_role": {
+                    "replication": {
+                        "name": "s3-replication-role",
+                        "assume_role_policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 's3.amazonaws.com'}}]})}"
+                    }
+                }
+            },
+            {
+                "aws_iam_role_policy": {
+                    "replication": {
+                        "name": "s3-replication-policy",
+                        "role": "${aws_iam_role.replication.id}",
+                        "policy": "${jsonencode({'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['s3:GetReplicationConfiguration', 's3:ListBucket'], 'Resource': '${aws_s3_bucket.source.arn}'}, {'Effect': 'Allow', 'Action': ['s3:GetObjectVersionForReplication', 's3:GetObjectVersionAcl'], 'Resource': '${aws_s3_bucket.source.arn}/*'}, {'Effect': 'Allow', 'Action': ['s3:ReplicateObject', 's3:ReplicateDelete'], 'Resource': '${aws_s3_bucket.destination.arn}/*'}]})}"
+                    }
+                }
+            },
+            {
+                "aws_s3_bucket_replication_configuration": {
+                    "replication": {
+                        "provider": "${aws.primary}",
+                        "depends_on": [
+                            "${aws_s3_bucket_versioning.source}",
+                            "${aws_s3_bucket_versioning.destination}"
+                        ],
+                        "role": "${aws_iam_role.replication.arn}",
+                        "bucket": "${aws_s3_bucket.source.id}",
+                        "rule": [
+                            {
+                                "id": "replicate-all",
+                                "status": "Enabled",
+                                "destination": [
+                                    {
+                                        "bucket": "${aws_s3_bucket.destination.arn}",
+                                        "storage_class": "STANDARD"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/s3_replication/main.tf": [
+            {
+                "aws": {
+                    "region": "us-east-1",
+                    "alias": "primary"
+                }
+            },
+            {
+                "aws": {
+                    "region": "us-west-2",
+                    "alias": "replica"
+                }
+            }
+        ]
+    },
+    "varfile_list": [],
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp6lsvo0y2'>"
 }
