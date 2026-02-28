@@ -24,9 +24,15 @@ import modules.helpers as helpers
 from modules.helpers import *
 
 
-def _parse_version(version_str: str) -> Tuple[int, ...]:
-    """Parse a version string like '5.48.0' into a tuple of ints."""
-    return tuple(int(x) for x in version_str.split("."))
+def _parse_version(version_str: str) -> Optional[Tuple[int, ...]]:
+    """Parse a version string like '5.48.0' into a tuple of ints.
+
+    Returns None for unparseable versions (e.g., pre-release '1.0.0-pre').
+    """
+    try:
+        return tuple(int(x) for x in version_str.split("."))
+    except ValueError:
+        return None
 
 
 def _resolve_version_constraint(constraint: str, versions: List[str]) -> Optional[str]:
@@ -44,6 +50,8 @@ def _resolve_version_constraint(constraint: str, versions: List[str]) -> Optiona
 
     def matches(ver_str: str) -> bool:
         ver = _parse_version(ver_str)
+        if ver is None:
+            return False
         for cons in constraints:
             cons = cons.strip()
             if cons.startswith("~>"):
