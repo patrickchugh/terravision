@@ -919,6 +919,16 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
         )
 
         for lt in launch_templates:
+            # Update parents that reference this launch template to point to numbered copies
+            numbered_lts = [f"{lt}~{j}" for j in range(1, len(matching_subnets) + 1)]
+            parents = helpers.list_of_parents(tfdata["graphdict"], lt)
+            for parent in parents:
+                if parent == asg or parent.startswith(f"{asg}~"):
+                    continue  # ASG connections already handled above
+                helpers.safe_remove_connection(tfdata, parent, lt)
+                for numbered_lt in numbered_lts:
+                    if numbered_lt not in tfdata["graphdict"].get(parent, []):
+                        tfdata["graphdict"][parent].append(numbered_lt)
             helpers.delete_node(tfdata, lt, remove_from_connections=False)
 
         for policy in policies:

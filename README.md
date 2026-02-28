@@ -151,41 +151,9 @@ pipx install terravision # only if in a virtual env, you can use pip install ter
 
 ### Verify Terraform Setup
 
-Before generating diagrams, ensure Terraform is working:
+Before generating diagrams, ensure Terraform is working with `terraform init` and `terraform plan` 
 
-```bash
-# Verify Terraform is installed
-terraform version
-# Should show v1.0.0 or higher
-
-# Configure cloud provider credentials
-# AWS:
-export AWS_ACCESS_KEY_ID="your-access-key"
-export AWS_SECRET_ACCESS_KEY="your-secret-key"
-# Or: aws configure
-
-# Azure:
-export ARM_CLIENT_ID="your-client-id"
-export ARM_CLIENT_SECRET="your-client-secret"
-export ARM_TENANT_ID="your-tenant-id"
-export ARM_SUBSCRIPTION_ID="your-subscription-id"
-# Or: az login
-
-# GCP:
-export GOOGLE_CREDENTIALS="path/to/service-account-key.json"
-# Or: gcloud auth application-default login
-
-# Test Terraform can initialize and plan
-cd tests/fixtures/aws_terraform/static-website  # or azure_terraform/test_vm_vmss
-terraform init
-terraform plan
-# Should complete without errors
-cd -
-```
-
-**Note**: TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Cloud credentials are required for TERRAFORM to validate resources and resolve functions, but TerraVision itself never accesses your cloud account. Alternatively, use `--planfile` and `--graphfile` to provide pre-generated Terraform outputs, bypassing Terraform execution entirely.
-
-**Important for Terraform Enterprise and Remote Backend Users**: TerraVision automatically forces local backend execution (ignoring remote state) to generate diagrams showing the complete infrastructure definition, not just deltas. This ensures accurate architecture visualization regardless of your configured backend.
+TerraVision needs Terraform to successfully run `terraform plan` to parse your infrastructure. Note that whilst cloud credentials are required for TERRAFORM to validate resources and resolve functions, TerraVision itself never accesses your cloud account. Alternatively, use `--planfile` and `--graphfile` to provide pre-generated Terraform plan and graph outputs, bypassing Terraform execution entirely.
 
 ### Option 3 - Nix
 
