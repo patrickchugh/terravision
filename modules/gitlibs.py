@@ -8,12 +8,15 @@ Terraform Enterprise. Supports SSH, HTTPS, and registry URL formats.
 import os
 import re
 import shutil
+import stat
+import tarfile
 import tempfile
+import zipfile
 from pathlib import Path
 from sys import exit
 from typing import Dict, List, Tuple, Any, Optional
 from urllib.parse import urlparse
-import stat
+
 import click
 import git
 import requests
@@ -166,6 +169,117 @@ def handle_readme_source(resp: requests.Response) -> str:
 # Known git hosting domains that should be cloned directly (not via registry API)
 GIT_HOSTING_DOMAINS = ["github.com", "gitlab.com", "bitbucket.org"]
 
+# Archive file extensions supported for HTTP module sources
+ARCHIVE_EXTENSIONS = (
+    ".zip",
+    ".tar.gz",
+    ".tgz",
+    ".tar.bz2",
+    ".tbz2",
+    ".tar.xz",
+    ".txz",
+    ".tar",
+)
+
+
+def _is_http_archive(url: str) -> bool:
+    """Check if a URL points to a downloadable archive file.
+
+    Args:
+        url: URL to check (may have s3::, gcs::, or query parameters)
+
+    Returns:
+        True if URL ends with a known archive extension
+    """
+    # Strip s3::/gcs:: prefixes and query parameters for extension check
+    clean = url
+    for prefix in ("s3::", "gcs::"):
+        if clean.startswith(prefix):
+            clean = clean[len(prefix) :]
+    # Remove query params first, then strip // subfolder (keep archive path, not subfolder)
+    clean = clean.split("?")[0]
+    # For protocol URLs, skip protocol //, then strip // subfolder
+    if clean.startswith(("https://", "http://")):
+        protocol_end = clean.find("//") + 2
+        remaining = clean[protocol_end:]
+        if "//" in remaining:
+            clean = clean[:protocol_end] + remaining.split("//", 1)[0]
+    return any(clean.endswith(ext) for ext in ARCHIVE_EXTENSIONS)
+
+
+def _download_and_extract_archive(url: str, destination: str) -> None:
+    """Download an archive from HTTP URL and extract it to destination.
+
+    Supports .zip, .tar.gz, .tgz, .tar.bz2, .tbz2, .tar.xz, .txz, and .tar.
+    Handles s3:: and gcs:: prefixed URLs by stripping the prefix.
+
+    Args:
+        url: HTTP URL to download the archive from
+        destination: Local directory to extract archive contents into
+    """
+    # Strip s3::/gcs:: prefixes — the underlying URL is plain HTTP
+    for prefix in ("s3::", "gcs::"):
+        if url.startswith(prefix):
+            url = url[len(prefix) :]
+
+    # Remove ?ref= or other query params from download URL
+    download_url = url.split("?")[0]
+
+    click.echo(f"  Downloading archive: {download_url}")
+
+    try:
+        resp = requests.get(download_url, stream=True, timeout=120)
+        resp.raise_for_status()
+    except Exception as e:
+        click.echo(
+            click.style(
+                f"\nERROR: Failed to download archive from {download_url}: {e}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+
+    # Write to a temp file, then extract
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        for chunk in resp.iter_content(chunk_size=8192):
+            tmp.write(chunk)
+        tmp_path = tmp.name
+
+    try:
+        os.makedirs(destination, exist_ok=True)
+
+        if download_url.endswith(".zip"):
+            with zipfile.ZipFile(tmp_path, "r") as zf:
+                zf.extractall(destination)
+        elif any(
+            download_url.endswith(ext)
+            for ext in (
+                ".tar.gz",
+                ".tgz",
+                ".tar.bz2",
+                ".tbz2",
+                ".tar.xz",
+                ".txz",
+                ".tar",
+            )
+        ):
+            with tarfile.open(tmp_path, "r:*") as tf:
+                tf.extractall(destination)
+        else:
+            click.echo(
+                click.style(
+                    f"\nERROR: Unsupported archive format: {download_url}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit()
+
+        click.echo(click.style(f"  Extracted archive to {destination}", fg="green"))
+    finally:
+        os.unlink(tmp_path)
+
 
 def _is_git_hosting_url(sourceURL: str) -> bool:
     """Check if URL is for a known git hosting service.
@@ -192,6 +306,11 @@ def get_clone_url(sourceURL: str, version_constraint: str = "") -> Tuple[str, st
     Returns:
         Tuple of (git_url, subfolder, git_tag)
     """
+    # Check for HTTP archive sources (e.g., .tgz, .zip from S3, GCS, or any HTTP URL)
+    # Must check before git:: prefix since s3::/gcs:: could be confused with git::
+    if _is_http_archive(sourceURL):
+        return _handle_http_archive_url(sourceURL)
+
     # Check for git:: prefix (SSH or HTTPS git URLs)
     is_git_prefix = (
         sourceURL.startswith("git::ssh://")
@@ -265,6 +384,38 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
             git_tag = sourceURL.split("?ref=")[1]
 
     return gitaddress, subfolder, git_tag
+
+
+def _handle_http_archive_url(sourceURL: str) -> Tuple[str, str, str]:
+    """Handle HTTP archive URLs (.tgz, .zip, etc.).
+
+    Strips s3::/gcs:: prefixes, extracts // subfolder if present,
+    and returns the download URL. No git tag is applicable.
+
+    Args:
+        sourceURL: HTTP archive URL (possibly with s3::/gcs:: prefix)
+
+    Returns:
+        Tuple of (download_url, subfolder, empty_tag)
+    """
+    url = sourceURL
+    subfolder = ""
+
+    # Strip s3::/gcs:: prefixes
+    for prefix in ("s3::", "gcs::"):
+        if url.startswith(prefix):
+            url = url[len(prefix) :]
+
+    # Extract // subfolder if present (skip protocol //)
+    if url.startswith(("https://", "http://")):
+        protocol_end = url.find("//") + 2
+        remaining = url[protocol_end:]
+        if "//" in remaining:
+            repo_part, subfolder = remaining.split("//", 1)
+            subfolder = subfolder.split("?")[0]
+            url = url[:protocol_end] + repo_part
+
+    return url, subfolder, ""
 
 
 def _handle_domain_url(sourceURL: str) -> Tuple[str, str, str]:
@@ -511,8 +662,19 @@ def clone_files(
     # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly
     base_source_url = sourceURL
 
+    # Handle s3::/gcs:: prefixed URLs (e.g., s3::https://...//subfolder)
+    if sourceURL.startswith(("s3::", "gcs::")):
+        stripped = sourceURL.split("::", 1)[1]
+        if stripped.startswith(("http://", "https://")):
+            protocol_end = stripped.find("//") + 2
+            remaining = stripped[protocol_end:]
+            if "//" in remaining:
+                prefix = sourceURL.split("::", 1)[0] + "::"
+                base_source_url = (
+                    prefix + stripped[:protocol_end] + remaining.split("//", 1)[0]
+                )
     # Handle git:: prefixed URLs (e.g., git::https://...//subfolder)
-    if sourceURL.startswith("git::"):
+    elif sourceURL.startswith("git::"):
         remaining_after_prefix = sourceURL[5:]  # Remove "git::" prefix
         if remaining_after_prefix.startswith(("http://", "https://", "ssh://")):
             # Protocol-based URL - skip past protocol //, then check for subfolder //
@@ -554,8 +716,11 @@ def clone_files(
     if module != "main":
         click.echo(f"  Processing External Module named '{module}': {sourceURL}")
 
-    # Determine if source is remote URL or local directory
-    if helpers.check_for_domain(str(sourceURL)):
+    # Determine if source is an HTTP archive, remote URL, or local directory
+    if _is_http_archive(sourceURL):
+        # HTTP archive (e.g., .tgz, .zip from S3, GCS, or any HTTP server)
+        _download_and_extract_archive(githubURL, codepath)
+    elif helpers.check_for_domain(str(sourceURL)):
         # Remote source: clone the repository
         _clone_full_repo(githubURL, subfolder, git_tag, codepath)
     else:

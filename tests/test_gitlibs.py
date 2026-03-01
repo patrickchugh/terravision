@@ -6,7 +6,12 @@ into (clone_url, subfolder, git_tag) tuples.
 
 import pytest
 
-from modules.gitlibs import _handle_git_prefix_url, get_clone_url
+from modules.gitlibs import (
+    _handle_git_prefix_url,
+    _handle_http_archive_url,
+    _is_http_archive,
+    get_clone_url,
+)
 
 
 class TestHandleGitPrefixUrl:
@@ -132,3 +137,106 @@ class TestGetCloneUrl:
         assert git_url == "https://github.com/owner/repo.git"
         assert subfolder == "modules/sub"
         assert tag == "v2.0.0"
+
+    def test_http_archive_routes_correctly(self):
+        url = "https://example.com/modules/vpc.tar.gz"
+        git_url, subfolder, tag = get_clone_url(url)
+        assert git_url == "https://example.com/modules/vpc.tar.gz"
+        assert subfolder == ""
+        assert tag == ""
+
+    def test_s3_archive_routes_correctly(self):
+        url = "s3::https://bucket.s3.amazonaws.com/modules/vpc.tar.gz"
+        git_url, subfolder, tag = get_clone_url(url)
+        assert git_url == "https://bucket.s3.amazonaws.com/modules/vpc.tar.gz"
+        assert subfolder == ""
+        assert tag == ""
+
+
+class TestIsHttpArchive:
+    """Tests for _is_http_archive detection."""
+
+    def test_tar_gz(self):
+        assert _is_http_archive("https://example.com/module.tar.gz") is True
+
+    def test_tgz(self):
+        assert _is_http_archive("https://example.com/module.tgz") is True
+
+    def test_zip(self):
+        assert _is_http_archive("https://example.com/module.zip") is True
+
+    def test_tar_bz2(self):
+        assert _is_http_archive("https://example.com/module.tar.bz2") is True
+
+    def test_tar_xz(self):
+        assert _is_http_archive("https://example.com/module.tar.xz") is True
+
+    def test_plain_tar(self):
+        assert _is_http_archive("https://example.com/module.tar") is True
+
+    def test_s3_prefix_tar_gz(self):
+        assert (
+            _is_http_archive("s3::https://bucket.s3.amazonaws.com/mod.tar.gz") is True
+        )
+
+    def test_gcs_prefix_zip(self):
+        assert _is_http_archive("gcs::https://storage.googleapis.com/mod.zip") is True
+
+    def test_with_query_params(self):
+        assert _is_http_archive("https://example.com/module.tar.gz?version=1") is True
+
+    def test_with_subfolder(self):
+        assert _is_http_archive("https://example.com/module.tar.gz//subdir") is True
+
+    def test_not_archive_git_url(self):
+        assert _is_http_archive("git::https://github.com/owner/repo.git") is False
+
+    def test_not_archive_registry(self):
+        assert _is_http_archive("terraform-aws-modules/vpc/aws") is False
+
+    def test_not_archive_github_shorthand(self):
+        assert _is_http_archive("github.com/owner/repo") is False
+
+
+class TestHandleHttpArchiveUrl:
+    """Tests for _handle_http_archive_url parsing."""
+
+    def test_plain_https_tar_gz(self):
+        url = "https://example.com/modules/vpc.tar.gz"
+        download_url, subfolder, tag = _handle_http_archive_url(url)
+        assert download_url == "https://example.com/modules/vpc.tar.gz"
+        assert subfolder == ""
+        assert tag == ""
+
+    def test_s3_prefix_stripped(self):
+        url = "s3::https://bucket.s3.amazonaws.com/modules/vpc.tar.gz"
+        download_url, subfolder, tag = _handle_http_archive_url(url)
+        assert download_url == "https://bucket.s3.amazonaws.com/modules/vpc.tar.gz"
+        assert subfolder == ""
+        assert tag == ""
+
+    def test_gcs_prefix_stripped(self):
+        url = "gcs::https://storage.googleapis.com/bucket/module.zip"
+        download_url, subfolder, tag = _handle_http_archive_url(url)
+        assert download_url == "https://storage.googleapis.com/bucket/module.zip"
+        assert subfolder == ""
+        assert tag == ""
+
+    def test_with_subfolder(self):
+        url = "https://example.com/modules/iam.tar.gz//modules/iam-user"
+        download_url, subfolder, tag = _handle_http_archive_url(url)
+        assert download_url == "https://example.com/modules/iam.tar.gz"
+        assert subfolder == "modules/iam-user"
+        assert tag == ""
+
+    def test_s3_with_subfolder(self):
+        url = "s3::https://bucket.s3.amazonaws.com/iam.tar.gz//modules/iam-user"
+        download_url, subfolder, tag = _handle_http_archive_url(url)
+        assert download_url == "https://bucket.s3.amazonaws.com/iam.tar.gz"
+        assert subfolder == "modules/iam-user"
+        assert tag == ""
+
+    def test_tag_always_empty(self):
+        url = "https://example.com/module.tar.gz"
+        _, _, tag = _handle_http_archive_url(url)
+        assert tag == ""

@@ -6,6 +6,7 @@ repositories, parses HCL2 syntax, and extracts resources, modules, and variables
 """
 
 import fileinput
+import json
 import os
 import re
 import tempfile
@@ -43,6 +44,41 @@ EXTRACT: List[str] = [
     "data",
     "provider",
 ]
+
+
+def _load_terraform_modules_json(source_dir: str) -> Dict[str, str]:
+    """Load Terraform's modules.json and return module key to directory mapping.
+
+    Terraform writes .terraform/modules/modules.json during 'terraform init' with
+    a mapping of each module's key (name) to its local directory path. This allows
+    terravision to use already-downloaded modules instead of re-cloning them.
+
+    Args:
+        source_dir: Root directory of the Terraform source (where .terraform/ lives)
+
+    Returns:
+        Dictionary mapping module key to absolute directory path
+    """
+    modules_json_path = os.path.join(
+        source_dir, ".terraform", "modules", "modules.json"
+    )
+    if not os.path.exists(modules_json_path):
+        return {}
+    try:
+        with open(modules_json_path, "r") as f:
+            data = json.load(f)
+        result: Dict[str, str] = {}
+        for mod in data.get("Modules", []):
+            key = mod.get("Key", "")
+            dir_path = mod.get("Dir", "")
+            if key and dir_path:
+                if os.path.isabs(dir_path):
+                    result[key] = dir_path
+                else:
+                    result[key] = os.path.normpath(os.path.join(source_dir, dir_path))
+        return result
+    except (json.JSONDecodeError, KeyError):
+        return {}
 
 
 def find_tf_files(
@@ -180,6 +216,7 @@ def iterative_parse(
     extract_sections: List[str],
     tfdata: Dict[str, Any],
     tf_mod_dir: str,
+    source_dir: str = "",
 ) -> Dict[str, Any]:
     """Parse Terraform files and extract resources, modules, and variables.
 
@@ -192,11 +229,20 @@ def iterative_parse(
         extract_sections: List of section names to extract (e.g., 'resource', 'module')
         tfdata: Main data dictionary to populate with parsed content
         tf_mod_dir: Directory containing Terraform modules
+        source_dir: Root source directory (for .terraform/modules/modules.json lookup)
 
     Returns:
         Updated tfdata dictionary with parsed content
     """
     tfdata["module_source_dict"] = dict()
+
+    # Load Terraform's modules.json for local module resolution (issue #168)
+    terraform_modules = _load_terraform_modules_json(source_dir) if source_dir else {}
+    if terraform_modules:
+        click.echo(
+            f"  Found .terraform/modules/modules.json with "
+            f"{len(terraform_modules)} module(s)"
+        )
 
     # Parse each Terraform file
     for filename in tf_file_paths:
@@ -256,6 +302,18 @@ def iterative_parse(
                             os.chdir(os.path.dirname(filename))
                             modpath = os.path.abspath(sourcemod)
                             os.chdir(curdir)
+
+                        # Check modules.json for already-downloaded modules
+                        if (
+                            not os.path.isdir(modpath)
+                            and module_name in terraform_modules
+                            and os.path.isdir(terraform_modules[module_name])
+                        ):
+                            modpath = terraform_modules[module_name]
+                            click.echo(
+                                f"  Using local module from "
+                                f".terraform/modules/{module_name}"
+                            )
 
                         # Fallback to source if module directory doesn't exist
                         if not os.path.isdir(modpath):
@@ -324,7 +382,11 @@ def read_tfsource(
                 click.echo(f"  Will use architecture annotation file : {file.name} \n")
                 annotations = yaml.safe_load(file)
 
-        tfdata = iterative_parse(tf_file_paths, hcl_dict, EXTRACT, tfdata, tf_mod_dir)
+        # Resolve source directory for .terraform/modules/modules.json lookup
+        source_dir = source if os.path.isdir(source) else ""
+        tfdata = iterative_parse(
+            tf_file_paths, hcl_dict, EXTRACT, tfdata, tf_mod_dir, source_dir
+        )
 
     # Auto-detect and load .tfvars files
     for file in tf_file_paths:
