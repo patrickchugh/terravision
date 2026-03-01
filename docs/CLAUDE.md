@@ -70,10 +70,10 @@ poetry run pytest tests --cov=modules
 
 ### Linting and Formatting
 
-**CRITICAL**: All modified Python files MUST be run through the Black formatter before committing. This is enforced by CI.
+**CRITICAL**: You MUST ALWAYS run Black on any Python file immediately after modifying it. Do not wait until committing — format right after every edit. This is enforced by CI and will cause failures if skipped.
 
 ```bash
-# Auto-format modified files (ALWAYS do this before committing)
+# ALWAYS run after modifying any Python file
 poetry run black <modified_files>
 
 # Check formatting (CI enforced)

@@ -226,23 +226,20 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
     subfolder = ""
     git_tag = ""
 
-    # Extract git address based on prefix type
-    if "ssh://" in sourceURL:
-        split_array = sourceURL.split("git::ssh://")
-    elif "git::http" in sourceURL:
-        split_array = sourceURL.split("git::")
+    # Remove git:: prefix, keeping the rest (ssh://, https://, etc.)
+    if "git::" in sourceURL:
+        gitaddress = sourceURL.split("git::", 1)[1]
     else:
-        split_array = sourceURL.split("git::")
+        gitaddress = sourceURL
 
-    gitaddress = split_array[-1]
-
-    # Normalize GitHub and GitLab SSH URLs
-    gitaddress = gitaddress.replace("git@github.com/", "git@github.com:")
-    gitaddress = gitaddress.replace("git@gitlab.com/", "git@gitlab.com:")
+    # Normalize GitHub and GitLab SSH URLs to SCP-style (only when not using ssh:// protocol)
+    if not gitaddress.startswith("ssh://"):
+        gitaddress = gitaddress.replace("git@github.com/", "git@github.com:")
+        gitaddress = gitaddress.replace("git@gitlab.com/", "git@gitlab.com:")
 
     # Extract subfolder if present (indicated by // after protocol)
-    if gitaddress.startswith(("https://", "http://")):
-        # For HTTPS URLs, skip the protocol // and look for subfolder //
+    # For protocol-based URLs (https://, http://, ssh://), skip past the protocol //
+    if gitaddress.startswith(("https://", "http://", "ssh://")):
         protocol_end = gitaddress.find("//") + 2
         remaining = gitaddress[protocol_end:]
         has_subfolder = "//" in remaining
@@ -261,6 +258,8 @@ def _handle_git_prefix_url(sourceURL: str) -> Tuple[str, str, str]:
             subfolder_array = gitaddress.split("//")
             subfolder = subfolder_array[1].split("?")[0]
             gitaddress = subfolder_array[0]
+            if "?ref" in subfolder_array[1]:
+                git_tag = subfolder_array[1].split("?ref=")[1]
         elif "?ref" in gitaddress:
             gitaddress = gitaddress.split("?ref=")[0]
             git_tag = sourceURL.split("?ref=")[1]
@@ -515,8 +514,8 @@ def clone_files(
     # Handle git:: prefixed URLs (e.g., git::https://...//subfolder)
     if sourceURL.startswith("git::"):
         remaining_after_prefix = sourceURL[5:]  # Remove "git::" prefix
-        if remaining_after_prefix.startswith(("http://", "https://")):
-            # git::https:// URL - find protocol end in remaining part, then check for subfolder //
+        if remaining_after_prefix.startswith(("http://", "https://", "ssh://")):
+            # Protocol-based URL - skip past protocol //, then check for subfolder //
             protocol_end = remaining_after_prefix.find("//") + 2
             after_protocol = remaining_after_prefix[protocol_end:]
             if "//" in after_protocol:
@@ -526,7 +525,7 @@ def clone_files(
                     + after_protocol.split("//", 1)[0]
                 )
         elif "//" in remaining_after_prefix:
-            # git::ssh or other format with subfolder
+            # SCP-style git URL or other format with subfolder
             base_source_url = "git::" + remaining_after_prefix.split("//", 1)[0]
     elif sourceURL.startswith(("http://", "https://")):
         # For HTTP(S) URLs, find protocol end then check for // in remaining part

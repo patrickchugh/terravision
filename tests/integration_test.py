@@ -212,6 +212,11 @@ def test_help() -> None:
             "gcp-three-tier-webapp-tfdata.json",
             "expected-gcp-three-tier-webapp.json",
         ),
+        # Module sources (registry, GitHub shorthand, git::https, GitLab, TFC)
+        (
+            "module-sources-tfdata.json",
+            "expected-module-sources.json",
+        ),
     ],
 )
 def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
@@ -272,7 +277,6 @@ TFC_ENV = {
     [
         (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
         (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
-        (str(FIXTURES_DIR / "module_sources"), "expected-module-sources.json"),
     ],
 )
 @pytest.mark.slow

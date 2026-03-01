@@ -56,17 +56,16 @@
         "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access"
     ],
     "module.gitlab_s3.aws_s3_bucket_public_access_block.public_access": [],
-    "module.gitlab_vpc.aws_route.public_internet_gateway~1": [
-        "module.gitlab_vpc.aws_route_table.public~1"
-    ],
+    "module.gitlab_vpc.aws_route.public_internet_gateway~1": [],
     "module.gitlab_vpc.aws_route_table.private[0]~1": [],
-    "module.gitlab_vpc.aws_route_table.public~1": [],
+    "module.gitlab_vpc.aws_route_table.public~1": [
+        "module.gitlab_vpc.aws_route.public_internet_gateway~1",
+        "module.gitlab_vpc.aws_route_table_association.public[0]~1"
+    ],
     "module.gitlab_vpc.aws_route_table_association.private[0]~1": [
         "module.gitlab_vpc.aws_route_table.private[0]~1"
     ],
-    "module.gitlab_vpc.aws_route_table_association.public[0]~1": [
-        "module.gitlab_vpc.aws_route_table.public~1"
-    ],
+    "module.gitlab_vpc.aws_route_table_association.public[0]~1": [],
     "module.gitlab_vpc.aws_subnet.private[0]~1": [
         "module.gitlab_vpc.aws_route_table_association.private[0]~1"
     ],
