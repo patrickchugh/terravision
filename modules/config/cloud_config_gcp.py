@@ -13,7 +13,6 @@ GCP_CONSOLIDATED_NODES = [
         "google_compute_firewall": {
             "resource_name": "google_compute_firewall.firewall",
             "import_location": "resource_classes.gcp.network",
-            "vpc": True,
             "edge_service": False,
         }
     },
@@ -21,7 +20,6 @@ GCP_CONSOLIDATED_NODES = [
         "google_compute_address": {
             "resource_name": "google_compute_address.external_ip",
             "import_location": "resource_classes.gcp.network",
-            "vpc": False,
             "edge_service": False,
         }
     },
@@ -29,21 +27,18 @@ GCP_CONSOLIDATED_NODES = [
         "google_compute_forwarding_rule": {
             "resource_name": "google_compute_forwarding_rule.lb",
             "import_location": "resource_classes.gcp.network",
-            "vpc": True,
         }
     },
     {
         "google_kms_key_ring": {
             "resource_name": "google_kms_key_ring.kms",
             "import_location": "resource_classes.gcp.security",
-            "vpc": False,
         }
     },
     {
         "google_logging": {
             "resource_name": "google_logging_project_sink.logging",
             "import_location": "resource_classes.gcp.management",
-            "vpc": False,
         }
     },
 ]

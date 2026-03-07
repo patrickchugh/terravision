@@ -1,3 +1,4 @@
+import json
 import unittest, sys, os
 from unittest.mock import patch, MagicMock, mock_open
 import tempfile
@@ -50,23 +51,47 @@ class TestHandleModule(unittest.TestCase):
 class TestLoadTerraformModulesJson(unittest.TestCase):
     """Tests for _load_terraform_modules_json()."""
 
+    SAMPLE_MODULES_JSON = json.dumps(
+        {
+            "Modules": [
+                {"Key": "", "Source": "", "Dir": "."},
+                {
+                    "Key": "registry_vpc",
+                    "Source": "registry.terraform.io/terraform-aws-modules/vpc/aws",
+                    "Version": "5.1.0",
+                    "Dir": ".terraform/modules/registry_vpc",
+                },
+                {
+                    "Key": "git_https_iam_account_ref",
+                    "Source": "git::https://github.com/terraform-aws-modules/terraform-aws-iam.git//modules/iam-account?ref=v5.30.0",
+                    "Dir": ".terraform/modules/git_https_iam_account_ref/modules/iam-account",
+                },
+                {
+                    "Key": "local_vpc",
+                    "Source": "./modules/local_vpc",
+                    "Dir": "modules/local_vpc",
+                },
+            ]
+        }
+    )
+
     def setUp(self):
-        # Clear TF_DATA_DIR which gets set at import time by tfwrapper.py
         self._orig_tf_data_dir = os.environ.pop("TF_DATA_DIR", None)
+        self._tmpdir = tempfile.TemporaryDirectory()
+        modules_dir = os.path.join(self._tmpdir.name, ".terraform", "modules")
+        os.makedirs(modules_dir)
+        with open(os.path.join(modules_dir, "modules.json"), "w") as f:
+            f.write(self.SAMPLE_MODULES_JSON)
 
     def tearDown(self):
+        self._tmpdir.cleanup()
         if self._orig_tf_data_dir is not None:
             os.environ["TF_DATA_DIR"] = self._orig_tf_data_dir
 
     def test_valid_modules_json(self):
-        """Test loading the real modules.json fixture."""
-        fixtures_dir = os.path.join(
-            os.path.dirname(__file__), "fixtures", "aws_terraform", "module_sources"
-        )
-        result = _load_terraform_modules_json(fixtures_dir)
-        # Should have entries (root module with empty key is excluded)
+        """Test loading modules.json returns expected modules."""
+        result = _load_terraform_modules_json(self._tmpdir.name)
         self.assertGreater(len(result), 0)
-        # Check a known module
         self.assertIn("registry_vpc", result)
         self.assertTrue(os.path.isabs(result["registry_vpc"]))
         self.assertTrue(
@@ -75,10 +100,7 @@ class TestLoadTerraformModulesJson(unittest.TestCase):
 
     def test_modules_json_resolves_relative_paths(self):
         """Test that relative Dir paths are resolved to absolute paths."""
-        fixtures_dir = os.path.join(
-            os.path.dirname(__file__), "fixtures", "aws_terraform", "module_sources"
-        )
-        result = _load_terraform_modules_json(fixtures_dir)
+        result = _load_terraform_modules_json(self._tmpdir.name)
         for key, path in result.items():
             self.assertTrue(
                 os.path.isabs(path), f"Module '{key}' path is not absolute: {path}"
@@ -101,19 +123,12 @@ class TestLoadTerraformModulesJson(unittest.TestCase):
 
     def test_empty_key_excluded(self):
         """Test that the root module (empty Key) is excluded."""
-        fixtures_dir = os.path.join(
-            os.path.dirname(__file__), "fixtures", "aws_terraform", "module_sources"
-        )
-        result = _load_terraform_modules_json(fixtures_dir)
+        result = _load_terraform_modules_json(self._tmpdir.name)
         self.assertNotIn("", result)
 
     def test_subfolder_modules_resolved(self):
         """Test modules with subfolder paths (e.g., .terraform/modules/X/modules/Y)."""
-        fixtures_dir = os.path.join(
-            os.path.dirname(__file__), "fixtures", "aws_terraform", "module_sources"
-        )
-        result = _load_terraform_modules_json(fixtures_dir)
-        # git_https_iam_account_ref has Dir: .terraform/modules/git_https_iam_account_ref/modules/iam-account
+        result = _load_terraform_modules_json(self._tmpdir.name)
         self.assertIn("git_https_iam_account_ref", result)
         self.assertTrue(
             result["git_https_iam_account_ref"].endswith("modules/iam-account")

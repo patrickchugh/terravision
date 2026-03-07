@@ -947,6 +947,31 @@ def inject_data_source_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # still available.
     _create_data_source_edges(tfdata, referenced)
 
+    # Synthesize VPC node when injected subnets/ALBs have vpc_id but no
+    # aws_vpc exists in the graph.  This gives the diagram a container for
+    # resources that reference infrastructure via data sources.
+    _synthesize_vpc_from_data_sources(tfdata)
+
+    # Re-run VPC→subnet linking since add_vpc_implied_relations in
+    # setup_tfdata ran before data source nodes existed.
+    has_vpc = any(
+        helpers.get_no_module_name(k).startswith("aws_vpc.")
+        for k in tfdata["graphdict"]
+    )
+    has_subnet = any(
+        helpers.get_no_module_name(k).startswith("aws_subnet.")
+        for k in tfdata["graphdict"]
+    )
+    if has_vpc and has_subnet:
+        from modules.tfwrapper import add_vpc_implied_relations
+
+        tfdata = add_vpc_implied_relations(tfdata)
+
+    # Place injected data source nodes into subnets by matching
+    # subnet_id/subnets metadata against subnet node IDs.
+    if injected:
+        _place_data_sources_in_subnets(tfdata, referenced)
+
     return tfdata
 
 
@@ -1036,6 +1061,143 @@ def _create_data_source_edges(
             for m in matched:
                 if tail_ds not in tfdata["graphdict"].get(m, []):
                     tfdata["graphdict"].setdefault(m, []).append(tail_ds)
+
+
+def _synthesize_vpc_from_data_sources(tfdata: Dict[str, Any]) -> None:
+    """Create a synthetic VPC node when data sources provide vpc_id but no VPC exists.
+
+    Scans injected data source nodes (subnets, ALBs, etc.) for vpc_id metadata.
+    If no aws_vpc node exists in the graph, creates one so the diagram has a
+    container for VPC-scoped resources. Links injected subnets to the VPC.
+
+    Args:
+        tfdata: Terraform data dictionary (modified in place)
+    """
+    # Check if any aws_vpc already exists
+    existing_vpcs = [
+        k
+        for k in tfdata["graphdict"]
+        if helpers.get_no_module_name(k).startswith("aws_vpc.")
+    ]
+    if existing_vpcs:
+        return
+
+    # Collect vpc_id → subnet nodes from injected data sources
+    vpc_subnets: Dict[str, List[str]] = {}
+    for node_name, meta in tfdata.get("meta_data", {}).items():
+        if not meta.get("_data_source"):
+            continue
+        vpc_id = meta.get("vpc_id", "")
+        if not vpc_id or not isinstance(vpc_id, str):
+            continue
+        node_type = node_name.split(".")[0] if "." in node_name else ""
+        if node_type == "aws_subnet":
+            vpc_subnets.setdefault(vpc_id, []).append(node_name)
+
+    if not vpc_subnets:
+        return
+
+    for vpc_id, subnets in vpc_subnets.items():
+        # Create synthetic VPC node named after the vpc_id
+        vpc_node = f"aws_vpc.{vpc_id}"
+        if vpc_node in tfdata["graphdict"]:
+            continue
+
+        # Build VPC metadata — derive CIDR from subnets if possible
+        vpc_meta: Dict[str, Any] = {
+            "module": "main",
+            "_data_source": True,
+            "_synthetic": True,
+            "id": vpc_id,
+        }
+
+        # Try to derive a VPC CIDR that encompasses all subnets
+        subnet_cidrs = []
+        for sn in subnets:
+            sn_meta = tfdata.get("meta_data", {}).get(sn, {})
+            cidr = sn_meta.get("cidr_block", "")
+            if cidr:
+                subnet_cidrs.append(cidr)
+
+        if subnet_cidrs:
+            try:
+                import ipaddress
+
+                networks = [ipaddress.ip_network(c, strict=False) for c in subnet_cidrs]
+                # Use the first subnet's address with a /16 as a reasonable VPC CIDR
+                first = networks[0]
+                vpc_network = ipaddress.ip_network(
+                    f"{first.network_address}/{min(first.prefixlen - 8, 16)}",
+                    strict=False,
+                )
+                vpc_meta["cidr_block"] = str(vpc_network)
+            except (ValueError, TypeError):
+                pass
+
+        tfdata["graphdict"][vpc_node] = list()
+        tfdata["node_list"].append(vpc_node)
+        tfdata["meta_data"][vpc_node] = vpc_meta
+
+        click.echo(
+            click.style(
+                f"\nSynthesized VPC node: {vpc_node}",
+                fg="white",
+                bold=True,
+            )
+        )
+
+
+def _place_data_sources_in_subnets(
+    tfdata: Dict[str, Any], data_source_nodes: Set[str]
+) -> None:
+    """Place injected data source nodes into subnets by matching IDs.
+
+    Checks each injected node's ``subnet_id`` (singular) or ``subnets``
+    (plural list) metadata against the ``id`` of subnet nodes already in
+    the graph.  Creates a subnet → node edge when a match is found.
+
+    This handles resources like data source ALBs where terraform graph
+    doesn't provide subnet dependency edges.
+
+    Args:
+        tfdata: Terraform data dictionary (modified in place)
+        data_source_nodes: Set of injected data source node names
+    """
+    # Build subnet_id → subnet_node lookup
+    subnet_id_map: Dict[str, str] = {}
+    for node_name in tfdata["graphdict"]:
+        if not helpers.get_no_module_name(node_name).startswith("aws_subnet."):
+            continue
+        meta = tfdata.get("meta_data", {}).get(node_name, {})
+        sid = meta.get("id", "")
+        if sid:
+            subnet_id_map[sid] = node_name
+
+    if not subnet_id_map:
+        return
+
+    for node_name in data_source_nodes:
+        if node_name not in tfdata["graphdict"]:
+            continue
+        # Skip subnet nodes themselves
+        if helpers.get_no_module_name(node_name).startswith("aws_subnet."):
+            continue
+        meta = tfdata.get("meta_data", {}).get(node_name, {})
+        # Collect candidate subnet IDs from metadata
+        candidate_ids: List[str] = []
+        subnet_id = meta.get("subnet_id", "")
+        if subnet_id and isinstance(subnet_id, str):
+            candidate_ids.append(subnet_id)
+        subnets_list = meta.get("subnets", [])
+        if isinstance(subnets_list, list):
+            candidate_ids.extend(s for s in subnets_list if isinstance(s, str))
+        # Match against known subnet nodes
+        for sid in candidate_ids:
+            if sid in subnet_id_map:
+                sn_node = subnet_id_map[sid]
+                if node_name not in tfdata["graphdict"].get(sn_node, []):
+                    tfdata["graphdict"].setdefault(sn_node, []).append(node_name)
+                break
 
 
 def _collect_data_sources(

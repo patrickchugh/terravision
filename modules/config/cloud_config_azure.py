@@ -13,7 +13,6 @@ AZURE_CONSOLIDATED_NODES = [
         "azurerm_public_ip": {
             "resource_name": "azurerm_public_ip.public_ip",
             "import_location": "resource_classes.azure.network",
-            "vnet": False,
             "edge_service": False,
         }
     },
@@ -21,42 +20,36 @@ AZURE_CONSOLIDATED_NODES = [
         "azurerm_application_gateway": {
             "resource_name": "azurerm_application_gateway.appgw",
             "import_location": "resource_classes.azure.network",
-            "vnet": True,
         }
     },
     {
         "azurerm_load_balancer": {
             "resource_name": "azurerm_load_balancer.lb",
             "import_location": "resource_classes.azure.network",
-            "vnet": True,
         }
     },
     {
         "azurerm_lb": {
             "resource_name": "azurerm_lb.lb",
             "import_location": "resource_classes.azure.network",
-            "vnet": True,
         }
     },
     {
         "azurerm_lb_backend_address_pool": {
             "resource_name": "azurerm_lb.lb",
             "import_location": "resource_classes.azure.network",
-            "vnet": True,
         }
     },
     {
         "azurerm_key_vault": {
             "resource_name": "azurerm_key_vault.keyvault",
             "import_location": "resource_classes.azure.security",
-            "vnet": False,
         }
     },
     {
         "azurerm_monitor": {
             "resource_name": "azurerm_monitor.monitor",
             "import_location": "resource_classes.azure.management",
-            "vnet": False,
         }
     },
 ]

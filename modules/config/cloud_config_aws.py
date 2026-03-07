@@ -16,7 +16,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_route53": {
             "resource_name": "aws_route53_record.route_53",
             "import_location": "resource_classes.aws.network",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -24,14 +23,12 @@ AWS_CONSOLIDATED_NODES = [
         "aws_cloudwatch_log": {
             "resource_name": "aws_cloudwatch_log_group.cloudwatch",
             "import_location": "resource_classes.aws.management",
-            "vpc": False,
         }
     },
     {
         "aws_cloudwatch_event": {
             "resource_name": "aws_cloudwatch_event_rule.eventbridge",
             "import_location": "resource_classes.aws.integration",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -39,7 +36,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_sns_topic": {
             "resource_name": "aws_sns_topic.sns",
             "import_location": "resource_classes.aws.integration",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -47,28 +43,24 @@ AWS_CONSOLIDATED_NODES = [
         "aws_api_gateway": {
             "resource_name": "aws_api_gateway_integration.gateway",
             "import_location": "resource_classes.aws.network",
-            "vpc": False,
         }
     },
     {
         "aws_acm": {
             "resource_name": "aws_acm_certificate.acm",
             "import_location": "resource_classes.aws.security",
-            "vpc": False,
         }
     },
     {
         "aws_ssm_parameter": {
             "resource_name": "aws_ssm_parameter.ssmparam",
             "import_location": "resource_classes.aws.management",
-            "vpc": False,
         }
     },
     {
         "aws_dx": {
             "resource_name": "aws_dx_connection.directconnect",
             "import_location": "resource_classes.aws.network",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -76,63 +68,54 @@ AWS_CONSOLIDATED_NODES = [
         "aws_lb": {
             "resource_name": "aws_lb.elb",
             "import_location": "resource_classes.aws.network",
-            "vpc": True,
         }
     },
     {
         "aws_ecs": {
             "resource_name": "aws_ecs_service.ecs",
             "import_location": "resource_classes.aws.compute",
-            "vpc": True,
         }
     },
     {
         "aws_internet_gateway": {
             "resource_name": "aws_internet_gateway.igw",
             "import_location": "resource_classes.aws.network",
-            "vpc": True,
         }
     },
     {
         "aws_efs_file_system": {
             "resource_name": "aws_efs_file_system.efs",
             "import_location": "resource_classes.aws.storage",
-            "vpc": False,
         }
     },
     {
         "aws_kms": {
             "resource_name": "aws_kms_key.kms",
             "import_location": "resource_classes.aws.kms",
-            "vpc": False,
         }
     },
     {
         "aws_eip": {
             "resource_name": "aws_eip.elastic_ip",
             "import_location": "resource_classes.eip.eip",
-            "vpc": False,
         }
     },
     {
         "aws_autoscaling_policy": {
             "resource_name": "aws_autoscaling_policy.autoscaling_policy",
             "import_location": "resource_classes.aws.compute",
-            "vpc": True,
         }
     },
     {
         "aws_sagemaker_endpoint": {
             "resource_name": "aws_sagemaker_endpoint.endpoint",
             "import_location": "resource_classes.aws.ml",
-            "vpc": False,
         }
     },
     {
         "aws_appsync_graphql_api": {
             "resource_name": "aws_appsync_graphql_api.graphql_api",
             "import_location": "resource_classes.aws.network",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -140,14 +123,12 @@ AWS_CONSOLIDATED_NODES = [
         "aws_secretsmanager_secret": {
             "resource_name": "aws_secretsmanager_secret.secretsmanager",
             "import_location": "resource_classes.aws.security",
-            "vpc": False,
         }
     },
     {
         "aws_cognito": {
             "resource_name": "aws_cognito_user_pool.cognito",
             "import_location": "resource_classes.aws.security",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -155,7 +136,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_wafv2": {
             "resource_name": "aws_wafv2_web_acl.waf",
             "import_location": "resource_classes.aws.security",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -163,7 +143,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_waf": {
             "resource_name": "aws_waf_web_acl.waf",
             "import_location": "resource_classes.aws.security",
-            "vpc": False,
             "edge_service": True,
         }
     },
@@ -435,6 +414,7 @@ AWS_NAME_REPLACEMENTS = {
     "dx": "Direct Connect",
     "cloudfront_distribution": "Cloudfront",
     "iam_policy": "policy",
+    "lb": "Elastic Load Balancer Service",
     "this": "",
 }
 
