@@ -405,6 +405,8 @@ def read_tfsource(
 
     click.echo(click.style("\nParsing Terraform Source Files..", fg="white", bold=True))
     hcl_dict: Dict[str, Any] = dict()
+    # Normalize varfile_list to a list (callers may pass tuple or list)
+    varfile_list = list(varfile_list)
 
     # Parse each source location
     for source in source_list:
@@ -437,9 +439,9 @@ def read_tfsource(
 
     # Use all variable files if none specified
     if len(varfile_list) == 0 and tfdata.get("all_variable"):
-        varfile_list = tuple(tfdata["all_variable"].keys())
+        varfile_list = list(tfdata["all_variable"].keys())
 
-    tfdata["varfile_list"] = list(varfile_list)
+    tfdata["varfile_list"] = varfile_list
     tfdata["tempdir"] = temp_dir
     tfdata["annotations"] = annotations
 
