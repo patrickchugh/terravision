@@ -195,7 +195,10 @@
         "module.vpc.aws_nat_gateway.this[2]~3",
         "module.vpc.aws_route_table.private[2]~3"
     ],
-    "module.vpc.aws_route.public_internet_gateway[0]~1": [],
+    "module.vpc.aws_route.public_internet_gateway[0]~1": [
+        "aws_internet_gateway.igw",
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
     "module.vpc.aws_route_table.private[0]~1": [],
     "module.vpc.aws_route_table.private[1]~2": [],
     "module.vpc.aws_route_table.private[2]~3": [],
@@ -209,7 +212,9 @@
     "module.vpc.aws_route_table_association.private[2]~3": [
         "module.vpc.aws_route_table.private[2]~3"
     ],
-    "module.vpc.aws_route_table_association.public[0]~1": [],
+    "module.vpc.aws_route_table_association.public[0]~1": [
+        "module.vpc.aws_route_table.public[0]~1"
+    ],
     "module.vpc.aws_route_table_association.public[1]~2": [],
     "module.vpc.aws_route_table_association.public[2]~3": [],
     "module.vpc.aws_subnet.private[0]~1": [
@@ -245,7 +250,13 @@
     "module.vpc.aws_vpc.this[0]~1": [
         "aws_az.availability_zone_us_east_1a~1",
         "aws_az.availability_zone_us_east_1b~2",
-        "aws_az.availability_zone_us_east_1c~3"
+        "aws_az.availability_zone_us_east_1c~3",
+        "aws_internet_gateway.igw",
+        "module.vpc.aws_default_network_acl.this[0]~1",
+        "module.vpc.aws_default_route_table.default[0]~1",
+        "module.vpc.aws_default_security_group.this[0]~1",
+        "module.vpc.aws_route_table.private[0]~1",
+        "module.vpc.aws_route_table.public[0]~1"
     ],
     "tv_aws_internet.internet": [],
     "tv_aws_users.users": [
