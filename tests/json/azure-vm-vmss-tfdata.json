@@ -1,6 +1,7 @@
 {
     "codepath": "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss",
-    "workdir": "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss",
+    "workdir": "/private/tmp/gen_azure",
+    "terraform_init_dir": "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmp06b0q1rx",
     "plandata": {
         "format_version": "1.2",
         "terraform_version": "1.13.3",
@@ -457,10 +458,14 @@
                             "location": "eastus",
                             "managed_by": null,
                             "name": "rg-terravision-test",
-                            "tags": null,
+                            "tags": {
+                                "Subscription": "Azure subscription 1"
+                            },
                             "timeouts": null
                         },
-                        "sensitive_values": {}
+                        "sensitive_values": {
+                            "tags": {}
+                        }
                     },
                     {
                         "address": "azurerm_subnet.main",
@@ -1167,16 +1172,19 @@
                         "location": "eastus",
                         "managed_by": null,
                         "name": "rg-terravision-test",
-                        "tags": null,
+                        "tags": {},
                         "timeouts": null,
                         "id": true,
                         "module": "main"
                     },
                     "after_unknown": {
-                        "id": true
+                        "id": true,
+                        "tags": {}
                     },
                     "before_sensitive": false,
-                    "after_sensitive": {}
+                    "after_sensitive": {
+                        "tags": {}
+                    }
                 }
             },
             {
@@ -1381,7 +1389,33 @@
                         "type": "string"
                     }
                 },
-                "root_module": {}
+                "root_module": {
+                    "resources": [
+                        {
+                            "address": "data.azurerm_subscription.current",
+                            "mode": "data",
+                            "type": "azurerm_subscription",
+                            "name": "current",
+                            "provider_name": "registry.terraform.io/hashicorp/azurerm",
+                            "schema_version": 0,
+                            "values": {
+                                "display_name": "Azure subscription 1",
+                                "id": "/subscriptions/96bce4f1-1b59-453d-94c8-1afa2477d1a0",
+                                "location_placement_id": "Public_2014-09-01",
+                                "quota_id": "PayAsYouGo_2014-09-01",
+                                "spending_limit": "Off",
+                                "state": "Enabled",
+                                "subscription_id": "96bce4f1-1b59-453d-94c8-1afa2477d1a0",
+                                "tags": {},
+                                "tenant_id": "9f93e346-0107-4639-b523-c9b19ed94121",
+                                "timeouts": null
+                            },
+                            "sensitive_values": {
+                                "tags": {}
+                            }
+                        }
+                    ]
+                }
             }
         },
         "configuration": {
@@ -1815,6 +1849,12 @@
                             },
                             "name": {
                                 "constant_value": "rg-terravision-test"
+                            },
+                            "tags": {
+                                "references": [
+                                    "data.azurerm_subscription.current.display_name",
+                                    "data.azurerm_subscription.current"
+                                ]
                             }
                         },
                         "schema_version": 0
@@ -1900,6 +1940,14 @@
                             }
                         },
                         "schema_version": 0
+                    },
+                    {
+                        "address": "data.azurerm_subscription.current",
+                        "mode": "data",
+                        "type": "azurerm_subscription",
+                        "name": "current",
+                        "provider_config_key": "azurerm",
+                        "schema_version": 0
                     }
                 ]
             }
@@ -1918,15 +1966,15 @@
                 ]
             },
             {
-                "resource": "azurerm_linux_virtual_machine_scale_set.main",
+                "resource": "data.azurerm_subscription.current",
                 "attribute": [
-                    "name"
+                    "display_name"
                 ]
             },
             {
-                "resource": "azurerm_network_security_group.main",
+                "resource": "azurerm_linux_virtual_machine_scale_set.main",
                 "attribute": [
-                    "id"
+                    "name"
                 ]
             },
             {
@@ -1942,6 +1990,18 @@
                 ]
             },
             {
+                "resource": "azurerm_lb.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "azurerm_network_security_group.main",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
                 "resource": "azurerm_public_ip.lb",
                 "attribute": [
                     "id"
@@ -1954,7 +2014,7 @@
                 ]
             },
             {
-                "resource": "azurerm_lb.main",
+                "resource": "azurerm_network_interface.vm",
                 "attribute": [
                     "id"
                 ]
@@ -1964,15 +2024,9 @@
                 "attribute": [
                     "id"
                 ]
-            },
-            {
-                "resource": "azurerm_network_interface.vm",
-                "attribute": [
-                    "id"
-                ]
             }
         ],
-        "timestamp": "2026-01-02T18:59:45Z",
+        "timestamp": "2026-03-07T13:11:53Z",
         "applyable": true,
         "complete": true,
         "errored": false
@@ -2608,16 +2662,19 @@
                     "location": "eastus",
                     "managed_by": null,
                     "name": "rg-terravision-test",
-                    "tags": null,
+                    "tags": {},
                     "timeouts": null,
                     "id": true,
                     "module": "main"
                 },
                 "after_unknown": {
-                    "id": true
+                    "id": true,
+                    "tags": {}
                 },
                 "before_sensitive": false,
-                "after_sensitive": {}
+                "after_sensitive": {
+                    "tags": {}
+                }
             }
         },
         {
@@ -2763,76 +2820,83 @@
         "objects": [
             {
                 "_gvid": 0,
+                "name": "data.azurerm_subscription.current",
+                "fontname": "sans-serif",
+                "label": "data.azurerm_subscription.current",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
                 "name": "azurerm_lb.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_lb.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 1,
+                "_gvid": 2,
                 "name": "azurerm_lb_backend_address_pool.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_lb_backend_address_pool.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 2,
+                "_gvid": 3,
                 "name": "azurerm_linux_virtual_machine.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_linux_virtual_machine.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 3,
+                "_gvid": 4,
                 "name": "azurerm_linux_virtual_machine_scale_set.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_linux_virtual_machine_scale_set.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 4,
+                "_gvid": 5,
                 "name": "azurerm_network_interface.vm",
                 "fontname": "sans-serif",
                 "label": "azurerm_network_interface.vm",
                 "shape": "rect"
             },
             {
-                "_gvid": 5,
+                "_gvid": 6,
                 "name": "azurerm_network_security_group.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_network_security_group.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 6,
+                "_gvid": 7,
                 "name": "azurerm_public_ip.lb",
                 "fontname": "sans-serif",
                 "label": "azurerm_public_ip.lb",
                 "shape": "rect"
             },
             {
-                "_gvid": 7,
+                "_gvid": 8,
                 "name": "azurerm_resource_group.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_resource_group.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 8,
+                "_gvid": 9,
                 "name": "azurerm_subnet.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_subnet.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 9,
+                "_gvid": 10,
                 "name": "azurerm_subnet_network_security_group_association.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_subnet_network_security_group_association.main",
                 "shape": "rect"
             },
             {
-                "_gvid": 10,
+                "_gvid": 11,
                 "name": "azurerm_virtual_network.main",
                 "fontname": "sans-serif",
                 "label": "azurerm_virtual_network.main",
@@ -2842,63 +2906,68 @@
         "edges": [
             {
                 "_gvid": 0,
-                "tail": 0,
-                "head": 6
+                "tail": 1,
+                "head": 7
             },
             {
                 "_gvid": 1,
-                "tail": 1,
-                "head": 0
-            },
-            {
-                "_gvid": 2,
                 "tail": 2,
-                "head": 4
-            },
-            {
-                "_gvid": 3,
-                "tail": 3,
                 "head": 1
             },
             {
-                "_gvid": 4,
+                "_gvid": 2,
                 "tail": 3,
-                "head": 8
+                "head": 5
+            },
+            {
+                "_gvid": 3,
+                "tail": 4,
+                "head": 2
+            },
+            {
+                "_gvid": 4,
+                "tail": 4,
+                "head": 9
             },
             {
                 "_gvid": 5,
-                "tail": 4,
-                "head": 8
+                "tail": 5,
+                "head": 9
             },
             {
                 "_gvid": 6,
-                "tail": 5,
-                "head": 7
+                "tail": 6,
+                "head": 8
             },
             {
                 "_gvid": 7,
-                "tail": 6,
-                "head": 7
+                "tail": 7,
+                "head": 8
             },
             {
                 "_gvid": 8,
                 "tail": 8,
-                "head": 10
+                "head": 0
             },
             {
                 "_gvid": 9,
                 "tail": 9,
-                "head": 5
+                "head": 11
             },
             {
                 "_gvid": 10,
-                "tail": 9,
-                "head": 8
+                "tail": 10,
+                "head": 6
             },
             {
                 "_gvid": 11,
                 "tail": 10,
-                "head": 7
+                "head": 9
+            },
+            {
+                "_gvid": 12,
+                "tail": 11,
+                "head": 8
             }
         ]
     },
@@ -3194,7 +3263,7 @@
             "location": "eastus",
             "managed_by": null,
             "name": "rg-terravision-test",
-            "tags": null,
+            "tags": {},
             "timeouts": null,
             "id": true,
             "module": "main"
@@ -3578,7 +3647,7 @@
             "location": "eastus",
             "managed_by": null,
             "name": "rg-terravision-test",
-            "tags": null,
+            "tags": {},
             "timeouts": null,
             "id": true,
             "module": "main"
@@ -3638,7 +3707,10 @@
                 "azurerm_resource_group": {
                     "main": {
                         "name": "rg-terravision-test",
-                        "location": "East US"
+                        "location": "East US",
+                        "tags": {
+                            "Subscription": "${data.azurerm_subscription.current.display_name}"
+                        }
                     }
                 }
             },
@@ -3838,6 +3910,15 @@
             }
         ]
     },
+    "all_data": {
+        "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss/main.tf": [
+            {
+                "azurerm_subscription": {
+                    "current": {}
+                }
+            }
+        ]
+    },
     "all_provider": {
         "/Users/patrick/git/terravision/tests/fixtures/azure_terraform/test_vm_vmss/main.tf": [
             {
@@ -3851,5 +3932,5 @@
         ]
     },
     "varfile_list": [],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpvcz2z7sl'>"
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmptuer4__i'>"
 }

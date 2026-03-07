@@ -1,6 +1,7 @@
 {
-    "codepath": "tests/fixtures/aws_terraform/elasticache_redis",
-    "workdir": "/Users/patrick/git/terravision",
+    "codepath": "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/elasticache_redis",
+    "workdir": "/private/tmp/gen_aws",
+    "terraform_init_dir": "/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmppbnbpqi2",
     "plandata": {
         "format_version": "1.2",
         "terraform_version": "1.13.3",
@@ -989,6 +990,56 @@
                 }
             }
         ],
+        "prior_state": {
+            "format_version": "1.0",
+            "terraform_version": "1.13.3",
+            "values": {
+                "root_module": {
+                    "resources": [
+                        {
+                            "address": "data.aws_vpc.default",
+                            "mode": "data",
+                            "type": "aws_vpc",
+                            "name": "default",
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "arn": "arn:aws:ec2:us-east-1:088594415319:vpc/vpc-05b33e71824ec8084",
+                                "cidr_block": "172.31.0.0/16",
+                                "cidr_block_associations": [
+                                    {
+                                        "association_id": "vpc-cidr-assoc-0bcc50e3dcdcb1bbf",
+                                        "cidr_block": "172.31.0.0/16",
+                                        "state": "associated"
+                                    }
+                                ],
+                                "default": true,
+                                "dhcp_options_id": "dopt-09f333d85339d9c0f",
+                                "enable_dns_hostnames": true,
+                                "enable_dns_support": true,
+                                "enable_network_address_usage_metrics": false,
+                                "filter": null,
+                                "id": "vpc-05b33e71824ec8084",
+                                "instance_tenancy": "default",
+                                "ipv6_association_id": "",
+                                "ipv6_cidr_block": "",
+                                "main_route_table_id": "rtb-0a0f6f4cbce1f5e3c",
+                                "owner_id": "088594415319",
+                                "state": null,
+                                "tags": {},
+                                "timeouts": null
+                            },
+                            "sensitive_values": {
+                                "cidr_block_associations": [
+                                    {}
+                                ],
+                                "tags": {}
+                            }
+                        }
+                    ]
+                }
+            }
+        },
         "configuration": {
             "provider_config": {
                 "aws": {
@@ -1086,7 +1137,9 @@
                                     "aws_elasticache_cluster.redis.cache_nodes[0].address",
                                     "aws_elasticache_cluster.redis.cache_nodes[0]",
                                     "aws_elasticache_cluster.redis.cache_nodes",
-                                    "aws_elasticache_cluster.redis"
+                                    "aws_elasticache_cluster.redis",
+                                    "data.aws_vpc.default.cidr_block",
+                                    "data.aws_vpc.default"
                                 ]
                             },
                             "cpu": {
@@ -1321,11 +1374,36 @@
                             }
                         },
                         "schema_version": 1
+                    },
+                    {
+                        "address": "data.aws_vpc.default",
+                        "mode": "data",
+                        "type": "aws_vpc",
+                        "name": "default",
+                        "provider_config_key": "aws",
+                        "expressions": {
+                            "default": {
+                                "constant_value": true
+                            }
+                        },
+                        "schema_version": 0
                     }
                 ]
             }
         },
         "relevant_attributes": [
+            {
+                "resource": "aws_subnet.private_a",
+                "attribute": [
+                    "id"
+                ]
+            },
+            {
+                "resource": "aws_vpc.main",
+                "attribute": [
+                    "id"
+                ]
+            },
             {
                 "resource": "aws_ecs_task_definition.app",
                 "attribute": [
@@ -1341,30 +1419,6 @@
                 ]
             },
             {
-                "resource": "aws_subnet.private_a",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_vpc.main",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_ecs_cluster.app",
-                "attribute": [
-                    "id"
-                ]
-            },
-            {
-                "resource": "aws_elasticache_subnet_group.redis",
-                "attribute": [
-                    "name"
-                ]
-            },
-            {
                 "resource": "aws_security_group.redis",
                 "attribute": [
                     "id"
@@ -1375,9 +1429,27 @@
                 "attribute": [
                     "id"
                 ]
+            },
+            {
+                "resource": "data.aws_vpc.default",
+                "attribute": [
+                    "cidr_block"
+                ]
+            },
+            {
+                "resource": "aws_elasticache_subnet_group.redis",
+                "attribute": [
+                    "name"
+                ]
+            },
+            {
+                "resource": "aws_ecs_cluster.app",
+                "attribute": [
+                    "id"
+                ]
             }
         ],
-        "timestamp": "2025-12-28T22:27:50Z",
+        "timestamp": "2026-03-07T13:11:07Z",
         "applyable": true,
         "complete": true,
         "errored": false
@@ -2004,62 +2076,69 @@
         "objects": [
             {
                 "_gvid": 0,
+                "name": "data.aws_vpc.default",
+                "fontname": "sans-serif",
+                "label": "data.aws_vpc.default",
+                "shape": "rect"
+            },
+            {
+                "_gvid": 1,
                 "name": "aws_ecs_cluster.app",
                 "fontname": "sans-serif",
                 "label": "aws_ecs_cluster.app",
                 "shape": "rect"
             },
             {
-                "_gvid": 1,
+                "_gvid": 2,
                 "name": "aws_ecs_service.app",
                 "fontname": "sans-serif",
                 "label": "aws_ecs_service.app",
                 "shape": "rect"
             },
             {
-                "_gvid": 2,
+                "_gvid": 3,
                 "name": "aws_ecs_task_definition.app",
                 "fontname": "sans-serif",
                 "label": "aws_ecs_task_definition.app",
                 "shape": "rect"
             },
             {
-                "_gvid": 3,
+                "_gvid": 4,
                 "name": "aws_elasticache_cluster.redis",
                 "fontname": "sans-serif",
                 "label": "aws_elasticache_cluster.redis",
                 "shape": "rect"
             },
             {
-                "_gvid": 4,
+                "_gvid": 5,
                 "name": "aws_elasticache_subnet_group.redis",
                 "fontname": "sans-serif",
                 "label": "aws_elasticache_subnet_group.redis",
                 "shape": "rect"
             },
             {
-                "_gvid": 5,
+                "_gvid": 6,
                 "name": "aws_security_group.redis",
                 "fontname": "sans-serif",
                 "label": "aws_security_group.redis",
                 "shape": "rect"
             },
             {
-                "_gvid": 6,
+                "_gvid": 7,
                 "name": "aws_subnet.private_a",
                 "fontname": "sans-serif",
                 "label": "aws_subnet.private_a",
                 "shape": "rect"
             },
             {
-                "_gvid": 7,
+                "_gvid": 8,
                 "name": "aws_subnet.private_b",
                 "fontname": "sans-serif",
                 "label": "aws_subnet.private_b",
                 "shape": "rect"
             },
             {
-                "_gvid": 8,
+                "_gvid": 9,
                 "name": "aws_vpc.main",
                 "fontname": "sans-serif",
                 "label": "aws_vpc.main",
@@ -2069,18 +2148,18 @@
         "edges": [
             {
                 "_gvid": 0,
-                "tail": 1,
-                "head": 0
+                "tail": 2,
+                "head": 1
             },
             {
                 "_gvid": 1,
-                "tail": 1,
-                "head": 2
+                "tail": 2,
+                "head": 3
             },
             {
                 "_gvid": 2,
-                "tail": 2,
-                "head": 3
+                "tail": 3,
+                "head": 0
             },
             {
                 "_gvid": 3,
@@ -2089,7 +2168,7 @@
             },
             {
                 "_gvid": 4,
-                "tail": 3,
+                "tail": 4,
                 "head": 5
             },
             {
@@ -2099,7 +2178,7 @@
             },
             {
                 "_gvid": 6,
-                "tail": 4,
+                "tail": 5,
                 "head": 7
             },
             {
@@ -2110,12 +2189,17 @@
             {
                 "_gvid": 8,
                 "tail": 6,
-                "head": 8
+                "head": 9
             },
             {
                 "_gvid": 9,
                 "tail": 7,
-                "head": 8
+                "head": 9
+            },
+            {
+                "_gvid": 10,
+                "tail": 8,
+                "head": 9
             }
         ]
     },
@@ -2693,7 +2777,7 @@
     },
     "module_source_dict": {},
     "all_resource": {
-        "tests/fixtures/aws_terraform/elasticache_redis/main.tf": [
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/elasticache_redis/main.tf": [
             {
                 "aws_vpc": {
                     "main": {
@@ -2816,7 +2900,7 @@
                         "network_mode": "awsvpc",
                         "cpu": "256",
                         "memory": "512",
-                        "container_definitions": "${jsonencode([{'name': 'app', 'image': 'nginx:latest', 'environment': [{'name': 'REDIS_HOST', 'value': '${aws_elasticache_cluster.redis.cache_nodes[0].address}'}], 'portMappings': [{'containerPort': 80, 'protocol': 'tcp'}]}])}"
+                        "container_definitions": "${jsonencode([{'name': 'app', 'image': 'nginx:latest', 'environment': [{'name': 'REDIS_HOST', 'value': '${aws_elasticache_cluster.redis.cache_nodes[0].address}'}, {'name': 'DEFAULT_VPC_CIDR', 'value': '${data.aws_vpc.default.cidr_block}'}], 'portMappings': [{'containerPort': 80, 'protocol': 'tcp'}]}])}"
                     }
                 }
             },
@@ -2845,6 +2929,26 @@
             }
         ]
     },
+    "all_data": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/elasticache_redis/main.tf": [
+            {
+                "aws_vpc": {
+                    "default": {
+                        "default": true
+                    }
+                }
+            }
+        ]
+    },
+    "all_provider": {
+        "/Users/patrick/git/terravision/tests/fixtures/aws_terraform/elasticache_redis/main.tf": [
+            {
+                "aws": {
+                    "region": "us-east-1"
+                }
+            }
+        ]
+    },
     "varfile_list": [],
-    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpook9_sx3'>"
+    "tempdir": "<TemporaryDirectory '/var/folders/tq/0qhyd1tx2mdfyb5wf16r4py40000gn/T/tmpr84u4zxt'>"
 }

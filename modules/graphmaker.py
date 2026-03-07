@@ -837,6 +837,270 @@ def _scan_node_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def inject_data_source_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Inject data source references as synthetic graph nodes.
+
+    Scans managed resources for references to data sources (e.g.,
+    ``data.aws_lb.main``).  When full metadata is available in the plan's
+    ``prior_state``, a node is created in ``graphdict`` / ``meta_data`` so
+    that ``add_relations`` can wire it up automatically.
+
+    Args:
+        tfdata: Terraform data dictionary (must already contain graphdict,
+                meta_data, all_resource, and plandata)
+
+    Returns:
+        Updated tfdata with injected data-source nodes
+    """
+    plandata = tfdata.get("plandata", {})
+    prior_state = plandata.get("prior_state", {})
+    if not prior_state:
+        return tfdata
+
+    # Data source types that are purely for lookups and never represent
+    # infrastructure on a diagram (e.g. getting AZ names, current region,
+    # AMI IDs, IAM policy documents).
+    EXCLUDED_DATA_SOURCE_TYPES = {
+        # AWS - identity / metadata lookups
+        "aws_availability_zones",
+        "aws_region",
+        "aws_caller_identity",
+        "aws_partition",
+        "aws_ami",
+        "aws_arn",
+        "aws_ip_ranges",
+        "aws_prefix_list",
+        "aws_canonical_user_id",
+        "aws_billing_service_account",
+        "aws_elb_service_account",
+        # AWS - IAM policy helpers
+        "aws_iam_policy_document",
+        "aws_iam_policy",
+        # AWS - config/secret lookups (value retrieval, not infrastructure)
+        "aws_kms_key",
+        "aws_kms_alias",
+        "aws_ssm_parameter",
+        "aws_secretsmanager_secret",
+        "aws_secretsmanager_secret_version",
+        # Azure - identity / metadata lookups
+        "azurerm_client_config",
+        "azurerm_role_definition",
+        "azurerm_platform_image",
+        "azurerm_shared_image_version",
+        # GCP - identity / metadata lookups
+        "google_project",
+        "google_client_config",
+        "google_client_openid_userinfo",
+        "google_compute_zones",
+        "google_compute_image",
+        "google_container_engine_versions",
+        "google_iam_policy",
+    }
+
+    # Build index of all data sources from prior_state with their full metadata
+    data_source_meta: Dict[str, Dict[str, Any]] = {}
+    _collect_data_sources(
+        prior_state.get("values", {}).get("root_module", {}),
+        data_source_meta,
+        EXCLUDED_DATA_SOURCE_TYPES,
+    )
+
+    if not data_source_meta:
+        return tfdata
+
+    # Scan all_resource for data.<type>.<name> references
+    referenced = _find_referenced_data_sources(tfdata, data_source_meta)
+
+    if not referenced:
+        return tfdata
+
+    # Inject referenced data sources as nodes
+    injected = 0
+    for node_name in referenced:
+        if node_name not in tfdata["graphdict"]:
+            tfdata["graphdict"][node_name] = list()
+            tfdata["node_list"].append(node_name)
+            if node_name in data_source_meta:
+                meta = data_source_meta[node_name]
+                meta["module"] = "main"
+                meta["_data_source"] = True
+                tfdata["meta_data"][node_name] = meta
+            injected += 1
+
+    if injected:
+        click.echo(
+            click.style(
+                f"\nInjected {injected} data source(s) as diagram nodes",
+                fg="white",
+                bold=True,
+            )
+        )
+        for node_name in sorted(referenced):
+            if node_name in tfdata["graphdict"]:
+                click.echo(f"   {node_name}")
+
+    # Create edges from managed resources to injected data source nodes.
+    # handle_metadata_vars may resolve data source refs (e.g.
+    # "${data.aws_subnet.x.id}") to "UNKNOWN", destroying the reference
+    # before add_relations can use it.  Scanning all_resource directly
+    # ensures edges are created while the original HCL references are
+    # still available.
+    _create_data_source_edges(tfdata, referenced)
+
+    return tfdata
+
+
+def _create_data_source_edges(
+    tfdata: Dict[str, Any], data_source_nodes: Set[str]
+) -> None:
+    """Create graph edges between injected data source nodes and managed resources.
+
+    Re-processes terraform graph edges that were skipped during tf_makegraph
+    because data source nodes didn't exist in graphdict at that time.
+    Only creates edges that terraform itself determined are real dependencies,
+    avoiding false edges from simple ID lookups (e.g. vpc_id = data.aws_vpc.x.id).
+
+    Args:
+        tfdata: Terraform data dictionary (must contain tfgraph)
+        data_source_nodes: Set of injected data source node names (without
+            ``data.`` prefix, e.g. ``aws_subnet.private_subnet``)
+    """
+    if not data_source_nodes:
+        return
+
+    tfgraph = tfdata.get("tfgraph", {})
+    objects = tfgraph.get("objects", [])
+    edges = tfgraph.get("edges", [])
+
+    if not objects or not edges:
+        return
+
+    # VPC-type data sources should NOT create direct edges to resources.
+    # VPC→resource relationships are mediated through subnets/AZs in the
+    # diagram.  A ``vpc_id = data.aws_vpc.x.id`` reference is just an ID
+    # lookup, not a parent-child relationship.
+    _SKIP_DS_TYPES = {
+        # VPC / virtual network — just vpc_id lookups
+        "aws_vpc",
+        "azurerm_virtual_network",
+        "google_compute_network",
+        # Subscription / account / project scope — scope lookups
+        "azurerm_subscription",
+        "azurerm_resource_group",
+        "google_project",
+    }
+
+    # Build gvid → name lookup from graph objects
+    gvid_names: Dict[int, str] = {}
+    for item in objects:
+        gvid_names[item["_gvid"]] = str(item.get("name", item.get("label", "")))
+
+    for edge in edges:
+        head_name = gvid_names.get(edge["head"], "")
+        tail_name = gvid_names.get(edge["tail"], "")
+
+        # Identify data source nodes in the edge
+        # tfgraph uses "data.<type>.<name>", graphdict uses "<type>.<name>"
+        head_ds = None
+        tail_ds = None
+        if head_name.startswith("data."):
+            stripped = head_name[len("data.") :]
+            if stripped in data_source_nodes:
+                head_ds = stripped
+        if tail_name.startswith("data."):
+            stripped = tail_name[len("data.") :]
+            if stripped in data_source_nodes:
+                tail_ds = stripped
+
+        if not head_ds and not tail_ds:
+            continue
+
+        # Skip VPC-type data sources (ID lookups, not containment)
+        if head_ds and head_ds.split(".")[0] in _SKIP_DS_TYPES:
+            continue
+        if tail_ds and tail_ds.split(".")[0] in _SKIP_DS_TYPES:
+            continue
+
+        # Edge semantics: tail depends on head
+        # In graphdict: head (dependency) → [tail (dependent)]
+        if head_ds:
+            # Data source is the dependency; find managed resource (tail)
+            matched = [k for k in tfdata["graphdict"] if k.startswith(tail_name)]
+            for m in matched:
+                if m not in tfdata["graphdict"].get(head_ds, []):
+                    tfdata["graphdict"].setdefault(head_ds, []).append(m)
+
+        if tail_ds:
+            # Data source depends on a managed resource (head)
+            matched = [k for k in tfdata["graphdict"] if k.startswith(head_name)]
+            for m in matched:
+                if tail_ds not in tfdata["graphdict"].get(m, []):
+                    tfdata["graphdict"].setdefault(m, []).append(tail_ds)
+
+
+def _collect_data_sources(
+    module_block: Dict[str, Any],
+    result: Dict[str, Dict[str, Any]],
+    excluded_types: Set[str],
+) -> None:
+    """Recursively collect data sources from prior_state module tree.
+
+    Args:
+        module_block: A root_module or child_module block from prior_state
+        result: Dict to populate, mapping node name to metadata values
+        excluded_types: Data source types to skip (lookup-only resources)
+    """
+    for resource in module_block.get("resources", []):
+        if resource.get("mode") != "data":
+            continue
+        res_type = resource.get("type", "")
+        if res_type in excluded_types:
+            continue
+        # Build node name as <type>.<name> (same format as managed resources)
+        address = resource.get("address", "")
+        # address is like "data.aws_lb.main" or "module.x.data.aws_lb.main"
+        # Strip the "data." prefix to get the node name used in graphdict
+        if ".data." in address:
+            # Module-scoped: module.x.data.aws_lb.main -> module.x.aws_lb.main
+            node_name = address.replace(".data.", ".", 1)
+        elif address.startswith("data."):
+            node_name = address[len("data.") :]
+        else:
+            continue
+        values = resource.get("values", {})
+        if values:
+            result[node_name] = copy.deepcopy(values)
+
+    # Recurse into child modules
+    for child in module_block.get("child_modules", []):
+        _collect_data_sources(child, result, excluded_types)
+
+
+def _find_referenced_data_sources(
+    tfdata: Dict[str, Any],
+    data_source_meta: Dict[str, Dict[str, Any]],
+) -> Set[str]:
+    """Scan all_resource for references to eligible data sources.
+
+    Args:
+        tfdata: Terraform data dictionary with all_resource
+        data_source_meta: Available data sources keyed by node name
+
+    Returns:
+        Set of data source node names that are referenced by managed resources
+    """
+    all_resource = tfdata.get("all_resource", {})
+    all_resource_str = str(all_resource)
+    referenced: Set[str] = set()
+    for node_name in data_source_meta:
+        # Check for "data.<type>.<name>" pattern in resource attributes
+        # node_name is like "aws_lb.main", so look for "data.aws_lb.main"
+        data_ref = f"data.{node_name}"
+        if data_ref in all_resource_str:
+            referenced.add(node_name)
+    return referenced
+
+
 def add_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Build final graph structure by detecting ALL resource relationships.
 

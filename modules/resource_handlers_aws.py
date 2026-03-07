@@ -451,6 +451,9 @@ def handle_sg_relationships(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                     tfdata["meta_data"][connection]
                                 )
                             sg_to_purge.append(connection)
+                            # Remove target from original SG connections since
+                            # the unique copy now owns this relationship
+                            helpers.safe_remove_connection(tfdata, connection, target)
                         else:
                             tfdata["graphdict"][connection] = newlist
                     newlist = list(tfdata["graphdict"][target])

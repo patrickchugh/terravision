@@ -15,10 +15,17 @@ provider "azurerm" {
   skip_provider_registration = true
 }
 
+# External subscription reference (simulates cross-repo data source)
+data "azurerm_subscription" "current" {}
+
 # Resource Group
 resource "azurerm_resource_group" "main" {
   name     = "rg-terravision-test"
   location = "East US"
+
+  tags = {
+    Subscription = data.azurerm_subscription.current.display_name
+  }
 }
 
 # Virtual Network

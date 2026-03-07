@@ -40,6 +40,7 @@
         "tv_azurerm_zone.zone_3"
     ],
     "azurerm_subnet_network_security_group_association.main": [],
+    "azurerm_subscription.current": [],
     "azurerm_virtual_network.main": [
         "azurerm_subnet.main"
     ],

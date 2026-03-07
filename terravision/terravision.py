@@ -467,6 +467,7 @@ def _enrich_graph_data(
     tfdata = interpreter.prefix_module_names(tfdata)
     tfdata = interpreter.resolve_all_variables(tfdata, debug, already_processed)
     tfdata = resource_handlers.handle_special_cases(tfdata)
+    tfdata = graphmaker.inject_data_source_nodes(tfdata)
     tfdata = graphmaker.add_relations(tfdata)
     tfdata = graphmaker.consolidate_nodes(tfdata)
     tfdata = annotations.add_annotations(tfdata)

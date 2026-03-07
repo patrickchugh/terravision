@@ -98,6 +98,12 @@ resource "aws_elasticache_cluster" "redis" {
   }
 }
 
+# External VPC (created by a separate Terraform repo / default VPC)
+# Referenced via data source to test cross-repo data source injection
+data "aws_vpc" "default" {
+  default = true
+}
+
 # ECS Task that uses Redis (to show connection)
 resource "aws_ecs_cluster" "app" {
   name = "app-cluster"
@@ -122,6 +128,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "REDIS_HOST"
           value = aws_elasticache_cluster.redis.cache_nodes[0].address
+        },
+        {
+          name  = "DEFAULT_VPC_CIDR"
+          value = data.aws_vpc.default.cidr_block
         }
       ]
       portMappings = [
