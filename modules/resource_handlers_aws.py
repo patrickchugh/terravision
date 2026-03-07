@@ -636,7 +636,7 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Find all load balancers
     found_lbs = sorted(
-        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb")
+        helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_lb.")
     )
     for lb in found_lbs:
         # Determine LB type (ALB, NLB, etc.)

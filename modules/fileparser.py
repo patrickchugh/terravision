@@ -53,15 +53,33 @@ def _load_terraform_modules_json(source_dir: str) -> Dict[str, str]:
     a mapping of each module's key (name) to its local directory path. This allows
     terravision to use already-downloaded modules instead of re-cloning them.
 
+    When TF_DATA_DIR is set, terraform stores modules at <TF_DATA_DIR>/modules/
+    instead of <source_dir>/.terraform/modules/.
+
     Args:
-        source_dir: Root directory of the Terraform source (where .terraform/ lives)
+        source_dir: Root directory of the Terraform source (where .terraform/ lives),
+                    or the TF_DATA_DIR path directly
 
     Returns:
         Dictionary mapping module key to absolute directory path
     """
-    modules_json_path = os.path.join(
-        source_dir, ".terraform", "modules", "modules.json"
-    )
+    # Check both the standard path and the TF_DATA_DIR path
+    using_tf_data_dir = False
+    tf_data_dir = os.environ.get("TF_DATA_DIR", "")
+    if tf_data_dir:
+        # TF_DATA_DIR replaces .terraform/, so modules.json is at <dir>/modules/
+        if not os.path.isabs(tf_data_dir):
+            tf_data_dir = os.path.join(source_dir, tf_data_dir)
+        modules_json_path = os.path.join(tf_data_dir, "modules", "modules.json")
+        using_tf_data_dir = True
+    else:
+        modules_json_path = os.path.join(
+            source_dir, ".terraform", "modules", "modules.json"
+        )
+    if not os.path.exists(modules_json_path) and not tf_data_dir:
+        # Fallback: check if source_dir itself is a TF_DATA_DIR-style path
+        modules_json_path = os.path.join(source_dir, "modules", "modules.json")
+        using_tf_data_dir = True
     if not os.path.exists(modules_json_path):
         return {}
     try:
@@ -75,6 +93,10 @@ def _load_terraform_modules_json(source_dir: str) -> Dict[str, str]:
                 if os.path.isabs(dir_path):
                     result[key] = dir_path
                 else:
+                    # When TF_DATA_DIR is used, Dir paths like ".terraform/modules/X"
+                    # need ".terraform/" stripped since TF_DATA_DIR replaces it
+                    if using_tf_data_dir and dir_path.startswith(".terraform/"):
+                        dir_path = dir_path[len(".terraform/") :]
                     result[key] = os.path.normpath(os.path.join(source_dir, dir_path))
         return result
     except (json.JSONDecodeError, KeyError):
@@ -87,6 +109,7 @@ def find_tf_files(
     mod: str = "main",
     recursive: bool = False,
     version: str = "",
+    terraform_modules: Optional[Dict[str, str]] = None,
 ) -> List[str]:
     """Discover Terraform files in local directory or Git repository.
 
@@ -99,6 +122,8 @@ def find_tf_files(
         mod: Module name for organizing cloned repositories (default: 'main')
         recursive: Whether to recursively search subdirectories (default: False)
         version: Terraform version constraint (e.g., "~> 5.0")
+        terraform_modules: Dict mapping module name to local directory from
+            terraform's .terraform/modules/modules.json (optional)
 
     Returns:
         List of absolute paths to discovered Terraform files
@@ -112,7 +137,9 @@ def find_tf_files(
 
     # Clone Git repository or use local directory
     if not os.path.isdir(source):
-        source_location = gitlibs.clone_files(source, temp_dir.name, mod, version)
+        source_location = gitlibs.clone_files(
+            source, temp_dir.name, mod, version, terraform_modules
+        )
     else:
         source_location = source.strip()
 
@@ -237,7 +264,14 @@ def iterative_parse(
     tfdata["module_source_dict"] = dict()
 
     # Load Terraform's modules.json for local module resolution (issue #168)
-    terraform_modules = _load_terraform_modules_json(source_dir) if source_dir else {}
+    # Check terraform init working directory first (temp dir where init ran),
+    # then fall back to source_dir
+    init_dir = tfdata.get("terraform_init_dir", "")
+    terraform_modules = _load_terraform_modules_json(init_dir) if init_dir else {}
+    if not terraform_modules:
+        terraform_modules = (
+            _load_terraform_modules_json(source_dir) if source_dir else {}
+        )
     if terraform_modules:
         click.echo(
             f"  Found .terraform/modules/modules.json with "
@@ -303,31 +337,32 @@ def iterative_parse(
                             modpath = os.path.abspath(sourcemod)
                             os.chdir(curdir)
 
-                        # Check modules.json for already-downloaded modules
-                        if (
-                            not os.path.isdir(modpath)
-                            and module_name in terraform_modules
-                            and os.path.isdir(terraform_modules[module_name])
-                        ):
-                            modpath = terraform_modules[module_name]
-                            click.echo(
-                                f"  Using local module from "
-                                f".terraform/modules/{module_name}"
-                            )
-
                         # Fallback to source if module directory doesn't exist
                         if not os.path.isdir(modpath):
                             modpath = mod_dict[module_name]["source"]
 
                         # Recursively find files in module directory
                         source_files_list = find_tf_files(
-                            modpath, [], module_name, version=version_constraint
+                            modpath,
+                            [],
+                            module_name,
+                            version=version_constraint,
+                            terraform_modules=terraform_modules,
                         )
                         existing_files = list(tf_file_paths)
                         tf_file_paths.extend(
                             x for x in source_files_list if x not in existing_files
                         )
-                        tfdata["module_source_dict"][module_name] = str(modpath)
+                        # Store source path for downstream module matching.
+                        # Local modules use the resolved absolute path (matches
+                        # file paths for resource-to-module association).
+                        # Remote modules store the source string (preserves
+                        # existing behavior where plan/graph data provides
+                        # module prefixes).
+                        if sourcemod.startswith("."):
+                            tfdata["module_source_dict"][module_name] = str(modpath)
+                        else:
+                            tfdata["module_source_dict"][module_name] = sourcemod
 
     # Handle duplicate module references
     oldpath: List[str] = []
@@ -383,7 +418,13 @@ def read_tfsource(
                 annotations = yaml.safe_load(file)
 
         # Resolve source directory for .terraform/modules/modules.json lookup
-        source_dir = source if os.path.isdir(source) else ""
+        # When source is a URL, derive the directory from the cloned .tf file paths
+        if os.path.isdir(source):
+            source_dir = source
+        elif tf_file_paths:
+            source_dir = os.path.dirname(tf_file_paths[0])
+        else:
+            source_dir = ""
         tfdata = iterative_parse(
             tf_file_paths, hcl_dict, EXTRACT, tfdata, tf_mod_dir, source_dir
         )
@@ -392,7 +433,7 @@ def read_tfsource(
     for file in tf_file_paths:
         if "auto.tfvars" in file or "terraform.tfvars" in file:
             click.echo(f"  Will use auto variables from file : {file} \n")
-            varfile_list = varfile_list + (file,)
+            varfile_list = varfile_list + [file]
 
     # Use all variable files if none specified
     if len(varfile_list) == 0 and tfdata.get("all_variable"):

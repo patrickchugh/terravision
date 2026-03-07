@@ -50,6 +50,14 @@ class TestHandleModule(unittest.TestCase):
 class TestLoadTerraformModulesJson(unittest.TestCase):
     """Tests for _load_terraform_modules_json()."""
 
+    def setUp(self):
+        # Clear TF_DATA_DIR which gets set at import time by tfwrapper.py
+        self._orig_tf_data_dir = os.environ.pop("TF_DATA_DIR", None)
+
+    def tearDown(self):
+        if self._orig_tf_data_dir is not None:
+            os.environ["TF_DATA_DIR"] = self._orig_tf_data_dir
+
     def test_valid_modules_json(self):
         """Test loading the real modules.json fixture."""
         fixtures_dir = os.path.join(

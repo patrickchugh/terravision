@@ -146,6 +146,9 @@ def tf_initplan(
             if not debug and result.stderr:
                 click.echo(click.style(f"Details: {result.stderr}", fg="red"))
             exit(result.returncode)
+        # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
+        # TF_DATA_DIR overrides the default .terraform/ location (see line 40).
+        tfdata["terraform_init_dir"] = temp_dir.name
         # Resolve variable file path
         if varfile:
             vfile = varfile[0]

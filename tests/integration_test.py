@@ -277,6 +277,10 @@ TFC_ENV = {
     [
         (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
         (f"{BASE_REPO}/testcase-bastion.git//examples", "expected-bastion-live.json"),
+        (
+            "https://github.com/patrickchugh/terraform-examples.git//aws//wordpress_fargate",
+            "expected-wordpress-live.json",
+        ),
     ],
 )
 @pytest.mark.slow

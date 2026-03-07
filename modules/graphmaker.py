@@ -389,12 +389,15 @@ def _find_implied_connections(
     return matching
 
 
-def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
+def _find_matching_resources(
+    param: str, nodes: List[str], source_resource: str = ""
+) -> List[str]:
     """Find resources that match the parameter value.
 
     Args:
         param: Parameter value to search for references
         nodes: List of all resource nodes
+        source_resource: The resource whose params are being scanned (for module scoping)
 
     Returns:
         List of matching resource names
@@ -411,9 +414,41 @@ def _find_matching_resources(param: str, nodes: List[str]) -> List[str]:
         and "[*]" not in normalized_param
         and normalized_param != "[]"
     ):
-        matching = list(
-            {s for s in nodes if s.split("~")[0] in normalized_param.replace(".*", "")}
-        )
+        # First try original logic: node name (without ~suffix) as substring of param.
+        # This is naturally precise and handles non-module cases.
+        for s in nodes:
+            node_base = s.split("~")[0]
+            if node_base in normalized_param and s not in matching:
+                matching.append(s)
+
+        # If no match found, try ref-in-node with module scoping.
+        # This handles module-prefixed nodes where the param lacks the prefix
+        # (e.g., param="${aws_route_table.public[0].id}" but node is
+        # "module.vpc.aws_route_table.public[0]~1").
+        if not matching:
+            # Extract module prefix from source resource for scoping
+            source_base = source_resource.split("~")[0]
+            source_parts = source_base.split(".")
+            module_prefix = (
+                ".".join(source_parts[:-2]) + "."
+                if "module." in source_base and len(source_parts) > 2
+                else ""
+            )
+
+            extracted = helpers.extract_terraform_resource(normalized_param)
+            for r in extracted:
+                idx = normalized_param.find(r) + len(r)
+                idx_match = re.match(r"\[\d+\]", normalized_param[idx:])
+                ref = r + idx_match.group() if idx_match else r
+                matching.extend(
+                    [
+                        s
+                        for s in nodes
+                        if ref in s
+                        and s not in matching
+                        and (not module_prefix or s.startswith(module_prefix))
+                    ]
+                )
     else:
         # Extract Terraform resource references from parameter
         extracted_resources_list = helpers.extract_terraform_resource(normalized_param)
@@ -544,7 +579,7 @@ def check_relationship(
     # Scan each parameter for resource references
     for p in plist:
         param = str(p)
-        matching = _find_matching_resources(param, nodes)
+        matching = _find_matching_resources(param, nodes, resource_associated_with)
         implied = _find_implied_connections(param, nodes, IMPLIED_CONNECTIONS)
         # Combine explicit and implied matches, avoiding duplicates
         matching.extend([m for m in implied if m not in matching])

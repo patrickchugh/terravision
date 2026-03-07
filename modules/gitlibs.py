@@ -61,6 +61,8 @@ def _resolve_version_constraint(constraint: str, versions: List[str]) -> Optiona
                 bound = cons[2:].strip()
                 bound_parts = bound.split(".")
                 min_ver = _parse_version(bound)
+                if min_ver is None:
+                    return False
                 # ~> X.Y means >= X.Y, < (X+1).0
                 # ~> X.Y.Z means >= X.Y.Z, < X.(Y+1).0
                 if len(bound_parts) <= 2:
@@ -70,23 +72,29 @@ def _resolve_version_constraint(constraint: str, versions: List[str]) -> Optiona
                 if not (min_ver <= ver < max_ver):
                     return False
             elif cons.startswith(">="):
-                if ver < _parse_version(cons[2:].strip()):
+                bound = _parse_version(cons[2:].strip())
+                if bound is None or ver < bound:
                     return False
             elif cons.startswith("<="):
-                if ver > _parse_version(cons[2:].strip()):
+                bound = _parse_version(cons[2:].strip())
+                if bound is None or ver > bound:
                     return False
             elif cons.startswith(">"):
-                if ver <= _parse_version(cons[1:].strip()):
+                bound = _parse_version(cons[1:].strip())
+                if bound is None or ver <= bound:
                     return False
             elif cons.startswith("<"):
-                if ver >= _parse_version(cons[1:].strip()):
+                bound = _parse_version(cons[1:].strip())
+                if bound is None or ver >= bound:
                     return False
             elif cons.startswith("="):
-                if ver != _parse_version(cons[1:].strip()):
+                bound = _parse_version(cons[1:].strip())
+                if bound is None or ver != bound:
                     return False
             else:
                 # Bare version string
-                if ver != _parse_version(cons):
+                bound = _parse_version(cons)
+                if bound is None or ver != bound:
                     return False
         return True
 
@@ -636,18 +644,25 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
 
 
 def clone_files(
-    sourceURL: str, tempdir: str, module: str = "main", version: str = ""
+    sourceURL: str,
+    tempdir: str,
+    module: str = "main",
+    version: str = "",
+    terraform_modules: Optional[Dict[str, str]] = None,
 ) -> str:
     """Clone git repository or retrieve from cache.
 
     Main entry point for retrieving Terraform module code. Checks cache first,
-    then clones from remote source if needed. Handles both URL and local paths.
+    then checks terraform's downloaded modules (from terraform init), and finally
+    clones from remote source if needed. Handles both URL and local paths.
 
     Args:
         sourceURL: Source URL of the module (git URL, registry URL, or local path)
         tempdir: Temporary directory for cloning
         module: Module name for cache organization (default: "main")
         version: Terraform version constraint (e.g., "~> 5.0")
+        terraform_modules: Dict mapping module name to local directory from
+            terraform's .terraform/modules/modules.json (optional)
 
     Returns:
         Path to cloned module code directory
@@ -711,6 +726,17 @@ def clone_files(
     # Return cached module if it exists
     if os.path.exists(codepath):
         return _handle_cached_module(codepath, tempdir, module, reponame, subfolder)
+
+    # Use terraform's already-downloaded module if available (from terraform init)
+    if terraform_modules and module in terraform_modules:
+        tf_cached_dir = terraform_modules[module]
+        if os.path.isdir(tf_cached_dir):
+            click.echo(
+                f"  Using Terraform-cached module for '{module}': {tf_cached_dir}"
+            )
+            target_dir = os.path.join(codepath, subfolder) if subfolder else codepath
+            shutil.copytree(tf_cached_dir, target_dir)
+            return os.path.join(codepath, subfolder)
 
     # Clone new module
     if module != "main":
