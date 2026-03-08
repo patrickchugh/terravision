@@ -276,6 +276,36 @@ def get_no_module_name(node: str) -> Optional[str]:
     return no_module_name
 
 
+_CIDR_ATTRIBUTES = {
+    "aws_vpc": "cidr_block",
+    "aws_subnet": "cidr_block",
+    "azurerm_virtual_network": "address_space",
+    "azurerm_subnet": "address_prefixes",
+    "google_compute_subnetwork": "ip_cidr_range",
+}
+
+
+def get_cidr_label(resource: str, tfdata: Dict[str, Any]) -> str:
+    """Get CIDR range string for a resource if available."""
+    resource_type = get_no_module_name(resource).split(".")[0]
+    attr_name = _CIDR_ATTRIBUTES.get(resource_type)
+    if not attr_name:
+        return ""
+    # Use original_metadata (from plan) to get resolved values,
+    # as meta_data may contain raw HCL expressions after read_tfsource
+    meta = tfdata.get("original_metadata", tfdata.get("meta_data", {})).get(
+        resource, {}
+    )
+    if not isinstance(meta, dict):
+        return ""
+    value = meta.get(attr_name, "")
+    if isinstance(value, list):
+        value = ", ".join(str(v) for v in value if isinstance(v, str) and "/" in v)
+    if not isinstance(value, str) or "/" not in value:
+        return ""
+    return value
+
+
 def extract_subfolder_from_repo(source_url: str) -> Tuple[str, str]:
     """Extract repo URL and subfolder from a string.
 

@@ -414,7 +414,7 @@ AWS_NAME_REPLACEMENTS = {
     "dx": "Direct Connect",
     "cloudfront_distribution": "Cloudfront",
     "iam_policy": "policy",
-    "lb": "Elastic Load Balancer Service",
+    "lb": "ELB Service",
     "this": "",
 }
 

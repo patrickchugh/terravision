@@ -486,9 +486,11 @@ def handle_group(
         return None, drawn_resources
 
     # Create new group/cluster
-    newGroup = getattr(sys.modules[__name__], resource_type)(
-        label=helpers.pretty_name(resource, is_group=True)
-    )
+    node_label = helpers.pretty_name(resource, is_group=True)
+    cidr = helpers.get_cidr_label(resource, tfdata)
+    if cidr:
+        node_label = f"{node_label} ({cidr})"
+    newGroup = getattr(sys.modules[__name__], resource_type)(label=node_label)
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)

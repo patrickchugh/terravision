@@ -742,17 +742,15 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
                 omd.update(md)
-                # Replace True values with original Terraform source expressions
-                # True indicates "known after apply" - preserve the original HCL expression
-                for k, v in list(omd.items()):
-                    if v is True and k in md and md[k] is not True:
-                        # Use the original HCL expression from all_resource
-                        omd[k] = md[k]
                 # Clean up metadata by removing empty values which add no info and clutter metadata
                 omd = {
                     k: v
                     for k, v in omd.items()
-                    if v is not True and v != "" and v != {} and v != [] and v != None
+                    if v is not True
+                    and v != ""
+                    and v != {}
+                    and v != []
+                    and v is not None
                 }
                 meta_data[resource_node] = omd
                 if "~" in resource_node or meta_data[resource_node].get("count"):

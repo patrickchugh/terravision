@@ -402,8 +402,6 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Collect resource metadata from plan
             details = object["change"]["after"]
             if details is not None:
-                details.update(object["change"]["after_unknown"])
-                details.update(object["change"]["after_sensitive"])
                 # Add module name if resource is in a module
                 if "module." in object["address"]:
                     modname = (
