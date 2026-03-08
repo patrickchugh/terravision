@@ -68,3 +68,4 @@ specs/
 compare_branches.sh
 ./architecture*.dot.png
 
+docs/*-plan.md
