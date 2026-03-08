@@ -356,9 +356,18 @@ def handle_nodes(
                                 if always_draw_edge(resource_type, node_type, tfdata)
                                 else "invis"
                             )
+                            # Check if this is a bidirectional link
+                            is_bidir = frozenset(
+                                (resource, node_connection)
+                            ) in tfdata.get("bidirectional_edges", set())
                             originNode.connect(
                                 connectedNode,
-                                Edge(forward=True, label=label, style=line_style),
+                                Edge(
+                                    forward=True,
+                                    reverse=is_bidir,
+                                    label=label,
+                                    style=line_style,
+                                ),
                             )
                             # Track connection to prevent duplicates
                             if not tfdata["connected_nodes"].get(originNode._id):
@@ -369,6 +378,18 @@ def handle_nodes(
                                     connectedNode._id,
                                 )
                             )
+                            # For bidirectional edges, also track the reverse to prevent duplicate
+                            if is_bidir:
+                                if not tfdata["connected_nodes"].get(connectedNode._id):
+                                    tfdata["connected_nodes"][
+                                        connectedNode._id
+                                    ] = list()
+                                tfdata["connected_nodes"][connectedNode._id] = (
+                                    helpers.append_dictlist(
+                                        tfdata["connected_nodes"][connectedNode._id],
+                                        originNode._id,
+                                    )
+                                )
 
     return newNode, drawn_resources
 
@@ -752,9 +773,18 @@ def render_diagram(
                             if always_draw_edge(origin_type, dest_type, tfdata)
                             else "invis"
                         )
+                        # Check if this is a bidirectional link
+                        is_bidir = frozenset(
+                            (origin_resource, dest_resource)
+                        ) in tfdata.get("bidirectional_edges", set())
                         originNode.connect(
                             connectedNode,
-                            Edge(forward=True, label=label, style=line_style),
+                            Edge(
+                                forward=True,
+                                reverse=is_bidir,
+                                label=label,
+                                style=line_style,
+                            ),
                         )
                         if not tfdata["connected_nodes"].get(originNode._id):
                             tfdata["connected_nodes"][originNode._id] = list()
@@ -764,9 +794,19 @@ def render_diagram(
                                 connectedNode._id,
                             )
                         )
+                        # For bidirectional edges, also track the reverse
+                        if is_bidir:
+                            if not tfdata["connected_nodes"].get(connectedNode._id):
+                                tfdata["connected_nodes"][connectedNode._id] = list()
+                            tfdata["connected_nodes"][connectedNode._id] = (
+                                helpers.append_dictlist(
+                                    tfdata["connected_nodes"][connectedNode._id],
+                                    originNode._id,
+                                )
+                            )
 
     # Add footer with metadata
-    if str(source) == "('.',)":
+    if source == ".":
         source = os.getcwd()
 
     # Set context to main diagram so footer is outside all clusters
@@ -779,7 +819,7 @@ def render_diagram(
         "width": "25",
         "height": "2",
         "fontsize": "18",
-        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{str(source)} }}",
+        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 

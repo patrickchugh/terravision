@@ -84,12 +84,12 @@ def convert_dot_to_json(dot_file: str) -> dict:
 
 
 def tf_initplan(
-    source: Tuple[str, ...], varfile: List[str], workspace: str, debug: bool = True
+    source: str, varfile: List[str], workspace: str, debug: bool = True
 ) -> Dict[str, Any]:
     """Initialize Terraform and generate plan and graph data.
 
     Args:
-        source: Tuple of source locations (directories or Git URLs)
+        source: Source location (directory or Git URL)
         varfile: List of variable files to use
         workspace: Terraform workspace name
         debug: Show subprocess output to console
@@ -101,210 +101,204 @@ def tf_initplan(
     tfdata = dict()
     tfdata["codepath"] = list()
     tfdata["workdir"] = os.getcwd()
-    # Process each source location
-    for sourceloc in source:
-        # Handle local directory source
-        if os.path.isdir(sourceloc):
-            codepath = os.path.abspath(sourceloc)
-            # Force local backend so full infra plan is created with override.tf
-            override_dest = _write_override(codepath)
-            os.chdir(codepath)
-        # Handle Git repository source
-        else:
-            githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
-            codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
-            # Force local backend so full infra plan is created with override.tf
-            override_dest = _write_override(codepath)
-            os.chdir(codepath)
-            codepath = [codepath]
-            # Verify files were cloned
-            if len(os.listdir()) == 0:
-                click.echo(
-                    click.style(
-                        f"\n  ERROR: No files found to process.",
-                        fg="red",
-                        bold=True,
-                    )
-                )
-                exit()
-        click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
-        click.echo(
-            "  Forcing temporary local backend to generate full infrastructure plan"
-        )
-        # Initialize terraform with providers
-        result = subprocess.run(
-            ["terraform", "init", "--upgrade", "-reconfigure"],
-            capture_output=not debug,
-            text=True,
-        )
-        if result.returncode != 0:
+    # Process source location
+    sourceloc = source
+    # Handle local directory source
+    if os.path.isdir(sourceloc):
+        codepath = os.path.abspath(sourceloc)
+        # Force local backend so full infra plan is created with override.tf
+        override_dest = _write_override(codepath)
+        os.chdir(codepath)
+    # Handle Git repository source
+    else:
+        githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
+        codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
+        # Force local backend so full infra plan is created with override.tf
+        override_dest = _write_override(codepath)
+        os.chdir(codepath)
+        codepath = [codepath]
+        # Verify files were cloned
+        if len(os.listdir()) == 0:
             click.echo(
                 click.style(
-                    f"\nERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
+                    f"\n  ERROR: No files found to process.",
                     fg="red",
                     bold=True,
                 )
             )
-            if not debug and result.stderr:
-                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-            exit(result.returncode)
-        # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
-        # TF_DATA_DIR overrides the default .terraform/ location (see line 40).
-        tfdata["terraform_init_dir"] = temp_dir.name
-        # Resolve variable file path
-        if varfile:
-            vfile = varfile[0]
-            if not os.path.isabs(vfile):
-                vfile = os.path.join(start_dir, vfile)
-
+            exit()
+    click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
+    click.echo("  Forcing temporary local backend to generate full infrastructure plan")
+    # Initialize terraform with providers
+    result = subprocess.run(
+        ["terraform", "init", "--upgrade", "-reconfigure"],
+        capture_output=not debug,
+        text=True,
+    )
+    if result.returncode != 0:
         click.echo(
             click.style(
-                f"\nInitalising workspace: {workspace}\n", fg="white", bold=True
+                f"\nERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
+                fg="red",
+                bold=True,
             )
         )
-        # Select or create terraform workspace
+        if not debug and result.stderr:
+            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+        exit(result.returncode)
+    # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
+    # TF_DATA_DIR overrides the default .terraform/ location (see line 40).
+    tfdata["terraform_init_dir"] = temp_dir.name
+    # Resolve variable file path
+    if varfile:
+        vfile = varfile[0]
+        if not os.path.isabs(vfile):
+            vfile = os.path.join(start_dir, vfile)
+
+    click.echo(
+        click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
+    )
+    # Select or create terraform workspace
+    result = subprocess.run(
+        ["terraform", "workspace", "select", "-or-create=True", workspace],
+        capture_output=not debug,
+        text=True,
+    )
+    if result.returncode != 0:
+        click.echo(
+            click.style(
+                f"\nERROR: Invalid output from 'terraform workspace select {workspace}' command.",
+                fg="red",
+                bold=True,
+            )
+        )
+        if not debug and result.stderr:
+            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+        exit(result.returncode)
+
+    click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
+    # Setup temporary file paths and clean up old files
+    tempdir = os.path.dirname(temp_dir.name)
+    tfplan_path = os.path.join(tempdir, "tfplan.bin")
+    if os.path.exists(tfplan_path):
+        os.remove(tfplan_path)
+    tfplan_json_path = os.path.join(tempdir, "tfplan.json")
+    if os.path.exists(tfplan_json_path):
+        os.remove(tfplan_json_path)
+    tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
+    if os.path.exists(tfgraph_path):
+        os.remove(tfgraph_path)
+    tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
+    if os.path.exists(tfgraph_json_path):
+        os.remove(tfgraph_json_path)
+    # Generate terraform plan with or without varfile
+    if varfile:
         result = subprocess.run(
-            ["terraform", "workspace", "select", "-or-create=True", workspace],
+            [
+                "terraform",
+                "plan",
+                "-refresh=false",
+                "-var-file",
+                vfile,
+                "-out",
+                tfplan_path,
+            ],
             capture_output=not debug,
             text=True,
         )
-        if result.returncode != 0:
-            click.echo(
-                click.style(
-                    f"\nERROR: Invalid output from 'terraform workspace select {workspace}' command.",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            if not debug and result.stderr:
-                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-            exit(result.returncode)
-
-        click.echo(
-            click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True)
+    else:
+        result = subprocess.run(
+            ["terraform", "plan", "-refresh=false", "-out", tfplan_path],
+            capture_output=not debug,
+            text=True,
         )
-        # Setup temporary file paths and clean up old files
-        tempdir = os.path.dirname(temp_dir.name)
-        tfplan_path = os.path.join(tempdir, "tfplan.bin")
-        if os.path.exists(tfplan_path):
-            os.remove(tfplan_path)
-        tfplan_json_path = os.path.join(tempdir, "tfplan.json")
-        if os.path.exists(tfplan_json_path):
-            os.remove(tfplan_json_path)
-        tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
-        if os.path.exists(tfgraph_path):
-            os.remove(tfgraph_path)
-        tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
-        if os.path.exists(tfgraph_json_path):
-            os.remove(tfgraph_json_path)
-        # Generate terraform plan with or without varfile
-        if varfile:
-            result = subprocess.run(
-                [
-                    "terraform",
-                    "plan",
-                    "-refresh=false",
-                    "-var-file",
-                    vfile,
-                    "-out",
-                    tfplan_path,
-                ],
-                capture_output=not debug,
-                text=True,
+    if result.returncode != 0:
+        click.echo(
+            click.style(
+                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
+                fg="red",
+                bold=True,
             )
-        else:
-            result = subprocess.run(
-                ["terraform", "plan", "-refresh=false", "-out", tfplan_path],
-                capture_output=not debug,
-                text=True,
-            )
-        if result.returncode != 0:
-            click.echo(
-                click.style(
-                    f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            if not debug and result.stderr:
-                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-            exit(result.returncode)
+        )
+        if not debug and result.stderr:
+            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+        exit(result.returncode)
 
-        click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
-        # Convert binary plan to JSON format
-        if os.path.exists(tfplan_path):
-            with open(tfplan_json_path, "w") as f:
+    click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
+    # Convert binary plan to JSON format
+    if os.path.exists(tfplan_path):
+        with open(tfplan_json_path, "w") as f:
+            result = subprocess.run(
+                ["terraform", "show", "-json", tfplan_path],
+                stdout=f,
+                stderr=None if debug else subprocess.PIPE,
+                text=True,
+            )
+        if result.returncode == 0:
+            click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+            # Load plan data
+            with open(tfplan_json_path) as f:
+                plandata = json.load(f)
+            # Generate terraform graph
+            with open(tfgraph_path, "w") as f:
                 result = subprocess.run(
-                    ["terraform", "show", "-json", tfplan_path],
+                    ["terraform", "graph"],
                     stdout=f,
                     stderr=None if debug else subprocess.PIPE,
                     text=True,
                 )
-            if result.returncode == 0:
-                click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
-                # Load plan data
-                with open(tfplan_json_path) as f:
-                    plandata = json.load(f)
-                # Generate terraform graph
-                with open(tfgraph_path, "w") as f:
-                    result = subprocess.run(
-                        ["terraform", "graph"],
-                        stdout=f,
-                        stderr=None if debug else subprocess.PIPE,
-                        text=True,
-                    )
-                # Remove override.tf after all terraform commands complete
-                if os.path.exists(override_dest):
-                    os.remove(override_dest)
-                if result.returncode != 0:
-                    click.echo(
-                        click.style(
-                            f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
-                            fg="red",
-                            bold=True,
-                        )
-                    )
-                    exit(result.returncode)
-                tfdata["plandata"] = dict(plandata)
+            # Remove override.tf after all terraform commands complete
+            if os.path.exists(override_dest):
+                os.remove(override_dest)
+            if result.returncode != 0:
                 click.echo(
                     click.style(
-                        f"\nConverting TF Graph Connections..  (this may take a while)\n",
-                        fg="white",
-                        bold=True,
-                    )
-                )
-                # Convert DOT graph to JSON using Graphviz
-                if not os.path.exists(tfgraph_path):
-                    click.echo(
-                        click.style(
-                            f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
-                            fg="red",
-                            bold=True,
-                        )
-                    )
-                    exit(1)
-                graphdata = convert_dot_to_json(tfgraph_path)
-            else:
-                click.echo(
-                    click.style(
-                        f"\nERROR: Invalid output from 'terraform show' command.",
+                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
                         fg="red",
                         bold=True,
                     )
                 )
-                if not debug and result.stderr:
-                    click.echo(click.style(f"Details: {result.stderr}", fg="red"))
                 exit(result.returncode)
+            tfdata["plandata"] = dict(plandata)
+            click.echo(
+                click.style(
+                    f"\nConverting TF Graph Connections..  (this may take a while)\n",
+                    fg="white",
+                    bold=True,
+                )
+            )
+            # Convert DOT graph to JSON using Graphviz
+            if not os.path.exists(tfgraph_path):
+                click.echo(
+                    click.style(
+                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+                exit(1)
+            graphdata = convert_dot_to_json(tfgraph_path)
         else:
             click.echo(
                 click.style(
-                    f"\nERROR: Terraform plan file not found at {tfplan_path}",
+                    f"\nERROR: Invalid output from 'terraform show' command.",
                     fg="red",
                     bold=True,
                 )
             )
-            exit(1)
-        tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
+            if not debug and result.stderr:
+                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+            exit(result.returncode)
+    else:
+        click.echo(
+            click.style(
+                f"\nERROR: Terraform plan file not found at {tfplan_path}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit(1)
+    tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
     os.chdir(start_dir)
     return tfdata
 
@@ -665,7 +659,7 @@ def load_json_source(source: str) -> Dict[str, Any]:
 def process_pregenerated_source(
     planfile: str,
     graphfile: str,
-    source: List[str],
+    source: str,
     annotate: str,
     debug: bool,
 ) -> Dict[str, Any]:
@@ -709,9 +703,9 @@ def process_pregenerated_source(
     tfdata["plandata"] = dict(plandata)
     # Keep URLs as-is so read_tfsource can clone them; only resolve local paths
     codepath = (
-        source[0]
-        if helpers.check_for_domain(source[0]) or source[0].startswith("git::")
-        else os.path.abspath(source[0])
+        source
+        if helpers.check_for_domain(source) or source.startswith("git::")
+        else os.path.abspath(source)
     )
     tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
 
@@ -736,12 +730,12 @@ def process_pregenerated_source(
 
 
 def process_terraform_source(
-    source: List[str], varfile: List[str], workspace: str, annotate: str, debug: bool
+    source: str, varfile: List[str], workspace: str, annotate: str, debug: bool
 ) -> Dict[str, Any]:
     """Process Terraform source files and generate initial tfdata.
 
     Args:
-        source: List of source paths
+        source: Source path (folder or git URL)
         varfile: List of variable file paths
         workspace: Terraform workspace name
         annotate: Path to annotations file

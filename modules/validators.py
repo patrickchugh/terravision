@@ -14,16 +14,16 @@ import click
 import modules.helpers as helpers
 
 
-def validate_source(source: List[str]) -> None:
+def validate_source(source: str) -> None:
     """Validate source input before processing.
 
     Args:
-        source: List of source paths
+        source: Source path (folder, git URL, or JSON file)
 
     Raises:
         SystemExit: If source is invalid
     """
-    src = source[0]
+    src = source
     if src.endswith(".tf"):
         click.echo(
             click.style(
@@ -191,15 +191,13 @@ def validate_consistency(tfdata: Dict[str, Any]) -> None:
             sys.exit(1)
 
 
-def validate_pregenerated_inputs(
-    planfile: str, graphfile: str, source: List[str]
-) -> None:
+def validate_pregenerated_inputs(planfile: str, graphfile: str, source: str) -> None:
     """Validate that all required inputs are provided for pre-generated mode.
 
     Args:
         planfile: Path to plan JSON file
         graphfile: Path to graph DOT file
-        source: List of source paths
+        source: Source path (folder or git URL)
 
     Raises:
         SystemExit: If required inputs are missing or invalid
@@ -222,9 +220,7 @@ def validate_pregenerated_inputs(
             )
         )
         sys.exit(1)
-    if planfile and (
-        not source or source == (".",) or source == ["."] or not source[0]
-    ):
+    if planfile and (not source or source == "."):
         click.echo(
             click.style(
                 "\nERROR: --planfile requires --graphfile and --source.\n",
@@ -233,7 +229,7 @@ def validate_pregenerated_inputs(
             )
         )
         sys.exit(1)
-    if planfile and source[0].endswith(".json"):
+    if planfile and source.endswith(".json"):
         click.echo(
             click.style(
                 "\nERROR: --source must be a directory when using --planfile.\n",

@@ -125,89 +125,117 @@ def export_tfdata(tfdata: Dict[str, Any]) -> None:
     )
 
 
-def remove_recursive_links(tfdata: dict):
-    """Remove 2-node circular references from the graph.
+def find_bidirectional_links(tfdata: dict):
+    """Detect 2-node bidirectional links (A->B and B->A) and store them.
 
-    Detects and removes bidirectional links between two nodes (A->B and B->A)
-    to prevent rendering issues. Longer cycles (A->B->C->A) are preserved.
-
-    For consolidated nodes (API Gateway, CloudWatch, etc. that are merged from
-    multiple sub-resources), prefers to keep their OUTGOING connections by
-    removing the incoming connection from the other node instead.
+    Instead of removing circular references, marks them so drawing.py can
+    render them as two-way arrows in Graphviz.
 
     Args:
         tfdata: Dictionary containing 'graphdict' with node relationships
 
     Returns:
-        dict: Updated tfdata with circular references removed from graphdict
+        dict: Updated tfdata with 'bidirectional_edges' set of frozenset pairs
     """
-    graphdict = tfdata.get("graphdict")
-    circular = find_circular_refs(graphdict)
+    graphdict = tfdata.get("graphdict", {})
+    bidirectional = set()
 
-    # Load consolidated node names from config
-    config_constants = _get_provider_config_constants(tfdata)
-    consolidated_nodes = config_constants.get("CONSOLIDATED_NODES", [])
+    for node_a in graphdict:
+        for node_b in graphdict[node_a]:
+            if node_b in graphdict and node_a in graphdict[node_b]:
+                bidirectional.add(frozenset((node_a, node_b)))
 
-    # Build set of consolidated node resource names (the merged names like "aws_api_gateway_integration.gateway")
-    consolidated_names = set()
-    for consolidated in consolidated_nodes:
-        for prefix, config in consolidated.items():
-            consolidated_names.add(config.get("resource_name", ""))
+        for pair in bidirectional:
+            nodes = list(pair)
+            # print(f"  {nodes[0]} <-> {nodes[1]}")
 
-    def is_consolidated_node(node: str) -> bool:
-        """Check if node is a consolidated node (the merged target, not a source)."""
-        return node in consolidated_names
-
-    if circular:
-        click.echo(
-            click.style(
-                f"\nINFO: Found {len(circular)} 2-node circular references in the graph. These will be removed to prevent rendering issues.\n",
-                fg="yellow",
-                bold=True,
-            )
-        )
-        # Remove one direction of each bidirectional link
-        for i, cycle in enumerate(circular, 1):
-            print(f"  {i}. {' -> '.join(cycle)}")
-            node_b = cycle[-1]
-            node_a = cycle[-2]
-
-            # For consolidated nodes, keep their outgoing connections
-            # (remove incoming connection from other node instead)
-            node_a_consolidated = is_consolidated_node(node_a)
-            node_b_consolidated = is_consolidated_node(node_b)
-
-            if node_a_consolidated and not node_b_consolidated:
-                # node_a is consolidated, keep its outgoing, remove node_b's connection to it
-                if node_a in graphdict.get(node_b, []):
-                    graphdict[node_b].remove(node_a)
-                    click.echo(
-                        click.style(
-                            f"  Removed link from {node_b} to {node_a} (keeping consolidated node outgoing)",
-                            fg="white",
-                        )
-                    )
-            elif node_b_consolidated and not node_a_consolidated:
-                # node_b is consolidated, keep its outgoing, remove node_a's connection to it
-                if node_b in graphdict.get(node_a, []):
-                    graphdict[node_a].remove(node_b)
-                    click.echo(
-                        click.style(
-                            f"  Removed link from {node_a} to {node_b} (keeping consolidated node outgoing)",
-                            fg="white",
-                        )
-                    )
-            else:
-                # Neither or both consolidated - default behavior
-                if node_b in graphdict.get(node_a, []):
-                    graphdict[node_a].remove(node_b)
-                    click.echo(
-                        click.style(
-                            f"  Removed link from {node_a} to {node_b}",
-                            fg="white",
-                        )
-                    )
+    tfdata["bidirectional_edges"] = bidirectional
     return tfdata
+
+
+# def remove_recursive_links(tfdata: dict):
+#     """Remove 2-node circular references from the graph.
+
+#     Detects and removes bidirectional links between two nodes (A->B and B->A)
+#     to prevent rendering issues. Longer cycles (A->B->C->A) are preserved.
+
+#     For consolidated nodes (API Gateway, CloudWatch, etc. that are merged from
+#     multiple sub-resources), prefers to keep their OUTGOING connections by
+#     removing the incoming connection from the other node instead.
+
+#     Args:
+#         tfdata: Dictionary containing 'graphdict' with node relationships
+
+#     Returns:
+#         dict: Updated tfdata with circular references removed from graphdict
+#     """
+#     graphdict = tfdata.get("graphdict")
+#     circular = find_circular_refs(graphdict)
+
+#     # Load consolidated node names from config
+#     config_constants = _get_provider_config_constants(tfdata)
+#     consolidated_nodes = config_constants.get("CONSOLIDATED_NODES", [])
+
+#     # Build set of consolidated node resource names (the merged names like "aws_api_gateway_integration.gateway")
+#     consolidated_names = set()
+#     for consolidated in consolidated_nodes:
+#         for prefix, config in consolidated.items():
+#             consolidated_names.add(config.get("resource_name", ""))
+
+#     def is_consolidated_node(node: str) -> bool:
+#         """Check if node is a consolidated node (the merged target, not a source)."""
+#         return node in consolidated_names
+
+#     if circular:
+#         click.echo(
+#             click.style(
+#                 f"\nINFO: Found {len(circular)} 2-node circular references in the graph. These will be removed to prevent rendering issues.\n",
+#                 fg="yellow",
+#                 bold=True,
+#             )
+#         )
+#         # Remove one direction of each bidirectional link
+#         for i, cycle in enumerate(circular, 1):
+#             print(f"  {i}. {' -> '.join(cycle)}")
+#             node_b = cycle[-1]
+#             node_a = cycle[-2]
+
+#             # For consolidated nodes, keep their outgoing connections
+#             # (remove incoming connection from other node instead)
+#             node_a_consolidated = is_consolidated_node(node_a)
+#             node_b_consolidated = is_consolidated_node(node_b)
+
+#             if node_a_consolidated and not node_b_consolidated:
+#                 # node_a is consolidated, keep its outgoing, remove node_b's connection to it
+#                 if node_a in graphdict.get(node_b, []):
+#                     graphdict[node_b].remove(node_a)
+#                     click.echo(
+#                         click.style(
+#                             f"  Removed link from {node_b} to {node_a} (keeping consolidated node outgoing)",
+#                             fg="white",
+#                         )
+#                     )
+#             elif node_b_consolidated and not node_a_consolidated:
+#                 # node_b is consolidated, keep its outgoing, remove node_a's connection to it
+#                 if node_b in graphdict.get(node_a, []):
+#                     graphdict[node_a].remove(node_b)
+#                     click.echo(
+#                         click.style(
+#                             f"  Removed link from {node_a} to {node_b} (keeping consolidated node outgoing)",
+#                             fg="white",
+#                         )
+#                     )
+#             else:
+#                 # Neither or both consolidated - default behavior
+#                 if node_b in graphdict.get(node_a, []):
+#                     graphdict[node_a].remove(node_b)
+#                     click.echo(
+#                         click.style(
+#                             f"  Removed link from {node_a} to {node_b}",
+#                             fg="white",
+#                         )
+#                     )
+#     return tfdata
 
 
 def find_circular_refs(graph):

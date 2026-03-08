@@ -219,7 +219,9 @@ def test_help() -> None:
         ),
     ],
 )
-def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) -> None:
+def test_graphdata_output(
+    json_path: str, expected_file: str, tmp_path: Path, request
+) -> None:
     """Test graphdata command generates correct JSON output.
 
     Validates that the graphdata command correctly parses Terraform code
@@ -251,14 +253,20 @@ def test_graphdata_output(json_path: str, expected_file: str, tmp_path: Path) ->
     assert result.returncode == 0, f"Command failed: {result.stderr}"
     assert output_file.exists(), f"Output file not created: {output_file}"
 
-    # Load and compare actual vs expected JSON
+    # Load actual output
     with open(output_file) as f:
         actual = json.load(f)
 
-    with open(expected_path) as f:
-        expected = json.load(f)
-
-    assert actual == expected, "JSON output doesn't match expected"
+    # Update snapshot or compare
+    if request.config.getoption("--snapshot-update"):
+        with open(expected_path, "w") as f:
+            json.dump(actual, f, indent=2, sort_keys=True)
+            f.write("\n")
+        pytest.skip(f"Snapshot updated: {expected_path.name}")
+    else:
+        with open(expected_path) as f:
+            expected = json.load(f)
+        assert actual == expected, "JSON output doesn't match expected"
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "aws_terraform"
@@ -284,7 +292,7 @@ TFC_ENV = {
     ],
 )
 @pytest.mark.slow
-def test_live_source(source: str, expected_file: str, tmp_path: Path) -> None:
+def test_live_source(source: str, expected_file: str, tmp_path: Path, request) -> None:
     """Test graphdata against live sources (git repos and local fixtures).
 
     The bastion source is listed twice to verify module cache correctness
@@ -314,7 +322,13 @@ def test_live_source(source: str, expected_file: str, tmp_path: Path) -> None:
     with open(output_file) as f:
         actual = json.load(f)
 
-    assert_graphs_equal_az_independent(actual, expected)
+    if request.config.getoption("--snapshot-update"):
+        with open(expected_path, "w") as f:
+            json.dump(actual, f, indent=2, sort_keys=True)
+            f.write("\n")
+        pytest.skip(f"Snapshot updated: {expected_path.name}")
+    else:
+        assert_graphs_equal_az_independent(actual, expected)
 
 
 if __name__ == "__main__":

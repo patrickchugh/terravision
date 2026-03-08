@@ -105,41 +105,41 @@ class TestValidatePreGeneratedInputs:
     def test_graphfile_without_planfile(self):
         """--graphfile without --planfile should cause SystemExit."""
         with pytest.raises(SystemExit):
-            validate_pregenerated_inputs("", GRAPH_FILE, ["."])
+            validate_pregenerated_inputs("", GRAPH_FILE, ".")
 
     def test_planfile_without_source(self):
         """--planfile without --source should cause SystemExit."""
         with pytest.raises(SystemExit):
-            validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, ["."])
+            validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, ".")
 
     def test_planfile_with_json_source(self):
         """--planfile with .json source should cause SystemExit."""
         with pytest.raises(SystemExit):
-            validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, ["tfdata.json"])
+            validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, "tfdata.json")
 
     def test_valid_inputs_pass(self, tmp_path):
         """Valid planfile + graphfile + source directory should not raise."""
         source_dir = str(tmp_path)
-        validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, [source_dir])
+        validate_pregenerated_inputs(PLAN_FILE, GRAPH_FILE, source_dir)
 
     def test_valid_inputs_git_url_pass(self):
         """Valid planfile + graphfile + git URL source should not raise."""
         validate_pregenerated_inputs(
-            PLAN_FILE, GRAPH_FILE, ["https://github.com/user/repo.git"]
+            PLAN_FILE, GRAPH_FILE, "https://github.com/user/repo.git"
         )
 
     def test_nonexistent_planfile(self, tmp_path):
         """Non-existent planfile should cause SystemExit."""
         with pytest.raises(SystemExit):
             validate_pregenerated_inputs(
-                "/nonexistent/plan.json", GRAPH_FILE, [str(tmp_path)]
+                "/nonexistent/plan.json", GRAPH_FILE, str(tmp_path)
             )
 
     def test_nonexistent_graphfile(self, tmp_path):
         """Non-existent graphfile should cause SystemExit."""
         with pytest.raises(SystemExit):
             validate_pregenerated_inputs(
-                PLAN_FILE, "/nonexistent/graph.dot", [str(tmp_path)]
+                PLAN_FILE, "/nonexistent/graph.dot", str(tmp_path)
             )
 
 

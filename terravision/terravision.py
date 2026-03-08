@@ -69,7 +69,9 @@ def _enrich_graph_data(
     tfdata = graphmaker.create_multiple_resources(tfdata)
     tfdata = graphmaker.cleanup_cross_subnet_connections(tfdata)
     tfdata = graphmaker.reverse_relations(tfdata)
-    tfdata = helpers.remove_recursive_links(tfdata)
+    # Bidirectional links are now rendered as two-way arrows instead of being removed
+    # tfdata = helpers.remove_recursive_links(tfdata)
+    tfdata = helpers.find_bidirectional_links(tfdata)
     tfdata = resource_handlers.match_resources(tfdata)
 
     return tfdata
@@ -87,7 +89,7 @@ def _print_graph_debug(outputdict: Dict[str, Any], title: str) -> None:
 
 
 def compile_tfdata(
-    source: List[str],
+    source: str,
     varfile: List[str],
     workspace: str,
     debug: bool,
@@ -98,7 +100,7 @@ def compile_tfdata(
     """Compile Terraform data from source files into enriched graph dictionary.
 
     Args:
-        source: List of source paths (folders, git URLs, or JSON files)
+        source: Source path (folder, git URL, or JSON file)
         varfile: List of paths to .tfvars files
         workspace: Terraform workspace name
         debug: Enable debug output and export tracedata
@@ -115,9 +117,9 @@ def compile_tfdata(
         tfdata = tfwrapper.process_pregenerated_source(
             planfile, graphfile, source, annotate, debug
         )
-    elif source[0].endswith(".json"):
+    elif source.endswith(".json"):
         validators.validate_source(source)
-        tfdata = tfwrapper.load_json_source(source[0])
+        tfdata = tfwrapper.load_json_source(source)
         already_processed = True
         if "all_resource" not in tfdata:
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
@@ -195,8 +197,7 @@ def cli() -> None:
 @click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
 @click.option(
     "--source",
-    multiple=True,
-    default=["."],
+    default=".",
     help="Source files location (Git URL, Folder or .JSON file)",
 )
 @click.option(
@@ -250,7 +251,7 @@ def cli() -> None:
 )
 def draw(
     debug: bool,
-    source: tuple,
+    source: str,
     workspace: str,
     varfile: tuple,
     outfile: str,
@@ -267,7 +268,7 @@ def draw(
 
     Args:
         debug: Enable debug mode
-        source: Source paths tuple
+        source: Source path (Git URL, folder, or .JSON file)
         workspace: Terraform workspace
         varfile: Variable files tuple
         outfile: Output filename
@@ -317,8 +318,7 @@ def draw(
 @click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
 @click.option(
     "--source",
-    multiple=True,
-    default=["."],
+    default=".",
     help="Source files location (Git URL or folder)",
 )
 @click.option(
@@ -368,7 +368,7 @@ def draw(
 )
 def graphdata(
     debug: bool,
-    source: tuple,
+    source: str,
     varfile: tuple,
     workspace: str,
     show_services: bool,
@@ -384,7 +384,7 @@ def graphdata(
 
     Args:
         debug: Enable debug mode
-        source: Source paths tuple
+        source: Source path (Git URL, folder, or .JSON file)
         varfile: Variable files tuple
         workspace: Terraform workspace
         show_services: Show only unique services
