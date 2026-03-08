@@ -1,7 +1,7 @@
-"""Generic resource transformation operations for AWS architecture diagrams.
+"""Generic resource transformation operations for All Cloud providers.
 
 Provides reusable building blocks for mutating tfdata['graphdict'] to create
-professional AWS architecture diagrams. Each transformer is a pure function
+professional cloud architecture diagrams. Each transformer is a pure function
 that can be composed via configuration.
 """
 

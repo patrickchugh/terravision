@@ -12,6 +12,8 @@ import subprocess
 import click
 import modules.gitlibs as gitlibs
 import modules.helpers as helpers
+import modules.fileparser as fileparser
+import modules.validators as validators
 import tempfile
 import json
 import ipaddr
@@ -630,4 +632,132 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     and subnet not in tfdata["graphdict"][vpc]
                 ):
                     tfdata["graphdict"][vpc].append(subnet)
+    return tfdata
+
+
+def load_json_source(source: str) -> Dict[str, Any]:
+    """Load and parse JSON source file.
+
+    Args:
+        source: Path to JSON file
+
+    Returns:
+        Dictionary containing tfdata with graphdict and metadata
+    """
+    with open(source, "r") as file:
+        jsondata = json.load(file)
+    tfdata = {"annotations": {}, "meta_data": {}}
+    if "all_resource" in jsondata:
+        click.echo(
+            "Source appears to be a JSON of previous debug output. Will not call terraform binary."
+        )
+        tfdata = jsondata
+        tfdata["graphdict"] = dict(tfdata["original_graphdict"])
+        tfdata["metadata"] = dict(tfdata["original_metadata"])
+    else:
+        click.echo(
+            "Source is a pre-generated JSON tfgraph file. Will not call terraform binary or AI model."
+        )
+        tfdata["graphdict"] = jsondata
+    return tfdata
+
+
+def process_pregenerated_source(
+    planfile: str,
+    graphfile: str,
+    source: List[str],
+    annotate: str,
+    debug: bool,
+) -> Dict[str, Any]:
+    """Process pre-generated Terraform plan and graph files with source directory.
+
+    Loads plan JSON and graph DOT, builds tfdata using existing pipeline functions,
+    then enriches with HCL parsing from source directory. No Terraform CLI execution.
+
+    Args:
+        planfile: Path to Terraform plan JSON file
+        graphfile: Path to Terraform graph DOT file
+        source: List of source directory paths
+        annotate: Path to annotations file
+        debug: Enable debug mode
+
+    Returns:
+        Dictionary containing parsed Terraform data
+    """
+    click.echo(
+        click.style(
+            "\nUsing pre-generated plan and graph files. "
+            "No Terraform commands will be executed.\n",
+            fg="cyan",
+            bold=True,
+        )
+    )
+
+    # Load and validate plan JSON
+    plandata = validators.validate_planfile(planfile)
+
+    # Convert DOT graph to JSON using Graphviz
+    click.echo(
+        click.style("Converting TF Graph Connections..\n", fg="white", bold=True)
+    )
+    graphdata = convert_dot_to_json(graphfile)
+
+    # Build tfdata from plan and graph data
+    tfdata = dict()
+    tfdata["codepath"] = list()
+    tfdata["workdir"] = os.getcwd()
+    tfdata["plandata"] = dict(plandata)
+    # Keep URLs as-is so read_tfsource can clone them; only resolve local paths
+    codepath = (
+        source[0]
+        if helpers.check_for_domain(source[0]) or source[0].startswith("git::")
+        else os.path.abspath(source[0])
+    )
+    tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
+
+    # Build resource dependency graph
+    tfdata = tf_makegraph(tfdata, debug)
+
+    # Parse source directory for HCL metadata
+    codepath_list = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
+    tfdata = fileparser.read_tfsource(codepath_list, [], annotate, tfdata)
+
+    # Validate consistency across inputs
+    validators.validate_consistency(tfdata)
+
+    if debug:
+        helpers.export_tfdata(tfdata)
+
+    return tfdata
+
+
+def process_terraform_source(
+    source: List[str], varfile: List[str], workspace: str, annotate: str, debug: bool
+) -> Dict[str, Any]:
+    """Process Terraform source files and generate initial tfdata.
+
+    Args:
+        source: List of source paths
+        varfile: List of variable file paths
+        workspace: Terraform workspace name
+        annotate: Path to annotations file
+        debug: Enable debug mode
+
+    Returns:
+        Dictionary containing parsed Terraform data
+    """
+    tfdata = tf_initplan(source, varfile, workspace, debug)
+    tfdata = tf_makegraph(tfdata, debug)
+    codepath = (
+        [tfdata["codepath"]]
+        if isinstance(tfdata["codepath"], str)
+        else tfdata["codepath"]
+    )
+    tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+    if debug:
+        helpers.export_tfdata(tfdata)
     return tfdata

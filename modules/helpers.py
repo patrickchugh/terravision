@@ -8,6 +8,8 @@ data extraction and transformation.
 import json
 import os
 import re
+import shutil
+import subprocess
 from contextlib import suppress
 from pathlib import Path
 from sys import exit
@@ -1556,3 +1558,58 @@ def safe_remove_connection(
         connections.remove(child_node)
         return True
     return False
+
+
+def check_dependencies() -> None:
+    """Check if required command-line tools are available."""
+    dependencies = ["dot", "gvpr", "git", "terraform"]
+    bundle_dir = Path(__file__).parent
+    import sys
+
+    sys.path.append(str(bundle_dir))
+    for exe in dependencies:
+        location = shutil.which(exe) or os.path.isfile(exe)
+        if location:
+            click.echo(f"  {exe} command detected: {location}")
+        else:
+            click.echo(
+                click.style(
+                    f"\n  ERROR: {exe} command executable not detected in path. Please ensure you have installed all required dependencies first",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit()
+
+
+def check_terraform_version() -> None:
+    """Validate Terraform version is compatible."""
+    try:
+        result = subprocess.run(
+            ["terraform", "-v"], capture_output=True, text=True, check=True
+        )
+        version_output = result.stdout
+
+        version_line = version_output.split("\n")[0]
+        print(f"  terraform version detected: {version_line}")
+        tf_version = version_line.split(" ")[1].replace("v", "")
+        version_major = tf_version.split(".")[0]
+
+        if version_major != "1":
+            click.echo(
+                click.style(
+                    f"\n  ERROR: Terraform Version '{tf_version}' is not supported. Please upgrade to >= v1.0.0",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit()
+    except (subprocess.CalledProcessError, IndexError, FileNotFoundError) as e:
+        click.echo(
+            click.style(
+                f"\n  ERROR: Failed to check Terraform version: {e}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
