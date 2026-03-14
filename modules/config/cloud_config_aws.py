@@ -286,9 +286,24 @@ AWS_NODE_VARIANTS = {
     "aws_eks_cluster": {"compute_config": "aws_eks_cluster_auto"},
     "aws_lb": {"application": "aws_alb", "network": "aws_nlb"},
     "aws_rds": {
+        "aurora-mysql": "aws_rds_aurora_mysql",
+        "aurora-postgresql": "aws_rds_aurora_postgres",
         "aurora": "aws_rds_aurora",
         "mysql": "aws_rds_mysql",
         "postgres": "aws_rds_postgres",
+        "mariadb": "aws_rds_mariadb",
+        "oracle": "aws_rds_oracle",
+        "sqlserver": "aws_rds_sqlserver",
+    },
+    "aws_db_instance": {
+        "aurora-mysql": "aws_rds_aurora_mysql",
+        "aurora-postgresql": "aws_rds_aurora_postgres",
+        "aurora": "aws_rds_aurora",
+        "mysql": "aws_rds_mysql",
+        "postgres": "aws_rds_postgres",
+        "mariadb": "aws_rds_mariadb",
+        "oracle": "aws_rds_oracle",
+        "sqlserver": "aws_rds_sqlserver",
     },
 }
 

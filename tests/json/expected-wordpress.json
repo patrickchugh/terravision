@@ -67,7 +67,7 @@
     "aws_fargate.ecs~3"
   ],
   "aws_db_subnet_group.this": [
-    "aws_rds_aurora.this"
+    "aws_rds_aurora_mysql.this"
   ],
   "aws_ecr_repository.ecr": [],
   "aws_ecs_cluster.ecs": [],
@@ -90,7 +90,7 @@
     "aws_ecs_cluster.ecs",
     "aws_efs_mount_target.this",
     "aws_efs_mount_target.this[0]~1",
-    "aws_rds_aurora.this",
+    "aws_rds_aurora_mysql.this",
     "aws_ssm_parameter.ssmparam"
   ],
   "aws_fargate.ecs~2": [
@@ -99,7 +99,7 @@
     "aws_ecs_cluster.ecs",
     "aws_efs_mount_target.this",
     "aws_efs_mount_target.this[1]~2",
-    "aws_rds_aurora.this",
+    "aws_rds_aurora_mysql.this",
     "aws_ssm_parameter.ssmparam"
   ],
   "aws_fargate.ecs~3": [
@@ -108,7 +108,7 @@
     "aws_ecs_cluster.ecs",
     "aws_efs_mount_target.this",
     "aws_efs_mount_target.this[2]~3",
-    "aws_rds_aurora.this",
+    "aws_rds_aurora_mysql.this",
     "aws_ssm_parameter.ssmparam"
   ],
   "aws_group.shared_services": [
@@ -153,7 +153,7 @@
     "aws_alb.elb~2",
     "aws_alb.elb~3"
   ],
-  "aws_rds_aurora.this": [],
+  "aws_rds_aurora_mysql.this": [],
   "aws_route53_record.route_53": [
     "aws_acm_certificate.acm"
   ],

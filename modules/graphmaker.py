@@ -2246,28 +2246,39 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if numbered_instances and resource in tfdata["graphdict"]:
             tfdata["graphdict"][resource] = numbered_instances
 
+            # Collect subnets that reference this resource BEFORE removing connections,
+            # so positional mapping uses only relevant subnets (not all subnets in graph)
+            referring_subnets = sorted(
+                [
+                    k
+                    for k in tfdata["graphdict"].keys()
+                    if k != resource
+                    and "_subnet" in k
+                    and "association" not in k
+                    and resource in tfdata["graphdict"].get(k, [])
+                ]
+            )
+
             # Update any nodes that point to this resource to point to numbered instances instead
             for node in list(tfdata["graphdict"].keys()):
                 if node != resource and helpers.safe_remove_connection(
                     tfdata, node, resource
                 ):
                     # For subnets: only add the numbered instance matching the subnet's position
-                    if "_subnet" in node:
-                        # Get all subnets sorted to determine position
-                        all_subnets = sorted(
-                            [
-                                k
-                                for k in tfdata["graphdict"].keys()
-                                if "_subnet" in k and "association" not in k
-                            ]
-                        )
+                    if "_subnet" in node and "association" not in node:
                         try:
-                            subnet_position = all_subnets.index(node) + 1
+                            # Use position among subnets that actually reference this resource
+                            subnet_position = referring_subnets.index(node) + 1
                             # Only add the instance matching this subnet's position
                             matching_inst = f"{resource}~{subnet_position}"
                             if matching_inst in numbered_instances:
                                 if matching_inst not in tfdata["graphdict"][node]:
                                     tfdata["graphdict"][node].append(matching_inst)
+                            else:
+                                # Position valid but no matching instance: add all
+                                for inst in numbered_instances:
+                                    if inst not in tfdata["graphdict"][node]:
+                                        tfdata["graphdict"][node].append(inst)
                         except (ValueError, IndexError):
                             # Fallback: add all instances if position can't be determined
                             for inst in numbered_instances:
