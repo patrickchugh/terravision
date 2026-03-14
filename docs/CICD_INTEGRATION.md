@@ -39,7 +39,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
 
-      - uses: patrickchugh/terravision-action@v1
+      - uses: patrickchugh/terravision-action@v2
         with:
           source: ./infrastructure
           outfile: docs/architecture
@@ -74,7 +74,7 @@ steps:
       role-to-assume: arn:aws:iam::123456789012:role/diagram-role
       aws-region: us-east-1
 
-  - uses: patrickchugh/terravision-action@v1
+  - uses: patrickchugh/terravision-action@v2
     with:
       source: ./infrastructure
       format: svg
@@ -100,7 +100,7 @@ steps:
       terraform show -json tfplan.bin > plan.json
       terraform graph > graph.dot
 
-  - uses: patrickchugh/terravision-action@v1
+  - uses: patrickchugh/terravision-action@v2
     with:
       source: ./infrastructure
       planfile: infrastructure/plan.json
@@ -121,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
 
-      - uses: patrickchugh/terravision-action@v1
+      - uses: patrickchugh/terravision-action@v2
         with:
           source: ./terraform
           outfile: docs/architecture-${{ matrix.environment }}
@@ -136,7 +136,7 @@ steps:
   - uses: actions/checkout@v4
   - uses: hashicorp/setup-terraform@v3
 
-  - uses: patrickchugh/terravision-action@v1
+  - uses: patrickchugh/terravision-action@v2
     with:
       source: ./infrastructure
       outfile: docs/architecture
@@ -167,7 +167,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
 
-      - uses: patrickchugh/terravision-action@v1
+      - uses: patrickchugh/terravision-action@v2
         with:
           source: ./infrastructure
           outfile: pr-architecture
@@ -623,7 +623,7 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::123456789012:role/terraform-role
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Terraform Plan

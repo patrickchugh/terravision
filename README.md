@@ -420,7 +420,7 @@ jobs:
           role-session-name: ghasession
           aws-region: us-east-1
 
-      - uses: patrickchugh/terravision-action@v1
+      - uses: patrickchugh/terravision-action@v2
         with:
           source: .
           format: png
