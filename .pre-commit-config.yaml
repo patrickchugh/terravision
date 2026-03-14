@@ -12,4 +12,4 @@ repos:
         entry: poetry run pytest -m "not slow"
         language: system
         pass_filenames: false
-        always_run: true
+        types: [python]
