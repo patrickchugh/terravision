@@ -1986,7 +1986,7 @@ def _get_instance_count(metadata: Dict[str, Any]) -> int:
     Returns:
         Number of instances to create (minimum 1)
     """
-    for attr in ("count", "max_capacity", "desired_count"):
+    for attr in ("count", "min_capacity", "max_capacity", "desired_count"):
         value = metadata.get(attr)
         if value:
             return _parse_count_value(value)
@@ -2218,6 +2218,7 @@ def create_multiple_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             and (
                 tfdata["meta_data"][n].get("count")
                 or tfdata["meta_data"][n].get("desired_count")
+                or tfdata["meta_data"][n].get("min_capacity")
                 or tfdata["meta_data"][n].get("max_capacity")
                 or tfdata["meta_data"][n].get("for_each")
                 or tfdata["meta_data"][n].get("target_size")  # GCP IGM target_size
