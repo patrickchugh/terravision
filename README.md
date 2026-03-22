@@ -1,6 +1,6 @@
-# TerraVision
+# TerraVision - Terraform Visualization tool and Architecture Diagram Generator
 
-**AI-Powered Terraform to Architecture Diagram Generator**
+Visualise your Terraform code using official AWS/GCP/Azure design standards and icons to create solution architect grade architecture diagrams ready for audit, governance, team member and security reviews.
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -11,11 +11,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/issues)
 [![License](https://img.shields.io/github/license/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
-
-> **⚠️ Alpha Software Notice**  
-> This software is in alpha testing. Code is shared "AS IS" without warranties. Use at your own risk.
-
----
 
 ## Table of Contents
 
@@ -33,7 +28,7 @@
 
 ## What is TerraVision?
 
-TerraVision automatically converts your Terraform code into professional cloud architecture diagrams. Quickly visualise any Terraform code to analyse what would be created in the cloud, AND keep your documentation in sync with your infrastructure. No more outdated diagrams!
+TerraVision automatically converts your Terraform code into professional grade cloud architecture diagrams. Quickly visualise any Terraform code to analyse what would be created in the cloud, AND keep your documentation in sync with your infrastructure. No more outdated diagrams!
 
 **Turn this Terraform code:**
 
@@ -114,11 +109,11 @@ If you pulled from Docker Hub, use `patrickchugh/terravision` as the image name.
 
 ```sh
 # Using Docker Hub image
-$ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source /yourproject/ --varfile /project/your.tfvars
+$ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source /project/yourfiles/ --varfile /project/your.tfvars
 $ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 
 # Using self-built image
-$ docker run --rm -it -v $(pwd):/project terravision draw --source /yourproject/ --varfile /project/your.tfvars
+$ docker run --rm -it -v $(pwd):/project terravision draw --source /project/yourfiles/ --varfile /project/your.tfvars
 $ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
 
