@@ -20,6 +20,50 @@ from importlib.metadata import version
 __version__ = version("terravision")
 
 
+class ColorHelpMixin:
+    """Mixin to colorize Click help output."""
+
+    def format_help(self, ctx, formatter):
+        tmp_formatter = click.HelpFormatter()
+        super().format_help(ctx, tmp_formatter)
+        raw = tmp_formatter.getvalue()
+        in_commands = False
+        for line in raw.splitlines(True):
+            if line.startswith("Usage:"):
+                formatter.write(click.style(line, fg="cyan", bold=True))
+                in_commands = False
+            elif line.startswith("Commands:"):
+                formatter.write(click.style(line, fg="yellow", bold=True))
+                in_commands = True
+            elif line.startswith("Options:"):
+                formatter.write(click.style(line, fg="yellow", bold=True))
+                in_commands = False
+            elif line.strip().startswith("--") or (
+                in_commands and line.startswith("  ") and line.strip()
+            ):
+                stripped = line.lstrip()
+                indent = line[: len(line) - len(stripped)]
+                parts = stripped.split("  ", 1)
+                if len(parts) == 2:
+                    formatter.write(
+                        indent + click.style(parts[0], fg="green") + "  " + parts[1]
+                    )
+                else:
+                    formatter.write(indent + click.style(stripped, fg="green"))
+            else:
+                formatter.write(line)
+
+
+class ColorGroup(ColorHelpMixin, click.Group):
+    """Click Group with colorized help."""
+
+    pass
+
+
+class ColorCommand(ColorHelpMixin, click.Command):
+    pass
+
+
 def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) -> None:
     """Custom exception hook for unhandled errors."""
     import traceback
@@ -31,16 +75,15 @@ def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) 
 def _show_banner() -> None:
     """Display TerraVision ASCII banner."""
     banner = (
-        "\n\n\n"
         " _____                          _     _             \n"
         "/__   \\___ _ __ _ __ __ ___   _(_)___(_) ___  _ __  \n"
         "  / /\\/ _ \\ '__| '__/ _` \\ \\ / / / __| |/ _ \\| '_ \\ \n"
         " / / |  __/ |  | | | (_| |\\ V /| \\__ \\ | (_) | | | |\n"
         " \\/   \\___|_|  |_|  \\__,_| \\_/ |_|___/_|\\___/|_| |_|\n"
-        "                                                    \n"
-        "\n"
     )
-    print(banner)
+    click.echo("\n")
+    click.echo(click.style(banner, fg="cyan", bold=True))
+    click.echo()
 
 
 def _enrich_graph_data(
@@ -183,18 +226,26 @@ def preflight_check(aibackend: Optional[str] = None) -> None:
 
 
 @click.version_option(version=__version__, prog_name="terravision")
-@click.group()
-def cli() -> None:
-    """TerraVision generates cloud architecture diagrams and documentation from Terraform scripts.
+@click.group(cls=ColorGroup, invoke_without_command=True)
+@click.pass_context
+def cli(ctx) -> None:
+    """TerraVision generates professional cloud architecture diagrams from Terraform HCL code.
 
     For help with a specific command type:
     terravision [COMMAND] --help
     """
-    pass
+    if not ctx.invoked_subcommand:
+        _show_banner()
+        click.echo(ctx.get_help())
 
 
-@cli.command()
-@click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
+@cli.command(cls=ColorCommand)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Dump exception tracebacks, creates tfdata.json replay file",
+)
 @click.option(
     "--source",
     default=".",
@@ -218,7 +269,7 @@ def cli() -> None:
     help="Filename for output diagram (default architecture.dot.png)",
 )
 @click.option(
-    "--format", default="png", help="Output format(png, svg, pdf, jpg, dot etc.)"
+    "--format", default="png", help="Output format(png, svg, pdf, jpg, drawio etc.)"
 )
 @click.option(
     "--show", is_flag=True, default=False, help="Show diagram after generation"
@@ -264,23 +315,7 @@ def draw(
     planfile: str,
     graphfile: str,
 ) -> None:
-    """Draw architecture diagram from Terraform code.
-
-    Args:
-        debug: Enable debug mode
-        source: Source path (Git URL, folder, or .JSON file)
-        workspace: Terraform workspace
-        varfile: Variable files tuple
-        outfile: Output filename
-        format: Output format (any Graphviz format: png, svg, pdf, jpg, etc.)
-        show: Show diagram after generation
-        simplified: Generate simplified diagram
-        annotate: Path to annotations file
-        aibackend: AI backend to use
-        avl_classes: Available classes (hidden)
-        planfile: Path to pre-generated Terraform plan JSON file
-        graphfile: Path to pre-generated Terraform graph DOT file
-    """
+    """Draw architecture diagram from Terraform code."""
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
@@ -314,8 +349,13 @@ def draw(
     drawing.render_diagram(tfdata, show, final_outfile, format, source)
 
 
-@cli.command()
-@click.option("--debug", is_flag=True, default=False, help="Dump exception tracebacks")
+@cli.command(cls=ColorCommand)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Dump exception tracebacks, creates tfdata.json replay file",
+)
 @click.option(
     "--source",
     default=".",
@@ -380,22 +420,7 @@ def graphdata(
     planfile: str = "",
     graphfile: str = "",
 ) -> None:
-    """List cloud resources and relations as JSON.
-
-    Args:
-        debug: Enable debug mode
-        source: Source path (Git URL, folder, or .JSON file)
-        varfile: Variable files tuple
-        workspace: Terraform workspace
-        show_services: Show only unique services
-        simplified: Generate simplified graph data
-        annotate: Path to annotations file
-        aibackend: AI backend to use
-        avl_classes: Available classes (hidden)
-        outfile: Output JSON filename
-        planfile: Path to pre-generated Terraform plan JSON file
-        graphfile: Path to pre-generated Terraform graph DOT file
-    """
+    """List cloud resources and relations as JSON."""
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
