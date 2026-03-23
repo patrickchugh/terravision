@@ -117,6 +117,16 @@ $ docker run --rm -it -v $(pwd):/project terravision draw --source /project/your
 $ docker run --rm -it -v $(pwd):/project terravision draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/secondfolder/
 ```
 
+The Docker image now includes `tfenv`, so you can optionally choose the Terraform version to install and use at runtime with `TFENV_TERRAFORM_VERSION` before `terravision` starts:
+
+```sh
+# Install and use a specific Terraform version through tfenv, then run terravision
+$ docker run --rm -it -v $(pwd):/project -e TFENV_TERRAFORM_VERSION=1.9.8 patrickchugh/terravision draw --source /project/yourfiles/
+
+# If TFENV_TERRAFORM_VERSION is omitted, the container invokes terravision directly
+$ docker run --rm -it -v $(pwd):/project patrickchugh/terravision draw --source /project/yourfiles/
+```
+
 Depending on your cloud provider, you may need to pass your credentials so that OpenTofu/Terraform can run terraform plan commands
 
 For example, for AWS:
