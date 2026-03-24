@@ -149,11 +149,12 @@ def tf_initplan(
     # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
     # TF_DATA_DIR overrides the default .terraform/ location (see line 40).
     tfdata["terraform_init_dir"] = temp_dir.name
-    # Resolve variable file path
-    if varfile:
-        vfile = varfile[0]
-        if not os.path.isabs(vfile):
-            vfile = os.path.join(start_dir, vfile)
+    # Resolve variable file paths
+    vfiles = []
+    for vf in varfile:
+        if not os.path.isabs(vf):
+            vf = os.path.join(start_dir, vf)
+        vfiles.append(vf)
 
     click.echo(
         click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
@@ -192,14 +193,16 @@ def tf_initplan(
     if os.path.exists(tfgraph_json_path):
         os.remove(tfgraph_json_path)
     # Generate terraform plan with or without varfile
-    if varfile:
+    if vfiles:
+        varfile_args = []
+        for vf in vfiles:
+            varfile_args.extend(["-var-file", vf])
         result = subprocess.run(
             [
                 "terraform",
                 "plan",
                 "-refresh=false",
-                "-var-file",
-                vfile,
+                *varfile_args,
                 "-out",
                 tfplan_path,
             ],

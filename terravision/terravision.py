@@ -261,7 +261,7 @@ def cli(ctx) -> None:
     "--varfile",
     multiple=True,
     default=[],
-    help="Path to .tfvars variables file",
+    help="Path to .tfvars variables file (can be specified multiple times)",
 )
 @click.option(
     "--outfile",
@@ -368,7 +368,10 @@ def draw(
     help="The Terraform workspace to initialise",
 )
 @click.option(
-    "--varfile", multiple=True, default=[], help="Path to .tfvars variables file"
+    "--varfile",
+    multiple=True,
+    default=[],
+    help="Path to .tfvars variables file (can be specified multiple times)",
 )
 @click.option(
     "--show_services",
