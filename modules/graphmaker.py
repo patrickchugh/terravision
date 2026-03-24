@@ -1452,7 +1452,7 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             is_provider_connection = any(
                 connection_name.startswith(prefix) for prefix in provider_prefixes
             )
-            if is_provider_connection:
+            if is_provider_connection and "." in resource:
                 variant_suffix = helpers.check_variant(
                     resource, tfdata["meta_data"].get(connection_resource_name), tfdata
                 )

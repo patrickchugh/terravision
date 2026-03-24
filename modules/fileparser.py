@@ -6,6 +6,7 @@ repositories, parses HCL2 syntax, and extracts resources, modules, and variables
 """
 
 import fileinput
+import io
 import json
 import os
 import re
@@ -288,25 +289,15 @@ def iterative_parse(
         with click.open_file(filename, "r", encoding="utf8") as f:
             try:
                 hcl_dict[filename] = hcl2.load(f)
-            except Exception as error:
-                print("A Terraform HCL parsing error occurred:", filename, error)
-                continue
-
-            # Retry with character cleanup if initial parse failed
-            if filename not in hcl_dict.keys():
-                click.echo(
-                    f"   WARNING: Unknown Error reading TF file {filename}. "
-                    f"Attempting character cleanup fix.."
-                )
-                with tempfile.TemporaryDirectory(dir=temp_dir.name) as tempclean:
-                    f_tmp = clean_file(filename, str(tempclean))
-                    hcl_dict[filename] = hcl2.load(f_tmp)
-                    if filename not in hcl_dict.keys():
-                        click.echo(
-                            f"   ERROR: Unknown Error reading TF file {filename}. "
-                            f"Aborting!"
-                        )
-                        exit()
+            except Exception:
+                # Retry with preprocessed content to fix known parser limitations
+                try:
+                    f.seek(0)
+                    preprocessed = _preprocess_hcl(f.read())
+                    hcl_dict[filename] = hcl2.load(io.StringIO(preprocessed))
+                except Exception as error:
+                    print("A Terraform HCL parsing error occurred:", filename, error)
+                    continue
 
         # Extract specified sections from parsed HCL
         for section in extract_sections:
@@ -446,6 +437,16 @@ def read_tfsource(
     tfdata["annotations"] = annotations
 
     return tfdata
+
+
+def _preprocess_hcl(content: str) -> str:
+    """Preprocess HCL content to work around python-hcl2 parser limitations.
+
+    Joins continuation lines that start with && or || operators back onto the
+    previous line, since the lark-based parser cannot handle these operators
+    at the start of a new line.
+    """
+    return re.sub(r"\n(\s*)(&&|\|\|)", r" \2", content)
 
 
 def clean_file(filename: str, tempdir: str):
