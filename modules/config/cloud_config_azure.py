@@ -52,6 +52,42 @@ AZURE_CONSOLIDATED_NODES = [
             "import_location": "resource_classes.azure.management",
         }
     },
+    {
+        "azurerm_api_management_api": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
+    {
+        "azurerm_api_management_logger": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
+    {
+        "azurerm_api_management_diagnostic": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
+    {
+        "azurerm_api_management_api_operation": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
+    {
+        "azurerm_api_management_api_policy": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
+    {
+        "azurerm_api_management_api_operation_policy": {
+            "resource_name": "azurerm_api_management.apim",
+            "import_location": "resource_classes.azure.integration",
+        }
+    },
 ]
 
 # List of Group type nodes and order to draw them in
@@ -187,6 +223,9 @@ AZURE_FORCED_ORIGIN = ["azurerm_dns_zone", "azurerm_traffic_manager_profile"]
 AZURE_IMPLIED_CONNECTIONS = {
     "key_vault_id": "azurerm_key_vault",
     "storage_account_id": "azurerm_storage_account",
+    "api_management_name": "azurerm_api_management",
+    "eventhub_name": "azurerm_eventhub",
+    "stream_analytics_job_name": "azurerm_stream_analytics_job",
 }
 
 # Special resources that need custom handling

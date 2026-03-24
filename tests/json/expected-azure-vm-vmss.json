@@ -14,9 +14,7 @@
   "azurerm_network_interface.vm": [
     "azurerm_linux_virtual_machine.main"
   ],
-  "azurerm_network_security_group.main": [
-    "azurerm_subnet_network_security_group_association.main"
-  ],
+  "azurerm_network_security_group.main": [],
   "azurerm_public_ip.public_ip": [
     "azurerm_lb.lb",
     "tv_azurerm_internet.internet"
@@ -35,12 +33,11 @@
   "azurerm_subnet.main": [
     "azurerm_linux_virtual_machine.main",
     "azurerm_network_interface.vm",
-    "azurerm_subnet_network_security_group_association.main",
+    "azurerm_network_security_group.main",
     "tv_azurerm_zone.zone_1",
     "tv_azurerm_zone.zone_2",
     "tv_azurerm_zone.zone_3"
   ],
-  "azurerm_subnet_network_security_group_association.main": [],
   "azurerm_subscription.current": [],
   "azurerm_virtual_network.main": [
     "azurerm_subnet.main"

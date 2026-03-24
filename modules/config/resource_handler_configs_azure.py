@@ -5,20 +5,6 @@ Patterns support wildcards via substring matching.
 """
 
 RESOURCE_HANDLER_CONFIGS = {
-    # Association resource removal handled in match_resources() after numbering
-    # So we can properly connect Load Balancers to backend VMs
-    # "association": {
-    #     "description": "Remove Azure association resources from diagram (Pure Config)",
-    #     "transformations": [
-    #         {
-    #             "operation": "delete_nodes",
-    #             "params": {
-    #                 "resource_pattern": "association",
-    #                 "remove_from_parents": True,
-    #             },
-    #         }
-    #     ],
-    # },
     # Core Azure hierarchy handlers (Pure Function - complex logic)
     "azurerm_resource_group": {
         "description": "Handle Azure Resource Group relationships - all resources belong to RG (Pure Function)",
@@ -44,6 +30,11 @@ RESOURCE_HANDLER_CONFIGS = {
     "azurerm_windows_virtual_machine_scale_set": {
         "description": "Handle Azure Windows VMSS - expansion and zone containerization (Pure Function)",
         "additional_handler_function": "azure_handle_vmss",
+    },
+    # NSG: resolve association resources into connections, place NSG in subnet as a node
+    "azurerm_network_security_group": {
+        "description": "Place NSGs inside associated subnets and clean up association resources (Pure Function)",
+        "additional_handler_function": "azure_handle_nsg",
     },
 }
 

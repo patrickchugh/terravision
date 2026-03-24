@@ -783,6 +783,8 @@ def _get_metadata_generator(node: str, nodename: str, tfdata: Dict[str, Any]):
             # Mutation: populate meta_data from original_metadata
             tfdata["meta_data"][node] = copy.deepcopy(tfdata["original_metadata"][node])
             return dict_generator(tfdata["original_metadata"][node])
+        # No metadata available for this node; return empty generator
+        return iter([])
     return dict_generator(tfdata["meta_data"][nodename])
 
 

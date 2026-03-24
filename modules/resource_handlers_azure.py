@@ -202,7 +202,9 @@ def azure_handle_subnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle Azure Network Security Group relationships.
 
-    NSGs can be associated with Subnets or Network Interfaces.
+    Places NSGs as sibling nodes inside the subnet they protect (following
+    standard Azure diagram conventions where NSGs are icons, not containers).
+    Association resources are resolved into connections and then removed.
 
     Args:
         tfdata: Terraform data dictionary
@@ -231,7 +233,7 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         tfdata["graphdict"], "azurerm_network_interface_security_group_association"
     )
 
-    # Process subnet-NSG associations
+    # Process subnet-NSG associations: place NSG inside the subnet as a sibling node
     for assoc in subnet_nsg_associations:
         if not tfdata["meta_data"].get(assoc):
             continue
@@ -257,31 +259,16 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 target_nsg = nsg
                 break
 
-        # Link NSG to subnet - NSG becomes a container for subnet's resources
+        # Place NSG as a node inside the subnet
         if target_subnet and target_nsg:
-            # Get resources currently in the subnet
-            subnet_resources = list(tfdata["graphdict"].get(target_subnet, []))
-
-            # Add NSG to subnet
             if target_nsg not in tfdata["graphdict"].get(target_subnet, []):
                 tfdata["graphdict"][target_subnet].append(target_nsg)
-
-            # Move non-group resources from subnet to NSG
-            for resource in subnet_resources:
-                resource_type = helpers.get_no_module_name(resource).split(".")[0]
-                if resource_type not in GROUP_NODES and resource != target_nsg:
-                    # Add resource to NSG
-                    if resource not in tfdata["graphdict"].get(target_nsg, []):
-                        tfdata["graphdict"][target_nsg].append(resource)
-                    # Remove from direct subnet connection
-                    if resource in tfdata["graphdict"].get(target_subnet, []):
-                        helpers.safe_remove_connection(tfdata, target_subnet, resource)
 
         # Remove the association resource from graph (it's a linking resource)
         if assoc in tfdata["graphdict"]:
             helpers.delete_node(tfdata, assoc)
 
-    # Process NIC-NSG associations
+    # Process NIC-NSG associations: connect NSG to its NIC
     for assoc in nic_nsg_associations:
         if not tfdata["meta_data"].get(assoc):
             continue
@@ -305,7 +292,7 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 target_nsg = nsg
                 break
 
-        # Link NIC to NSG
+        # Connect NSG to NIC
         if target_nic and target_nsg:
             if target_nic not in tfdata["graphdict"].get(target_nsg, []):
                 tfdata["graphdict"][target_nsg].append(target_nic)
