@@ -23,17 +23,21 @@ FROM base
 
 ENV PATH=/home/terravision/.local/bin:$PATH
 
-# Install terravision and dependencies
-COPY --chown=terravision:terravision . /opt/terravision
-RUN cd /opt/terravision && pip install .
-
 USER root
 
-RUN mkdir -p /project && \
-    chown -R terravision:terravision /project
+# Install terravision and dependencies
+COPY --chown=terravision:terravision . /opt/terravision
+RUN cd /opt/terravision && \
+    pip install . && \
+    apk add --no-cache bash && \
+    mkdir -p /project && \
+    chown -R terravision:terravision /project && \
+    git clone --depth=1 https://github.com/tfutils/tfenv.git /home/terravision/.tfenv && \
+    chown -R terravision:terravision /home/terravision/.tfenv && \
+    chmod u+x /opt/terravision/docker-entrypoint.sh
 
 USER terravision
 
 WORKDIR /project
 
-ENTRYPOINT [ "terravision" ]
+ENTRYPOINT [ "/opt/terravision/docker-entrypoint.sh" ]
