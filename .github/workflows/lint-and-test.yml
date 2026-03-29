@@ -71,6 +71,10 @@ jobs:
         run: poetry install --no-interaction --with test
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
+      - name: Install Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: latest
       - name: Mock ssh file
         run :
           touch id_rsa.pub
