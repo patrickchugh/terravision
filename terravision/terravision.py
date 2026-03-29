@@ -438,7 +438,7 @@ def graphdata(
     graphfile: str = "",
     upgrade: bool = False,
 ) -> None:
-    """List cloud resources and relations as JSON."""
+    """List cloud resources and relations as drawable JSON."""
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
