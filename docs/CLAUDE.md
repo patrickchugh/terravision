@@ -583,9 +583,21 @@ See `specs/EXPECTED_JSON_MODIFICATION_POLICY.md` for complete policy.
 
 - Terraform must be v1.x (v0.x not supported)
 - Requires external dependencies: Graphviz (`dot`), Git, Terraform
+- **Optional**: Terragrunt v0.50+ (only needed when `--source` points to a Terragrunt project; auto-detected via `terragrunt.hcl` presence)
 - Security groups require special handling due to complex ingress/egress rules
 - Module paths must be resolvable (Git URLs cloned to `~/.terravision/`)
 - JSON debug files from different TerraVision versions may not be compatible
+
+### Terragrunt Support
+
+TerraVision auto-detects Terragrunt sources by scanning for `terragrunt.hcl` files. No new CLI flags needed.
+
+- **Single-module**: When `terragrunt.hcl` is in the source directory, TerraVision delegates to `terragrunt init/plan/show/graph` instead of `terraform`
+- **Multi-module**: When child directories contain `terragrunt.hcl`, TerraVision runs each module's plan independently, merges results with `module.<name>.` prefixes, and parses `dependency` blocks with python-hcl2 to inject cross-module references into metadata. The existing `add_relations()` code discovers cross-module edges automatically.
+- **Cross-module link heuristic**: Maps dependency output key names to resource types (e.g., `vpc_id` → `aws_vpc.*`). Unusual naming may miss some links. Falls back to first resource in producer module.
+- **Dependency parsing graceful degradation**: If python-hcl2 can't parse a `terragrunt.hcl` (e.g., uses Terragrunt-specific functions), cross-module links for that module are skipped with a warning — the diagram still renders.
+- **Binary check**: Terragrunt binary is checked lazily when a Terragrunt source is detected, not at startup. Requires v0.50+ (unified `run-all` syntax).
+- **Key module**: `modules/tgwrapper.py` — detection, plan execution, plan merging, HCL dependency parsing
 
 ### Resource Graph Depends on Terraform Plan (Critical)
 

@@ -387,6 +387,8 @@ def replace_var_values(
         if not module:
             module = "main"
         # Check if variable exists in current module and is resolved
+        if module not in tfdata["variable_map"]:
+            return value
         if (lookup in tfdata["variable_map"][module].keys()) and (
             "var." + lookup not in str(tfdata["variable_map"][module][lookup])
         ):

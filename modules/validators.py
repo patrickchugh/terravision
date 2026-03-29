@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 import click
 
 import modules.helpers as helpers
+import modules.tgwrapper as tgwrapper
 
 
 def validate_source(source: str) -> None:
@@ -189,6 +190,20 @@ def validate_consistency(tfdata: Dict[str, Any]) -> None:
                 )
             )
             sys.exit(1)
+
+
+def is_terragrunt_source(source: str) -> dict:
+    """Check if a source directory is a Terragrunt project.
+
+    Args:
+        source: Path to the source directory.
+
+    Returns:
+        Dict with keys: is_terragrunt, is_multi_module, child_modules.
+    """
+    if not os.path.isdir(source):
+        return {"is_terragrunt": False, "is_multi_module": False, "child_modules": []}
+    return tgwrapper.detect_terragrunt(source)
 
 
 def validate_pregenerated_inputs(planfile: str, graphfile: str, source: str) -> None:

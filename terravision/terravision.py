@@ -10,9 +10,11 @@ import modules.graphmaker as graphmaker
 import modules.helpers as helpers
 import modules.interpreter as interpreter
 import modules.tfwrapper as tfwrapper
+import modules.tgwrapper as tgwrapper
 import modules.resource_handlers as resource_handlers
 import modules.llm as llm
 import modules.validators as validators
+import modules.fileparser as fileparser
 from modules.config_loader import load_config
 from modules.provider_detector import detect_providers
 from importlib.metadata import version
@@ -169,9 +171,50 @@ def compile_tfdata(
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:
         validators.validate_source(source)
-        tfdata = tfwrapper.process_terraform_source(
-            source, varfile, workspace, annotate, debug, upgrade
-        )
+        # Check for Terragrunt source before falling back to Terraform
+        tg_detection = validators.is_terragrunt_source(source)
+        if tg_detection["is_terragrunt"]:
+            is_multi = tg_detection["is_multi_module"]
+            n = len(tg_detection["child_modules"])
+            mode = f"multi-module, {n} child modules" if is_multi else "single-module"
+            click.echo(
+                click.style(
+                    f"\nTerragrunt detected ({mode})\n",
+                    fg="cyan",
+                    bold=True,
+                )
+            )
+            if is_multi:
+                tfdata = tgwrapper.tg_run_all_plan(
+                    source, varfile, workspace, debug, upgrade
+                )
+            else:
+                tfdata = tgwrapper.tg_initplan(
+                    source, varfile, workspace, debug, upgrade
+                )
+            # Continue with standard pipeline: graph building + source parsing
+            tfdata = tfwrapper.tf_makegraph(tfdata, debug)
+            # For multi-module: inject cross-module refs now that meta_data is populated
+            dep_info = tfdata.pop("_tg_dependency_info", None)
+            if dep_info:
+                tfdata = tgwrapper._inject_dependency_refs(
+                    tfdata,
+                    dep_info["per_module_deps"],
+                    dep_info["per_module_resources"],
+                    dep_info["source_root"],
+                )
+            codepath = (
+                [tfdata["codepath"]]
+                if isinstance(tfdata["codepath"], str)
+                else tfdata["codepath"]
+            )
+            tfdata = fileparser.read_tfsource(codepath, varfile, annotate, tfdata)
+            if debug:
+                helpers.export_tfdata(tfdata)
+        else:
+            tfdata = tfwrapper.process_terraform_source(
+                source, varfile, workspace, annotate, debug, upgrade
+            )
 
     # Detect cloud provider and store in tfdata (multi-cloud support)
     if "all_resource" in tfdata and "provider_detection" not in tfdata:
