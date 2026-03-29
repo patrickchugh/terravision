@@ -628,6 +628,51 @@ When Terraform code uses `data` sources to reference resources managed by anothe
 
 **Limitation**: This only works within a single `terraform plan` — data sources must be in the plan's `prior_state` to be injected. Separate repos with separate plans cannot cross-reference each other's resources directly.
 
+### Terragrunt Support
+
+TerraVision auto-detects Terragrunt sources by scanning for `terragrunt.hcl` files. No new CLI flags needed. Requires Terragrunt v0.50+ (unified `run-all` syntax).
+
+- **Single-module**: When `terragrunt.hcl` is in the source directory, TerraVision delegates to `terragrunt init/plan` instead of `terraform`
+- **Multi-module**: When child directories contain `terragrunt.hcl`, TerraVision runs each module's plan independently, merges results with `module.<name>.` prefixes, and parses `dependency` blocks with python-hcl2 to inject cross-module references. The existing `add_relations()` code discovers cross-module edges automatically.
+- **Key module**: `modules/tgwrapper.py` — detection, plan execution, plan merging, HCL dependency parsing
+
+#### Backend Override Mechanism (Critical)
+
+Terragrunt projects typically configure remote backends (S3, GCS, Azure) via `generate "backend"` or `remote_state` blocks in `root.hcl`. TerraVision doesn't need remote state — it only needs plan output. The override mechanism:
+
+1. **Override file**: `terravision_override.tf` is written to each module's source directory, forcing `backend "local"`. Terragrunt copies ALL `.tf` files from the module directory into `.terragrunt-cache`, even for remote `terraform.source` URLs, so the override reaches Terraform via the standard `_override.tf` naming convention.
+2. **`-reconfigure` flag**: Passed both as a CLI arg to `terragrunt init` and via `TF_CLI_ARGS_init=-reconfigure` env var. The env var is critical because it also affects Terragrunt's auto-init of dependency modules (to read their outputs).
+3. **Multi-module**: Override files must be written to ALL child modules BEFORE any plans run. This ensures that when Terragrunt auto-inits a dependency module to read outputs, the dependency also uses the local backend. Without state, outputs are empty, so Terragrunt falls back to `mock_outputs`.
+
+#### Cache Directory Structure
+
+Terragrunt downloads sources into `.terragrunt-cache/<hash1>/<hash2>/`. For source URLs with `//subfolder` (e.g., `git::https://...//modules/vpc`), Terraform runs in the subfolder, NOT the repo root. `_find_terragrunt_cache_dir()` locates the actual working directory by searching for Terragrunt-generated files (`backend.tf`/`provider.tf` containing the Terragrunt signature).
+
+#### Decode Phase: terraform directly, not terragrunt
+
+After init/plan, `terraform show -json` and `terraform graph` run directly in the cache directory (not via `terragrunt`). This is necessary because `terragrunt show` can trigger auto-init, which re-processes the cache (re-downloads source, re-runs generate blocks) and disrupts the backend state between the plan and decode phases.
+
+#### Dependency Parsing and Cross-Module Links
+
+- `_parse_tg_dependencies()` uses python-hcl2 to extract `dependency` blocks and `inputs` referencing `dependency.<name>.outputs.<key>`
+- `_inject_dependency_refs()` maps output key names to resource types (e.g., `vpc_id` → `aws_vpc.*`) and adds direct edges in graphdict
+- **Graceful degradation**: If python-hcl2 can't parse a `terragrunt.hcl` (e.g., uses Terragrunt-specific functions not supported by python-hcl2), cross-module links for that module are skipped with a warning — the diagram still renders
+
+#### Common Terragrunt Patterns Supported
+
+- `include "root" { path = find_in_parent_folders("root.hcl") }`
+- `locals` with `read_terragrunt_config(find_in_parent_folders("account.hcl"))`
+- `dependency` blocks with `mock_outputs`
+- Remote git sources: `git::https://...`, `git@github.com:...` (with `//subfolder` and `?ref=tag`)
+- `generate "backend"` / `generate "provider"` blocks
+
+#### Docker Considerations
+
+When running TerraVision in Docker against Terragrunt projects:
+- Mount the **entire infrastructure repo root**, not just a subdirectory — `find_in_parent_folders()` needs parent HCL files to be reachable
+- Mount `~/.ssh` for private git sources (`-v ~/.ssh:/root/.ssh`)
+- SSH must be available in the container for `git@github.com:` sources
+
 ## Active Technologies
 - Python 3.11+ (as per pyproject.toml)
 - Graphviz (for diagram rendering and cluster styling)
