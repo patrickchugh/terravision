@@ -333,6 +333,17 @@ def get_cidr_label(resource: str, tfdata: Dict[str, Any]) -> str:
         value = ", ".join(str(v) for v in value if isinstance(v, str) and "/" in v)
     if not isinstance(value, str) or "/" not in value:
         return ""
+    # Append secondary CIDRs from vpc_ipv4_cidr_block_association children
+    if resource_type == "aws_vpc":
+        meta_source = tfdata.get("original_metadata", tfdata.get("meta_data", {}))
+        for child in tfdata.get("graphdict", {}).get(resource, []):
+            child_type = get_no_module_name(child).split(".")[0]
+            if child_type == "aws_vpc_ipv4_cidr_block_association":
+                child_meta = meta_source.get(child, {})
+                if isinstance(child_meta, dict):
+                    extra = child_meta.get("cidr_block", "")
+                    if isinstance(extra, str) and "/" in extra:
+                        value = f"{value}, {extra}"
     return value
 
 
