@@ -16,7 +16,7 @@ The project constitution defining core principles and technical standards is at 
 
 ```bash
 # ✅ CORRECT - Always use poetry run
-poetry run python terravision draw --source <path>
+poetry run terravision draw --source <path>
 
 # ❌ WRONG - Never run directly
 python terravision.py draw --source <path>
@@ -39,17 +39,17 @@ pip install -r requirements.txt
 
 ```bash
 # Basic diagram generation
-poetry run python terravision draw --source <path>
+poetry run terravision draw --source <path>
 
 # With AI refinement
-poetry run python terravision draw --source <path> --aibackend bedrock
-poetry run python terravision draw --source <path> --aibackend ollama
+poetry run terravision draw --source <path> --aibackend bedrock
+poetry run terravision draw --source <path> --aibackend ollama
 
 # Export graph data
-poetry run python terravision graphdata --source <path> --outfile graph.json
+poetry run terravision graphdata --source <path> --outfile graph.json
 
 # Debug mode (exports tfdata.json)
-poetry run python terravision draw --source <path> --debug
+poetry run terravision draw --source <path> --debug
 ```
 
 ### Testing
@@ -124,22 +124,34 @@ config = load_config(provider)  # Returns cloud_config_aws, cloud_config_azure, 
 The main processing pipeline in `terravision.py` follows this flow:
 
 ```
+Phase 1: Source Processing (compile_tfdata)
 1. tf_initplan()      → Initialize Terraform, run plan
 2. tf_makegraph()     → Generate Terraform graph
 3. read_tfsource()    → Parse .tf files with HCL2
-4. prefix_module_names() → Handle Terraform modules
-5. resolve_all_variables() → Interpolate variables
-6. handle_special_cases() → Provider-specific resource processing
-7. add_relations()    → Detect resource dependencies
-8. consolidate_nodes() → Merge similar resources
-9. add_annotations()  → Apply custom YAML annotations
-10. detect_and_set_counts() → Set synthetic count for multi-instance resources
-11. handle_special_resources() → VPC, subnet, security group logic
-12. handle_variants() → Add resource variants (Lambda runtime, EC2 type)
-13. create_multiple_resources() → Handle count/for_each (resource~1, resource~2)
-14. reverse_relations() → Fix arrow directions
-15. (Optional) _refine_with_llm() → AI diagram refinement
-16. render_diagram()  → Generate Graphviz output
+
+Phase 2: Provider Detection (compile_tfdata)
+4. detect_providers() → Identify cloud provider from resource prefixes
+
+Phase 3: Graph Enrichment (_enrich_graph_data)
+5. prefix_module_names() → Handle Terraform modules
+6. resolve_all_variables() → Interpolate variables
+7. handle_special_cases() → Provider-specific resource processing
+8. inject_data_source_nodes() → Add data source nodes to graph
+9. add_relations()    → Detect resource dependencies
+10. consolidate_nodes() → Merge similar resources
+11. add_annotations()  → Apply custom YAML annotations
+12. detect_and_set_counts() → Set synthetic count for multi-instance resources
+13. handle_special_resources() → VPC, subnet, security group logic
+14. handle_variants() → Add resource variants (Lambda runtime, EC2 type)
+15. create_multiple_resources() → Handle count/for_each (resource~1, resource~2)
+16. cleanup_cross_subnet_connections() → Fix cross-subnet rendering issues
+17. reverse_relations() → Fix arrow directions
+18. find_bidirectional_links() → Detect two-way connections
+19. match_resources() → Match resources across providers/sources
+
+Phase 4: Output (draw command only)
+20. (Optional) _refine_with_llm() → AI diagram refinement
+21. render_diagram()  → Generate Graphviz output
 ```
 
 ### Key Modules
@@ -166,45 +178,7 @@ The main processing pipeline in `terravision.py` follows this flow:
 
 ### Multi-Instance Resource Detection
 
-**Purpose**: Automatically detect and number resources that span multiple availability zones, subnets, or networks but lack explicit Terraform `count` or `for_each` attributes.
-
-**How it works**:
-1. Scans Terraform configuration for resources matching configured patterns
-2. Checks if trigger attributes (e.g., `subnets`, `zones`) contain multiple references
-3. Sets synthetic `count` equal to number of references
-4. Optionally expands associated resources (e.g., security groups)
-5. Lets `create_multiple_resources()` handle numbering naturally
-
-**Configuration location**: `modules/detect_multi_instance_resources.py` → `MULTI_INSTANCE_PATTERNS`
-
-**Adding new patterns**:
-```python
-MULTI_INSTANCE_PATTERNS = {
-    "aws": [
-        {
-            "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
-            "trigger_attributes": ["subnets"],  # Trigger if len > 1
-            "also_expand_attributes": ["security_groups"],  # Also set count for these
-            "resource_pattern": r"\$\{(aws_\w+\.\w+)",  # Regex to extract references
-            "description": "ALB/NLB spanning multiple subnets",
-        },
-        # Add more AWS patterns...
-    ],
-    "azure": [
-        {
-            "resource_types": ["azurerm_lb"],
-            "trigger_attributes": ["zones"],
-            "also_expand_attributes": [],
-            "resource_pattern": r'"([^"]+)"',  # Zones are strings
-            "description": "Azure Load Balancer with multiple zones",
-        },
-        # Add more Azure patterns...
-    ],
-    # Add more providers...
-}
-```
-
-**Example**: AWS ALB with `subnets = [subnet_a, subnet_b]` triggers count=2, creating `aws_alb.elb~1` and `aws_alb.elb~2`.
+**Purpose**: Automatically detect and number resources that span multiple availability zones, subnets, or networks but lack explicit Terraform `count` or `for_each` attributes. Count detection logic is in `graphmaker.py:detect_and_set_counts()`.
 
 ### Resource Handlers Pattern
 
@@ -457,13 +431,13 @@ Attributes marked `(known after apply)` in Terraform plans appear as boolean `Tr
 When debugging Terraform parsing issues:
 ```bash
 # Generate debug output
-poetry run python terravision.py draw --source <path> --debug
+poetry run terravision draw --source <path> --debug
 
 # Inspect tfdata.json (contains all_resource, original_metadata, graphdict)
 cat tfdata.json | jq '.graphdict'
 
 # Replay from debug file (skips terraform init/plan)
-poetry run python terravision.py draw --source tfdata.json
+poetry run terravision draw --source tfdata.json
 ```
 
 ### Pre-commit Hooks
@@ -474,7 +448,7 @@ The repo uses pre-commit to run pytest on non-slow tests before each commit. Hoo
 
 GitHub Actions workflow (`.github/workflows/lint-and-test.yml`) runs on push/PR to main:
 
-1. Installs Poetry, Python 3.11, Terraform, Graphviz
+1. Installs Poetry, Python 3.14, Terraform, Graphviz
 2. Runs Black formatter check on `modules/` directory
 3. Executes pytest test suite
 4. Uses AWS OIDC for integration tests requiring AWS credentials
@@ -624,30 +598,26 @@ The resource graph (`graphdict`) is built **entirely from `terraform plan` outpu
 
 **Implication**: If `terraform plan` fails, there is no way to produce a resource graph from .tf files alone without reimplementing Terraform's evaluation engine (conditionals, count/for_each, functions, module expansion). The code does a hard `exit()` if no `resource_changes` exist in plan data (`tfwrapper.py:setup_tfdata`).
 
-### Multi-Source --source Flag
+### Multiple Variable Files
 
-The CLI already declares `multiple=True` for the `--source` Click option, meaning `--source a --source b` is parsed into a tuple. However, the pipeline has bugs that prevent multiple sources from working:
+The `--varfile` flag supports multiple values (e.g., `--varfile a.tfvars --varfile b.tfvars`). Multiple `--source` values are not supported — use a single source path per invocation.
 
-- `tf_initplan()` loops through sources but `make_tf_data()` **overwrites** (not merges) `tfdata["codepath"]`, `tfdata["tfgraph"]`, and `tfdata["tf_resources_created"]` on each iteration — only the last source survives
-- `read_tfsource()` correctly accumulates data from multiple sources (it appends to dicts)
-- Fixing multi-source requires merging graph dicts after processing each source independently
+### Data Source Injection (Cross-Stack Resources)
 
-### Cross-Repo Terraform References
+When Terraform code uses `data` sources to reference resources managed by another stack (e.g., `data "aws_vpc"` looking up a VPC created elsewhere), TerraVision can inject these into the diagram via `inject_data_source_nodes()` in `graphmaker.py`.
 
-Separate Terraform repos **cannot** contain direct resource references to each other (e.g., `aws_subnet.main.id` is invalid across repos). Cross-repo references use:
-- **Data sources**: `data "aws_vpc" "main" { filter { ... } }` — queries cloud API, not Terraform state
-- **Variables**: `var.vpc_id` — resolves to opaque cloud IDs like `vpc-12345`
-- **Remote state**: `data.terraform_remote_state.infra.outputs.vpc_id` — requires remote backend access
-- **Hard-coded IDs**: `vpc_id = "vpc-12345"`
+**How it works**:
+1. Collects data sources from `prior_state` in the Terraform plan output
+2. Filters out lookup-only types (`aws_ami`, `aws_availability_zones`, etc.) via `EXCLUDED_DATA_SOURCE_TYPES`
+3. Injects referenced data sources as graph nodes (flagged `_data_source=True`)
+4. Creates edges from `terraform graph` for data source dependencies
+5. Synthesizes parent nodes when needed (e.g., creates a synthetic VPC if injected subnets reference a `vpc_id` with no matching `aws_vpc` in the graph)
+6. Places data source nodes inside subnets by matching `subnet_id` metadata
 
-None of these produce resolvable Terraform resource references. For multi-source diagrams, best-effort matching can be done by resource type (e.g., `data "aws_vpc"` → match to `resource "aws_vpc"` if exactly one candidate exists).
+**Limitation**: This only works within a single `terraform plan` — data sources must be in the plan's `prior_state` to be injected. Separate repos with separate plans cannot cross-reference each other's resources directly.
 
 ## Active Technologies
-- Python 3.10+ (as per Constitution Technical Standards) (003-azure-handler-implementation)
-- File-based (Terraform .tf files, JSON intermediate state via --debug) (003-azure-handler-implementation)
-- Python 3.10+ (as per Constitution Technical Standards) + Graphviz (for cluster styling attributes), existing TerraVision modules (drawing.py, resource_classes/) (005-gcp-2024-style-icons)
-- File-based (icon files in resource_classes/gcp/, Python modules for mappings) (005-gcp-2024-style-icons)
-- Python 3.10+ (per Constitution Technical Standards) + Graphviz, Terraform 1.x, python-hcl2 (001-gcp-core-services)
-
-## Recent Changes
-- 003-azure-handler-implementation: Added Python 3.10+ (as per Constitution Technical Standards)
+- Python 3.11+ (as per pyproject.toml)
+- Graphviz (for diagram rendering and cluster styling)
+- Terraform 1.x + python-hcl2 (for .tf parsing)
+- File-based intermediate state (JSON via --debug)
