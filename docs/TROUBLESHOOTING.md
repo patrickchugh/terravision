@@ -89,7 +89,7 @@ python3.10 -m pip install -r requirements.txt
 **Explanation**: TerraVision automatically forces local backend execution to generate complete infrastructure diagrams (not just state deltas). This is intentional and required for accurate visualization.
 
 **How it works**:
-- TerraVision copies `override.tf` to your source directory
+- TerraVision copies `terravision_override.tf` to your source directory
 - This forces `backend "local"` configuration
 - Terraform ignores remote state and shows all resources
 - Your actual TFE state remains unchanged
@@ -100,7 +100,7 @@ python3.10 -m pip install -r requirements.txt
 3. Create the diagram from the complete infrastructure definition
 4. Leave your remote state untouched
 
-**Note**: If you see `override.tf` in your directory after running TerraVision, you can safely delete it or add to `.gitignore`.
+**Note**: If you see `terravision_override.tf` in your directory after running TerraVision, you can safely delete it or add to `.gitignore`.
 
 #### "TFE_TOKEN required for module registry"
 

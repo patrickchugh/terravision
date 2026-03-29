@@ -139,6 +139,7 @@ def compile_tfdata(
     annotate: str = "",
     planfile: str = "",
     graphfile: str = "",
+    upgrade: bool = False,
 ) -> Dict[str, Any]:
     """Compile Terraform data from source files into enriched graph dictionary.
 
@@ -169,7 +170,7 @@ def compile_tfdata(
     else:
         validators.validate_source(source)
         tfdata = tfwrapper.process_terraform_source(
-            source, varfile, workspace, annotate, debug
+            source, varfile, workspace, annotate, debug, upgrade
         )
 
     # Detect cloud provider and store in tfdata (multi-cloud support)
@@ -300,6 +301,12 @@ def cli(ctx) -> None:
     type=click.Path(),
     help="Path to Terraform graph DOT (terraform graph)",
 )
+@click.option(
+    "--upgrade",
+    is_flag=True,
+    default=False,
+    help="Run terraform init with -upgrade to update modules/providers",
+)
 def draw(
     debug: bool,
     source: str,
@@ -314,6 +321,7 @@ def draw(
     avl_classes: Any,
     planfile: str,
     graphfile: str,
+    upgrade: bool,
 ) -> None:
     """Draw architecture diagram from Terraform code."""
     if not debug:
@@ -328,7 +336,7 @@ def draw(
         )
     preflight_check(aibackend if not planfile else None)
     tfdata = compile_tfdata(
-        source, varfile, workspace, debug, annotate, planfile, graphfile
+        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
     )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend:
@@ -409,6 +417,12 @@ def draw(
     type=click.Path(),
     help="Path to Terraform graph DOT (terraform graph)",
 )
+@click.option(
+    "--upgrade",
+    is_flag=True,
+    default=False,
+    help="Run terraform init with -upgrade to update modules/providers",
+)
 def graphdata(
     debug: bool,
     source: str,
@@ -422,6 +436,7 @@ def graphdata(
     outfile: str = "graphdata.json",
     planfile: str = "",
     graphfile: str = "",
+    upgrade: bool = False,
 ) -> None:
     """List cloud resources and relations as JSON."""
     if not debug:
@@ -436,7 +451,7 @@ def graphdata(
         )
     preflight_check(aibackend if not planfile else None)
     tfdata = compile_tfdata(
-        source, varfile, workspace, debug, annotate, planfile, graphfile
+        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
     )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend and (not show_services):

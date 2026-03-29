@@ -20,29 +20,19 @@ import ipaddr
 import modules.config_loader as config_loader
 import modules.provider_detector as provider_detector
 
-# HCL content for override.tf to force local backend (ignores remote state)
-OVERRIDE_TF_CONTENT = 'terraform {\n  backend "local" {\n\n  }\n}\n'
+START_DIR = Path.cwd()
+temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
+os.environ["TF_DATA_DIR"] = temp_dir.name
+MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 
 
 def _write_override(codepath):
-    """Write override.tf to force local backend if it doesn't already exist."""
-    dest = os.path.join(codepath, "override.tf")
-    if not os.path.exists(dest):
-        with open(dest, "w") as f:
-            f.write(OVERRIDE_TF_CONTENT)
+    """Write terravision_override.tf to force local backend."""
+    content = 'terraform {\n  backend "local" {\n\n  }\n}\n'
+    dest = os.path.join(codepath, "terravision_override.tf")
+    with open(dest, "w") as f:
+        f.write(content)
     return dest
-
-
-# Create Tempdir and Module Cache Directories
-annotations = dict()
-# basedir =  os.path.dirname(os.path.isfile("terravision"))
-basedir = Path(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
-start_dir = Path.cwd()
-temp_dir = tempfile.TemporaryDirectory(dir=tempfile.gettempdir())
-os.environ["TF_DATA_DIR"] = temp_dir.name
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-MODULE_DIR = str(Path(Path.home(), ".terravision", "module_cache"))
 
 
 def convert_dot_to_json(dot_file: str) -> dict:
@@ -83,8 +73,147 @@ def convert_dot_to_json(dot_file: str) -> dict:
             os.remove(json_file)
 
 
+def _cleanup_override(override_dest):
+    """Remove override.tf if it exists."""
+    if override_dest and os.path.exists(override_dest):
+        os.remove(override_dest)
+
+
+def _tf_error(message, debug=True, result=None):
+    """Print a terraform error message and exit."""
+    click.echo(click.style(f"\nERROR: {message}", fg="red", bold=True))
+    if not debug and result and result.stderr:
+        click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+    exit(result.returncode if result and result.returncode else 1)
+
+
+def _prepare_source(source):
+    """Resolve source to a local codepath and write override.tf.
+
+    Returns:
+        Tuple of (codepath, override_dest)
+    """
+    if os.path.isdir(source):
+        codepath = os.path.abspath(source)
+        override_dest = _write_override(codepath)
+        os.chdir(codepath)
+    else:
+        githubURL, subfolder, git_tag = gitlibs.get_clone_url(source)
+        codepath = gitlibs.clone_files(source, temp_dir.name)
+        override_dest = _write_override(codepath)
+        os.chdir(codepath)
+        codepath = [codepath]
+        if len(os.listdir()) == 0:
+            _tf_error("No files found to process.")
+    return codepath, override_dest
+
+
+def _run_terraform_init(debug, upgrade):
+    """Run terraform init with reconfigure and optional upgrade."""
+    click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
+    click.echo("  Forcing temporary local backend to generate full infrastructure plan")
+    init_cmd = ["terraform", "init", "-reconfigure"]
+    if upgrade:
+        init_cmd.append("-upgrade")
+    result = subprocess.run(init_cmd, capture_output=not debug, text=True)
+    if result.returncode != 0:
+        _tf_error(
+            "Cannot perform terraform init using provided source. "
+            "Check providers and backend config.",
+            debug,
+            result,
+        )
+
+
+def _select_workspace(workspace, debug):
+    """Select or create terraform workspace."""
+    click.echo(
+        click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
+    )
+    result = subprocess.run(
+        ["terraform", "workspace", "select", "-or-create=True", workspace],
+        capture_output=not debug,
+        text=True,
+    )
+    if result.returncode != 0:
+        _tf_error(
+            f"Invalid output from 'terraform workspace select {workspace}' command.",
+            debug,
+            result,
+        )
+
+
+def _run_terraform_plan(vfiles, tfplan_path, debug):
+    """Generate terraform plan binary."""
+    click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
+    plan_cmd = ["terraform", "plan", "-refresh=false"]
+    for vf in vfiles:
+        plan_cmd.extend(["-var-file", vf])
+    plan_cmd.extend(["-out", tfplan_path])
+    result = subprocess.run(plan_cmd, capture_output=not debug, text=True)
+    if result.returncode != 0:
+        _tf_error(
+            "Invalid output from 'terraform plan' command. "
+            "Try using the terraform CLI first to check source files have no errors.",
+            debug,
+            result,
+        )
+
+
+def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
+    """Convert plan binary to JSON and generate terraform graph.
+
+    Returns:
+        Tuple of (plandata, graphdata)
+    """
+    click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
+    if not os.path.exists(tfplan_path):
+        _tf_error(f"Terraform plan file not found at {tfplan_path}")
+    # Convert binary plan to JSON
+    with open(tfplan_json_path, "w") as f:
+        result = subprocess.run(
+            ["terraform", "show", "-json", tfplan_path],
+            stdout=f,
+            stderr=None if debug else subprocess.PIPE,
+            text=True,
+        )
+    if result.returncode != 0:
+        _tf_error("Invalid output from 'terraform show' command.", debug, result)
+    click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+    with open(tfplan_json_path) as f:
+        plandata = json.load(f)
+    # Generate terraform graph
+    with open(tfgraph_path, "w") as f:
+        result = subprocess.run(
+            ["terraform", "graph"],
+            stdout=f,
+            stderr=None if debug else subprocess.PIPE,
+            text=True,
+        )
+    if result.returncode != 0:
+        _tf_error(
+            "Invalid output from 'terraform graph' command. "
+            "Check your TF source files can generate a valid plan and graph",
+            debug,
+            result,
+        )
+    click.echo(
+        click.style(
+            f"\nConverting TF Graph Connections..  (this may take a while)\n",
+            fg="white",
+            bold=True,
+        )
+    )
+    graphdata = convert_dot_to_json(tfgraph_path)
+    return plandata, graphdata
+
+
 def tf_initplan(
-    source: str, varfile: List[str], workspace: str, debug: bool = True
+    source: str,
+    varfile: List[str],
+    workspace: str,
+    debug: bool = True,
+    upgrade: bool = False,
 ) -> Dict[str, Any]:
     """Initialize Terraform and generate plan and graph data.
 
@@ -93,217 +222,49 @@ def tf_initplan(
         varfile: List of variable files to use
         workspace: Terraform workspace name
         debug: Show subprocess output to console
+        upgrade: Pass -upgrade flag to terraform init
 
     Returns:
         Dictionary containing terraform plan and graph data
     """
     debug = True
-    tfdata = dict()
-    tfdata["codepath"] = list()
-    tfdata["workdir"] = os.getcwd()
-    # Process source location
-    sourceloc = source
-    # Handle local directory source
-    if os.path.isdir(sourceloc):
-        codepath = os.path.abspath(sourceloc)
-        # Force local backend so full infra plan is created with override.tf
-        override_dest = _write_override(codepath)
-        os.chdir(codepath)
-    # Handle Git repository source
-    else:
-        githubURL, subfolder, git_tag = gitlibs.get_clone_url(sourceloc)
-        codepath = gitlibs.clone_files(sourceloc, temp_dir.name)
-        # Force local backend so full infra plan is created with override.tf
-        override_dest = _write_override(codepath)
-        os.chdir(codepath)
-        codepath = [codepath]
-        # Verify files were cloned
-        if len(os.listdir()) == 0:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: No files found to process.",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            exit()
-    click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
-    click.echo("  Forcing temporary local backend to generate full infrastructure plan")
-    # Initialize terraform with providers
-    result = subprocess.run(
-        ["terraform", "init", "--upgrade", "-reconfigure"],
-        capture_output=not debug,
-        text=True,
-    )
-    if result.returncode != 0:
-        click.echo(
-            click.style(
-                f"\nERROR: Cannot perform terraform init using provided source. Check providers and backend config.",
-                fg="red",
-                bold=True,
-            )
-        )
-        if not debug and result.stderr:
-            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-        exit(result.returncode)
-    # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
-    # TF_DATA_DIR overrides the default .terraform/ location (see line 40).
-    tfdata["terraform_init_dir"] = temp_dir.name
-    # Resolve variable file paths
-    vfiles = []
-    for vf in varfile:
-        if not os.path.isabs(vf):
-            vf = os.path.join(start_dir, vf)
-        vfiles.append(vf)
+    override_dest = None
+    try:
+        # Clone repo (if git URL) or resolve local path then write override.tf for local backend
+        codepath, override_dest = _prepare_source(source)
+        # Run terraform init (downloads providers/modules)
+        _run_terraform_init(debug, upgrade)
+        # Select or create the terraform workspace
+        _select_workspace(workspace, debug)
+        # Resolve variable file paths to absolute
+        vfiles = [
+            vf if os.path.isabs(vf) else os.path.join(START_DIR, vf) for vf in varfile
+        ]
+        # Setup temporary file paths
+        tempdir = os.path.dirname(temp_dir.name)
+        tfplan_path = os.path.join(tempdir, "tfplan.bin")
+        tfplan_json_path = os.path.join(tempdir, "tfplan.json")
+        tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
 
-    click.echo(
-        click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
-    )
-    # Select or create terraform workspace
-    result = subprocess.run(
-        ["terraform", "workspace", "select", "-or-create=True", workspace],
-        capture_output=not debug,
-        text=True,
-    )
-    if result.returncode != 0:
-        click.echo(
-            click.style(
-                f"\nERROR: Invalid output from 'terraform workspace select {workspace}' command.",
-                fg="red",
-                bold=True,
-            )
+        # Run terraform plan to generate the binary plan file
+        _run_terraform_plan(vfiles, tfplan_path, debug)
+        # Convert binary plan to JSON and generate the dependency graph
+        plandata, graphdata = _decode_plan(
+            tfplan_path, tfplan_json_path, tfgraph_path, debug
         )
-        if not debug and result.stderr:
-            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-        exit(result.returncode)
-
-    click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
-    # Setup temporary file paths and clean up old files
-    tempdir = os.path.dirname(temp_dir.name)
-    tfplan_path = os.path.join(tempdir, "tfplan.bin")
-    if os.path.exists(tfplan_path):
-        os.remove(tfplan_path)
-    tfplan_json_path = os.path.join(tempdir, "tfplan.json")
-    if os.path.exists(tfplan_json_path):
-        os.remove(tfplan_json_path)
-    tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
-    if os.path.exists(tfgraph_path):
-        os.remove(tfgraph_path)
-    tfgraph_json_path = os.path.join(tempdir, "tfgraph.json")
-    if os.path.exists(tfgraph_json_path):
-        os.remove(tfgraph_json_path)
-    # Generate terraform plan with or without varfile
-    if vfiles:
-        varfile_args = []
-        for vf in vfiles:
-            varfile_args.extend(["-var-file", vf])
-        result = subprocess.run(
-            [
-                "terraform",
-                "plan",
-                "-refresh=false",
-                *varfile_args,
-                "-out",
-                tfplan_path,
-            ],
-            capture_output=not debug,
-            text=True,
-        )
-    else:
-        result = subprocess.run(
-            ["terraform", "plan", "-refresh=false", "-out", tfplan_path],
-            capture_output=not debug,
-            text=True,
-        )
-    if result.returncode != 0:
-        click.echo(
-            click.style(
-                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source files have no errors.",
-                fg="red",
-                bold=True,
-            )
-        )
-        if not debug and result.stderr:
-            click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-        exit(result.returncode)
-
-    click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
-    # Convert binary plan to JSON format
-    if os.path.exists(tfplan_path):
-        with open(tfplan_json_path, "w") as f:
-            result = subprocess.run(
-                ["terraform", "show", "-json", tfplan_path],
-                stdout=f,
-                stderr=None if debug else subprocess.PIPE,
-                text=True,
-            )
-        if result.returncode == 0:
-            click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
-            # Load plan data
-            with open(tfplan_json_path) as f:
-                plandata = json.load(f)
-            # Generate terraform graph
-            with open(tfgraph_path, "w") as f:
-                result = subprocess.run(
-                    ["terraform", "graph"],
-                    stdout=f,
-                    stderr=None if debug else subprocess.PIPE,
-                    text=True,
-                )
-            # Remove override.tf after all terraform commands complete
-            if os.path.exists(override_dest):
-                os.remove(override_dest)
-            if result.returncode != 0:
-                click.echo(
-                    click.style(
-                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
-                        fg="red",
-                        bold=True,
-                    )
-                )
-                exit(result.returncode)
-            tfdata["plandata"] = dict(plandata)
-            click.echo(
-                click.style(
-                    f"\nConverting TF Graph Connections..  (this may take a while)\n",
-                    fg="white",
-                    bold=True,
-                )
-            )
-            # Convert DOT graph to JSON using Graphviz
-            if not os.path.exists(tfgraph_path):
-                click.echo(
-                    click.style(
-                        f"\nERROR: Invalid output from 'terraform graph' command. Check your TF source files can generate a valid plan and graph",
-                        fg="red",
-                        bold=True,
-                    )
-                )
-                exit(1)
-            graphdata = convert_dot_to_json(tfgraph_path)
-        else:
-            click.echo(
-                click.style(
-                    f"\nERROR: Invalid output from 'terraform show' command.",
-                    fg="red",
-                    bold=True,
-                )
-            )
-            if not debug and result.stderr:
-                click.echo(click.style(f"Details: {result.stderr}", fg="red"))
-            exit(result.returncode)
-    else:
-        click.echo(
-            click.style(
-                f"\nERROR: Terraform plan file not found at {tfplan_path}",
-                fg="red",
-                bold=True,
-            )
-        )
-        exit(1)
-    tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
-    os.chdir(start_dir)
-    return tfdata
+        # Assemble tfdata dict with plan output and graph connections
+        tfdata = dict()
+        tfdata["codepath"] = list()
+        tfdata["workdir"] = os.getcwd()
+        # Store the TF_DATA_DIR so read_tfsource can find modules/modules.json.
+        tfdata["terraform_init_dir"] = temp_dir.name
+        tfdata["plandata"] = dict(plandata)
+        tfdata = make_tf_data(tfdata, plandata, graphdata, codepath)
+        os.chdir(START_DIR)
+        return tfdata
+    finally:
+        # Always clean up override.tf, even if an error occurred
+        _cleanup_override(override_dest)
 
 
 def make_tf_data(
@@ -340,16 +301,12 @@ def make_tf_data(
     return tfdata
 
 
-def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Initialize tfdata data structures from terraform plan.
-
-    Args:
-        tfdata: Terraform data dictionary
+def _detect_provider(tfdata):
+    """Detect cloud provider from terraform plan resources.
 
     Returns:
-        Updated tfdata with initialized graph structures
+        Detected provider string (e.g. 'aws', 'azure', 'gcp')
     """
-    # Detect cloud provider from tf_resources_created (early detection before all_resource exists)
     detected_provider = None
     if "tf_resources_created" in tfdata:
         resource_addresses = [
@@ -367,20 +324,31 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             detected_provider = max(provider_counts, key=provider_counts.get)
 
     if not detected_provider:
-        # Cannot detect provider at this stage - this is fatal
         raise provider_detector.ProviderDetectionError(
             "Could not detect cloud provider from Terraform plan. "
             "Ensure your Terraform code contains cloud resources (aws_, azurerm_, google_, etc.)"
         )
+    return detected_provider
 
+
+def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Initialize tfdata data structures from terraform plan.
+
+    Args:
+        tfdata: Terraform data dictionary
+
+    Returns:
+        Updated tfdata with initialized graph structures
+    """
+    detected_provider = _detect_provider(tfdata)
     cloud_config = config_loader.load_config(detected_provider)
-    HIDDEN_NODES = getattr(cloud_config, f"{detected_provider.upper()}_HIDE_NODES", [])
+    hidden_nodes = getattr(cloud_config, f"{detected_provider.upper()}_HIDE_NODES", [])
     # Initialize graph data structures
     tfdata["graphdict"] = dict()
     tfdata["meta_data"] = dict()
     tfdata["all_output"] = dict()
     tfdata["node_list"] = list()
-    tfdata["hidden"] = HIDDEN_NODES
+    tfdata["hidden"] = hidden_nodes
     tfdata["annotations"] = dict()
     # Create nodes from resources in plan
     for object in tfdata["tf_resources_created"]:
@@ -459,50 +427,9 @@ def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
     exit()
 
 
-def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
-    """Build resource dependency graph from terraform graph output.
-
-    Args:
-        tfdata: Terraform data dictionary with plan and graph data
-
-    Returns:
-        Updated tfdata with populated graphdict connections
-    """
-    # Detect cloud provider from tf_resources_created (early detection before all_resource exists)
-    # At this stage, all_resource hasn't been populated yet, so we detect from terraform plan resources
-    detected_provider = None
-    if "tf_resources_created" in tfdata:
-        resource_addresses = [
-            obj["address"]
-            for obj in tfdata["tf_resources_created"]
-            if obj.get("mode") == "managed"
-        ]
-        provider_counts = {}
-        for resource_addr in resource_addresses:
-            provider = provider_detector.get_provider_for_resource(resource_addr)
-            if provider in provider_detector.SUPPORTED_PROVIDERS:
-                provider_counts[provider] = provider_counts.get(provider, 0) + 1
-
-        if provider_counts:
-            detected_provider = max(provider_counts, key=provider_counts.get)
-
-    if not detected_provider:
-        # Cannot detect provider at this stage - this is fatal
-        raise provider_detector.ProviderDetectionError(
-            "Could not detect cloud provider from Terraform plan. "
-            "Ensure your Terraform code contains cloud resources (aws_, azurerm_, google_, etc.)"
-        )
-
-    cloud_config = config_loader.load_config(detected_provider)
-    REVERSE_ARROW_LIST = getattr(
-        cloud_config, f"{detected_provider.upper()}_REVERSE_ARROW_LIST", []
-    )
-
-    # Initialize graph structures
-    tfdata = setup_tfdata(tfdata)
-    # Build lookup table mapping graph IDs to resource names
+def _build_gvid_table(tfdata):
+    """Build lookup table mapping terraform graph IDs to resource names."""
     gvid_table = list()
-    # Build gvid lookup table from graph objects
     for item in tfdata["tfgraph"]["objects"]:
         gvid = item["_gvid"]
         gvid_table.append("")
@@ -511,9 +438,12 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
             gvid_table[gvid] = str(item.get("name"))
         else:
             gvid_table[gvid] = str(item.get("label"))
-    # Process graph edges to build connections
+    return gvid_table
+
+
+def _process_edges(tfdata, gvid_table, reverse_arrow_list):
+    """Walk terraform graph edges and populate graphdict connections."""
     for node in dict(tfdata["graphdict"]):
-        # Find node ID in graph
         node_id = find_node_in_gvid_table(node, gvid_table)
         if tfdata["tfgraph"].get("edges"):
             for connection in tfdata["tfgraph"]["edges"]:
@@ -543,7 +473,7 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
                     ):
                         conn = matched_connections[0]
                     # Handle reverse arrow resources (connection points to node)
-                    if conn_type in REVERSE_ARROW_LIST:
+                    if conn_type in reverse_arrow_list:
                         if conn not in tfdata["graphdict"].keys():
                             tfdata["graphdict"][conn] = list()
                         # Skip multi-instance resources
@@ -553,12 +483,38 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
                     else:
                         if "[" not in node:
                             tfdata["graphdict"][node].append(conn)
+
+
+def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
+    """Build resource dependency graph from terraform graph output.
+
+    Args:
+        tfdata: Terraform data dictionary with plan and graph data
+
+    Returns:
+        Updated tfdata with populated graphdict connections
+    """
+    # Detect cloud provider and load provider-specific config
+    detected_provider = _detect_provider(tfdata)
+    cloud_config = config_loader.load_config(detected_provider)
+    reverse_arrow_list = getattr(
+        cloud_config, f"{detected_provider.upper()}_REVERSE_ARROW_LIST", []
+    )
+
+    # Create graph nodes from terraform plan resources
+    tfdata = setup_tfdata(tfdata)
+    # Map terraform graph IDs to resource names
+    gvid_table = _build_gvid_table(tfdata)
+    # Walk graph edges and populate connections between nodes
+    _process_edges(tfdata, gvid_table, reverse_arrow_list)
     # Add VPC-subnet relationships based on CIDR overlap
     tfdata = add_vpc_implied_relations(tfdata)
+
     # Save original graph and metadata for reference
     tfdata["original_graphdict"] = copy.deepcopy(tfdata["graphdict"])
     tfdata["original_metadata"] = copy.deepcopy(tfdata["meta_data"])
-    # Verify cloud resources exist (check all supported provider prefixes)
+
+    # Verify cloud resources exist
     from modules.provider_detector import PROVIDER_PREFIXES
 
     has_cloud_resources = any(
@@ -733,7 +689,12 @@ def process_pregenerated_source(
 
 
 def process_terraform_source(
-    source: str, varfile: List[str], workspace: str, annotate: str, debug: bool
+    source: str,
+    varfile: List[str],
+    workspace: str,
+    annotate: str,
+    debug: bool,
+    upgrade: bool = False,
 ) -> Dict[str, Any]:
     """Process Terraform source files and generate initial tfdata.
 
@@ -743,11 +704,12 @@ def process_terraform_source(
         workspace: Terraform workspace name
         annotate: Path to annotations file
         debug: Enable debug mode
+        upgrade: Pass -upgrade flag to terraform init
 
     Returns:
         Dictionary containing parsed Terraform data
     """
-    tfdata = tf_initplan(source, varfile, workspace, debug)
+    tfdata = tf_initplan(source, varfile, workspace, debug, upgrade)
     tfdata = tf_makegraph(tfdata, debug)
     codepath = (
         [tfdata["codepath"]]
