@@ -1353,7 +1353,10 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     continue
                 new_connections.add(conn)
             tfdata["graphdict"][consolidated_name] = list(new_connections)
-            helpers.delete_node(tfdata, resource, remove_from_connections=False)
+            # Only delete the original resource if it differs from the consolidated name;
+            # otherwise we'd remove the node we just built.
+            if resource != consolidated_name:
+                helpers.delete_node(tfdata, resource, remove_from_connections=False)
             # del tfdata["meta_data"][res]
             connected_resource = consolidated_name
         else:
