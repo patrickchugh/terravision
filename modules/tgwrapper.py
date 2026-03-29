@@ -20,11 +20,27 @@ import modules.tfwrapper as tfwrapper
 MIN_TERRAGRUNT_VERSION = "0.50.0"
 
 
+def _tg_env() -> dict:
+    """Build environment for all terragrunt subprocess calls.
+
+    Sets TF_CLI_ARGS_init=-reconfigure so that ANY terraform init
+    triggered by Terragrunt (explicit or auto-init for dependencies)
+    accepts the local backend override without prompting for migration.
+    """
+    env = dict(os.environ)
+    env["TF_CLI_ARGS_init"] = "-reconfigure"
+    return env
+
+
 def _find_terragrunt_cache_dir(workdir: str) -> str:
     """Find the terraform working directory inside .terragrunt-cache.
 
-    Terragrunt cache uses a fixed structure: .terragrunt-cache/<hash>/<hash>/
-    The leaf (second hash) directory is where terraform files live.
+    Terragrunt downloads sources into .terragrunt-cache/<hash>/<hash>/.
+    For sources with a //subfolder (e.g., git::https://...//modules/vpc),
+    terraform runs inside the subfolder, not the repo root.
+
+    We locate the working directory by searching for Terragrunt-generated
+    files (backend.tf or provider.tf with the Terragrunt signature).
 
     Args:
         workdir: The terragrunt module source directory.
@@ -41,7 +57,21 @@ def _find_terragrunt_cache_dir(workdir: str) -> str:
             f"No .terragrunt-cache found in {workdir}. "
             "Ensure terragrunt init ran successfully."
         )
-    # .terragrunt-cache/<hash1>/<hash2>/
+    # Search for Terragrunt-generated files to find the actual working dir.
+    # These are placed in the directory where terraform runs, which may be
+    # a subfolder for sources like git::https://...//modules/db_subnet_group.
+    for root, dirs, files in os.walk(cache_root):
+        dirs[:] = [d for d in dirs if d != ".terraform"]
+        for gen_file in ("backend.tf", "provider.tf"):
+            if gen_file in files:
+                filepath = os.path.join(root, gen_file)
+                try:
+                    with open(filepath) as f:
+                        if "Terragrunt" in f.read(200):
+                            return root
+                except OSError:
+                    continue
+    # Fallback: return the first hash2 directory
     for hash1 in os.listdir(cache_root):
         hash1_path = os.path.join(cache_root, hash1)
         if not os.path.isdir(hash1_path):
@@ -147,13 +177,12 @@ def check_terragrunt_version() -> str:
 def _prepare_tg_source(source: str) -> Tuple[str, str]:
     """Prepare a Terragrunt source directory for plan execution.
 
-    Writes terravision_override.tf to the source directory to force local
-    backend. Terragrunt copies .tf files (including the override) into
-    .terragrunt-cache before running Terraform, so the override reaches
-    Terraform via the standard override file mechanism.
-
-    If the override file already exists (e.g., pre-written by tg_run_all_plan),
-    it is left in place and not overwritten.
+    Writes terravision_override.tf to the source directory to force a
+    local backend. Terragrunt copies ALL files from the module directory
+    (including .tf files) into .terragrunt-cache before running Terraform,
+    even when terraform.source is a remote URL.  The override file uses
+    Terraform's standard _override.tf naming convention to take precedence
+    over any generated backend.tf.
 
     Args:
         source: Path to the source directory.
@@ -173,23 +202,45 @@ def _prepare_tg_source(source: str) -> Tuple[str, str]:
 def _run_terragrunt_init(workdir: str, debug: bool) -> None:
     """Run terragrunt init in the working directory.
 
-    Passes -reconfigure to terraform init via TF_CLI_ARGS_init so that
-    Terraform picks up the terravision_override.tf backend override
-    instead of trying to migrate from the original remote backend.
-    The env var is scoped to this subprocess call only.
+    Passes -reconfigure both as a CLI flag and via TF_CLI_ARGS_init
+    (see _tg_env) so that Terraform accepts the local backend override
+    (terravision_override.tf) without prompting for state migration.
+
+    The override file must be written to the source directory BEFORE
+    calling this function. Terragrunt copies all .tf files from the
+    module directory into .terragrunt-cache, so the override reaches
+    Terraform via the standard _override.tf naming convention.
+
+    For multi-module runs, the env var also ensures that auto-init of
+    dependency modules (to read outputs) uses -reconfigure, so their
+    local backend override is accepted too.
     """
     click.echo(click.style("\nRunning Terragrunt Init..\n", fg="white", bold=True))
-    init_cmd = ["terragrunt", "init"]
-    init_env = dict(os.environ)
-    init_env["TF_CLI_ARGS_init"] = "-reconfigure"
+    init_cmd = ["terragrunt", "init", "-reconfigure"]
     result = subprocess.run(
-        init_cmd, capture_output=not debug, text=True, cwd=workdir, env=init_env
+        init_cmd, capture_output=not debug, text=True, cwd=workdir, env=_tg_env()
     )
     if result.returncode != 0:
         stderr = result.stderr or ""
         hint = ""
-        if "Could not download module" in stderr or "Module not found" in stderr:
+        if "find_in_parent_folders" in stderr:
+            hint = (
+                "\nHint: Terragrunt uses find_in_parent_folders() to locate config "
+                "files (e.g., root.hcl, account.hcl) in parent directories. "
+                "Make sure --source points to a path where parent directories "
+                "are accessible. If using Docker, mount the entire infrastructure "
+                "repo root (not just a subdirectory) so that parent HCL files "
+                "are reachable."
+            )
+        elif "Could not download module" in stderr or "Module not found" in stderr:
             hint = "\nHint: Check that the module source URL is accessible and credentials are configured."
+        elif "error downloading" in stderr or "unable to fork" in stderr:
+            hint = (
+                "\nHint: Failed to download a module source. If using Docker, "
+                "ensure SSH keys and git are available inside the container "
+                "(e.g., mount ~/.ssh). For HTTPS sources, ensure credentials "
+                "are configured."
+            )
         elif ".terragrunt-cache" in stderr:
             hint = "\nHint: Try clearing the cache with: rm -rf .terragrunt-cache"
         raise RuntimeError(f"Terragrunt init failed:\n{stderr}{hint}")
@@ -204,7 +255,9 @@ def _run_terragrunt_plan(
     for vf in varfiles:
         plan_cmd.extend(["-var-file", vf])
     plan_cmd.extend(["-out", tfplan_path])
-    result = subprocess.run(plan_cmd, capture_output=not debug, text=True, cwd=workdir)
+    result = subprocess.run(
+        plan_cmd, capture_output=not debug, text=True, cwd=workdir, env=_tg_env()
+    )
     if result.returncode != 0:
         stderr = result.stderr or ""
         hint = ""
@@ -225,31 +278,33 @@ def _decode_tg_plan(
 ) -> Tuple[dict, dict]:
     """Decode terragrunt plan and graph output into JSON.
 
-    Runs terragrunt show -json and terragrunt graph, then converts
-    the DOT graph to JSON using tfwrapper.convert_dot_to_json.
+    Runs terraform show -json and terraform graph directly in the
+    .terragrunt-cache directory.  We avoid running these via terragrunt
+    because Terragrunt's auto-init can re-process the cache (re-download
+    source, re-run generate blocks) which disrupts the backend state
+    between the plan and decode phases.
 
     Returns:
         Tuple of (plan_data, graph_data).
     """
-    # Generate plan JSON via terragrunt show (built-in command)
+    cache_dir = _find_terragrunt_cache_dir(workdir)
+
+    # Generate plan JSON via terraform show directly in cache
     with open(tfplan_json_path, "w") as f:
         result = subprocess.run(
-            ["terragrunt", "show", "-json", tfplan_path],
+            ["terraform", "show", "-json", tfplan_path],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
-            cwd=workdir,
+            cwd=cache_dir,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Terragrunt show failed:\n{result.stderr or ''}")
+        raise RuntimeError(f"Terraform show failed:\n{result.stderr or ''}")
 
     with open(tfplan_json_path) as f:
         plan_data = json.load(f)
 
-    # Generate graph DOT — run terraform graph directly in .terragrunt-cache
-    # where terraform init/plan already ran. Terragrunt doesn't have a built-in
-    # graph command, and `terraform graph` needs to run where .terraform/ exists.
-    cache_dir = _find_terragrunt_cache_dir(workdir)
+    # Generate graph DOT
     with open(tfgraph_path, "w") as f:
         result = subprocess.run(
             ["terraform", "graph"],
@@ -498,8 +553,8 @@ def tg_run_all_plan(
         )
 
     # Write override files to ALL child modules before running any plans.
-    # This ensures dependency resolution (terragrunt inits dependency modules
-    # to read outputs) also picks up the local backend override.
+    # This ensures dependency resolution (terragrunt auto-inits dependency
+    # modules to read outputs) also picks up the local backend override.
     override_files = []
     for module_path in child_modules:
         override_dest = tfwrapper._write_override(module_path)
