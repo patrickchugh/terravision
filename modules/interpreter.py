@@ -68,7 +68,9 @@ def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
     # Search through all output files for matching module
     for file in tfdata["all_output"].keys():
         for i in tfdata["all_output"][file]:
-            if outputname in i.keys() and f";{mod};" in file:
+            if outputname in i.keys() and helpers.output_file_matches_module(
+                file, mod, tfdata
+            ):
                 outvalue = i[outputname]["value"]
                 # Handle wildcard ID references
                 if "*.id" in outvalue and "*.id" in eval_string:
@@ -284,7 +286,7 @@ def replace_module_vars(
             mod = value.split("module.")[1].split(".")[0]
             # Search through output files for matching module
             for ofile in tfdata["all_output"].keys():
-                if "modules" and f";{mod};" in ofile:
+                if helpers.output_file_matches_module(ofile, mod, tfdata):
                     # Found the right output file for this module
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():

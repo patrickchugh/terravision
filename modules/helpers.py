@@ -24,6 +24,29 @@ from modules.config_loader import load_config
 from modules.provider_detector import get_provider_for_resource
 
 
+def output_file_matches_module(
+    filepath: str, module_name: str, tfdata: Dict[str, Any]
+) -> bool:
+    """Check whether an all_output file path belongs to a given module.
+
+    Supports two conventions:
+    1. Remote modules: path contains ';module_name;' (e.g. cache/repo;keyvault;/outputs.tf)
+    2. Local modules:  module_source_dict maps module_name to a directory that is a
+       prefix of the file path (e.g. /home/user/infra/modules/keyvault -> outputs.tf)
+    """
+    # Remote-module convention
+    if f";{module_name};" in filepath:
+        return True
+    # Local-module convention via module_source_dict
+    source_dict = tfdata.get("module_source_dict", {})
+    if module_name in source_dict:
+        source_path = source_dict[module_name]
+        # Normalise to avoid trailing-slash mismatches
+        if filepath.startswith(os.path.normpath(source_path) + os.sep):
+            return True
+    return False
+
+
 def _get_provider_config_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Load provider-specific configuration constants from tfdata.
 

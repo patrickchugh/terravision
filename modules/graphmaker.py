@@ -737,7 +737,7 @@ def resolve_module_output_to_resources(
     resources = []
     # Search through output files for matching module
     for file in tfdata.get("all_output", {}).keys():
-        if f";{module_name};" in file:
+        if helpers.output_file_matches_module(file, module_name, tfdata):
             for output_dict in tfdata["all_output"][file]:
                 if output_name in output_dict:
                     output_value = output_dict[output_name].get("value", "")
