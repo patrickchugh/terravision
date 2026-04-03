@@ -14,6 +14,7 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 SINGLE_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-single")
 MULTI_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-multi")
 INCLUDES_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-includes")
+REMOTE_STATE_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-remote-state")
 
 
 @pytest.fixture
@@ -149,26 +150,53 @@ class TestPrepareTgSource:
 
     def test_writes_override_and_returns_correct_path(self, tmpdir):
         """_prepare_tg_source writes terravision_override.tf and returns codepath."""
-        codepath, override_dest = tgwrapper._prepare_tg_source(tmpdir)
+        codepath, override_files = tgwrapper._prepare_tg_source(tmpdir)
         assert codepath == os.path.abspath(tmpdir)
-        assert override_dest == os.path.join(codepath, "terravision_override.tf")
-        assert os.path.isfile(override_dest)
-        os.remove(override_dest)
+        assert len(override_files) >= 1
+        assert override_files[0] == os.path.join(codepath, "terravision_override.tf")
+        assert os.path.isfile(override_files[0])
+        for f in override_files:
+            os.remove(f)
 
     def test_override_contains_local_backend(self, tmpdir):
         """The written override file forces local backend."""
-        _, override_dest = tgwrapper._prepare_tg_source(tmpdir)
-        with open(override_dest) as f:
+        _, override_files = tgwrapper._prepare_tg_source(tmpdir)
+        with open(override_files[0]) as f:
             content = f.read()
         assert "local" in content
         assert "backend" in content
-        os.remove(override_dest)
+        for f in override_files:
+            os.remove(f)
 
     def test_codepath_is_absolute(self, tmpdir):
         """Returned codepath is always absolute."""
-        codepath, override_dest = tgwrapper._prepare_tg_source(tmpdir)
+        codepath, override_files = tgwrapper._prepare_tg_source(tmpdir)
         assert os.path.isabs(codepath)
-        os.remove(override_dest)
+        for f in override_files:
+            os.remove(f)
+
+    def test_writes_override_to_dependency_dirs(self, tmpdir):
+        """_prepare_tg_source writes overrides to dependency module dirs too."""
+        # Create dependency directory
+        dep_dir = os.path.join(str(tmpdir), "dep_vpc")
+        os.makedirs(dep_dir)
+        # Create terragrunt.hcl with a dependency block
+        tg_content = (
+            'dependency "vpc" {\n'
+            '  config_path = "./dep_vpc"\n'
+            "  mock_outputs = {\n"
+            '    vpc_id = "vpc-mock"\n'
+            "  }\n"
+            "}\n"
+        )
+        with open(os.path.join(str(tmpdir), "terragrunt.hcl"), "w") as f:
+            f.write(tg_content)
+        codepath, override_files = tgwrapper._prepare_tg_source(str(tmpdir))
+        # Should have overrides in both main dir and dependency dir
+        assert len(override_files) == 2
+        assert os.path.isfile(os.path.join(dep_dir, "terravision_override.tf"))
+        for f in override_files:
+            os.remove(f)
 
 
 class TestParseTgDependencies:
@@ -439,19 +467,27 @@ class TestInjectDependencyRefs:
 
 
 class TestTgIntegration:
-    """Integration tests for Terragrunt — requires Terragrunt installed.
+    """Single comprehensive integration test for Terragrunt.
 
-    Uses the terragrunt-includes fixture which reproduces the real-world
-    pattern from issue #114:
-    - root.hcl with generate "backend" (S3)
-    - account.hcl with locals
-    - terragrunt.hcl using include "root", find_in_parent_folders, locals
-      with read_terragrunt_config, dependency blocks, and remote git source
+    Tests real-world patterns from issue #114 in one test to minimize CI time.
+    Covers: includes, find_in_parent_folders, remote git sources, local sources,
+    cross-module dependencies, mock_outputs, single-module and multi-module modes,
+    backend override, codepath resolution, and override cleanup.
     """
 
     @pytest.mark.slow
-    def test_single_module_with_includes_and_remote_source(self):
-        """tg_initplan works with include/find_in_parent_folders and remote git source."""
+    def test_terragrunt_full_pipeline(self):
+        """Comprehensive test of all Terragrunt scenarios."""
+        # Clean all caches
+        for fixture_dir in [INCLUDES_FIXTURE, REMOTE_STATE_FIXTURE]:
+            for root, dirs, _ in os.walk(fixture_dir):
+                dirs[:] = [d for d in dirs if d != ".git"]
+                for d in list(dirs):
+                    if d == ".terragrunt-cache":
+                        shutil.rmtree(os.path.join(root, d), ignore_errors=True)
+                        dirs.remove(d)
+
+        # --- Test 1: Single module with remote source and includes ---
         vpc_path = os.path.join(
             INCLUDES_FIXTURE, "staging", "us-east-1", "networking", "vpc"
         )
@@ -459,34 +495,49 @@ class TestTgIntegration:
             vpc_path, varfile=[], workspace="default", debug=False, upgrade=False
         )
         assert tfdata["is_terragrunt"] is True
-        assert len(tfdata["tf_resources_created"]) > 0
-        # Should contain VPC-related resources from the remote module
         types = {rc.get("type", "") for rc in tfdata["tf_resources_created"]}
         assert "aws_vpc" in types, f"Expected aws_vpc in {types}"
-        # No override file should leak into the source directory
-        override = os.path.join(vpc_path, "terravision_override.tf")
-        assert not os.path.exists(override), "Override leaked to source dir"
+        # codepath should point to cache dir with .tf files
+        assert ".terragrunt-cache" in tfdata["codepath"]
+        tf_files = [f for f in os.listdir(tfdata["codepath"]) if f.endswith(".tf")]
+        assert len(tf_files) > 0, f"No .tf files in codepath: {tfdata['codepath']}"
+        # No override leak
+        assert not os.path.exists(os.path.join(vpc_path, "terravision_override.tf"))
 
-    @pytest.mark.slow
-    def test_multi_module_with_includes_and_dependencies(self):
-        """tg_run_all_plan works with includes, dependencies, and remote sources."""
+        # --- Test 2: Single module with dependency (remote source) ---
+        rds_path = os.path.join(
+            INCLUDES_FIXTURE, "staging", "us-east-1", "data-stores", "rds"
+        )
+        tfdata = tgwrapper.tg_initplan(
+            rds_path, varfile=[], workspace="default", debug=False, upgrade=False
+        )
+        types = {rc.get("type", "") for rc in tfdata["tf_resources_created"]}
+        assert (
+            "aws_db_subnet_group" in types
+        ), f"Expected aws_db_subnet_group in {types}"
+        assert ".terragrunt-cache" in tfdata["codepath"]
+        # No override leak on either module or dependency
+        assert not os.path.exists(os.path.join(rds_path, "terravision_override.tf"))
+        assert not os.path.exists(os.path.join(vpc_path, "terravision_override.tf"))
+
+        # --- Test 3: Multi-module with remote sources ---
         staging_path = os.path.join(INCLUDES_FIXTURE, "staging")
         tfdata = tgwrapper.tg_run_all_plan(
             staging_path, varfile=[], workspace="default", debug=False, upgrade=False
         )
-        assert tfdata["is_terragrunt"] is True
         addresses = [rc["address"] for rc in tfdata["tf_resources_created"]]
-        # Should have resources from both vpc and rds modules
-        has_vpc = any("aws_vpc" in a for a in addresses)
-        has_rds = any("aws_db" in a for a in addresses)
-        assert has_vpc, f"Expected aws_vpc resource in {addresses}"
-        assert has_rds, f"Expected aws_db resource in {addresses}"
-        # All addresses should be module-prefixed
+        assert any("aws_vpc" in a for a in addresses), f"No vpc in {addresses}"
+        assert any("aws_db" in a for a in addresses), f"No rds in {addresses}"
         for addr in addresses:
-            assert addr.startswith("module."), f"Expected module prefix on {addr}"
-        # Verify override files were cleaned up from source directories
-        # (overrides in .terragrunt-cache are expected — Terragrunt copies them)
+            assert addr.startswith("module."), f"Missing module prefix: {addr}"
+        # codepath should be a list of cache directories
+        assert isinstance(tfdata["codepath"], list)
+        for cp in tfdata["codepath"]:
+            assert ".terragrunt-cache" in cp
+            assert any(f.endswith(".tf") for f in os.listdir(cp))
+        # Override cleanup
         for dirpath, dirs, _ in os.walk(staging_path):
             dirs[:] = [d for d in dirs if d != ".terragrunt-cache"]
-            override = os.path.join(dirpath, "terravision_override.tf")
-            assert not os.path.exists(override), f"Override not cleaned up in {dirpath}"
+            assert not os.path.exists(
+                os.path.join(dirpath, "terravision_override.tf")
+            ), f"Override leak in {dirpath}"

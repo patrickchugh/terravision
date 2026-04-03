@@ -15,7 +15,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
 import click
-from graphviz2drawio import graphviz2drawio
+
+try:
+    from graphviz2drawio import graphviz2drawio
+except ImportError:
+    graphviz2drawio = None
 
 import modules.config_loader as config_loader
 import modules.helpers as helpers
@@ -321,6 +325,13 @@ def handle_nodes(
                             tfdata["meta_data"].update(
                                 {node_connection: {"node": connectedNode}}
                             )
+                            # Defer the circular node's own connections so they
+                            # get processed after all nodes are drawn
+                            for dest in tfdata["graphdict"].get(node_connection, []):
+                                if dest != resource:
+                                    tfdata["deferred_connections"].append(
+                                        (node_connection, dest)
+                                    )
                     else:
                         # Node not in graphdict yet, defer
                         tfdata["deferred_connections"].append(
@@ -843,6 +854,17 @@ def render_diagram(
 
     # Handle draw.io format conversion
     if format == "drawio":
+        if graphviz2drawio is None:
+            click.echo(
+                click.style(
+                    "Error: draw.io export requires the 'graphviz2drawio' package.\n"
+                    "Install with: pip install 'terravision[drawio]'\n"
+                    "On Apple Silicon Mac/Windows you may need to set CFLAGS/LDFLAGS for Graphviz headers.\n"
+                    "See README for details.",
+                    fg="red",
+                )
+            )
+            sys.exit(1)
         drawio_output = Path.cwd() / f"{outfile}.drawio"
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

@@ -18,6 +18,10 @@ class EFSInfrequentaccessPrimaryBg(_Storage):
     _icon = "efs-infrequentaccess-primary-bg.png"
 
 
+class EFSFileSystem(_Storage):
+    _icon = "elastic-file-system-efs-file-system.png"
+
+
 class EFSStandardPrimaryBg(_Storage):
     _icon = "efs-standard-primary-bg.png"
 
@@ -88,7 +92,7 @@ aws_backup_vault = Backup
 aws_backup_selection = Backup
 aws_ebs_snapshot = ElasticBlockStoreEBS
 aws_ebs_volume = ElasticBlockStoreEBS
-aws_efs_access_point = ElasticFileSystemEFS
+aws_efs_access_point = EFSFileSystem
 aws_efs_file_system = ElasticFileSystemEFS
 aws_efs = ElasticFileSystemEFS
 aws_fsx_lustre_file_system = FsxForLustre

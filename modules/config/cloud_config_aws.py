@@ -364,6 +364,7 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_volume_attachment",
     "aws_alb",
     "aws_nlb",
+    "aws_efs_access_point",
     "aws_efs_mount_target",
     "aws_ecs_service",
     "aws_rds_aurora",

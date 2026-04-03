@@ -29,9 +29,9 @@ python terravision.py draw --source <path>
 ```bash
 # Poetry installation (recommended for development)
 poetry install
-poetry shell
 
-# Quick install (global packages)
+
+# Legacy install (global packages)
 pip install -r requirements.txt
 ```
 

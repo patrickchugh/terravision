@@ -1,0 +1,252 @@
+{
+    "aws_alb.elb~1": [
+        "aws_fargate.ecs~1"
+    ],
+    "aws_alb.elb~2": [
+        "aws_fargate.ecs~1"
+    ],
+    "aws_az.availability_zone_us_east_2a~1": [
+        "aws_subnet.app_private_use2a",
+        "aws_subnet.app_public_use2a"
+    ],
+    "aws_az.availability_zone_us_east_2b~2": [
+        "aws_subnet.app_private_use2b",
+        "aws_subnet.app_public_use2b"
+    ],
+    "aws_cloudwatch_log_group.cloudwatch": [
+        "aws_fargate.ecs~1"
+    ],
+    "aws_db_subnet_group.app_db_subnet_group": [
+        "aws_rds_mariadb.database"
+    ],
+    "aws_ecr_repository.ecr": [],
+    "aws_ecr_repository.webapp": [],
+    "aws_ecs_cluster.ecs": [],
+    "aws_efs_access_point.cache": [
+        "aws_efs_file_system.efs",
+        "aws_efs_file_system.efs",
+        "aws_fargate.ecs~1"
+    ],
+    "aws_efs_access_point.config": [
+        "aws_efs_file_system.efs",
+        "aws_efs_file_system.efs",
+        "aws_fargate.ecs~1"
+    ],
+    "aws_efs_access_point.images": [
+        "aws_efs_file_system.efs",
+        "aws_efs_file_system.efs",
+        "aws_fargate.ecs~1"
+    ],
+    "aws_efs_file_system.efs": [
+        "aws_instance.admin_host"
+    ],
+    "aws_efs_mount_target.webapp[\"use2a\"][use2a]~1": [
+        "aws_efs_file_system.efs"
+    ],
+    "aws_efs_mount_target.webapp[\"use2b\"][use2b]~1": [
+        "aws_efs_file_system.efs"
+    ],
+    "aws_eip.elastic_ip": [
+        "aws_nat_gateway.app_ngw_a",
+        "aws_nat_gateway.app_ngw_b"
+    ],
+    "aws_fargate.ecs~1": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_ecr_repository.webapp",
+        "aws_ecs_cluster.ecs",
+        "aws_efs_access_point.cache",
+        "aws_efs_access_point.config",
+        "aws_efs_access_point.images",
+        "aws_efs_mount_target.webapp[\"use2a\"][use2a]~1",
+        "aws_efs_mount_target.webapp[\"use2b\"][use2b]~1",
+        "aws_ssm_parameter.ssmparam"
+    ],
+    "aws_group.shared_services": [
+        "aws_cloudwatch_log_group.cloudwatch",
+        "aws_ecr_repository.ecr",
+        "aws_ecr_repository.webapp",
+        "aws_efs_file_system.efs",
+        "aws_eip.elastic_ip",
+        "aws_iam_group.of_services",
+        "aws_ssm_parameter.ssmparam"
+    ],
+    "aws_iam_instance_profile.admin_host_profile": [
+        "aws_instance.admin_host"
+    ],
+    "aws_iam_role.admin_host_role": [
+        "aws_iam_instance_profile.admin_host_profile",
+        "aws_iam_role_policy.admin_host_role_s3_policy",
+        "aws_iam_role_policy.admin_host_s3",
+        "aws_iam_role_policy_attachment.admin_host_role_patchpolicy",
+        "aws_iam_role_policy_attachment.admin_host_role_ssm_managed_instance_core",
+        "aws_instance.admin_host"
+    ],
+    "aws_iam_role.ecs_task_role": [
+        "aws_iam_role_policy.ecs_task_efs"
+    ],
+    "aws_iam_role_policy.admin_host_role_s3_policy": [],
+    "aws_iam_role_policy.admin_host_s3": [
+        "aws_s3_bucket.app_bucket"
+    ],
+    "aws_iam_role_policy.ecs_task_efs": [
+        "aws_efs_file_system.efs",
+        "aws_efs_file_system.efs"
+    ],
+    "aws_iam_role_policy.task_secrets": [
+        "aws_efs_file_system.efs",
+        "aws_efs_file_system.efs"
+    ],
+    "aws_iam_role_policy_attachment.admin_host_role_patchpolicy": [],
+    "aws_iam_role_policy_attachment.admin_host_role_ssm_managed_instance_core": [],
+    "aws_instance.admin_host": [],
+    "aws_internet_gateway.igw": [
+        "aws_route_table.app_public_rt",
+        "tv_aws_internet.internet"
+    ],
+    "aws_lb.elb": [
+        "aws_alb.elb~1",
+        "aws_alb.elb~2"
+    ],
+    "aws_nat_gateway.app_ngw_a": [
+        "aws_eip.elastic_ip",
+        "aws_internet_gateway.igw",
+        "aws_route_table.app_private_rt_a"
+    ],
+    "aws_nat_gateway.app_ngw_b": [
+        "aws_eip.elastic_ip",
+        "aws_internet_gateway.igw",
+        "aws_route_table.app_private_rt_b"
+    ],
+    "aws_rds_mariadb.database": [],
+    "aws_route_table.app_main_rt": [],
+    "aws_route_table.app_private_rt_a": [
+        "aws_nat_gateway.app_ngw_a",
+        "aws_route_table_association.app_private_rt_assoc_use2a",
+        "aws_vpc_endpoint_route_table_association.app_s3_endpoint_rt_assoc_a"
+    ],
+    "aws_route_table.app_private_rt_b": [
+        "aws_nat_gateway.app_ngw_b",
+        "aws_route_table_association.app_private_rt_assoc_use2b",
+        "aws_vpc_endpoint_route_table_association.app_s3_endpoint_rt_assoc_b"
+    ],
+    "aws_route_table.app_public_rt": [
+        "aws_internet_gateway.igw",
+        "aws_route_table_association.app_public_rt_assoc_use2a",
+        "aws_route_table_association.app_public_rt_assoc_use2b"
+    ],
+    "aws_route_table_association.app_private_rt_assoc_use2a": [
+        "aws_route_table.app_private_rt_a"
+    ],
+    "aws_route_table_association.app_private_rt_assoc_use2b": [
+        "aws_route_table.app_private_rt_b"
+    ],
+    "aws_route_table_association.app_public_rt_assoc_use2a": [
+        "aws_route_table.app_public_rt"
+    ],
+    "aws_route_table_association.app_public_rt_assoc_use2b": [
+        "aws_route_table.app_public_rt"
+    ],
+    "aws_s3_bucket.app_bucket": [
+        "aws_iam_role_policy.admin_host_s3",
+        "aws_s3_bucket_lifecycle_configuration.app_bucket_lifecycle",
+        "aws_s3_bucket_server_side_encryption_configuration.app_bucket_sse",
+        "aws_s3_bucket_versioning.app_bucket_versioning"
+    ],
+    "aws_s3_bucket_lifecycle_configuration.app_bucket_lifecycle": [
+        "aws_s3_bucket.app_bucket"
+    ],
+    "aws_s3_bucket_server_side_encryption_configuration.app_bucket_sse": [
+        "aws_s3_bucket.app_bucket"
+    ],
+    "aws_s3_bucket_versioning.app_bucket_versioning": [
+        "aws_s3_bucket.app_bucket"
+    ],
+    "aws_security_group.app_admin_sg_admin_host": [
+        "aws_instance.admin_host"
+    ],
+    "aws_security_group.app_alb_sg_elb~1": [
+        "aws_alb.elb~1"
+    ],
+    "aws_security_group.app_alb_sg_elb~2": [
+        "aws_alb.elb~2"
+    ],
+    "aws_security_group.app_ecs_sg~1": [
+        "aws_fargate.ecs~1"
+    ],
+    "aws_security_group.efs_webapp[\"use2a\"][use2a]~1": [
+        "aws_efs_mount_target.webapp[\"use2a\"][use2a]~1"
+    ],
+    "aws_security_group.efs_webapp[\"use2b\"][use2b]~1": [
+        "aws_efs_mount_target.webapp[\"use2b\"][use2b]~1"
+    ],
+    "aws_security_group.efs~1": [
+        "aws_efs_mount_target.webapp",
+        "aws_security_group_rule.admin_egress_to_efs",
+        "aws_security_group_rule.ecs_egress_to_efs",
+        "aws_security_group_rule.efs_egress_all",
+        "aws_security_group_rule.efs_ingress_from_admin",
+        "aws_security_group_rule.efs_ingress_from_ecs"
+    ],
+    "aws_security_group.efs~2": [
+        "aws_efs_mount_target.webapp",
+        "aws_security_group_rule.admin_egress_to_efs",
+        "aws_security_group_rule.ecs_egress_to_efs",
+        "aws_security_group_rule.efs_egress_all",
+        "aws_security_group_rule.efs_ingress_from_admin",
+        "aws_security_group_rule.efs_ingress_from_ecs"
+    ],
+    "aws_security_group_rule.admin_egress_to_efs": [],
+    "aws_security_group_rule.admin_egress_to_endpoints": [],
+    "aws_security_group_rule.admin_egress_to_rds": [],
+    "aws_security_group_rule.alb_egress_to_ecs": [],
+    "aws_security_group_rule.ecs_egress_to_efs": [],
+    "aws_security_group_rule.ecs_egress_to_endpoints": [],
+    "aws_security_group_rule.ecs_egress_to_rds": [],
+    "aws_security_group_rule.ecs_egress_to_s3": [],
+    "aws_security_group_rule.ecs_ingress_from_alb": [],
+    "aws_security_group_rule.efs_egress_all": [],
+    "aws_security_group_rule.efs_ingress_from_admin": [],
+    "aws_security_group_rule.efs_ingress_from_ecs": [],
+    "aws_security_group_rule.endpoints_egress_all": [],
+    "aws_security_group_rule.endpoints_ingress_from_admin": [],
+    "aws_security_group_rule.endpoints_ingress_from_ecs": [],
+    "aws_security_group_rule.rds_egress_all": [],
+    "aws_security_group_rule.rds_ingress_from_admin": [],
+    "aws_security_group_rule.rds_ingress_from_ecs": [],
+    "aws_ssm_parameter.ssmparam": [],
+    "aws_subnet.app_private_use2a": [
+        "aws_route_table_association.app_private_rt_assoc_use2a",
+        "aws_security_group.app_admin_sg_admin_host",
+        "aws_security_group.app_ecs_sg~1",
+        "aws_security_group.efs_webapp[\"use2a\"][use2a]~1",
+        "aws_security_group.efs_webapp[\"use2b\"][use2b]~1",
+        "aws_security_group.efs~1"
+    ],
+    "aws_subnet.app_private_use2b": [
+        "aws_route_table_association.app_private_rt_assoc_use2b",
+        "aws_security_group.efs~2"
+    ],
+    "aws_subnet.app_public_use2a": [
+        "aws_nat_gateway.app_ngw_a",
+        "aws_route_table_association.app_public_rt_assoc_use2a",
+        "aws_security_group.app_alb_sg_elb~1"
+    ],
+    "aws_subnet.app_public_use2b": [
+        "aws_nat_gateway.app_ngw_b",
+        "aws_route_table_association.app_public_rt_assoc_use2b",
+        "aws_security_group.app_alb_sg_elb~2"
+    ],
+    "aws_vpc.app_vpc": [
+        "aws_az.availability_zone_us_east_2a~1",
+        "aws_az.availability_zone_us_east_2b~2",
+        "aws_internet_gateway.igw",
+        "aws_lb.elb",
+        "aws_route_table.app_main_rt",
+        "aws_route_table.app_private_rt_a",
+        "aws_route_table.app_private_rt_b",
+        "aws_route_table.app_public_rt",
+        "aws_vpc_endpoint.app_s3_endpoint"
+    ],
+    "tv_aws_internet.internet": []
+}

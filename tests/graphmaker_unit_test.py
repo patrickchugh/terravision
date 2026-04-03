@@ -11,6 +11,8 @@ from modules.graphmaker import (
     consolidate_nodes,
     dict_generator,
     cleanup_originals,
+    add_number_suffix,
+    extend_sg_groups,
 )
 
 
@@ -136,6 +138,161 @@ class TestCleanupOriginals(unittest.TestCase):
         }
         result = cleanup_originals([], tfdata)
         self.assertIn("resource1", result["graphdict"])
+
+
+class TestAddNumberSuffix(unittest.TestCase):
+    """Tests for add_number_suffix - issue #184 ValueError fix."""
+
+    def test_no_crash_when_resource_removed_twice(self):
+        """A resource matching multiple numbered variants should not crash.
+
+        When a connection matches two or more numbered variants (e.g. res~1 and
+        res~2), the original unnumbered connection should only be removed once
+        from new_list, not once per match.
+        """
+        tfdata = {
+            "graphdict": {
+                "aws_security_group.sg": [
+                    "aws_instance.web",
+                ],
+                "aws_instance.web~1": [],
+                "aws_instance.web~2": [],
+                "aws_instance.web": [],
+            },
+            "meta_data": {
+                "aws_security_group.sg": {"count": 2},
+                "aws_instance.web": {"count": 2},
+                "aws_instance.web~1": {"count": 2},
+                "aws_instance.web~2": {"count": 2},
+            },
+            "provider_detection": {"primary_provider": "aws"},
+        }
+        # Should not raise ValueError: list.remove(x): x not in list
+        result = add_number_suffix(1, "aws_security_group.sg", tfdata)
+        self.assertIsInstance(result, list)
+
+
+class TestExtendSgGroups(unittest.TestCase):
+    """Tests for extend_sg_groups - issue #184 shared SG across subnets."""
+
+    def _make_tfdata(self, graphdict, meta_data=None):
+        if meta_data is None:
+            meta_data = {k: {"module": "main"} for k in graphdict}
+        return {
+            "graphdict": graphdict,
+            "meta_data": meta_data,
+            "provider_detection": {"primary_provider": "aws"},
+        }
+
+    def test_subnet_refs_updated_when_sg_expanded(self):
+        """When an SG is expanded into numbered variants, subnets referencing
+        the original SG must be updated to reference the numbered variants.
+        """
+        tfdata = self._make_tfdata(
+            {
+                "aws_subnet.private_a": ["aws_security_group.ecs_sg"],
+                "aws_subnet.private_b": ["aws_security_group.ecs_sg"],
+                "aws_security_group.ecs_sg": ["aws_fargate.ecs~1"],
+                "aws_fargate.ecs~1": [],
+            }
+        )
+        result = extend_sg_groups(tfdata)
+        gd = result["graphdict"]
+
+        # Original SG should be deleted
+        self.assertNotIn("aws_security_group.ecs_sg", gd)
+
+        # Numbered variant should exist
+        self.assertIn("aws_security_group.ecs_sg~1", gd)
+
+        # First subnet gets the SG variant (only ~1 exists)
+        self.assertNotIn("aws_security_group.ecs_sg", gd["aws_subnet.private_a"])
+        self.assertIn("aws_security_group.ecs_sg~1", gd["aws_subnet.private_a"])
+
+        # Second subnet should NOT get an SG — there is no ~2 instance,
+        # so no resource is actually deployed there
+        self.assertNotIn("aws_security_group.ecs_sg", gd["aws_subnet.private_b"])
+        sg_refs_b = [c for c in gd["aws_subnet.private_b"] if "ecs_sg~" in c]
+        self.assertEqual(len(sg_refs_b), 0, "Subnet B should have no SG variant")
+
+    def test_multiple_instances_across_subnets(self):
+        """When an SG has variants matching each subnet, each subnet gets one."""
+        tfdata = self._make_tfdata(
+            {
+                "aws_subnet.a": ["aws_security_group.web_sg"],
+                "aws_subnet.b": ["aws_security_group.web_sg"],
+                "aws_security_group.web_sg": [
+                    "aws_instance.web~1",
+                    "aws_instance.web~2",
+                ],
+                "aws_instance.web~1": [],
+                "aws_instance.web~2": [],
+            }
+        )
+        result = extend_sg_groups(tfdata)
+        gd = result["graphdict"]
+
+        sg_in_a = [c for c in gd["aws_subnet.a"] if "web_sg~" in c]
+        sg_in_b = [c for c in gd["aws_subnet.b"] if "web_sg~" in c]
+
+        # Both subnets should have SG refs
+        self.assertTrue(len(sg_in_a) > 0)
+        self.assertTrue(len(sg_in_b) > 0)
+
+        # They should NOT share the same SG variant
+        self.assertNotEqual(
+            sg_in_a,
+            sg_in_b,
+            "Subnets share the same SG variant - graphviz can't render this",
+        )
+
+    def test_shared_sg_no_numbered_children_gets_expanded(self):
+        """An SG with no numbered children but shared across subnets must
+        still be expanded into per-subnet copies.
+        """
+        tfdata = self._make_tfdata(
+            {
+                "aws_subnet.a": ["aws_security_group.efs"],
+                "aws_subnet.b": ["aws_security_group.efs"],
+                "aws_security_group.efs": [
+                    "aws_efs_mount_target.mt",
+                    "aws_security_group_rule.efs_rule",
+                ],
+                "aws_efs_mount_target.mt": [],
+                "aws_security_group_rule.efs_rule": [],
+            }
+        )
+        result = extend_sg_groups(tfdata)
+        gd = result["graphdict"]
+
+        # Original SG should be deleted
+        self.assertNotIn("aws_security_group.efs", gd)
+
+        # Per-subnet variants should exist
+        self.assertIn("aws_security_group.efs~1", gd)
+        self.assertIn("aws_security_group.efs~2", gd)
+
+        # Each subnet gets its own variant
+        self.assertIn("aws_security_group.efs~1", gd["aws_subnet.a"])
+        self.assertIn("aws_security_group.efs~2", gd["aws_subnet.b"])
+        self.assertNotIn("aws_security_group.efs~2", gd["aws_subnet.a"])
+        self.assertNotIn("aws_security_group.efs~1", gd["aws_subnet.b"])
+
+    def test_single_subnet_sg_not_expanded(self):
+        """An SG referenced by only one subnet should not be expanded."""
+        tfdata = self._make_tfdata(
+            {
+                "aws_subnet.a": ["aws_security_group.admin_sg"],
+                "aws_security_group.admin_sg": ["aws_instance.bastion"],
+                "aws_instance.bastion": [],
+            }
+        )
+        result = extend_sg_groups(tfdata)
+        gd = result["graphdict"]
+
+        # SG should remain unchanged (not expanded)
+        self.assertIn("aws_security_group.admin_sg", gd)
+        self.assertIn("aws_security_group.admin_sg", gd["aws_subnet.a"])
 
 
 if __name__ == "__main__":

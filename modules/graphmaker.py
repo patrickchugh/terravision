@@ -1851,7 +1851,8 @@ def add_number_suffix(
                 and res not in new_list
             ):
                 new_list.append(res)
-                new_list.remove(resource)
+                if resource in new_list:
+                    new_list.remove(resource)
     return new_list
 
 
@@ -1882,6 +1883,17 @@ def extend_sg_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 helpers.safe_remove_connection(tfdata, sg, connection)
         if expanded:
             also_connected = helpers.list_of_parents(tfdata["graphdict"], sg)
+            # Collect all numbered SG variants and referring subnets before modifying
+            sg_variants = sorted(
+                [k for k in tfdata["graphdict"] if k.startswith(sg + "~")]
+            )
+            referring_subnets = sorted(
+                [
+                    p
+                    for p in also_connected
+                    if "_subnet" in p and "association" not in p and "~" not in p
+                ]
+            )
             for node in also_connected:
                 if "~" in node:
                     suffixed_sg = sg + "~" + node.split("~")[1]
@@ -1901,7 +1913,119 @@ def extend_sg_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                             i = i + 1
                             next_node = node.split("~")[0] + "~" + str(i)
                             next_sg = sg + "~" + str(i)
+                else:
+                    # Update non-numbered parents (subnets, VPCs, etc.)
+                    if not helpers.safe_remove_connection(tfdata, node, sg):
+                        continue
+                    if "_subnet" in node and "association" not in node and sg_variants:
+                        # For subnets: positionally map to an existing SG variant.
+                        # Only assign variants that already exist — don't fabricate
+                        # new ones, since each variant's children are tied to a
+                        # specific numbered instance (e.g. fargate.ecs~1).
+                        try:
+                            subnet_pos = referring_subnets.index(node)
+                            matching_sg = sg + "~" + str(subnet_pos + 1)
+                            if matching_sg in tfdata["graphdict"]:
+                                if matching_sg not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(matching_sg)
+                            elif subnet_pos < len(sg_variants):
+                                # Fall back to the variant at this position
+                                fallback = sg_variants[subnet_pos]
+                                if fallback not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(fallback)
+                            # else: no matching variant — subnet doesn't get this SG
+                        except (ValueError, IndexError):
+                            for variant in sg_variants:
+                                if variant not in tfdata["graphdict"][node]:
+                                    tfdata["graphdict"][node].append(variant)
+                    else:
+                        # For non-subnet parents: add all SG variants
+                        for variant in sg_variants:
+                            if variant not in tfdata["graphdict"][node]:
+                                tfdata["graphdict"][node].append(variant)
             helpers.delete_node(tfdata, sg, remove_from_connections=False)
+        elif "~" not in sg:
+            # SG has no numbered children but may be shared across multiple subnets.
+            # Graphviz can't render a group inside multiple parent clusters,
+            # so create per-subnet copies.
+            parents = helpers.list_of_parents(tfdata["graphdict"], sg)
+            referring_subnets = sorted(
+                [
+                    p
+                    for p in parents
+                    if "_subnet" in p and "association" not in p and "~" not in p
+                ]
+            )
+            if len(referring_subnets) > 1:
+                children = list(tfdata["graphdict"][sg])
+                # Resolve dangling plain names to their for_each/numbered
+                # variants so each subnet copy gets the correct child.
+                resolved_children = []
+                expandable = []
+                for child in children:
+                    variants = sorted(
+                        [
+                            k
+                            for k in tfdata["graphdict"]
+                            if k != child and k.startswith(child)
+                        ]
+                    )
+                    if child not in tfdata["graphdict"] and variants:
+                        expandable.append((child, variants))
+                    else:
+                        resolved_children.append(child)
+                for idx, subnet in enumerate(referring_subnets):
+                    suffixed_sg = sg + "~" + str(idx + 1)
+                    sg_children = list(resolved_children)
+                    # Distribute expanded variants across subnets positionally
+                    for _plain, variants in expandable:
+                        if idx < len(variants):
+                            sg_children.append(variants[idx])
+                        elif variants:
+                            sg_children.append(variants[-1])
+                    tfdata["graphdict"][suffixed_sg] = sg_children
+                    helpers.safe_remove_connection(tfdata, subnet, sg)
+                    if suffixed_sg not in tfdata["graphdict"][subnet]:
+                        tfdata["graphdict"][subnet].append(suffixed_sg)
+                # Update non-subnet parents to reference all new variants
+                sg_variants = sorted(
+                    [k for k in tfdata["graphdict"] if k.startswith(sg + "~")]
+                )
+                for parent in parents:
+                    if parent in referring_subnets:
+                        continue
+                    if helpers.safe_remove_connection(tfdata, parent, sg):
+                        for variant in sg_variants:
+                            if variant not in tfdata["graphdict"][parent]:
+                                tfdata["graphdict"][parent].append(variant)
+                helpers.delete_node(tfdata, sg, remove_from_connections=False)
+
+    # Clean up redundant SG copies: if an SG's children are all already
+    # contained by another SG in the same subnet, the duplicate is noise.
+    all_sgs = [
+        s
+        for s in list(tfdata["graphdict"])
+        if helpers.get_no_module_name(s).startswith("aws_security_group")
+        and "rule" not in s
+    ]
+    for sg in all_sgs:
+        if sg not in tfdata["graphdict"]:
+            continue
+        sg_children = set(tfdata["graphdict"][sg])
+        if not sg_children:
+            continue
+        # Find any other SG that fully covers this SG's children
+        for other_sg in all_sgs:
+            if other_sg == sg or other_sg not in tfdata["graphdict"]:
+                continue
+            other_children = set(tfdata["graphdict"][other_sg])
+            if sg_children.issubset(other_children) and len(other_children) > len(
+                sg_children
+            ):
+                # other_sg fully contains this SG's children plus more (rules).
+                # This SG is a redundant subset — remove it.
+                helpers.delete_node(tfdata, sg)
+                break
 
     return tfdata
 
