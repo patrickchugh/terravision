@@ -12,7 +12,7 @@ import pkgutil
 import sys
 import warnings
 from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Set, Any, Optional
 
 import click
 
@@ -527,6 +527,11 @@ def handle_group(
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
 
+    # Track cluster ID to terraform resource mapping for HTML renderer
+    if "cluster_id_map" not in tfdata:
+        tfdata["cluster_id_map"] = {}
+    tfdata["cluster_id_map"][newGroup.name] = resource
+
     # Create separate label node for clusters that have label metadata
     create_cluster_label_node(newGroup)
 
@@ -649,6 +654,298 @@ def draw_objects(
                     )
 
     return all_drawn_resources_list
+
+
+def generate_dot(
+    tfdata: Dict[str, Any],
+    outfile: str,
+    source: str,
+) -> Tuple[str, Set[str]]:
+    """Generate a post-processed DOT string from tfdata.
+
+    Builds the complete Graphviz DOT graph (nodes, clusters, edges, footer),
+    runs the gvpr label positioning script, and returns the DOT string along
+    with the set of icon file paths referenced in the graph.
+
+    Args:
+        tfdata: Terraform data dictionary with graphdict, meta_data, annotations
+        outfile: Output filename stem (used for temp DOT files)
+        source: Source path or URL for footer attribution
+
+    Returns:
+        Tuple of (dot_string, icon_paths) where dot_string is the post-processed
+        DOT source and icon_paths is a set of absolute paths to icon files used.
+    """
+    # Load provider-specific configuration constants and set module globals
+    global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
+
+    provider = get_primary_provider_or_default(tfdata)
+
+    # Dynamically load resource classes for the detected provider
+    _load_provider_resources(provider)
+
+    constants = _load_provider_constants(tfdata)
+    CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
+    GROUP_NODES = constants["GROUP_NODES"]
+    DRAW_ORDER = constants["DRAW_ORDER"]
+    NODE_VARIANTS = constants["NODE_VARIANTS"]
+    OUTER_NODES = constants["OUTER_NODES"]
+    AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
+    EDGE_NODES = constants["EDGE_NODES"]
+    SHARED_SERVICES = constants["SHARED_SERVICES"]
+    ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
+    NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
+
+    # Snapshot meta_data before drawing (drawing overwrites entries with {"node": ...})
+    # Used by HTML renderer to show metadata for drawn resources
+    import copy as _copy
+
+    tfdata["pre_draw_metadata"] = _copy.deepcopy(tfdata.get("meta_data", {}))
+
+    # Track already drawn resources to prevent duplicates
+    all_drawn_resources_list = list()
+    tfdata["deferred_connections"] = list()
+
+    # Initialize diagram canvas
+    title = (
+        "Cloud Architecture Diagram"
+        if not tfdata["annotations"].get("title")
+        else tfdata["annotations"]["title"]
+    )
+    # Use 'neato' engine for all providers with neato_no_op=2
+    myDiagram = Canvas(
+        "",
+        filename=outfile,
+        outformat="dot",
+        show=False,
+        direction="TB",
+        engine="neato",
+    )
+    setdiagram(myDiagram)
+
+    # Create main cloud provider boundary
+    provider_group_name = provider.upper() + "Group"
+    cloud_group_class = globals().get(provider_group_name)
+    if cloud_group_class is None:
+        click.echo(
+            click.style(
+                f"\nERROR: No group class '{provider_group_name}' found for provider '{provider}'. Exiting.",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit()
+
+    # Add title as a node at the top (positioned by gvpr for all providers)
+    setcluster(myDiagram)
+    title_style = {
+        "_titlenode": "1",
+        "shape": "plaintext",
+        "fontsize": "30",
+        "fontname": "Sans-Serif",
+        "fontcolor": "#2D3436",
+        "label": title,
+    }
+    getattr(sys.modules[__name__], "Node")(**title_style)
+
+    cloudGroup = cloud_group_class()
+    setcluster(cloudGroup)
+    tfdata["connected_nodes"] = dict()
+
+    # Draw resources in predefined order for optimal layout
+    for node_type_list in DRAW_ORDER:
+        # Outer nodes go directly on canvas, others in cloud group
+        targetGroup = cloudGroup
+        if node_type_list == OUTER_NODES:
+            targetGroup = myDiagram
+        setcluster(targetGroup)
+        all_drawn_resources_list = draw_objects(
+            node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
+        )
+
+    # Process deferred connections after all nodes are drawn
+    if tfdata.get("deferred_connections"):
+        for origin_resource, dest_resource in tfdata["deferred_connections"]:
+            if (
+                dest_resource in tfdata["meta_data"]
+                and "node" in tfdata["meta_data"][dest_resource]
+            ):
+                if (
+                    origin_resource in tfdata["meta_data"]
+                    and "node" in tfdata["meta_data"][origin_resource]
+                ):
+                    originNode = tfdata["meta_data"][origin_resource]["node"]
+                    connectedNode = tfdata["meta_data"][dest_resource]["node"]
+                    origin_type = helpers.get_no_module_name(origin_resource).split(
+                        "."
+                    )[0]
+                    dest_type = helpers.get_no_module_name(dest_resource).split(".")[0]
+
+                    if originNode != connectedNode and ok_to_connect(
+                        origin_type, dest_type
+                    ):
+                        label = get_edge_labels(originNode, connectedNode, tfdata)
+                        line_style = (
+                            "solid"
+                            if always_draw_edge(origin_type, dest_type, tfdata)
+                            else "invis"
+                        )
+                        # Check if this is a bidirectional link
+                        is_bidir = frozenset(
+                            (origin_resource, dest_resource)
+                        ) in tfdata.get("bidirectional_edges", set())
+                        originNode.connect(
+                            connectedNode,
+                            Edge(
+                                forward=True,
+                                reverse=is_bidir,
+                                label=label,
+                                style=line_style,
+                            ),
+                        )
+                        if not tfdata["connected_nodes"].get(originNode._id):
+                            tfdata["connected_nodes"][originNode._id] = list()
+                        tfdata["connected_nodes"][originNode._id] = (
+                            helpers.append_dictlist(
+                                tfdata["connected_nodes"][originNode._id],
+                                connectedNode._id,
+                            )
+                        )
+                        # For bidirectional edges, also track the reverse
+                        if is_bidir:
+                            if not tfdata["connected_nodes"].get(connectedNode._id):
+                                tfdata["connected_nodes"][connectedNode._id] = list()
+                            tfdata["connected_nodes"][connectedNode._id] = (
+                                helpers.append_dictlist(
+                                    tfdata["connected_nodes"][connectedNode._id],
+                                    originNode._id,
+                                )
+                            )
+
+    # Add footer with metadata
+    if source == ".":
+        source = os.getcwd()
+
+    # Set context to main diagram so footer is outside all clusters
+    setcluster(myDiagram)
+
+    # Add footer node (positioned by gvpr for all providers)
+    footer_style = {
+        "_footernode": "1",
+        "shape": "record",
+        "width": "25",
+        "height": "2",
+        "fontsize": "18",
+        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
+    }
+    getattr(sys.modules[__name__], "Node")(**footer_style)
+
+    # Create label node for cloud group if it has label metadata
+    create_cluster_label_node(cloudGroup)
+
+    # Add cloud group to main canvas
+    myDiagram.subgraph(cloudGroup.dot)
+
+    # Generate initial DOT file
+    path_to_predot = myDiagram.pre_render()
+
+    # Apply label positioning script
+    bundle_dir = Path(__file__).parent.parent
+    path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
+    path_to_postdot = Path.cwd() / f"{outfile}.dot"
+    os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
+
+    # Read the post-processed DOT string
+    with open(path_to_postdot, "r", encoding="utf-8") as f:
+        dot_string = f.read()
+
+    # Extract icon file paths from DOT string (both image="..." and <img src="..."/>)
+    import re
+
+    icon_paths = set(re.findall(r'image="([^"]+)"', dot_string))
+    icon_paths.update(re.findall(r'<img src="([^"]+)"', dot_string))
+
+    # Build mapping from Graphviz node ID to Terraform resource address
+    # After drawing, meta_data[resource] = {"node": newNode} where resource is
+    # the Terraform address and newNode._id is the Graphviz UUID
+    node_id_map = {}
+    for tf_address, meta_val in tfdata.get("meta_data", {}).items():
+        if isinstance(meta_val, dict) and "node" in meta_val:
+            node_obj = meta_val["node"]
+            if hasattr(node_obj, "_id"):
+                node_id_map[node_obj._id] = tf_address
+
+    # Clean up temporary DOT files
+    os.remove(path_to_predot)
+    os.remove(path_to_postdot)
+
+    # Include cluster ID mapping
+    cluster_id_map = tfdata.get("cluster_id_map", {})
+
+    setdiagram(None)
+    return dot_string, icon_paths, node_id_map, cluster_id_map
+
+
+def generate_svg(
+    tfdata: Dict[str, Any],
+    outfile: str,
+    source: str,
+) -> Tuple[str, Set[str]]:
+    """Generate an SVG string from tfdata using the local Graphviz installation.
+
+    Calls generate_dot() to build the DOT, renders to SVG via Graphviz neato,
+    then replaces icon file paths with base64 data URIs in the SVG output.
+
+    Returns:
+        Tuple of (svg_string, icon_paths) where svg_string is the rendered SVG
+        with all icons embedded as base64 data URIs.
+    """
+    from graphviz import Source
+
+    dot_string, icon_paths, node_id_map, cluster_id_map = generate_dot(
+        tfdata, outfile, source
+    )
+
+    # Write DOT (with original file paths) to a temp file, render to SVG
+    temp_dot_path = Path.cwd() / f"{outfile}_html_temp.dot"
+    with open(temp_dot_path, "w", encoding="utf-8") as f:
+        f.write(dot_string)
+
+    dotsource = Source.from_file(
+        str(temp_dot_path), engine="neato", directory=Path.cwd()
+    )
+    svg_path = dotsource.render(
+        format="svg", quiet=True, engine="neato", neato_no_op=2, directory=Path.cwd()
+    )
+
+    with open(svg_path, "r", encoding="utf-8") as f:
+        svg_string = f.read()
+
+    # Clean up temp files
+    os.remove(temp_dot_path)
+    os.remove(svg_path)
+
+    # Now replace icon file paths with base64 data URIs in the SVG output
+    import base64
+
+    for icon_path in icon_paths:
+        if os.path.isfile(icon_path):
+            with open(icon_path, "rb") as f:
+                icon_data = f.read()
+            ext = os.path.splitext(icon_path)[1].lower()
+            mime = {
+                ".png": "image/png",
+                ".svg": "image/svg+xml",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+            }.get(ext, "image/png")
+            b64 = base64.b64encode(icon_data).decode("ascii")
+            data_uri = f"data:{mime};base64,{b64}"
+            svg_string = svg_string.replace(icon_path, data_uri)
+
+    return svg_string, icon_paths, node_id_map, cluster_id_map
 
 
 def render_diagram(

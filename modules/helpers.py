@@ -780,11 +780,30 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     instance_raw = (m.group(2) or "").strip()
 
     # Replace placeholder instance names; prefer module name when available
+    # But only use module name if the resource type is generic enough that
+    # the module name adds meaningful context (e.g. module.image_compression_lambda.aws_lambda_function.this)
+    # Don't use it when the resource type itself is descriptive (e.g. aws_nat_gateway, aws_ecs_service)
     placeholders = {"this", "resource"}
     use_module_as_label = False
     if instance_raw in placeholders:
         if innermost_module and innermost_module not in placeholders:
-            use_module_as_label = True
+            # Only use module name for generic resource types where instance name
+            # is the only differentiator (e.g. aws_lambda_function.this in module.x)
+            generic_types = {
+                "lambda_function",
+                "instance",
+                "function",
+                "bucket",
+                "table",
+                "queue",
+                "topic",
+                "stream",
+                "cluster",
+                "service",
+                "task_definition",
+            }
+            if resource_type in generic_types:
+                use_module_as_label = True
         instance_raw = ""
 
     # Special-case: availability zone formatting

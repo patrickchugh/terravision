@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - Architecture Diagram</title>
+    <style>
+        /* === BASE STYLES === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        #diagram-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #graph {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        #graph:active { cursor: grabbing; }
+        #graph svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* === DIAGRAM TITLE === */
+        #diagram-title {
+            position: fixed;
+            top: 14px;
+            left: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3436;
+            background: rgba(255,255,255,0.85);
+            padding: 6px 14px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            z-index: 50;
+        }
+
+        /* === CONTROLS TOOLBAR === */
+        #controls {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 50;
+        }
+        .ctrl-btn {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 7px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            transition: background 0.15s;
+            user-select: none;
+            line-height: 1;
+        }
+        .ctrl-btn:hover { background: #e8e8e8; }
+        .ctrl-btn.active { background: #e8f4fd; border-color: #3498db; color: #3498db; }
+
+        /* Search */
+        .search-wrapper { position: relative; }
+        #search-input {
+            width: 200px;
+            padding: 7px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'SF Mono', Consolas, monospace;
+            outline: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        #search-input:focus { border-color: #3498db; }
+        .search-results {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #0d1f3c;
+            border: 1px solid #1a2a4a;
+            border-radius: 6px;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 60;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .search-result-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            font-family: 'SF Mono', Consolas, monospace;
+            color: #c8d6e5;
+            cursor: pointer;
+            border-bottom: 1px solid #111d33;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: #112240; color: #00d4ff; }
+        .ctrl-btn-label {
+            font-size: 11px;
+            display: block;
+            text-align: center;
+            margin-top: 2px;
+            color: #888;
+        }
+
+        /* === DETAIL PANEL — Cyberpunk Dark Blue === */
+        .panel-brand {
+            padding: 18px 20px 14px;
+            background: #07101e;
+            border-bottom: 1px solid #1a2a4a;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand-terra {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1px;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .brand-vision {
+            font-size: 24px;
+            font-weight: 300;
+            color: #ffd700;
+            letter-spacing: 1px;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        #detail-panel {
+            position: fixed;
+            top: 0;
+            right: -520px;
+            width: 520px;
+            height: 100vh;
+            background: #0a1628;
+            box-shadow: -2px 0 20px rgba(0,0,0,0.5);
+            z-index: 100;
+            transition: right 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            color: #c8d6e5;
+        }
+        #detail-panel.open { right: 0; }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1a2a4a;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-shrink: 0;
+            background: #0d1f3c;
+        }
+        .panel-header-text { flex: 1; }
+        .panel-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #00d4ff;
+            word-break: break-all;
+        }
+        .panel-subtitle {
+            font-size: 11px;
+            color: #5a7a9a;
+            margin-top: 4px;
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+        .panel-instance-badge {
+            display: inline-block;
+            background: #1a2a4a;
+            color: #5a7a9a;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 8px;
+            margin-top: 3px;
+            border: 1px solid #2a4a6a;
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+        .panel-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #5a7a9a;
+            padding: 0 0 0 12px;
+            line-height: 1;
+        }
+        .panel-close:hover { color: #00d4ff; }
+
+        /* Tab bar */
+        .panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #1a2a4a;
+            flex-shrink: 0;
+            background: #0d1f3c;
+        }
+        .panel-tab {
+            flex: 1;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #5a7a9a;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .panel-tab:hover { color: #c8d6e5; background: #112240; }
+        .panel-tab.active { color: #00d4ff; border-bottom-color: #00d4ff; }
+
+        /* Panel content */
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+        .panel-body::-webkit-scrollbar { width: 6px; }
+        .panel-body::-webkit-scrollbar-track { background: #0a1628; }
+        .panel-body::-webkit-scrollbar-thumb { background: #1a2a4a; border-radius: 3px; }
+        .panel-section { display: none; }
+        .panel-section.active { display: block; }
+
+        .attr-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .attr-table tr { border-bottom: 1px solid #111d33; }
+        .attr-table tr:hover { background: #112240; }
+        .attr-key {
+            padding: 8px 12px 8px 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #5a7a9a;
+            vertical-align: top;
+            width: 40%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .attr-val {
+            padding: 8px 20px 8px 8px;
+            font-size: 12px;
+            color: #c8d6e5;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            vertical-align: top;
+            width: 60%;
+        }
+        .attr-val.computed { color: #3a5a7a; font-style: italic; }
+        .attr-val-box {
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 11px;
+            background: #111d33;
+            color: #c8d6e5;
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #1a2a4a;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .attr-val-box.computed { color: #3a5a7a; font-style: italic; }
+        .no-metadata {
+            padding: 30px 20px;
+            text-align: center;
+            color: #3a5a7a;
+            font-size: 13px;
+        }
+
+        /* Row action buttons */
+        .attr-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .attr-action-btn {
+            background: #1a2a4a;
+            border: 1px solid #2a3a5a;
+            border-radius: 3px;
+            color: #5a7a9a;
+            font-size: 10px;
+            padding: 2px 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .attr-action-btn:hover { background: #2a4a6a; color: #00d4ff; border-color: #00d4ff; }
+        .attr-action-btn.copied { background: #0a3a2a; color: #00ff88; border-color: #00ff88; }
+
+        /* Expand modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: #0d1f3c;
+            border: 1px solid #1a2a4a;
+            border-radius: 8px;
+            width: 80vw;
+            max-width: 900px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #1a2a4a;
+            flex-shrink: 0;
+        }
+        .modal-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #00d4ff;
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #5a7a9a;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #00d4ff; }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: #0d1f3c; }
+        .modal-body::-webkit-scrollbar-thumb { background: #1a2a4a; border-radius: 3px; }
+        .modal-content {
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 13px;
+            color: #c8d6e5;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        .modal-actions {
+            padding: 10px 20px;
+            border-top: 1px solid #1a2a4a;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .modal-copy-btn {
+            background: #1a2a4a;
+            border: 1px solid #2a4a6a;
+            border-radius: 4px;
+            color: #00d4ff;
+            font-size: 12px;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .modal-copy-btn:hover { background: #2a4a6a; }
+
+        /* Related resources */
+        .related-section {
+            border-top: 1px solid #1a2a4a;
+            padding: 12px 20px;
+            flex-shrink: 0;
+        }
+        .related-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #5a7a9a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .related-link {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 3px 4px 3px 0;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+        .related-link[data-source="graph"] {
+            background: #0a2a1a;
+            border: 1px solid #0d4a2a;
+            color: #00ff88;
+        }
+        .related-link[data-source="graph"]:hover { background: #0d4a2a; }
+        .related-link[data-source="sibling"] {
+            background: #112240;
+            border: 1px solid #1a2a4a;
+            color: #00d4ff;
+        }
+        .related-link[data-source="sibling"]:hover { background: #1a3a5a; }
+
+        /* Highlight clicked node - glow + pulse */
+        @keyframes pulse-node {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .node-pulsing {
+            transform-origin: center;
+            transform-box: fill-box;
+            animation: pulse-node 0.8s ease-in-out infinite;
+        }
+        .node-pulsing > *:not(title) {
+            filter: drop-shadow(0 0 12px rgba(255,255,0,1)) drop-shadow(0 0 25px rgba(255,255,0,0.8)) drop-shadow(0 0 40px rgba(255,200,0,0.5));
+        }
+
+        /* === ANIMATION DOTS (US3) === */
+        /* PLACEHOLDER: Animation styles added in US3 */
+    </style>
+</head>
+<body>
+    <div id="diagram-container">
+        <div id="diagram-title">{{TITLE}}</div>
+        <div id="graph">
+            {{SVG_CONTENT}}
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="search-wrapper">
+            <input type="text" id="search-input" placeholder="Search resources..." autocomplete="off" spellcheck="false">
+            <div id="search-results" class="search-results"></div>
+        </div>
+        <button class="ctrl-btn" id="btn-zoom-in" title="Zoom in">+</button>
+        <button class="ctrl-btn" id="btn-zoom-out" title="Zoom out">&minus;</button>
+        <button class="ctrl-btn" id="btn-fit" title="Fit diagram to screen">Fit</button>
+    </div>
+
+    <!-- Detail Panel -->
+    <div id="detail-panel">
+        <div class="panel-brand">
+            <span><span class="brand-terra">Terra</span><span class="brand-vision">Vision</span></span>
+            <button class="panel-close" id="panel-close">&times;</button>
+        </div>
+        <div class="panel-header">
+            <div class="panel-header-text">
+                <div class="panel-title" id="panel-title"></div>
+                <div class="panel-subtitle" id="panel-subtitle"></div>
+                <div id="panel-instance-badge" style="display:none"></div>
+            </div>
+        </div>
+        <div class="panel-tabs">
+            <div class="panel-tab active" data-tab="processed">Plan Attributes</div>
+            <div class="panel-tab" data-tab="raw">Enriched</div>
+        </div>
+        <div class="panel-body">
+            <div class="panel-section active" id="section-processed"></div>
+            <div class="panel-section" id="section-raw"></div>
+        </div>
+        <div class="related-section" id="related-section" style="display:none">
+            <div id="related-links"></div>
+        </div>
+    </div>
+
+    <!-- Expand Modal -->
+    <div id="expand-modal" class="modal-overlay" style="display:none">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-field-name"></span>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-content" id="modal-content"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-copy-btn" id="modal-copy-btn">Copy to clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- === D3.js for interactivity === -->
+    <script>
+    {{D3_JS}}
+    </script>
+
+    <!-- === EMBEDDED DATA === -->
+    <script>
+    var TERRAVISION_DATA = {{METADATA_JSON}};
+    </script>
+
+    <!-- === INITIALIZATION === -->
+    <script>
+    (function() {
+        'use strict';
+
+        var svg = d3.select('#graph svg');
+        if (svg.empty()) {
+            console.error('TerraVision: No SVG found in #graph');
+            return;
+        }
+
+        // Store original viewBox then remove fixed dimensions so we control sizing via zoom
+        var origViewBox = svg.attr('viewBox');
+        svg.attr('width', '100%').attr('height', '100%').attr('viewBox', null);
+
+        // =============================================
+        // US4: Pan & Zoom
+        // =============================================
+        var svgEl = svg.node();
+        var graphDiv = d3.select('#graph');
+
+        var zoom = d3.zoom()
+            .scaleExtent([0.05, 10])
+            .on('zoom', function(event) {
+                svgInner.attr('transform', event.transform);
+            });
+
+        // Wrap SVG content in a <g> for zoom transforms
+        var svgInner = svg.append('g').attr('class', 'zoom-layer');
+        // Move all existing SVG children into the zoom layer
+        svg.selectAll(':scope > :not(.zoom-layer)').each(function() {
+            svgInner.node().appendChild(this);
+        });
+
+        graphDiv.call(zoom);
+
+        function fitToScreen() {
+            var bounds = svgInner.node().getBBox();
+            if (!bounds.width || !bounds.height) return;
+            var fullWidth = svgEl.clientWidth || window.innerWidth;
+            var fullHeight = svgEl.clientHeight || window.innerHeight;
+            var padding = 40;
+            var scale = Math.min(
+                (fullWidth - padding) / bounds.width,
+                (fullHeight - padding) / bounds.height
+            );
+            var tx = (fullWidth - bounds.width * scale) / 2 - bounds.x * scale;
+            var ty = (fullHeight - bounds.height * scale) / 2 - bounds.y * scale;
+            graphDiv.transition().duration(400).call(
+                zoom.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }
+
+        // Initial fit — use requestAnimationFrame to ensure SVG is laid out
+        requestAnimationFrame(function() {
+            requestAnimationFrame(fitToScreen);
+        });
+
+        // Zoom controls
+        document.getElementById('btn-zoom-in').addEventListener('click', function() {
+            graphDiv.transition().duration(200).call(zoom.scaleBy, 1.4);
+        });
+        document.getElementById('btn-zoom-out').addEventListener('click', function() {
+            graphDiv.transition().duration(200).call(zoom.scaleBy, 0.7);
+        });
+        document.getElementById('btn-fit').addEventListener('click', fitToScreen);
+
+        // =============================================
+        // US2: Detail Panel - Click handlers
+        // =============================================
+        var panel = document.getElementById('detail-panel');
+        var panelTitle = document.getElementById('panel-title');
+        var panelSubtitle = document.getElementById('panel-subtitle');
+        var panelInstanceBadge = document.getElementById('panel-instance-badge');
+        var sectionProcessed = document.getElementById('section-processed');
+        var sectionRaw = document.getElementById('section-raw');
+        var relatedSection = document.getElementById('related-section');
+        var relatedLinks = document.getElementById('related-links');
+        var highlightedNode = null;
+
+        function addHighlight(nodeEl) {
+            removeHighlight();
+            highlightedNode = nodeEl;
+            d3.select(nodeEl).classed('node-pulsing', true);
+        }
+
+        function removeHighlight() {
+            if (highlightedNode) {
+                d3.select(highlightedNode).classed('node-pulsing', false);
+            }
+            highlightedNode = null;
+        }
+
+        // Build reverse node_id_map: tfName -> gvId
+        var reverseNodeMap = {};
+        var nodeMap = TERRAVISION_DATA.node_id_map || {};
+        for (var gvId in nodeMap) {
+            reverseNodeMap[nodeMap[gvId]] = gvId;
+        }
+
+        function openPanel(nodeId, clickedEl) {
+            var tfName = nodeMap[nodeId] || nodeId;
+
+            var meta = TERRAVISION_DATA.metadata[tfName];
+            var origKey = (TERRAVISION_DATA.original_name_map || {})[tfName] || tfName;
+            var origMeta = TERRAVISION_DATA.original_metadata[origKey];
+
+            // Get pretty label from the SVG node text
+            var prettyLabel = '';
+            if (clickedEl) {
+                var textEls = clickedEl.querySelectorAll('text');
+                var labels = [];
+                for (var i = 0; i < textEls.length; i++) {
+                    var t = textEls[i].textContent.trim();
+                    if (t) labels.push(t);
+                }
+                prettyLabel = labels.join(' ');
+            }
+
+            panelTitle.textContent = prettyLabel || tfName;
+            panelSubtitle.textContent = tfName;
+
+            // Instance badge
+            panelInstanceBadge.style.display = 'none';
+            if (meta && meta._instance_info) {
+                var info = meta._instance_info;
+                panelInstanceBadge.style.display = 'inline-block';
+                if (info.is_synthetic) {
+                    panelInstanceBadge.textContent = 'Instance ' + info.instance_number + ' of ' + info.total_instances + ' (diagram only)';
+                } else {
+                    panelInstanceBadge.textContent = 'Instance ' + info.instance_number + ' of ' + info.total_instances;
+                }
+            }
+
+            // Populate tabs
+            var planAttrs = (origMeta && Object.keys(origMeta).length > 0) ? origMeta : meta;
+            sectionProcessed.innerHTML = buildAttrTable(planAttrs);
+            sectionRaw.innerHTML = buildAttrTable(meta);
+
+            // Activate first tab
+            document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.panel-section').forEach(function(s) { s.classList.remove('active'); });
+            document.querySelector('.panel-tab[data-tab="processed"]').classList.add('active');
+            sectionProcessed.classList.add('active');
+
+            // Related resources from graphdict
+            buildRelatedLinks(tfName);
+
+            panel.classList.add('open');
+        }
+
+        function buildRelatedLinks(tfName) {
+            var graphdict = TERRAVISION_DATA.graphdict || {};
+            var siblings = TERRAVISION_DATA.resource_siblings || {};
+            var origNameMap = TERRAVISION_DATA.original_name_map || {};
+
+            // 1. Connected resources (from graph edges)
+            var connected = new Set();
+            var outgoing = graphdict[tfName] || [];
+            for (var i = 0; i < outgoing.length; i++) connected.add(outgoing[i]);
+            for (var src in graphdict) {
+                var conns = graphdict[src];
+                for (var j = 0; j < conns.length; j++) {
+                    if (conns[j] === tfName) connected.add(src);
+                }
+            }
+            connected.delete(tfName);
+
+            var connectedArr = Array.from(connected).filter(function(r) {
+                return !r.startsWith('tv_') && !r.startsWith('aws_az.') && !r.startsWith('aws_group.');
+            }).sort();
+
+            // 2. Sibling resources (same type group from original_metadata)
+            // Look up using the original name if this resource was renamed
+            var origName = origNameMap[tfName] || tfName;
+            var siblingList = siblings[origName] || siblings[tfName] || [];
+
+            // If still empty, try matching by stripping ~N suffix or [N] index
+            if (siblingList.length === 0) {
+                var baseName = tfName.replace(/~\d+$/, '').replace(/\[\d+\]$/, '');
+                siblingList = siblings[baseName] || [];
+            }
+            // Also try the original name variants
+            if (siblingList.length === 0) {
+                var origBase = origName.replace(/~\d+$/, '').replace(/\[\d+\]$/, '');
+                siblingList = siblings[origBase] || [];
+            }
+            // Last resort: search siblings keys that the current resource would match as a member
+            if (siblingList.length === 0) {
+                for (var sKey in siblings) {
+                    var members = siblings[sKey];
+                    for (var mi = 0; mi < members.length; mi++) {
+                        if (members[mi] === tfName || members[mi] === origName) {
+                            // Found ourselves as a member - grab siblings from the parent key
+                            siblingList = siblings[sKey];
+                            break;
+                        }
+                    }
+                    if (siblingList.length > 0) break;
+                }
+            }
+
+            var html = '';
+            var hasContent = false;
+
+            if (connectedArr.length > 0) {
+                hasContent = true;
+                html += '<div class="related-title">&#x2194; Connected Resources</div>';
+                for (var k = 0; k < connectedArr.length; k++) {
+                    var rName = connectedArr[k];
+                    var displayName = rName.replace(/^module\.[^.]+\./, '');
+                    html += '<span class="related-link" data-resource="' + escapeHtml(rName) + '" data-source="graph">' + escapeHtml(displayName) + '</span>';
+                }
+            }
+
+            if (siblingList.length > 0) {
+                hasContent = true;
+                html += '<div class="related-title" style="margin-top:10px">&#x2261; Related (Same Type)</div>';
+                for (var s = 0; s < siblingList.length; s++) {
+                    var sName = siblingList[s];
+                    var sDisplay = sName.replace(/^module\.[^.]+\./, '');
+                    html += '<span class="related-link" data-resource="' + escapeHtml(sName) + '" data-source="sibling">' + escapeHtml(sDisplay) + '</span>';
+                }
+            }
+
+            if (!hasContent) {
+                relatedSection.style.display = 'none';
+                return;
+            }
+
+            relatedSection.style.display = 'block';
+            relatedLinks.innerHTML = html;
+
+            // Attach click handlers
+            relatedLinks.querySelectorAll('.related-link').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    var rName = this.getAttribute('data-resource');
+                    var source = this.getAttribute('data-source');
+                    var gvId = reverseNodeMap[rName];
+
+                    if (gvId) {
+                        // Resource is drawn on diagram — navigate to it
+                        var targetNode = null;
+                        svg.selectAll('.node').each(function() {
+                            var t = this.querySelector('title');
+                            if (t && t.textContent.trim() === gvId) targetNode = this;
+                        });
+                        if (targetNode) {
+                            addHighlight(targetNode);
+                            openPanel(gvId, targetNode);
+                        }
+                    } else {
+                        // Resource not drawn — show its metadata from original_metadata
+                        showNonDrawnResource(rName);
+                    }
+                });
+            });
+        }
+
+        function showNonDrawnResource(tfName) {
+            // Show metadata for a resource that isn't on the diagram
+            var origMeta = TERRAVISION_DATA.original_metadata[tfName];
+            var meta = TERRAVISION_DATA.metadata[tfName];
+
+            var parts = tfName.replace(/^module\.[^.]+\./, '').split('.');
+            var resourceType = parts[0] || tfName;
+            var resourceName = parts.slice(1).join('.') || '';
+
+            panelTitle.textContent = resourceType + (resourceName ? '.' + resourceName : '');
+            panelSubtitle.textContent = tfName;
+            panelInstanceBadge.style.display = 'none';
+
+            var planAttrs = (origMeta && Object.keys(origMeta).length > 0) ? origMeta : meta;
+            sectionProcessed.innerHTML = buildAttrTable(planAttrs);
+            sectionRaw.innerHTML = buildAttrTable(meta);
+
+            document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.panel-section').forEach(function(s) { s.classList.remove('active'); });
+            document.querySelector('.panel-tab[data-tab="processed"]').classList.add('active');
+            sectionProcessed.classList.add('active');
+
+            // Show siblings for this non-drawn resource too
+            buildRelatedLinks(tfName);
+
+            removeHighlight();
+        }
+
+        function closePanel() {
+            panel.classList.remove('open');
+            removeHighlight();
+        }
+
+        function buildAttrTable(attrs) {
+            if (!attrs || Object.keys(attrs).length === 0) {
+                return '<div class="no-metadata">No additional metadata available</div>';
+            }
+
+            var rows = '';
+            var keys = Object.keys(attrs).sort();
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                if (key === '_instance_info' || key === '_synthetic' || key === '_data_source') continue;
+
+                var val = attrs[key];
+                var formattedVal;
+                try {
+                    formattedVal = formatValue(val, key);
+                } catch(e) {
+                    formattedVal = '<span class="computed">Error rendering value</span>';
+                }
+                rows += '<tr><td class="attr-key">' + escapeHtml(key) + '</td><td class="attr-val">' + formattedVal + '</td></tr>';
+            }
+
+            if (!rows) {
+                return '<div class="no-metadata">No additional metadata available</div>';
+            }
+
+            return '<table class="attr-table">' + rows + '</table>';
+        }
+
+        // Store raw values for copy/expand - keyed by unique id
+        var rawValues = {};
+
+        function formatValue(val, key) {
+            if (val === null || val === undefined) {
+                return '<div class="attr-val-box computed">null</div>';
+            }
+            if (val === 'Computed (known after apply)') {
+                return '<div class="attr-val-box computed">' + escapeHtml(val) + '</div>';
+            }
+
+            var rawStr;
+            if (typeof val === 'object') {
+                rawStr = JSON.stringify(val, null, 2);
+            } else {
+                rawStr = String(val);
+            }
+
+            // Generate a unique id for this value
+            var uid = 'v' + Math.random().toString(36).substr(2, 8);
+            rawValues[uid] = { key: key, value: rawStr };
+
+            var displayHtml = '<div class="attr-val-box">' + escapeHtml(rawStr) + '</div>';
+
+            // Add action buttons
+            displayHtml += '<div class="attr-actions">';
+            displayHtml += '<button class="attr-action-btn" onclick="copyValue(\'' + uid + '\', this)" title="Copy to clipboard">&#x2398;</button>';
+            displayHtml += '<button class="attr-action-btn" onclick="expandValue(\'' + uid + '\')" title="Expand">&#x2922;</button>';
+            displayHtml += '</div>';
+
+            return displayHtml;
+        }
+
+        // Make functions globally accessible for onclick handlers
+        window.copyValue = function(uid, btnEl) {
+            var item = rawValues[uid];
+            if (!item) return;
+            navigator.clipboard.writeText(item.value).then(function() {
+                btnEl.textContent = '\u2713';
+                btnEl.classList.add('copied');
+                setTimeout(function() {
+                    btnEl.textContent = '\u2398';
+                    btnEl.classList.remove('copied');
+                }, 1500);
+            }).catch(function() {
+                // Fallback for file:// protocol where clipboard API may not work
+                var ta = document.createElement('textarea');
+                ta.value = item.value;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btnEl.textContent = '\u2713';
+                btnEl.classList.add('copied');
+                setTimeout(function() {
+                    btnEl.textContent = '\u2398';
+                    btnEl.classList.remove('copied');
+                }, 1500);
+            });
+        };
+
+        window.expandValue = function(uid) {
+            var item = rawValues[uid];
+            if (!item) return;
+            document.getElementById('modal-field-name').textContent = item.key;
+            document.getElementById('modal-content').textContent = item.value;
+            document.getElementById('expand-modal').style.display = 'flex';
+        };
+
+        // Modal close handlers
+        document.getElementById('modal-close').addEventListener('click', function() {
+            document.getElementById('expand-modal').style.display = 'none';
+        });
+        document.getElementById('expand-modal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('modal-copy-btn').addEventListener('click', function() {
+            var content = document.getElementById('modal-content').textContent;
+            var btn = this;
+            navigator.clipboard.writeText(content).then(function() {
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy to clipboard'; }, 1500);
+            }).catch(function() {
+                var ta = document.createElement('textarea');
+                ta.value = content;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy to clipboard'; }, 1500);
+            });
+        });
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Tab switching
+        document.querySelectorAll('.panel-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.panel-section').forEach(function(s) { s.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('section-' + tab.getAttribute('data-tab')).classList.add('active');
+            });
+        });
+
+        // Close panel
+        document.getElementById('panel-close').addEventListener('click', closePanel);
+
+        // Click on SVG nodes
+        svg.selectAll('.node').on('click', function(event) {
+            event.stopPropagation();
+
+            var titleEl = this.querySelector('title');
+            if (!titleEl) return;
+            var nodeId = titleEl.textContent.trim();
+
+            if (!nodeId || nodeId.startsWith('tv_') || nodeId.startsWith('aws_az.')
+                || nodeId.startsWith('aws_group.') || nodeId === 'cluster_'
+                || nodeId.startsWith('None.None.')
+                || nodeId.startsWith('_')) return;
+
+            addHighlight(this);
+            openPanel(nodeId, this);
+        });
+
+        // Click on SVG clusters (groups like subnets, security groups, VPCs)
+        var clusterMap = TERRAVISION_DATA.cluster_id_map || {};
+        svg.selectAll('.cluster').on('click', function(event) {
+            event.stopPropagation();
+
+            var titleEl = this.querySelector('title');
+            if (!titleEl) return;
+            var clusterId = titleEl.textContent.trim();
+
+            // Look up terraform resource name from cluster map
+            var tfName = clusterMap[clusterId];
+            if (!tfName) return;
+
+            addHighlight(this);
+            openPanel(clusterId, this);
+        });
+
+        // Override openPanel to also check cluster_id_map
+        var origNodeMap = nodeMap;
+        nodeMap = Object.assign({}, origNodeMap, clusterMap);
+        // Also update reverse map
+        for (var cId in clusterMap) {
+            reverseNodeMap[clusterMap[cId]] = cId;
+        }
+
+        // Click background to close
+        svg.on('click', function() {
+            closePanel();
+        });
+
+        // Escape key to close panel and modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var modal = document.getElementById('expand-modal');
+                if (modal.style.display !== 'none') {
+                    modal.style.display = 'none';
+                } else {
+                    closePanel();
+                }
+            }
+        });
+
+        // =============================================
+        // Search box
+        // =============================================
+        function initSearch() {
+            var searchInput = document.getElementById('search-input');
+            var searchResults = document.getElementById('search-results');
+            if (!searchInput) return;
+
+            // Build searchable list from node_id_map and cluster_id_map
+            var allResources = [];
+            var nmap = TERRAVISION_DATA.node_id_map || {};
+            var cmap = TERRAVISION_DATA.cluster_id_map || {};
+            for (var gvId in nmap) {
+                allResources.push({ gvId: gvId, tfName: nmap[gvId], type: 'node' });
+            }
+            for (var cId in cmap) {
+                allResources.push({ gvId: cId, tfName: cmap[cId], type: 'cluster' });
+            }
+
+            searchInput.addEventListener('input', function() {
+                var query = this.value.toLowerCase().trim();
+                searchResults.innerHTML = '';
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                var matches = allResources.filter(function(r) {
+                    return r.tfName.toLowerCase().indexOf(query) >= 0;
+                }).slice(0, 10);
+
+                if (matches.length === 0) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                searchResults.style.display = 'block';
+                matches.forEach(function(r) {
+                    var div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.textContent = r.tfName;
+                    div.addEventListener('click', function() {
+                        searchInput.value = '';
+                        searchResults.style.display = 'none';
+                        // Find the SVG element and open panel
+                        var selector = r.type === 'node' ? '.node' : '.cluster';
+                        var targetEl = null;
+                        svg.selectAll(selector).each(function() {
+                            var t = this.querySelector('title');
+                            if (t && t.textContent.trim() === r.gvId) targetEl = this;
+                        });
+                        if (targetEl) {
+                            addHighlight(targetEl);
+                            openPanel(r.gvId, targetEl);
+                        }
+                    });
+                    searchResults.appendChild(div);
+                });
+            });
+
+            // Close results on outside click
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+        initSearch();
+
+        console.log('TerraVision interactive diagram loaded');
+    })();
+    </script>
+</body>
+</html>

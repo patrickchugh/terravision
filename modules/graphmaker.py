@@ -1334,6 +1334,11 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if not tfdata["meta_data"].get(consolidated_name):
                 tfdata["graphdict"][consolidated_name] = list()
                 tfdata["meta_data"][consolidated_name] = dict()
+            # Track name mapping for HTML renderer (new_name → original_name)
+            if "resource_name_map" not in tfdata:
+                tfdata["resource_name_map"] = {}
+            if resource != consolidated_name:
+                tfdata["resource_name_map"][consolidated_name] = resource
             # Use deepcopy to avoid shared references between consolidated nodes
             merged_data = copy.deepcopy(tfdata["meta_data"][consolidated_name])
             merged_data.update(copy.deepcopy(resdata))

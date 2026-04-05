@@ -7,6 +7,7 @@ import click
 import modules.annotations as annotations
 import modules.drawing as drawing
 import modules.graphmaker as graphmaker
+import modules.html_renderer as html_renderer
 import modules.helpers as helpers
 import modules.interpreter as interpreter
 import modules.tfwrapper as tfwrapper
@@ -523,11 +524,136 @@ def graphdata(
     click.echo("\nCompleted!")
 
 
+@cli.command(cls=ColorCommand)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Dump exception tracebacks, creates tfdata.json replay file",
+)
+@click.option(
+    "--source",
+    default=".",
+    help="Source files location (Git URL, Folder or .JSON file)",
+)
+@click.option(
+    "--workspace",
+    multiple=False,
+    default="default",
+    help="The Terraform workspace to initialise",
+)
+@click.option(
+    "--varfile",
+    multiple=True,
+    default=[],
+    help="Path to .tfvars variables file (can be specified multiple times)",
+)
+@click.option(
+    "--outfile",
+    default="architecture",
+    help="Filename for output HTML diagram (default architecture.html)",
+)
+@click.option(
+    "--show", is_flag=True, default=False, help="Open HTML in browser after generation"
+)
+@click.option(
+    "--simplified",
+    is_flag=True,
+    default=False,
+    help="Simplified high level services shown only",
+)
+@click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
+@click.option(
+    "--planfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform plan JSON (terraform show -json)",
+)
+@click.option(
+    "--graphfile",
+    default="",
+    type=click.Path(),
+    help="Path to Terraform graph DOT (terraform graph)",
+)
+@click.option(
+    "--upgrade",
+    is_flag=True,
+    default=False,
+    help="Run terraform init with -upgrade to update modules/providers",
+)
+@click.option("--format", default="", hidden=True)
+@click.option("--aibackend", default="", hidden=True)
+@click.option("--avl_classes", hidden=True)
+def visualise(
+    debug: bool,
+    source: str,
+    workspace: str,
+    varfile: tuple,
+    outfile: str,
+    show: bool,
+    simplified: bool,
+    annotate: str,
+    planfile: str,
+    graphfile: str,
+    upgrade: bool,
+    format: str,
+    aibackend: str,
+    avl_classes: Any,
+) -> None:
+    """Generate interactive HTML architecture diagram from Terraform code."""
+    if not debug:
+        sys.excepthook = my_excepthook
+    _show_banner()
+
+    # Warn about inapplicable flags
+    if format:
+        click.echo(
+            click.style(
+                "WARNING: --format is not applicable to the visualise command. HTML is the only output format.",
+                fg="yellow",
+            )
+        )
+    if aibackend:
+        click.echo(
+            click.style(
+                "WARNING: --aibackend is not applicable to the visualise command.",
+                fg="yellow",
+            )
+        )
+
+    if planfile and (workspace != "default" or varfile):
+        click.echo(
+            click.style(
+                "WARNING: --workspace and --varfile are ignored when --planfile is provided.",
+                fg="yellow",
+            )
+        )
+
+    preflight_check(None)
+    tfdata = compile_tfdata(
+        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+    )
+
+    # Strip networking groups for simplified diagrams
+    if simplified:
+        graphmaker.simplify_graphdict(tfdata)
+
+    # Add provider suffix to output filename for non-AWS providers
+    final_outfile = outfile
+    if tfdata.get("provider_detection"):
+        provider = tfdata["provider_detection"].get("primary_provider", "aws")
+        if provider != "aws" and not outfile.endswith(f"-{provider}"):
+            final_outfile = f"{outfile}-{provider}"
+
+    html_renderer.render_html(tfdata, show, final_outfile, source)
+
+
 def main():
     cli(
         default_map={
             "draw": {"avl_classes": dir()},
             "graphdata": {"avl_classes": dir()},
+            "visualise": {"avl_classes": dir()},
         }
     )
 
