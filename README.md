@@ -221,6 +221,33 @@ terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
 terravision draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
 ```
 
+### Generate an Interactive HTML Diagram
+
+The new `terravision visualise` command produces a self-contained interactive HTML file with clickable resource nodes, a metadata sidebar, search box, pan/zoom navigation, related-resources navigation, and animated edge flow. The HTML works fully offline — no internet connection or external resources required.
+
+```bash
+# Generate an interactive HTML diagram
+terravision visualise --source ./terraform
+
+# Auto-open the result in your default browser
+terravision visualise --source ./terraform --show
+
+# Custom output filename (.html appended automatically)
+terravision visualise --source ./terraform --outfile my-architecture
+```
+
+**Interactive features in the generated HTML:**
+- Click any resource icon or group container (VPC, subnet, security group) to see its Terraform metadata in a slide-in sidebar
+- Search box to find resources by name and jump to them
+- Pulsing yellow highlight + animated cyan flow trails on connected edges showing data flow direction (bidirectional edges flow both ways)
+- Bold navy underlay on connected edges so they stand out where lines cross
+- Related resources section showing both directly connected and same-type sibling resources (clickable for navigation)
+- Copy-to-clipboard and expand-to-modal buttons on each metadata field
+- Pan/zoom with `+`/`-`/`Fit` controls and mouse wheel
+- Press `Escape` to close the detail panel
+
+See the [`visualise` section in USAGE_GUIDE.md](docs/USAGE_GUIDE.md) for full details.
+
 **That's it!** Your diagram is saved as `architecture.png` and automatically opened.
 
 ### Use Your Own Terraform Code
