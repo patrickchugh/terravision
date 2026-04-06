@@ -600,7 +600,7 @@ def visualise(
     aibackend: str,
     avl_classes: Any,
 ) -> None:
-    """Generate interactive HTML architecture diagram from Terraform code."""
+    """Generate interactive HTML architecture diagram"""
     if not debug:
         sys.excepthook = my_excepthook
     _show_banner()
