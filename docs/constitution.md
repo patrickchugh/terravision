@@ -103,7 +103,7 @@ All cloud-specific resource handling logic MUST reside exclusively in provider-s
 
 **Enforcement Rules**:
 
-- **CO-001**: Cloud-specific resource handling logic MUST be implemented in `modules/config/cloud_config_<provider>.py` files (e.g., `cloud_config_aws.py`, `cloud_config_azure.py`, `cloud_config_gcp.py`)
+- **CO-001**: Cloud-specific configuration MUST be stored in `modules/config/cloud_config_<provider>.py` files (e.g., `cloud_config_aws.py`, `cloud_config_azure.py`, `cloud_config_gcp.py`)
 - **CO-002**: Provider-specific resource handlers MUST be implemented in `modules/resource_handlers_<provider>.py` files (e.g., `resource_handlers_aws.py`, `resource_handlers_azure.py`, `resource_handlers_gcp.py`)
 - **CO-003**: Common modules (e.g., `graphmaker.py`, `drawing.py`, `fileparser.py`, `interpreter.py`, `tfwrapper.py`) MUST NOT contain hardcoded provider-specific logic or resource types
 - **CO-004**: Provider detection and configuration loading MUST use dynamic dispatch patterns to route to provider-specific implementations
