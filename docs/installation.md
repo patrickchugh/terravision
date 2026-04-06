@@ -8,7 +8,7 @@
 - **Graphviz**
 - **Ollama** (Optional - only for local AI refinement)
 
-> **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](USAGE_GUIDE.md#pre-generated-plan-input) for details.
+> **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](usage-guide.md#pre-generated-plan-input) for details.
 
 ---
 
@@ -273,6 +273,6 @@ sudo apt-get install --reinstall graphviz
 
 ## Next Steps
 
-- **[Usage Guide](USAGE_GUIDE.md)** - Learn how to use TerraVision
-- **[Quick Start Examples](USAGE_GUIDE.md#quick-start-examples)** - Try your first diagram
-- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Usage Guide](usage-guide.md)** - Learn how to use TerraVision
+- **[Quick Start Examples](usage-guide.md#quick-start-examples)** - Try your first diagram
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions

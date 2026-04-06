@@ -550,9 +550,9 @@ cat tfdata.json | jq '.graphdict["aws_lambda_function.api"]'
 ## Getting Help
 
 ### Check Documentation
-- [Installation Guide](INSTALLATION.md)
-- [Usage Guide](USAGE_GUIDE.md)
-- [Annotations Guide](ANNOTATIONS.md)
+- [Installation Guide](installation.md)
+- [Usage Guide](usage-guide.md)
+- [Annotations Guide](annotations.md)
 
 ### Command Help
 ```bash

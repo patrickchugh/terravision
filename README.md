@@ -246,7 +246,7 @@ terravision visualise --source ./terraform --outfile my-architecture
 - Pan/zoom with `+`/`-`/`Fit` controls and mouse wheel
 - Press `Escape` to close the detail panel
 
-See the [`visualise` section in USAGE_GUIDE.md](docs/USAGE_GUIDE.md) for full details.
+See the [`visualise` section in usage-guide.md](docs/usage-guide.md) for full details.
 
 **That's it!** Your diagram is saved as `architecture.png` and automatically opened.
 
@@ -271,7 +271,7 @@ terraform graph > graph.dot
 terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
 ```
 
-This is especially useful in CI/CD pipelines where Terraform runs in one step and diagram generation happens in another. See [CI/CD Integration](docs/CICD_INTEGRATION.md) for examples.
+This is especially useful in CI/CD pipelines where Terraform runs in one step and diagram generation happens in another. See [CI/CD Integration](docs/cicd-integration.md) for examples.
 
 ### Use TerraVision simply as a drawing engine with a simple JSON dict
 ```bash
@@ -286,7 +286,7 @@ terravision draw --source tests/json/bastion-expected.json
 
 ## Installation for Developers / Power Users
 
-**Detailed installation instructions**: See [docs/INSTALLATION.md](docs/INSTALLATION.md)
+**Detailed installation instructions**: See [docs/installation.md](docs/installation.md)
 
 ---
 
@@ -372,7 +372,7 @@ Perfect for adding annotations, adjusting layouts, or incorporating TerraVision 
 terravision graphdata --source ./terraform --outfile resources.json
 ```
 
-**More examples**: See [docs/USAGE_GUIDE.md](docs/USAGE_GUIDE.md)
+**More examples**: See [docs/usage-guide.md](docs/usage-guide.md)
 
 ### Simplified Diagrams
 
@@ -402,17 +402,17 @@ The `--simplified` flag works with both `draw` and `graphdata` commands and is s
 
 ### For Users
 
-- **[Installation Guide](docs/INSTALLATION.md)** - Detailed setup instructions
-- **[Usage Guide](docs/USAGE_GUIDE.md)** - Commands, options, and examples
-- **[Annotations Guide](docs/ANNOTATIONS.md)** - Customize your diagrams
-- **[CI/CD Integration](docs/CICD_INTEGRATION.md)** - Automate diagram generation
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Installation Guide](docs/installation.md)** - Detailed setup instructions
+- **[Usage Guide](docs/usage-guide.md)** - Commands, options, and examples
+- **[Annotations Guide](docs/annotations.md)** - Customize your diagrams
+- **[CI/CD Integration](docs/cicd-integration.md)** - Automate diagram generation
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
 ### For Developers
 
-- **[Resource Handler Guide](docs/RESOURCE_HANDLER_GUIDE.md)** - Handler architecture
+- **[Resource Handler Guide](docs/resource-handler-guide.md)** - Handler architecture
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
-- **[Developer Guide](docs/developer_guide.md)** - Development setup
+- **[Developer Guide](docs/developer-guide.md)** - Development setup
 
 ### Advanced Topics
 
@@ -556,7 +556,7 @@ generate-diagram:
       - architecture.png
 ```
 
-**Full CI/CD guide (GitHub, GitLab, Jenkins, Azure DevOps, generic)**: See [docs/CICD_INTEGRATION.md](docs/CICD_INTEGRATION.md)
+**Full CI/CD guide (GitHub, GitLab, Jenkins, Azure DevOps, generic)**: See [docs/cicd-integration.md](docs/cicd-integration.md)
 
 ---
 

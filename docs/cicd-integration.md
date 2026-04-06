@@ -943,7 +943,7 @@ Add a `terravision.yml` file to customize diagrams without changing Terraform co
 terravision draw --source ./infrastructure --annotate terravision.yml --format png
 ```
 
-See [Annotations Guide](ANNOTATIONS.md) for details.
+See [Annotations Guide](annotations.md) for details.
 
 ---
 
@@ -991,6 +991,6 @@ terravision draw --source ./terraform/compute --outfile compute-diagram --format
 
 ## Next Steps
 
-- **[Usage Guide](USAGE_GUIDE.md)** - Learn more TerraVision commands and options
-- **[Annotations Guide](ANNOTATIONS.md)** - Customize diagrams with YAML annotations
-- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Usage Guide](usage-guide.md)** - Learn more TerraVision commands and options
+- **[Annotations Guide](annotations.md)** - Customize diagrams with YAML annotations
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions

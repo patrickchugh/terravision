@@ -177,7 +177,7 @@ terravision draw --source ./terraform --annotate custom-annotations.yml
 terravision draw --source ./terraform
 ```
 
-See [ANNOTATIONS.md](ANNOTATIONS.md) for annotation file format.
+See [annotations.md](annotations.md) for annotation file format.
 
 ### Export and Reuse Graph Data
 
@@ -300,7 +300,7 @@ terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
 - Terraform does not need to be installed when using `--planfile` mode
 - The plan JSON must contain `resource_changes` with at least one resource
 
-See [CI/CD Integration](CICD_INTEGRATION.md) for pipeline examples using pre-generated plan files.
+See [CI/CD Integration](cicd-integration.md) for pipeline examples using pre-generated plan files.
 
 ---
 
@@ -400,12 +400,12 @@ terravision draw --format svg --outfile docs/images/architecture
 terravision draw --format svg --outfile architecture-${BUILD_NUMBER}
 ```
 
-See [CICD_INTEGRATION.md](CICD_INTEGRATION.md) for complete CI/CD examples.
+See [cicd-integration.md](cicd-integration.md) for complete CI/CD examples.
 
 ---
 
 ## Next Steps
 
-- **[Annotations Guide](ANNOTATIONS.md)** - Customize your diagrams
-- **[CI/CD Integration](CICD_INTEGRATION.md)** - Automate diagram generation
-- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Annotations Guide](annotations.md)** - Customize your diagrams
+- **[CI/CD Integration](cicd-integration.md)** - Automate diagram generation
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
