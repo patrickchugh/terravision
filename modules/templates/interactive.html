@@ -278,6 +278,21 @@
             font-size: 13px;
         }
 
+        /* Computed fields toggle */
+        .computed-toggle {
+            padding: 10px 20px;
+            text-align: center;
+            border-top: 1px solid #111d33;
+        }
+        .computed-toggle-link {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-style: italic;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .computed-toggle-link:hover { color: #00d4ff; }
+
         /* Row action buttons */
         .attr-actions {
             display: flex;
@@ -798,27 +813,54 @@
                 return '<div class="no-metadata">No additional metadata available</div>';
             }
 
-            var rows = '';
+            var realRows = '';
+            var computedRows = '';
+            var realCount = 0;
+            var computedCount = 0;
             var keys = Object.keys(attrs).sort();
+
             for (var i = 0; i < keys.length; i++) {
                 var key = keys[i];
                 if (key === '_instance_info' || key === '_synthetic' || key === '_data_source') continue;
 
                 var val = attrs[key];
+                // Hide both "Computed (known after apply)" and null/empty values
+                var isEmpty = (
+                    val === 'Computed (known after apply)' ||
+                    val === null ||
+                    val === undefined ||
+                    val === '' ||
+                    (Array.isArray(val) && val.length === 0) ||
+                    (typeof val === 'object' && val !== null && Object.keys(val).length === 0)
+                );
                 var formattedVal;
                 try {
                     formattedVal = formatValue(val, key);
                 } catch(e) {
                     formattedVal = '<span class="computed">Error rendering value</span>';
                 }
-                rows += '<tr><td class="attr-key">' + escapeHtml(key) + '</td><td class="attr-val">' + formattedVal + '</td></tr>';
+                var rowHtml = '<tr><td class="attr-key">' + escapeHtml(key) + '</td><td class="attr-val">' + formattedVal + '</td></tr>';
+
+                if (isEmpty) {
+                    computedRows += rowHtml.replace('<tr>', '<tr class="computed-row" style="display:none">');
+                    computedCount++;
+                } else {
+                    realRows += rowHtml;
+                    realCount++;
+                }
             }
 
-            if (!rows) {
+            if (!realRows && !computedRows) {
                 return '<div class="no-metadata">No additional metadata available</div>';
             }
 
-            return '<table class="attr-table">' + rows + '</table>';
+            var html = '<table class="attr-table">' + realRows + computedRows + '</table>';
+            if (computedCount > 0) {
+                html += '<div class="computed-toggle" data-shown="false">'
+                    + '<span class="computed-toggle-link">Show ' + computedCount + ' empty/computed field' + (computedCount > 1 ? 's' : '') + '</span>'
+                    + '</div>';
+            }
+            return html;
         }
 
         // Store raw values for copy/expand - keyed by unique id
@@ -922,6 +964,24 @@
         function escapeHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
+
+        // Toggle computed fields (event delegation on panel body)
+        document.querySelector('.panel-body').addEventListener('click', function(e) {
+            if (e.target.classList.contains('computed-toggle-link')) {
+                var toggle = e.target.parentElement;
+                var table = toggle.previousElementSibling;
+                var shown = toggle.getAttribute('data-shown') === 'true';
+                var rows = table.querySelectorAll('.computed-row');
+                rows.forEach(function(r) {
+                    r.style.display = shown ? 'none' : 'table-row';
+                });
+                toggle.setAttribute('data-shown', shown ? 'false' : 'true');
+                var count = rows.length;
+                e.target.textContent = shown
+                    ? 'Show ' + count + ' empty/computed field' + (count > 1 ? 's' : '')
+                    : 'Hide ' + count + ' empty/computed field' + (count > 1 ? 's' : '');
+            }
+        });
 
         // Tab switching
         document.querySelectorAll('.panel-tab').forEach(function(tab) {

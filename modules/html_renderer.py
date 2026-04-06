@@ -5,8 +5,11 @@ Generates self-contained HTML files with interactive architecture diagrams
 using d3-graphviz (Graphviz compiled to WebAssembly) for in-browser rendering.
 """
 
+import ast
 import base64
+import binascii
 import copy
+import gzip
 import json
 import os
 import re
@@ -294,13 +297,123 @@ def _clean_metadata_dict(attrs: Dict[str, Any]) -> Dict[str, Any]:
         ):
             cleaned[key] = "Computed (known after apply)"
         else:
-            # Ensure the value is JSON-serializable
-            try:
-                json.dumps(value)
-                cleaned[key] = value
-            except (TypeError, ValueError):
-                cleaned[key] = str(value)
+            cleaned[key] = _normalize_value(key, value)
     return cleaned
+
+
+def _normalize_value(key: str, value: Any) -> Any:
+    """Convert Python repr strings back to dicts/lists, decode base64 user_data,
+    and clean up interpreter artifacts (extra quotes/whitespace)."""
+    # If string, try to parse Python repr back into a real object
+    if isinstance(value, str):
+        stripped = value.strip()
+        # Detect Python list/dict repr
+        if (stripped.startswith("[") and stripped.endswith("]")) or (
+            stripped.startswith("{") and stripped.endswith("}")
+        ):
+            try:
+                parsed = ast.literal_eval(stripped)
+                if isinstance(parsed, (list, dict)):
+                    # Recursively normalize nested values
+                    return _deep_normalize(parsed)
+            except (ValueError, SyntaxError):
+                pass
+
+        # Detect base64-encoded user_data fields and decode them
+        if key in ("user_data", "user_data_base64") and len(stripped) > 16:
+            decoded_text = _try_decode_base64(stripped)
+            if decoded_text is not None:
+                return decoded_text
+
+        # Clean up interpreter artifacts: trailing whitespace and surrounding quotes
+        cleaned = _clean_string_value(stripped)
+        if cleaned != value:
+            return cleaned
+
+    # Ensure the value is JSON-serializable
+    try:
+        json.dumps(value)
+        return value
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def _clean_string_value(s: str) -> str:
+    """Clean up interpreter artifacts in a string value.
+
+    - Strip leading/trailing whitespace
+    - Strip surrounding double quotes if the entire value is wrapped in them
+    - Strip ${...} Terraform expression wrappers, keeping inner reference
+    - Replace literal "UNKNOWN" markers with <unknown>
+    """
+    import modules.helpers as helpers
+
+    s = s.strip()
+    # Strip ${...} Terraform expression wrappers using existing helper
+    if "${" in s:
+        s = helpers.remove_terraform_functions(s)
+        # Also strip standalone ${...} that just wraps a reference
+        s = re.sub(r"\$\{([^}]+)\}", r"\1", s)
+    # If the whole string is wrapped in matching double quotes, unwrap once
+    if len(s) >= 2 and s.startswith('"') and s.endswith('"'):
+        inner = s[1:-1]
+        if '"' not in inner:
+            s = inner
+    # Replace UNKNOWN markers (left by interpreter when value can't be resolved)
+    s = s.replace('"UNKNOWN"', "<unknown>")
+    return s.strip()
+
+
+def _try_decode_base64(s: str) -> str | None:
+    """Decode a base64 string, optionally gzip-decompressing it.
+
+    Returns the decoded text if successful and looks like printable text,
+    or None if decoding failed or result is binary.
+    """
+    # Strip surrounding quotes/whitespace
+    candidate = s.strip().strip("\"'").strip()
+    # Add missing base64 padding
+    padding = (-len(candidate)) % 4
+    candidate_padded = candidate + ("=" * padding)
+
+    try:
+        raw = base64.b64decode(candidate_padded, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+
+    # If it starts with gzip magic bytes (1f 8b 08), decompress
+    if len(raw) >= 3 and raw[0] == 0x1F and raw[1] == 0x8B and raw[2] == 0x08:
+        try:
+            raw = gzip.decompress(raw)
+        except (OSError, EOFError):
+            return None
+
+    # Try to decode as UTF-8 text
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+    # Only return if it looks like text (mostly printable chars)
+    if not text:
+        return None
+    printable = sum(1 for c in text if c.isprintable() or c in "\n\t\r")
+    if printable / len(text) < 0.95:
+        return None
+    return text
+
+
+def _deep_normalize(obj: Any) -> Any:
+    """Recursively normalize nested dicts/lists, ensuring JSON-serializable."""
+    if isinstance(obj, dict):
+        return {k: _deep_normalize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_deep_normalize(v) for v in obj]
+    if isinstance(obj, str):
+        return _clean_string_value(obj)
+    if isinstance(obj, (int, float, bool)) or obj is None:
+        return obj
+    return str(obj)
 
 
 def _get_instance_info(node_name: str, tfdata: Dict[str, Any]) -> Dict[str, Any] | None:
