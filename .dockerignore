@@ -9,3 +9,9 @@ eks-*.json
 buildspec.yml
 clearcache.sh
 ai-backend-terraform
+specs
+.specify
+test-html-output.html
+test-png-check.dot.png
+architecture.html
+architecture.dot.png
