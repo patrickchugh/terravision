@@ -78,9 +78,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add edge animation JavaScript to modules/templates/interactive.html. Select all edge `<path>` elements in the pre-rendered SVG. For each edge, create a small SVG `<circle>` element. Use the embedded graphdict to determine source-to-target direction. Animate each circle along its path using `getPointAtLength()` with `requestAnimationFrame`. Loop the animation smoothly.
-- [ ] T017 [US3] Handle bidirectional edges in the animation JavaScript. Detect bidirectional connections from graphdict (A→B and B→A both exist). For bidirectional edges, create two animated dots moving in opposite directions simultaneously.
-- [ ] T018 [US3] Add animation toggle button to modules/templates/interactive.html. Place a toggle button in a toolbar/controls area (top-right or bottom-right). Default state: animations ON. Clicking pauses all dot animations (stop requestAnimationFrame loop, freeze dot positions). Clicking again resumes. Style the button with a play/pause icon or text label.
+- [x] T016 [US3] Add edge animation JavaScript to modules/templates/interactive.html. Select all edge `<path>` elements in the pre-rendered SVG. For each edge, create a small SVG `<circle>` element. Use the embedded graphdict to determine source-to-target direction. Animate each circle along its path using `getPointAtLength()` with `requestAnimationFrame`. Loop the animation smoothly.
+- [x] T017 [US3] Handle bidirectional edges in the animation JavaScript. Detect bidirectional connections from graphdict (A→B and B→A both exist). For bidirectional edges, create two animated dots moving in opposite directions simultaneously.
+- [x] T018 [US3] Add animation toggle button to modules/templates/interactive.html. Place a toggle button in a toolbar/controls area (top-right or bottom-right). Default state: animations ON. Clicking pauses all dot animations (stop requestAnimationFrame loop, freeze dot positions). Clicking again resumes. Style the button with a play/pause icon or text label.
 
 **Checkpoint**: All edges have animated flow dots. Bidirectional edges show dots in both directions. Toggle button pauses/resumes animations.
 
@@ -105,11 +105,11 @@
 
 **Purpose**: Edge cases, tests, and documentation
 
-- [ ] T021 [P] Handle empty graph edge case in modules/html_renderer.py. If graphdict is empty (no resources), generate an HTML file with a meaningful message: "No resources found in Terraform plan. Ensure your source contains valid Terraform configuration." instead of an empty diagram.
-- [ ] T022 [P] Add unit tests in tests/test_html_renderer.py: test _serialize_metadata() with known-after-apply values, synthetic instances, and empty metadata. Test _embed_icons_as_base64() with a sample DOT string and icon paths. Test render_html() produces a valid HTML file. Test --outfile appends .html extension.
-- [ ] T023 [P] Add CLI command tests in tests/test_visualise_command.py: test that `visualise` command is registered and accepts all expected flags. Test warning output when --format or --aibackend is passed. Test --outfile produces correctly named file.
-- [ ] T024 Update docs/USAGE_GUIDE.md to add a `terravision visualise` section with usage examples, flag reference, and sample output description.
-- [ ] T025 Update docs/README.md to mention the `visualise` command in the commands section and add an example.
+- [x] T021 [P] Handle empty graph edge case in modules/html_renderer.py. If graphdict is empty (no resources), generate an HTML file with a meaningful message: "No resources found in Terraform plan. Ensure your source contains valid Terraform configuration." instead of an empty diagram.
+- [x] T022 [P] Add unit tests in tests/test_html_renderer.py: test _serialize_metadata() with known-after-apply values, synthetic instances, and empty metadata. Test _embed_icons_as_base64() with a sample DOT string and icon paths. Test render_html() produces a valid HTML file. Test --outfile appends .html extension.
+- [x] T023 [P] Add CLI command tests in tests/test_visualise_command.py: test that `visualise` command is registered and accepts all expected flags. Test warning output when --format or --aibackend is passed. Test --outfile produces correctly named file.
+- [x] T024 Update docs/USAGE_GUIDE.md to add a `terravision visualise` section with usage examples, flag reference, and sample output description.
+- [x] T025 Update docs/README.md to mention the `visualise` command in the commands section and add an example.
 - [ ] T026 Manual validation of SC-006: run `poetry run terravision visualise` against a real-world Terraform project with 100+ resources. Open the HTML in a browser and verify pan/zoom interactions remain smooth without noticeable lag. Document results.
 
 ---

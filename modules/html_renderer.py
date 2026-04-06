@@ -36,6 +36,19 @@ def render_html(
         click.style("\nGenerating Interactive HTML Diagram...", fg="white", bold=True)
     )
 
+    # Handle empty graph edge case
+    graphdict = tfdata.get("graphdict", {})
+    if not graphdict:
+        if not outfile.endswith(".html"):
+            outfile = outfile + ".html"
+        output_path = _write_empty_diagram(outfile)
+        click.echo(f"  Output file: {output_path}")
+        click.echo("  Completed (no resources found)")
+        if show:
+            abs_path = os.path.abspath(output_path)
+            webbrowser.open(f"file://{abs_path}")
+        return
+
     # Generate SVG with embedded icons using local Graphviz
     svg_string, icon_paths, node_id_map, cluster_id_map = drawing.generate_svg(
         tfdata, outfile, source
@@ -65,6 +78,36 @@ def render_html(
     if show:
         abs_path = os.path.abspath(output_path)
         webbrowser.open(f"file://{abs_path}")
+
+
+def _write_empty_diagram(outfile: str) -> str:
+    """Write a minimal HTML file with an empty-state message."""
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TerraVision - No Resources</title>
+<style>
+body { font-family: -apple-system, sans-serif; background: #0a1628; color: #c8d6e5;
+       display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+.empty { text-align: center; }
+.empty h1 { color: #00d4ff; font-weight: 300; font-size: 32px; margin-bottom: 12px; }
+.empty p { color: #5a7a9a; font-size: 14px; max-width: 480px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="empty">
+<h1>No resources found</h1>
+<p>The Terraform plan did not contain any resources to visualise.
+Ensure your source contains valid Terraform configuration with at least one resource definition.</p>
+</div>
+</body>
+</html>
+"""
+    output_path = str(Path.cwd() / outfile)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    return output_path
 
 
 def _embed_icons_as_base64(

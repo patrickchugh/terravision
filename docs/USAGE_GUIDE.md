@@ -45,6 +45,62 @@ terravision draw [OPTIONS]
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
 
+### `terravision visualise`
+
+Generates a self-contained interactive HTML diagram with clickable resource nodes, metadata sidebar, and pan/zoom navigation. The diagram is rendered server-side using the same Graphviz engine as `draw`, so the layout is identical.
+
+**Syntax:**
+```bash
+terravision visualise [OPTIONS]
+```
+
+**Common Options:**
+
+| Option | Description | Default | Example |
+|--------|-------------|---------|---------|
+| `--source` | Source location (folder, Git URL, or JSON) | Current directory | `./terraform` |
+| `--outfile` | Output filename (`.html` appended automatically) | `architecture` | `--outfile my-diagram` |
+| `--workspace` | Terraform workspace | `default` | `--workspace production` |
+| `--varfile` | Variable file (can use multiple times) | None | `--varfile prod.tfvars` |
+| `--show` | Auto-open HTML in default browser | False | `--show` |
+| `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
+| `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
+| `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
+| `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
+| `--debug` | Enable debug output | False | `--debug` |
+
+**Interactive features in the generated HTML:**
+
+- **Click any resource or group container** (VPC, subnet, security group) to see its Terraform metadata in a slide-in sidebar
+- **Search box** in the top-right to find resources by name and jump to them
+- **Pan/zoom controls** plus mouse wheel zoom and click-drag pan
+- **Pulsing flow dots** on connection edges showing data flow direction
+- **Related Resources** section in the sidebar — click to navigate to connected nodes (graph edges, green) or sibling resources of the same type (blue)
+- **Copy/Expand buttons** on each metadata field for clipboard copy and full-text modal view
+- **Escape key** closes the detail panel
+- **Empty/computed fields** hidden by default with a "Show N fields" toggle
+
+**Examples:**
+
+```bash
+# Basic usage
+terravision visualise --source ./terraform
+
+# Custom output filename and auto-open in browser
+terravision visualise --source ./terraform --outfile my-arch --show
+
+# From pre-generated plan files (no Terraform credentials needed)
+terravision visualise --planfile plan.json --graphfile graph.dot --source ./terraform
+
+# Simplified high-level diagram
+terravision visualise --source ./terraform --simplified
+
+# Replay from debug JSON for fast iteration
+terravision visualise --source tfdata.json
+```
+
+The output is a single self-contained HTML file (~500KB-1.5MB) that works fully offline — no internet connection or external resources required.
+
 ### `terravision graphdata`
 
 Exports resource relationships and metadata as JSON.

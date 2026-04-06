@@ -441,8 +441,30 @@
             filter: drop-shadow(0 0 12px rgba(255,255,0,1)) drop-shadow(0 0 25px rgba(255,255,0,0.8)) drop-shadow(0 0 40px rgba(255,200,0,0.5));
         }
 
-        /* === ANIMATION DOTS (US3) === */
-        /* PLACEHOLDER: Animation styles added in US3 */
+        /* === EDGE FLOW ANIMATION === */
+        /* Short flowing line segments traced along selected edges */
+        @keyframes flow-trail-pulse {
+            0%, 100% { stroke-width: 2; opacity: 0.7; }
+            50% { stroke-width: 3.5; opacity: 1; }
+        }
+        .flow-trail {
+            fill: none;
+            stroke: #00d4ff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            pointer-events: none;
+            filter: drop-shadow(0 0 3px rgba(0,212,255,1)) drop-shadow(0 0 8px rgba(0,212,255,0.6));
+            animation: flow-trail-pulse 0.7s ease-in-out infinite;
+        }
+        /* Bold underlay for the actual edge path when connected to selected node */
+        .edge-bold-underlay {
+            fill: none;
+            stroke: #1a3a8a;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            opacity: 0.95;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -461,6 +483,7 @@
         <button class="ctrl-btn" id="btn-zoom-in" title="Zoom in">+</button>
         <button class="ctrl-btn" id="btn-zoom-out" title="Zoom out">&minus;</button>
         <button class="ctrl-btn" id="btn-fit" title="Fit diagram to screen">Fit</button>
+        <button class="ctrl-btn" id="btn-anim" title="Animate all edges">&#x25B6;</button>
     </div>
 
     <!-- Detail Panel -->
@@ -584,6 +607,206 @@
         document.getElementById('btn-fit').addEventListener('click', fitToScreen);
 
         // =============================================
+        // US3: Edge Flow Animation - on-demand for selected node
+        // =============================================
+        // Animate only edges connected to the currently selected node.
+        // Flowing line segments trace along the path indicating direction.
+        // Bidirectional edges get flows in both directions.
+        var animationFrameId = null;
+        var activeFlows = [];  // active flow trail elements
+        var flowStartTime = 0;
+
+        function clearFlowAnimation() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            activeFlows.forEach(function(f) {
+                if (f.trail && f.trail.parentNode) {
+                    f.trail.parentNode.removeChild(f.trail);
+                }
+                if (f.underlay && f.underlay.parentNode) {
+                    f.underlay.parentNode.removeChild(f.underlay);
+                }
+            });
+            activeFlows = [];
+        }
+
+        function startFlowAnimationForNode(nodeId) {
+            clearFlowAnimation();
+
+            // Map graphviz id -> tf name to find connected edges
+            var tfName = (TERRAVISION_DATA.node_id_map || {})[nodeId]
+                || (TERRAVISION_DATA.cluster_id_map || {})[nodeId];
+            if (!tfName) return;
+
+            var graphdict = TERRAVISION_DATA.graphdict || {};
+            var connectedTfNames = new Set();
+            var bidirectional = new Set();
+
+            // Outgoing connections
+            (graphdict[tfName] || []).forEach(function(target) {
+                connectedTfNames.add(target);
+                // Check if target also points back (bidirectional)
+                if ((graphdict[target] || []).indexOf(tfName) >= 0) {
+                    bidirectional.add(target);
+                }
+            });
+            // Incoming connections
+            for (var src in graphdict) {
+                if (src === tfName) continue;
+                if ((graphdict[src] || []).indexOf(tfName) >= 0) {
+                    connectedTfNames.add(src);
+                    if ((graphdict[tfName] || []).indexOf(src) >= 0) {
+                        bidirectional.add(src);
+                    }
+                }
+            }
+
+            // Find SVG edges that match these connections
+            var reverseMap = {};
+            var nmap = TERRAVISION_DATA.node_id_map || {};
+            var cmap = TERRAVISION_DATA.cluster_id_map || {};
+            for (var gv in nmap) reverseMap[nmap[gv]] = gv;
+            for (var gv in cmap) reverseMap[cmap[gv]] = gv;
+
+            svgInner.selectAll('.edge').each(function() {
+                var titleEl = this.querySelector('title');
+                if (!titleEl) return;
+                var edgeTitle = titleEl.textContent.trim();
+                // Edge titles look like "src&#45;&gt;dst" or "src->dst"
+                var parts = edgeTitle.split(/->|&#45;&gt;/);
+                if (parts.length !== 2) return;
+                var srcGv = parts[0].trim();
+                var dstGv = parts[1].trim();
+
+                // Check if either end matches our selected node
+                var matchesSelected = (srcGv === nodeId || dstGv === nodeId);
+                if (!matchesSelected) {
+                    // Also check if either end belongs to the connected tf names
+                    var srcTf = nmap[srcGv] || cmap[srcGv];
+                    var dstTf = nmap[dstGv] || cmap[dstGv];
+                    if (srcTf !== tfName && dstTf !== tfName) return;
+                }
+
+                var pathEl = this.querySelector('path');
+                if (!pathEl) return;
+                var totalLength;
+                try { totalLength = pathEl.getTotalLength(); } catch (e) { return; }
+                if (!totalLength || totalLength < 10) return;
+
+                // Forward flow: from src to dst
+                var forwardReversed = (dstGv === nodeId);
+                // If selected node is the destination, flow points TOWARD it (forward direction is fine)
+                // The actual SVG path goes from src to dst, so reverse=false means dot moves src->dst
+
+                addFlowTrail(this, pathEl, totalLength, false);
+
+                // Bidirectional: also add reverse flow
+                var srcTf2 = nmap[srcGv] || cmap[srcGv];
+                var dstTf2 = nmap[dstGv] || cmap[dstGv];
+                var isBidir = (
+                    (srcTf2 && dstTf2 && bidirectional.has(srcTf2)) ||
+                    (srcTf2 && dstTf2 && bidirectional.has(dstTf2))
+                );
+                if (isBidir) {
+                    addFlowTrail(this, pathEl, totalLength, true);
+                }
+            });
+
+            if (activeFlows.length > 0) {
+                flowStartTime = performance.now();
+                animationFrameId = requestAnimationFrame(animateFlows);
+            }
+        }
+
+        function addFlowTrail(edgeEl, pathEl, totalLength, reversed) {
+            // Bold underlay - render the full edge in thick black so it stands out
+            // Only add one underlay per edge (not duplicated for bidirectional)
+            var underlay = null;
+            if (!edgeEl.querySelector('.edge-bold-underlay')) {
+                underlay = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                underlay.setAttribute('d', pathEl.getAttribute('d'));
+                underlay.setAttribute('class', 'edge-bold-underlay');
+                // Insert before the original path so it renders behind
+                edgeEl.insertBefore(underlay, pathEl);
+            }
+
+            var trail = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // Clone the d attribute so the trail follows the same shape
+            trail.setAttribute('d', pathEl.getAttribute('d'));
+            trail.setAttribute('class', 'flow-trail');
+            // Use dasharray to show only a small segment, dashoffset to animate position
+            // Trail length: ~25% of path or 50px max for short edges
+            var trailLength = Math.min(50, totalLength * 0.25);
+            var gapLength = totalLength - trailLength;
+            trail.setAttribute('stroke-dasharray', trailLength + ' ' + gapLength);
+            edgeEl.appendChild(trail);
+
+            activeFlows.push({
+                trail: trail,
+                underlay: underlay,
+                totalLength: totalLength,
+                trailLength: trailLength,
+                reversed: reversed,
+                offset: Math.random() * totalLength
+            });
+        }
+
+        function animateFlows(timestamp) {
+            if (activeFlows.length === 0) {
+                animationFrameId = null;
+                return;
+            }
+            // Speed: ~280 pixels per second
+            var speed = 280 / 60;
+            for (var i = 0; i < activeFlows.length; i++) {
+                var f = activeFlows[i];
+                f.offset = (f.offset + speed) % f.totalLength;
+                // dashoffset: positive moves dash backward along path
+                // For forward flow (src->dst) we want offset to decrease
+                // For reversed flow we want offset to increase
+                var dashoffset = f.reversed ? f.offset : (f.totalLength - f.offset);
+                f.trail.setAttribute('stroke-dashoffset', dashoffset);
+            }
+            animationFrameId = requestAnimationFrame(animateFlows);
+        }
+
+        // Animation toggle button - now toggles "animate all edges always" mode
+        var allEdgesMode = false;
+        document.getElementById('btn-anim').addEventListener('click', function() {
+            allEdgesMode = !allEdgesMode;
+            if (allEdgesMode) {
+                this.classList.add('active');
+                this.title = 'Disable always-on animation';
+                animateAllEdges();
+            } else {
+                this.classList.remove('active');
+                this.title = 'Animate all edges';
+                clearFlowAnimation();
+                if (highlightedNode) {
+                    var titleEl = highlightedNode.querySelector('title');
+                    if (titleEl) startFlowAnimationForNode(titleEl.textContent.trim());
+                }
+            }
+        });
+
+        function animateAllEdges() {
+            clearFlowAnimation();
+            svgInner.selectAll('.edge').each(function() {
+                var pathEl = this.querySelector('path');
+                if (!pathEl) return;
+                var totalLength;
+                try { totalLength = pathEl.getTotalLength(); } catch (e) { return; }
+                if (!totalLength || totalLength < 10) return;
+                addFlowTrail(this, pathEl, totalLength, false);
+            });
+            if (activeFlows.length > 0) {
+                animationFrameId = requestAnimationFrame(animateFlows);
+            }
+        }
+
+        // =============================================
         // US2: Detail Panel - Click handlers
         // =============================================
         var panel = document.getElementById('detail-panel');
@@ -607,6 +830,10 @@
                 d3.select(highlightedNode).classed('node-pulsing', false);
             }
             highlightedNode = null;
+            // Clear edge flow animation unless in always-on mode
+            if (!allEdgesMode) {
+                clearFlowAnimation();
+            }
         }
 
         // Build reverse node_id_map: tfName -> gvId
@@ -765,6 +992,7 @@
                         });
                         if (targetNode) {
                             addHighlight(targetNode);
+                            if (!allEdgesMode) startFlowAnimationForNode(gvId);
                             openPanel(gvId, targetNode);
                         }
                     } else {
@@ -1010,6 +1238,7 @@
                 || nodeId.startsWith('_')) return;
 
             addHighlight(this);
+            if (!allEdgesMode) startFlowAnimationForNode(nodeId);
             openPanel(nodeId, this);
         });
 
@@ -1027,6 +1256,7 @@
             if (!tfName) return;
 
             addHighlight(this);
+            if (!allEdgesMode) startFlowAnimationForNode(clusterId);
             openPanel(clusterId, this);
         });
 
@@ -1107,6 +1337,7 @@
                         });
                         if (targetEl) {
                             addHighlight(targetEl);
+                            if (!allEdgesMode) startFlowAnimationForNode(r.gvId);
                             openPanel(r.gvId, targetEl);
                         }
                     });

@@ -250,6 +250,27 @@ terravision draw --source https://github.com/your-repo/terraform-examples.git
 terravision draw --source https://github.com/your-repo/terraform-examples.git//aws/vpc
 ```
 
+### Generate Interactive HTML Diagram
+
+```bash
+# Generate a self-contained interactive HTML diagram
+terravision visualise --source ~/src/my-terraform-code
+
+# Auto-open in default browser
+terravision visualise --source ~/src/my-terraform-code --show
+
+# Custom output filename (.html appended automatically)
+terravision visualise --source ~/src/my-terraform-code --outfile my-architecture
+```
+
+The HTML output is a single self-contained file with:
+- Clickable resource nodes and group containers (VPC/subnet/security group) showing Terraform metadata
+- Search box, pan/zoom navigation, and pulsing flow dots on edges
+- Related resources navigation (connected nodes + same-type siblings)
+- Works fully offline — no internet connection required
+
+See the `visualise` section in [USAGE_GUIDE.md](USAGE_GUIDE.md) for full details.
+
 ### Export Graph Data
 
 ```bash
