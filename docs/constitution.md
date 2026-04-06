@@ -1,25 +1,23 @@
 <!--
 Sync Impact Report:
-- Version change: 1.4.0 → 1.5.0 (added minimalist handler principle CO-005.1)
-- Modified principles: None
-- Added sections:
-  - Code Organization > Resource Handler Implementation Guidelines: Added CO-005.1 "Most services MUST NOT have custom handlers"
-  - Added "When to implement a handler" criteria (4 conditions)
-  - Added "When NOT to implement a handler" guidance
-- Modified sections:
-  - Code Organization: Updated rationale to emphasize baseline Terraform parsing handles most resources
-  - Enhanced rationale with "Default to no handler; add only when baseline output is insufficient"
+- Version change: 1.5.0 → 1.6.0 (clarified credentials boundary in Principle II;
+  expanded Principle I to explicitly require plan over state)
+- Modified principles:
+  - I. Code as Source of Truth — added explicit guidance on why plan is preferred
+    over state file as the input source. State is a snapshot of yesterday's
+    deployment; plan is the semantic content of the code.
+  - II. Client-Side Security & Privacy — clarified that TerraVision itself
+    requires no cloud credentials. Cloud API access happens only when Terraform
+    is invoked by TerraVision to generate a plan. Pre-generated plan/graph file
+    mode (`--planfile` / `--graphfile`) is fully credential-free.
+- Added sections: None
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
-  ✅ CLAUDE.md - Contains detailed guidance on Poetry, Black, pytest, and config-driven handlers
-  ✅ HANDLER_CONFIG_GUIDE.md - Comprehensive guide aligns with CO-006 through CO-013
-  ✅ CONFIGURATION_DRIVEN_HANDLERS.md - Architecture documentation supports new standards
-  ✅ HANDLER_ARCHITECTURE.md - Handler type breakdown aligns with decision hierarchy
-  ✅ docs/specs/002-aws-handler-refinement/ - All documents updated to reflect config-driven approach
-- Follow-up TODOs: Update AZURE_RESOURCE_HANDLERS.md to reflect config-first approach
+  ✅ CLAUDE.md - No changes required
+- Follow-up TODOs: None
 -->
 
 # TerraVision Constitution
@@ -28,15 +26,34 @@ Sync Impact Report:
 
 ### I. Code as Source of Truth
 
-The infrastructure code (Terraform) is the authoritative source of truth for architecture diagrams. Architecture diagrams MUST be generated from code, not manually drawn. Human-generated architecture diagrams are inherently stale in high-velocity environments. Machine-generated diagrams maintain accuracy by dynamically parsing actual infrastructure definitions.
+The infrastructure code (Terraform) is the authoritative source of truth for architecture diagrams. Architecture diagrams MUST be generated from code (via `terraform plan` output), not from deployed state files, and not manually drawn. Machine-generated diagrams maintain accuracy by dynamically parsing actual infrastructure definitions and resolving conditionals, variables, counts, and for_each expressions through the Terraform evaluation engine.
 
-**Rationale**: Manual diagrams become outdated immediately after deployment. By treating code as truth and automating diagram generation, TerraVision ensures architecture documentation reflects deployed reality, reducing discrepancies between documentation and production.
+**Why plan, not state**:
+
+- **State is a snapshot of yesterday's deployment; plan is the semantic content of the code today.** A new feature branch with 50 new resources would show 0 in state but all 50 in plan. A half-deployed environment would show partial reality in state. A `count = var.enable_feature ? N : 0` block in state only reflects the last-applied value.
+- **Variant rendering requires plan.** `--varfile prod.tfvars` vs `--varfile dev.tfvars` vs `--varfile dr.tfvars` produces fundamentally different architectures from the same code. State is one snapshot of one workspace at one point in time and cannot be pivoted to show "what would dev look like with this same code."
+- **Pre-deployment review requires plan.** `terravision draw` against a feature branch shows the architecture impact before merging. Greenfield projects that have never been applied have no state but have valid plan output.
+- **Conditional logic resolution requires plan.** `count`, `for_each`, `dynamic` blocks, and ternary expressions are evaluated by Terraform's plan engine. State is the *result* of evaluation, not the evaluation itself.
+- **Plan outputs are CI-friendly.** `terraform plan -out=tfplan.bin && terraform show -json tfplan.bin > plan.json` already runs in most pipelines. TerraVision can consume that artifact via `--planfile` with zero new infrastructure or permissions.
+
+State files MAY be used as an *optional enrichment overlay* to populate `(known after apply)` values in detailed metadata views (e.g., the interactive HTML sidebar), but MUST NOT be used as the primary or sole input source for diagram structure. When state-file enrichment is used, sensitive attributes MUST be redacted by default.
+
+**Rationale**: Manual diagrams become outdated immediately after deployment. State-based diagrams document yesterday's deployment, not today's code. By treating code as truth and using `terraform plan` as the authoritative input, TerraVision shows what the code defines, supports multi-environment variants, works on undeployed branches, and accurately reflects conditional logic — all things state files cannot do.
 
 ### II. Client-Side Security & Privacy
 
-All processing MUST occur 100% client-side without cloud environment access. TerraVision MUST NOT require cloud credentials, API access, or intrusive cloud resources. Only minimal aggregate metadata may be sent to LLM backends - never sensitive code or runtime values.
+TerraVision itself MUST NOT require cloud credentials, API access, or intrusive cloud resources. The TerraVision binary parses files (Terraform source, plan JSON, graph DOT) and renders diagrams. It does not authenticate to cloud providers, does not call cloud APIs, and does not write or read remote state.
 
-**Rationale**: Enterprise security requirements prohibit tools that need cloud access or expose sensitive infrastructure details. Client-side processing ensures organizations maintain complete control over their infrastructure code and secrets without third-party exposure.
+Cloud API access happens only when TerraVision invokes Terraform as a subprocess to generate a plan from raw `.tf` files. In that mode, **Terraform — not TerraVision — is the component that needs credentials**, because Terraform's plan engine calls provider APIs to authenticate, look up data sources, and resolve computed values. TerraVision is a downstream consumer of plan output.
+
+**Two operating modes:**
+
+1. **Plan-from-source mode** (`terravision draw --source ./terraform`): TerraVision invokes Terraform, which calls cloud APIs to produce a plan. Cloud credentials are required by Terraform but never accessed or stored by TerraVision itself.
+2. **Pre-generated plan mode** (`terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform`): TerraVision consumes plan and graph files generated upstream (typically in a CI pipeline where Terraform already ran). **Zero cloud credentials of any kind are required.** This is the gold-standard path for high-security environments and air-gapped use.
+
+For LLM-based AI refinement, only minimal aggregate metadata may be sent to backends — never sensitive code, secrets, or runtime values. Local AI backends (Ollama) MUST be available for environments that prohibit any external API calls.
+
+**Rationale**: The clear separation between TerraVision (credential-free) and Terraform (the component that needs credentials when used) lets enterprises adopt TerraVision in environments where the security team controls credential boundaries. CI pipelines that already run `terraform plan` for review can pipe the resulting JSON directly into TerraVision in a separate, credential-free job, isolating the credential surface to a single existing pipeline step. State file backends are deliberately not read by TerraVision because that would re-introduce a credential dependency for a use case (diagram generation) that does not require it.
 
 ### III. Docs as Code (DaC)
 
@@ -207,4 +224,4 @@ This constitution supersedes all other development practices and documentation. 
 - **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.5.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2025-12-28
+**Version**: 1.6.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2026-04-06
