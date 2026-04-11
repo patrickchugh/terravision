@@ -11,7 +11,41 @@ from modules.interpreter import (
     replace_local_values,
     handle_implied_resources,
     handle_numbered_nodes,
+    handle_module_vars,
 )
+
+
+class TestHandleModuleVars(unittest.TestCase):
+    """Regression: module outputs that are objects/maps must not crash."""
+
+    def _tfdata(self, output_value):
+        return {
+            "all_output": {
+                "outputs.tf;vpc;": [
+                    {"vpc_info": {"value": output_value}},
+                ]
+            },
+            "module_source_dict": {},
+            "meta_data": {},
+        }
+
+    def test_object_output_value_does_not_crash(self):
+        # Reproduces robinbowes' issue #114 multi-cloud TypeError
+        tfdata = self._tfdata({"id": "vpc-123", "cidr": "10.0.0.0/16"})
+        result = handle_module_vars("module.vpc.vpc_info ", tfdata)
+        # Should return a string, not raise TypeError
+        self.assertIsInstance(result, str)
+
+    def test_list_output_value_does_not_crash(self):
+        tfdata = self._tfdata(["subnet-1", "subnet-2"])
+        result = handle_module_vars("module.vpc.vpc_info ", tfdata)
+        self.assertIsInstance(result, str)
+
+    def test_string_output_value_still_works(self):
+        tfdata = self._tfdata("vpc-123")
+        result = handle_module_vars("module.vpc.vpc_info ", tfdata)
+        self.assertIsInstance(result, str)
+        self.assertIn("vpc-123", result)
 
 
 class TestExtractLocals(unittest.TestCase):

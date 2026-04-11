@@ -72,6 +72,13 @@ def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
                 file, mod, tfdata
             ):
                 outvalue = i[outputname]["value"]
+                # Module outputs can be object/map/list literals (e.g.
+                # `output "vpc" { value = { id = ..., cidr = ... } }`).
+                # The wildcard branches below and the str.replace at the
+                # bottom both require a string, so coerce non-string types
+                # to their literal HCL-ish representation.
+                if not isinstance(outvalue, str):
+                    outvalue = str(outvalue)
                 # Handle wildcard ID references
                 if "*.id" in outvalue and "*.id" in eval_string:
                     outvalue = tfdata["meta_data"][outvalue]["count"]
@@ -88,7 +95,9 @@ def handle_module_vars(eval_string: str, tfdata: Dict[str, Any]) -> str:
     if len(stringarray) >= 3:
         modulevar = "module" + "." + stringarray[1] + "." + stringarray[2]
         modulevar = modulevar.strip()
-        eval_string = helpers.cleanup_curlies(eval_string.replace(modulevar, outvalue))
+        eval_string = helpers.cleanup_curlies(
+            eval_string.replace(modulevar, str(outvalue))
+        )
     return eval_string
 
 
