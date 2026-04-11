@@ -6,6 +6,7 @@ output into internal data structures for diagram generation.
 
 from typing import Dict, List, Tuple, Any
 import os
+import re
 import copy
 from pathlib import Path
 import subprocess
@@ -289,14 +290,11 @@ def make_tf_data(
     if plandata.get("resource_changes"):
         tfdata["tf_resources_created"] = plandata["resource_changes"]
     else:
-        click.echo(
-            click.style(
-                f"\nERROR: Invalid output from 'terraform plan' command. Try using the terraform CLI first to check source actually generates resources and has no errors.",
-                fg="red",
-                bold=True,
-            )
+        raise helpers.TerravisionError(
+            "Invalid output from 'terraform plan' command. Try using the terraform CLI "
+            "first to check source actually generates resources and has no errors.",
+            tfdata=tfdata,
         )
-        exit()
     tfdata["tfgraph"] = graphdata
     return tfdata
 
@@ -387,6 +385,18 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+_TILDE_SUFFIX_RE = re.compile(r"~\d+$")
+
+
+def _normalize_for_gvid_match(name: str) -> str:
+    """Strip terravision's ~N suffix and any [...] index segments.
+
+    `terraform graph` output (the source of gvid_table) never contains either
+    of these, so this is the canonical match form for both sides.
+    """
+    return _TILDE_SUFFIX_RE.sub("", helpers.remove_brackets_and_numbers(name))
+
+
 def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
     """Find node ID in gvid_table by trying name variations.
 
@@ -396,35 +406,37 @@ def find_node_in_gvid_table(node: str, gvid_table: List[str]) -> int:
 
     Returns:
         Index of node in gvid_table
+
+    Raises:
+        TerravisionError: If the node cannot be matched to any gvid entry.
     """
     # Try exact match first
     if node in gvid_table:
         return gvid_table.index(node)
 
-    # Try without brackets and numbers
-    nodename = helpers.remove_brackets_and_numbers(node)
+    # Strip both for_each / count brackets AND the ~N suffix that
+    # setup_tfdata appends. Handles nested-module + count cases like
+    # `module.foo["key"].module.bar.aws_thing.x[0]~1`.
+    nodename = _normalize_for_gvid_match(node)
     if nodename in gvid_table:
         return gvid_table.index(nodename)
 
-    # Try base name without index suffix
-    nodename = node.split("[")[0].split("~")[0]
-    if nodename in gvid_table:
-        return gvid_table.index(nodename)
-
-    # Try without module prefix
+    # Last-resort: drop module prefix (legacy fallback for non-module resources
+    # whose gvid_table entry is the bare `<type>.<name>` form).
     nodename = helpers.get_no_module_no_number_name(node)
     if nodename in gvid_table:
         return gvid_table.index(nodename)
 
-    # No match found
-    click.echo(
-        click.style(
-            f"\nERROR: Cannot map node {node} to graph connections. Exiting.",
-            fg="red",
-            bold=True,
-        )
+    # No match found - raise with diagnostic context
+    normalized = _normalize_for_gvid_match(node)
+    base = node.split(".")[-1].split("[")[0].split("~")[0]
+    near = [n for n in gvid_table if base and base in n][:5]
+    near_str = "\n  ".join(near) if near else "(no near matches)"
+    raise helpers.TerravisionError(
+        f"Cannot map node {node} to graph connections.\n"
+        f"  Normalized form tried: {normalized}\n"
+        f"  gvid_table has {len(gvid_table)} entries; nearest matches:\n  {near_str}"
     )
-    exit()
 
 
 def _build_gvid_table(tfdata):
@@ -444,7 +456,11 @@ def _build_gvid_table(tfdata):
 def _process_edges(tfdata, gvid_table, reverse_arrow_list):
     """Walk terraform graph edges and populate graphdict connections."""
     for node in dict(tfdata["graphdict"]):
-        node_id = find_node_in_gvid_table(node, gvid_table)
+        try:
+            node_id = find_node_in_gvid_table(node, gvid_table)
+        except helpers.TerravisionError as e:
+            e.tfdata = tfdata
+            raise
         if tfdata["tfgraph"].get("edges"):
             for connection in tfdata["tfgraph"]["edges"]:
                 head = connection["head"]
@@ -522,14 +538,10 @@ def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:
         for prefix in PROVIDER_PREFIXES.keys()
     )
     if not has_cloud_resources:
-        click.echo(
-            click.style(
-                f"\nERROR: No AWS, Azure or Google resources will be created with current plan. Exiting.",
-                fg="red",
-                bold=True,
-            )
+        raise helpers.TerravisionError(
+            "No AWS, Azure or Google resources will be created with current plan.",
+            tfdata=tfdata,
         )
-        exit()
     return tfdata
 
 

@@ -68,11 +68,54 @@ class ColorCommand(ColorHelpMixin, click.Command):
 
 
 def my_excepthook(exc_type: type, exc_value: BaseException, exc_traceback: Any) -> None:
-    """Custom exception hook for unhandled errors."""
-    import traceback
+    """Quiet exception hook used when --debug is OFF.
 
-    print(f"Unhandled error: {exc_type}, {exc_value}")
-    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    Prints a single-line error without a stack trace. With --debug ON we
+    leave Python's default hook in place so users get a full traceback.
+    """
+    click.echo(click.style(f"\nERROR: {exc_value}", fg="red", bold=True), err=True)
+
+
+def _install_excepthook(debug: bool) -> None:
+    """Install the user-friendly excepthook unless --debug is set."""
+    if not debug:
+        sys.excepthook = my_excepthook
+
+
+def _safe_compile_tfdata(
+    debug: bool,
+    source: str,
+    varfile: tuple,
+    workspace: str,
+    annotate: str = "",
+    planfile: str = "",
+    graphfile: str = "",
+    upgrade: bool = False,
+) -> Dict[str, Any]:
+    """Run compile_tfdata with TerravisionError handling.
+
+    On a TerravisionError, prints the message and (when --debug) writes
+    whatever partial tfdata was built to tfdata.json so the failure can be
+    diagnosed offline. Exits with status 1.
+    """
+    try:
+        return compile_tfdata(
+            source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+        )
+    except helpers.TerravisionError as e:
+        click.echo(click.style(f"\nERROR: {e}", fg="red", bold=True), err=True)
+        if debug and e.tfdata is not None:
+            try:
+                helpers.export_tfdata(e.tfdata)
+            except Exception as dump_err:
+                click.echo(
+                    click.style(
+                        f"\nWARNING: Could not write tfdata.json: {dump_err}",
+                        fg="yellow",
+                    ),
+                    err=True,
+                )
+        sys.exit(1)
 
 
 def _show_banner() -> None:
@@ -231,14 +274,9 @@ def compile_tfdata(
                 )
             )
         except Exception as e:
-            click.echo(
-                click.style(
-                    f"\nERROR: Failed to detect cloud provider: {e}",
-                    fg="red",
-                    bold=True,
-                )
+            raise helpers.TerravisionError(
+                f"Failed to detect cloud provider: {e}", tfdata=tfdata
             )
-            sys.exit()
 
     if "all_resource" in tfdata:
         _print_graph_debug(tfdata["graphdict"], "Terraform JSON graph dictionary")
@@ -368,8 +406,7 @@ def draw(
     upgrade: bool,
 ) -> None:
     """Draw architecture diagram from Terraform code."""
-    if not debug:
-        sys.excepthook = my_excepthook
+    _install_excepthook(debug)
     _show_banner()
     if planfile and (workspace != "default" or varfile):
         click.echo(
@@ -379,8 +416,8 @@ def draw(
             )
         )
     preflight_check(aibackend if not planfile else None)
-    tfdata = compile_tfdata(
-        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+    tfdata = _safe_compile_tfdata(
+        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
     )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend:
@@ -483,8 +520,7 @@ def graphdata(
     upgrade: bool = False,
 ) -> None:
     """List cloud resources and relations as drawable JSON."""
-    if not debug:
-        sys.excepthook = my_excepthook
+    _install_excepthook(debug)
     _show_banner()
     if planfile and (workspace != "default" or varfile):
         click.echo(
@@ -494,8 +530,8 @@ def graphdata(
             )
         )
     preflight_check(aibackend if not planfile else None)
-    tfdata = compile_tfdata(
-        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+    tfdata = _safe_compile_tfdata(
+        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
     )
     # Pass to LLM if this is not a pregraphed JSON
     if "all_resource" in tfdata and aibackend and (not show_services):
@@ -601,8 +637,7 @@ def visualise(
     avl_classes: Any,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
-    if not debug:
-        sys.excepthook = my_excepthook
+    _install_excepthook(debug)
     _show_banner()
 
     # Warn about inapplicable flags
@@ -630,8 +665,8 @@ def visualise(
         )
 
     preflight_check(None)
-    tfdata = compile_tfdata(
-        source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+    tfdata = _safe_compile_tfdata(
+        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
     )
 
     # Strip networking groups for simplified diagrams

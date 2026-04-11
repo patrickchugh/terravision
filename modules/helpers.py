@@ -129,16 +129,30 @@ def check_for_domain(string: str) -> bool:
     return False
 
 
+class TerravisionError(Exception):
+    """Raised on user-facing pipeline failures.
+
+    Carries optional partial tfdata so a debug dump can be written from the
+    failure point. Use this instead of bare `exit()` so callers can present
+    a clean error and (when --debug) export whatever state was built.
+    """
+
+    def __init__(self, message: str, tfdata: Optional[Dict[str, Any]] = None) -> None:
+        super().__init__(message)
+        self.tfdata = tfdata
+
+
 def export_tfdata(tfdata: Dict[str, Any]) -> None:
     """Export Terraform data dictionary to tfdata.json for debugging.
 
-    Args:
-        tfdata: Terraform data dictionary to export
+    Tolerant of partial state: missing keys and non-serializable values are
+    skipped so early-failure dumps still produce a usable file.
     """
-    tfdata["tempdir"] = str(tfdata["tempdir"])
-    with open(Path.cwd() / "tfdata.json", "w") as file:
-        json.dump(tfdata, file, indent=4)
+    if "tempdir" in tfdata and tfdata["tempdir"] is not None:
+        tfdata["tempdir"] = str(tfdata["tempdir"])
     out_path = (Path.cwd() / "tfdata.json").resolve()
+    with open(out_path, "w") as file:
+        json.dump(tfdata, file, indent=4, default=str)
     click.echo(
         click.style(
             f"\nINFO: Debug flag used. Current state has been written to {out_path}\n",
