@@ -34,7 +34,138 @@ def _tg_env() -> dict:
     return env
 
 
-def _find_terragrunt_cache_dir(workdir: str) -> str:
+def _tg_debug_snapshot(label: str, cache_dir: str, debug: bool) -> None:
+    """Print a one-section diagnostic snapshot of cache + backend state.
+
+    Used at checkpoints (after init, before plan, after plan) to pinpoint
+    when/where the override file or stored backend state changes. Only
+    fires under --debug. Issue #114: lgg42 reports the backend type
+    "keeps changing" between init and plan in his environment; we can't
+    reproduce locally, so this dumps the relevant on-disk state at each
+    transition so a remote reporter can hand us conclusive evidence.
+    """
+    if not debug:
+        return
+
+    lines = [f"\n--- [tg-debug] {label} ---"]
+    lines.append(f"  cache_dir: {cache_dir}")
+    lines.append(f"  TF_DATA_DIR: {os.environ.get('TF_DATA_DIR', '<unset>')}")
+
+    override_path = os.path.join(cache_dir, "terravision_override.tf")
+    if os.path.exists(override_path):
+        try:
+            with open(override_path) as f:
+                content = f.read()
+            lines.append(
+                f"  override file: EXISTS ({len(content)} bytes)\n"
+                f"    content: {content!r}"
+            )
+        except OSError as e:
+            lines.append(f"  override file: EXISTS (read error: {e})")
+    else:
+        lines.append("  override file: MISSING")
+
+    # Inspect backend.tf as it currently sits in the cache so we can see
+    # whether terragrunt regenerated it between checkpoints.
+    backend_tf = os.path.join(cache_dir, "backend.tf")
+    if os.path.exists(backend_tf):
+        try:
+            with open(backend_tf) as f:
+                content = f.read()
+            lines.append(f"  backend.tf: EXISTS ({len(content)} bytes)")
+            # Extract just the backend "TYPE" line for at-a-glance comparison
+            import re
+
+            m = re.search(r'backend\s+"(\w+)"', content)
+            if m:
+                lines.append(f"    backend type in file: {m.group(1)}")
+        except OSError as e:
+            lines.append(f"  backend.tf: EXISTS (read error: {e})")
+    else:
+        lines.append("  backend.tf: MISSING")
+
+    # Check terraform's stored backend state. terravision sets TF_DATA_DIR
+    # to a temp dir, so terraform stores .terraform/terraform.tfstate there
+    # rather than in the cache dir. Check both locations to be safe.
+    candidates = []
+    tf_data_dir = os.environ.get("TF_DATA_DIR", "")
+    if tf_data_dir:
+        candidates.append(
+            ("TF_DATA_DIR", os.path.join(tf_data_dir, "terraform.tfstate"))
+        )
+    candidates.append(
+        ("cache_dir", os.path.join(cache_dir, ".terraform", "terraform.tfstate"))
+    )
+    for label2, path in candidates:
+        if os.path.exists(path):
+            try:
+                with open(path) as f:
+                    state = json.load(f)
+                backend = state.get("backend", {})
+                lines.append(
+                    f"  stored .terraform/terraform.tfstate ({label2}): "
+                    f"backend.type={backend.get('type')!r}"
+                )
+            except (OSError, json.JSONDecodeError) as e:
+                lines.append(f"  stored state ({label2}): exists, read error: {e}")
+        else:
+            lines.append(f"  stored state ({label2}): MISSING ({path})")
+
+    # List all .tf files in cache_dir so we can see if terragrunt added,
+    # removed, or regenerated any between checkpoints.
+    try:
+        tf_files = sorted(f for f in os.listdir(cache_dir) if f.endswith(".tf"))
+        lines.append(f"  .tf files in cache_dir: {tf_files}")
+    except OSError as e:
+        lines.append(f"  .tf files in cache_dir: read error: {e}")
+
+    # Walk the entire .terragrunt-cache tree and list every directory that
+    # contains .tf files. If we picked the wrong cache subdir, the right
+    # one will show up here as a sibling that has its own backend.tf,
+    # .terraform state, or override file. Issue #114: critical for telling
+    # "wrong cache dir picked" apart from "override gets removed mid-run".
+    workdir_root = cache_dir
+    while workdir_root and os.path.basename(workdir_root) != ".terragrunt-cache":
+        parent = os.path.dirname(workdir_root)
+        if parent == workdir_root:
+            workdir_root = None
+            break
+        workdir_root = parent
+    if workdir_root and os.path.isdir(workdir_root):
+        sibling_dirs = []
+        for root, dirs, files in os.walk(workdir_root):
+            dirs[:] = [d for d in dirs if d != ".terraform"]
+            if any(f.endswith(".tf") for f in files):
+                rel = os.path.relpath(root, workdir_root)
+                marker_files = sorted(
+                    f
+                    for f in files
+                    if f
+                    in (
+                        "backend.tf",
+                        "provider.tf",
+                        "terravision_override.tf",
+                    )
+                    or f.endswith("_override.tf")
+                )
+                has_state = os.path.exists(
+                    os.path.join(root, ".terraform", "terraform.tfstate")
+                )
+                marker = " [PICKED]" if root == cache_dir else ""
+                sibling_dirs.append(
+                    f"    {rel}{marker}: markers={marker_files} "
+                    f"has_local_state={has_state}"
+                )
+        lines.append(
+            f"  all .tf-containing dirs in .terragrunt-cache "
+            f"({len(sibling_dirs)} found):"
+        )
+        lines.extend(sibling_dirs)
+
+    click.echo(click.style("\n".join(lines), fg="magenta"))
+
+
+def _find_terragrunt_cache_dir(workdir: str, debug: bool = False) -> str:
     """Find the terraform working directory inside .terragrunt-cache.
 
     Terragrunt downloads sources into .terragrunt-cache/<hash>/<hash>/.
@@ -46,6 +177,7 @@ def _find_terragrunt_cache_dir(workdir: str) -> str:
 
     Args:
         workdir: The terragrunt module source directory.
+        debug: If True, log every candidate considered and the final pick.
 
     Returns:
         Absolute path to the terraform working directory in cache.
@@ -62,6 +194,7 @@ def _find_terragrunt_cache_dir(workdir: str) -> str:
     # Search for Terragrunt-generated files to find the actual working dir.
     # These are placed in the directory where terraform runs, which may be
     # a subfolder for sources like git::https://...//modules/db_subnet_group.
+    candidates = []  # tuples of (root, marker_file, signature_present)
     for root, dirs, files in os.walk(cache_root):
         dirs[:] = [d for d in dirs if d != ".terraform"]
         for gen_file in ("backend.tf", "provider.tf"):
@@ -69,10 +202,39 @@ def _find_terragrunt_cache_dir(workdir: str) -> str:
                 filepath = os.path.join(root, gen_file)
                 try:
                     with open(filepath) as f:
-                        if "Terragrunt" in f.read(200):
-                            return root
+                        head = f.read(200)
+                    candidates.append((root, gen_file, "Terragrunt" in head))
                 except OSError:
                     continue
+
+    if debug and candidates:
+        click.echo(
+            click.style(
+                "\n[tg-debug] _find_terragrunt_cache_dir candidates "
+                f"({len(candidates)}):",
+                fg="magenta",
+            )
+        )
+        for root, marker, sig in candidates:
+            rel = os.path.relpath(root, cache_root)
+            click.echo(
+                click.style(
+                    f"  {rel}: marker={marker} terragrunt_sig_in_first_200B={sig}",
+                    fg="magenta",
+                )
+            )
+
+    for root, marker, sig in candidates:
+        if sig:
+            if debug:
+                click.echo(
+                    click.style(
+                        f"[tg-debug] picked: {os.path.relpath(root, cache_root)}",
+                        fg="magenta",
+                    )
+                )
+            return root
+
     # Fallback: return the first hash2 directory
     for hash1 in os.listdir(cache_root):
         hash1_path = os.path.join(cache_root, hash1)
@@ -81,6 +243,14 @@ def _find_terragrunt_cache_dir(workdir: str) -> str:
         for hash2 in os.listdir(hash1_path):
             hash2_path = os.path.join(hash1_path, hash2)
             if os.path.isdir(hash2_path):
+                if debug:
+                    click.echo(
+                        click.style(
+                            f"[tg-debug] no signature match; falling back to "
+                            f"{os.path.relpath(hash2_path, cache_root)}",
+                            fg="magenta",
+                        )
+                    )
                 return hash2_path
     raise RuntimeError(
         f"No cache subdirectory found in {cache_root}. "
@@ -276,13 +446,15 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
 
     # Try to find the cache directory (should exist if source download succeeded)
     try:
-        cache_dir = _find_terragrunt_cache_dir(workdir)
+        cache_dir = _find_terragrunt_cache_dir(workdir, debug=debug)
     except RuntimeError:
         if result.returncode != 0:
             stderr = result.stderr or ""
             hint = _get_init_error_hint(stderr)
             raise RuntimeError(f"Terragrunt init failed:\n{stderr}{hint}")
         raise
+
+    _tg_debug_snapshot("after terragrunt init", cache_dir, debug)
 
     # Safety net: ensure override is in the cache directory
     cache_override = os.path.join(cache_dir, "terravision_override.tf")
@@ -302,6 +474,8 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
             stderr = result.stderr or ""
             hint = _get_init_error_hint(stderr)
             raise RuntimeError(f"Terragrunt init failed:\n{stderr}{hint}")
+
+    _tg_debug_snapshot("after fallback terraform init", cache_dir, debug)
 
     return cache_dir
 
@@ -332,13 +506,21 @@ def _get_init_error_hint(stderr: str) -> str:
 
 
 def _run_terragrunt_plan(
-    workdir: str, varfiles: list, tfplan_path: str, debug: bool
+    workdir: str,
+    varfiles: list,
+    tfplan_path: str,
+    debug: bool,
+    cache_dir: str = "",
 ) -> None:
     """Run terragrunt plan with -refresh=false.
 
     Uses terragrunt (not terraform directly) so that dependency inputs
     are resolved from mock_outputs and passed as terraform variables.
+
+    cache_dir is optional and only used for diagnostic snapshots when
+    debug=True (issue #114 investigation).
     """
+    _tg_debug_snapshot("before terragrunt plan", cache_dir, debug)
     click.echo(click.style("\nGenerating Terragrunt Plan..\n", fg="white", bold=True))
     plan_cmd = ["terragrunt", "plan", "-refresh=false"]
     for vf in varfiles:
@@ -347,6 +529,7 @@ def _run_terragrunt_plan(
     result = subprocess.run(
         plan_cmd, capture_output=not debug, text=True, cwd=workdir, env=_tg_env()
     )
+    _tg_debug_snapshot("after terragrunt plan", cache_dir, debug)
     if result.returncode != 0:
         stderr = result.stderr or ""
         hint = ""
@@ -433,7 +616,7 @@ def tg_initplan(
 
     try:
         cache_dir = _run_terragrunt_init(codepath, debug)
-        _run_terragrunt_plan(codepath, varfile, tfplan_path, debug)
+        _run_terragrunt_plan(codepath, varfile, tfplan_path, debug, cache_dir=cache_dir)
         plan_data, graph_data = _decode_tg_plan(
             codepath, tfplan_path, tfplan_json_path, tfgraph_path, debug
         )
