@@ -91,6 +91,7 @@ def _safe_compile_tfdata(
     planfile: str = "",
     graphfile: str = "",
     upgrade: bool = False,
+    aibackend: str = "",
 ) -> Dict[str, Any]:
     """Run compile_tfdata with TerravisionError handling.
 
@@ -100,7 +101,15 @@ def _safe_compile_tfdata(
     """
     try:
         return compile_tfdata(
-            source, varfile, workspace, debug, annotate, planfile, graphfile, upgrade
+            source,
+            varfile,
+            workspace,
+            debug,
+            annotate,
+            planfile,
+            graphfile,
+            upgrade,
+            aibackend=aibackend,
         )
     except helpers.TerravisionError as e:
         click.echo(click.style(f"\nERROR: {e}", fg="red", bold=True), err=True)
@@ -186,6 +195,7 @@ def compile_tfdata(
     planfile: str = "",
     graphfile: str = "",
     upgrade: bool = False,
+    aibackend: str = "",
 ) -> Dict[str, Any]:
     """Compile Terraform data from source files into enriched graph dictionary.
 
@@ -197,6 +207,8 @@ def compile_tfdata(
         annotate: Path to custom annotations YAML file
         planfile: Path to pre-generated Terraform plan JSON file
         graphfile: Path to pre-generated Terraform graph DOT file
+        aibackend: Optional AI backend ("ollama" / "bedrock") for AI
+            annotation generation. Empty string disables AI.
 
     Returns:
         Enriched tfdata dictionary with graphdict and metadata
@@ -283,6 +295,27 @@ def compile_tfdata(
         tfdata = _enrich_graph_data(tfdata, debug, already_processed)
         tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
         _print_graph_debug(tfdata["graphdict"], "Enriched graphviz dictionary")
+
+        # AI annotations run AFTER full enrichment so the LLM sees the
+        # final graphdict that the renderer will actually iterate. If
+        # the AI ran earlier, downstream transformations
+        # (handle_special_resources, create_multiple_resources, etc.)
+        # would rename or expand the nodes the AI labelled, and the
+        # labels would never reach the renderer because they were
+        # keyed on intermediate names. Running AI last also means the
+        # AI sees auto-annotation nodes (tv_aws_users.users etc.)
+        # already in the inventory and connects to them directly
+        # instead of trying to add them again. Failures inside the AI
+        # path return None and fall through to the default pipeline.
+        if aibackend and "all_resource" in tfdata:
+            ai_dict = llm.generate_ai_annotations(
+                tfdata,
+                aibackend,
+                source_dir=source if isinstance(source, str) else None,
+                output_dir=None,
+            )
+            if ai_dict:
+                tfdata = annotations.apply_ai_annotations(tfdata, ai_dict)
     return tfdata
 
 
@@ -417,11 +450,16 @@ def draw(
         )
     preflight_check(aibackend if not planfile else None)
     tfdata = _safe_compile_tfdata(
-        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
+        debug,
+        source,
+        varfile,
+        workspace,
+        annotate,
+        planfile,
+        graphfile,
+        upgrade,
+        aibackend=aibackend,
     )
-    # Pass to LLM if this is not a pregraphed JSON
-    if "all_resource" in tfdata and aibackend:
-        tfdata = llm.refine_with_llm(tfdata, aibackend, debug)
 
     # Strip networking groups for simplified diagrams, bridging connections
     if simplified:
@@ -531,11 +569,16 @@ def graphdata(
         )
     preflight_check(aibackend if not planfile else None)
     tfdata = _safe_compile_tfdata(
-        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
+        debug,
+        source,
+        varfile,
+        workspace,
+        annotate,
+        planfile,
+        graphfile,
+        upgrade,
+        aibackend=aibackend if not show_services else "",
     )
-    # Pass to LLM if this is not a pregraphed JSON
-    if "all_resource" in tfdata and aibackend and (not show_services):
-        tfdata = llm.refine_with_llm(tfdata, aibackend, debug)
     if simplified:
         graphmaker.simplify_graphdict(tfdata)
     click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))

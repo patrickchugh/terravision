@@ -23,6 +23,14 @@ import modules.gitlibs as gitlibs
 
 # Global module-level variables
 annotations: Dict[str, Any] = dict()
+ai_annotations: Dict[str, Any] = dict()
+# Comments harvested from raw .tf files. Keyed by "<type>.<name>" when a
+# comment block sits directly above a resource declaration; bare module
+# /file-level intent is parked in tf_unattached_comments. Both buckets
+# accumulate across iterative_parse() calls so a project with multiple
+# nested modules collects everything.
+tf_comments: Dict[str, str] = dict()
+tf_unattached_comments: List[str] = list()
 start_dir: Path = Path.cwd()
 temp_dir: tempfile.TemporaryDirectory = tempfile.TemporaryDirectory(
     dir=tempfile.gettempdir()
@@ -45,6 +53,87 @@ EXTRACT: List[str] = [
     "data",
     "provider",
 ]
+
+
+# Match a `resource "<type>" "<name>" {` declaration. We deliberately do
+# not try to handle every HCL edge case — quoted braces inside attribute
+# values etc. Comment harvesting is best-effort context for the LLM, not
+# a parser.
+_HCL_RESOURCE_RE = re.compile(r'^\s*resource\s+"([^"]+)"\s+"([^"]+)"\s*\{')
+# A line that is purely a comment (allowing leading whitespace). Supports
+# `#` and `//` line comments — block /* ... */ comments are rare in HCL
+# and are skipped on purpose.
+_HCL_COMMENT_LINE_RE = re.compile(r"^\s*(?://|#)\s?(.*)$")
+
+
+def _extract_comments_from_tf(
+    content: str,
+    max_chars_per_resource: int = 500,
+) -> "tuple[Dict[str, str], List[str]]":
+    """Pull human-authored comments out of raw HCL source.
+
+    Returns ``(per_resource, unattached)``:
+
+      * ``per_resource`` maps a graphdict-style key (``aws_lambda_function.api``)
+        to a single joined comment string. The mapped comment is the
+        consecutive comment block that sits immediately above the
+        ``resource "<type>" "<name>" {`` declaration. A blank line
+        between the comment and the resource is tolerated — humans
+        naturally space out documentation.
+      * ``unattached`` collects comment lines that are not directly above
+        a resource (file headers, comments inside locals/module blocks,
+        explanatory paragraphs). These are still useful project-intent
+        signal for the LLM, just not bound to a specific node.
+
+    The function is regex-only and does not understand HCL syntax. False
+    positives (e.g. ``#`` inside a quoted string) are accepted as the
+    cost of keeping this scanner cheap. Output is hard-capped per
+    resource so a giant doc-block above one node cannot starve the
+    rest of the prompt budget.
+    """
+    per_resource: Dict[str, str] = {}
+    unattached: List[str] = []
+    pending: List[str] = []
+
+    for line in content.splitlines():
+        comment_match = _HCL_COMMENT_LINE_RE.match(line)
+        if comment_match:
+            text = comment_match.group(1).strip()
+            if text:
+                pending.append(text)
+            continue
+
+        # Blank line — keep the pending block alive; it might still
+        # belong to the resource declared two lines down.
+        if not line.strip():
+            continue
+
+        resource_match = _HCL_RESOURCE_RE.match(line)
+        if resource_match and pending:
+            type_name, local_name = resource_match.group(1), resource_match.group(2)
+            key = f"{type_name}.{local_name}"
+            joined = " ".join(pending)
+            if len(joined) > max_chars_per_resource:
+                joined = joined[:max_chars_per_resource] + "..."
+            # Only the FIRST comment block wins for a given resource —
+            # if the same key shows up twice (e.g. count expansions in
+            # different files) we keep the earliest documentation.
+            per_resource.setdefault(key, joined)
+            pending = []
+            continue
+
+        # Some other code line (locals, variable, module, attribute,
+        # closing brace). Anything pending is therefore not directly
+        # above a resource declaration — drain it to the unattached
+        # bucket so it still reaches the LLM.
+        if pending:
+            unattached.extend(pending)
+            pending = []
+
+    if pending:
+        unattached.extend(pending)
+
+    return per_resource, unattached
 
 
 def _load_terraform_modules_json(source_dir: str) -> Dict[str, str]:
@@ -130,6 +219,7 @@ def find_tf_files(
         List of absolute paths to discovered Terraform files
     """
     global annotations
+    global ai_annotations
 
     if paths is None:
         paths = list()
@@ -157,7 +247,17 @@ def find_tf_files(
         ):
             paths.append(os.path.join(source_location, file))
 
-        # Load annotation YAML files if present
+        # Load AI annotation file if present (terravision.ai.yml).
+        # Detected before the user file so the .yml suffix check below
+        # doesn't accidentally match it.
+        if file.lower().endswith("terravision.ai.yml"):
+            full_filepath = Path(source_location).joinpath(file)
+            with open(full_filepath, "r") as fh:
+                click.echo(f"  Detected AI annotation file : {fh.name} \n")
+                ai_annotations = yaml.safe_load(fh) or dict()
+            continue
+
+        # Load user annotation YAML files if present
         if (
             file.lower().endswith("terravision.yml")
             or file.lower().endswith("architecture.yaml")
@@ -285,19 +385,37 @@ def iterative_parse(
         fname = filepath.parent.name + "/" + filepath.name
         click.echo(f"  Parsing {filename}")
 
+        # Read the raw text once so we can both parse it as HCL AND
+        # harvest line comments out of it. python-hcl2 strips comments
+        # during parsing, so the only way to surface human documentation
+        # to downstream consumers (the AI annotation context block in
+        # particular) is to scan the raw source ourselves before handing
+        # it to the parser.
+        try:
+            with click.open_file(filename, "r", encoding="utf8") as f:
+                raw_content = f.read()
+        except OSError as read_err:
+            print("Could not read Terraform file:", filename, read_err)
+            continue
+
+        per_resource, unattached = _extract_comments_from_tf(raw_content)
+        if per_resource:
+            for key, comment in per_resource.items():
+                tf_comments.setdefault(key, comment)
+        if unattached:
+            tf_unattached_comments.extend(unattached)
+
         # Attempt to parse HCL2 content
-        with click.open_file(filename, "r", encoding="utf8") as f:
+        try:
+            hcl_dict[filename] = hcl2.load(io.StringIO(raw_content))
+        except Exception:
+            # Retry with preprocessed content to fix known parser limitations
             try:
-                hcl_dict[filename] = hcl2.load(f)
-            except Exception:
-                # Retry with preprocessed content to fix known parser limitations
-                try:
-                    f.seek(0)
-                    preprocessed = _preprocess_hcl(f.read())
-                    hcl_dict[filename] = hcl2.load(io.StringIO(preprocessed))
-                except Exception as error:
-                    print("A Terraform HCL parsing error occurred:", filename, error)
-                    continue
+                preprocessed = _preprocess_hcl(raw_content)
+                hcl_dict[filename] = hcl2.load(io.StringIO(preprocessed))
+            except Exception as error:
+                print("A Terraform HCL parsing error occurred:", filename, error)
+                continue
 
         # Extract specified sections from parsed HCL
         for section in extract_sections:
@@ -393,8 +511,35 @@ def read_tfsource(
         Updated tfdata dictionary containing all parsed Terraform data
     """
     global annotations
+    global ai_annotations
+    global tf_comments
+    global tf_unattached_comments
+
+    # Reset the comment buckets at the start of each parse run so a
+    # second invocation in the same Python process doesn't ship stale
+    # comments from a previous source. The annotation globals are
+    # intentionally NOT reset (existing behaviour for backwards compat).
+    tf_comments = dict()
+    tf_unattached_comments = list()
 
     click.echo(click.style("\nParsing Terraform Source Files..", fg="white", bold=True))
+
+    # Also discover terravision.ai.yml in the current working directory
+    # (the spec places the AI file next to the rendered diagram, not in the
+    # source dir). Source-dir discovery still happens inside find_tf_files.
+    cwd_ai_path = Path.cwd() / "terravision.ai.yml"
+    if cwd_ai_path.is_file():
+        try:
+            with open(cwd_ai_path, "r") as fh:
+                click.echo(f"  Detected AI annotation file : {cwd_ai_path} \n")
+                ai_annotations = yaml.safe_load(fh) or dict()
+        except (OSError, yaml.YAMLError) as exc:
+            click.echo(
+                click.style(
+                    f"  WARNING: Could not read {cwd_ai_path}: {exc}",
+                    fg="yellow",
+                )
+            )
     hcl_dict: Dict[str, Any] = dict()
     # Normalize varfile_list to a list (callers may pass tuple or list)
     varfile_list = list(varfile_list)
@@ -435,6 +580,9 @@ def read_tfsource(
     tfdata["varfile_list"] = varfile_list
     tfdata["tempdir"] = temp_dir
     tfdata["annotations"] = annotations
+    tfdata["ai_annotations"] = ai_annotations
+    tfdata["tf_comments"] = tf_comments
+    tfdata["tf_unattached_comments"] = tf_unattached_comments
 
     return tfdata
 

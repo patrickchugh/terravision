@@ -253,13 +253,21 @@ class TestConfigModuleAttributes:
         assert hasattr(config, "GCP_SHARED_SERVICES")
 
     def test_all_configs_have_ai_prompts(self):
-        """Test that all configs have AI prompt constants."""
+        """All cloud configs MUST still expose the documentation prompt.
+
+        The legacy per-provider *_REFINEMENT_PROMPT constants were
+        removed when the AI pipeline switched from "rewrite the whole
+        graphdict" to "write a separate terravision.ai.yml annotation
+        file". A single provider-agnostic ANNOTATION_PROMPT now lives
+        in modules/llm.py — the LLM identifies the cloud from resource
+        name prefixes (aws_, azurerm_, google_) inside the graphdict.
+        """
         for provider in ["aws", "azure", "gcp"]:
             config = load_config(provider)
             provider_upper = provider.upper()
 
-            assert hasattr(config, f"{provider_upper}_REFINEMENT_PROMPT")
             assert hasattr(config, f"{provider_upper}_DOCUMENTATION_PROMPT")
+            assert not hasattr(config, f"{provider_upper}_REFINEMENT_PROMPT")
 
     def test_all_configs_have_name_replacements(self):
         """Test that all configs have name replacement mappings."""
