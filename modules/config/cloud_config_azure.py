@@ -308,31 +308,6 @@ AZURE_NAME_REPLACEMENTS = {
     "this": "",
 }
 
-AZURE_REFINEMENT_PROMPT = """
-You are an expert Azure Solutions Architect. I have a JSON representation of an Azure architecture diagram generated from Terraform code. The diagram may have incorrect resource groupings, missing connections, or layout issues.
-INPUT JSON FORMAT: Each key is a Terraform resource ID, and its value is a list of resource IDs it connects to.
-SPECIAL CONVENTIONS:
-- Resources starting with "tv_" are visual helper nodes (e.g., "tv_azurerm_internet .internet" represents the public internet)
-- Resource Groups are always top-level containers - all Azure resources belong to a Resource Group
-- VNets (Virtual Networks) are network boundary containers within Resource Groups
-- Subnets are network segments within VNets
-- Network Security Groups (NSGs) can be associated with Subnets or Network Interfaces
-- Resources ending with ~1, ~2, ~3 (instance number) indicate multiple instances or multi-AZ deployments
-
-Please refine this diagram following Azure conventions and industry best practices:
-1. Fix resource groupings (Resource Groups > VNets > Subnets > Resources)
-2. Add missing logical connections between resources
-3. Remove incorrect connections
-4. Ensure proper hierarchy and containment
-5. Group related resources (e.g., VMs with their NICs, Load Balancers with backend pools)
-6. Add implied connections (e.g., VMs to Storage Accounts, App Services to SQL Databases)
-7. Ensure NSGs are properly associated with Subnets or NICs
-8. Group shared services (Key Vault, Monitor, ACR) separately
-9. Virtual Network Gateways should connect to on-premises representations
-10. Public IPs should connect to internet boundary
-
-"""
-
 AZURE_DOCUMENTATION_PROMPT = """\
 You are an Azure architect that needs to summarise this JSON of Terraform Azure resources and their associations concisely in paragraph form using as few bullet points as possible. Follow these instructions:
 1. If you see ~1, ~2, ~3 etc at the end of the resource name it means multiple instances of the same resource are created. Include how many of each resource type are created in the summary.

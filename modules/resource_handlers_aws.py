@@ -19,6 +19,7 @@ CONSOLIDATED_NODES = cloud_config.AWS_CONSOLIDATED_NODES
 NODE_VARIANTS = cloud_config.AWS_NODE_VARIANTS
 SPECIAL_RESOURCES = cloud_config.AWS_SPECIAL_RESOURCES
 SHARED_SERVICES = cloud_config.AWS_SHARED_SERVICES
+EDGE_NODES = cloud_config.AWS_EDGE_NODES
 DISCONNECT_SERVICES = cloud_config.AWS_DISCONNECT_LIST
 
 
@@ -193,7 +194,11 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Process origin configuration
             if "origin" in tfdata["meta_data"][cf_resource]:
                 origin_source = tfdata["meta_data"][cf_resource]["origin"]
-                # Parse string representation of dict/list
+                # Parse string representation of dict/list. The resolver
+                # may produce malformed strings when module outputs can't
+                # be fully resolved (e.g. UNKNOWN placeholders with
+                # partial function calls). Guard with try/except so a
+                # single bad origin doesn't crash the entire render.
                 if isinstance(origin_source, str) and (
                     origin_source.startswith("{") or origin_source.startswith("[")
                 ):
@@ -706,9 +711,16 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     # Defensive check: only remove if lb is actually in parent
                     # (SG handler may have already modified structure for multi-subnet LBs)
                     helpers.safe_remove_connection(tfdata, p, lb)
-                elif p_type not in GROUP_NODES and p_type not in SHARED_SERVICES:
-                    # Remove backward connections from compute resources (Fargate, EC2, etc.) to LB
-                    # Traffic should flow LB → ALB → Compute, not Compute → LB
+                elif (
+                    p_type not in GROUP_NODES
+                    and p_type not in SHARED_SERVICES
+                    and p_type not in EDGE_NODES
+                ):
+                    # Remove backward connections from compute resources
+                    # (Fargate, EC2, etc.) to LB. Traffic should flow
+                    # LB → ALB → Compute, not Compute → LB. EDGE nodes
+                    # (CloudFront, API Gateway) are IN FRONT of the LB
+                    # and their connection is correct (CF → ALB).
                     helpers.safe_remove_connection(tfdata, p, lb)
         # ELB service points TO ALB instances (correct direction)
         if lb not in tfdata["graphdict"]:

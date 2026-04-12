@@ -488,17 +488,22 @@ def _process_edges(tfdata, gvid_table, reverse_arrow_list):
                         and len(matched_connections) == 1
                     ):
                         conn = matched_connections[0]
-                    # Handle reverse arrow resources (connection points to node)
-                    if conn_type in reverse_arrow_list:
+                    # Handle reverse arrow resources (connection points to node).
+                    # The reverse_arrow_list entries are prefixes (e.g.
+                    # "aws_cloudfront") that must match against the full
+                    # resource type (e.g. "aws_cloudfront_distribution").
+                    if any(conn_type.startswith(r) for r in reverse_arrow_list):
                         if conn not in tfdata["graphdict"].keys():
                             tfdata["graphdict"][conn] = list()
                         # Skip multi-instance resources
                         if "[" not in conn:
-                            tfdata["graphdict"][conn].append(node)
+                            if node not in tfdata["graphdict"][conn]:
+                                tfdata["graphdict"][conn].append(node)
                     # Normal arrow (node points to connection)
                     else:
                         if "[" not in node:
-                            tfdata["graphdict"][node].append(conn)
+                            if conn not in tfdata["graphdict"].get(node, []):
+                                tfdata["graphdict"][node].append(conn)
 
 
 def tf_makegraph(tfdata: Dict[str, Any], debug: bool) -> Dict[str, Any]:

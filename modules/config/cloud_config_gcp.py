@@ -321,34 +321,6 @@ GCP_NAME_REPLACEMENTS = {
     "this": "",
 }
 
-GCP_REFINEMENT_PROMPT = """
-You are an expert GCP Solutions Architect. I have a JSON representation of a GCP architecture diagram generated from Terraform code. The diagram may have incorrect resource groupings, missing connections, or layout issues.
-INPUT JSON FORMAT: Each key is a Terraform resource ID, and its value is a list of resource IDs it connects to.
-SPECIAL CONVENTIONS:
-- Resources starting with "tv_" are visual helper nodes (e.g., "tv_gcp_internet.internet" represents the public internet)
-- Projects are top-level containers for all GCP resources
-- VPCs (Virtual Private Clouds) are global network containers
-- Subnets are regional network segments within VPCs
-- Firewall Rules are applied at the VPC level
-- Zones represent physical data center locations
-- Resources ending with ~1, ~2, ~3 (instance number) indicate multiple instances or multi-zone deployments
-
-Please refine this diagram following GCP conventions and industry best practices:
-1. Fix resource groupings (Project > VPC > Subnet > Zone > Resources)
-2. Add missing logical connections between resources
-3. Remove incorrect connections
-4. Ensure proper hierarchy and containment
-5. Group related resources (e.g., GKE nodes with node pools, Load Balancers with backend services)
-6. Add implied connections (e.g., Compute Instances to Cloud Storage, Cloud Run to Artifact Registry)
-7. Ensure Firewall Rules are associated with VPCs
-8. Group shared services (KMS, Logging, Monitoring, GCR) separately
-9. VPN Gateways should connect to on-premises representations
-10. External IPs should connect to internet boundary
-11. GKE clusters should show connections to GCR and Cloud Storage
-12. Consider regional vs global resources (Cloud Storage is global, Subnets are regional)
-
-"""
-
 GCP_DOCUMENTATION_PROMPT = """\
 You are a GCP architect that needs to summarise this JSON of Terraform GCP resources and their associations concisely in paragraph form using as few bullet points as possible. Follow these instructions:
 1. If you see ~1, ~2, ~3 etc at the end of the resource name it means multiple instances of the same resource are created. Include how many of each resource type are created in the summary.

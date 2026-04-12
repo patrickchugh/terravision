@@ -81,9 +81,11 @@ Generated diagrams MUST be extensible via YAML-based annotations without modifyi
 
 ### VII. AI-Assisted Refinement (Optional)
 
-AI-powered diagram refinement MUST remain optional and support multiple backends (cloud-based, local). AI refinement MUST fix groupings, add missing connections, and enforce architectural conventions. Local AI options (Ollama) MUST be available for privacy-sensitive environments.
+AI-powered diagram refinement MUST remain optional and support multiple backends (cloud-based, local). AI refinement MUST add missing connections, suggest meaningful diagram titles and external actors, generate numbered flow sequences where an end-to-end path exists, and enforce architectural conventions. Local AI options (Ollama) MUST be available for privacy-sensitive environments.
 
-**Rationale**: AI improves diagram quality by applying architectural best practices and detecting missing relationships, but must remain optional to support air-gapped environments. Multiple backend support allows organizations to choose between convenience (cloud) and privacy (local).
+AI refinement MUST NOT modify the deterministic graph data (graphdict, tfdata) — all AI output MUST be expressed as a separate annotation artifact (e.g., `terravision.ai.yml`) or as positional-only edits to a laid-out DOT file that pass a strict validation gate before image generation.
+
+**Rationale**: AI improves diagram quality by applying architectural best practices and detecting missing relationships, but must remain optional to support air-gapped environments. Multiple backend support allows organizations to choose between convenience (cloud) and privacy (local). Resource grouping/simplification was explicitly removed from the mandated capabilities in v1.7.0 because the risk of the AI hiding load-bearing resources outweighed the readability benefit; grouping may return as an opt-in capability in a future amendment once a safe heuristic is proven.
 
 ## Technical Standards
 

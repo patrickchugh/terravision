@@ -84,11 +84,14 @@ class Canvas:
         "overlap" : "false",
         "nodesep": "3",  # Horizontal spacing between nodes
         "fontname": "Sans-Serif",
-        "fontsize": "30",
+        "fontsize": "36",
         "fontcolor": "#2D3436",
         "labelloc" : "t",
         "concentrate": 'false',
-        "ranksep": "5",  # Vertical spacing between ranks
+        "ranksep": "6",  # Vertical spacing between ranks
+        "mclimit": "2.0",  # More crossing-minimisation iterations
+        "nslimit": "2.0",  # More network-simplex iterations for rank assignment
+        "forcelabels": "true",  # Force xlabel placement to avoid overlaps
         "center": "true",
         "pad" : "1.5",
     }
@@ -102,7 +105,7 @@ class Canvas:
         "imagepos": "c",
         "imagescale": "true",
         "fontname": "Sans-Serif",
-        "fontsize": "14",
+        "fontsize": "18",
         "fontcolor": "#2D3436",
         "center": "true",
     }
@@ -280,7 +283,7 @@ class Cluster:
         "labeljust": "l",
         "pencolor": "black",
         "fontname": "Sans-Serif",
-        "fontsize": "14",
+        "fontsize": "18",
     }
 
     def __init__(
@@ -559,6 +562,8 @@ class Edge:
 
         if label:
             self._attrs["xlabel"] = "  " + label + "  "
+            self._attrs["fontsize"] = "18"
+            self._attrs["fontcolor"] = "#5b9bd5"
         if color:
             self._attrs["color"] = color
         if style:

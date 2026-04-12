@@ -271,7 +271,7 @@ def handle_nodes(
                 label=node_label, tf_resource_name=resource, **extra_attrs
             )
         drawn_resources.append(resource)
-        tfdata["meta_data"].update({resource: {"node": newNode}})
+        tfdata["meta_data"].setdefault(resource, {})["node"] = newNode
 
     # Process connections to other nodes
     if tfdata["graphdict"].get(resource):

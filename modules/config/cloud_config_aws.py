@@ -435,31 +435,6 @@ AWS_NAME_REPLACEMENTS = {
 }
 
 
-AWS_REFINEMENT_PROMPT = """
-You are an expert AWS Solutions Architect. I have a JSON representation of an AWS architecture diagram generated from Terraform code. The diagram may have incorrect resource groupings, missing connections, or layout issues.
-INPUT JSON FORMAT: Each key is a Terraform resource ID, and its value is a list of resource IDs it connects to.
-SPECIAL CONVENTIONS:
-- Resources starting with "tv_" are visual helper nodes (e.g., "tv_aws_internet.internet" represents the public internet)
-- Groups like VPCs, Subnets, Autoscaling, Security Groups etc are always parents and a connection to a resource means the resource is inside that group. However, if a resource inside a group is not also a group type, it should have no connections back to the group nodes
-- "aws_az.availability_zone_*" groups represent availability zone boundaries
-- Security Groups should always be a group containing EC2 instances or other resources within a subnet
-- Resources ending with ~1, ~2, ~3 (instance number) indicate they're either multiple instances of the same resource, or one resource duplicated for clarity when a resource is deployed in multiple availability zones and subnets
-- aws_group.shared_services is used to group common shared resources which are accessed by multiple resources such as CloudWatch, ECR, KMS and do not have any incoming or outgoing connections 
-Please refine this diagram following AWS conventions and industry best practices:
-1. Fix resource groupings (VPCs, subnets, availability zones, security groups) where necessary
-2. Add missing logical connections between resources
-3. Remove incorrect connections
-4. Ensure proper hierarchy (Region > VPC > AZ > Subnet > Resources)
-5. Group related resources (e.g., ALB with target groups, Autoscaling resources in an AutoScaling Group, EKS nodes within a subnet)
-6. Group type resources like aws_group, aws_appautoscaling_targ, aws_subnet, aws_security_group and tv_aws_oprem are always the parent and other non group resources should be children without connections back to the group
-7. Add implied connections (e.g., Lambda in VPC needs ENI connection, ECS or EKS will connect to an ECR repository node)
-8. Autoscaling targets should appear as group type nodes within their relevant subnet with the same instance number
-9. NAT Gateways in a public subnet should be duplicated with incremental instance numbers in all public subnets to show multi-AZ deployment
-10. EKS Cluster worker nodes should be inside subnet groups
-
-"""
-
-
 AWS_DOCUMENTATION_PROMPT = """\
 You are an AWS architect that needs to summarise this JSON of Terraform AWS resources and their associations concisely in paragraph form using as few bullet points as possible. Follow these instructions:
 1. If you see ~1, ~2, ~3 etc at the end of the resource name it means multiple instances of the same resource are created. Include how many of each resource type are created in the summary. 
