@@ -154,24 +154,9 @@ the ONE situation where you may write a node name that is not in
 the allow-list above, AND the ONE situation where you may draw a
 new edge (from the actor to an existing resource). You MUST use
 one of these built-in identifiers — they are the only names with
-registered icons. Pick the variant matching the cloud provider:
+registered icons:
 
-  AWS:
-    tv_aws_users.users                  - end users / web browsers
-    tv_aws_mobile_client.mobile         - mobile app clients
-    tv_aws_device.device                - generic IoT or thin client
-    tv_aws_internet.internet            - public internet
-    tv_aws_onprem.corporate_datacenter  - on-premises datacenter
-    tv_aws_cgw.customer_gateway         - customer VPN gateway
-
-  Azure:
-    tv_azurerm_users.users              - end users / web browsers
-    tv_azurerm_internet.internet        - public internet
-
-  GCP:
-    tv_gcp_users.users                  - end users / web browsers
-    tv_gcp_internet.internet            - public internet
-    tv_gcp_onprem.corporate_datacenter  - on-premises datacenter
+{actors}
 
 ================================================================
 OUTPUT FORMAT — the YAML you must produce
@@ -232,6 +217,39 @@ Now produce the YAML:
 # README filenames considered when assembling LLM context. Single-file
 # only by design — see module docstring above.
 _README_CANDIDATES = ("README.md", "README.MD", "Readme.md", "README", "README.txt")
+
+
+def _build_actors_block(config: Any, provider: str) -> str:
+    """Build the external-actor identifier list from the provider's
+    AUTO_ANNOTATIONS config.
+
+    Scans the ``*_AUTO_ANNOTATIONS`` list for ``tv_*`` link targets and
+    returns them as a flat list the LLM can copy from. This is the
+    single source of truth — adding or removing a ``tv_*`` entry in
+    ``cloud_config_<provider>.py`` automatically updates the prompt.
+    """
+    provider_upper = provider.upper()
+    auto_annotations = getattr(config, f"{provider_upper}_AUTO_ANNOTATIONS", [])
+
+    actors: set = set()
+    for entry in auto_annotations:
+        for _, spec in entry.items():
+            for link in spec.get("link", []):
+                if link.startswith("tv_"):
+                    actors.add(link)
+
+    if not actors:
+        return "(no external actor identifiers defined for this provider)"
+
+    # Format as a readable list with a description derived from the name.
+    lines: List[str] = []
+    for actor in sorted(actors):
+        # Derive a human-readable description from the node name:
+        # tv_aws_users.users → "users", tv_aws_onprem.corporate_datacenter → "corporate datacenter"
+        suffix = actor.split(".")[-1] if "." in actor else actor
+        description = suffix.replace("_", " ")
+        lines.append(f"  {actor:<45s} - {description}")
+    return "\n".join(lines)
 
 
 def _extract_context_block(
@@ -739,12 +757,18 @@ def generate_ai_annotations(
         for tgt in graphdict[src] or []:
             edge_lines.append(f"{src} -> {tgt}")
     edges_block = "\n".join(edge_lines) if edge_lines else "(graph has no edges)"
+    # Build the external actor identifier list dynamically from the
+    # provider's AUTO_ANNOTATIONS config. This is the single source of
+    # truth — adding or removing a tv_* entry in cloud_config_<provider>.py
+    # automatically updates what the LLM is allowed to use.
+    actors_block = _build_actors_block(config, provider)
     # Use plain replace, not str.format(), because the YAML schema example
     # baked into ANNOTATION_PROMPT contains literal "{}" tokens that
     # str.format() would misinterpret as positional placeholders.
     prompt = (
         ANNOTATION_PROMPT.replace("{inventory}", inventory_block)
         .replace("{edges}", edges_block)
+        .replace("{actors}", actors_block)
         .replace("{context}", context_block)
     )
 
