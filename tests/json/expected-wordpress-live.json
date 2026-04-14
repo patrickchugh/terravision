@@ -44,9 +44,6 @@
   ],
   "aws_cloudfront_distribution.this": [
     "aws_acm_certificate.acm",
-    "aws_fargate.ecs~1",
-    "aws_fargate.ecs~2",
-    "aws_fargate.ecs~3",
     "aws_route53_record.route_53"
   ],
   "aws_cloudwatch_log_group.cloudwatch": [
