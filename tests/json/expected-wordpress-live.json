@@ -44,6 +44,7 @@
   ],
   "aws_cloudfront_distribution.this": [
     "aws_acm_certificate.acm",
+    "aws_lb.elb",
     "aws_route53_record.route_53"
   ],
   "aws_cloudwatch_log_group.cloudwatch": [

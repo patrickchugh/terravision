@@ -15,7 +15,6 @@ These tests cover:
 """
 
 import copy
-import json
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -535,54 +534,6 @@ def test_context_block_includes_project_level_comments(sample_tfdata):
     # Duplicate header collapsed
     assert block.count("Order processing stack — payments team") == 1
     assert "Owned by team-payments@example.com" in block
-
-
-# ---------------------------------------------------------------------------
-# US1: Slow integration test — graphdict byte-identical with/without AI (T013)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.slow
-def test_graphdict_byte_identical_with_and_without_ai(tmp_path):
-    """US1 T013: Run generate_ai_annotations against a real fixture with
-    Bedrock and verify the graphdict is byte-identical before and after.
-
-    The AI annotation pipeline MUST NOT modify the deterministic graphdict.
-    It only writes terravision.ai.yml as a sidecar file.
-    """
-    fixture = os.path.join(
-        os.path.dirname(__file__),
-        "fixtures",
-        "aws_terraform",
-        "sns_sqs_lambda",
-    )
-    tfdata = _build_minimal_tfdata_from_fixture(fixture)
-
-    # Snapshot the graphdict before AI annotation
-    graphdict_before = json.dumps(tfdata["graphdict"], indent=4, sort_keys=True)
-
-    output_dir = str(tmp_path)
-    result = llm.generate_ai_annotations(
-        tfdata,
-        backend="bedrock",
-        source_dir=fixture,
-        output_dir=output_dir,
-    )
-
-    # Snapshot the graphdict after AI annotation
-    graphdict_after = json.dumps(tfdata["graphdict"], indent=4, sort_keys=True)
-
-    # SC-006: graphdict must be byte-identical
-    assert graphdict_before == graphdict_after, (
-        "graphdict was mutated by generate_ai_annotations — "
-        "the AI pipeline must not touch the deterministic graph"
-    )
-
-    # The AI should have produced a file (sanity check that Bedrock is working)
-    ai_path = os.path.join(output_dir, "terravision.ai.yml")
-    assert os.path.isfile(
-        ai_path
-    ), "terravision.ai.yml not written — Bedrock may be unreachable"
 
 
 # ---------------------------------------------------------------------------

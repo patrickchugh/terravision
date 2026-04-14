@@ -80,7 +80,7 @@ TerraVision automatically converts your Terraform code into professional grade c
 - GitHub Actions, GitLab CI, Jenkins support
 - Show multiple environments using TF Variables to document variants of your infrastructure (e.g. prod vs dev)
 - **Pre-generated plan mode**: Use `--planfile` and `--graphfile` to skip Terraform execution entirely — no cloud credentials needed in the diagram step
-- **Terragrunt compatible**: Auto-detects `terragrunt.hcl` and uses the `terragrunt` CLI for init/plan — multi-module projects are merged automatically with cross-module dependency edges
+- **Terragrunt compatible**: Auto-detects `terragrunt.hcl` and uses the `terragrunt` CLI for init/plan — multi-module projects are merged automatically
 
 ### 🔒 Secure & Private
 
@@ -346,8 +346,6 @@ See [Annotations Guide](docs/annotations.md) for full details.
 | `--simplified` | Simplified high-level view   | (flag)                     |
 | `--show`      | Open diagram after generation | (flag)                     |
 | `--debug`     | Enable debug output           | (flag)                     |
-
-**Note**: Terragrunt projects are auto-detected when a `terragrunt.hcl` file is present — no additional flags required.
 
 ### Supported Output Formats
 
