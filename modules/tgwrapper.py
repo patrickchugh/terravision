@@ -423,6 +423,46 @@ def _prepare_tg_source(source: str) -> Tuple[str, List[str]]:
     return codepath, override_files
 
 
+def _sync_local_state_into_cache(cache_dir: str, debug: bool) -> None:
+    """Sync the local-backend state from TF_DATA_DIR into the cache directory.
+
+    Issue #114: After terragrunt's first init configures the real backend
+    (e.g. s3), `cache_dir/.terraform/terraform.tfstate` records
+    backend.type='s3'. Our fallback `terraform init -reconfigure` then
+    writes a local-backend state, but it lands in TF_DATA_DIR (the temp
+    dir terravision exports), not in the cache dir.
+
+    The user reporting #114 (terragrunt 0.94+) hits this: stored state in
+    cache_dir says s3, merged config (backend.tf + override) says local,
+    and `terragrunt plan` reads from cache_dir/.terraform rather than the
+    inherited TF_DATA_DIR — producing "Backend type changed from local to
+    s3" mid-plan. Sync the freshly-written local state INTO the cache so
+    both locations agree on backend.type='local' regardless of which path
+    terragrunt's plan invocation actually consults.
+    """
+    tf_data_dir = os.environ.get("TF_DATA_DIR", "")
+    if not tf_data_dir:
+        return
+    src_state = os.path.join(tf_data_dir, "terraform.tfstate")
+    if not os.path.exists(src_state):
+        return
+
+    dst_dir = os.path.join(cache_dir, ".terraform")
+    os.makedirs(dst_dir, exist_ok=True)
+    dst_state = os.path.join(dst_dir, "terraform.tfstate")
+    try:
+        with open(src_state) as src, open(dst_state, "w") as dst:
+            dst.write(src.read())
+    except OSError as e:
+        if debug:
+            click.echo(
+                click.style(
+                    f"[tg-debug] could not sync state {src_state} -> {dst_state}: {e}",
+                    fg="magenta",
+                )
+            )
+
+
 def _run_terragrunt_init(workdir: str, debug: bool) -> str:
     """Run terragrunt init and ensure the local backend override is in the cache.
 
@@ -433,7 +473,9 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
     standard _override.tf naming convention.
 
     After init, writes the override to the cache directory as a safety
-    net (in case Terragrunt didn't copy it).
+    net (in case Terragrunt didn't copy it), then re-runs `terraform
+    init -reconfigure` in the cache so the backend state is consistent
+    with the override (issue #114).
 
     Returns:
         Absolute path to the terraform working directory in cache.
@@ -456,24 +498,34 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
 
     _tg_debug_snapshot("after terragrunt init", cache_dir, debug)
 
-    # Safety net: ensure override is in the cache directory
+    # Safety net: ensure override is in the cache directory. Terragrunt
+    # downloads remote sources directly into the cache, so an override
+    # written to the user's source dir never reaches it.
     cache_override = os.path.join(cache_dir, "terravision_override.tf")
     if not os.path.exists(cache_override):
         tfwrapper._write_override(cache_dir)
 
-    if result.returncode != 0:
-        # Init failed — try to recover by re-initing terraform directly
-        # in the cache with the override in place
-        tf_result = subprocess.run(
-            ["terraform", "init", "-reconfigure", "-input=false"],
-            capture_output=not debug,
-            text=True,
-            cwd=cache_dir,
-        )
-        if tf_result.returncode != 0:
-            stderr = result.stderr or ""
-            hint = _get_init_error_hint(stderr)
-            raise RuntimeError(f"Terragrunt init failed:\n{stderr}{hint}")
+    # Run terraform init in the cache regardless of whether terragrunt's
+    # init succeeded. Issue #114: even when terragrunt init returns 0,
+    # the cache's stored backend state can still claim the user's real
+    # backend (e.g. s3) because terragrunt's auto-init ran before our
+    # override reached the cache. A fresh `-reconfigure` reinitialises
+    # the stored state to match the override (local).
+    tf_result = subprocess.run(
+        ["terraform", "init", "-reconfigure", "-input=false"],
+        capture_output=not debug,
+        text=True,
+        cwd=cache_dir,
+    )
+    if tf_result.returncode != 0:
+        stderr = (result.stderr or "") + (tf_result.stderr or "")
+        hint = _get_init_error_hint(stderr)
+        raise RuntimeError(f"Terragrunt init failed:\n{stderr}{hint}")
+
+    # Sync the local-backend state into the cache so terragrunt plan
+    # reads the same backend.type from both TF_DATA_DIR and cache_dir
+    # (issue #114).
+    _sync_local_state_into_cache(cache_dir, debug)
 
     _tg_debug_snapshot("after fallback terraform init", cache_dir, debug)
 
