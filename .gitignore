@@ -70,3 +70,8 @@ compare_branches.sh
 .terragrunt-cache
 docs/*-plan.md
 docs/LEARNINGS_*.md
+# Generated AI annotation outputs and intermediate DOT files
+terravision.ai.yml
+architecture.ai.dot
+architecture.orig.dot
+architecture.json

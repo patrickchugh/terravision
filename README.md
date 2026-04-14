@@ -61,11 +61,19 @@ TerraVision automatically converts your Terraform code into professional grade c
 - Multiple output formats (PNG, SVG, PDF, JPG, and [many more](#supported-output-formats))
 - **Editable draw.io export** - open in draw.io, Lucidchart, or your favorite diagram editor
 - **HTML viewer** - Browse a self-contained HTML to interactively explore your infrastructure and metadata, with animations on packet flow.
-### 🤖 AI-Powered Refinement
 
-- Automatically fixes resource relationships
-- Adds missing logical connections, labels, titles and icons as needed
-- Ensures architectural diagramming best practices
+### 🤖 AI-Powered Annotations
+
+- Generates a `terravision.ai.yml` annotation file with AI-suggested edge labels, titles, and external actors
+- Deterministic graph is never modified by the AI -- all suggestions go through the auditable annotation file
+- Supports Ollama (local) and AWS Bedrock backends
+
+### 🔢 Numbered Flow Badges
+
+- Define named request flows (e.g., "User Login", "Order Processing") in your annotation file
+- Flows render as small numbered badges on diagram nodes and edges showing the step sequence
+- A legend table is automatically generated at the bottom of the diagram mapping badge numbers to step descriptions
+- Nodes that appear in multiple flows display a combined badge (e.g., "1, 5")
 
 ### 📝 Customizable Annotations
 
@@ -308,6 +316,27 @@ terravision draw --source ./terraform --format svg --outfile my-architecture
 terravision draw --source ./terraform --show
 ```
 
+### AI-Powered Annotations
+
+```bash
+# Generate AI annotations with local Ollama
+poetry run terravision draw --source ./terraform --ai-annotate ollama
+
+# Generate AI annotations with AWS Bedrock
+poetry run terravision draw --source ./terraform --ai-annotate bedrock
+```
+
+When `--ai-annotate <backend>` is used, TerraVision writes a `terravision.ai.yml` file (format 0.2) with AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is unchanged -- all AI suggestions flow through the annotation file. If a user-authored `terravision.yml` also exists, it takes precedence on conflicts.
+
+The AI backend can also generate `flows` sections that describe request paths through your architecture. These render as numbered badges on nodes and edges, with a legend table at the bottom of the diagram:
+
+```bash
+# AI generates annotations including flow sequences
+poetry run terravision draw --source ./terraform --ai-annotate bedrock
+```
+
+See [Annotations Guide](docs/annotations.md) for full details.
+
 ### Common Options
 
 | Option        | Description                   | Example                    |
@@ -319,6 +348,7 @@ terravision draw --source ./terraform --show
 | `--varfile`   | Variable file                 | `prod.tfvars`              |
 | `--planfile`  | Pre-generated plan JSON file  | `plan.json`                |
 | `--graphfile` | Pre-generated graph DOT file  | `graph.dot`                |
+| `--ai-annotate` | Generate AI annotations with specified backend | `ollama`, `bedrock` |
 | `--simplified` | Simplified high-level view   | (flag)                     |
 | `--show`      | Open diagram after generation | (flag)                     |
 | `--debug`     | Enable debug output           | (flag)                     |

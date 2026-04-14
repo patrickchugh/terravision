@@ -64,8 +64,8 @@ class TestVisualiseCommand(unittest.TestCase):
         self.assertIn("--format", result.output)
         self.assertIn("not applicable", result.output)
 
-    def test_aibackend_flag_warning(self):
-        """Passing --aibackend should print a warning but continue."""
+    def test_ai_annotate_flag_warning(self):
+        """Passing --ai-annotate should print a warning but continue."""
         runner = CliRunner()
         result = runner.invoke(
             cli,
@@ -73,11 +73,11 @@ class TestVisualiseCommand(unittest.TestCase):
                 "visualise",
                 "--source",
                 "/nonexistent/path",
-                "--aibackend",
+                "--ai-annotate",
                 "bedrock",
             ],
         )
-        self.assertIn("--aibackend", result.output)
+        self.assertIn("--ai-annotate", result.output)
         self.assertIn("not applicable", result.output)
 
     def test_html_extension_appended(self):

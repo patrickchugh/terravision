@@ -41,9 +41,9 @@ pip install -r requirements.txt
 # Basic diagram generation
 poetry run terravision draw --source <path>
 
-# With AI refinement
-poetry run terravision draw --source <path> --aibackend bedrock
-poetry run terravision draw --source <path> --aibackend ollama
+# With AI annotation generation
+poetry run terravision draw --source <path> --ai-annotate bedrock
+poetry run terravision draw --source <path> --ai-annotate ollama
 
 # Export graph data
 poetry run terravision graphdata --source <path> --outfile graph.json
@@ -150,7 +150,7 @@ Phase 3: Graph Enrichment (_enrich_graph_data)
 19. match_resources() → Match resources across providers/sources
 
 Phase 4: Output (draw command only)
-20. (Optional) _refine_with_llm() → AI diagram refinement
+20. (Optional) generate_ai_annotations() → Write terravision.ai.yml with AI-suggested labels, titles, flows (--ai-annotate flag)
 21. render_diagram()  → Generate Graphviz output
 ```
 
@@ -380,14 +380,16 @@ if "count.index" in zone and "~" in vm:
 
 **Why This Matters**: Any handler that uses per-instance metadata (zones, availability sets, instance types) must resolve count.index expressions. The base resource metadata contains the TEMPLATE, numbered resources need the RESOLVED values.
 
-### AI Refinement Backends
+### AI Annotation Pipeline
 
-Two AI backends refine diagrams:
+Two AI backends generate annotation files:
 
 **Bedrock**: AWS API Gateway + Lambda + Bedrock (infrastructure in `ai-backend-terraform/`)
 **Ollama**: Local llama3 model (localhost:11434)
 
-Both use provider-specific prompts from `cloud_config_*.py` (`AWS_REFINEMENT_PROMPT`, `AZURE_REFINEMENT_PROMPT`, etc.) to fix groupings and connections.
+The old `refine_with_llm()` function and provider-specific `*_REFINEMENT_PROMPT` constants have been removed. They are replaced by:
+
+- **`generate_ai_annotations(tfdata, backend, source_dir)`** in `modules/llm.py`: Assembles a prompt from the graphdict and HCL context, streams the LLM response, validates resource references, and writes `terravision.ai.yml` with `generated_by` metadata. Uses a single `ANNOTATION_PROMPT` constant (not per-provider prompts). The deterministic graph is never modified by AI.
 
 ### Icon Libraries
 

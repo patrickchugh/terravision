@@ -880,7 +880,40 @@ This pattern is ideal when:
 - You want to archive plan files and regenerate diagrams later
 - Diagram generation runs on a machine without Terraform installed
 
-### Pattern 5: Multi-Region/Multi-Environment
+### Pattern 5: AI Annotations in CI Pipelines
+
+You can include `--ai-annotate <backend>` in CI runs to generate AI-powered annotations (edge labels, flow sequences, external actors) automatically. AWS Bedrock is a natural fit for pipelines already running in AWS, since authentication uses the same IAM role:
+
+```bash
+# In a CI step that already has AWS credentials configured
+terravision draw \
+  --source ./infrastructure \
+  --ai-annotate bedrock \
+  --format png
+```
+
+For non-AWS environments, or when you prefer local inference, use Ollama in a sidecar container:
+
+```yaml
+# GitHub Actions example with Ollama sidecar
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+
+steps:
+  - name: Generate AI-Annotated Diagram
+    run: |
+      pip install terravision
+      terravision draw --source ./infrastructure --ai-annotate ollama --format png
+    env:
+      OLLAMA_HOST: http://ollama:11434
+```
+
+The AI annotations are written to `terravision.ai.yml` in the source directory. You can commit this file alongside the diagram so that subsequent non-AI runs still benefit from the generated labels and flows. If the AI backend is unreachable, the diagram renders without AI annotations (graceful fallback).
+
+### Pattern 6: Multi-Region/Multi-Environment
 
 ```bash
 for env in dev staging prod; do

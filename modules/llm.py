@@ -29,7 +29,6 @@ import yaml
 from modules.config_loader import load_config
 from modules.provider_detector import get_primary_provider_or_default
 
-
 # ---------------------------------------------------------------------------
 # Backend reachability checks (preflight)
 # ---------------------------------------------------------------------------

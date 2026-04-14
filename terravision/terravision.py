@@ -319,23 +319,23 @@ def compile_tfdata(
     return tfdata
 
 
-def preflight_check(aibackend: Optional[str] = None) -> None:
+def preflight_check(ai_backend: Optional[str] = None) -> None:
     """Check required dependencies and Terraform version compatibility.
 
     Args:
-        aibackend: AI backend to validate ('ollama' or 'bedrock')
+        ai_backend: AI backend to validate ('ollama' or 'bedrock')
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     helpers.check_dependencies()
     helpers.check_terraform_version()
 
-    if aibackend:
+    if ai_backend:
         # Load default AWS config for preflight (endpoints are the same across providers)
         default_config = load_config("aws")
 
-        if aibackend.lower() == "ollama":
+        if ai_backend.lower() == "ollama":
             llm.check_ollama_server(default_config.OLLAMA_HOST)
-        elif aibackend.lower() == "bedrock":
+        elif ai_backend.lower() == "bedrock":
             llm.check_bedrock_endpoint(default_config.BEDROCK_API_ENDPOINT)
 
     click.echo("\n")
@@ -398,10 +398,10 @@ def cli(ctx) -> None:
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
-    "--aibackend",
+    "--ai-annotate",
     default="",
     type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
-    help="AI backend to use (bedrock or ollama)",
+    help="Generate AI annotations file using the named backend (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
 @click.option(
@@ -432,7 +432,7 @@ def draw(
     show: bool,
     simplified: bool,
     annotate: str,
-    aibackend: str,
+    ai_annotate: str,
     avl_classes: Any,
     planfile: str,
     graphfile: str,
@@ -441,6 +441,7 @@ def draw(
     """Draw architecture diagram from Terraform code."""
     _install_excepthook(debug)
     _show_banner()
+
     if planfile and (workspace != "default" or varfile):
         click.echo(
             click.style(
@@ -448,7 +449,7 @@ def draw(
                 fg="yellow",
             )
         )
-    preflight_check(aibackend if not planfile else None)
+    preflight_check(ai_annotate if not planfile else None)
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -458,7 +459,7 @@ def draw(
         planfile,
         graphfile,
         upgrade,
-        aibackend=aibackend,
+        aibackend=ai_annotate,
     )
 
     # Strip networking groups for simplified diagrams, bridging connections
@@ -519,9 +520,10 @@ def draw(
     help="Simplified high level services shown only",
 )
 @click.option(
-    "--aibackend",
-    # type=click.Choice(["bedrock", "ollama"], case_sensitive=False),
-    help="AI backend to use (bedrock or ollama)",
+    "--ai-annotate",
+    default="",
+    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
+    help="Generate AI annotations file using the named backend (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
 @click.option(
@@ -550,7 +552,7 @@ def graphdata(
     show_services: bool,
     simplified: bool,
     annotate: str,
-    aibackend: str,
+    ai_annotate: str,
     avl_classes: Any,
     outfile: str = "graphdata.json",
     planfile: str = "",
@@ -560,6 +562,7 @@ def graphdata(
     """List cloud resources and relations as drawable JSON."""
     _install_excepthook(debug)
     _show_banner()
+
     if planfile and (workspace != "default" or varfile):
         click.echo(
             click.style(
@@ -567,7 +570,7 @@ def graphdata(
                 fg="yellow",
             )
         )
-    preflight_check(aibackend if not planfile else None)
+    preflight_check(ai_annotate if not planfile else None)
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -577,7 +580,7 @@ def graphdata(
         planfile,
         graphfile,
         upgrade,
-        aibackend=aibackend if not show_services else "",
+        aibackend=ai_annotate if not show_services else "",
     )
     if simplified:
         graphmaker.simplify_graphdict(tfdata)
@@ -661,7 +664,7 @@ def graphdata(
     help="Run terraform init with -upgrade to update modules/providers",
 )
 @click.option("--format", default="", hidden=True)
-@click.option("--aibackend", default="", hidden=True)
+@click.option("--ai-annotate", default="", hidden=True)
 @click.option("--avl_classes", hidden=True)
 def visualise(
     debug: bool,
@@ -676,7 +679,7 @@ def visualise(
     graphfile: str,
     upgrade: bool,
     format: str,
-    aibackend: str,
+    ai_annotate: str,
     avl_classes: Any,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
@@ -691,10 +694,10 @@ def visualise(
                 fg="yellow",
             )
         )
-    if aibackend:
+    if ai_annotate:
         click.echo(
             click.style(
-                "WARNING: --aibackend is not applicable to the visualise command.",
+                "WARNING: --ai-annotate is not applicable to the visualise command.",
                 fg="yellow",
             )
         )

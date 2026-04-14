@@ -388,6 +388,47 @@ ollama serve
 
 ---
 
+### AI Annotation Issues
+
+#### "AI Annotations Look Wrong"
+
+**Problem**: AI-generated labels, flows, or external actors are inaccurate or unhelpful.
+
+**Solution**: Edit your `terravision.yml` to override specific AI suggestions. The user file always takes precedence over `terravision.ai.yml`:
+
+```yaml
+# terravision.yml - your overrides
+format: 0.2
+title: "Correct Title Here"
+
+connect:
+  aws_lambda_function.api:
+    - aws_rds_cluster.db: "Correct label here"
+```
+
+Any annotation you define in `terravision.yml` replaces the corresponding AI-generated value. Annotations you do not override continue to use the AI suggestions.
+
+#### "AI Backend Unreachable"
+
+**Problem**: Ollama server is down, or the Bedrock API endpoint is not accessible.
+
+**How TerraVision handles this**: If the AI backend cannot be reached, TerraVision skips annotation generation and renders the diagram without AI annotations. The deterministic graph is never affected by AI availability -- you will always get a valid diagram.
+
+**To diagnose**:
+```bash
+# Check Ollama is running
+curl http://localhost:11434/api/tags
+
+# Check Bedrock endpoint (replace with your API URL)
+curl -X POST https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "test"}'
+```
+
+If you have an existing `terravision.ai.yml` from a previous run, it will still be loaded and applied even when the backend is unreachable. Only the regeneration step is skipped.
+
+---
+
 ### Performance Issues
 
 #### Slow Diagram Generation

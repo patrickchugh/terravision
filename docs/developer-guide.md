@@ -27,9 +27,9 @@ pip install -r requirements.txt
 # Basic diagram generation
 python terravision.py draw --source <path>
 
-# With AI refinement
-python terravision.py draw --source <path> --aibackend bedrock
-python terravision.py draw --source <path> --aibackend ollama
+# With AI annotation generation
+python terravision.py draw --source <path> --ai-annotate bedrock
+python terravision.py draw --source <path> --ai-annotate ollama
 
 # Export graph data
 python terravision.py graphdata --source <path> --outfile graph.json
@@ -118,7 +118,7 @@ The main processing pipeline in `terravision.py` follows this flow:
 11. handle_variants() → Add resource variants (Lambda runtime, EC2 type)
 12. create_multiple_resources() → Handle count/for_each (resource~1, resource~2)
 13. reverse_relations() → Fix arrow directions
-14. (Optional) _refine_with_llm() → AI diagram refinement
+14. (Optional) generate_ai_annotations() → Write terravision.ai.yml (--ai-annotate flag)
 15. render_diagram()  → Generate Graphviz output
 ```
 

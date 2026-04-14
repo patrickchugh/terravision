@@ -40,7 +40,7 @@ terravision draw [OPTIONS]
 | `--show` | Open diagram after generation | False | `--show` |
 | `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
 | `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
-| `--aibackend` | AI backend (bedrock, ollama) | `bedrock` | `--aibackend ollama` |
+| `--ai-annotate` | Generate AI annotations with specified backend (bedrock, ollama) | None | `--ai-annotate ollama` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
@@ -323,17 +323,100 @@ For large infrastructures, generate high-level overview:
 terravision draw --source ./terraform --simplified --outfile overview
 ```
 
-### AI-Powered Refinement
+### AI-Powered Annotations
+
+When you pass `--ai-annotate <backend>`, TerraVision uses an LLM to generate a `terravision.ai.yml` annotation file containing AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is never modified by the AI -- all suggestions are written to the annotation file and merged with any existing `terravision.yml` at render time.
+
+This replaces the old `refine_with_llm` behaviour, which modified the graph directly. The new approach is safer (the graph is byte-identical with or without `--ai-annotate`) and auditable (you can inspect `terravision.ai.yml` to see exactly what the AI suggested).
 
 ```bash
-# Use AWS Bedrock (default)
-terravision draw --source ./terraform --aibackend bedrock
+# Generate AI annotations with local Ollama
+poetry run terravision draw --source ./terraform --ai-annotate ollama
 
-# Use local Ollama
-terravision draw --source ./terraform --aibackend ollama
+# Generate AI annotations with AWS Bedrock
+poetry run terravision draw --source ./terraform --ai-annotate bedrock
 ```
 
-See [AI_REFINEMENT.md](AI_REFINEMENT.md) for setup instructions.
+**How it works:**
+1. TerraVision builds the graph deterministically (identical to a non-AI run)
+2. The graph and HCL context are sent to the LLM, which returns YAML annotations
+3. The AI annotations are written to `terravision.ai.yml` in the source directory
+4. If a user `terravision.yml` also exists, both files are merged (user file takes precedence)
+5. The merged annotations are applied to the graph before rendering
+
+### Two-File Model
+
+TerraVision uses a two-file annotation model that separates AI-generated suggestions from your manual customizations:
+
+| File | Purpose | Created By |
+|------|---------|------------|
+| `terravision.yml` | User-authored annotations | You (manually) |
+| `terravision.ai.yml` | AI-generated annotations | TerraVision with `--ai-annotate <backend>` |
+
+Both files use the same YAML schema (format 0.2). When both are present in the source directory, they are merged automatically at render time. You never need to edit `terravision.ai.yml` by hand -- it is regenerated on each AI-enabled run.
+
+**Precedence (highest to lowest):**
+
+| Source | Priority | Example |
+|--------|----------|---------|
+| `--annotate <path>` (CLI flag) | Highest | Explicit path overrides everything |
+| `terravision.yml` (user file) | Medium | Your manual edits always beat AI suggestions |
+| `terravision.ai.yml` (AI file) | Lowest | AI suggestions apply only when no conflict exists |
+
+This means you can let the AI generate a baseline annotation file, then selectively override specific labels, connections, or flows in your `terravision.yml` without losing the rest of the AI output.
+
+### Flow Annotations
+
+Flows describe named request paths through your architecture (e.g., "User Login", "Data Ingestion"). Each flow is a sequence of steps that map to resources in your diagram.
+
+**Example `terravision.yml` with flows:**
+
+```yaml
+format: 0.2
+title: Payment Processing Architecture
+
+flows:
+  payment_request:
+    description: "Customer payment flow"
+    steps:
+      - node: Internet
+        label: "1. Customer submits payment"
+      - edge: [Internet, aws_api_gateway_rest_api.payments]
+        label: "2. HTTPS POST /pay"
+      - node: aws_lambda_function.process_payment
+        label: "3. Validate and process"
+      - edge: [aws_lambda_function.process_payment, aws_dynamodb_table.transactions]
+        label: "4. Store transaction"
+      - node: aws_sqs_queue.notifications
+        label: "5. Queue confirmation"
+
+  refund_flow:
+    description: "Refund processing"
+    steps:
+      - node: aws_lambda_function.process_refund
+        label: "1. Initiate refund"
+      - edge: [aws_lambda_function.process_refund, aws_dynamodb_table.transactions]
+        label: "2. Update transaction status"
+```
+
+**How flows render on diagrams:**
+
+- Each step produces a small colored circle (badge) with the step number on the corresponding node or edge.
+- A legend table is automatically generated at the bottom of the diagram listing each flow name, step number, and label.
+- Step numbers are continuous across multiple flows. If "payment_request" uses steps 1-5, "refund_flow" continues from 6. This ensures every badge number on the diagram is unique.
+- If a node appears in multiple flows, it displays a combined badge showing all step numbers (e.g., "3, 8").
+
+**Generating flows with AI:**
+
+When you use `--ai-annotate <backend>`, TerraVision can generate flow sequences automatically based on the architecture:
+
+```bash
+poetry run terravision draw --source ./terraform --ai-annotate ollama
+```
+
+The AI writes its suggested flows to `terravision.ai.yml`. To override a specific flow, define a flow with the same name in your `terravision.yml` -- the user version entirely replaces the AI version for that flow name.
+
+See [annotations.md](annotations.md) for the full annotation file format and precedence rules.
 
 ---
 
