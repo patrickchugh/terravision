@@ -197,7 +197,10 @@ def handle_cf_origins(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 if isinstance(origin_source, str) and (
                     origin_source.startswith("{") or origin_source.startswith("[")
                 ):
-                    origin_source = literal_eval(origin_source)
+                    try:
+                        origin_source = literal_eval(origin_source)
+                    except (ValueError, SyntaxError):
+                        continue
                 # Extract first origin if list
                 if isinstance(origin_source, list):
                     origin_source = origin_source[0]
