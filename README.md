@@ -60,7 +60,7 @@ TerraVision automatically converts your Terraform code into professional grade c
 - Clean, readable layouts
 - Multiple output formats (PNG, SVG, PDF, JPG, and [many more](#supported-output-formats))
 - **Editable draw.io export** - open in draw.io, Lucidchart, or your favorite diagram editor
-
+- **Interactive HTML viewert** - Browse a self-contained HTML to interactively explore your infrastructure and metadata, with animations on packet flow.
 ### 🤖 AI-Powered Refinement
 
 - Automatically fixes resource relationships
