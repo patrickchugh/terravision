@@ -69,3 +69,4 @@ compare_branches.sh
 ./architecture*.dot.png
 .terragrunt-cache
 docs/*-plan.md
+docs/LEARNINGS_*.md

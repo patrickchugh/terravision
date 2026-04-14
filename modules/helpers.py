@@ -808,6 +808,7 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
                 "instance",
                 "function",
                 "bucket",
+                "s3_bucket",
                 "table",
                 "queue",
                 "topic",
@@ -815,6 +816,14 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
                 "cluster",
                 "service",
                 "task_definition",
+                "subnet",
+                "route_table",
+                "route_table_association",
+                "repository",
+                "ecr_repository",
+                "db_instance",
+                "db_subnet_group",
+                "vpc",
             }
             if resource_type in generic_types:
                 use_module_as_label = True
@@ -831,7 +840,19 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     )
 
     if use_module_as_label:
-        left_part = innermost_module.replace("_", " ").replace("-", " ").strip()
+        # Strip for_each / count index syntax: az1_subnets["pvt-1"] -> az1_subnets_pvt_1
+        cleaned_mod = re.sub(r'\["?([^"\]]*)"?\]', r"_\1", innermost_module)
+        cleaned_mod = re.sub(r"\[(\d+)\]", r"_\1", cleaned_mod)
+        # Expand common network-tier abbreviations for readability
+        tier_words = {
+            "pvt": "Private",
+            "pub": "Public",
+            "vpce": "VPC Endpoint",
+        }
+        tokens = [
+            tier_words.get(t.lower(), t) for t in re.split(r"[_\- ]+", cleaned_mod) if t
+        ]
+        left_part = " ".join(tokens).strip()
         right_part = ""
     else:
         left_part = (left_raw or "").replace("_", " ").strip()

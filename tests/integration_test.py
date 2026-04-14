@@ -217,6 +217,15 @@ def test_help() -> None:
             "module-sources-tfdata.json",
             "expected-module-sources.json",
         ),
+        # Issue #187: heavily-modularised TF with nested local maps where
+        # subnet/LB IDs are resolved strings in the plan rather than HCL
+        # references. Exercises place_resources_in_subnets,
+        # place_regional_nat_gateways, LB-per-subnet expansion, AZ-based
+        # ALB↔ECS pairing, VPC↔AZ linking, and placeholder node cleanup.
+        (
+            "nested-modules-tfdata.json",
+            "expected-nested-modules.json",
+        ),
     ],
 )
 def test_graphdata_output(

@@ -314,8 +314,9 @@ def aws_prepare_subnet_az_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if "region" in original_meta:
             tfdata["meta_data"][subnet]["region"] = original_meta["region"]
 
-    # Fill empty groups with blank nodes (legacy behavior)
-    tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
+    # Blank-node filling is deferred until the end of match_resources so that
+    # we only fill subnets that are *still* empty after all placement logic
+    # (place_resources_in_subnets, NAT expansion, LB expansion, etc.) runs.
 
     return tfdata
 
@@ -1654,9 +1655,698 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["graphdict"] = link_ec2_to_iam_roles(tfdata["graphdict"])
     # Split NAT gateways per subnet
     tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
+    # Place managed resources into matching subnets via subnet_id metadata
+    place_resources_in_subnets(tfdata)
+    # Place regional (multi-AZ) NAT gateways in the public subnet of each AZ
+    place_regional_nat_gateways(tfdata)
+    # Connect load balancers to ECS services via target_group_arn
+    link_lb_to_ecs_services(tfdata)
+    # Drop empty generic placeholder nodes when real module-scoped siblings exist
+    _dedupe_placeholder_nodes(tfdata)
     # Remove generic subnet references
     tfdata["graphdict"] = _remove_consolidated_subnet_refs(tfdata["graphdict"])
+    # Final step: only now do we fill still-empty subnets with blank spacers so
+    # graphviz renders their clusters. Running late means blanks are created
+    # only when genuinely needed, not reactively stripped later.
+    tfdata["graphdict"] = _fill_empty_groups_with_space(tfdata["graphdict"])
     return tfdata
+
+
+def _collect_public_subnet_ids(tfdata: Dict[str, Any]) -> set:
+    """Return the set of subnet IDs whose route table has an IGW default route.
+
+    Traces the chain: subnet → route_table_association → route_table → routes,
+    and collects the subnets whose route table contains a ``0.0.0.0/0`` entry
+    pointing at an ``igw-*`` gateway. This is the authoritative definition of
+    a public subnet in AWS and is independent of naming conventions.
+    """
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+    all_keys = set(meta_data) | set(original_metadata)
+
+    def _merge(node: str) -> Dict[str, Any]:
+        return {**original_metadata.get(node, {}), **meta_data.get(node, {})}
+
+    # route_table_id → is_public?
+    public_rt_ids: set = set()
+    for node in all_keys:
+        if "aws_route_table.this" not in helpers.get_no_module_name(
+            node
+        ) and not helpers.get_no_module_name(node).startswith("aws_route_table."):
+            continue
+        if "association" in node:
+            continue
+        m = _merge(node)
+        rt_id = m.get("id")
+        routes = m.get("route") or []
+        if not isinstance(routes, list) or not isinstance(rt_id, str):
+            continue
+        for route in routes:
+            if not isinstance(route, dict):
+                continue
+            dest = route.get("cidr_block") or route.get("destination_cidr_block")
+            gw = route.get("gateway_id") or ""
+            if dest == "0.0.0.0/0" and isinstance(gw, str) and gw.startswith("igw-"):
+                public_rt_ids.add(rt_id)
+                break
+
+    # Also check standalone aws_route resources (when not inlined on the RT)
+    for node in all_keys:
+        if "aws_route." not in node or "table" in node:
+            continue
+        m = _merge(node)
+        if (
+            m.get("destination_cidr_block") == "0.0.0.0/0"
+            and isinstance(m.get("gateway_id"), str)
+            and m.get("gateway_id", "").startswith("igw-")
+        ):
+            rt_id = m.get("route_table_id")
+            if isinstance(rt_id, str):
+                public_rt_ids.add(rt_id)
+
+    if not public_rt_ids:
+        return set()
+
+    # subnet_id → public? via RTAs pointing to any public RT
+    public_subnet_ids: set = set()
+    for node in all_keys:
+        if "aws_route_table_association" not in helpers.get_no_module_name(node):
+            continue
+        m = _merge(node)
+        if m.get("route_table_id") in public_rt_ids:
+            sid = m.get("subnet_id")
+            if isinstance(sid, str):
+                public_subnet_ids.add(sid)
+
+    return public_subnet_ids
+
+
+def _is_public_subnet(
+    meta: Dict[str, Any], module_key: str = "", public_subnet_ids: set = None
+) -> bool:
+    """Return True when a subnet is intended for public-facing workloads.
+
+    Priority:
+      1. Route-table analysis: subnet is associated with an RT that has a
+         ``0.0.0.0/0`` route to an IGW (authoritative).
+      2. ``map_public_ip_on_launch == True``.
+      3. ``tags.tier`` in {"pub", "public"}.
+      4. ``tags.Name`` containing "-pub" / "public".
+      5. ``module_key`` (for_each key) starting with "pub".
+    """
+    if public_subnet_ids is not None and meta.get("id") in public_subnet_ids:
+        return True
+    if meta.get("map_public_ip_on_launch") is True:
+        return True
+    tags = meta.get("tags") or {}
+    if isinstance(tags, dict):
+        tier = str(tags.get("tier", "")).lower()
+        if tier in ("pub", "public"):
+            return True
+        name = str(tags.get("Name", "")).lower()
+        if "-pub" in name or "public" in name:
+            return True
+    if module_key and module_key.lower().startswith(("pub", "public")):
+        return True
+    return False
+
+
+def _subnet_module_key(subnet_node: str) -> str:
+    """Extract the for_each key from a subnet node name, e.g. ``pvt-1``."""
+    match = re.search(r'\["([^"]+)"\]', subnet_node)
+    return match.group(1) if match else ""
+
+
+def place_regional_nat_gateways(tfdata: Dict[str, Any]) -> None:
+    """Place regional (multi-AZ) NAT gateways into public subnets per AZ.
+
+    Classic NAT gateways declare a single ``subnet_id`` and are handled by
+    ``split_nat_gateways``. The regional variant
+    (``availability_mode = "regional"``) has ``subnet_id = null`` and lists
+    per-AZ ENIs under ``regional_nat_gateway_address``. We create one
+    numbered NAT instance per AZ entry and drop each into a public subnet
+    within that AZ.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _get(node: str, key: str) -> Any:
+        val = original_metadata.get(node, {}).get(key)
+        if val in (None, "", []):
+            val = meta_data.get(node, {}).get(key)
+        return val
+
+    nat_nodes = [n for n in graphdict if "aws_nat_gateway" in n and "~" not in n]
+    if not nat_nodes:
+        return
+
+    public_subnet_ids = _collect_public_subnet_ids(tfdata)
+
+    # Group subnets by availability_zone_id for lookup
+    subnets_by_az: Dict[str, List[str]] = {}
+    for node in graphdict:
+        if not helpers.get_no_module_name(node).startswith("aws_subnet."):
+            continue
+        m = {**original_metadata.get(node, {}), **meta_data.get(node, {})}
+        az_id = m.get("availability_zone_id") or ""
+        if isinstance(az_id, str) and az_id:
+            subnets_by_az.setdefault(az_id, []).append(node)
+
+    for nat in nat_nodes:
+        mode = _get(nat, "availability_mode")
+        if mode != "regional":
+            continue
+        addresses = _get(nat, "regional_nat_gateway_address") or []
+        if not isinstance(addresses, list) or not addresses:
+            continue
+
+        original_children = list(graphdict.get(nat, []))
+        for i, entry in enumerate(addresses, start=1):
+            if not isinstance(entry, dict):
+                continue
+            az_id = entry.get("availability_zone_id")
+            if not isinstance(az_id, str):
+                continue
+            az_subnets = subnets_by_az.get(az_id, [])
+            # Pick the first public subnet in this AZ
+            target_subnet = None
+            for sn in az_subnets:
+                sn_meta = {
+                    **original_metadata.get(sn, {}),
+                    **meta_data.get(sn, {}),
+                }
+                if _is_public_subnet(
+                    sn_meta, _subnet_module_key(sn), public_subnet_ids
+                ):
+                    target_subnet = sn
+                    break
+            if not target_subnet:
+                continue
+            numbered_nat = f"{nat}~{i}"
+            graphdict[numbered_nat] = list(original_children)
+            meta_data[numbered_nat] = copy.deepcopy(meta_data.get(nat, {}))
+            if nat in original_metadata:
+                original_metadata[numbered_nat] = copy.deepcopy(original_metadata[nat])
+            if numbered_nat not in graphdict[target_subnet]:
+                graphdict[target_subnet].append(numbered_nat)
+
+        # Redirect parent references on the original NAT to the numbered copies
+        numbered = [f"{nat}~{i}" for i in range(1, len(addresses) + 1)]
+        numbered = [n for n in numbered if n in graphdict]
+        if not numbered:
+            continue
+        for parent, kids in graphdict.items():
+            if nat in kids:
+                kids.remove(nat)
+                for nn in numbered:
+                    if nn not in kids:
+                        kids.append(nn)
+        helpers.delete_node(
+            tfdata, nat, remove_from_connections=False, delete_meta_data=False
+        )
+
+
+def link_lb_to_ecs_services(tfdata: Dict[str, Any]) -> None:
+    """Add LB → ECS service edges by matching target_group_arn.
+
+    When Terraform plan has resolved ARNs rather than HCL references the
+    ``aws_ecs_service.load_balancer[].target_group_arn`` never produces a
+    graph edge. Match ARNs on the target group against the ECS service to
+    recover the missing connection.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _get(node: str, key: str) -> Any:
+        val = original_metadata.get(node, {}).get(key)
+        if val in (None, "", []):
+            val = meta_data.get(node, {}).get(key)
+        return val
+
+    # ARN → target_group node
+    tg_arn_to_node: Dict[str, str] = {}
+    for node in set(meta_data) | set(original_metadata):
+        if "aws_lb_target_group" not in helpers.get_no_module_name(node):
+            continue
+        arn = _get(node, "arn")
+        if isinstance(arn, str) and arn.startswith("arn:"):
+            tg_arn_to_node[arn] = node
+
+    if not tg_arn_to_node:
+        return
+
+    # For each ECS service, extract load_balancer[].target_group_arn
+    for node in set(meta_data) | set(original_metadata):
+        if "aws_ecs_service" not in helpers.get_no_module_name(node):
+            continue
+        lb_cfg = _get(node, "load_balancer")
+        if not isinstance(lb_cfg, list):
+            continue
+        for entry in lb_cfg:
+            if not isinstance(entry, dict):
+                continue
+            arn = entry.get("target_group_arn")
+            tg_node = tg_arn_to_node.get(arn) if isinstance(arn, str) else None
+            if not tg_node:
+                continue
+            # Find the LB this target group belongs to (terraform graph usually links these)
+            lb_nodes = [
+                n for n, kids in graphdict.items() if tg_node in kids and "aws_lb" in n
+            ]
+            # Find actual ECS service instances in graphdict (may be consolidated / variant-renamed)
+            ecs_instances = [
+                n
+                for n in graphdict
+                if ("aws_fargate" in n or "aws_ec2ecs" in n or "aws_ecs_service" in n)
+                and "cluster" not in n
+            ]
+            sources = lb_nodes or [
+                n
+                for n in graphdict
+                if helpers.get_no_module_name(n).startswith(
+                    ("aws_lb.", "aws_alb.", "aws_nlb.")
+                )
+            ]
+            # Prefer variant nodes (aws_alb / aws_nlb) — the parent aws_lb
+            # shouldn't connect directly to the ECS service when a variant
+            # is present. Traffic flow: ELB → ALB → Fargate.
+            variant_sources = [
+                s
+                for s in sources
+                if helpers.get_no_module_name(s).startswith(("aws_alb.", "aws_nlb."))
+            ]
+            if variant_sources:
+                sources = variant_sources
+
+            # When both sides are replicated per-AZ (``src~1/~2``, ``inst~1/~2``)
+            # pair them by the AZ of the subnet they live in, not by their
+            # ``~N`` suffix — each resource type is numbered independently
+            # so matching suffixes don't guarantee matching AZs. Looking up
+            # each numbered node's subnet → AZ gives a reliable pairing.
+            numbered_sources = [s for s in sources if "~" in s]
+            numbered_instances = [i for i in ecs_instances if "~" in i]
+
+            def _az_of(node: str) -> str:
+                for parent, kids in graphdict.items():
+                    if node not in kids:
+                        continue
+                    if not helpers.get_no_module_name(parent).startswith("aws_subnet."):
+                        continue
+                    sn_meta = {
+                        **original_metadata.get(parent, {}),
+                        **meta_data.get(parent, {}),
+                    }
+                    az = sn_meta.get("availability_zone_id") or sn_meta.get(
+                        "availability_zone"
+                    )
+                    if isinstance(az, str) and az:
+                        return az
+                return ""
+
+            if numbered_sources and numbered_instances:
+                az_to_instance: Dict[str, str] = {}
+                for inst in numbered_instances:
+                    az = _az_of(inst)
+                    if az:
+                        az_to_instance.setdefault(az, inst)
+                for src in numbered_sources:
+                    az = _az_of(src)
+                    match = az_to_instance.get(az) if az else None
+                    if match and match not in graphdict.get(src, []):
+                        graphdict.setdefault(src, []).append(match)
+            else:
+                for src in sources:
+                    for inst in ecs_instances:
+                        if inst not in graphdict.get(src, []):
+                            graphdict.setdefault(src, []).append(inst)
+
+
+def _dedupe_placeholder_nodes(tfdata: Dict[str, Any]) -> None:
+    """Remove empty generic placeholder nodes when real module-scoped nodes exist.
+
+    ``IMPLIED_CONNECTIONS`` and some handlers create generic nodes like
+    ``aws_ecr_repository.ecr`` for diagram clarity. When the user's stack
+    actually declares multiple real ECR repositories the generic node shows
+    up as a confusing duplicate. Drop it when real siblings exist and it has
+    no children of its own.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    # Patterns where a single generic placeholder is commonly injected
+    candidate_prefixes = ("aws_ecr_repository.",)
+
+    for node in list(graphdict.keys()):
+        no_mod = helpers.get_no_module_name(node)
+        if not any(no_mod.startswith(p) for p in candidate_prefixes):
+            continue
+        if "module." in node:
+            continue  # Only target the generic (module-less) node
+        if graphdict.get(node):
+            continue  # Has children - not a pure placeholder
+        res_type = no_mod.split(".")[0]
+        real_siblings = [
+            n
+            for n in graphdict
+            if n != node and helpers.get_no_module_name(n).startswith(res_type + ".")
+        ]
+        if not real_siblings:
+            continue
+        # Redirect any parent edges pointing at the placeholder to the real siblings
+        for parent, kids in graphdict.items():
+            if node in kids:
+                kids.remove(node)
+                for sib in real_siblings:
+                    if sib not in kids:
+                        kids.append(sib)
+        helpers.delete_node(
+            tfdata, node, remove_from_connections=False, delete_meta_data=True
+        )
+
+
+def _collect_subnet_ids_from_meta(meta: Dict[str, Any]) -> List[str]:
+    """Collect all subnet ID references from a resource's metadata.
+
+    Inspects common Terraform fields that reference subnets:
+    ``subnet_id``, ``subnets``, ``subnet_ids``, and
+    ``network_configuration[0].subnets`` (ECS services, Fargate).
+
+    Returns a list of subnet-id strings (e.g. ``subnet-0abc...``).
+    """
+    ids: List[str] = []
+    sid = meta.get("subnet_id")
+    if isinstance(sid, str) and sid:
+        ids.append(sid)
+    for key in ("subnets", "subnet_ids"):
+        val = meta.get(key)
+        if isinstance(val, list):
+            ids.extend(s for s in val if isinstance(s, str) and s.startswith("subnet-"))
+    # ECS service network_configuration is a list-of-dicts in plan output
+    nc = meta.get("network_configuration")
+    if isinstance(nc, list):
+        for block in nc:
+            if isinstance(block, dict):
+                sublist = block.get("subnets", [])
+                if isinstance(sublist, list):
+                    ids.extend(
+                        s
+                        for s in sublist
+                        if isinstance(s, str) and s.startswith("subnet-")
+                    )
+    # aws_lb / aws_nlb can declare subnets via subnet_mapping blocks
+    sub_mapping = meta.get("subnet_mapping")
+    if isinstance(sub_mapping, list):
+        for entry in sub_mapping:
+            if isinstance(entry, dict):
+                sid = entry.get("subnet_id")
+                if isinstance(sid, str) and sid.startswith("subnet-"):
+                    ids.append(sid)
+    return ids
+
+
+def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Place managed resources into the subnets their metadata references.
+
+    Many Terraform resources (EC2 instances, ECS services, RDS) record the
+    subnet they live in via ``subnet_id``/``subnets``/``subnet_ids`` fields.
+    When the plan contains resolved AWS IDs (not HCL references), the
+    standard terraform-graph edges don't link them to subnet nodes, so they
+    end up floating at the top level. This function matches those IDs
+    against known subnet nodes and adds containment edges.
+
+    Numbered resource instances (``foo~1``, ``foo~2``) are distributed
+    round-robin across matching subnets so each instance lands in a
+    distinct AZ/subnet.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _meta(node: str) -> Dict[str, Any]:
+        """Return merged metadata, preferring original_metadata values.
+
+        Variable resolution sometimes nulls resolved attributes (e.g. when a
+        ``local`` cannot be evaluated). ``original_metadata`` preserves the
+        raw plan values, which is what we need for subnet-ID matching.
+        """
+        merged: Dict[str, Any] = {}
+        md = meta_data.get(node, {}) or {}
+        om = original_metadata.get(node, {}) or {}
+        for key in (
+            "id",
+            "subnet_id",
+            "subnets",
+            "subnet_ids",
+            "network_configuration",
+            "db_subnet_group_name",
+            "name",
+            "vpc_id",
+        ):
+            val = om.get(key)
+            if val in (None, "", []):
+                val = md.get(key)
+            if val not in (None, "", []):
+                merged[key] = val
+        return merged
+
+    # Build subnet_id → subnet node lookup
+    subnet_id_map: Dict[str, str] = {}
+    for node in graphdict:
+        if not helpers.get_no_module_name(node).startswith("aws_subnet."):
+            continue
+        sid = _meta(node).get("id", "")
+        if isinstance(sid, str) and sid:
+            subnet_id_map[sid] = node
+
+    if not subnet_id_map:
+        return tfdata
+
+    # Build db_subnet_group_name → [subnet_ids] lookup (RDS uses the group name)
+    db_group_subnet_ids: Dict[str, List[str]] = {}
+    all_nodes = set(meta_data.keys()) | set(original_metadata.keys())
+    for node in all_nodes:
+        if "aws_db_subnet_group" not in helpers.get_no_module_name(node):
+            continue
+        m = _meta(node)
+        name = m.get("name")
+        sids = m.get("subnet_ids", [])
+        if isinstance(name, str) and isinstance(sids, list):
+            db_group_subnet_ids[name] = [s for s in sids if isinstance(s, str)]
+
+    # Group numbered instances so we can distribute them across subnets
+    base_to_instances: Dict[str, List[str]] = {}
+    for node in list(graphdict.keys()):
+        no_mod = helpers.get_no_module_name(node)
+        # Skip subnets themselves and structural nodes
+        if no_mod.startswith("aws_subnet.") or no_mod.startswith("aws_vpc."):
+            continue
+        if no_mod.startswith(("aws_az.", "tv_blank.", "aws_group.")):
+            continue
+        base = node.split("~")[0] if "~" in node else node
+        base_to_instances.setdefault(base, []).append(node)
+
+    def _add_subnet_edge(subnet_node: str, child: str) -> None:
+        children = graphdict.setdefault(subnet_node, [])
+        if child not in children:
+            children.append(child)
+
+    # Reverse lookup for variants (e.g. aws_fargate → aws_ecs_service)
+    variant_to_original: Dict[str, str] = {}
+    for original_type, variants in cloud_config.AWS_NODE_VARIANTS.items():
+        for variant_name in variants.values():
+            variant_to_original[variant_name] = original_type
+
+    def _meta_with_fallback(base: str, instances: List[str]) -> Dict[str, Any]:
+        """Look up metadata, falling back to variant or consolidation source nodes.
+
+        Consolidated/variant renames can detach subnet metadata from the
+        current graph node. When the direct lookup is empty we scan the
+        full metadata map for entries whose resource type matches the
+        original (pre-variant) type.
+        """
+        direct = _meta(base) or _meta(instances[0])
+        ids = _collect_subnet_ids_from_meta(direct)
+        if ids or direct.get("db_subnet_group_name"):
+            return direct
+
+        base_type = helpers.get_no_module_name(base).split(".")[0]
+        candidate_types = {base_type}
+        if base_type in variant_to_original:
+            candidate_types.add(variant_to_original[base_type])
+
+        for node_key in set(meta_data.keys()) | set(original_metadata.keys()):
+            node_type = helpers.get_no_module_name(node_key).split(".")[0]
+            if node_type not in candidate_types:
+                continue
+            m = _meta(node_key)
+            if _collect_subnet_ids_from_meta(m) or m.get("db_subnet_group_name"):
+                return m
+        return direct
+
+    for base, instances in base_to_instances.items():
+        meta = _meta_with_fallback(base, instances)
+        candidate_ids = _collect_subnet_ids_from_meta(meta)
+
+        # RDS and similar reference a db_subnet_group by name rather than id
+        if not candidate_ids:
+            group_name = meta.get("db_subnet_group_name")
+            if isinstance(group_name, str) and group_name in db_group_subnet_ids:
+                candidate_ids = db_group_subnet_ids[group_name]
+
+        if not candidate_ids:
+            continue
+
+        matching_subnets: List[str] = []
+        seen: set = set()
+        for sid in candidate_ids:
+            sn = subnet_id_map.get(sid)
+            if sn and sn not in seen:
+                matching_subnets.append(sn)
+                seen.add(sn)
+
+        if not matching_subnets:
+            continue
+
+        # Load balancers logically span multiple subnets; expand a single
+        # base node into numbered copies so each subnet gets its own icon.
+        # When the variant form (aws_alb / aws_nlb) exists alongside the
+        # generic aws_lb parent, only expand the variant — the aws_lb node
+        # stays as a single top-level "ELB" icon pointing down at the
+        # per-subnet variant copies.
+        base_type = helpers.get_no_module_name(base).split(".")[0]
+        is_lb = base_type in ("aws_lb", "aws_alb", "aws_nlb")
+        base_instance = helpers.get_no_module_name(base).split(".", 1)[-1]
+        variant_exists = base_type == "aws_lb" and any(
+            helpers.get_no_module_name(n).startswith(
+                (f"aws_alb.{base_instance}", f"aws_nlb.{base_instance}")
+            )
+            for n in graphdict
+        )
+        # If a variant (aws_alb/aws_nlb) exists, the base aws_lb is the
+        # top-level "ELB Service" icon — it stays outside any subnet.
+        if is_lb and variant_exists:
+            continue
+        if (
+            is_lb
+            and not variant_exists
+            and len(instances) == 1
+            and len(matching_subnets) > 1
+        ):
+            original = instances[0]
+            original_children = list(graphdict.get(original, []))
+            for i, subnet in enumerate(matching_subnets, start=1):
+                numbered = f"{original}~{i}"
+                if numbered not in graphdict:
+                    graphdict[numbered] = list(original_children)
+                    meta_data[numbered] = copy.deepcopy(meta_data.get(original, {}))
+                    if original in original_metadata:
+                        original_metadata[numbered] = copy.deepcopy(
+                            original_metadata[original]
+                        )
+                _add_subnet_edge(subnet, numbered)
+            # Redirect parent references on the original LB to the numbered copies
+            numbered_nodes = [
+                f"{original}~{i}" for i in range(1, len(matching_subnets) + 1)
+            ]
+            for parent, kids in graphdict.items():
+                if original in kids and parent not in matching_subnets:
+                    kids.remove(original)
+                    for nn in numbered_nodes:
+                        if nn not in kids:
+                            kids.append(nn)
+            helpers.delete_node(
+                tfdata,
+                original,
+                remove_from_connections=False,
+                delete_meta_data=False,
+            )
+            continue
+
+        # Distribute instances round-robin across matching subnets
+        instances_sorted = sorted(instances)
+        for i, inst in enumerate(instances_sorted):
+            target = matching_subnets[i % len(matching_subnets)]
+            _add_subnet_edge(target, inst)
+
+    # Ensure VPC → AZ edges exist so subnets render inside the VPC
+    _link_vpcs_to_az_nodes(tfdata, subnet_id_map, _meta)
+    return tfdata
+
+
+def _link_vpcs_to_az_nodes(
+    tfdata: Dict[str, Any],
+    subnet_id_map: Dict[str, str],
+    meta_lookup,
+) -> None:
+    """Add VPC → AZ edges based on each subnet's vpc_id metadata.
+
+    The ``insert_intermediate_node`` subnet handler only wires AZ nodes when
+    a VPC→subnet edge already exists. When dependencies flow through
+    unresolved locals the terraform-graph skips that edge, leaving AZ nodes
+    (and therefore subnets) orphaned. Match subnets' ``vpc_id`` against VPC
+    nodes' ``id`` to reconstruct the containment edge.
+    """
+    graphdict = tfdata.get("graphdict", {})
+
+    vpc_id_to_node: Dict[str, str] = {}
+    for node in graphdict:
+        if not helpers.get_no_module_name(node).startswith("aws_vpc."):
+            continue
+        vpc_id = meta_lookup(node).get("id", "")
+        if isinstance(vpc_id, str) and vpc_id:
+            vpc_id_to_node[vpc_id] = node
+
+    if not vpc_id_to_node:
+        return
+
+    # For each AZ node, find its subnets' vpc_id and add VPC → AZ edge
+    for az_node, subnets in list(graphdict.items()):
+        if not helpers.get_no_module_name(az_node).startswith("aws_az."):
+            continue
+        for subnet in subnets:
+            if not helpers.get_no_module_name(subnet).startswith("aws_subnet."):
+                continue
+            vpc_id = meta_lookup(subnet).get("vpc_id", "")
+            vpc_node = vpc_id_to_node.get(vpc_id)
+            if vpc_node and az_node not in graphdict.get(vpc_node, []):
+                graphdict.setdefault(vpc_node, []).append(az_node)
+                break
+
+
+def _remove_redundant_blanks(graphdict: Dict[str, List[str]]) -> None:
+    """Drop tv_blank placeholders from subnets that gained real children.
+
+    Blank nodes exist solely to force graphviz to render empty group
+    clusters. Once a subnet has a real child the placeholder is redundant
+    and any orphaned blank node (no remaining parent) is deleted outright
+    to keep it out of the graph export.
+    """
+    for node, children in graphdict.items():
+        no_mod = helpers.get_no_module_name(node)
+        if not no_mod.startswith("aws_subnet."):
+            continue
+        has_real_child = any(
+            not helpers.get_no_module_name(c).startswith("tv_blank.") for c in children
+        )
+        if has_real_child:
+            graphdict[node] = [
+                c
+                for c in children
+                if not helpers.get_no_module_name(c).startswith("tv_blank.")
+            ]
+
+    # Drop any blank nodes no longer referenced by any parent
+    referenced = set()
+    for children in graphdict.values():
+        for c in children:
+            if helpers.get_no_module_name(c).startswith("tv_blank."):
+                referenced.add(c)
+    for node in list(graphdict.keys()):
+        if (
+            helpers.get_no_module_name(node).startswith("tv_blank.")
+            and node not in referenced
+        ):
+            del graphdict[node]
 
 
 def _fill_empty_groups_with_space(

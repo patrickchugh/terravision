@@ -1,0 +1,308 @@
+{
+  "aws_alb.elb~1": [
+    "aws_fargate.ecs~2"
+  ],
+  "aws_alb.elb~2": [
+    "aws_fargate.ecs~1"
+  ],
+  "aws_az.availability_zone_apse2_az1": [
+    "module.az1_subnets[\"data-1\"].aws_subnet.this",
+    "module.az1_subnets[\"data-2\"].aws_subnet.this",
+    "module.az1_subnets[\"pub-1\"].aws_subnet.this",
+    "module.az1_subnets[\"pub-2\"].aws_subnet.this",
+    "module.az1_subnets[\"pvt-1\"].aws_subnet.this",
+    "module.az1_subnets[\"pvt-2\"].aws_subnet.this",
+    "module.az1_subnets[\"vpce-1\"].aws_subnet.this",
+    "module.az1_subnets[\"vpce-2\"].aws_subnet.this"
+  ],
+  "aws_az.availability_zone_apse2_az3": [
+    "module.az2_subnets[\"data-1\"].aws_subnet.this",
+    "module.az2_subnets[\"data-2\"].aws_subnet.this",
+    "module.az2_subnets[\"pub-1\"].aws_subnet.this",
+    "module.az2_subnets[\"pub-2\"].aws_subnet.this",
+    "module.az2_subnets[\"pvt-1\"].aws_subnet.this",
+    "module.az2_subnets[\"pvt-2\"].aws_subnet.this",
+    "module.az2_subnets[\"vpce-1\"].aws_subnet.this",
+    "module.az2_subnets[\"vpce-2\"].aws_subnet.this"
+  ],
+  "aws_cloudwatch_log_group.cloudwatch": [
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
+  "aws_default_route_table.main": [],
+  "aws_ecs_cluster.ecs": [],
+  "aws_fargate.ecs~1": [
+    "aws_cloudwatch_log_group.cloudwatch",
+    "aws_ecs_cluster.ecs",
+    "aws_secretsmanager_secret.secretsmanager",
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
+  "aws_fargate.ecs~2": [
+    "aws_cloudwatch_log_group.cloudwatch",
+    "aws_ecs_cluster.ecs",
+    "aws_secretsmanager_secret.secretsmanager",
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
+  "aws_group.shared_services": [
+    "aws_cloudwatch_log_group.cloudwatch",
+    "aws_iam_group.of_services",
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
+  "aws_iam_instance_profile.bastion": [
+    "module.ssm_bastion_host.aws_instance.bastion"
+  ],
+  "aws_iam_role.bastion": [
+    "aws_iam_instance_profile.bastion",
+    "aws_iam_role_policy_attachment.ssm_core",
+    "module.ssm_bastion_host.aws_instance.bastion"
+  ],
+  "aws_iam_role.ecs_pgadmin_task_execution_role": [],
+  "aws_iam_role.ecs_task_role": [
+    "aws_fargate.ecs~1",
+    "aws_fargate.ecs~2",
+    "aws_iam_role_policy.ecs_task_role_policy"
+  ],
+  "aws_iam_role_policy.ecs_pgadmin_exec_secrets": [],
+  "aws_iam_role_policy.ecs_task_role_policy": [],
+  "aws_iam_role_policy_attachment.ssm_core": [],
+  "aws_internet_gateway.igw": [
+    "tv_aws_internet.internet"
+  ],
+  "aws_lb.elb": [
+    "aws_alb.elb~1",
+    "aws_alb.elb~2"
+  ],
+  "aws_nat_gateway.this~1": [
+    "aws_internet_gateway.igw"
+  ],
+  "aws_nat_gateway.this~2": [
+    "aws_internet_gateway.igw"
+  ],
+  "aws_route53_record.route_53": [
+    "aws_lb.elb",
+    "module.mkhan-test_aws_rds.aws_db_instance.this",
+    "module.mkhan-test_vpc.aws_vpc.this"
+  ],
+  "aws_secretsmanager_secret.secretsmanager": [],
+  "aws_security_group_rule.alb_to_ecs": [],
+  "module.aws_rds_data_sn_group.aws_db_subnet_group.data": [],
+  "module.az1_aws_route_table_association[\"data-1\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"data-2\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"pub-1\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"pub-2\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"pvt-1\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"pvt-2\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this": [],
+  "module.az1_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this": [],
+  "module.az1_subnets[\"data-1\"].aws_subnet.this": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
+    "module.az1_aws_route_table_association[\"data-1\"].aws_route_table_association.this",
+    "module.mkhan-test_aws_rds.aws_db_instance.this"
+  ],
+  "module.az1_subnets[\"data-2\"].aws_subnet.this": [
+    "module.az1_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
+  ],
+  "module.az1_subnets[\"pub-1\"].aws_subnet.this": [
+    "aws_alb.elb~2",
+    "aws_nat_gateway.this~2",
+    "module.az1_aws_route_table_association[\"pub-1\"].aws_route_table_association.this"
+  ],
+  "module.az1_subnets[\"pub-2\"].aws_subnet.this": [
+    "module.az1_aws_route_table_association[\"pub-2\"].aws_route_table_association.this"
+  ],
+  "module.az1_subnets[\"pvt-1\"].aws_subnet.this": [
+    "module.az1_aws_route_table_association[\"pvt-1\"].aws_route_table_association.this",
+    "module.ssm_bastion_host.aws_instance.bastion"
+  ],
+  "module.az1_subnets[\"pvt-2\"].aws_subnet.this": [
+    "aws_fargate.ecs~1",
+    "module.az1_aws_route_table_association[\"pvt-2\"].aws_route_table_association.this"
+  ],
+  "module.az1_subnets[\"vpce-1\"].aws_subnet.this": [
+    "module.az1_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this"
+  ],
+  "module.az1_subnets[\"vpce-2\"].aws_subnet.this": [
+    "module.az1_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this"
+  ],
+  "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"data-2\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"pub-1\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"pub-2\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"pvt-1\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"pvt-2\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this": [],
+  "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this": [],
+  "module.az2_subnets[\"data-1\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"data-2\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"pub-1\"].aws_subnet.this": [
+    "aws_alb.elb~1",
+    "aws_nat_gateway.this~1",
+    "module.az2_aws_route_table_association[\"pub-1\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"pub-2\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"pub-2\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"pvt-1\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"pvt-1\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"pvt-2\"].aws_subnet.this": [
+    "aws_fargate.ecs~2",
+    "module.az2_aws_route_table_association[\"pvt-2\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"vpce-1\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this"
+  ],
+  "module.az2_subnets[\"vpce-2\"].aws_subnet.this": [
+    "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this"
+  ],
+  "module.mkhan-test_aws_rds.aws_db_instance.this": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_iam_role.rds_enhanced_monitoring": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
+    "module.mkhan-test_aws_rds.aws_db_instance.this",
+    "module.mkhan-test_aws_rds.aws_iam_role_policy_attachment.rds_enhanced_monitoring"
+  ],
+  "module.mkhan-test_aws_rds.aws_iam_role_policy_attachment.rds_enhanced_monitoring": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_vpc_security_group_egress_rule.all": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_vpc_security_group_ingress_rule.source_sgs[\"0\"][0]~1": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_vpc_security_group_ingress_rule.source_sgs[\"1\"][1]~1": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_ecr_repository.aws_ecr_lifecycle_policy.this": [
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
+  "module.mkhan-test_ecr_repository.aws_ecr_repository.this": [
+    "module.mkhan-test_ecr_repository.aws_ecr_lifecycle_policy.this"
+  ],
+  "module.mkhan-test_s3_access_logs.aws_s3_bucket.this": [
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket_lifecycle_configuration.this[0]~1",
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket_versioning.this"
+  ],
+  "module.mkhan-test_s3_access_logs.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_access_logs.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_access_logs.aws_s3_bucket_versioning.this": [
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket.this": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket_lifecycle_configuration.this[0]~1",
+    "module.mkhan-test_s3_documents.aws_s3_bucket_logging.this[0]~1",
+    "module.mkhan-test_s3_documents.aws_s3_bucket_policy.this[0]~1",
+    "module.mkhan-test_s3_documents.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
+    "module.mkhan-test_s3_documents.aws_s3_bucket_versioning.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_logging.this[0]~1": [],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_policy.this[0]~1": [],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket.this": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket_lifecycle_configuration.this[0]~1",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket_logging.this[0]~1",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket_policy.this[0]~1",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
+    "module.mkhan-test_s3_frontend.aws_s3_bucket_versioning.this"
+  ],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_logging.this[0]~1": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_policy.this[0]~1": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket.this": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket_lifecycle_configuration.this[0]~1",
+    "module.mkhan-test_s3_guides.aws_s3_bucket_logging.this[0]~1",
+    "module.mkhan-test_s3_guides.aws_s3_bucket_policy.this[0]~1",
+    "module.mkhan-test_s3_guides.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
+    "module.mkhan-test_s3_guides.aws_s3_bucket_versioning.this"
+  ],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_logging.this[0]~1": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_policy.this[0]~1": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket.this": [
+    "module.mkhan-test_s3_images.aws_s3_bucket_lifecycle_configuration.this[0]~1",
+    "module.mkhan-test_s3_images.aws_s3_bucket_logging.this[0]~1",
+    "module.mkhan-test_s3_images.aws_s3_bucket_policy.this[0]~1",
+    "module.mkhan-test_s3_images.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
+    "module.mkhan-test_s3_images.aws_s3_bucket_versioning.this"
+  ],
+  "module.mkhan-test_s3_images.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket_logging.this[0]~1": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket_policy.this[0]~1": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_vpc.aws_vpc.this": [
+    "aws_az.availability_zone_apse2_az1",
+    "aws_az.availability_zone_apse2_az3",
+    "aws_default_route_table.main",
+    "aws_internet_gateway.igw",
+    "aws_lb.elb",
+    "aws_nat_gateway.this~1",
+    "aws_nat_gateway.this~2",
+    "module.rt_data.aws_route_table.this",
+    "module.rt_pub.aws_route_table.this",
+    "module.rt_pvt.aws_route_table.this",
+    "module.rt_vpce.aws_route_table.this"
+  ],
+  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
+  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]": [],
+  "module.pgadmin_alb_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
+  "module.pgadmin_alb_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]": [],
+  "module.pgadmin_ecr_repository.aws_ecr_lifecycle_policy.this": [],
+  "module.pgadmin_ecr_repository.aws_ecr_repository.this": [
+    "module.pgadmin_ecr_repository.aws_ecr_lifecycle_policy.this"
+  ],
+  "module.pgadmin_ecs_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
+  "module.rt_data.aws_route_table.this": [],
+  "module.rt_pub.aws_route_table.this": [
+    "aws_internet_gateway.igw"
+  ],
+  "module.rt_pvt.aws_route_table.this": [
+    "aws_nat_gateway.this~1",
+    "aws_nat_gateway.this~2"
+  ],
+  "module.rt_vpce.aws_route_table.this": [],
+  "module.ssm_bastion_host.aws_instance.bastion": [],
+  "module.ssm_bastion_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]~1": [],
+  "module.ssm_bastion_sg.aws_vpc_security_group_egress_rule.this[\"1-0.0.0.0/0\"][1-0.0.0.0/0]~1": [],
+  "module.ssm_bastion_sg.aws_vpc_security_group_egress_rule.this[\"2-0.0.0.0/0\"][2-0.0.0.0/0]~1": [],
+  "random_password.pgadmin_task": [
+    "aws_secretsmanager_secret.secretsmanager"
+  ],
+  "tv_aws_internet.internet": [],
+  "tv_aws_users.users": [
+    "aws_route53_record.route_53"
+  ]
+}
