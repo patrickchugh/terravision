@@ -64,18 +64,12 @@ TerraVision automatically converts your Terraform code into professional grade c
 
 ### 🤖 AI-Powered Annotations
 
-- Generates a `terravision.ai.yml` annotation file with AI-suggested edge labels, titles, and external actors
-- Deterministic graph is never modified by the AI -- all suggestions go through the auditable annotation file
+- Generates AI-suggested connection labels, titles, and external actors
+- Deterministic graph is never modified by the AI -- all suggestions go through an auditable annotation file
+- Only metadata and summary graph sent to LLM, never your code
 - Supports Ollama (local) and AWS Bedrock backends
-
-### 🔢 Numbered Flow Badges
-
-- Define named request flows (e.g., "User Login", "Order Processing") in your annotation file
-- Flows render as small numbered badges on diagram nodes and edges showing the step sequence
-- A legend table is automatically generated at the bottom of the diagram mapping badge numbers to step descriptions
-- Nodes that appear in multiple flows display a combined badge (e.g., "1, 5")
-
-### 📝 Customizable Annotations
+ 
+### 📝 User Customizable Annotations
 
 - Add custom labels and titles
 - Include external resources not in Terraform
