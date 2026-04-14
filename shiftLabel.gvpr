@@ -112,6 +112,7 @@ BEG_G{
       tgt = e.head;
       if (hasAttr(tgt, "_titlenode") && tgt._titlenode == "1") continue;
       if (hasAttr(tgt, "_footernode") && tgt._footernode == "1") continue;
+      if (hasAttr(tgt, "_legendnode") && tgt._legendnode == "1") continue;
       if (hasAttr(tgt, "_clusterlabel") && tgt._clusterlabel == "1") continue;
       sumX = sumX + xOf(tgt.pos);
       fanoutCount = fanoutCount + 1;
@@ -150,6 +151,7 @@ BEG_G{
   for (n = fstnode($G); n; n = nxtnode(n)) {
     if (hasAttr(n, "_titlenode") && n._titlenode == "1") continue;
     if (hasAttr(n, "_footernode") && n._footernode == "1") continue;
+    if (hasAttr(n, "_legendnode") && n._legendnode == "1") continue;
     nodeY = yOf(n.pos);
     if (nodeY > topMostY) topMostY = nodeY;
     if (nodeY < bottomMostY) bottomMostY = nodeY;
@@ -173,4 +175,7 @@ N[_titlenode=="1"]{
 }
 N[_footernode=="1"]{
   pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 180);
+}
+N[_legendnode=="1"]{
+  pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 400);
 }

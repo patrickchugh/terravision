@@ -111,6 +111,148 @@ ALWAYS_DRAW_LINE = []
 NEVER_DRAW_LINE = []
 
 
+# ---------------------------------------------------------------------------
+# Flow badge helpers (US5)
+# ---------------------------------------------------------------------------
+
+
+def generate_badge_xlabel(step_numbers: List[int], color: str = "#E74C3C") -> str:
+    """Return an HTML-table xlabel badge for one or more step numbers.
+
+    Args:
+        step_numbers: Ordered list of step numbers to display in the badge.
+        color: Background colour of the badge circle.
+
+    Returns:
+        A Graphviz HTML-label string (angle-bracket delimited) suitable
+        for use as an ``xlabel`` attribute on a node or edge.
+    """
+    nums = ", ".join(str(n) for n in step_numbers)
+    return (
+        f'<<TABLE BORDER="0"><TR>'
+        f'<TD BGCOLOR="{color}" STYLE="ROUNDED" WIDTH="24" HEIGHT="24">'
+        f'<FONT COLOR="white"><B>{nums}</B></FONT></TD>'
+        f"</TR></TABLE>>"
+    )
+
+
+def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
+    """Build an HTML-table label string for the flow legend node.
+
+    Args:
+        legend_entries: Ordered list of dicts with keys ``step_number``,
+            ``flow_name``, ``description``, ``xlabel``, ``detail``,
+            ``color``.
+
+    Returns:
+        Graphviz HTML-label string (angle-bracket delimited).
+    """
+    if not legend_entries:
+        return '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" BGCOLOR="white"></TABLE>>'
+
+    rows: List[str] = []
+    current_flow: Optional[str] = None
+
+    for entry in legend_entries:
+        flow = entry["flow_name"]
+        if flow != current_flow:
+            current_flow = flow
+            rows.append(f'<TR><TD COLSPAN="3"><B>Flow: {flow}</B></TD></TR>')
+
+        color = entry.get("color", "#E74C3C")
+        num = entry["step_number"]
+        xlabel = entry.get("xlabel", "")
+        detail = entry.get("detail", "")
+        rows.append(
+            f"<TR>"
+            f'<TD BGCOLOR="{color}" WIDTH="20" HEIGHT="20" STYLE="ROUNDED">'
+            f'<FONT COLOR="white"><B>{num}</B></FONT></TD>'
+            f'<TD ALIGN="LEFT">{xlabel}</TD>'
+            f'<TD ALIGN="LEFT">{detail}</TD>'
+            f"</TR>"
+        )
+
+    body = "\n".join(rows)
+    return (
+        f'<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" BGCOLOR="white">\n'
+        f"{body}\n"
+        f"</TABLE>>"
+    )
+
+
+def _apply_flow_badges(
+    tfdata: Dict[str, Any],
+    diagram: "Canvas",
+    cloud_group: "Cluster",
+) -> None:
+    """Apply pre-computed flow badge xlabels to drawn nodes.
+
+    Iterates ``tfdata["flow_badges"]`` and for each resource that has
+    been drawn (has a ``node`` entry in ``meta_data``), sets the
+    ``xlabel`` attribute on the underlying Graphviz node object.
+
+    Edge badges are NOT applied here — they are applied during edge
+    creation via ``tfdata["flow_edge_badges"]``.
+    """
+    flow_badges = tfdata.get("flow_badges") or {}
+    if not flow_badges:
+        return
+
+    for resource, badge_html in flow_badges.items():
+        meta = tfdata.get("meta_data", {}).get(resource)
+        if not meta or "node" not in meta:
+            continue
+        node_obj = meta["node"]
+        # Re-declare the node with the xlabel attribute.  In the
+        # graphviz Python library calling .node() again with the same
+        # ID simply appends a second node statement whose attributes
+        # merge with the first.
+        cluster = node_obj._cluster or diagram
+        cluster.dot.node(node_obj._id, xlabel=badge_html)
+
+
+def _make_edge_with_badge(
+    tfdata: Dict[str, Any],
+    origin_resource: str,
+    dest_resource: str,
+    **edge_kwargs,
+) -> "Edge":
+    """Create an Edge, injecting a flow-badge xlabel if one exists.
+
+    Checks ``tfdata["flow_edge_badges"]`` for a badge matching the
+    ``(origin_resource, dest_resource)`` pair and, if found, sets the
+    ``xlabel`` attribute on the Edge.
+    """
+    edge_badges = tfdata.get("flow_edge_badges") or {}
+    badge = edge_badges.get((origin_resource, dest_resource))
+    if badge:
+        edge_kwargs["xlabel"] = badge
+    return Edge(**edge_kwargs)
+
+
+def _add_legend_node(
+    tfdata: Dict[str, Any],
+    diagram: "Canvas",
+) -> None:
+    """Add a flow-legend HTML-table node to the diagram (if flows exist).
+
+    The node is tagged with ``_legendnode="1"`` so the ``shiftLabel.gvpr``
+    post-processor can position it below the footer.
+    """
+    legend_entries = tfdata.get("flow_legend_entries") or []
+    if not legend_entries:
+        return
+
+    legend_html = generate_legend_html(legend_entries)
+    setcluster(diagram)
+    legend_style = {
+        "_legendnode": "1",
+        "shape": "plaintext",
+        "label": legend_html,
+    }
+    getattr(sys.modules[__name__], "Node")(**legend_style)
+
+
 def _get_provider_config(tfdata: Dict[str, Any]):
     """Load provider-specific configuration dynamically.
 
@@ -373,7 +515,10 @@ def handle_nodes(
                             ) in tfdata.get("bidirectional_edges", set())
                             originNode.connect(
                                 connectedNode,
-                                Edge(
+                                _make_edge_with_badge(
+                                    tfdata,
+                                    resource,
+                                    node_connection,
                                     forward=True,
                                     reverse=is_bidir,
                                     label=label,
@@ -708,6 +853,19 @@ def generate_dot(
     all_drawn_resources_list = list()
     tfdata["deferred_connections"] = list()
 
+    # Pre-compute flow badges (US5) before drawing starts
+    from modules.annotations import compute_flow_step_numbers
+
+    _flows = (tfdata.get("annotations") or {}).get("flows") or {}
+    _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
+    tfdata["flow_badges"] = {
+        res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
+    }
+    tfdata["flow_edge_badges"] = {
+        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_badges.items()
+    }
+    tfdata["flow_legend_entries"] = _legend_entries
+
     # Initialize diagram canvas
     title = (
         "Cloud Architecture Diagram"
@@ -798,7 +956,10 @@ def generate_dot(
                         ) in tfdata.get("bidirectional_edges", set())
                         originNode.connect(
                             connectedNode,
-                            Edge(
+                            _make_edge_with_badge(
+                                tfdata,
+                                origin_resource,
+                                dest_resource,
                                 forward=True,
                                 reverse=is_bidir,
                                 label=label,
@@ -824,6 +985,9 @@ def generate_dot(
                                 )
                             )
 
+    # Apply flow badge xlabels to drawn nodes (US5 T034)
+    _apply_flow_badges(tfdata, myDiagram, cloudGroup)
+
     # Add footer with metadata
     if source == ".":
         source = os.getcwd()
@@ -841,6 +1005,9 @@ def generate_dot(
         "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
+
+    # Add flow legend node if any flows were defined (US5 T036)
+    _add_legend_node(tfdata, myDiagram)
 
     # Create label node for cloud group if it has label metadata
     create_cluster_label_node(cloudGroup)
@@ -996,6 +1163,19 @@ def render_diagram(
     all_drawn_resources_list = list()
     tfdata["deferred_connections"] = list()
 
+    # Pre-compute flow badges (US5) before drawing starts
+    from modules.annotations import compute_flow_step_numbers
+
+    _flows = (tfdata.get("annotations") or {}).get("flows") or {}
+    _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
+    tfdata["flow_badges"] = {
+        res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
+    }
+    tfdata["flow_edge_badges"] = {
+        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_badges.items()
+    }
+    tfdata["flow_legend_entries"] = _legend_entries
+
     # Initialize diagram canvas
     title = (
         "Cloud Architecture Diagram"
@@ -1087,7 +1267,10 @@ def render_diagram(
                         ) in tfdata.get("bidirectional_edges", set())
                         originNode.connect(
                             connectedNode,
-                            Edge(
+                            _make_edge_with_badge(
+                                tfdata,
+                                origin_resource,
+                                dest_resource,
                                 forward=True,
                                 reverse=is_bidir,
                                 label=label,
@@ -1113,6 +1296,9 @@ def render_diagram(
                                 )
                             )
 
+    # Apply flow badge xlabels to drawn nodes (US5 T034)
+    _apply_flow_badges(tfdata, myDiagram, cloudGroup)
+
     # Add footer with metadata
     if source == ".":
         source = os.getcwd()
@@ -1130,6 +1316,9 @@ def render_diagram(
         "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
+
+    # Add flow legend node if any flows were defined (US5 T036)
+    _add_legend_node(tfdata, myDiagram)
 
     # Create label node for cloud group if it has label metadata
     create_cluster_label_node(cloudGroup)

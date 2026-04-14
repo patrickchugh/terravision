@@ -667,3 +667,84 @@ def modify_metadata(
                     metadata[node][param] = annotations["update"][node][param]
 
     return metadata
+
+
+# ---------------------------------------------------------------------------
+# Flow badge computation (US5)
+# ---------------------------------------------------------------------------
+
+DEFAULT_FLOW_COLOR = "#E74C3C"
+
+
+def compute_flow_step_numbers(
+    flows: Dict[str, Any],
+) -> tuple:
+    """Compute continuous step numbers across all flows.
+
+    Takes the ``flows`` dict from merged annotations and returns a
+    triple of:
+
+    * ``node_badges``  – ``{resource_name: [step_numbers]}``
+    * ``edge_badges``  – ``{(src, tgt): [step_numbers]}``
+    * ``legend_entries`` – ordered list of dicts with keys:
+      ``step_number``, ``flow_name``, ``description``, ``xlabel``,
+      ``detail``, ``color``
+
+    Steps are numbered continuously across flows in iteration (merge)
+    order.  A flow with zero steps is silently skipped.  When a
+    resource string contains `` -> `` it is treated as an edge badge
+    rather than a node badge.
+
+    Args:
+        flows: The ``flows`` section from the merged annotation dict.
+
+    Returns:
+        Tuple of (node_badges, edge_badges, legend_entries).
+    """
+    if not flows:
+        return {}, {}, []
+
+    node_badges: Dict[str, List[int]] = {}
+    edge_badges: Dict[tuple, List[int]] = {}
+    legend_entries: List[Dict[str, Any]] = []
+
+    step_counter = 0
+
+    for flow_name, flow_def in flows.items():
+        if not flow_def:
+            continue
+        steps = flow_def.get("steps") or []
+        if not steps:
+            continue
+
+        flow_color = flow_def.get("color", DEFAULT_FLOW_COLOR)
+        flow_description = flow_def.get("description", "")
+
+        for step in steps:
+            step_counter += 1
+            resource_ref = step.get("resource", "")
+            detail = step.get("detail", "")
+            xlabel = step.get("xlabel", "")
+
+            # Edge badge: "src -> tgt"
+            if " -> " in resource_ref:
+                parts = resource_ref.split(" -> ", 1)
+                src = parts[0].strip()
+                tgt = parts[1].strip()
+                edge_key = (src, tgt)
+                edge_badges.setdefault(edge_key, []).append(step_counter)
+            else:
+                node_badges.setdefault(resource_ref, []).append(step_counter)
+
+            legend_entries.append(
+                {
+                    "step_number": step_counter,
+                    "flow_name": flow_name,
+                    "description": flow_description,
+                    "xlabel": xlabel,
+                    "detail": detail,
+                    "color": flow_color,
+                }
+            )
+
+    return node_badges, edge_badges, legend_entries

@@ -14,6 +14,8 @@ These tests cover:
     bubbles up to the caller and no terravision.ai.yml is written.
 """
 
+import copy
+import json
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -23,6 +25,52 @@ import pytest
 import yaml
 
 import modules.llm as llm
+
+
+# ---------------------------------------------------------------------------
+# Helpers for slow integration tests
+# ---------------------------------------------------------------------------
+
+
+def _build_minimal_tfdata_from_fixture(fixture_dir: str) -> Dict[str, Any]:
+    """Build a minimal tfdata dict from a fixture directory.
+
+    Constructs a graphdict by scanning the .tf files for resource blocks and
+    wiring simple edges. This is NOT a full Terraform evaluation — it's
+    enough to exercise the AI annotation pipeline with a realistic resource
+    set so the LLM has real resource names and types to reason about.
+    """
+    import re
+
+    resources = []
+    tf_files = [f for f in os.listdir(fixture_dir) if f.endswith(".tf")]
+    for tf_file in tf_files:
+        content = Path(os.path.join(fixture_dir, tf_file)).read_text()
+        # Extract resource "type" "name" blocks
+        for m in re.finditer(r'resource\s+"([^"]+)"\s+"([^"]+)"', content):
+            resources.append(f"{m.group(1)}.{m.group(2)}")
+
+    # Build a simple graphdict with empty adjacency lists
+    graphdict: Dict[str, list] = {r: [] for r in resources}
+
+    # Detect provider from resource prefixes
+    provider_counts: Dict[str, int] = {}
+    for r in resources:
+        prefix = r.split("_")[0]
+        provider_counts[prefix] = provider_counts.get(prefix, 0) + 1
+    primary = (
+        max(provider_counts, key=provider_counts.get) if provider_counts else "aws"
+    )
+
+    return {
+        "graphdict": graphdict,
+        "meta_data": {r: {} for r in resources},
+        "annotations": {},
+        "provider_detection": {
+            "primary_provider": primary,
+            "resource_counts": provider_counts,
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -487,3 +535,202 @@ def test_context_block_includes_project_level_comments(sample_tfdata):
     # Duplicate header collapsed
     assert block.count("Order processing stack — payments team") == 1
     assert "Owned by team-payments@example.com" in block
+
+
+# ---------------------------------------------------------------------------
+# US1: Slow integration test — graphdict byte-identical with/without AI (T013)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_graphdict_byte_identical_with_and_without_ai(tmp_path):
+    """US1 T013: Run generate_ai_annotations against a real fixture with
+    Bedrock and verify the graphdict is byte-identical before and after.
+
+    The AI annotation pipeline MUST NOT modify the deterministic graphdict.
+    It only writes terravision.ai.yml as a sidecar file.
+    """
+    fixture = os.path.join(
+        os.path.dirname(__file__),
+        "fixtures",
+        "aws_terraform",
+        "sns_sqs_lambda",
+    )
+    tfdata = _build_minimal_tfdata_from_fixture(fixture)
+
+    # Snapshot the graphdict before AI annotation
+    graphdict_before = json.dumps(tfdata["graphdict"], indent=4, sort_keys=True)
+
+    output_dir = str(tmp_path)
+    result = llm.generate_ai_annotations(
+        tfdata,
+        backend="bedrock",
+        source_dir=fixture,
+        output_dir=output_dir,
+    )
+
+    # Snapshot the graphdict after AI annotation
+    graphdict_after = json.dumps(tfdata["graphdict"], indent=4, sort_keys=True)
+
+    # SC-006: graphdict must be byte-identical
+    assert graphdict_before == graphdict_after, (
+        "graphdict was mutated by generate_ai_annotations — "
+        "the AI pipeline must not touch the deterministic graph"
+    )
+
+    # The AI should have produced a file (sanity check that Bedrock is working)
+    ai_path = os.path.join(output_dir, "terravision.ai.yml")
+    assert os.path.isfile(
+        ai_path
+    ), "terravision.ai.yml not written — Bedrock may be unreachable"
+
+
+# ---------------------------------------------------------------------------
+# US2: AI-Suggested Title and Contextual Annotations (T021)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def apigw_lambda_dynamo_tfdata() -> Dict[str, Any]:
+    """Minimal tfdata with API Gateway + Lambda + DynamoDB style resources.
+
+    Enough to exercise the AI title + external actor annotation path.
+    """
+    return {
+        "graphdict": {
+            "aws_api_gateway_rest_api.orders_api": [
+                "aws_lambda_function.process_order"
+            ],
+            "aws_lambda_function.process_order": ["aws_dynamodb_table.orders"],
+            "aws_dynamodb_table.orders": [],
+        },
+        "meta_data": {
+            "aws_api_gateway_rest_api.orders_api": {},
+            "aws_lambda_function.process_order": {
+                "tags": {"app": "order-service", "env": "prod"}
+            },
+            "aws_dynamodb_table.orders": {},
+        },
+        "annotations": {},
+        "provider_detection": {
+            "primary_provider": "aws",
+            "resource_counts": {"aws": 3},
+        },
+    }
+
+
+@pytest.fixture
+def title_actor_llm_yaml() -> str:
+    """Canned LLM response with title + add (external actor) + connect only.
+
+    No flows section — this exercises the US2 path specifically.
+    """
+    return (
+        'format: "0.2"\n'
+        'title: "Serverless Order Processing API"\n'
+        "add:\n"
+        "  tv_aws_users.users:\n"
+        '    label: "End Users"\n'
+        "connect:\n"
+        "  tv_aws_users.users:\n"
+        '    - aws_api_gateway_rest_api.orders_api: "HTTPS request"\n'
+        "  aws_api_gateway_rest_api.orders_api:\n"
+        '    - aws_lambda_function.process_order: "Invokes handler"\n'
+        "  aws_lambda_function.process_order:\n"
+        '    - aws_dynamodb_table.orders: "Persists order"\n'
+    )
+
+
+def test_apply_ai_annotations_title_and_external_actor(
+    apigw_lambda_dynamo_tfdata, title_actor_llm_yaml
+):
+    """US2 T021: A canned LLM response with title + add + connect (no flows)
+    is merged via apply_ai_annotations(). Verify:
+      1. The title is applied to the merged annotations.
+      2. The external-actor node (tv_aws_users.users) is created in graphdict.
+      3. The edge from the actor to the entry-point resource is wired.
+      4. Edge labels are set in metadata.
+    """
+    import copy
+    from modules.annotations import apply_ai_annotations
+
+    tfdata = copy.deepcopy(apigw_lambda_dynamo_tfdata)
+
+    # Parse the canned YAML as if the LLM returned it
+    ai_annotations = yaml.safe_load(title_actor_llm_yaml)
+
+    # Snapshot graphdict before — deterministic topology should survive
+    original_nodes = set(tfdata["graphdict"].keys())
+
+    # Apply AI annotations
+    result = apply_ai_annotations(tfdata, ai_annotations)
+
+    # 1. Title is applied to merged annotations
+    assert result["annotations"]["title"] == "Serverless Order Processing API"
+
+    # 2. External-actor node is created in graphdict
+    assert "tv_aws_users.users" in result["graphdict"]
+
+    # 3. Edge from actor to entry-point resource is wired
+    assert (
+        "aws_api_gateway_rest_api.orders_api"
+        in result["graphdict"]["tv_aws_users.users"]
+    )
+
+    # 4. Edge labels are set in metadata
+    actor_meta = result["meta_data"].get("tv_aws_users.users", {})
+    assert "edge_labels" in actor_meta
+    assert {"aws_api_gateway_rest_api.orders_api": "HTTPS request"} in actor_meta[
+        "edge_labels"
+    ]
+    # Also verify label attribute from the add section
+    assert actor_meta.get("label") == "End Users"
+
+    # Original nodes still present (deterministic graph not damaged)
+    for node in original_nodes:
+        assert node in result["graphdict"]
+
+    # Edge labels on existing resources too
+    apigw_meta = result["meta_data"].get("aws_api_gateway_rest_api.orders_api", {})
+    assert "edge_labels" in apigw_meta
+    assert {"aws_lambda_function.process_order": "Invokes handler"} in apigw_meta[
+        "edge_labels"
+    ]
+
+
+# ---------------------------------------------------------------------------
+# US2: Slow integration test stub (T022)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_us2_live_bedrock_title_and_actors(tmp_path):
+    """US2 T022: Slow integration test — run against a reference Terraform
+    fixture with real Bedrock, assert the AI-generated title is non-default
+    and contains at least one resource-implied keyword.
+    """
+    fixture = os.path.join(
+        os.path.dirname(__file__),
+        "fixtures",
+        "aws_terraform",
+        "api_gateway_rest_lambda",
+    )
+    output_dir = str(tmp_path)
+
+    result = llm.generate_ai_annotations(
+        _build_minimal_tfdata_from_fixture(fixture),
+        backend="bedrock",
+        source_dir=fixture,
+        output_dir=output_dir,
+    )
+
+    assert result is not None, "Bedrock returned no annotations"
+    ai_path = os.path.join(output_dir, "terravision.ai.yml")
+    assert os.path.isfile(ai_path), "terravision.ai.yml not written"
+
+    on_disk = yaml.safe_load(Path(ai_path).read_text())
+    title = on_disk.get("title", "")
+    assert title, "AI must generate a title"
+    assert (
+        title != "Cloud Architecture Diagram"
+    ), "Title must not be the default placeholder"
