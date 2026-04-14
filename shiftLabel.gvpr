@@ -5,8 +5,11 @@ BEGIN{
   double clusterMinX, clusterMinY, clusterMaxX, clusterMaxY, clusterCenterX;
   double labelX, labelY;
   double topMostY, bottomMostY;
+  int hasLegend;
   string fld[int];
   node_t n;
+
+  hasLegend = 0;
 
   // recursive routine, processing from the top (root) down
   graph_t labelShift (graph_t Gr) {
@@ -147,11 +150,13 @@ BEG_G{
     }
   }
 
-  // Find topmost and bottommost node positions (including outer nodes)
+  // Find topmost and bottommost node positions (including outer nodes).
+  // Also note whether a legend node exists so the footer can be centred
+  // when it has to stand alone.
   for (n = fstnode($G); n; n = nxtnode(n)) {
     if (hasAttr(n, "_titlenode") && n._titlenode == "1") continue;
     if (hasAttr(n, "_footernode") && n._footernode == "1") continue;
-    if (hasAttr(n, "_legendnode") && n._legendnode == "1") continue;
+    if (hasAttr(n, "_legendnode") && n._legendnode == "1") { hasLegend = 1; continue; }
     nodeY = yOf(n.pos);
     if (nodeY > topMostY) topMostY = nodeY;
     if (nodeY < bottomMostY) bottomMostY = nodeY;
@@ -173,9 +178,20 @@ END_G{
 N[_titlenode=="1"]{
   pos=sprintf("%.0f,%.0f!", cloudCenterX, topMostY + 200);
 }
+// Footer + optional legend sit on the same Y below the cloud.
+// If a legend exists, footer shifts left and legend goes right so the
+// two occupy a single row. If no legend, footer stays centred.
+// Vertical offset of 400 matches the old legend-below-footer position
+// so the outer cluster border keeps its usual breathing room.
+// Footer width=12in → half-width ~432 pts; ±500 keeps the pair clear
+// of each other either side of cloudCenterX.
 N[_footernode=="1"]{
-  pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 180);
+  if (hasLegend) {
+    pos=sprintf("%.0f,%.0f!", cloudCenterX - 500, bottomMostY - 400);
+  } else {
+    pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 180);
+  }
 }
 N[_legendnode=="1"]{
-  pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 400);
+  pos=sprintf("%.0f,%.0f!", cloudCenterX + 500, bottomMostY - 400);
 }

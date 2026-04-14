@@ -11,10 +11,16 @@ import os
 import pkgutil
 import sys
 import warnings
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Dict, List, Tuple, Set, Any, Optional
 
 import click
+
+try:
+    _TERRAVISION_VERSION = version("terravision")
+except PackageNotFoundError:
+    _TERRAVISION_VERSION = "dev"
 
 try:
     from graphviz2drawio import graphviz2drawio
@@ -995,14 +1001,16 @@ def generate_dot(
     # Set context to main diagram so footer is outside all clusters
     setcluster(myDiagram)
 
-    # Add footer node (positioned by gvpr for all providers)
+    # Add footer node (positioned by gvpr for all providers).
+    # Width kept moderate so the legend node (when present) fits
+    # alongside it on the same row instead of stacking below.
     footer_style = {
         "_footernode": "1",
         "shape": "record",
-        "width": "25",
-        "height": "2",
-        "fontsize": "18",
-        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
+        "width": "12",
+        "height": "1.5",
+        "fontsize": "14",
+        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
@@ -1306,14 +1314,16 @@ def render_diagram(
     # Set context to main diagram so footer is outside all clusters
     setcluster(myDiagram)
 
-    # Add footer node (positioned by gvpr for all providers)
+    # Add footer node (positioned by gvpr for all providers).
+    # Width kept moderate so the legend node (when present) fits
+    # alongside it on the same row instead of stacking below.
     footer_style = {
         "_footernode": "1",
         "shape": "record",
-        "width": "25",
-        "height": "2",
-        "fontsize": "18",
-        "label": f"Machine generated using TerraVision|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
+        "width": "12",
+        "height": "1.5",
+        "fontsize": "14",
+        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
