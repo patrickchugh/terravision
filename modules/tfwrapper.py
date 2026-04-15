@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple, Any
 import os
 import re
 import copy
+import shutil
 from pathlib import Path
 import subprocess
 import click
@@ -34,6 +35,83 @@ def _write_override(codepath):
     with open(dest, "w") as f:
         f.write(content)
     return dest
+
+
+def _strip_cloud_block(content: str) -> str:
+    """Remove any `cloud { ... }` block (brace-balanced) from a .tf file body.
+
+    Terraform Cloud integration uses a `cloud` block inside `terraform { ... }`
+    that is mutually exclusive with a `backend` block. The local-backend
+    override file alone cannot disable it, so we physically strip the block
+    from the source file (backed up and restored afterwards).
+    """
+    result = []
+    i = 0
+    n = len(content)
+    pattern = re.compile(r"\bcloud\s*\{")
+    while i < n:
+        m = pattern.search(content, i)
+        if not m:
+            result.append(content[i:])
+            break
+        result.append(content[i : m.start()])
+        depth = 0
+        j = m.end() - 1  # position at '{'
+        while j < n:
+            ch = content[j]
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    j += 1
+                    break
+            j += 1
+        i = j
+    return "".join(result)
+
+
+def _neutralize_cloud_blocks(codepath: str) -> List[Tuple[str, str]]:
+    """Back up and strip `cloud {}` blocks from .tf files under *codepath*.
+
+    Returns a list of (backup_path, original_path) tuples for later restore.
+    Skips the .terraform cache directory. Non-recursive into modules —
+    Terraform Cloud configuration only lives in the root module.
+    """
+    backups: List[Tuple[str, str]] = []
+    try:
+        entries = os.listdir(codepath)
+    except OSError:
+        return backups
+    for name in entries:
+        if not name.endswith(".tf"):
+            continue
+        path = os.path.join(codepath, name)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, "r") as fh:
+                original = fh.read()
+        except OSError:
+            continue
+        if not re.search(r"\bcloud\s*\{", original):
+            continue
+        stripped = _strip_cloud_block(original)
+        if stripped == original:
+            continue
+        backup = path + ".terravision.bak"
+        shutil.copy2(path, backup)
+        with open(path, "w") as fh:
+            fh.write(stripped)
+        backups.append((backup, path))
+    return backups
+
+
+def _restore_cloud_backups(backups: List[Tuple[str, str]]) -> None:
+    """Restore files backed up by _neutralize_cloud_blocks."""
+    for backup, original in backups:
+        if os.path.exists(backup):
+            shutil.move(backup, original)
 
 
 def convert_dot_to_json(dot_file: str) -> dict:
@@ -89,31 +167,47 @@ def _tf_error(message, debug=True, result=None):
 
 
 def _prepare_source(source):
-    """Resolve source to a local codepath and write override.tf.
+    """Resolve source to a local codepath, write override.tf, and neutralize
+    any Terraform Cloud `cloud {}` block so `terraform init` runs offline.
 
     Returns:
-        Tuple of (codepath, override_dest)
+        Tuple of (codepath, override_dest, cloud_backups)
     """
     if os.path.isdir(source):
         codepath = os.path.abspath(source)
         override_dest = _write_override(codepath)
+        cloud_backups = _neutralize_cloud_blocks(codepath)
         os.chdir(codepath)
     else:
         githubURL, subfolder, git_tag = gitlibs.get_clone_url(source)
         codepath = gitlibs.clone_files(source, temp_dir.name)
         override_dest = _write_override(codepath)
+        cloud_backups = _neutralize_cloud_blocks(codepath)
         os.chdir(codepath)
         codepath = [codepath]
         if len(os.listdir()) == 0:
             _tf_error("No files found to process.")
-    return codepath, override_dest
+    if cloud_backups:
+        click.echo(
+            click.style(
+                "  Detected Terraform Cloud block; neutralized for local plan",
+                fg="yellow",
+            )
+        )
+    return codepath, override_dest, cloud_backups
 
 
-def _run_terraform_init(debug, upgrade):
-    """Run terraform init with reconfigure and optional upgrade."""
+def _run_terraform_init(debug, upgrade, skip_reconfigure: bool = False):
+    """Run terraform init with optional -reconfigure and -upgrade.
+
+    -reconfigure is only valid for state backends; Terraform Cloud rejects it,
+    so callers that have stripped a cloud block must pass skip_reconfigure=True.
+    """
     click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
     click.echo("  Forcing temporary local backend to generate full infrastructure plan")
-    init_cmd = ["terraform", "init", "-reconfigure"]
+    init_cmd = ["terraform", "init"]
+    if not skip_reconfigure:
+        init_cmd.append("-reconfigure")
     if upgrade:
         init_cmd.append("-upgrade")
     result = subprocess.run(init_cmd, capture_output=not debug, text=True)
@@ -230,11 +324,14 @@ def tf_initplan(
     """
     debug = True
     override_dest = None
+    cloud_backups: List[Tuple[str, str]] = []
     try:
         # Clone repo (if git URL) or resolve local path then write override.tf for local backend
-        codepath, override_dest = _prepare_source(source)
-        # Run terraform init (downloads providers/modules)
-        _run_terraform_init(debug, upgrade)
+        codepath, override_dest, cloud_backups = _prepare_source(source)
+        # Run terraform init (downloads providers/modules).
+        # Skip -reconfigure when we stripped a cloud block — it's not
+        # needed and we want init to succeed cleanly against the local backend.
+        _run_terraform_init(debug, upgrade, skip_reconfigure=bool(cloud_backups))
         # Select or create the terraform workspace
         _select_workspace(workspace, debug)
         # Resolve variable file paths to absolute
@@ -264,8 +361,10 @@ def tf_initplan(
         os.chdir(START_DIR)
         return tfdata
     finally:
-        # Always clean up override.tf, even if an error occurred
+        # Always clean up override.tf and restore cloud-block backups,
+        # even if an error occurred
         _cleanup_override(override_dest)
+        _restore_cloud_backups(cloud_backups)
 
 
 def make_tf_data(
