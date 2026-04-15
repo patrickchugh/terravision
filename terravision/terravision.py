@@ -422,6 +422,12 @@ def cli(ctx) -> None:
     default=False,
     help="Run terraform init with -upgrade to update modules/providers",
 )
+@click.option(
+    "--use-tf-names",
+    is_flag=True,
+    default=False,
+    help="Label nodes and groups with full Terraform resource names",
+)
 def draw(
     debug: bool,
     source: str,
@@ -437,6 +443,7 @@ def draw(
     planfile: str,
     graphfile: str,
     upgrade: bool,
+    use_tf_names: bool,
 ) -> None:
     """Draw architecture diagram from Terraform code."""
     _install_excepthook(debug)
@@ -466,6 +473,8 @@ def draw(
     if simplified:
         graphmaker.simplify_graphdict(tfdata)
         _print_graph_debug(tfdata["graphdict"], "Simplified graphviz dictionary")
+
+    helpers.USE_TF_NAMES = use_tf_names
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
@@ -675,6 +684,12 @@ def graphdata(
     help="Generate AI annotations file using the named backend (bedrock or ollama)",
 )
 @click.option("--avl_classes", hidden=True)
+@click.option(
+    "--use-tf-names",
+    is_flag=True,
+    default=False,
+    help="Label nodes with full Terraform resource names and append them to cluster labels",
+)
 def visualise(
     debug: bool,
     source: str,
@@ -690,6 +705,7 @@ def visualise(
     format: str,
     ai_annotate: str,
     avl_classes: Any,
+    use_tf_names: bool,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
     _install_excepthook(debug)
@@ -727,6 +743,8 @@ def visualise(
     # Strip networking groups for simplified diagrams
     if simplified:
         graphmaker.simplify_graphdict(tfdata)
+
+    helpers.USE_TF_NAMES = use_tf_names
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile

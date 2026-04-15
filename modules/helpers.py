@@ -24,6 +24,11 @@ from modules.config_loader import load_config
 from modules.provider_detector import get_provider_for_resource
 
 
+# When True, pretty_name() returns the raw Terraform resource name unchanged.
+# Set by the CLI --use-tf-names flag.
+USE_TF_NAMES: bool = False
+
+
 def output_file_matches_module(
     filepath: str, module_name: str, tfdata: Dict[str, Any]
 ) -> bool:
@@ -618,6 +623,32 @@ def remove_brackets_and_numbers(input_string: str) -> str:
     return output_string
 
 
+def _wrap_tf_name(name: str, max_width: int = 28) -> str:
+    """Wrap a raw Terraform resource name across multiple lines on `.` boundaries.
+
+    TF names have no spaces, so the generic soft-break wrapper can't split them.
+    Pack dot-separated segments greedily into lines no wider than *max_width*.
+    """
+    if len(name) <= max_width:
+        return name
+    parts = name.split(".")
+    lines: List[str] = []
+    current = ""
+    for p in parts:
+        candidate = f"{current}.{p}" if current else p
+        if len(candidate) > max_width and current:
+            # Keep the dot at end of the wrapped line so the full name
+            # remains readable if newlines are ever collapsed to spaces
+            # (e.g. GCP HTML label rendering).
+            lines.append(current + ".")
+            current = p
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return "\n".join(lines)
+
+
 def _soft_break(s: str, soft_at: int = 21, max_len: int = 40) -> str:
     """Insert a soft newline after the nearest word boundary past *soft_at*.
 
@@ -763,6 +794,9 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     """
     if not name:
         return ""
+
+    if USE_TF_NAMES:
+        return _wrap_tf_name(name)
 
     skip_keywords = {"null_", "random", "time_sleep", "empty", "blank"}
     if any(k in name for k in skip_keywords):
