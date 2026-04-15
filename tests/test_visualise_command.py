@@ -64,22 +64,6 @@ class TestVisualiseCommand(unittest.TestCase):
         self.assertIn("--format", result.output)
         self.assertIn("not applicable", result.output)
 
-    def test_ai_annotate_flag_warning(self):
-        """Passing --ai-annotate should print a warning but continue."""
-        runner = CliRunner()
-        result = runner.invoke(
-            cli,
-            [
-                "visualise",
-                "--source",
-                "/nonexistent/path",
-                "--ai-annotate",
-                "bedrock",
-            ],
-        )
-        self.assertIn("--ai-annotate", result.output)
-        self.assertIn("not applicable", result.output)
-
     def test_html_extension_appended(self):
         """The visualise command should append .html to outfile if missing."""
         runner = CliRunner()

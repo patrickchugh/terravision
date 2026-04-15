@@ -663,8 +663,17 @@ def graphdata(
     default=False,
     help="Run terraform init with -upgrade to update modules/providers",
 )
-@click.option("--format", default="", hidden=True)
-@click.option("--ai-annotate", default="", hidden=True)
+@click.option(
+    "--format",
+    hidden=True,
+    default="",
+)
+@click.option(
+    "--ai-annotate",
+    default="",
+    type=click.Choice(["", "bedrock", "ollama"], case_sensitive=False),
+    help="Generate AI annotations file using the named backend (bedrock or ollama)",
+)
 @click.option("--avl_classes", hidden=True)
 def visualise(
     debug: bool,
@@ -694,14 +703,6 @@ def visualise(
                 fg="yellow",
             )
         )
-    if ai_annotate:
-        click.echo(
-            click.style(
-                "WARNING: --ai-annotate is not applicable to the visualise command.",
-                fg="yellow",
-            )
-        )
-
     if planfile and (workspace != "default" or varfile):
         click.echo(
             click.style(
@@ -710,9 +711,17 @@ def visualise(
             )
         )
 
-    preflight_check(None)
+    preflight_check(ai_annotate if not planfile else None)
     tfdata = _safe_compile_tfdata(
-        debug, source, varfile, workspace, annotate, planfile, graphfile, upgrade
+        debug,
+        source,
+        varfile,
+        workspace,
+        annotate,
+        planfile,
+        graphfile,
+        upgrade,
+        aibackend=ai_annotate,
     )
 
     # Strip networking groups for simplified diagrams
