@@ -159,28 +159,12 @@ Before installing TerraVision, ensure you have:
 pip install terravision # only if in a virtual env, if not you can use pipx install terravision instead
 ```
 
-#### Draw.io Export (Optional)
+#### Draw.io Export
 
-Draw.io export is included automatically on Linux. On **macOS** and **Windows** install the extra:
+Draw.io export works out of the box on all platforms — no extra dependencies needed. Just use `--format drawio`:
 
 ```bash
-# Intel Mac — works directly
-pip install 'terravision[drawio]'
-
-# Apple Silicon Mac (M1/M2/M3/M4) — set Graphviz header paths first
-# Homebrew:
-export CFLAGS="-I$(brew --prefix graphviz)/include/"
-export LDFLAGS="-L$(brew --prefix graphviz)/lib/"
-# MacPorts: use CFLAGS="-I/opt/local/include/" LDFLAGS="-L/opt/local/lib/"
-# Other: point CFLAGS/LDFLAGS to wherever graphviz/cgraph.h is installed
-pip install 'terravision[drawio]'
-
-# Windows — set Graphviz paths (adjust if Graphviz is installed elsewhere)
-pip install --config-settings="--global-option=build_ext" ^
-  --config-settings="--global-option=-IC:\Program Files\Graphviz\include" ^
-  --config-settings="--global-option=-LC:\Program Files\Graphviz\lib" ^
-  pygraphviz
-pip install 'terravision[drawio]'
+terravision draw --source ./terraform --format drawio --outfile my-diagram
 ```
 
 ### Verify Terraform Setup
