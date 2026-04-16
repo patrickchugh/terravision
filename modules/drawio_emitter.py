@@ -27,6 +27,16 @@ RESICON_SIZE = 78
 # Fallback for unmapped nodes.
 DEFAULT_ICON_SIZE = 56
 
+# Azure card: grey rounded rectangle behind SVG icon (matches PNG output).
+AZURE_CARD_SIZE = 76
+AZURE_CARD_ICON_SIZE = 40
+
+# GCP card: bordered table with icon left, text right (matches PNG output).
+GCP_CARD_WIDTH = 280
+GCP_CARD_HEIGHT = 70
+GCP_CARD_ICON_SIZE = 48
+GCP_CARD_ICON_MARGIN = 12
+
 # Padding inside cluster containers (pixels).
 CLUSTER_PADDING = 10
 
@@ -103,6 +113,70 @@ GROUP_CENTER_STYLE_MAP = {
         "align=center;fontColor=#D86613;dashed=1;spacingTop=25;"
     ),
 }
+
+
+def _build_class_to_alias_map() -> Dict[str, str]:
+    """Auto-generate ClassName → terraform_alias map from resource_classes.
+
+    Scans all provider modules (aws, azure, gcp) for module-level alias
+    assignments like ``aws_eip = ElasticIP`` and builds a reverse mapping
+    so the emitter can resolve Graphviz node IDs to terraform resource types.
+    """
+    import importlib
+    import inspect
+    import pkgutil
+
+    mapping: Dict[str, str] = {}
+    for provider in ("aws", "azure", "gcp"):
+        pkg_name = f"resource_classes.{provider}"
+        try:
+            pkg = importlib.import_module(pkg_name)
+        except ModuleNotFoundError:
+            continue
+
+        # Scan all submodules in the provider package
+        pkg_path = getattr(pkg, "__path__", None)
+        if not pkg_path:
+            continue
+        modules_to_scan = [pkg]
+        for _importer, modname, _ispkg in pkgutil.iter_modules(pkg_path):
+            try:
+                modules_to_scan.append(importlib.import_module(f"{pkg_name}.{modname}"))
+            except Exception:
+                continue
+
+        for mod in modules_to_scan:
+            for attr_name in dir(mod):
+                # Skip private/dunder and non-alias names
+                if attr_name.startswith("_"):
+                    continue
+                # Alias names look like terraform types: aws_*, azurerm_*, google_*, tv_*
+                if not any(
+                    attr_name.startswith(p)
+                    for p in ("aws_", "azurerm_", "azuread_", "google_", "tv_", "gcp_")
+                ):
+                    continue
+                obj = getattr(mod, attr_name, None)
+                if obj is None or not inspect.isclass(obj):
+                    continue
+                class_name = obj.__name__
+                # First alias wins (don't overwrite)
+                if class_name not in mapping:
+                    mapping[class_name] = attr_name
+
+    return mapping
+
+
+# Lazily cached class-to-alias mapping.
+_CLASS_TO_ALIAS_CACHE: Optional[Dict[str, str]] = None
+
+
+def _get_class_to_alias() -> Dict[str, str]:
+    """Return the cached ClassName → terraform_alias map."""
+    global _CLASS_TO_ALIAS_CACHE
+    if _CLASS_TO_ALIAS_CACHE is None:
+        _CLASS_TO_ALIAS_CACHE = _build_class_to_alias_map()
+    return _CLASS_TO_ALIAS_CACHE
 
 
 def load_shape_map(provider: str) -> dict:
@@ -280,11 +354,16 @@ def emit_drawio(
                 "collapsible=0",
             ]
         else:
+            raw_style = cluster.style.get("style", "")
+            is_invisible = "invis" in raw_style
             stroke = cluster.style.get(
                 "color", cluster.style.get("pencolor", "#666666")
             )
             fill = cluster.style.get("fillcolor", cluster.style.get("bgcolor", "none"))
-            is_dashed = "dashed" in cluster.style.get("style", "dashed")
+            is_dashed = "dashed" in raw_style
+            if is_invisible:
+                stroke = "none"
+                fill = "none"
             style_parts = [
                 "rounded=1",
                 "arcSize=3",
@@ -294,6 +373,9 @@ def emit_drawio(
                 f"strokeColor={stroke}",
                 f"dashed={'1' if is_dashed else '0'}",
                 "verticalAlign=top",
+                "align=left",
+                "spacingLeft=10",
+                "spacingTop=5",
                 "fontStyle=1",
                 "fontSize=14",
                 "container=1",
@@ -303,7 +385,15 @@ def emit_drawio(
         if not center_style:
             style_str = ";".join(style_parts) + ";"
 
-        label = _sanitize_label(cluster.label)
+        # Handle cluster labels — if the label is an HTML table with only
+        # an image (e.g., cloud provider logo), clear the label and emit
+        # the logo as a separate child cell after all clusters are done.
+        raw_label = cluster.label or ""
+        if "<IMG" in raw_label.upper() or "<img" in raw_label:
+            # HTML label with embedded image — will be handled as logo below
+            label = ""
+        else:
+            label = _sanitize_label(raw_label)
 
         cell = ET.SubElement(
             root,
@@ -323,6 +413,56 @@ def emit_drawio(
             height=f"{dx_h:.1f}",
         )
         geo.set("as", "geometry")
+
+    # ── Cluster logo images (provider logos at bottom of cloud group) ──
+    for cluster_name in sorted_clusters:
+        cluster = xdot_graph.clusters[cluster_name]
+        raw_label = cluster.label or ""
+        if "<IMG" not in raw_label.upper() and "<img" not in raw_label:
+            continue
+        # Extract image path from HTML label
+        img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
+        if not img_match or not os.path.isfile(img_match.group(1)):
+            continue
+        icon_path = img_match.group(1)
+        icon_basename = os.path.basename(icon_path)
+        logo_size = _LOGO_ICON_SIZES.get(icon_basename, (180, 32))
+
+        b64 = _encode_icon_base64(icon_path)
+        logo_id = _next_id()
+        logo_style = (
+            f"shape=image;imageAspect=0;aspect=fixed;"
+            f"verticalLabelPosition=bottom;verticalAlign=top;"
+            f"image=data:image/png,{b64};"
+        )
+        # Position at bottom-left of parent cluster
+        x1, y1, x2, y2 = cluster.bb
+        cluster_w = x2 - x1
+        cluster_h = y2 - y1
+        w_px, h_px = logo_size
+        margin = 15
+        logo_x = margin
+        logo_y = cluster_h - h_px - margin
+
+        parent_cid = cluster_cell_ids.get(cluster_name, "1")
+        logo_cell = ET.SubElement(
+            root,
+            "mxCell",
+            id=logo_id,
+            value="",
+            style=logo_style,
+            vertex="1",
+            parent=parent_cid,
+        )
+        logo_geo = ET.SubElement(
+            logo_cell,
+            "mxGeometry",
+            x=f"{logo_x:.1f}",
+            y=f"{logo_y:.1f}",
+            width=f"{w_px:.1f}",
+            height=f"{h_px:.1f}",
+        )
+        logo_geo.set("as", "geometry")
 
     # ── Nodes ─────────────────────────────────────────────────────────
     footer_label = ""
@@ -391,35 +531,10 @@ def emit_drawio(
                 parts = node_name.split(".")
                 if len(parts) >= 3:
                     class_name = parts[-2]  # e.g., "ElasticIP"
-                    # Map Python class name to terraform alias.
-                    # Most classes match when underscores are removed
-                    # (e.g., InternetGateway→internet_gateway), but some
-                    # abbreviations need explicit mapping.
-                    _CLASS_TO_ALIAS = {
-                        "ElasticIP": "aws_eip",
-                        "InternetAlt1": "tv_aws_internet",
-                        "InternetAlt2": "tv_aws_internet",
-                        "SystemsManagerParameterStore": "aws_ssm_parameter",
-                        "SystemsManager": "aws_ssm_document",
-                        "IdentityAndAccessManagementIam": "aws_iam_group",
-                        "IdentityAndAccessManagementIamRole": "aws_iam_role",
-                        "IdentityAndAccessManagementIamPermissions": "aws_iam_policy_attachment",
-                        "IdentityAndAccessManagementIamAccessAnalyzer": "aws_iam_access_analyzer",
-                        "IdentityAndAccessManagementIamPolicy": "aws_iam_policy",
-                        "ElasticContainerRegistry": "aws_ecr_repository",
-                        "ElasticContainerRegistryImage": "aws_ecr_repository",
-                        "Users": "tv_aws_users",
-                        # Azure
-                        "PublicIpAddresses": "azurerm_public_ip",
-                        "VirtualMachine": "azurerm_virtual_machine",
-                        "LinuxVirtualMachine": "azurerm_linux_virtual_machine",
-                        "WindowsVirtualMachine": "azurerm_windows_virtual_machine",
-                        "ApplicationGateways": "azurerm_application_gateway",
-                        "LoadBalancers": "azurerm_lb",
-                        "NetworkInterfaces": "azurerm_network_interface",
-                        "Globe": "tv_azurerm_internet",
-                    }
-                    resource_type = _CLASS_TO_ALIAS.get(class_name, class_name)
+                    # Map Python class name to terraform alias using
+                    # auto-generated mapping from resource_classes.
+                    class_alias_map = _get_class_to_alias()
+                    resource_type = class_alias_map.get(class_name, class_name)
                     if resource_type == class_name:
                         # Try automated match
                         class_lower = class_name.lower()
@@ -433,10 +548,26 @@ def emit_drawio(
                     resource_type = node_name
             if "~" in resource_type:
                 resource_type = resource_type.split("~")[0]
-            style_str, icon_size = _build_node_style(resource_type, node, shape_map)
+
+            # GCP table card: bordered card with PNG icon left, text right
+            if provider == "gcp":
+                _emit_gcp_card(
+                    root,
+                    cid,
+                    node,
+                    resource_type,
+                    node.label or "",
+                    parent_id,
+                    parent_cluster,
+                    cluster_abs_pos,
+                    _flip_y,
+                )
+                continue
+
+            style_str, w_px, h_px = _build_node_style(
+                resource_type, node, shape_map, provider
+            )
             label = _sanitize_label(node.label)
-            w_px = icon_size
-            h_px = icon_size
 
         # Compute absolute draw.io position (top-left of node)
         dx_x = cx - w_px / 2
@@ -510,14 +641,11 @@ def emit_drawio(
         cid = _next_id()
         cell_ids[node_name] = cid
 
-        style_str, label = _build_cluster_label_style(node, shape_map)
+        style_str, label, w_px, h_px = _build_cluster_label_style(node, shape_map)
         parent_id = "1"
         clid = node.attrs.get("_clusterid", "")
         if clid in cluster_cell_ids:
             parent_id = cluster_cell_ids[clid]
-
-        w_px = 40
-        h_px = 40
 
         # Position based on _labelposition relative to parent cluster bounds
         label_pos = node.attrs.get("_labelposition", "bottom-left")
@@ -605,15 +733,8 @@ def emit_drawio(
         geo = ET.SubElement(edge_cell, "mxGeometry", relative="1")
         geo.set("as", "geometry")
 
-        # Add waypoints from Graphviz spline data (absolute coords, Y-flipped)
-        if edge.spline_points and len(edge.spline_points) > 2:
-            points_array = ET.SubElement(geo, "Array")
-            points_array.set("as", "points")
-            # Skip first and last points (they're the endpoint arrows)
-            for px, py in edge.spline_points[1:-1]:
-                pt = ET.SubElement(points_array, "mxPoint")
-                pt.set("x", f"{px:.1f}")
-                pt.set("y", f"{_flip_y(py):.1f}")
+        # Let draw.io's orthogonalEdgeStyle handle routing natively.
+        # Graphviz spline waypoints caused edges to cross through containers.
 
     # Wrap in draw.io's <mxfile><diagram> structure for full compatibility
     ET.indent(mx_model, space="      ")
@@ -637,18 +758,18 @@ def _build_node_style(
     resource_type: str,
     node: XdotNode,
     shape_map: dict,
-) -> Tuple[str, int]:
+    provider: str = "aws",
+) -> Tuple[str, int, int]:
     """Build an mxCell style string for a resource node.
 
-    Returns ``(style_string, icon_size_px)`` so the caller can set the
-    correct geometry width/height.
+    Returns ``(style_string, width_px, height_px)`` so the caller can set
+    the correct geometry dimensions.
 
     Priority:
     1. AWS: Direct shape or resourceIcon with correct fill colour
-    2. Azure: ``shape=mxgraph.azure.<name>;fillColor=#00BEF2``
-    3. GCP: Embedded PNG (draw.io uses SVG image paths for GCP, not stencils)
-    4. Fallback: Embedded PNG from TerraVision's local icon files
-    5. Generic rounded rectangle as last resort.
+    2. Azure: Grey card with SVG image (``shape=label``)
+    3. GCP: Handled separately in emit loop (table card); falls back here
+    4. Fallback: Generic rounded rectangle as last resort.
     """
     from modules.config.drawio_aws4_shapes import (
         AWS4_DIRECT_SHAPE_NAMES,
@@ -667,23 +788,29 @@ def _build_node_style(
             .replace("mxgraph.gcp2.", "")
         )
 
-        # Azure shapes: use img/lib/azure2/ SVG image paths
+        # Azure shapes: grey rounded card with SVG icon inside
         if "img/lib/azure2/" in drawio_shape:
             parts = [
-                "image",
-                "aspect=fixed",
+                "shape=label",
+                "rounded=1",
+                "arcSize=10",
+                "fillColor=#F2F2F2",
+                "strokeColor=#E0E0E0",
                 "html=1",
-                "points=[]",
                 "align=center",
+                "verticalLabelPosition=bottom",
+                "verticalAlign=top",
                 "fontSize=12",
+                "fontColor=#2C2C2C",
                 f"image={drawio_shape}",
+                f"imageWidth={AZURE_CARD_ICON_SIZE}",
+                f"imageHeight={AZURE_CARD_ICON_SIZE}",
+                "imageAlign=center",
+                "imageVerticalAlign=middle",
+                "spacingTop=4",
+                "spacing=6",
             ]
-            return ";".join(parts) + ";", DIRECT_ICON_SIZE
-
-        # GCP shapes: skip stencils, fall through to PNG fallback
-        # (draw.io itself uses SVG image paths for GCP, not stencils)
-        if "mxgraph.gcp2." in shape_ref:
-            drawio_shape = None  # force PNG fallback below
+            return ";".join(parts) + ";", AZURE_CARD_SIZE, AZURE_CARD_SIZE
 
         # Connection points used by draw.io for resourceIcon shapes
         _PTS = (
@@ -714,7 +841,7 @@ def _build_node_style(
                 "pointerEvents=1",
                 f"shape={shape_ref}",
             ]
-            return ";".join(parts) + ";", DIRECT_ICON_SIZE
+            return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
 
         if bare_name in AWS4_RESICON_NAMES:
             # resourceIcon — exact style from draw.io Sidebar-AWS4.js
@@ -737,7 +864,7 @@ def _build_node_style(
                 "shape=mxgraph.aws4.resourceIcon",
                 f"resIcon={shape_ref}",
             ]
-            return ";".join(parts) + ";", RESICON_SIZE
+            return ";".join(parts) + ";", RESICON_SIZE, RESICON_SIZE
 
         # Shape name not in either set — try direct with default fill
         parts = [
@@ -757,7 +884,7 @@ def _build_node_style(
             "aspect=fixed",
             f"shape={shape_ref}",
         ]
-        return ";".join(parts) + ";", DIRECT_ICON_SIZE
+        return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
 
     # No shape map entry — generic rectangle
     parts = [
@@ -771,7 +898,7 @@ def _build_node_style(
         "align=center",
     ]
 
-    return ";".join(parts) + ";", DEFAULT_ICON_SIZE
+    return ";".join(parts) + ";", DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE
 
 
 def _build_special_node_style(node: XdotNode) -> str:
@@ -794,29 +921,38 @@ def _build_special_node_style(node: XdotNode) -> str:
 # Map TerraVision PNG icon basenames to draw.io SVG paths for cluster labels.
 # This avoids fragile fuzzy matching — just hardcode known icon filenames.
 _ICON_TO_DRAWIO_SVG = {
-    # Azure
+    # Azure cluster label icons
     "subnet.png": "img/lib/azure2/networking/Subnet.svg",
     "virtual-networks.png": "img/lib/azure2/networking/Virtual_Networks_Classic.svg",
     "resource-groups.png": "img/lib/azure2/general/Resource_Groups.svg",
-    "azure.png": "img/lib/azure2/general/Azure.svg",
     "network-security-groups.png": "img/lib/azure2/networking/Network_Security_Groups.svg",
-    # AWS
-    "vpc.png": "img/lib/azure2/networking/Virtual_Networks.svg",  # no AWS SVG in draw.io
-    "private_subnet.png": None,  # use embedded PNG
+    # Azure logo — base64-embed the local PNG (it includes "Microsoft Azure" text)
+    "azure.png": None,
+    # AWS cluster label icons — base64-embed
+    "vpc.png": None,
+    "private_subnet.png": None,
     "public_subnet.png": None,
     "aws.png": None,
+}
+
+# Cluster label icons that are logos (contain text, need larger sizing).
+# Values are (width, height) in pixels.
+_LOGO_ICON_SIZES = {
+    "azure.png": (200, 112),  # 500x281 original, scaled to fit
+    "gcp.png": (180, 32),  # 384x68 original, scaled to fit
+    "aws.png": (150, 90),
 }
 
 
 def _build_cluster_label_style(
     node: XdotNode, shape_map: Optional[dict] = None
-) -> Tuple[str, str]:
+) -> Tuple[str, str, int, int]:
     """Build style and label for cluster label nodes with optional icons.
 
     Parses HTML-table labels to extract image paths and text.
-    If a draw.io SVG path exists in the shape_map for the icon,
-    uses that instead of embedded base64 PNG.
-    Returns (style_string, sanitized_label).
+    If a draw.io SVG path exists for the icon, uses that.
+    Otherwise base64-encodes the local PNG.
+    Returns (style_string, sanitized_label, width, height).
     """
     label = node.label
     # Try to extract image path and text from HTML label
@@ -825,12 +961,18 @@ def _build_cluster_label_style(
     text_parts = re.findall(r"<td[^>]*>([^<]+)</td>", label, re.IGNORECASE)
     clean_label = " ".join(t.strip() for t in text_parts if t.strip())
 
+    w_px = 40
+    h_px = 40
+
     if img_match:
         icon_path = img_match.group(1)
         icon_basename = os.path.basename(icon_path)
 
         # Direct lookup from known PNG filename → draw.io SVG path
         svg_path = _ICON_TO_DRAWIO_SVG.get(icon_basename)
+
+        # Check if this is a logo icon (needs larger sizing, no label text)
+        logo_size = _LOGO_ICON_SIZES.get(icon_basename)
 
         if svg_path:
             # Use draw.io's built-in SVG
@@ -840,13 +982,23 @@ def _build_cluster_label_style(
             )
         elif os.path.isfile(icon_path):
             b64 = _encode_icon_base64(icon_path)
-            style = (
-                f"shape=image;html=1;verticalAlign=top;"
-                f"verticalLabelPosition=bottom;labelBackgroundColor=default;"
-                f"imageAspect=0;aspect=fixed;"
-                f"image=data:image/png;base64,{b64};"
-                f"fontSize=10;fontColor=#232F3E;"
-            )
+            if logo_size:
+                # Logo icon — standalone image, no label text
+                w_px, h_px = logo_size
+                clean_label = ""
+                style = (
+                    f"shape=image;imageAspect=0;aspect=fixed;"
+                    f"verticalLabelPosition=bottom;verticalAlign=top;"
+                    f"image=data:image/png,{b64};"
+                )
+            else:
+                style = (
+                    f"shape=image;html=1;verticalAlign=top;"
+                    f"verticalLabelPosition=bottom;labelBackgroundColor=default;"
+                    f"imageAspect=0;aspect=fixed;"
+                    f"image=data:image/png,{b64};"
+                    f"fontSize=10;fontColor=#232F3E;"
+                )
         else:
             style = (
                 "text;html=1;align=left;verticalAlign=middle;"
@@ -862,7 +1014,127 @@ def _build_cluster_label_style(
         if not clean_label:
             clean_label = _sanitize_label(label)
 
-    return style, clean_label
+    return style, clean_label, w_px, h_px
+
+
+# ── GCP table-card helpers ────────────────────────────────────────────
+
+
+def _format_gcp_label(raw_label: str, resource_type: str) -> str:
+    """Format a GCP node label with bold service name and regular resource name.
+
+    Extracts bold/regular parts directly from the Graphviz HTML label, which
+    already uses ``<B>`` tags to mark the service name (set by GCP's
+    ``resource_classes/gcp/__init__.py``).
+    """
+    label = str(raw_label)
+
+    # Extract bold text (service name) from <B>...</B> tags
+    bold_match = re.search(r"<B>([^<]+)</B>", label, re.IGNORECASE)
+
+    if bold_match:
+        service_name = bold_match.group(1).strip()
+
+        # Extract all non-bold text from FONT/TD elements (resource name)
+        # Remove everything up to and including the </B> to get remaining text
+        after_bold = label[bold_match.end() :]
+        # Get text from remaining TD/FONT elements
+        remaining_texts = re.findall(
+            r"<(?:FONT|TD)[^>]*>([^<]+)</(?:FONT|TD)>", after_bold, re.IGNORECASE
+        )
+        resource_name = " ".join(t.strip() for t in remaining_texts if t.strip())
+
+        if service_name and resource_name:
+            return f"<b>{service_name}</b><br>{resource_name}"
+        elif service_name:
+            return f"<b>{service_name}</b>"
+
+    # Fallback: extract all text and bold it
+    clean = _extract_text_from_html(label)
+    if not clean:
+        clean = resource_type.replace("google_", "").replace("_", " ").title()
+    return f"<b>{clean}</b>"
+
+
+def _emit_gcp_card(
+    root: ET.Element,
+    card_id: str,
+    node: XdotNode,
+    resource_type: str,
+    raw_label: str,
+    parent_id: str,
+    parent_cluster: Optional[XdotCluster],
+    cluster_abs_pos: Dict[str, Tuple[float, float]],
+    flip_y_fn,
+) -> None:
+    """Emit a GCP table-card node: bordered card with PNG icon left, text right.
+
+    Uses ``shape=label`` with a base64-embedded PNG icon extracted from the
+    Graphviz HTML label.  Matches the PNG output's two-column table card.
+    """
+    card_w = GCP_CARD_WIDTH
+    card_h = GCP_CARD_HEIGHT
+    icon_size = GCP_CARD_ICON_SIZE
+    icon_margin = GCP_CARD_ICON_MARGIN
+
+    # Compute card top-left position (centered on node position)
+    cx, cy = node.pos
+    card_x = cx - card_w / 2
+    card_y = flip_y_fn(cy) - card_h / 2
+
+    # Relative to parent container
+    if parent_cluster and parent_cluster.name in cluster_abs_pos:
+        px, py = cluster_abs_pos[parent_cluster.name]
+        card_x -= px
+        card_y -= py
+
+    # Format label for right side of card
+    gcp_label = _format_gcp_label(raw_label, resource_type)
+
+    # Extract icon path from the Graphviz HTML label and base64-encode it
+    img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
+    if not img_match:
+        img_match = re.search(r'<img\s+src="([^"]+)"', raw_label, re.IGNORECASE)
+
+    spacing_left = icon_size + icon_margin * 2
+    if img_match and os.path.isfile(img_match.group(1)):
+        icon_b64 = _encode_icon_base64(img_match.group(1))
+        card_style = (
+            f"shape=label;rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            f"html=1;whiteSpace=wrap;"
+            f"image=data:image/png,{icon_b64};"
+            f"imageWidth={icon_size};imageHeight={icon_size};"
+            f"imageAlign=left;imageVerticalAlign=middle;"
+            f"align=left;verticalAlign=middle;"
+            f"spacingLeft={spacing_left};fontSize=12;fontColor=#2D3436;"
+        )
+    else:
+        # No icon available — plain card
+        card_style = (
+            "rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            "html=1;whiteSpace=wrap;"
+            "align=left;verticalAlign=middle;"
+            "fontSize=12;fontColor=#2D3436;"
+        )
+
+    card_cell = ET.SubElement(
+        root,
+        "mxCell",
+        id=card_id,
+        value=gcp_label,
+        style=card_style,
+        vertex="1",
+        parent=parent_id,
+    )
+    card_geo = ET.SubElement(
+        card_cell,
+        "mxGeometry",
+        x=f"{card_x:.1f}",
+        y=f"{card_y:.1f}",
+        width=f"{card_w:.1f}",
+        height=f"{card_h:.1f}",
+    )
+    card_geo.set("as", "geometry")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
@@ -875,11 +1147,13 @@ def _extract_text_from_html(html: str) -> str:
     and returns only the human-readable text content.
     """
     text = html
-    # Re-wrap if the outer <> delimiters were already stripped
-    if not text.startswith("<"):
-        text = f"<{text}>"
+    # Strip Graphviz HTML-label outer delimiters: <<TABLE...>> → <TABLE...>
+    if text.startswith("<<") and text.endswith(">>"):
+        text = text[1:-1]
     # Remove all HTML tags
     text = re.sub(r"<[^>]+>", " ", text)
+    # Remove any stray angle brackets (from Graphviz delimiters)
+    text = text.replace("<", "").replace(">", "")
     # Collapse whitespace
     text = re.sub(r"\s+", " ", text).strip()
     return text

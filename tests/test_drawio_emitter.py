@@ -296,9 +296,10 @@ class TestLoadShapeMap:
         m = load_shape_map("azure")
         assert len(m) > 30
 
-    def test_gcp_map_loads(self):
+    def test_gcp_map_returns_empty(self):
+        # GCP uses base64-embedded PNG icons, not a draw.io shape map
         m = load_shape_map("gcp")
-        assert len(m) > 20
+        assert m == {}
 
     def test_unknown_provider_returns_empty(self):
         m = load_shape_map("nonexistent_provider")

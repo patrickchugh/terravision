@@ -171,32 +171,48 @@ draw.io's `gcp2` stencil library has not been updated to match Google's latest i
 
 ---
 
-### 11. Provider-Specific Node Card Styles
+### 11. Provider-Specific Node Card Styles (IMPLEMENTED)
 
-Each provider renders nodes differently in the PNG output. The draw.io emitter must replicate these card styles, not just place standalone icons.
+Each provider renders nodes differently in the PNG output. The draw.io emitter replicates these card styles.
 
-**AWS**: Standalone icon with label below (no card). This is what we currently emit and it matches.
+**AWS**: Standalone icon with label below (no card). Uses draw.io AWS4 stencils directly.
 
-**Azure**: Grey rounded card with icon inside. From `resource_classes/azure/__init__.py`:
+**Azure**: Grey rounded card (`shape=label`) with SVG icon inside. Style: `shape=label;rounded=1;fillColor=#F2F2F2;strokeColor=#E0E0E0;image=img/lib/azure2/<path>.svg;imageWidth=40;imageHeight=40`. Card size: 76x76px. Label appears below the card via `verticalLabelPosition=bottom`.
+
+**GCP**: Table card (`shape=label`) with base64-embedded PNG icon on left, HTML label on right. The icon is extracted from the Graphviz HTML label and re-encoded as a data URI. Style: `shape=label;strokeColor=#DDDDDD;image=data:image/png,<base64>;imageAlign=left;spacingLeft=72`. Card size: 280x70px. The legacy `drawio_shape_map_gcp.py` (mxgraph.gcp2.* stencils) was removed — draw.io's GCP stencils are outdated.
+
+### 12. Auto-Generated Class-to-Alias Map
+
+The `_CLASS_TO_ALIAS` mapping (ClassName → terraform_alias) is now auto-generated at runtime by `_build_class_to_alias_map()` in `drawio_emitter.py`. It scans all `resource_classes/<provider>/*.py` modules for terraform alias assignments (e.g., `aws_eip = ElasticIP`) and builds a reverse map. This eliminates the hardcoded dict and automatically picks up new resource classes.
+
+### 13. Edge Routing: draw.io Native
+
+Graphviz spline waypoints were removed from edge geometry. Edges now use `edgeStyle=orthogonalEdgeStyle` with no `<mxPoint>` waypoints, letting draw.io handle routing natively. This prevents edges from crossing through containers.
+
+### 14. Invisible Clusters (AZUREGroup)
+
+Azure's `AZUREGroup` uses `style="invis"` in Graphviz. The emitter now detects this and sets `strokeColor=none;fillColor=none` so the cluster is truly invisible in draw.io (previously it rendered with a default grey border).
+
+### 15. draw.io Data URI Format (CRITICAL)
+
+draw.io uses **`data:image/png,<base64>`** (comma, NO `;base64` prefix) for embedded images. This differs from the standard data URI spec (`data:image/png;base64,<base64>`). Using the standard format causes draw.io to show a square placeholder instead of the image. This applies to all base64-embedded PNGs: logos, GCP card icons, and any other embedded images.
+
+The exact style draw.io generates when inserting an image:
 ```
-shape=box; style=rounded,filled; fillcolor=#F2F2F2; color=#E0E0E0;
-penwidth=1; fontcolor=#2C2C2C; margin=0.4
+shape=image;imageAspect=0;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;image=data:image/png,<base64data>;
 ```
-In draw.io this would be a rounded rectangle cell (`rounded=1;fillColor=#F2F2F2;strokeColor=#E0E0E0`) containing or overlaying the SVG icon.
 
-**GCP**: HTML table card — icon on left (100x100), two lines of text on right (service name bold, resource name regular). From `resource_classes/gcp/__init__.py`:
-```html
-<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" WIDTH="360">
-  <TR>
-    <TD FIXEDSIZE="TRUE" WIDTH="100" HEIGHT="100"><IMG SRC="icon.png"/></TD>
-    <TD ALIGN="LEFT" VALIGN="MIDDLE">
-      <FONT POINT-SIZE="24"><B>Service Name</B></FONT><BR/>
-      <FONT POINT-SIZE="18">resource_name</FONT>
-    </TD>
-  </TR>
-</TABLE>
-```
-In draw.io this would need a group cell containing an image cell + text cell side by side, or a single cell with HTML label.
+### 16. Provider Logos are Local PNGs, Not draw.io Built-ins
+
+Provider logos (Azure `resource_images/azure/azure.png` 500x281px, GCP `resource_images/gcp/gcp.png` 384x68px) already contain the provider name text. They do NOT exist in draw.io's built-in image library. The emitter base64-encodes the local PNGs and renders them as standalone `shape=image` cells. The `_LOGO_ICON_SIZES` dict in `drawio_emitter.py` controls sizing.
+
+For clusters whose Graphviz label is an HTML table containing only an `<IMG>` tag (i.e., a logo), the emitter clears the cluster label text and emits the logo as a separate child image cell at the bottom-left of the cluster.
+
+### 17. GCP Label Extraction from Graphviz HTML
+
+GCP node labels in Graphviz are HTML tables with `<B>` tags marking the service name and regular text for the resource name. The `_format_gcp_label()` function extracts bold/regular parts directly from the HTML rather than trying to derive them from the terraform resource type (which diverges due to pretty-naming, acronyms, etc.).
+
+Graphviz HTML labels are wrapped in double angle brackets `<<TABLE...>>`. The outer `<>` are Graphviz delimiters. `_extract_text_from_html()` strips these only when the text starts with `<<` (doubled), to avoid stripping the actual `<TABLE>` tag.
 
 ---
 
@@ -204,14 +220,10 @@ In draw.io this would need a group cell containing an image cell + text cell sid
 
 1. **Shape map generator**: Update `scripts/generate_drawio_shape_maps.py` to fetch sidebar JS directly:
    - **AWS**: Fetch `Sidebar-AWS4.js` → extract `resIcon=` names and `n + 'shapename;'` direct shapes with their `fillColor` per section. AWS uses **stencil shapes** (`shape=mxgraph.aws4.<name>;fillColor=<color>`)
-   - **Azure**: Fetch `Sidebar-Azure.js` → but Azure does NOT use stencils like AWS. Azure uses **SVG image paths** (`image=img/lib/azure2/<category>/<Name>.svg`). The generator must map terraform aliases to the correct `img/lib/azure2/` SVG path, not to `mxgraph.azure.*` stencil names.
-   - **GCP**: draw.io hasn't updated GCP stencils (`gcp2` is outdated). GCP sidebar also uses `shape=image;image=...` SVG paths for most icons. Until draw.io updates, use PNG fallback from TerraVision's local icons.
+   - **Azure**: Fetch `Sidebar-Azure.js` → Azure uses **SVG image paths** (`image=img/lib/azure2/<category>/<Name>.svg`). The generator must map terraform aliases to the correct `img/lib/azure2/` SVG path, not to `mxgraph.azure.*` stencil names.
 2. **Corner icon visibility**: Cluster label icons (VNet, Subnet, Resource Group corner icons) are positioned at bottom of parent but can be obscured by child clusters. Z-order fix is in place (emitted last in XML) but positioning still needs refinement.
-3. **Azure logo**: The "Microsoft Azure" group label image (`azure.png` → `Azure.svg`) renders as broken image at the very bottom of the diagram.
-4. **Edge routing**: Some edges cross through containers instead of routing around them. Graphviz spline waypoints are passed but `edgeStyle=orthogonalEdgeStyle` in draw.io may override them.
-5. **Integration tests**: Full pipeline tests comparing PNG vs drawio output for multiple test cases.
-6. **Documentation updates**: README and usage guide need updating to remove `[drawio]` installation instructions.
-7. **`_CLASS_TO_ALIAS` map**: The hardcoded class-name-to-terraform-alias fallback grows as we test more fixtures. Consider auto-generating it from the resource_classes package.
+3. **Integration tests**: Full pipeline tests comparing PNG vs drawio output for multiple test cases.
+4. **Documentation updates**: README and usage guide need updating to remove `[drawio]` installation instructions.
 
 ---
 

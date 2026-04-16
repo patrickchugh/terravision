@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Auto-generate draw.io shape mapping files from authoritative sources.
 
-Downloads the latest stencil definitions from the jgraph/drawio GitHub
+Downloads the latest shape definitions from the jgraph/drawio GitHub
 repository and matches them against TerraVision resource class aliases
 to produce ``modules/config/drawio_shape_map_<provider>.py`` files.
 
@@ -13,20 +13,19 @@ Re-run whenever draw.io updates their icon libraries (check releases at
 https://github.com/jgraph/drawio/releases).
 
 Shape library sources (jgraph/drawio repo):
-  - AWS:   stencils/aws4.xml   → prefix ``mxgraph.aws4.``
-  - Azure: img/lib/azure2/     → prefix ``img/lib/azure2/``  (SVG images)
-  - GCP:   stencils/gcp2.xml   → prefix ``mxgraph.gcp2.``
+  - AWS:   Sidebar-AWS4.js  → prefix ``mxgraph.aws4.``  (stencil shapes)
+  - Azure: img/lib/azure2/  → SVG image paths (NOT stencils)
+  - GCP:   Not generated — uses base64-embedded local PNGs at runtime
 """
 
 import importlib
-import os
+import json
 import pkgutil
 import re
 import sys
 import urllib.request
-import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # Ensure repo root is on sys.path so we can import resource_classes
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -34,10 +33,11 @@ sys.path.insert(0, str(REPO_ROOT))
 
 DRAWIO_REPO = "jgraph/drawio"
 DRAWIO_BRANCH = "dev"  # tracks latest; pin to a tag for stability
-STENCILS_URL = (
+RAW_BASE = (
     f"https://raw.githubusercontent.com/{DRAWIO_REPO}/{DRAWIO_BRANCH}"
-    "/src/main/webapp/stencils"
+    "/src/main/webapp"
 )
+SIDEBAR_AWS4_URL = f"{RAW_BASE}/js/diagramly/sidebar/Sidebar-AWS4.js"
 IMG_LIB_API = (
     f"https://api.github.com/repos/{DRAWIO_REPO}/contents"
     f"/src/main/webapp/img/lib/azure2?ref={DRAWIO_BRANCH}"
@@ -49,14 +49,41 @@ OUTPUT_DIR = REPO_ROOT / "modules" / "config"
 # ── Fetch helpers ─────────────────────────────────────────────────────
 
 
-def fetch_stencil_shapes(stencil_file: str) -> List[str]:
-    """Download a stencil XML and extract all shape names."""
-    url = f"{STENCILS_URL}/{stencil_file}"
-    print(f"  Fetching {url} ...")
-    with urllib.request.urlopen(url) as resp:
-        xml_text = resp.read().decode("utf-8")
-    names = re.findall(r'<shape[^>]+name="([^"]+)"', xml_text)
-    return names
+def fetch_sidebar_aws4_shapes() -> List[str]:
+    """Fetch Sidebar-AWS4.js and extract all shape names.
+
+    The sidebar JS is the authoritative source for shape names — it uses
+    underscores where the stencil XML uses spaces, and includes shapes
+    not in the stencil XML.
+    """
+    print(f"  Fetching {SIDEBAR_AWS4_URL} ...")
+    with urllib.request.urlopen(SIDEBAR_AWS4_URL) as resp:
+        js_text = resp.read().decode("utf-8")
+
+    # Extract shape names from patterns like:
+    #   n + 'instance2;'           → direct shape
+    #   n2 + 'resIcon=...ec2;'     → resourceIcon shape
+    #   shape=mxgraph.aws4.<name>  → any shape reference
+    shapes = set()
+
+    # Direct shapes: n + '<name>;'
+    for m in re.finditer(r"n\s*\+\s*'([^']+);'", js_text):
+        name = m.group(1)
+        if "=" not in name:  # Skip style properties
+            shapes.add(name)
+
+    # resourceIcon shapes: resIcon=mxgraph.aws4.<name>;
+    for m in re.finditer(r"resIcon=mxgraph\.aws4\.([^;'\"]+)", js_text):
+        shapes.add(m.group(1))
+
+    # General shape references: shape=mxgraph.aws4.<name>
+    for m in re.finditer(r"shape=mxgraph\.aws4\.([^;'\"]+)", js_text):
+        name = m.group(1)
+        if name not in ("group", "groupCenter", "resourceIcon"):
+            shapes.add(name)
+
+    print(f"  Extracted {len(shapes)} shapes from Sidebar-AWS4.js")
+    return sorted(shapes)
 
 
 def fetch_azure2_svgs() -> Dict[str, List[str]]:
@@ -147,7 +174,7 @@ def _normalize(name: str) -> str:
 
 
 # Manual overrides for services where auto-matching fails.
-# These are verified against the authoritative stencil files.
+# These are verified against the authoritative source files.
 AWS_OVERRIDES = {
     "aws_subnet": "mxgraph.aws4.subnet",
     "aws_security_group": "mxgraph.aws4.security group",
@@ -171,8 +198,6 @@ AWS_OVERRIDES = {
     "aws_ecs_cluster": "mxgraph.aws4.ecs",
     "aws_eks_cluster": "mxgraph.aws4.eks",
     "aws_fargate": "mxgraph.aws4.fargate",
-    "aws_ec2ecs": "mxgraph.aws4.ecs",
-    "aws_ecs_ec2": "mxgraph.aws4.ecs",
     "aws_cloudfront_distribution": "mxgraph.aws4.cloudfront",
     "aws_route53_zone": "mxgraph.aws4.route 53",
     "aws_route53_record": "mxgraph.aws4.route 53",
@@ -212,404 +237,107 @@ AWS_OVERRIDES = {
     "aws_msk_cluster": "mxgraph.aws4.managed streaming for apache kafka",
     "aws_mq_broker": "mxgraph.aws4.mq",
     "aws_backup_plan": "mxgraph.aws4.backup",
-    # LLM-matched: abbreviations and non-obvious mappings
-    "aws_acm_certificate_validation": "mxgraph.aws4.certificate manager",
-    "aws_apigatewayv2_integration": "mxgraph.aws4.api gateway",
-    "aws_apigatewayv2_route": "mxgraph.aws4.api gateway",
-    "aws_apigatewayv2_stage": "mxgraph.aws4.api gateway",
-    "aws_appstream_fleet": "mxgraph.aws4.appstream 20",
-    "aws_appstream_stack": "mxgraph.aws4.appstream 20",
-    "aws_dax_cluster": "mxgraph.aws4.dynamodb dax",
+    "aws_eip": "mxgraph.aws4.elastic ip address",
+    "aws_network_acl": "mxgraph.aws4.network access control list",
+    "aws_network_interface": "mxgraph.aws4.elastic network interface",
+    "aws_ssm_parameter": "mxgraph.aws4.systems manager parameter store",
+    "aws_ssm_document": "mxgraph.aws4.systems manager documents",
     "aws_dms_endpoint": "mxgraph.aws4.database migration service",
-    "aws_dms_replication_instance": "mxgraph.aws4.database migration service",
-    "aws_dms_replication_task": "mxgraph.aws4.database migration service",
-    "aws_docdb_cluster": "mxgraph.aws4.documentdb",
     "aws_dx_connection": "mxgraph.aws4.direct connect",
     "aws_dx_gateway": "mxgraph.aws4.direct connect gateway",
     "aws_ebs_snapshot": "mxgraph.aws4.elastic block store snapshot",
-    "aws_ecrpublic_repository": "mxgraph.aws4.elastic container registry",
-    "aws_efs": "mxgraph.aws4.elastic file system",
-    "aws_efs_access_point": "mxgraph.aws4.elastic file system",
-    "aws_efs_mount_target": "mxgraph.aws4.elastic file system",
-    "aws_eip": "mxgraph.aws4.elastic ip address",
-    "aws_elasticsearch_domain": "mxgraph.aws4.opensearch service",
-    "aws_fms_admin_account": "mxgraph.aws4.firewall manager",
-    "aws_fms_policy": "mxgraph.aws4.firewall manager",
-    "aws_iam_access_analyzer": "mxgraph.aws4.access analyzer",
-    "aws_iam_group": "mxgraph.aws4.iam",
-    "aws_iam_policy_attachment": "mxgraph.aws4.iam",
-    "aws_iam_role_policy": "mxgraph.aws4.iam",
-    "aws_iam_role_policy_attachment": "mxgraph.aws4.iam",
-    "aws_iam_user": "mxgraph.aws4.iam",
-    "aws_inspector2_enabler": "mxgraph.aws4.inspector",
-    "aws_iot_certificate": "mxgraph.aws4.iot core",
-    "aws_iot_policy": "mxgraph.aws4.iot core",
-    "aws_iot_thing": "mxgraph.aws4.iot core",
-    "aws_iot_thing_type": "mxgraph.aws4.iot core",
-    "aws_iot_topic_rule": "mxgraph.aws4.iot core",
-    "aws_kinesisanalyticsv2_application": "mxgraph.aws4.kinesis data analytics",
-    "aws_kms_alias": "mxgraph.aws4.kms",
-    "aws_kms_grant": "mxgraph.aws4.kms",
     "aws_launch_template": "mxgraph.aws4.ec2",
     "aws_lb_listener": "mxgraph.aws4.elastic load balancing",
     "aws_lb_target_group": "mxgraph.aws4.elastic load balancing",
-    "aws_macie2_account": "mxgraph.aws4.macie",
-    "aws_media_convert_queue": "mxgraph.aws4.elemental mediaconvert",
-    "aws_media_live_channel": "mxgraph.aws4.elemental medialive",
-    "aws_media_package_channel": "mxgraph.aws4.elemental mediapackage",
-    "aws_media_store_container": "mxgraph.aws4.elemental mediastore",
-    "aws_network_acl": "mxgraph.aws4.network access control list",
-    "aws_network_acl_rule": "mxgraph.aws4.network access control list",
-    "aws_network_interface": "mxgraph.aws4.elastic network interface",
-    "aws_qldb_ledger": "mxgraph.aws4.qldb",
-    "aws_ram_resource_share": "mxgraph.aws4.resource access manager",
     "aws_scheduler_schedule": "mxgraph.aws4.eventbridge scheduler",
-    "aws_ses_configuration_set": "mxgraph.aws4.simple email service",
-    "aws_ses_email_identity": "mxgraph.aws4.simple email service",
-    "aws_sfn_activity": "mxgraph.aws4.step functions",
-    "aws_ssm_parameter": "mxgraph.aws4.systems manager parameter store",
-    "aws_ssm_document": "mxgraph.aws4.systems manager documents",
-    "aws_ssm_maintenance_window": "mxgraph.aws4.systems manager maintenance windows",
-    "aws_ssm_patch_baseline": "mxgraph.aws4.systems manager patch manager",
-    "aws_ssoadmin_permission_set": "mxgraph.aws4.iam identity center",
-    "aws_transfer_user": "mxgraph.aws4.transfer family",
-    "aws_wafregional_web_acl": "mxgraph.aws4.waf",
-    "aws_wafv2_ip_set": "mxgraph.aws4.waf",
+    "aws_egress_only_internet_gateway": "mxgraph.aws4.internet gateway",
     "aws_ce_cost_category": "mxgraph.aws4.cost explorer",
     "aws_cur_report_definition": "mxgraph.aws4.cost and usage report",
-    "aws_egress_only_internet_gateway": "mxgraph.aws4.internet gateway",
 }
 
+# Azure maps to img/lib/azure2/ SVG paths, NOT stencil names.
 AZURE_OVERRIDES = {
-    "azurerm_kubernetes_cluster": "mxgraph.azure.Kubernetes Service",
-    "azurerm_virtual_machine": "mxgraph.azure.Virtual Machine",
-    "azurerm_linux_virtual_machine": "mxgraph.azure.Virtual Machine",
-    "azurerm_windows_virtual_machine": "mxgraph.azure.Virtual Machine",
-    "azurerm_virtual_machine_scale_set": "mxgraph.azure.VM Scale Set",
-    "azurerm_function_app": "mxgraph.azure.Azure Function",
-    "azurerm_app_service": "mxgraph.azure.App Service - Web App",
-    "azurerm_app_service_plan": "mxgraph.azure.App Service Plan",
-    "azurerm_container_registry": "mxgraph.azure.Azure Container Registry",
-    "azurerm_container_group": "mxgraph.azure.Azure Container Instance",
-    "azurerm_batch_account": "mxgraph.azure.Azure Batch",
-    "azurerm_service_fabric_cluster": "mxgraph.azure.Service Fabric",
-    "azurerm_application_gateway": "mxgraph.azure.Application Gateway",
-    "azurerm_lb": "mxgraph.azure.Azure Load Balancer",
-    "azurerm_firewall": "mxgraph.azure.Azure Firewall",
-    "azurerm_virtual_network": "mxgraph.azure.Virtual Network",
-    "azurerm_subnet": "mxgraph.azure.Subnet",
-    "azurerm_network_security_group": "mxgraph.azure.Network Security Group",
-    "azurerm_public_ip": "mxgraph.azure.Azure Load Balancer",
-    "azurerm_dns_zone": "mxgraph.azure.DNS Zone",
-    "azurerm_private_dns_zone": "mxgraph.azure.DNS Zone",
-    "azurerm_cdn_endpoint": "mxgraph.azure.CDN",
-    "azurerm_frontdoor": "mxgraph.azure.Azure Front Door",
-    "azurerm_express_route_circuit": "mxgraph.azure.ExpressRoute",
-    "azurerm_virtual_network_gateway": "mxgraph.azure.Azure VPN Gateway",
-    "azurerm_traffic_manager_profile": "mxgraph.azure.Azure Traffic Manager",
-    "azurerm_private_endpoint": "mxgraph.azure.Private Endpoint",
-    "azurerm_sql_server": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_mssql_server": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_mssql_database": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_cosmosdb_account": "mxgraph.azure.Azure Cosmos DB",
-    "azurerm_mysql_server": "mxgraph.azure.MySQL Database",
-    "azurerm_postgresql_server": "mxgraph.azure.PostgreSQL Database",
-    "azurerm_redis_cache": "mxgraph.azure.Azure Redis Cache",
-    "azurerm_storage_account": "mxgraph.azure.Storage",
-    "azurerm_storage_blob": "mxgraph.azure.Storage Blob",
-    "azurerm_key_vault": "mxgraph.azure.Azure Key Vault",
-    "azurerm_resource_group": "mxgraph.azure.Azure Resource Group",
-    "azurerm_log_analytics_workspace": "mxgraph.azure.Azure Log Analytics",
-    "azurerm_eventhub_namespace": "mxgraph.azure.Azure Event Hub",
-    "azurerm_servicebus_namespace": "mxgraph.azure.Azure Service Bus",
-    "azurerm_logic_app_workflow": "mxgraph.azure.Azure Logic App",
-    "azurerm_api_management": "mxgraph.azure.Azure API Management",
-    "azurerm_signalr_service": "mxgraph.azure.Azure SignalR Service",
-    "azurerm_monitor_action_group": "mxgraph.azure.Azure Monitor",
-    "azurerm_automation_account": "mxgraph.azure.Azure Automation",
-    "azurerm_recovery_services_vault": "mxgraph.azure.Azure Site Recovery",
-    "azurerm_data_factory": "mxgraph.azure.Azure Data Factory",
-    "azurerm_databricks_workspace": "mxgraph.azure.Azure Databricks",
-    "azurerm_synapse_workspace": "mxgraph.azure.Azure Synapse Analytics",
-    "azurerm_machine_learning_workspace": "mxgraph.azure.Azure Machine Learning",
-    "azurerm_cognitive_account": "mxgraph.azure.Azure Cognitive Services",
-    "azurerm_bot_service_azure_bot": "mxgraph.azure.Azure Bot Service",
-    "azurerm_iothub": "mxgraph.azure.Azure IoT Hub",
-    "azurerm_notification_hub": "mxgraph.azure.Azure Notification Hub",
-    "azurerm_stream_analytics_job": "mxgraph.azure.Azure Stream Analytics",
-    "azurerm_hdinsight_hadoop_cluster": "mxgraph.azure.Azure HDInsight",
-    "azurerm_search_service": "mxgraph.azure.Azure Search",
-    "azurerm_policy_definition": "mxgraph.azure.Azure Policy",
-    "azurerm_availability_set": "mxgraph.azure.Availability Set",
-    # LLM-matched: remaining Azure terraform-style types
-    "azurerm_active_directory_domain_service": "mxgraph.azure.Azure Active Directory",
-    "azurerm_analysis_services_server": "mxgraph.azure.Azure Analysis Services",
-    "azurerm_api_management_api": "mxgraph.azure.Azure API Management",
-    "azurerm_app_configuration": "mxgraph.azure.Azure App Configuration",
-    "azurerm_app_service_certificate": "mxgraph.azure.App Service - Web App",
-    "azurerm_app_service_environment": "mxgraph.azure.App Service Environment",
-    "azurerm_app_service_mobile": "mxgraph.azure.App Service - Mobile",
-    "azurerm_application_insights": "mxgraph.azure.Application Insights",
-    "azurerm_application_security_group": "mxgraph.azure.Network Security Group",
-    "azurerm_backup_vault": "mxgraph.azure.Azure Site Recovery",
-    "azurerm_batch_pool": "mxgraph.azure.Azure Batch",
-    "azurerm_blockchain_member": "mxgraph.azure.Azure Blockchain Service",
-    "azurerm_cdn_profile": "mxgraph.azure.CDN",
-    "azurerm_container_app": "mxgraph.azure.Azure Container Instance",
-    "azurerm_data_catalog": "mxgraph.azure.Azure Data Catalog",
-    "azurerm_data_factory_pipeline": "mxgraph.azure.Azure Data Factory",
-    "azurerm_data_lake_store": "mxgraph.azure.Azure Data Lake",
-    "azurerm_devtest_lab": "mxgraph.azure.Azure DevTest Lab",
-    "azurerm_devtest_virtual_network": "mxgraph.azure.Azure DevTest Lab",
-    "azurerm_digital_twins_instance": "mxgraph.azure.Azure Digital Twins",
-    "azurerm_eventgrid_domain": "mxgraph.azure.Azure Event Grid Domain",
-    "azurerm_eventgrid_event_subscription": "mxgraph.azure.Azure Event Grid",
-    "azurerm_eventgrid_topic": "mxgraph.azure.Azure Event Grid Topic",
-    "azurerm_eventhub": "mxgraph.azure.Azure Event Hub",
-    "azurerm_healthcare_service": "mxgraph.azure.Azure API for FHIR",
-    "azurerm_image": "mxgraph.azure.Virtual Machine",
-    "azurerm_iotcentral_application": "mxgraph.azure.Azure IoT Central",
-    "azurerm_iothub_dps": "mxgraph.azure.Azure IoT Hub",
-    "azurerm_key_vault_key": "mxgraph.azure.Azure Key Vault",
-    "azurerm_key_vault_secret": "mxgraph.azure.Azure Key Vault",
-    "azurerm_kubernetes_cluster_node_pool": "mxgraph.azure.Kubernetes Service",
-    "azurerm_kusto_cluster": "mxgraph.azure.Azure Data Explorer",
-    "azurerm_linux_function_app": "mxgraph.azure.Azure Function",
-    "azurerm_linux_virtual_machine_scale_set": "mxgraph.azure.VM Scale Set",
-    "azurerm_linux_web_app": "mxgraph.azure.App Service - Web App",
-    "azurerm_local_network_gateway": "mxgraph.azure.Azure VPN Gateway",
-    "azurerm_logic_app_action_custom": "mxgraph.azure.Azure Logic App",
-    "azurerm_managed_disk": "mxgraph.azure.Azure Managed Disk",
-    "azurerm_management_group": "mxgraph.azure.Azure Resource Group",
-    "azurerm_maps_account": "mxgraph.azure.Azure Maps",
-    "azurerm_mariadb_server": "mxgraph.azure.MySQL Database",
-    "azurerm_media_services_account": "mxgraph.azure.Azure Media Services",
-    "azurerm_monitor_activity_log_alert": "mxgraph.azure.Azure Monitor",
-    "azurerm_monitor_autoscale_setting": "mxgraph.azure.Azure Monitor",
-    "azurerm_monitor_diagnostic_setting": "mxgraph.azure.Azure Monitor",
-    "azurerm_monitor_metric_alert": "mxgraph.azure.Azure Monitor",
-    "azurerm_mssql_elasticpool": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_mssql_managed_instance": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_mssql_virtual_machine": "mxgraph.azure.SQL Database SQL Azure",
-    "azurerm_mysql_flexible_server": "mxgraph.azure.MySQL Database",
-    "azurerm_netapp_account": "mxgraph.azure.Azure NetApp Files",
-    "azurerm_netapp_volume": "mxgraph.azure.Azure NetApp Files",
-    "azurerm_network_ddos_protection_plan": "mxgraph.azure.Azure DDoS Protection",
-    "azurerm_network_interface": "mxgraph.azure.Virtual Network",
-    "azurerm_network_watcher": "mxgraph.azure.Azure Network Watcher",
-    "azurerm_policy_assignment": "mxgraph.azure.Azure Policy",
-    "azurerm_postgresql_flexible_server": "mxgraph.azure.PostgreSQL Database",
-    "azurerm_powerbi_embedded": "mxgraph.azure.Azure Power BI Embedded",
-    "azurerm_relay_namespace": "mxgraph.azure.Azure Relay",
-    "azurerm_role_assignment": "mxgraph.azure.Azure Active Directory",
-    "azurerm_role_definition": "mxgraph.azure.Azure Active Directory",
-    "azurerm_route": "mxgraph.azure.Route Table",
-    "azurerm_route_table": "mxgraph.azure.Route Table",
-    "azurerm_security_center_contact": "mxgraph.azure.Azure Security Center",
-    "azurerm_security_center_subscription_pricing": "mxgraph.azure.Azure Security Center",
-    "azurerm_sentinel_alert_rule": "mxgraph.azure.Azure Sentinel",
-    "azurerm_sentinel_data_connector": "mxgraph.azure.Azure Sentinel",
-    "azurerm_service_plan": "mxgraph.azure.App Service Plan",
-    "azurerm_shared_image": "mxgraph.azure.Virtual Machine",
-    "azurerm_shared_image_gallery": "mxgraph.azure.Virtual Machine",
-    "azurerm_site_recovery_fabric": "mxgraph.azure.Azure Site Recovery",
-    "azurerm_site_recovery_replicated_vm": "mxgraph.azure.Azure Site Recovery",
-    "azurerm_snapshot": "mxgraph.azure.Azure Managed Disk",
-    "azurerm_spring_cloud_app": "mxgraph.azure.Azure Spring Cloud",
-    "azurerm_static_site": "mxgraph.azure.Static App",
-    "azurerm_virtual_wan": "mxgraph.azure.Azure Virtual WAN",
-    "azurerm_vpn_gateway": "mxgraph.azure.Azure VPN Gateway",
-    "azurerm_windows_function_app": "mxgraph.azure.Azure Function",
-    "azurerm_windows_virtual_machine_scale_set": "mxgraph.azure.VM Scale Set",
-    "azurerm_windows_web_app": "mxgraph.azure.App Service - Web App",
-}
-
-GCP_OVERRIDES = {
-    "google_compute_instance": "mxgraph.gcp2.Compute Engine",
-    "google_compute_instance_template": "mxgraph.gcp2.Compute Engine",
-    "google_compute_instance_group_manager": "mxgraph.gcp2.Compute Engine",
-    "google_container_cluster": "mxgraph.gcp2.Kubernetes logo",
-    "google_container_node_pool": "mxgraph.gcp2.Kubernetes logo",
-    "google_cloudfunctions_function": "mxgraph.gcp2.Cloud Functions",
-    "google_cloudfunctions2_function": "mxgraph.gcp2.Cloud Functions",
-    "google_cloud_run_service": "mxgraph.gcp2.Cloud Run",
-    "google_cloud_run_v2_service": "mxgraph.gcp2.Cloud Run",
-    "google_app_engine_application": "mxgraph.gcp2.App Engine",
-    "google_compute_network": "mxgraph.gcp2.virtual private cloud",
-    "google_compute_subnetwork": "mxgraph.gcp2.virtual private cloud",
-    "google_compute_firewall": "mxgraph.gcp2.Cloud Firewall Rules",
-    "google_compute_router": "mxgraph.gcp2.Cloud Router",
-    "google_compute_forwarding_rule": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_compute_target_http_proxy": "mxgraph.gcp2.HTTPS Load Balancer",
-    "google_compute_target_https_proxy": "mxgraph.gcp2.HTTPS Load Balancer",
-    "google_compute_url_map": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_compute_backend_service": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_dns_managed_zone": "mxgraph.gcp2.Cloud DNS",
-    "google_compute_global_address": "mxgraph.gcp2.Cloud External IP Addresses",
-    "google_storage_bucket": "mxgraph.gcp2.Cloud Storage",
-    "google_sql_database_instance": "mxgraph.gcp2.Cloud SQL",
-    "google_spanner_instance": "mxgraph.gcp2.Cloud Spanner",
-    "google_bigtable_instance": "mxgraph.gcp2.Cloud Bigtable",
-    "google_firestore_database": "mxgraph.gcp2.Cloud Firestore",
-    "google_redis_instance": "mxgraph.gcp2.Cloud Memorystore",
-    "google_bigquery_dataset": "mxgraph.gcp2.BigQuery",
-    "google_bigquery_table": "mxgraph.gcp2.BigQuery",
-    "google_dataflow_job": "mxgraph.gcp2.Cloud Dataflow",
-    "google_dataproc_cluster": "mxgraph.gcp2.Cloud Dataproc",
-    "google_pubsub_topic": "mxgraph.gcp2.Cloud PubSub",
-    "google_pubsub_subscription": "mxgraph.gcp2.Cloud PubSub",
-    "google_composer_environment": "mxgraph.gcp2.Cloud Composer",
-    "google_kms_key_ring": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_secret_manager_secret": "mxgraph.gcp2.secret manager",
-    "google_service_account": "mxgraph.gcp2.Cloud IAM",
-    "google_artifact_registry_repository": "mxgraph.gcp2.Artifact Registry",
-    "google_cloudbuild_trigger": "mxgraph.gcp2.Cloud Build",
-    "google_monitoring_alert_policy": "mxgraph.gcp2.Cloud Monitoring",
-    "google_logging_metric": "mxgraph.gcp2.Cloud Logging",
-    "google_project_iam_member": "mxgraph.gcp2.Cloud IAM",
-    # LLM-matched: remaining GCP terraform-style types
-    "google_alloydb_cluster": "mxgraph.gcp2.Cloud SQL",
-    "google_alloydb_instance": "mxgraph.gcp2.Cloud SQL",
-    "google_api_gateway_api": "mxgraph.gcp2.Cloud Endpoints",
-    "google_api_gateway_api_config": "mxgraph.gcp2.Cloud Endpoints",
-    "google_api_gateway_gateway": "mxgraph.gcp2.Cloud Endpoints",
-    "google_apigee_envgroup": "mxgraph.gcp2.Apigee",
-    "google_apigee_environment": "mxgraph.gcp2.Apigee",
-    "google_apigee_instance": "mxgraph.gcp2.Apigee",
-    "google_apigee_organization": "mxgraph.gcp2.Apigee",
-    "google_artifact_registry_repository_iam_member": "mxgraph.gcp2.Artifact Registry",
-    "google_batch_job": "mxgraph.gcp2.Compute Engine",
-    "google_bigtable_table": "mxgraph.gcp2.Cloud Bigtable",
-    "google_binary_authorization_attestor": "mxgraph.gcp2.Binary Authorization",
-    "google_binary_authorization_policy": "mxgraph.gcp2.Binary Authorization",
-    "google_certificate_manager_certificate": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_cloudbuild_worker_pool": "mxgraph.gcp2.Cloud Build",
-    "google_clouddeploy_delivery_pipeline": "mxgraph.gcp2.Cloud Deploy",
-    "google_clouddeploy_target": "mxgraph.gcp2.Cloud Deploy",
-    "google_compute_backend_bucket": "mxgraph.gcp2.Cloud Storage",
-    "google_compute_disk": "mxgraph.gcp2.Persistent Disk",
-    "google_compute_external_vpn_gateway": "mxgraph.gcp2.Cloud VPN",
-    "google_compute_global_forwarding_rule": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_compute_ha_vpn_gateway": "mxgraph.gcp2.Cloud VPN",
-    "google_compute_health_check": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_compute_image": "mxgraph.gcp2.Compute Engine",
-    "google_compute_instance_group": "mxgraph.gcp2.Compute Engine",
-    "google_compute_interconnect_attachment": "mxgraph.gcp2.Cloud Interconnect",
-    "google_compute_machine_image": "mxgraph.gcp2.Compute Engine",
-    "google_compute_node_group": "mxgraph.gcp2.Compute Engine",
-    "google_compute_node_template": "mxgraph.gcp2.Compute Engine",
-    "google_compute_region_disk": "mxgraph.gcp2.Persistent Disk",
-    "google_compute_region_health_check": "mxgraph.gcp2.Cloud Load Balancing",
-    "google_compute_region_instance_group_manager": "mxgraph.gcp2.Compute Engine",
-    "google_compute_reservation": "mxgraph.gcp2.Compute Engine",
-    "google_compute_resource_policy": "mxgraph.gcp2.Compute Engine",
-    "google_compute_router_nat": "mxgraph.gcp2.Cloud NAT",
-    "google_compute_security_policy": "mxgraph.gcp2.Cloud Armor",
-    "google_compute_service_attachment": "mxgraph.gcp2.virtual private cloud",
-    "google_compute_snapshot": "mxgraph.gcp2.Persistent Disk",
-    "google_compute_target_pool": "mxgraph.gcp2.Network Load Balancer",
-    "google_compute_vpn_gateway": "mxgraph.gcp2.Cloud VPN",
-    "google_compute_vpn_tunnel": "mxgraph.gcp2.Cloud VPN",
-    "google_data_catalog_entry": "mxgraph.gcp2.Data Catalog",
-    "google_data_catalog_tag_template": "mxgraph.gcp2.Data Catalog",
-    "google_data_fusion_instance": "mxgraph.gcp2.Cloud Data Fusion",
-    "google_data_loss_prevention_inspect_template": "mxgraph.gcp2.Cloud Data Loss Prevention API",
-    "google_data_loss_prevention_job_trigger": "mxgraph.gcp2.Cloud Data Loss Prevention API",
-    "google_dataplex_asset": "mxgraph.gcp2.Cloud Dataflow",
-    "google_dataplex_lake": "mxgraph.gcp2.Cloud Dataflow",
-    "google_dataplex_zone": "mxgraph.gcp2.Cloud Dataflow",
-    "google_dataproc_job": "mxgraph.gcp2.Cloud Dataproc",
-    "google_dataproc_metastore_service": "mxgraph.gcp2.Cloud Dataproc",
-    "google_datastream_connection_profile": "mxgraph.gcp2.Cloud Dataflow",
-    "google_datastream_stream": "mxgraph.gcp2.Cloud Dataflow",
-    "google_deployment_manager_deployment": "mxgraph.gcp2.Cloud Deployment Manager",
-    "google_dialogflow_agent": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_cx_agent": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_cx_flow": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_cx_intent": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_cx_page": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_entity_type": "mxgraph.gcp2.Dialogflow",
-    "google_dialogflow_intent": "mxgraph.gcp2.Dialogflow",
-    "google_dns_record_set": "mxgraph.gcp2.Cloud DNS",
-    "google_document_ai_processor": "mxgraph.gcp2.Document AI",
-    "google_endpoints_service": "mxgraph.gcp2.Cloud Endpoints",
-    "google_eventarc_trigger": "mxgraph.gcp2.Cloud PubSub",
-    "google_filestore_instance": "mxgraph.gcp2.Filestore",
-    "google_firestore_document": "mxgraph.gcp2.Cloud Firestore",
-    "google_gke_hub_feature": "mxgraph.gcp2.Kubernetes logo",
-    "google_gke_hub_feature_membership": "mxgraph.gcp2.Kubernetes logo",
-    "google_gke_hub_fleet": "mxgraph.gcp2.Kubernetes logo",
-    "google_gke_hub_membership": "mxgraph.gcp2.Kubernetes logo",
-    "google_gke_hub_namespace": "mxgraph.gcp2.Kubernetes logo",
-    "google_gke_hub_scope": "mxgraph.gcp2.Kubernetes logo",
-    "google_healthcare_dataset": "mxgraph.gcp2.Cloud Healthcare API",
-    "google_healthcare_fhir_store": "mxgraph.gcp2.Cloud Healthcare API",
-    "google_healthcare_hl7_v2_store": "mxgraph.gcp2.Cloud Healthcare API",
-    "google_iap_client": "mxgraph.gcp2.Cloud IAM",
-    "google_iap_web_iam_binding": "mxgraph.gcp2.Cloud IAM",
-    "google_iap_web_iam_member": "mxgraph.gcp2.Cloud IAM",
-    "google_identity_platform_config": "mxgraph.gcp2.Cloud IAM",
-    "google_identity_platform_tenant": "mxgraph.gcp2.Cloud IAM",
-    "google_kms_crypto_key": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_kms_crypto_key_iam_member": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_ml_engine_model": "mxgraph.gcp2.AI Platform",
-    "google_monitoring_dashboard": "mxgraph.gcp2.Cloud Monitoring",
-    "google_monitoring_group": "mxgraph.gcp2.Cloud Monitoring",
-    "google_monitoring_metric_descriptor": "mxgraph.gcp2.Cloud Monitoring",
-    "google_monitoring_notification_channel": "mxgraph.gcp2.Cloud Monitoring",
-    "google_monitoring_uptime_check_config": "mxgraph.gcp2.Cloud Monitoring",
-    "google_notebooks_instance": "mxgraph.gcp2.AI Platform",
-    "google_notebooks_runtime": "mxgraph.gcp2.AI Platform",
-    "google_privateca_certificate": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_privateca_certificate_authority": "mxgraph.gcp2.Cloud Key Management Service",
-    "google_project": "mxgraph.gcp2.Cloud IAM",
-    "google_project_iam_binding": "mxgraph.gcp2.Cloud IAM",
-    "google_project_iam_policy": "mxgraph.gcp2.Cloud IAM",
-    "google_project_service": "mxgraph.gcp2.Cloud APIs",
-    "google_pubsub_schema": "mxgraph.gcp2.Cloud PubSub",
-    "google_secret_manager_secret_version": "mxgraph.gcp2.secret manager",
-    "google_sourcerepo_repository": "mxgraph.gcp2.Cloud Source Repositories",
-    "google_spanner_database": "mxgraph.gcp2.Cloud Spanner",
-    "google_sql_database": "mxgraph.gcp2.Cloud SQL",
-    "google_sql_user": "mxgraph.gcp2.Cloud SQL",
-    "google_vertex_ai_dataset": "mxgraph.gcp2.Vertex AI",
-    "google_vertex_ai_endpoint": "mxgraph.gcp2.Vertex AI",
-    "google_vertex_ai_featurestore": "mxgraph.gcp2.Vertex AI",
-    "google_vertex_ai_metadata_store": "mxgraph.gcp2.Vertex AI",
-    "google_vertex_ai_model": "mxgraph.gcp2.Vertex AI",
-    "google_vertex_ai_tensorboard": "mxgraph.gcp2.Vertex AI",
-    "google_workflows_workflow": "mxgraph.gcp2.Workflows",
-    "google_workstations_workstation": "mxgraph.gcp2.Compute Engine",
-    "google_workstations_workstation_cluster": "mxgraph.gcp2.Compute Engine",
-    "google_workstations_workstation_config": "mxgraph.gcp2.Compute Engine",
+    "azurerm_api_management": "img/lib/azure2/integration/API_Management_Services.svg",
+    "azurerm_app_service": "img/lib/azure2/compute/App_Services.svg",
+    "azurerm_application_gateway": "img/lib/azure2/networking/Application_Gateways.svg",
+    "azurerm_application_insights": "img/lib/azure2/devops/Application_Insights.svg",
+    "azurerm_automation_account": "img/lib/azure2/management_governance/Automation_Accounts.svg",
+    "azurerm_availability_set": "img/lib/azure2/compute/Availability_Sets.svg",
+    "azurerm_cdn_endpoint": "img/lib/azure2/networking/CDN_Profiles.svg",
+    "azurerm_container_group": "img/lib/azure2/compute/Container_Instances.svg",
+    "azurerm_container_registry": "img/lib/azure2/containers/Container_Registries.svg",
+    "azurerm_cosmosdb_account": "img/lib/azure2/databases/Azure_Cosmos_DB.svg",
+    "azurerm_data_factory": "img/lib/azure2/databases/Data_Factory.svg",
+    "azurerm_dns_zone": "img/lib/azure2/networking/DNS_Zones.svg",
+    "azurerm_eventhub_namespace": "img/lib/azure2/analytics/Event_Hubs.svg",
+    "azurerm_express_route_circuit": "img/lib/azure2/networking/ExpressRoute_Circuits.svg",
+    "azurerm_firewall": "img/lib/azure2/networking/Firewalls.svg",
+    "azurerm_frontdoor": "img/lib/azure2/networking/Front_Doors.svg",
+    "azurerm_function_app": "img/lib/azure2/compute/Function_Apps.svg",
+    "azurerm_iothub": "img/lib/azure2/iot/IoT_Hub.svg",
+    "azurerm_key_vault": "img/lib/azure2/security/Key_Vaults.svg",
+    "azurerm_kubernetes_cluster": "img/lib/azure2/compute/Kubernetes_Services.svg",
+    "azurerm_lb": "img/lib/azure2/networking/Load_Balancers.svg",
+    "azurerm_linux_function_app": "img/lib/azure2/compute/Function_Apps.svg",
+    "azurerm_linux_virtual_machine": "img/lib/azure2/compute/Virtual_Machine.svg",
+    "azurerm_linux_web_app": "img/lib/azure2/compute/App_Services.svg",
+    "azurerm_log_analytics_workspace": "img/lib/azure2/analytics/Log_Analytics_Workspaces.svg",
+    "azurerm_logic_app_workflow": "img/lib/azure2/integration/Logic_Apps.svg",
+    "azurerm_managed_disk": "img/lib/azure2/compute/Disks.svg",
+    "azurerm_monitor_action_group": "img/lib/azure2/management_governance/Monitor.svg",
+    "azurerm_mssql_database": "img/lib/azure2/databases/SQL_Database.svg",
+    "azurerm_mssql_server": "img/lib/azure2/databases/SQL_Server.svg",
+    "azurerm_mysql_flexible_server": "img/lib/azure2/databases/Azure_Database_MySQL_Server.svg",
+    "azurerm_mysql_server": "img/lib/azure2/databases/Azure_Database_MySQL_Server.svg",
+    "azurerm_network_interface": "img/lib/azure2/networking/Network_Interfaces.svg",
+    "azurerm_network_security_group": "img/lib/azure2/networking/Network_Security_Groups.svg",
+    "azurerm_postgresql_flexible_server": "img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg",
+    "azurerm_postgresql_server": "img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg",
+    "azurerm_private_dns_zone": "img/lib/azure2/networking/Private_DNS_Zones.svg",
+    "azurerm_private_endpoint": "img/lib/azure2/networking/Private_Endpoints.svg",
+    "azurerm_public_ip": "img/lib/azure2/networking/Public_IP_Addresses.svg",
+    "azurerm_recovery_services_vault": "img/lib/azure2/management_governance/Recovery_Services_Vaults.svg",
+    "azurerm_redis_cache": "img/lib/azure2/databases/Cache_Redis.svg",
+    "azurerm_resource_group": "img/lib/azure2/general/Resource_Groups.svg",
+    "azurerm_route_table": "img/lib/azure2/networking/Route_Tables.svg",
+    "azurerm_service_fabric_cluster": "img/lib/azure2/compute/Service_Fabric_Clusters.svg",
+    "azurerm_servicebus_namespace": "img/lib/azure2/integration/Service_Bus.svg",
+    "azurerm_sql_server": "img/lib/azure2/databases/SQL_Server.svg",
+    "azurerm_storage_account": "img/lib/azure2/storage/Storage_Accounts.svg",
+    "azurerm_subnet": "img/lib/azure2/networking/Subnets.svg",
+    "azurerm_traffic_manager_profile": "img/lib/azure2/networking/Traffic_Manager_Profiles.svg",
+    "azurerm_virtual_machine": "img/lib/azure2/compute/Virtual_Machine.svg",
+    "azurerm_virtual_machine_scale_set": "img/lib/azure2/compute/VM_Scale_Sets.svg",
+    "azurerm_virtual_network": "img/lib/azure2/networking/Virtual_Networks.svg",
+    "azurerm_virtual_network_gateway": "img/lib/azure2/networking/Virtual_Network_Gateways.svg",
+    "azurerm_windows_function_app": "img/lib/azure2/compute/Function_Apps.svg",
+    "azurerm_windows_virtual_machine": "img/lib/azure2/compute/Virtual_Machine.svg",
+    "azurerm_windows_web_app": "img/lib/azure2/compute/App_Services.svg",
+    "tv_azurerm_internet": "img/lib/azure2/general/Globe.svg",
+    "tv_azurerm_users": "img/lib/azure2/identity/Users.svg",
 }
 
 
 def match_aws(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
     """Match AWS resource aliases to aws4 stencil shape names."""
-    # Apply manual overrides first
     matched = {k: v for k, v in AWS_OVERRIDES.items() if k in aliases}
 
-    # Build lookup: normalized shape name -> original shape name
     shape_lookup = {_normalize(s): s for s in shapes}
 
     for alias in sorted(aliases.keys()):
         if alias in matched:
             continue
-        # Strip provider prefix to get the service name
         suffix = alias
         for prefix in ("aws_", "tv_aws_"):
             if alias.startswith(prefix):
                 suffix = alias[len(prefix) :]
                 break
 
-        # Try exact normalized match
         norm = _normalize(suffix)
         if norm in shape_lookup:
             matched[alias] = f"mxgraph.aws4.{shape_lookup[norm]}"
             continue
 
-        # Try common transformations
         candidates = [
             suffix,
             suffix.replace("_", " "),
@@ -627,26 +355,30 @@ def match_aws(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
         if found:
             continue
 
-        # Try partial match: find shapes containing the key service word
         parts = suffix.split("_")
         for i in range(len(parts), 0, -1):
             partial = _normalize("".join(parts[:i]))
             if partial in shape_lookup:
                 matched[alias] = f"mxgraph.aws4.{shape_lookup[partial]}"
-                found = True
                 break
-        # If still not found, skip (will use PNG fallback)
 
     return matched
 
 
-def match_azure(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
-    """Match Azure resource aliases to azure stencil shape names."""
-    # Apply manual overrides first
+def match_azure(
+    aliases: Dict[str, str], azure2_svgs: Dict[str, List[str]]
+) -> Dict[str, str]:
+    """Match Azure resource aliases to img/lib/azure2/ SVG paths."""
+    # Apply overrides first
     matched = {k: v for k, v in AZURE_OVERRIDES.items() if k in aliases}
 
-    # Build lookup from stencil shapes
-    shape_lookup = {_normalize(s): s for s in shapes}
+    # Build lookup: normalized SVG basename (without extension) -> full path
+    svg_lookup: Dict[str, str] = {}
+    for cat, paths in azure2_svgs.items():
+        for path in paths:
+            basename = path.rsplit("/", 1)[-1].replace(".svg", "")
+            norm = _normalize(basename)
+            svg_lookup[norm] = path
 
     for alias in sorted(aliases.keys()):
         if alias in matched:
@@ -657,85 +389,25 @@ def match_azure(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
                 suffix = alias[len(prefix) :]
                 break
 
+        # Try normalized suffix against SVG basenames
         norm = _normalize(suffix)
-        if norm in shape_lookup:
-            matched[alias] = f"mxgraph.azure.{shape_lookup[norm]}"
+        if norm in svg_lookup:
+            matched[alias] = svg_lookup[norm]
             continue
 
+        # Try common transformations
         candidates = [
             suffix.replace("_", ""),
             suffix.replace("_", " "),
-            "azure " + suffix.replace("_", " "),
-            suffix.replace("_group", "").replace("_", " "),
-            suffix.replace("_cluster", "").replace("_", " "),
-            suffix.replace("_server", "").replace("_", " "),
-            suffix.replace("_account", "").replace("_", " "),
+            suffix.replace("_group", "").replace("_", ""),
+            suffix.replace("_cluster", "").replace("_", ""),
+            suffix.replace("_server", "").replace("_", ""),
         ]
         found = False
         for cand in candidates:
             cn = _normalize(cand)
-            if cn in shape_lookup:
-                matched[alias] = f"mxgraph.azure.{shape_lookup[cn]}"
-                found = True
-                break
-        if found:
-            continue
-
-        parts = suffix.split("_")
-        for i in range(len(parts), 0, -1):
-            partial = _normalize("".join(parts[:i]))
-            if partial in shape_lookup:
-                matched[alias] = f"mxgraph.azure.{shape_lookup[partial]}"
-                found = True
-                break
-
-    return matched
-
-
-def match_gcp(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
-    """Match GCP resource aliases to gcp2 stencil shape names."""
-    # Apply manual overrides first
-    matched = {k: v for k, v in GCP_OVERRIDES.items() if k in aliases}
-
-    shape_lookup = {_normalize(s): s for s in shapes}
-
-    for alias in sorted(aliases.keys()):
-        if alias in matched:
-            continue
-        suffix = alias
-        for prefix in ("google_", "tv_gcp_"):
-            if alias.startswith(prefix):
-                suffix = alias[len(prefix) :]
-                break
-
-        norm = _normalize(suffix)
-        if norm in shape_lookup:
-            matched[alias] = f"mxgraph.gcp2.{shape_lookup[norm]}"
-            continue
-
-        candidates = [
-            suffix.replace("_", " "),
-            suffix.replace("_", ""),
-            "cloud " + suffix.replace("_", " "),
-            suffix.replace("_instance", "").replace("_", " "),
-            suffix.replace("_cluster", "").replace("_", " "),
-            suffix.replace("_bucket", "").replace("_", " "),
-        ]
-        found = False
-        for cand in candidates:
-            cn = _normalize(cand)
-            if cn in shape_lookup:
-                matched[alias] = f"mxgraph.gcp2.{shape_lookup[cn]}"
-                found = True
-                break
-        if found:
-            continue
-
-        parts = suffix.split("_")
-        for i in range(len(parts), 0, -1):
-            partial = _normalize("".join(parts[:i]))
-            if partial in shape_lookup:
-                matched[alias] = f"mxgraph.gcp2.{shape_lookup[partial]}"
+            if cn in svg_lookup:
+                matched[alias] = svg_lookup[cn]
                 found = True
                 break
 
@@ -753,12 +425,26 @@ def write_map_file(
 ):
     """Write a shape map Python file."""
     out_path = OUTPUT_DIR / f"drawio_shape_map_{provider}.py"
+
+    # Determine style description based on provider
+    if provider == "azure":
+        style_desc = (
+            "Uses img/lib/azure2/ SVG image paths from draw.io.\n"
+            "Style: image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=<path>;"
+        )
+    else:
+        style_desc = (
+            f"Maps terraform resource types to mxgraph.{provider}4.* stencil shapes."
+        )
+
     lines = [
         f'"""draw.io shape mapping for {provider.upper()} resource types.',
         "",
         f"Auto-generated by scripts/generate_drawio_shape_maps.py",
         f"Source: {note}",
         f"Total mappings: {len(mapping)}",
+        "",
+        style_desc,
         '"""',
         "",
         f"{var_name} = {{",
@@ -779,38 +465,29 @@ def main():
     print("=== Discovering TerraVision resource class aliases ===")
     aws_aliases = discover_resource_aliases("aws")
     azure_aliases = discover_resource_aliases("azure")
-    gcp_aliases = discover_resource_aliases("gcp")
     print(f"  AWS: {len(aws_aliases)} aliases")
     print(f"  Azure: {len(azure_aliases)} aliases")
-    print(f"  GCP: {len(gcp_aliases)} aliases")
+    print(f"  GCP: skipped (uses base64-embedded local PNGs)")
 
     print("\n=== Fetching draw.io shape libraries ===")
-    aws4_shapes = fetch_stencil_shapes("aws4.xml")
-    print(f"  AWS4 stencils: {len(aws4_shapes)} shapes")
+    aws4_shapes = fetch_sidebar_aws4_shapes()
+    print(f"  AWS4 shapes: {len(aws4_shapes)}")
 
-    azure_shapes = fetch_stencil_shapes("azure.xml")
-    print(f"  Azure stencils: {len(azure_shapes)} shapes")
-
-    gcp2_shapes = fetch_stencil_shapes("gcp2.xml")
-    print(f"  GCP2 stencils: {len(gcp2_shapes)} shapes")
+    azure2_svgs = fetch_azure2_svgs()
+    total_azure_svgs = sum(len(v) for v in azure2_svgs.values())
+    print(f"  Azure2 SVGs: {total_azure_svgs} across {len(azure2_svgs)} categories")
 
     print("\n=== Matching resource types to shapes ===")
     aws_map = match_aws(aws_aliases, aws4_shapes)
     print(
         f"  AWS: {len(aws_map)}/{len(aws_aliases)} matched "
-        f"({len(aws_aliases) - len(aws_map)} unmapped → PNG fallback)"
+        f"({len(aws_aliases) - len(aws_map)} unmapped)"
     )
 
-    azure_map = match_azure(azure_aliases, azure_shapes)
+    azure_map = match_azure(azure_aliases, azure2_svgs)
     print(
         f"  Azure: {len(azure_map)}/{len(azure_aliases)} matched "
-        f"({len(azure_aliases) - len(azure_map)} unmapped → PNG fallback)"
-    )
-
-    gcp_map = match_gcp(gcp_aliases, gcp2_shapes)
-    print(
-        f"  GCP: {len(gcp_map)}/{len(gcp_aliases)} matched "
-        f"({len(gcp_aliases) - len(gcp_map)} unmapped → PNG fallback)"
+        f"({len(azure_aliases) - len(azure_map)} unmapped)"
     )
 
     print("\n=== Writing shape map files ===")
@@ -818,26 +495,19 @@ def main():
         "aws",
         "DRAWIO_SHAPE_MAP_AWS",
         aws_map,
-        f"jgraph/drawio stencils/aws4.xml ({len(aws4_shapes)} shapes)",
+        f"jgraph/drawio Sidebar-AWS4.js ({len(aws4_shapes)} shapes)",
     )
     write_map_file(
         "azure",
         "DRAWIO_SHAPE_MAP_AZURE",
         azure_map,
-        f"jgraph/drawio stencils/azure.xml ({len(azure_shapes)} shapes)",
-    )
-    write_map_file(
-        "gcp",
-        "DRAWIO_SHAPE_MAP_GCP",
-        gcp_map,
-        f"jgraph/drawio stencils/gcp2.xml ({len(gcp2_shapes)} shapes)",
+        f"jgraph/drawio img/lib/azure2/ ({total_azure_svgs} SVGs)",
     )
 
-    print("\n=== Unmatched aliases (will use PNG fallback) ===")
+    print("\n=== Unmatched aliases (will use fallback) ===")
     for label, aliases, matched in [
         ("AWS", aws_aliases, aws_map),
         ("Azure", azure_aliases, azure_map),
-        ("GCP", gcp_aliases, gcp_map),
     ]:
         unmatched = sorted(set(aliases.keys()) - set(matched.keys()))
         if unmatched:
