@@ -289,6 +289,16 @@ def emit_drawio(
         dx_w = x2 - x1
         dx_h = y2 - y1
 
+        # Add bottom padding for clusters that have label nodes (icons
+        # at bottom) so child containers don't obscure them.
+        has_label_node = any(
+            n.attrs.get("_clusterlabel") == "1"
+            and n.attrs.get("_clusterid") == cluster_name
+            for n in xdot_graph.nodes.values()
+        )
+        if has_label_node:
+            dx_h += 50
+
         cluster_abs_pos[cluster_name] = (abs_x, abs_y)
 
         # draw.io geometry is relative to immediate parent only
@@ -385,12 +395,12 @@ def emit_drawio(
         if not center_style:
             style_str = ";".join(style_parts) + ";"
 
-        # Handle cluster labels — if the label is an HTML table with only
-        # an image (e.g., cloud provider logo), clear the label and emit
-        # the logo as a separate child cell after all clusters are done.
+        # Handle cluster labels — for non-AWS providers, if the label is an
+        # HTML table with only an image (cloud provider logo), clear the text
+        # and emit the logo as a separate child cell after all clusters.
+        # AWS keeps its cluster label text ("AWS Cloud") as-is.
         raw_label = cluster.label or ""
-        if "<IMG" in raw_label.upper() or "<img" in raw_label:
-            # HTML label with embedded image — will be handled as logo below
+        if provider != "aws" and ("<IMG" in raw_label.upper() or "<img" in raw_label):
             label = ""
         else:
             label = _sanitize_label(raw_label)
@@ -415,54 +425,56 @@ def emit_drawio(
         geo.set("as", "geometry")
 
     # ── Cluster logo images (provider logos at bottom of cloud group) ──
-    for cluster_name in sorted_clusters:
-        cluster = xdot_graph.clusters[cluster_name]
-        raw_label = cluster.label or ""
-        if "<IMG" not in raw_label.upper() and "<img" not in raw_label:
-            continue
-        # Extract image path from HTML label
-        img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
-        if not img_match or not os.path.isfile(img_match.group(1)):
-            continue
-        icon_path = img_match.group(1)
-        icon_basename = os.path.basename(icon_path)
-        logo_size = _LOGO_ICON_SIZES.get(icon_basename, (180, 32))
+    # AWS doesn't use provider logos in clusters.
+    if provider != "aws":
+        for cluster_name in sorted_clusters:
+            cluster = xdot_graph.clusters[cluster_name]
+            raw_label = cluster.label or ""
+            if "<IMG" not in raw_label.upper() and "<img" not in raw_label:
+                continue
+            # Extract image path from HTML label
+            img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
+            if not img_match or not os.path.isfile(img_match.group(1)):
+                continue
+            icon_path = img_match.group(1)
+            icon_basename = os.path.basename(icon_path)
+            logo_size = _LOGO_ICON_SIZES.get(icon_basename, (180, 32))
 
-        b64 = _encode_icon_base64(icon_path)
-        logo_id = _next_id()
-        logo_style = (
-            f"shape=image;imageAspect=0;aspect=fixed;"
-            f"verticalLabelPosition=bottom;verticalAlign=top;"
-            f"image=data:image/png,{b64};"
-        )
-        # Position at bottom-left of parent cluster
-        x1, y1, x2, y2 = cluster.bb
-        cluster_w = x2 - x1
-        cluster_h = y2 - y1
-        w_px, h_px = logo_size
-        margin = 15
-        logo_x = margin
-        logo_y = cluster_h - h_px - margin
+            b64 = _encode_icon_base64(icon_path)
+            logo_id = _next_id()
+            logo_style = (
+                f"shape=image;imageAspect=0;aspect=fixed;"
+                f"verticalLabelPosition=bottom;verticalAlign=top;"
+                f"image=data:image/png,{b64};"
+            )
+            # Position at bottom-left of parent cluster
+            x1, y1, x2, y2 = cluster.bb
+            cluster_w = x2 - x1
+            cluster_h = y2 - y1
+            w_px, h_px = logo_size
+            margin = 15
+            logo_x = margin
+            logo_y = cluster_h - h_px - margin
 
-        parent_cid = cluster_cell_ids.get(cluster_name, "1")
-        logo_cell = ET.SubElement(
-            root,
-            "mxCell",
-            id=logo_id,
-            value="",
-            style=logo_style,
-            vertex="1",
-            parent=parent_cid,
-        )
-        logo_geo = ET.SubElement(
-            logo_cell,
-            "mxGeometry",
-            x=f"{logo_x:.1f}",
-            y=f"{logo_y:.1f}",
-            width=f"{w_px:.1f}",
-            height=f"{h_px:.1f}",
-        )
-        logo_geo.set("as", "geometry")
+            parent_cid = cluster_cell_ids.get(cluster_name, "1")
+            logo_cell = ET.SubElement(
+                root,
+                "mxCell",
+                id=logo_id,
+                value="",
+                style=logo_style,
+                vertex="1",
+                parent=parent_cid,
+            )
+            logo_geo = ET.SubElement(
+                logo_cell,
+                "mxGeometry",
+                x=f"{logo_x:.1f}",
+                y=f"{logo_y:.1f}",
+                width=f"{w_px:.1f}",
+                height=f"{h_px:.1f}",
+            )
+            logo_geo.set("as", "geometry")
 
     # ── Nodes ─────────────────────────────────────────────────────────
     footer_label = ""
@@ -642,10 +654,11 @@ def emit_drawio(
         cell_ids[node_name] = cid
 
         style_str, label, w_px, h_px = _build_cluster_label_style(node, shape_map)
+        # Use absolute positioning (parent="1") so icons render on top of
+        # all child containers.  Relative positioning inside clusters
+        # causes icons to be obscured by overlapping child containers.
         parent_id = "1"
         clid = node.attrs.get("_clusterid", "")
-        if clid in cluster_cell_ids:
-            parent_id = cluster_cell_ids[clid]
 
         # Position based on _labelposition relative to parent cluster bounds
         label_pos = node.attrs.get("_labelposition", "bottom-left")
@@ -659,16 +672,19 @@ def emit_drawio(
         if parent_cluster:
             x1, y1, x2, y2 = parent_cluster.bb
             cluster_w = x2 - x1
-            cluster_h = y2 - y1
+            cluster_h = y2 - y1 + 50  # padded height
+            # Absolute position: cluster origin + offset within cluster
+            abs_x = x1
+            abs_y = _flip_y(y2)
             margin = 10
             if "left" in label_pos:
-                dx_x = margin
+                dx_x = abs_x + margin
             elif "right" in label_pos:
-                dx_x = cluster_w - w_px - margin
+                dx_x = abs_x + cluster_w - w_px - margin
             else:  # center
-                dx_x = (cluster_w - w_px) / 2
-            # Always at bottom
-            dx_y = cluster_h - h_px - margin
+                dx_x = abs_x + (cluster_w - w_px) / 2
+            # Always at bottom of padded area
+            dx_y = abs_y + cluster_h - h_px - margin
         else:
             cx, cy = node.pos
             dx_x = cx - w_px / 2
@@ -1228,11 +1244,16 @@ def _sanitize_label(label: Optional[str]) -> str:
     if not label:
         return ""
     text = label
-    # Remove Graphviz HTML-label delimiters < >
-    if text.startswith("<") and text.endswith(">"):
-        text = text[1:-1]
+    # Remove Graphviz HTML-label delimiters << >>
+    # Graphviz wraps HTML labels in << >>, so strip both layers.
+    while text.startswith("<") and text.endswith(">"):
+        inner = text[1:-1]
+        if inner.startswith("<") or "<TABLE" in inner.upper():
+            text = inner
+        else:
+            break
     # For complex HTML labels, extract just the visible text content
-    if "<TABLE" in text.upper() or "<table" in text or text.upper().startswith("TABLE"):
+    if "<TABLE" in text.upper() or "<table" in text:
         return _extract_text_from_html(text)
     # Convert Graphviz record syntax to HTML line breaks
     # e.g., "Title|{ Key:|Value }|{ Key2:|Value2 }" → "Title<br>Key: Value<br>..."
