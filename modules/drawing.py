@@ -22,11 +22,6 @@ try:
 except PackageNotFoundError:
     _TERRAVISION_VERSION = "dev"
 
-try:
-    from graphviz2drawio import graphviz2drawio
-except ImportError:
-    graphviz2drawio = None
-
 import modules.config_loader as config_loader
 import modules.helpers as helpers
 from modules.provider_detector import get_primary_provider_or_default
@@ -420,6 +415,7 @@ def handle_nodes(
             )
         drawn_resources.append(resource)
         tfdata["meta_data"].setdefault(resource, {})["node"] = newNode
+        tfdata.setdefault("node_id_map", {})[newNode._id] = resource
 
     # Process connections to other nodes
     if tfdata["graphdict"].get(resource):
@@ -1054,7 +1050,7 @@ def generate_dot(
 
     # Clean up temporary DOT files
     os.remove(path_to_predot)
-    os.remove(path_to_postdot)
+    pass  # os.remove(path_to_postdot)
 
     # Include cluster ID mapping
     cluster_id_map = tfdata.get("cluster_id_map", {})
@@ -1350,24 +1346,47 @@ def render_diagram(
 
     # Handle draw.io format conversion
     if format == "drawio":
-        if graphviz2drawio is None:
+        from modules.xdot_parser import run_xdot, parse_xdot
+        from modules.drawio_emitter import emit_drawio, load_shape_map
+
+        # Run Graphviz to get layout coordinates from post-processed DOT
+        try:
+            json_output = run_xdot(str(path_to_postdot))
+            xdot_graph = parse_xdot(json_output)
+        except Exception as e:
             click.echo(
                 click.style(
-                    "Error: draw.io export requires the 'graphviz2drawio' package.\n"
-                    "Install with: pip install 'terravision[drawio]'\n"
-                    "On Apple Silicon Mac/Windows you may need to set CFLAGS/LDFLAGS for Graphviz headers.\n"
-                    "See README for details.",
+                    f"Error: Failed to parse layout data from Graphviz: {e}\n"
+                    "Check that Graphviz is installed and supports JSON output.",
                     fg="red",
                 )
             )
             sys.exit(1)
+
+        # Load provider-specific shape mapping
+        provider = get_primary_provider_or_default(tfdata)
+        shape_map = load_shape_map(provider)
+
+        # Emit mxGraph XML
+        xml_content = emit_drawio(
+            xdot_graph,
+            shape_map,
+            set(),
+            tfdata.get("node_id_map", {}),
+            tfdata.get("cluster_id_map", {}),
+            provider=provider,
+        )
+
+        # Write output
         drawio_output = Path.cwd() / f"{outfile}.drawio"
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            xml_content = graphviz2drawio.convert(str(path_to_postdot))
         with open(drawio_output, "w", encoding="utf-8") as f:
             f.write(xml_content)
         click.echo(f"  Output file: {drawio_output}")
+
+        # Auto-open if --show flag is set
+        if picshow:
+            click.launch(str(drawio_output))
+
         # Clean up temporary files
         os.remove(path_to_predot)
         os.remove(path_to_postdot)

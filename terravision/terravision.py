@@ -167,8 +167,6 @@ def _enrich_graph_data(
     tfdata = graphmaker.create_multiple_resources(tfdata)
     tfdata = graphmaker.cleanup_cross_subnet_connections(tfdata)
     tfdata = graphmaker.reverse_relations(tfdata)
-    # Bidirectional links are now rendered as two-way arrows instead of being removed
-    # tfdata = helpers.remove_recursive_links(tfdata)
     tfdata = helpers.find_bidirectional_links(tfdata)
     tfdata = resource_handlers.match_resources(tfdata)
 
@@ -296,17 +294,6 @@ def compile_tfdata(
         tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
         _print_graph_debug(tfdata["graphdict"], "Enriched graphviz dictionary")
 
-        # AI annotations run AFTER full enrichment so the LLM sees the
-        # final graphdict that the renderer will actually iterate. If
-        # the AI ran earlier, downstream transformations
-        # (handle_special_resources, create_multiple_resources, etc.)
-        # would rename or expand the nodes the AI labelled, and the
-        # labels would never reach the renderer because they were
-        # keyed on intermediate names. Running AI last also means the
-        # AI sees auto-annotation nodes (tv_aws_users.users etc.)
-        # already in the inventory and connects to them directly
-        # instead of trying to add them again. Failures inside the AI
-        # path return None and fall through to the default pipeline.
         if aibackend and "all_resource" in tfdata:
             ai_dict = llm.generate_ai_annotations(
                 tfdata,
@@ -480,7 +467,7 @@ def draw(
     final_outfile = outfile
     if tfdata.get("provider_detection"):
         provider = tfdata["provider_detection"].get("primary_provider", "aws")
-        if provider != "aws" and not outfile.endswith(f"-{provider}"):
+        if not outfile.endswith(f"-{provider}"):
             final_outfile = f"{outfile}-{provider}"
 
     drawing.render_diagram(tfdata, show, final_outfile, format, source)
@@ -750,7 +737,7 @@ def visualise(
     final_outfile = outfile
     if tfdata.get("provider_detection"):
         provider = tfdata["provider_detection"].get("primary_provider", "aws")
-        if provider != "aws" and not outfile.endswith(f"-{provider}"):
+        if not outfile.endswith(f"-{provider}"):
             final_outfile = f"{outfile}-{provider}"
 
     html_renderer.render_html(tfdata, show, final_outfile, source)
