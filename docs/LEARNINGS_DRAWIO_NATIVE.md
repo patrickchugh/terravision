@@ -171,6 +171,35 @@ draw.io's `gcp2` stencil library has not been updated to match Google's latest i
 
 ---
 
+### 11. Provider-Specific Node Card Styles
+
+Each provider renders nodes differently in the PNG output. The draw.io emitter must replicate these card styles, not just place standalone icons.
+
+**AWS**: Standalone icon with label below (no card). This is what we currently emit and it matches.
+
+**Azure**: Grey rounded card with icon inside. From `resource_classes/azure/__init__.py`:
+```
+shape=box; style=rounded,filled; fillcolor=#F2F2F2; color=#E0E0E0;
+penwidth=1; fontcolor=#2C2C2C; margin=0.4
+```
+In draw.io this would be a rounded rectangle cell (`rounded=1;fillColor=#F2F2F2;strokeColor=#E0E0E0`) containing or overlaying the SVG icon.
+
+**GCP**: HTML table card — icon on left (100x100), two lines of text on right (service name bold, resource name regular). From `resource_classes/gcp/__init__.py`:
+```html
+<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="8" WIDTH="360">
+  <TR>
+    <TD FIXEDSIZE="TRUE" WIDTH="100" HEIGHT="100"><IMG SRC="icon.png"/></TD>
+    <TD ALIGN="LEFT" VALIGN="MIDDLE">
+      <FONT POINT-SIZE="24"><B>Service Name</B></FONT><BR/>
+      <FONT POINT-SIZE="18">resource_name</FONT>
+    </TD>
+  </TR>
+</TABLE>
+```
+In draw.io this would need a group cell containing an image cell + text cell side by side, or a single cell with HTML label.
+
+---
+
 ## What Still Needs Work
 
 1. **Shape map generator**: Update `scripts/generate_drawio_shape_maps.py` to fetch sidebar JS directly:
