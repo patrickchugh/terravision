@@ -36,15 +36,14 @@ class SubnetGroup(Cluster):
     def __init__(self, label, **kwargs):
         if "Public" in label:
             image = "public_subnet.png"
-            col = "#F2F7EE"
+            border_col = "#248814"
         else:
             image = "private_subnet.png"
-            col = "#deebf7"
+            border_col = "#147EBA"
         vpc_graph_attrs = {
-            "style": "filled",
+            "style": "solid",
             "margin": "50",
-            "color": col,
-            "pencolor": "",
+            "pencolor": border_col,
             "_shift": "1",
         }
         subnet_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/network/{image}"/></TD><TD>{label}</TD></TR></TABLE>>'

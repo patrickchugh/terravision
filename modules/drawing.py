@@ -1385,7 +1385,13 @@ def render_diagram(
 
         # Auto-open if --show flag is set
         if picshow:
-            click.launch(str(drawio_output))
+            if not click.launch(str(drawio_output)):
+                # launch() returns False if no app is associated with .drawio
+                click.echo(
+                    "  No draw.io desktop app found. "
+                    "Open https://app.diagrams.net and use File > Open "
+                    f"to load {drawio_output}"
+                )
 
         # Clean up temporary files
         os.remove(path_to_predot)

@@ -55,8 +55,6 @@ GROUP_SHAPE_MAP = {
     "AWSGroup": ("group_aws_cloud", "#232F3E", "none", "#232F3E"),
     "VPCgroup": ("group_vpc2", "#8C4FFF", "none", "#AAB7B8"),
     "SubnetGroup": ("group_security_group", "#7AA116", "none", "#248814"),
-    "EC2SecurityGroup": ("group_security_group", "#DD3522", "none", "#DD3522"),
-    "SecurityGroup": ("group_security_group", "#DD3522", "none", "#DD3522"),
     "RegionGroup": ("group_region", "#00A4A6", "none", "#147EBA"),
     "AccountGroup": ("group_account", "#CD2264", "none", "#CD2264"),
     "SpotFleetGroup": ("group_spot_fleet", "#D86613", "none", "#D86613"),
@@ -82,6 +80,9 @@ SIMPLE_GROUP_STYLE_MAP = {
     # AWS AZ — blue dashed border, no fill, no corner icon
     "AZGroup": ("#147EBA", "none", "#147EBA", True),
     "AvailabilityZone": ("#147EBA", "none", "#147EBA", True),
+    # Security group — red solid border, no fill, no corner icon
+    "SecurityGroup": ("#DD3522", "none", "#DD3522", False),
+    "EC2SecurityGroup": ("#DD3522", "none", "#DD3522", False),
     # Generic group — gray dashed
     "GenericGroup": ("#5A6C86", "none", "#5A6C86", True),
     "SharedServicesGroup": ("#5A6C86", "#F5F5F5", "#5A6C86", True),
