@@ -173,12 +173,16 @@ draw.io's `gcp2` stencil library has not been updated to match Google's latest i
 
 ## What Still Needs Work
 
-1. **Azure/GCP shape maps**: Need the same sidebar JS extraction treatment as AWS (fetch `Sidebar-Azure.js` and `Sidebar-GCP2.js` for authoritative shape names and fill colors)
-2. **Shape map generator**: Should fetch sidebar JS files directly instead of stencil XML for more accurate name matching
-3. **Edge routing refinement**: Graphviz spline waypoints are used but some edge paths could be cleaner
-4. **Cluster label icons**: The gvpr-positioned cluster label nodes (with HTML table labels containing corner icons) aren't rendered as separate image+text mxCells yet — only the text is extracted
-5. **Integration tests**: Full pipeline tests comparing PNG vs drawio output for multiple test cases
-6. **Documentation updates**: README and usage guide need updating to remove `[drawio]` installation instructions
+1. **Shape map generator**: Update `scripts/generate_drawio_shape_maps.py` to fetch sidebar JS directly:
+   - **AWS**: Fetch `Sidebar-AWS4.js` → extract `resIcon=` names and `n + 'shapename;'` direct shapes with their `fillColor` per section. AWS uses **stencil shapes** (`shape=mxgraph.aws4.<name>;fillColor=<color>`)
+   - **Azure**: Fetch `Sidebar-Azure.js` → but Azure does NOT use stencils like AWS. Azure uses **SVG image paths** (`image=img/lib/azure2/<category>/<Name>.svg`). The generator must map terraform aliases to the correct `img/lib/azure2/` SVG path, not to `mxgraph.azure.*` stencil names.
+   - **GCP**: draw.io hasn't updated GCP stencils (`gcp2` is outdated). GCP sidebar also uses `shape=image;image=...` SVG paths for most icons. Until draw.io updates, use PNG fallback from TerraVision's local icons.
+2. **Corner icon visibility**: Cluster label icons (VNet, Subnet, Resource Group corner icons) are positioned at bottom of parent but can be obscured by child clusters. Z-order fix is in place (emitted last in XML) but positioning still needs refinement.
+3. **Azure logo**: The "Microsoft Azure" group label image (`azure.png` → `Azure.svg`) renders as broken image at the very bottom of the diagram.
+4. **Edge routing**: Some edges cross through containers instead of routing around them. Graphviz spline waypoints are passed but `edgeStyle=orthogonalEdgeStyle` in draw.io may override them.
+5. **Integration tests**: Full pipeline tests comparing PNG vs drawio output for multiple test cases.
+6. **Documentation updates**: README and usage guide need updating to remove `[drawio]` installation instructions.
+7. **`_CLASS_TO_ALIAS` map**: The hardcoded class-name-to-terraform-alias fallback grows as we test more fixtures. Consider auto-generating it from the resource_classes package.
 
 ---
 
