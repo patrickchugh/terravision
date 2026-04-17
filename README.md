@@ -14,7 +14,7 @@
 
 ---
 
-## Watch a 2-Minute Intro
+## Watch a 4-Minute Intro
 
 [![TerraVision intro video](./images/youtube-thumbnail.png)](https://youtu.be/bTrWHBI2mF4)
 
