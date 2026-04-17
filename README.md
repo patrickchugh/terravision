@@ -16,7 +16,7 @@
 
 ## Watch a 2-Minute Intro
 
-[![TerraVision intro video](https://img.youtube.com/vi/bTrWHBI2mF4/maxresdefault.jpg)](https://youtu.be/bTrWHBI2mF4)
+[![TerraVision intro video](./images/youtube-thumbnail.png)](https://youtu.be/bTrWHBI2mF4)
 
 ---
 ## What is TerraVision?
