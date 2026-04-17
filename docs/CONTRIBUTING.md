@@ -19,35 +19,20 @@ By participating in this project, you agree to maintain a respectful and collabo
 
 ## Getting Started
 
-### Prerequisites
-
-Ensure you have the following installed:
-
-- Python 3.11+
-- Terraform v1.x (v0.x not supported)
-- Graphviz (`dot` command)
-- Git
-- Poetry (recommended) or pip
-- Ollama (for local AI testing)
-- AWS account (for bedrock AI testing)
-
 ### Development Setup
 
+Follow the canonical installation instructions: **[Installation → Method 4: Install from Source with Poetry](installation.md#method-4-install-from-source-with-poetry-for-contributors)**. That covers system prerequisites, Poetry install, and repo clone.
+
+Then, from the repo root, enable the project's git hooks:
+
 ```bash
-# Clone the repository
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-
-# Install dependencies with Poetry (recommended)
-poetry install
-poetry shell
-
-# Install pre-commit hooks
-pre-commit install
-
-# Verify installation
-python terravision.py --help
+poetry run pre-commit install
 ```
+
+Optional extras for AI-annotation work:
+
+- **Ollama** — for testing `--ai-annotate ollama` locally. See [Installation → Ollama](installation.md#optional-install-ollama-for-local-ai-refinement).
+- **AWS account with Bedrock access** — for testing `--ai-annotate bedrock`.
 
 ### Running Tests
 

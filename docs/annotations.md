@@ -3,6 +3,7 @@
 ## Overview
 
 Annotations allow you to customize automatically generated diagrams by:
+
 - Adding custom titles and labels
 - Creating new connections
 - Removing unwanted connections
@@ -30,7 +31,7 @@ disconnect:
 
 Run TerraVision:
 ```bash
-terravision draw --source ./terraform
+terravision draw --source ./path-to-your-terraform
 # Annotations are automatically loaded from terravision.yml
 ```
 
@@ -115,7 +116,7 @@ flows:
 
 **Option 2: Specify path**
 ```bash
-terravision draw --source ./terraform --annotate /path/to/annotations.yml
+terravision draw --source ./path-to-your-terraform --annotate /path/to/annotations.yml
 ```
 
 **Option 3: AI-generated** (automatic)
@@ -464,11 +465,60 @@ Resource names follow Terraform conventions:
 **Find resource names:**
 ```bash
 # Export graph data to see all resource names
-terravision graphdata --source ./terraform --outfile resources.json
+terravision graphdata --source ./path-to-your-terraform --outfile resources.json
 
 # View the JSON file
 cat resources.json | jq 'keys'
 ```
+
+### Helper Nodes (`tv_*`) — External Actors and Icons
+
+In addition to your real Terraform resources, TerraVision ships with **helper icons** you can drop into any diagram to represent things that aren't in your `.tf` code — users, the public internet, on-prem datacenters, mobile clients, external SaaS, etc. They live in a reserved `tv_*` namespace and are referenced in annotations just like any other resource.
+
+Some helpers are added **automatically** via built-in auto-annotations — for example, a `tv_aws_users.users` icon is wired to any `aws_route53_record` or `aws_cloudfront_distribution` in your plan, so a "users" actor appears on the diagram without you doing anything. Others you add **manually** in your `terravision.yml` when you want to show an external interaction.
+
+**Common AWS helpers** (equivalent `tv_azure_*` and `tv_gcp_*` exist):
+
+| Helper                            | Represents                                  |
+| --------------------------------- | ------------------------------------------- |
+| `tv_aws_users.<name>`             | External end users / clients                |
+| `tv_aws_internet.<name>`          | The public internet                         |
+| `tv_aws_onprem.<name>`            | On-premises datacenter                      |
+| `tv_aws_mobile_client.<name>`     | Mobile app / device                         |
+| `tv_aws_device.<name>`            | IoT / physical device                       |
+| `tv_aws_cgw.<name>`               | Customer gateway (VPN peer)                 |
+
+**Example 1 — add an explicit "corporate users" actor hitting an ALB:**
+
+```yaml
+format: 0.2
+connect:
+  tv_aws_users.corporate:
+    - aws_lb.app: "HTTPS 443"
+```
+
+**Example 2 — an on-prem datacenter flowing into a Transit Gateway via VPN:**
+
+```yaml
+format: 0.2
+connect:
+  tv_aws_onprem.corporate_datacenter:
+    - aws_cgw.vpn: "IPsec tunnel"
+    - aws_ec2_transit_gateway.tgw: "BGP peering"
+```
+
+**Example 3 — mobile app calling API Gateway + Cognito:**
+
+```yaml
+format: 0.2
+connect:
+  tv_aws_mobile_client.ios_app:
+    - aws_cognito_user_pool.auth: "Sign in"
+    - aws_api_gateway_rest_api.backend: "Authenticated requests"
+```
+
+!!! tip "Naming the instance"
+    The part after the dot (`corporate`, `corporate_datacenter`, `ios_app` above) is arbitrary — choose whatever reads well on the diagram. You can have multiple instances of the same helper (e.g. `tv_aws_users.employees` and `tv_aws_users.customers`) to distinguish different actor groups.
 
 ---
 
@@ -523,7 +573,7 @@ Consider adding `terravision.ai.yml` to `.gitignore` if you regenerate it on eve
 Add annotations gradually and regenerate diagrams to verify:
 ```bash
 # After each change
-terravision draw --source ./terraform --show
+terravision draw --source ./path-to-your-terraform --show
 ```
 
 ---
@@ -602,7 +652,7 @@ update:
 
 ```bash
 # List all resources to verify patterns
-terravision graphdata --source ./terraform --show_services
+terravision graphdata --source ./path-to-your-terraform --show_services
 ```
 
 ### Connections Not Showing

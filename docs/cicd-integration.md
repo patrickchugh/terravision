@@ -123,7 +123,7 @@ jobs:
 
       - uses: patrickchugh/terravision-action@v2
         with:
-          source: ./terraform
+          source: ./path-to-your-terraform
           outfile: docs/architecture-${{ matrix.environment }}
           varfile: environments/${{ matrix.environment }}.tfvars
           format: svg
@@ -243,7 +243,7 @@ generate-diagram:
       - ENVIRONMENT: [dev, staging, prod]
   script:
     - terravision draw
-        --source ./terraform
+        --source ./path-to-your-terraform
         --varfile environments/${ENVIRONMENT}.tfvars
         --outfile architecture-${ENVIRONMENT}
         --format svg
@@ -391,7 +391,7 @@ pipeline {
             steps {
                 sh """
                     terravision draw \
-                        --source ./terraform \
+                        --source ./path-to-your-terraform \
                         --varfile environments/${params.ENVIRONMENT}.tfvars \
                         --outfile architecture-${params.ENVIRONMENT} \
                         --format png
@@ -918,7 +918,7 @@ The AI annotations are written to `terravision.ai.yml` in the source directory. 
 ```bash
 for env in dev staging prod; do
   terravision draw \
-    --source ./terraform \
+    --source ./path-to-your-terraform \
     --varfile environments/${env}.tfvars \
     --outfile docs/architecture-${env} \
     --format svg
@@ -1016,8 +1016,8 @@ permissions:
 For large Terraform codebases, increase timeout or generate diagrams for specific subdirectories:
 
 ```bash
-terravision draw --source ./terraform/networking --outfile network-diagram --format png
-terravision draw --source ./terraform/compute --outfile compute-diagram --format png
+terravision draw --source ./path-to-your-terraform/networking --outfile network-diagram --format png
+terravision draw --source ./path-to-your-terraform/compute --outfile compute-diagram --format png
 ```
 
 ---

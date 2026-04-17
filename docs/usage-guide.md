@@ -15,6 +15,59 @@ terravision draw --source ~/projects/my-terraform-code
 terravision draw --source ~/projects/my-terraform-code --show
 ```
 
+### Try It on the Bundled Test Fixtures
+
+If you're not ready to point TerraVision at your own Terraform yet, the repo ships with real Terraform projects under [`tests/fixtures/`](https://github.com/patrickchugh/terravision/tree/main/tests/fixtures) that you can use to see the tool in action. Clone the repo first, then run any of the examples below:
+
+```bash
+git clone https://github.com/patrickchugh/terravision.git
+cd terravision
+```
+
+=== "AWS"
+
+    EKS cluster in auto mode (fully managed node groups, ingress controller, sample workload):
+
+    ```bash
+    terravision draw --source tests/fixtures/aws_terraform/eks_automode --show
+    ```
+
+    Other AWS fixtures worth trying:
+    `api_gateway_rest_lambda`, `dynamodb_streams_lambda`, `ecs-ec2`, `elasticache_redis`, `sagemaker_endpoint`, `stepfunctions_multi_service`, `waf_cloudfront`, `static-website`.
+
+=== "Azure"
+
+    VM scale set behind a load balancer in a VNet:
+
+    ```bash
+    terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
+    ```
+
+    Other Azure fixtures worth trying:
+    `test_aks` (AKS cluster), `test_appgw_lb` (Application Gateway + LB).
+
+=== "GCP"
+
+    Classic three-tier web app (GCE + LB + Cloud SQL):
+
+    ```bash
+    terravision draw --source tests/fixtures/gcp_terraform/three_tier_webapp --show
+    ```
+
+    Other GCP fixtures worth trying:
+    `us4_gke_cluster` (GKE), `us6_serverless` (Cloud Run / Functions), `us8_vpc_firewall` (networking), `us9_data_services` (BigQuery, Pub/Sub, Dataflow).
+
+=== "Terragrunt"
+
+    Multi-module Terragrunt project — TerraVision auto-detects `terragrunt.hcl` and stitches each module into one diagram:
+
+    ```bash
+    terravision draw --source tests/fixtures/terragrunt-multi --show
+    ```
+
+!!! tip "Skip the `--show` flag"
+    Omit `--show` to generate the PNG without opening a viewer — useful in CI or over SSH. The default output file is `architecture.png` in the current directory.
+
 ---
 
 ## Commands
@@ -32,7 +85,7 @@ terravision draw [OPTIONS]
 
 | Option | Description | Default | Example |
 |--------|-------------|---------|---------|
-| `--source` | Source location (folder, Git URL, or JSON) | Current directory | `./terraform` |
+| `--source` | Source location (folder, Git URL, or JSON) | Current directory | `./path-to-your-terraform` |
 | `--format` | Output format (png, svg, pdf, bmp) | `png` | `--format svg` |
 | `--outfile` | Output filename | `architecture` | `--outfile my-diagram` |
 | `--workspace` | Terraform workspace | `default` | `--workspace production` |
@@ -49,6 +102,14 @@ terravision draw [OPTIONS]
 
 Generates a self-contained interactive HTML diagram with clickable resource nodes, metadata sidebar, and pan/zoom navigation. The diagram is rendered server-side using the same Graphviz engine as `draw`, so the layout is identical.
 
+**See it live — interactive demos:**
+
+- 🟧 [AWS demo](https://patrickchugh.github.io/terravision/demo-aws.html) — Wordpress on ECS Fargate with CloudFront, RDS, EFS
+- 🟦 [Azure demo](https://patrickchugh.github.io/terravision/demo-azure.html) — VM scale set with load balancer and VNet
+- 🟩 [GCP demo](https://patrickchugh.github.io/terravision/demo-gcp.html) — Core GCP networking and compute
+
+Click nodes to inspect metadata, use the search box, or pan/zoom around to explore.
+
 **Syntax:**
 ```bash
 terravision visualise [OPTIONS]
@@ -58,7 +119,7 @@ terravision visualise [OPTIONS]
 
 | Option | Description | Default | Example |
 |--------|-------------|---------|---------|
-| `--source` | Source location (folder, Git URL, or JSON) | Current directory | `./terraform` |
+| `--source` | Source location (folder, Git URL, or JSON) | Current directory | `./path-to-your-terraform` |
 | `--outfile` | Output filename (`.html` appended automatically) | `architecture` | `--outfile my-diagram` |
 | `--workspace` | Terraform workspace | `default` | `--workspace production` |
 | `--varfile` | Variable file (can use multiple times) | None | `--varfile prod.tfvars` |
@@ -84,16 +145,16 @@ terravision visualise [OPTIONS]
 
 ```bash
 # Basic usage
-terravision visualise --source ./terraform
+terravision visualise --source ./path-to-your-terraform
 
 # Custom output filename and auto-open in browser
-terravision visualise --source ./terraform --outfile my-arch --show
+terravision visualise --source ./path-to-your-terraform --outfile my-arch --show
 
 # From pre-generated plan files (no Terraform credentials needed)
-terravision visualise --planfile plan.json --graphfile graph.dot --source ./terraform
+terravision visualise --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform
 
 # Simplified high-level diagram
-terravision visualise --source ./terraform --simplified
+terravision visualise --source ./path-to-your-terraform --simplified
 
 # Replay from debug JSON for fast iteration
 terravision visualise --source tfdata.json
@@ -114,7 +175,7 @@ terravision graphdata [OPTIONS]
 
 | Option | Description | Default | Example |
 |--------|-------------|---------|---------|
-| `--source` | Source location | Current directory | `./terraform` |
+| `--source` | Source location | Current directory | `./path-to-your-terraform` |
 | `--outfile` | Output JSON filename | `architecture.json` | `--outfile resources.json` |
 | `--show_services` | Show only unique services list | False | `--show_services` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
@@ -128,16 +189,16 @@ terravision graphdata [OPTIONS]
 
 ```bash
 # Generate PNG diagram
-terravision draw --source ./terraform
+terravision draw --source ./path-to-your-terraform
 
 # Generate SVG diagram with custom name
-terravision draw --source ./terraform --format svg --outfile my-architecture
+terravision draw --source ./path-to-your-terraform --format svg --outfile my-architecture
 
 # Use specific workspace
-terravision draw --source ./terraform --workspace production
+terravision draw --source ./path-to-your-terraform --workspace production
 
 # Use variable files
-terravision draw --source ./terraform --varfile prod.tfvars --varfile secrets.tfvars
+terravision draw --source ./path-to-your-terraform --varfile prod.tfvars --varfile secrets.tfvars
 ```
 
 ### Remote Git Repositories
@@ -157,13 +218,13 @@ terravision draw --source https://github.com/user/terraform-repo.git?ref=develop
 
 ```bash
 # Generate all formats
-terravision draw --source ./terraform --format png --outfile arch-png
-terravision draw --source ./terraform --format svg --outfile arch-svg
-terravision draw --source ./terraform --format pdf --outfile arch-pdf
+terravision draw --source ./path-to-your-terraform --format png --outfile arch-png
+terravision draw --source ./path-to-your-terraform --format svg --outfile arch-svg
+terravision draw --source ./path-to-your-terraform --format pdf --outfile arch-pdf
 
 # Batch processing
 for format in png svg pdf; do
-  terravision draw --source ./terraform --format $format --outfile arch-$format
+  terravision draw --source ./path-to-your-terraform --format $format --outfile arch-$format
 done
 ```
 
@@ -171,10 +232,10 @@ done
 
 ```bash
 # Use annotations file
-terravision draw --source ./terraform --annotate custom-annotations.yml
+terravision draw --source ./path-to-your-terraform --annotate custom-annotations.yml
 
 # Annotations file will be auto-loaded if named terravision.yml in source directory
-terravision draw --source ./terraform
+terravision draw --source ./path-to-your-terraform
 ```
 
 See [annotations.md](annotations.md) for annotation file format.
@@ -183,20 +244,20 @@ See [annotations.md](annotations.md) for annotation file format.
 
 ```bash
 # Export graph data
-terravision graphdata --source ./terraform --outfile graph.json
+terravision graphdata --source ./path-to-your-terraform --outfile graph.json
 
 # Generate diagram from exported data (faster)
 terravision draw --source graph.json --format svg
 
 # Show only services used
-terravision graphdata --source ./terraform --show_services
+terravision graphdata --source ./path-to-your-terraform --show_services
 ```
 
 ### Debug Mode
 
 ```bash
 # Enable debug output
-terravision draw --source ./terraform --debug
+terravision draw --source ./path-to-your-terraform --debug
 
 # This creates tfdata.json which can be reused
 terravision draw --source tfdata.json --format svg
@@ -215,6 +276,7 @@ TerraVision supports all output formats provided by Graphviz. Use the `--format`
 | `png` | Portable Network Graphics (default) | Documentation, wikis, presentations |
 | `svg` | Scalable Vector Graphics | Web pages, scalable diagrams, editing |
 | `pdf` | Portable Document Format | Reports, printing, professional docs |
+| **`drawio`** | **Native draw.io / mxGraph XML — fully editable** | **Editing in draw.io, Lucidchart, or any mxGraph tool** |
 | `jpg` / `jpeg` | JPEG image | Photos, web (lossy compression) |
 | `gif` | Graphics Interchange Format | Simple graphics, animations |
 | `bmp` | Windows Bitmap | Windows applications |
@@ -229,34 +291,7 @@ TerraVision supports all output formats provided by Graphviz. Use the `--format`
 For the complete list of supported formats, see the [Graphviz Output Formats documentation](https://graphviz.org/docs/outputs/).
 
 **Note**: `--format json` produces Graphviz's internal JSON format with layout coordinates. For TerraVision's simple graph dictionary (just nodes and connections), use the `graphdata` command instead.
-
-### PNG (Default)
-- **Use for**: Documentation, wikis, presentations
-- **Pros**: Universal support, good quality
-- **Cons**: Not scalable, larger file size
-
-```bash
-terravision draw --source ./terraform --format png
-```
-
-### SVG
-- **Use for**: Web pages, scalable diagrams
-- **Pros**: Scalable, smaller file size, editable
-- **Cons**: Some tools don't support SVG
-
-```bash
-terravision draw --source ./terraform --format svg
-```
-
-### PDF
-- **Use for**: Reports, documentation, printing
-- **Pros**: Professional, portable, printable
-- **Cons**: Larger file size
-
-```bash
-terravision draw --source ./terraform --format pdf
-```
-
+ 
 ### Pre-Generated Plan Input
 
 If you already have Terraform plan and graph output files (e.g. from a CI/CD pipeline), you can generate diagrams without running Terraform. This is useful when:
@@ -279,13 +314,13 @@ terraform graph > graph.dot
 
 ```bash
 # Draw diagram from pre-generated files
-terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
+terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform
 
 # Export graph data from pre-generated files
-terravision graphdata --planfile plan.json --graphfile graph.dot --source ./terraform --outfile resources.json
+terravision graphdata --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform --outfile resources.json
 
 # Combine with other options
-terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform \
+terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform \
   --format svg --outfile my-architecture --annotate custom.yml
 ```
 
@@ -310,9 +345,9 @@ See [CI/CD Integration](cicd-integration.md) for pipeline examples using pre-gen
 
 ```bash
 # Generate diagrams for different environments
-terravision draw --source ./terraform --varfile dev.tfvars --outfile arch-dev
-terravision draw --source ./terraform --varfile staging.tfvars --outfile arch-staging
-terravision draw --source ./terraform --varfile prod.tfvars --outfile arch-prod
+terravision draw --source ./path-to-your-terraform --varfile dev.tfvars --outfile arch-dev
+terravision draw --source ./path-to-your-terraform --varfile staging.tfvars --outfile arch-staging
+terravision draw --source ./path-to-your-terraform --varfile prod.tfvars --outfile arch-prod
 ```
 
 ### Simplified Diagrams
@@ -320,7 +355,7 @@ terravision draw --source ./terraform --varfile prod.tfvars --outfile arch-prod
 For large infrastructures, generate high-level overview:
 
 ```bash
-terravision draw --source ./terraform --simplified --outfile overview
+terravision draw --source ./path-to-your-terraform --simplified --outfile overview
 ```
 
 ### AI-Powered Annotations
@@ -331,10 +366,10 @@ This replaces the old `refine_with_llm` behaviour, which modified the graph dire
 
 ```bash
 # Generate AI annotations with local Ollama
-poetry run terravision draw --source ./terraform --ai-annotate ollama
+poetry run terravision draw --source ./path-to-your-terraform --ai-annotate ollama
 
 # Generate AI annotations with AWS Bedrock
-poetry run terravision draw --source ./terraform --ai-annotate bedrock
+poetry run terravision draw --source ./path-to-your-terraform --ai-annotate bedrock
 ```
 
 **How it works:**
@@ -411,7 +446,7 @@ flows:
 When you use `--ai-annotate <backend>`, TerraVision can generate flow sequences automatically based on the architecture:
 
 ```bash
-poetry run terravision draw --source ./terraform --ai-annotate ollama
+poetry run terravision draw --source ./path-to-your-terraform --ai-annotate ollama
 ```
 
 The AI writes its suggested flows to `terravision.ai.yml`. To override a specific flow, define a flow with the same name in your `terravision.yml` -- the user version entirely replaces the AI version for that flow name.
@@ -426,19 +461,19 @@ See [annotations.md](annotations.md) for the full annotation file format and pre
 
 1. **Use simplified mode** for overview diagrams:
    ```bash
-   terravision draw --source ./terraform --simplified
+   terravision draw --source ./path-to-your-terraform --simplified
    ```
 
 2. **Export to JSON first**, then generate multiple variants:
    ```bash
-   terravision graphdata --source ./terraform --outfile graph.json
+   terravision graphdata --source ./path-to-your-terraform --outfile graph.json
    terravision draw --source graph.json --format png
    terravision draw --source graph.json --format svg
    ```
 
 3. **Use specific workspaces** to reduce scope:
    ```bash
-   terravision draw --source ./terraform --workspace production
+   terravision draw --source ./path-to-your-terraform --workspace production
    ```
 
 ### Batch Processing
@@ -465,7 +500,7 @@ terravision draw --show
 
 ```bash
 # Generate diagram for PR review
-terravision draw --source ./terraform --format svg --outfile pr-${PR_NUMBER}
+terravision draw --source ./path-to-your-terraform --format svg --outfile pr-${PR_NUMBER}
 ```
 
 ### Documentation Updates

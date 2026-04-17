@@ -1,0 +1,129 @@
+site_name: TerraVision
+site_description: Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents.
+site_url: https://patrickchugh.github.io/terravision/
+repo_url: https://github.com/patrickchugh/terravision
+repo_name: patrickchugh/terravision
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; Patrick Chugh
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - navigation.tracking
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - search.share
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.keys
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+      skip_classes:
+        - no-lightbox
+      auto_caption: false
+      caption_position: bottom
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: installation.md
+      - Usage Guide: usage-guide.md
+  - Features:
+      - Annotations: annotations.md
+      - CI/CD Integration: cicd-integration.md
+  - Help:
+      - FAQ: faq.md
+      - Troubleshooting: troubleshooting.md
+  - Contributing:
+      - Contributing Guide: CONTRIBUTING.md
+      - Developer Guide: developer-guide.md
+      - Resource Handler Guide: resource-handler-guide.md
+      - Project Constitution: constitution.md
+  - Live Demos:
+      - AWS Demo: demo-aws.html
+      - Azure Demo: demo-azure.html
+      - GCP Demo: demo-gcp.html
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/patrickchugh/terravision
+    - icon: fontawesome/brands/youtube
+      link: https://youtu.be/bTrWHBI2mF4
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/terravision/
+
+exclude_docs: |
+  CLAUDE.md
+  LEARNINGS_*.md
+  metadata-refactor-plan.md
+  README.md

@@ -72,56 +72,119 @@ terraform version
 
 ## Step 2: Install TerraVision
 
-### Method 1: Quick Install (For Users)
+### Method 1: Install from PyPI (Recommended for Users)
 
-This method installs packages globally and is suitable for casual users.
+TerraVision is published to PyPI, so a single command installs the CLI and wires it up on your PATH on macOS, Linux, and Windows.
 
-#### macOS/Linux
+#### Using `pipx` (preferred — isolated environment)
+
+[`pipx`](https://pipx.pypa.io/) installs the CLI into its own isolated virtualenv so it can't clash with other Python tooling on your system.
 
 ```bash
-# Clone repository
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
+# Install pipx first if you don't have it
+# macOS:          brew install pipx && pipx ensurepath
+# Ubuntu/Debian:  sudo apt install pipx && pipx ensurepath
+# Windows:        python -m pip install --user pipx && python -m pipx ensurepath
 
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Make script executable
-chmod +x terravision.py
-
-# Create symbolic link
-ln -s $(pwd)/terravision.py $(pwd)/terravision
-
-# Add to PATH (add this to ~/.bashrc or ~/.zshrc for persistence)
-export PATH=$PATH:$(pwd)
-
-# Test installation
+pipx install terravision
 terravision --version
 ```
 
-#### Windows
+#### Using `pip` (if you're already in a virtualenv)
 
-```powershell
-# Clone repository
-git clone https://github.com/patrickchugh/terravision.git
-cd terravision
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Create batch file wrapper
-echo @python "%~dp0terravision.py" %* > terravision.bat
-
-# Copy to system directory (requires admin privileges)
-copy terravision.bat C:\Windows\System32\
-
-# Test installation
+```bash
+pip install terravision
 terravision --version
 ```
 
-### Method 2: Poetry Install (For Developers)
+!!! tip "Upgrading"
+    `pipx upgrade terravision` or `pip install --upgrade terravision` pulls the latest release from PyPI.
 
-This method uses Poetry for dependency management and is recommended for developers.
+### Method 2: Docker (Zero Setup)
+
+If you don't want to install Python, Graphviz, and Terraform locally, you can run everything inside the official Docker image. This is also the recommended method for containerized CI/CD systems.
+
+#### Pull the image
+
+```bash
+docker pull patrickchugh/terravision:latest
+```
+
+Or build it yourself:
+
+```bash
+git clone https://github.com/patrickchugh/terravision.git && cd terravision
+docker build -t patrickchugh/terravision .
+```
+
+#### Run it against your Terraform code
+
+Mount your project into the container so it can see your `.tf` files and write output back:
+
+```bash
+# Local directory
+docker run --rm -it -v "$(pwd):/project" patrickchugh/terravision \
+  draw --source /project/yourfiles/ --varfile /project/your.tfvars
+
+# Remote Git repository with subfolder
+docker run --rm -it -v "$(pwd):/project" patrickchugh/terravision \
+  draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/
+```
+
+#### Passing cloud credentials
+
+If Terraform needs credentials to run `terraform plan`, pass them into the container. For AWS:
+
+```bash
+# Mount your AWS credentials folder
+docker run --rm -it -v "$(pwd):/project" \
+  -v ~/.aws:/home/terravision/.aws:ro \
+  patrickchugh/terravision draw --source /project/yourfiles/
+
+# Or pass credentials as environment variables
+docker run --rm -it -v "$(pwd):/project" \
+  -e AWS_ACCESS_KEY_ID=your-access-key \
+  -e AWS_SECRET_ACCESS_KEY=your-secret-key \
+  patrickchugh/terravision draw --source /project/yourfiles/
+```
+
+!!! tip "Skip credentials entirely"
+    Use `--planfile` and `--graphfile` with pre-generated Terraform plan output to bypass `terraform plan` altogether. See [Pre-Generated Plan Input](usage-guide.md#pre-generated-plan-input).
+
+#### Pinning a Terraform version
+
+The image includes `tfenv`, so you can install and select a specific Terraform version at runtime via `TFENV_TERRAFORM_VERSION`:
+
+```bash
+docker run --rm -it -v "$(pwd):/project" \
+  -e TFENV_TERRAFORM_VERSION=1.9.8 \
+  patrickchugh/terravision draw --source /project/yourfiles/
+```
+
+If `TFENV_TERRAFORM_VERSION` is omitted, the container runs `terravision` directly with the image's default Terraform.
+
+### Method 3: Nix (Reproducible Shell)
+
+If you have [Nix](https://nixos.org/download/) installed with flakes enabled, you can get a fully reproducible development shell with TerraVision and every dependency pinned.
+
+#### Enter a dev shell
+
+```bash
+git clone https://github.com/patrickchugh/terravision.git && cd terravision
+nix develop
+```
+
+This gives you `terravision`, `graphviz`, `terraform`, and `git` in your PATH with no system-level install needed.
+
+#### One-shot run without cloning
+
+```bash
+nix run github:patrickchugh/terravision -- draw --source /path/to/terraform --show
+```
+
+### Method 4: Install from Source with Poetry (For Contributors)
+
+Use this method if you plan to hack on TerraVision itself. It's the workflow used by CI and every maintainer.
 
 #### Install Poetry
 
@@ -142,16 +205,18 @@ curl -sSL https://install.python-poetry.org | python3 -
 git clone https://github.com/patrickchugh/terravision.git
 cd terravision
 
-# Install dependencies in virtual environment
+# Install dependencies in an isolated virtual environment
 poetry install
 
-# Activate virtual environment
+# Activate the venv (drop the `poetry run` prefix for subsequent commands)
 eval $(poetry env activate)
-terravision
+terravision --version
 
-# Or use poetry run for individual commands
+# Or use `poetry run` for individual commands without activating
 poetry run terravision --version
 ```
+
+See the [Contributing Guide](CONTRIBUTING.md) for coding standards, tests, and the PR process.
 
 ---
 
@@ -230,14 +295,19 @@ sudo apt-get install python3.10
 
 ### Permission Issues (Linux/macOS)
 
-```bash
-# If pip install fails with permission errors, use --user flag
-pip install --user -r requirements.txt
+If `pip install terravision` fails with permission errors, use `pipx` (recommended) or fall back to a user install / virtualenv:
 
-# Or use virtual environment
+```bash
+# Preferred: isolated install via pipx (no sudo ever needed)
+pipx install terravision
+
+# Or user install
+pip install --user terravision
+
+# Or inside a virtualenv
 python -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install terravision
 ```
 
 ### PATH Issues

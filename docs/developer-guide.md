@@ -1,41 +1,30 @@
 # Developer Guide
 
-This file provides guidance to Devs seeking to improve Terravision.
+Guidance for developers working on TerraVision itself. This guide focuses on **how the code works** — architecture, pipeline, handler patterns, and critical constants. For how to *install* a dev environment, see [Installation → Method 4](installation.md#method-4-install-from-source-with-poetry-for-contributors). For contribution workflow (branching, PRs, code standards), see the [Contributing Guide](CONTRIBUTING.md).
 
 ## Project Overview
 
 TerraVision is an AI-powered CLI tool that converts Terraform code into professional cloud architecture diagrams. It runs 100% client-side, securely parses Terraform plans, and generates visual representations of cloud infrastructure without requiring access to cloud environments.
 
-
-
 ## Commands
 
-### Development Setup
-
-```bash
-# Poetry installation (recommended for development)
-poetry install
-poetry shell
-
-# Quick install (global packages)
-pip install -r requirements.txt
-```
+All commands below assume `poetry run` as the prefix, e.g. `poetry run terravision draw ...`. Alternatively activate the venv with `eval $(poetry env activate)` and drop the prefix.
 
 ### Running TerraVision
 
 ```bash
 # Basic diagram generation
-python terravision.py draw --source <path>
+poetry run terravision draw --source <path>
 
 # With AI annotation generation
-python terravision.py draw --source <path> --ai-annotate bedrock
-python terravision.py draw --source <path> --ai-annotate ollama
+poetry run terravision draw --source <path> --ai-annotate bedrock
+poetry run terravision draw --source <path> --ai-annotate ollama
 
 # Export graph data
-python terravision.py graphdata --source <path> --outfile graph.json
+poetry run terravision graphdata --source <path> --outfile graph.json
 
 # Debug mode (exports tfdata.json)
-python terravision.py draw --source <path> --debug
+poetry run terravision draw --source <path> --debug
 ```
 
 ### Testing
@@ -281,7 +270,6 @@ GitHub Actions workflow (`.github/workflows/lint-and-test.yml`) runs on push/PR 
 ## Configuration Files
 
 **pyproject.toml**: Poetry dependencies, Black config (line-length 88), isort config
-**requirements.txt**: Pip fallback for non-Poetry users
 **.pre-commit-config.yaml**: Pre-commit hook running pytest
 **.github/workflows/lint-and-test.yml**: CI pipeline
 

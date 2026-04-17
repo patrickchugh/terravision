@@ -48,8 +48,8 @@ Cloud API access happens only when TerraVision invokes Terraform as a subprocess
 
 **Two operating modes:**
 
-1. **Plan-from-source mode** (`terravision draw --source ./terraform`): TerraVision invokes Terraform, which calls cloud APIs to produce a plan. Cloud credentials are required by Terraform but never accessed or stored by TerraVision itself.
-2. **Pre-generated plan mode** (`terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform`): TerraVision consumes plan and graph files generated upstream (typically in a CI pipeline where Terraform already ran). **Zero cloud credentials of any kind are required.** This is the gold-standard path for high-security environments and air-gapped use.
+1. **Plan-from-source mode** (`terravision draw --source ./path-to-your-terraform`): TerraVision invokes Terraform, which calls cloud APIs to produce a plan. Cloud credentials are required by Terraform but never accessed or stored by TerraVision itself.
+2. **Pre-generated plan mode** (`terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform`): TerraVision consumes plan and graph files generated upstream (typically in a CI pipeline where Terraform already ran). **Zero cloud credentials of any kind are required.** This is the gold-standard path for high-security environments and air-gapped use.
 
 For LLM-based AI refinement, only minimal aggregate metadata may be sent to backends — never sensitive code, secrets, or runtime values. Local AI backends (Ollama) MUST be available for environments that prohibit any external API calls.
 

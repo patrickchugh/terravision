@@ -74,8 +74,8 @@ brew install python@3.10
 # Ubuntu
 sudo apt-get install python3.10
 
-# Use specific Python version
-python3.10 -m pip install -r requirements.txt
+# Install TerraVision with a specific Python version
+python3.10 -m pip install terravision
 ```
 
 ---
@@ -174,22 +174,23 @@ terraform init
 terravision draw --source /path/to/terraform
 ```
 
-#### "Permission denied" errors
+#### "Permission denied" errors when installing
 
-**Problem**: Insufficient permissions
+**Problem**: `pip install terravision` fails with permission errors (common on system Python without `sudo`)
 
-**Solution**:
+**Solution** — use an isolated install so `sudo` is never required:
+
 ```bash
-# Make terravision.py executable
-chmod +x terravision.py
+# Preferred: pipx (fully isolated, auto-manages PATH)
+pipx install terravision
 
-# If pip install fails, use --user flag
-pip install --user -r requirements.txt
+# Or user install
+pip install --user terravision
 
-# Or use virtual environment
+# Or inside a virtualenv
 python -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install terravision
 ```
 
 ---
@@ -203,7 +204,7 @@ pip install -r requirements.txt
 **Solution**: Convert the binary plan to JSON first:
 ```bash
 terraform show -json tfplan.bin > plan.json
-terravision draw --planfile plan.json --graphfile graph.dot --source ./terraform
+terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform
 ```
 
 #### "Plan file does not contain 'resource_changes'"
@@ -239,7 +240,7 @@ If no resources appear, check your Terraform code and variable files.
 terravision draw \
   --planfile plan.json \
   --graphfile graph.dot \
-  --source ./terraform
+  --source ./path-to-your-terraform
 ```
 
 #### "WARNING: --workspace/--varfile ignored with --planfile"
@@ -626,8 +627,9 @@ rm -rf ~/.terravision/
 rm -rf .terraform/
 rm -f tfdata.json
 
-# Reinstall dependencies
-pip install --force-reinstall -r requirements.txt
+# Reinstall TerraVision
+pipx reinstall terravision         # if installed with pipx
+# or: pip install --force-reinstall terravision
 
 # Reinitialize Terraform
 terraform init
