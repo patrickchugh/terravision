@@ -664,6 +664,9 @@ def handle_group(
     if not tfdata["graphdict"].get(resource):
         return None, drawn_resources
 
+    if resource in drawn_resources:
+        return None, drawn_resources
+
     # Create new group/cluster
     node_label = helpers.pretty_name(resource, is_group=True)
     cidr = helpers.get_cidr_label(resource, tfdata)

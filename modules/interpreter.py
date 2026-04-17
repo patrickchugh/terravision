@@ -6,6 +6,10 @@ Processes resource metadata and manages variable substitution across modules.
 
 from typing import Dict, List, Any, Tuple
 import modules.helpers as helpers
+from modules.plan_resolver import (
+    resolve_module_ref_from_plan,
+    is_hcl_function_suffix,
+)
 import hcl2
 import click
 import re
@@ -355,10 +359,19 @@ def replace_module_vars(
                     continue
             # Mark as unknown if no resolution found
             if value == oldvalue and not re.search(r"module\.[\w-]+\.aws_", module_var):
-                value = value.replace(module_var, '"UNKNOWN"')
-                click.echo(
-                    f"   WARNING: Cannot resolve {module_var}, assigning UNKNOWN value in module {module}"
-                )
+                # Try plan-based fallback (terraform plan JSON has resolved values)
+                plan_value = resolve_module_ref_from_plan(module_var, tfdata)
+                if plan_value is not None:
+                    value = value.replace(module_var, plan_value)
+                elif is_hcl_function_suffix(module_var):
+                    # False-positive regex match on HCL builtin (tomap/flatten/for/...);
+                    # leave value alone and don't warn.
+                    pass
+                else:
+                    value = value.replace(module_var, '"UNKNOWN"')
+                    click.echo(
+                        f"   WARNING: Cannot resolve {module_var}, assigning UNKNOWN value in module {module}"
+                    )
             # Clean up wildcard ID references
             if "[" in value and "*.id" in value:
                 value = (value.replace(".*.id", "")).strip()
