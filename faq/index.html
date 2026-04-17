@@ -1,0 +1,2344 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents.">
+      
+      
+      
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/faq/">
+      
+      
+        <link rel="prev" href="../cicd-integration/">
+      
+      
+        <link rel="next" href="../troubleshooting/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>FAQ - TerraVision</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#frequently-asked-questions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="TerraVision" class="md-header__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TerraVision
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FAQ
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard="" data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"></path></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../annotations/" class="md-tabs__link">
+          
+  
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Help
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../demo-aws.html" class="md-tabs__link">
+          
+  
+  
+  Live Demos
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="TerraVision" class="md-nav__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    TerraVision
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#about-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About TerraVision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="About TerraVision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is TerraVision?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-is-it-different-from-terraform-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How is it different from terraform graph?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-it-free" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is it free?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-and-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and Privacy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security and Privacy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#does-terravision-need-cloud-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does TerraVision need cloud credentials?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-my-terraform-code-leave-my-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does my Terraform code leave my machine?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-data-is-sent-to-the-llm-when-i-use-ai-annotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What data is sent to the LLM when I use --ai-annotate?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-audit-what-the-ai-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I audit what the AI changed?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-llm-backends-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which LLM backends are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running TerraVision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running TerraVision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-it-fully-offline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I run it fully offline?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-versions-of-terraform-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What versions of Terraform are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-work-with-terragrunt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it work with Terragrunt?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-support-terraform-modules-from-private-git-repos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it support Terraform modules from private Git repos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-support-opentofu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it support OpenTofu?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does my diagram look different from my actual deployed infrastructure?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-and-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output and Customization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output and Customization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-output-formats-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What output formats are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-edit-the-diagram-afterwards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I edit the diagram afterwards?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-add-custom-labels-external-actors-or-override-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I add custom labels, external actors, or override connections?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-generate-different-diagrams-for-dev-vs-prod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I generate different diagrams for dev vs prod?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-diagrams-in-my-docs-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I embed diagrams in my docs site?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cloud-providers-and-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cloud Providers and Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cloud Providers and Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#which-cloud-providers-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which cloud providers are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-it-for-multi-cloud-architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I use it for multi-cloud architectures?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-add-support-for-a-new-service-or-resource-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I add support for a new service or resource type?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI/CD
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI/CD">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#do-i-need-cloud-credentials-in-my-ci-job-that-generates-diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do I need cloud credentials in my CI job that generates diagrams?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-an-official-github-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is there an official GitHub Action?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-an-official-docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is there an official Docker image?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dot-command-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "dot command not found"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-plan-fails-inside-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "terraform plan" fails inside TerraVision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-diagram-is-too-large-unreadable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My diagram is too large / unreadable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#more-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#still-stuck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Still stuck?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-handler-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Handler Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constitution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Constitution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live Demos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Live Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-aws.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-azure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Azure Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-gcp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCP Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#about-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About TerraVision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="About TerraVision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is TerraVision?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-is-it-different-from-terraform-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How is it different from terraform graph?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-it-free" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is it free?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-and-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and Privacy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security and Privacy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#does-terravision-need-cloud-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does TerraVision need cloud credentials?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-my-terraform-code-leave-my-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does my Terraform code leave my machine?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-data-is-sent-to-the-llm-when-i-use-ai-annotate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What data is sent to the LLM when I use --ai-annotate?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-audit-what-the-ai-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I audit what the AI changed?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#which-llm-backends-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which LLM backends are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running TerraVision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running TerraVision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#can-i-run-it-fully-offline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I run it fully offline?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-versions-of-terraform-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What versions of Terraform are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-work-with-terragrunt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it work with Terragrunt?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-support-terraform-modules-from-private-git-repos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it support Terraform modules from private Git repos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-it-support-opentofu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it support OpenTofu?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why does my diagram look different from my actual deployed infrastructure?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-and-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output and Customization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output and Customization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-output-formats-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What output formats are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-edit-the-diagram-afterwards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I edit the diagram afterwards?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-add-custom-labels-external-actors-or-override-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I add custom labels, external actors, or override connections?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-generate-different-diagrams-for-dev-vs-prod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I generate different diagrams for dev vs prod?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-do-i-embed-diagrams-in-my-docs-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I embed diagrams in my docs site?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cloud-providers-and-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cloud Providers and Scope
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cloud Providers and Scope">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#which-cloud-providers-are-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which cloud providers are supported?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-use-it-for-multi-cloud-architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I use it for multi-cloud architectures?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-add-support-for-a-new-service-or-resource-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I add support for a new service or resource type?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI/CD
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI/CD">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#do-i-need-cloud-credentials-in-my-ci-job-that-generates-diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Do I need cloud credentials in my CI job that generates diagrams?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-an-official-github-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is there an official GitHub Action?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-there-an-official-docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is there an official Docker image?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dot-command-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "dot command not found"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-plan-fails-inside-terravision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "terraform plan" fails inside TerraVision
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-diagram-is-too-large-unreadable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My diagram is too large / unreadable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#more-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#still-stuck" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Still stuck?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/faq.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<h1 id="frequently-asked-questions">Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">¶</a></h1>
+<h2 id="about-terravision">About TerraVision<a class="headerlink" href="#about-terravision" title="Permanent link">¶</a></h2>
+<h3 id="what-is-terravision">What is TerraVision?<a class="headerlink" href="#what-is-terravision" title="Permanent link">¶</a></h3>
+<p>TerraVision is a command-line tool that converts Terraform code into professional cloud architecture diagrams using the official AWS, GCP, and Azure icon sets. It runs entirely on your local machine and keeps your infrastructure documentation in sync with your code.</p>
+<h3 id="how-is-it-different-from-terraform-graph">How is it different from <code>terraform graph</code>?<a class="headerlink" href="#how-is-it-different-from-terraform-graph" title="Permanent link">¶</a></h3>
+<p><code>terraform graph</code> outputs a raw dependency graph in Graphviz DOT format — technically accurate but not human-readable. TerraVision takes that raw graph as one input, enriches it with plan data and provider-specific layout rules, groups resources into VPCs/subnets/resource groups, applies official cloud icons, and produces a diagram you can actually put in front of a stakeholder.</p>
+<h3 id="is-it-free">Is it free?<a class="headerlink" href="#is-it-free" title="Permanent link">¶</a></h3>
+<p>Yes. TerraVision is open source — see <a href="https://github.com/patrickchugh/terravision/blob/main/LICENSE">LICENSE on GitHub</a>.</p>
+<hr>
+<h2 id="security-and-privacy">Security and Privacy<a class="headerlink" href="#security-and-privacy" title="Permanent link">¶</a></h2>
+<h3 id="does-terravision-need-cloud-credentials">Does TerraVision need cloud credentials?<a class="headerlink" href="#does-terravision-need-cloud-credentials" title="Permanent link">¶</a></h3>
+<p><strong>TerraVision itself does not.</strong> It never calls any cloud API.</p>
+<p>However, the tool it depends on — Terraform — does need credentials to run <code>terraform plan</code>, because Terraform resolves data sources and validates references against your cloud account. Two ways to avoid this:</p>
+<ol>
+<li><strong>Use pre-generated plan files</strong>: run <code>terraform plan</code> once (in a trusted environment), export the output, and pass it to TerraVision with <code>--planfile</code> and <code>--graphfile</code>. The diagramming step then needs no credentials at all. See <a href="../usage-guide/#pre-generated-plan-input">Pre-Generated Plan Input</a>.</li>
+<li><strong>Run Terraform locally</strong> with your normal developer credentials — the plan output stays on your machine.</li>
+</ol>
+<h3 id="does-my-terraform-code-leave-my-machine">Does my Terraform code leave my machine?<a class="headerlink" href="#does-my-terraform-code-leave-my-machine" title="Permanent link">¶</a></h3>
+<p><strong>No.</strong> TerraVision runs 100% client-side. Your <code>.tf</code> files, <code>.tfvars</code>, and plan output are parsed locally and never transmitted anywhere.</p>
+<p>The only exception is when you opt into <code>--ai-annotate</code>, and even then the source code itself is not sent — see the next question.</p>
+<h3 id="what-data-is-sent-to-the-llm-when-i-use-ai-annotate">What data is sent to the LLM when I use <code>--ai-annotate</code>?<a class="headerlink" href="#what-data-is-sent-to-the-llm-when-i-use-ai-annotate" title="Permanent link">¶</a></h3>
+<p>Only a compact summary:</p>
+<ul>
+<li>The <strong>resource graph</strong> — resource types (e.g. <code>aws_lambda_function</code>), logical names, and the edges between them</li>
+<li><strong>Lightweight metadata</strong> — selected attributes like resource tags, labels, and port numbers that help the model generate useful connection labels and flow sequences</li>
+</ul>
+<p><strong>Never sent:</strong></p>
+<ul>
+<li>Your <code>.tf</code> source code</li>
+<li>Variable values, secrets, access keys, or anything from your environment</li>
+<li>Plan state beyond the graph topology</li>
+</ul>
+<p>The LLM response is written to <code>terravision.ai.yml</code> as a human-readable annotation file, which is merged on top of the deterministic graph at render time. You can inspect exactly what the AI suggested before it appears on your diagram. See the <a href="../annotations/">Annotations Guide</a> for details.</p>
+<h3 id="can-i-audit-what-the-ai-changed">Can I audit what the AI changed?<a class="headerlink" href="#can-i-audit-what-the-ai-changed" title="Permanent link">¶</a></h3>
+<p>Yes. The <code>terravision.ai.yml</code> file is a plain YAML file containing every AI-suggested label, title, external actor, and flow. The underlying graph (<code>graphdict</code>) is byte-identical with or without <code>--ai-annotate</code> — AI suggestions flow through the annotation layer only, never into the graph itself.</p>
+<h3 id="which-llm-backends-are-supported">Which LLM backends are supported?<a class="headerlink" href="#which-llm-backends-are-supported" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Ollama</strong> (local) — runs on your own machine, no data leaves it. Recommended for most users.</li>
+<li><strong>AWS Bedrock</strong> — uses your AWS account and stays within AWS.</li>
+</ul>
+<p>You can also skip AI entirely and write your own <code>terravision.yml</code> by hand.</p>
+<hr>
+<h2 id="running-terravision">Running TerraVision<a class="headerlink" href="#running-terravision" title="Permanent link">¶</a></h2>
+<h3 id="can-i-run-it-fully-offline">Can I run it fully offline?<a class="headerlink" href="#can-i-run-it-fully-offline" title="Permanent link">¶</a></h3>
+<p>Yes — once installed, TerraVision works without a network connection. The <code>visualise</code> HTML output is a single self-contained file with no external dependencies (fonts, JS libraries, and icons are all inlined), so you can open it offline too.</p>
+<p>If you point <code>--source</code> at a Git URL, that clone obviously needs network access, but local directories don't.</p>
+<h3 id="what-versions-of-terraform-are-supported">What versions of Terraform are supported?<a class="headerlink" href="#what-versions-of-terraform-are-supported" title="Permanent link">¶</a></h3>
+<p>Terraform <strong>1.x</strong> (v1.0.0 or later). OpenTofu is supported via the same binary interface. Terraform 0.x is not supported.</p>
+<h3 id="does-it-work-with-terragrunt">Does it work with Terragrunt?<a class="headerlink" href="#does-it-work-with-terragrunt" title="Permanent link">¶</a></h3>
+<p>Yes, with auto-detection:</p>
+<ul>
+<li><strong>Single-module</strong> (<code>terragrunt.hcl</code> in the source directory): delegated to <code>terragrunt init</code> / <code>terragrunt plan</code>, then <code>terraform show</code> / <code>terraform graph</code> in the cache directory.</li>
+<li><strong>Multi-module</strong> (child directories with their own <code>terragrunt.hcl</code>): each module is planned independently, outputs merged with <code>module.&lt;name&gt;.</code> prefixes, and <code>dependency</code> blocks are parsed to inject cross-module edges.</li>
+</ul>
+<p>Requires Terragrunt v0.50+ for unified <code>run-all</code> syntax.</p>
+<h3 id="does-it-support-terraform-modules-from-private-git-repos">Does it support Terraform modules from private Git repos?<a class="headerlink" href="#does-it-support-terraform-modules-from-private-git-repos" title="Permanent link">¶</a></h3>
+<p>Yes. TerraVision uses your local Git credentials (SSH keys, <code>GIT_ASKPASS</code>, etc.), and Terraform module sources like <code>git::ssh://...</code> or private <code>github.com/...</code> URLs work as normal.</p>
+<h3 id="does-it-support-opentofu">Does it support OpenTofu?<a class="headerlink" href="#does-it-support-opentofu" title="Permanent link">¶</a></h3>
+<p>Yes. OpenTofu's CLI is a drop-in replacement for the Terraform binary on PATH.</p>
+<h3 id="why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure">Why does my diagram look different from my actual deployed infrastructure?<a class="headerlink" href="#why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure" title="Permanent link">¶</a></h3>
+<p>The graph is built from <code>terraform plan</code> output, which represents the <em>desired</em> state declared in your code. If your deployed infrastructure has drifted (manual changes in the console, another tool, etc.), the diagram reflects the code, not the drift. Run <code>terraform plan</code> yourself to see the same divergence.</p>
+<hr>
+<h2 id="output-and-customization">Output and Customization<a class="headerlink" href="#output-and-customization" title="Permanent link">¶</a></h2>
+<h3 id="what-output-formats-are-supported">What output formats are supported?<a class="headerlink" href="#what-output-formats-are-supported" title="Permanent link">¶</a></h3>
+<p>All Graphviz formats (png, svg, pdf, jpg, gif, bmp, eps, webp, dot, xdot, json, tif…) plus native draw.io XML export (<code>--format drawio</code>). See <a href="../usage-guide/#output-formats">Output Formats</a> for the full list.</p>
+<h3 id="can-i-edit-the-diagram-afterwards">Can I edit the diagram afterwards?<a class="headerlink" href="#can-i-edit-the-diagram-afterwards" title="Permanent link">¶</a></h3>
+<p>Yes — export with <code>--format drawio</code> and open the result in <a href="https://app.diagrams.net/">draw.io</a>, <a href="https://www.lucidchart.com/">Lucidchart</a>, or any other mxGraph-compatible editor. Everything is editable: move nodes, change colours, add annotations, swap icons.</p>
+<p>For SVG output, any vector editor (Illustrator, Inkscape, Figma) will open it.</p>
+<h3 id="how-do-i-add-custom-labels-external-actors-or-override-connections">How do I add custom labels, external actors, or override connections?<a class="headerlink" href="#how-do-i-add-custom-labels-external-actors-or-override-connections" title="Permanent link">¶</a></h3>
+<p>Create a <code>terravision.yml</code> in your Terraform directory. See the <a href="../annotations/">Annotations Guide</a> for the full schema.</p>
+<h3 id="can-i-generate-different-diagrams-for-dev-vs-prod">Can I generate different diagrams for dev vs prod?<a class="headerlink" href="#can-i-generate-different-diagrams-for-dev-vs-prod" title="Permanent link">¶</a></h3>
+<p>Yes — use <code>--varfile</code> with different <code>.tfvars</code> files:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>dev.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-dev
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-prod
+</span></code></pre></div>
+<p>Or use <code>--workspace</code> to target a specific Terraform workspace.</p>
+<h3 id="how-do-i-embed-diagrams-in-my-docs-site">How do I embed diagrams in my docs site?<a class="headerlink" href="#how-do-i-embed-diagrams-in-my-docs-site" title="Permanent link">¶</a></h3>
+<ul>
+<li>Export as <code>svg</code> and include it like any image — it scales cleanly.</li>
+<li>Or use the interactive HTML from <code>terravision visualise</code> as an iframe or standalone page (see the <a href="https://patrickchugh.github.io/terravision/demo-aws.html">AWS</a>, <a href="https://patrickchugh.github.io/terravision/demo-azure.html">Azure</a>, and <a href="https://patrickchugh.github.io/terravision/demo-gcp.html">GCP</a> demos for examples).</li>
+</ul>
+<hr>
+<h2 id="cloud-providers-and-scope">Cloud Providers and Scope<a class="headerlink" href="#cloud-providers-and-scope" title="Permanent link">¶</a></h2>
+<h3 id="which-cloud-providers-are-supported">Which cloud providers are supported?<a class="headerlink" href="#which-cloud-providers-are-supported" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Status</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS</td>
+<td>Full</td>
+<td>200+ services (compute, networking, storage, data, …)</td>
+</tr>
+<tr>
+<td>Google Cloud</td>
+<td>Partial</td>
+<td>Core services (GCE, GKE, Cloud SQL, VPC, Load Balancer, …)</td>
+</tr>
+<tr>
+<td>Azure</td>
+<td>Partial</td>
+<td>Core services (VM, VMSS, AKS, VNet, Load Balancer, …)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="can-i-use-it-for-multi-cloud-architectures">Can I use it for multi-cloud architectures?<a class="headerlink" href="#can-i-use-it-for-multi-cloud-architectures" title="Permanent link">¶</a></h3>
+<p>Yes — a single Terraform project can declare resources from AWS, GCP, and Azure simultaneously, and TerraVision will render all three on the same diagram with each provider's own icon set.</p>
+<h3 id="can-i-add-support-for-a-new-service-or-resource-type">Can I add support for a new service or resource type?<a class="headerlink" href="#can-i-add-support-for-a-new-service-or-resource-type" title="Permanent link">¶</a></h3>
+<p>Most services need no special handling — the baseline Terraform graph plus icon mapping produces an accurate diagram. If you find a resource rendering incorrectly, check the <a href="../resource-handler-guide/">Resource Handler Guide</a> and either open an issue or submit a PR.</p>
+<hr>
+<h2 id="cicd">CI/CD<a class="headerlink" href="#cicd" title="Permanent link">¶</a></h2>
+<h3 id="do-i-need-cloud-credentials-in-my-ci-job-that-generates-diagrams">Do I need cloud credentials in my CI job that generates diagrams?<a class="headerlink" href="#do-i-need-cloud-credentials-in-my-ci-job-that-generates-diagrams" title="Permanent link">¶</a></h3>
+<p>No, if you use <code>--planfile</code> and <code>--graphfile</code>. Run <code>terraform plan</code> in a trusted job with credentials, export the plan and graph, then pass them to <code>terravision draw</code> in a separate credential-free step. See the <a href="../cicd-integration/">CI/CD Integration Guide</a> for GitHub Actions, GitLab, Jenkins, and Azure DevOps examples.</p>
+<h3 id="is-there-an-official-github-action">Is there an official GitHub Action?<a class="headerlink" href="#is-there-an-official-github-action" title="Permanent link">¶</a></h3>
+<p>Yes — <a href="https://github.com/patrickchugh/terravision-action">patrickchugh/terravision-action</a> installs TerraVision and Graphviz for you.</p>
+<h3 id="is-there-an-official-docker-image">Is there an official Docker image?<a class="headerlink" href="#is-there-an-official-docker-image" title="Permanent link">¶</a></h3>
+<p>Yes — <code>patrickchugh/terravision:latest</code> on Docker Hub. Includes Terraform via <code>tfenv</code> so you can pin a Terraform version at runtime with <code>-e TFENV_TERRAFORM_VERSION=1.9.8</code>.</p>
+<hr>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
+<h3 id="dot-command-not-found">"dot command not found"<a class="headerlink" href="#dot-command-not-found" title="Permanent link">¶</a></h3>
+<p>Graphviz isn't installed. See <a href="../troubleshooting/">Troubleshooting → Graphviz Not Found</a>.</p>
+<h3 id="terraform-plan-fails-inside-terravision">"terraform plan" fails inside TerraVision<a class="headerlink" href="#terraform-plan-fails-inside-terravision" title="Permanent link">¶</a></h3>
+<p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> using your normal Terraform setup, so a plan failure inside TerraVision means the plan would fail outside it too. Run <code>terraform plan</code> yourself to debug, then retry. If plan succeeds but TerraVision still fails, that's a TerraVision bug — please open an issue.</p>
+<h3 id="my-diagram-is-too-large-unreadable">My diagram is too large / unreadable<a class="headerlink" href="#my-diagram-is-too-large-unreadable" title="Permanent link">¶</a></h3>
+<p>Try <code>--simplified</code> to collapse networking infrastructure and focus on core services. For very large projects, generate per-module diagrams:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/vpc<span class="w"> </span>--outfile<span class="w"> </span>arch-vpc
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/app<span class="w"> </span>--outfile<span class="w"> </span>arch-app
+</span></code></pre></div>
+<h3 id="more-issues">More issues<a class="headerlink" href="#more-issues" title="Permanent link">¶</a></h3>
+<p>See the <a href="../troubleshooting/">Troubleshooting Guide</a> for a longer list of common problems and solutions.</p>
+<hr>
+<h2 id="still-stuck">Still stuck?<a class="headerlink" href="#still-stuck" title="Permanent link">¶</a></h2>
+<ul>
+<li>Open an <a href="https://github.com/patrickchugh/terravision/issues">issue on GitHub</a></li>
+<li>Ask on <a href="https://github.com/patrickchugh/terravision/discussions">GitHub Discussions</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Patrick Chugh
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/patrickchugh/terravision" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://youtu.be/bTrWHBI2mF4" target="_blank" rel="noopener" title="youtu.be" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/terravision/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "toc.follow", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

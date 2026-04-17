@@ -1,0 +1,2097 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents.">
+      
+      
+      
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/constitution/">
+      
+      
+        <link rel="prev" href="../resource-handler-guide/">
+      
+      
+        <link rel="next" href="../demo-aws.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Project Constitution - TerraVision</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#terravision-constitution" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="TerraVision" class="md-header__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            TerraVision
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Project Constitution
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard="" data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"></path></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../annotations/" class="md-tabs__link">
+          
+  
+  
+  Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../faq/" class="md-tabs__link">
+          
+  
+  
+  Help
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Contributing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../demo-aws.html" class="md-tabs__link">
+          
+  
+  
+  Live Demos
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="TerraVision" class="md-nav__button md-logo" aria-label="TerraVision" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+
+    </a>
+    TerraVision
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/patrickchugh/terravision" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    patrickchugh/terravision
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cicd-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-handler-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Handler Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Constitution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Constitution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#core-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i-code-as-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I. Code as Source of Truth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ii-client-side-security-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        II. Client-Side Security &amp; Privacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iii-docs-as-code-dac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        III. Docs as Code (DaC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iv-dynamic-parsing-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IV. Dynamic Parsing &amp; Accuracy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v-multi-cloud-provider-agnostic-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        V. Multi-Cloud &amp; Provider Agnostic Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vi-extensibility-through-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VI. Extensibility Through Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vii-ai-assisted-refinement-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VII. AI-Assisted Refinement (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Standards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Standards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-technologies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Technologies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Organization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#provider-specific-code-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider-Specific Code Isolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-handler-implementation-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Handler Implementation Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Standards
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation System
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feature-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feature Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-review-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Review Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Governance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Governance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constitution-authority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constitution Authority
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amendment-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Amendment Procedure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compliance-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance &amp; Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#versioning-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live Demos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Live Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-aws.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-azure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Azure Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../demo-gcp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCP Demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#core-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i-code-as-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I. Code as Source of Truth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ii-client-side-security-privacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        II. Client-Side Security &amp; Privacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iii-docs-as-code-dac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        III. Docs as Code (DaC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iv-dynamic-parsing-accuracy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IV. Dynamic Parsing &amp; Accuracy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v-multi-cloud-provider-agnostic-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        V. Multi-Cloud &amp; Provider Agnostic Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vi-extensibility-through-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VI. Extensibility Through Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vii-ai-assisted-refinement-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VII. AI-Assisted Refinement (Optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technical Standards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technical Standards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-technologies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Technologies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Organization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Code Organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#provider-specific-code-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Provider-Specific Code Isolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-handler-implementation-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resource Handler Implementation Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Standards
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation System
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feature-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feature Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-review-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Review Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#release-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Governance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Governance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#constitution-authority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constitution Authority
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amendment-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Amendment Procedure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compliance-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance &amp; Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#versioning-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/constitution.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<!--
+Sync Impact Report:
+- Version change: 1.5.0 → 1.6.0 (clarified credentials boundary in Principle II;
+  expanded Principle I to explicitly require plan over state)
+- Modified principles:
+  - I. Code as Source of Truth — added explicit guidance on why plan is preferred
+    over state file as the input source. State is a snapshot of yesterday's
+    deployment; plan is the semantic content of the code.
+  - II. Client-Side Security & Privacy — clarified that TerraVision itself
+    requires no cloud credentials. Cloud API access happens only when Terraform
+    is invoked by TerraVision to generate a plan. Pre-generated plan/graph file
+    mode (`--planfile` / `--graphfile`) is fully credential-free.
+- Added sections: None
+- Removed sections: None
+- Templates status:
+  ✅ plan-template.md - Constitution Check section aligns with principles
+  ✅ spec-template.md - Requirements sections align with testability principles
+  ✅ tasks-template.md - Task organization reflects independent testing principles
+  ✅ CLAUDE.md - No changes required
+- Follow-up TODOs: None
+--><h1 id="terravision-constitution">TerraVision Constitution<a class="headerlink" href="#terravision-constitution" title="Permanent link">¶</a></h1>
+<h2 id="core-principles">Core Principles<a class="headerlink" href="#core-principles" title="Permanent link">¶</a></h2>
+<h3 id="i-code-as-source-of-truth">I. Code as Source of Truth<a class="headerlink" href="#i-code-as-source-of-truth" title="Permanent link">¶</a></h3>
+<p>The infrastructure code (Terraform) is the authoritative source of truth for architecture diagrams. Architecture diagrams MUST be generated from code (via <code>terraform plan</code> output), not from deployed state files, and not manually drawn. Machine-generated diagrams maintain accuracy by dynamically parsing actual infrastructure definitions and resolving conditionals, variables, counts, and for_each expressions through the Terraform evaluation engine.</p>
+<p><strong>Why plan, not state</strong>:</p>
+<ul>
+<li><strong>State is a snapshot of yesterday's deployment; plan is the semantic content of the code today.</strong> A new feature branch with 50 new resources would show 0 in state but all 50 in plan. A half-deployed environment would show partial reality in state. A <code>count = var.enable_feature ? N : 0</code> block in state only reflects the last-applied value.</li>
+<li><strong>Variant rendering requires plan.</strong> <code>--varfile prod.tfvars</code> vs <code>--varfile dev.tfvars</code> vs <code>--varfile dr.tfvars</code> produces fundamentally different architectures from the same code. State is one snapshot of one workspace at one point in time and cannot be pivoted to show "what would dev look like with this same code."</li>
+<li><strong>Pre-deployment review requires plan.</strong> <code>terravision draw</code> against a feature branch shows the architecture impact before merging. Greenfield projects that have never been applied have no state but have valid plan output.</li>
+<li><strong>Conditional logic resolution requires plan.</strong> <code>count</code>, <code>for_each</code>, <code>dynamic</code> blocks, and ternary expressions are evaluated by Terraform's plan engine. State is the <em>result</em> of evaluation, not the evaluation itself.</li>
+<li><strong>Plan outputs are CI-friendly.</strong> <code>terraform plan -out=tfplan.bin &amp;&amp; terraform show -json tfplan.bin &gt; plan.json</code> already runs in most pipelines. TerraVision can consume that artifact via <code>--planfile</code> with zero new infrastructure or permissions.</li>
+</ul>
+<p>State files MAY be used as an <em>optional enrichment overlay</em> to populate <code>(known after apply)</code> values in detailed metadata views (e.g., the interactive HTML sidebar), but MUST NOT be used as the primary or sole input source for diagram structure. When state-file enrichment is used, sensitive attributes MUST be redacted by default.</p>
+<p><strong>Rationale</strong>: Manual diagrams become outdated immediately after deployment. State-based diagrams document yesterday's deployment, not today's code. By treating code as truth and using <code>terraform plan</code> as the authoritative input, TerraVision shows what the code defines, supports multi-environment variants, works on undeployed branches, and accurately reflects conditional logic — all things state files cannot do.</p>
+<h3 id="ii-client-side-security-privacy">II. Client-Side Security &amp; Privacy<a class="headerlink" href="#ii-client-side-security-privacy" title="Permanent link">¶</a></h3>
+<p>TerraVision itself MUST NOT require cloud credentials, API access, or intrusive cloud resources. The TerraVision binary parses files (Terraform source, plan JSON, graph DOT) and renders diagrams. It does not authenticate to cloud providers, does not call cloud APIs, and does not write or read remote state.</p>
+<p>Cloud API access happens only when TerraVision invokes Terraform as a subprocess to generate a plan from raw <code>.tf</code> files. In that mode, <strong>Terraform — not TerraVision — is the component that needs credentials</strong>, because Terraform's plan engine calls provider APIs to authenticate, look up data sources, and resolve computed values. TerraVision is a downstream consumer of plan output.</p>
+<p><strong>Two operating modes:</strong></p>
+<ol>
+<li><strong>Plan-from-source mode</strong> (<code>terravision draw --source ./path-to-your-terraform</code>): TerraVision invokes Terraform, which calls cloud APIs to produce a plan. Cloud credentials are required by Terraform but never accessed or stored by TerraVision itself.</li>
+<li><strong>Pre-generated plan mode</strong> (<code>terravision draw --planfile plan.json --graphfile graph.dot --source ./path-to-your-terraform</code>): TerraVision consumes plan and graph files generated upstream (typically in a CI pipeline where Terraform already ran). <strong>Zero cloud credentials of any kind are required.</strong> This is the gold-standard path for high-security environments and air-gapped use.</li>
+</ol>
+<p>For LLM-based AI refinement, only minimal aggregate metadata may be sent to backends — never sensitive code, secrets, or runtime values. Local AI backends (Ollama) MUST be available for environments that prohibit any external API calls.</p>
+<p><strong>Rationale</strong>: The clear separation between TerraVision (credential-free) and Terraform (the component that needs credentials when used) lets enterprises adopt TerraVision in environments where the security team controls credential boundaries. CI pipelines that already run <code>terraform plan</code> for review can pipe the resulting JSON directly into TerraVision in a separate, credential-free job, isolating the credential surface to a single existing pipeline step. State file backends are deliberately not read by TerraVision because that would re-introduce a credential dependency for a use case (diagram generation) that does not require it.</p>
+<h3 id="iii-docs-as-code-dac">III. Docs as Code (DaC)<a class="headerlink" href="#iii-docs-as-code-dac" title="Permanent link">¶</a></h3>
+<p>Architecture diagrams MUST be treatable as code artifacts: versioned, automated, and integrated into CI/CD pipelines. Diagrams MUST be generated in build/test/release phases and committed to version control alongside infrastructure code.</p>
+<p><strong>Rationale</strong>: Documentation should follow the same discipline as code - versioned, reviewed, and automated. CI/CD integration ensures diagrams update automatically with infrastructure changes, eliminating manual diagram maintenance overhead.</p>
+<h3 id="iv-dynamic-parsing-accuracy">IV. Dynamic Parsing &amp; Accuracy<a class="headerlink" href="#iv-dynamic-parsing-accuracy" title="Permanent link">¶</a></h3>
+<p>The tool MUST dynamically parse conditionally created resources and variables to generate accurate architecture visuals. Diagrams MUST reflect the actual infrastructure that would be deployed, including conditional logic and variable substitution.</p>
+<p><strong>Rationale</strong>: Static parsing misses conditional resources and variable-driven infrastructure. Dynamic parsing ensures diagrams show what actually gets deployed based on workspace/variable configurations, not just what's theoretically possible.</p>
+<h3 id="v-multi-cloud-provider-agnostic-design">V. Multi-Cloud &amp; Provider Agnostic Design<a class="headerlink" href="#v-multi-cloud-provider-agnostic-design" title="Permanent link">¶</a></h3>
+<p>The architecture MUST support multiple cloud providers (AWS, GCP, Azure) and on-premises infrastructure with consistent icon libraries and styling. Provider-specific implementations MUST follow industry-standard architectural patterns and approved visual styles.</p>
+<p><strong>Rationale</strong>: Organizations operate in multi-cloud environments. Provider-agnostic design allows a single tool to document entire infrastructure portfolios, while consistent styling ensures diagrams remain readable across different cloud platforms.</p>
+<h3 id="vi-extensibility-through-annotations">VI. Extensibility Through Annotations<a class="headerlink" href="#vi-extensibility-through-annotations" title="Permanent link">¶</a></h3>
+<p>Generated diagrams MUST be extensible via YAML-based annotations without modifying source code. Users MUST be able to add custom labels, connections, resources, and titles to supplement auto-generated output. Annotations follow Diagrams as Code principles.</p>
+<p><strong>Rationale</strong>: Automated generation achieves 80-90% completeness but cannot capture external systems, organizational context, or non-Terraform resources. YAML annotations provide declarative, version-controllable extensibility without code modification.</p>
+<h3 id="vii-ai-assisted-refinement-optional">VII. AI-Assisted Refinement (Optional)<a class="headerlink" href="#vii-ai-assisted-refinement-optional" title="Permanent link">¶</a></h3>
+<p>AI-powered diagram refinement MUST remain optional and support multiple backends (cloud-based, local). AI refinement MUST add missing connections, suggest meaningful diagram titles and external actors, generate numbered flow sequences where an end-to-end path exists, and enforce architectural conventions. Local AI options (Ollama) MUST be available for privacy-sensitive environments.</p>
+<p>AI refinement MUST NOT modify the deterministic graph data (graphdict, tfdata) — all AI output MUST be expressed as a separate annotation artifact (e.g., <code>terravision.ai.yml</code>) or as positional-only edits to a laid-out DOT file that pass a strict validation gate before image generation.</p>
+<p><strong>Rationale</strong>: AI improves diagram quality by applying architectural best practices and detecting missing relationships, but must remain optional to support air-gapped environments. Multiple backend support allows organizations to choose between convenience (cloud) and privacy (local). Resource grouping/simplification was explicitly removed from the mandated capabilities in v1.7.0 because the risk of the AI hiding load-bearing resources outweighed the readability benefit; grouping may return as an opt-in capability in a future amendment once a safe heuristic is proven.</p>
+<h2 id="technical-standards">Technical Standards<a class="headerlink" href="#technical-standards" title="Permanent link">¶</a></h2>
+<h3 id="supported-technologies">Supported Technologies<a class="headerlink" href="#supported-technologies" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Language</strong>: Python 3.10+</li>
+<li><strong>Required Dependencies</strong>: Terraform 1.x, Git, Graphviz</li>
+<li><strong>Optional Dependencies</strong>: Ollama (for local AI), AWS Bedrock (for cloud AI)</li>
+<li><strong>Input Formats</strong>: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON</li>
+<li><strong>Output Formats</strong>: PNG (default), SVG, PDF, BMP, JSON</li>
+</ul>
+<h3 id="code-organization">Code Organization<a class="headerlink" href="#code-organization" title="Permanent link">¶</a></h3>
+<h4 id="provider-specific-code-isolation">Provider-Specific Code Isolation<a class="headerlink" href="#provider-specific-code-isolation" title="Permanent link">¶</a></h4>
+<p>All cloud-specific resource handling logic MUST reside exclusively in provider-specific configuration and handler modules. Common modules shared across all cloud service providers (CSPs) MUST remain provider-agnostic.</p>
+<p><strong>Enforcement Rules</strong>:</p>
+<ul>
+<li><strong>CO-001</strong>: Cloud-specific configuration MUST be stored in <code>modules/config/cloud_config_&lt;provider&gt;.py</code> files (e.g., <code>cloud_config_aws.py</code>, <code>cloud_config_azure.py</code>, <code>cloud_config_gcp.py</code>)</li>
+<li><strong>CO-002</strong>: Provider-specific resource handlers MUST be implemented in <code>modules/resource_handlers_&lt;provider&gt;.py</code> files (e.g., <code>resource_handlers_aws.py</code>, <code>resource_handlers_azure.py</code>, <code>resource_handlers_gcp.py</code>)</li>
+<li><strong>CO-003</strong>: Common modules (e.g., <code>graphmaker.py</code>, <code>drawing.py</code>, <code>fileparser.py</code>, <code>interpreter.py</code>, <code>tfwrapper.py</code>) MUST NOT contain hardcoded provider-specific logic or resource types</li>
+<li><strong>CO-004</strong>: Provider detection and configuration loading MUST use dynamic dispatch patterns to route to provider-specific implementations</li>
+<li><strong>CO-005</strong>: New cloud provider support MUST follow the established pattern: create <code>cloud_config_&lt;provider&gt;.py</code> + <code>resource_handlers_&lt;provider&gt;.py</code> without modifying common modules</li>
+</ul>
+<p><strong>Rationale</strong>: Strict separation of provider-specific code from common infrastructure ensures maintainability, testability, and extensibility as new cloud providers are added. This architectural boundary prevents provider-specific logic from polluting shared modules and enables teams to add cloud support without risk of breaking existing providers.</p>
+<h4 id="resource-handler-implementation-guidelines">Resource Handler Implementation Guidelines<a class="headerlink" href="#resource-handler-implementation-guidelines" title="Permanent link">¶</a></h4>
+<p><strong>CRITICAL PRINCIPLE</strong>: Most services DO NOT need custom handlers. TerraVision's core engine (Terraform graph parsing + relationship detection + icon mapping) produces accurate diagrams for the majority of resources. Only implement handlers when the baseline output is demonstrably insufficient.</p>
+<p><strong>When to implement a handler</strong> (ALL must be true):
+1. The baseline diagram is confusing, inaccurate, or misleading for that resource type
+2. Critical relationships are missing or incorrect
+3. The issue cannot be fixed with general config (implied connections, edge nodes, etc.)
+4. The pattern affects user comprehension of architecture</p>
+<p><strong>When NOT to implement a handler</strong>:
+- Icons display correctly
+- Relationships are clear from Terraform dependencies
+- Resource placement is logical
+- Users can understand the architecture without special handling</p>
+<p>All resource handlers MUST follow a <strong>config-first approach</strong>, preferring declarative configuration over imperative Python code. Handlers MUST be implemented using the hybrid configuration-driven architecture in <code>modules/config/resource_handler_configs_&lt;provider&gt;.py</code>.</p>
+<p><strong>Enforcement Rules</strong>:</p>
+<ul>
+<li><strong>CO-005.1</strong>: Most services MUST NOT have custom handlers - trust the baseline Terraform graph parsing</li>
+<li><strong>CO-006</strong>: Resource handlers MUST be implemented as <strong>Pure Config-Driven</strong> (using only transformation building blocks) whenever possible</li>
+<li><strong>CO-007</strong>: Resource handlers SHOULD use <strong>Hybrid approach</strong> (config transformations + custom Python function) when combining generic operations with unique logic</li>
+<li><strong>CO-008</strong>: Resource handlers MAY use <strong>Pure Function</strong> (custom Python only) ONLY when logic is too complex to express declaratively (conditional logic with multiple branches, domain-specific parsing, selective filtering with complex rules)</li>
+<li><strong>CO-009</strong>: Custom Python handler functions MUST include clear documentation explaining why config-driven approach was insufficient</li>
+<li><strong>CO-010</strong>: New transformers SHOULD be added to <code>resource_transformers.py</code> when a pattern is reused across 2+ handlers</li>
+<li><strong>CO-011</strong>: Handler configurations MUST include descriptive <code>description</code> field explaining purpose and handler type rationale</li>
+<li><strong>CO-012</strong>: Parameters ending in <code>_function</code> or <code>_generator</code> in transformation configs are automatically resolved to function references - use this convention for all callable parameters</li>
+<li><strong>CO-013</strong>: The transformer library SHOULD remain stable at ~30 operations and reach a saturation point that won't increase no matter how many cloud providers are supported. New transformers require justification that the pattern: (a) appears in 4+ handlers across 2+ cloud providers, (b) cannot be expressed by composing existing transformers, and (c) represents a fundamental graph operation not yet covered</li>
+</ul>
+<p><strong>Decision Hierarchy</strong> (attempt in order):
+1. <strong>Pure Config-Driven</strong> - Use only existing transformers (70% code reduction, easiest to maintain)
+2. <strong>Hybrid</strong> - Add new generic transformer if pattern is reusable, supplement with custom function for unique logic
+3. <strong>Pure Function</strong> - Only for complex conditional logic that cannot be expressed declaratively</p>
+<p><strong>Rationale</strong>: TerraVision's core Terraform graph parsing handles most resources correctly without custom handlers. Adding handlers prematurely creates maintenance burden and complexity. When handlers ARE needed, config-driven approach reduces code by 70%, improves maintainability through reusable building blocks, and makes transformation logic transparent and testable. Requiring justification for imperative code prevents premature optimization and ensures the transformation library grows to handle common patterns. The automatic function resolution feature enables declarative configs to reference callable parameters without boilerplate. Limiting transformer growth to ~30 operations prevents DSL complexity while leveraging cross-provider reuse (3× multiplier for AWS/Azure/GCP). <strong>Default to no handler; add only when baseline output is insufficient.</strong></p>
+<h3 id="quality-requirements">Quality Requirements<a class="headerlink" href="#quality-requirements" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>QR-001</strong>: Architecture diagrams MUST be generated without requiring deployed infrastructure (work from <code>terraform plan</code>, not remote state)</li>
+<li><strong>QR-002</strong>: Tool MUST handle large Terraform projects (200+ resources) efficiently with simplified diagram options</li>
+<li><strong>QR-003</strong>: Tool MUST automatically download and parse organizational/external Terraform modules</li>
+<li><strong>QR-004</strong>: Debug mode MUST export intermediate state (tfdata.json) for troubleshooting without re-running slow terraform operations</li>
+<li><strong>QR-005</strong>: All CLI commands MUST support both human-readable and JSON output formats</li>
+<li><strong>QR-006</strong>: Module cache and temporary files MUST use <code>~/.terravision</code> directory; cache MUST be clearable via <code>rm -rf ~/.terravision</code></li>
+</ul>
+<h3 id="testing-standards">Testing Standards<a class="headerlink" href="#testing-standards" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>TS-001</strong>: Changes MUST NOT break terraform plan parsing for supported Terraform versions (1.x)</li>
+<li><strong>TS-002</strong>: Provider support additions MUST include icon library and resource mapping tests</li>
+<li><strong>TS-003</strong>: Annotation functionality MUST be tested with valid and malformed YAML inputs</li>
+<li><strong>TS-004</strong>: CI/CD integration examples MUST be validated against actual pipeline runners</li>
+<li><strong>TS-005</strong>: Poetry MUST be used for dependency management; all Python commands in documentation and development MUST use <code>poetry run</code> prefix (e.g., <code>poetry run python terravision.py</code>, <code>poetry run pytest</code>)</li>
+<li><strong>TS-006</strong>: Code MUST be formatted with Black using 88-character line length; CI MUST enforce formatting via <code>poetry run black --check -v modules</code>; violations MUST fail builds</li>
+<li><strong>TS-007</strong>: Pre-commit hooks MUST run non-slow tests (<code>poetry run pytest -m "not slow"</code>); terraform-dependent tests MUST be marked with <code>@pytest.mark.slow</code></li>
+</ul>
+<h2 id="validation-system">Validation System<a class="headerlink" href="#validation-system" title="Permanent link">¶</a></h2>
+<p>A validation system has been implemented to enforce safeguards around expected JSON modifications. The process documented in BASELINE_VALIDATION_CHECKLIST.md, EXPECTED_JSON_MODIFICATION_POLICY.md, VALIDATION_FINDINGS.md and POST_IMPLEMENTATION_VALIDATION.md should be used before marking any tasks compelte.</p>
+<h2 id="development-workflow">Development Workflow<a class="headerlink" href="#development-workflow" title="Permanent link">¶</a></h2>
+<h3 id="feature-development">Feature Development<a class="headerlink" href="#feature-development" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Specification</strong>: New features MUST include user scenarios with acceptance criteria</li>
+<li><strong>Testing</strong>: Core functionality changes MUST be validated with real Terraform repositories</li>
+<li><strong>Documentation</strong>: New features MUST update README with usage examples and troubleshooting</li>
+<li><strong>Backward Compatibility</strong>: Changes MUST maintain compatibility with existing Terraform code, Graph Transformation logic and annotation files. All deterministic JSON output should pass the unit tests to ensure the same values are produced with new code.</li>
+<li>Format and location changes of config files are permitted when new cloud providers are introduced or where necessary.</li>
+</ol>
+<h3 id="code-review-requirements">Code Review Requirements<a class="headerlink" href="#code-review-requirements" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>CR-001</strong>: Parser changes require validation against 3+ real-world Terraform repositories</li>
+<li><strong>CR-002</strong>: Icon/styling changes require visual comparison screenshots in PR</li>
+<li><strong>CR-003</strong>: AI backend changes require testing with both Bedrock and Ollama</li>
+<li><strong>CR-004</strong>: Security-related changes require explicit threat model consideration</li>
+<li><strong>CR-005</strong>: Provider-specific code changes MUST NOT modify common modules (enforces CO-001 through CO-005)</li>
+</ul>
+<h3 id="release-criteria">Release Criteria<a class="headerlink" href="#release-criteria" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>RC-001</strong>: Each release MUST increment version following semantic versioning in pyproject.toml</li>
+<li><strong>RC-002</strong>: Breaking changes to annotation YAML format require migration guide</li>
+<li><strong>RC-003</strong>: New cloud provider support requires icon library with the top 30 services ready for use</li>
+<li><strong>RC-004</strong>: Performance regressions &gt;20% on reference repositories block release</li>
+</ul>
+<h2 id="governance">Governance<a class="headerlink" href="#governance" title="Permanent link">¶</a></h2>
+<h3 id="constitution-authority">Constitution Authority<a class="headerlink" href="#constitution-authority" title="Permanent link">¶</a></h3>
+<p>This constitution supersedes all other development practices and documentation. Any conflict between this constitution and other guidance documents MUST be resolved in favor of the constitution. Amendments require documented justification, technical review, and version increment.</p>
+<h3 id="amendment-procedure">Amendment Procedure<a class="headerlink" href="#amendment-procedure" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Proposal</strong>: Document proposed change with rationale and impact analysis</li>
+<li><strong>Review</strong>: Technical review of implications across codebase and user workflows</li>
+<li><strong>Approval</strong>: Maintainer approval required for principle additions/removals</li>
+<li><strong>Migration</strong>: Update dependent templates, documentation, and examples</li>
+<li><strong>Version</strong>: Increment constitution version following semantic versioning</li>
+</ol>
+<h3 id="compliance-enforcement">Compliance &amp; Enforcement<a class="headerlink" href="#compliance-enforcement" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>All pull requests</strong> MUST verify compliance with security principles (client-side processing, no credentials)</li>
+<li><strong>Feature proposals</strong> that violate Code as Source of Truth principle MUST be rejected</li>
+<li><strong>Architectural changes</strong> requiring server-side processing or cloud credentials MUST provide compelling justification and maintain client-side alternative</li>
+<li><strong>Complexity additions</strong> (new dependencies, architectural patterns) MUST demonstrate necessity over simpler alternatives</li>
+<li><strong>Provider-specific changes</strong> MUST comply with Code Organization standards (CO-001 through CO-005)</li>
+</ul>
+<h3 id="versioning-policy">Versioning Policy<a class="headerlink" href="#versioning-policy" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>MAJOR</strong>: Backward-incompatible changes to CLI interface, annotation format, or core principles</li>
+<li><strong>MINOR</strong>: New cloud provider support, new output formats, new AI backends, new principles, new technical standards</li>
+<li><strong>PATCH</strong>: Bug fixes, documentation updates, icon additions, clarifications</li>
+</ul>
+<p><strong>Version</strong>: 1.6.0 | <strong>Ratified</strong>: 2025-12-07 | <strong>Last Amended</strong>: 2026-04-06</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Patrick Chugh
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/patrickchugh/terravision" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://youtu.be/bTrWHBI2mF4" target="_blank" rel="noopener" title="youtu.be" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"></path></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://pypi.org/project/terravision/" target="_blank" rel="noopener" title="pypi.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"></path></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "toc.follow", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
