@@ -2127,14 +2127,16 @@
 <li>Plan state beyond the graph topology</li>
 </ul>
 <p>The LLM response is written to <code>terravision.ai.yml</code> as a human-readable annotation file, which is merged on top of the deterministic graph at render time. You can inspect exactly what the AI suggested before it appears on your diagram. See the <a href="../annotations/">Annotations Guide</a> for details.</p>
+<p><strong>Where does the data go?</strong> That depends on the backend you choose with <code>--ai-annotate</code>. With <code>ollama</code> it never leaves your machine. With <code>bedrock</code> it goes to AWS Bedrock in the region set by <code>TV_BEDROCK_REGION</code> (default <code>us-east-1</code>) and is bound by AWS's data-handling terms for that service. With <code>restapi</code> it goes wherever you've pointed <code>TV_RESTAPI_URL</code> — that's entirely your decision (OpenAI, an Anthropic-via-LiteLLM proxy, a self-hosted vLLM, etc.), so the destination's privacy policy is whatever you've configured.</p>
 <h3 id="can-i-audit-what-the-ai-changed">Can I audit what the AI changed?<a class="headerlink" href="#can-i-audit-what-the-ai-changed" title="Permanent link">¶</a></h3>
 <p>Yes. The <code>terravision.ai.yml</code> file is a plain YAML file containing every AI-suggested label, title, external actor, and flow. The underlying graph (<code>graphdict</code>) is byte-identical with or without <code>--ai-annotate</code> — AI suggestions flow through the annotation layer only, never into the graph itself.</p>
 <h3 id="which-llm-backends-are-supported">Which LLM backends are supported?<a class="headerlink" href="#which-llm-backends-are-supported" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>Ollama</strong> (local) — runs on your own machine, no data leaves it. Recommended for most users.</li>
-<li><strong>AWS Bedrock</strong> — uses your AWS account and stays within AWS.</li>
+<li><strong>AWS Bedrock</strong> — calls Bedrock directly via <code>boto3</code> using the standard AWS credential chain (env vars, <code>~/.aws/credentials</code>, IAM role, SSO). Region and model id are overridable via <code>TV_BEDROCK_REGION</code> and <code>TV_BEDROCK_MODEL_ID</code>.</li>
+<li><strong>REST API</strong> (any OpenAI-compatible endpoint) — works with OpenAI, Anthropic-via-LiteLLM, vLLM, LM Studio, OpenRouter, or any custom proxy that speaks the OpenAI chat-completions schema. Configured via <code>TV_RESTAPI_URL</code>, <code>TV_RESTAPI_KEY</code>, and <code>TV_RESTAPI_MODEL</code>.</li>
 </ul>
-<p>You can also skip AI entirely and write your own <code>terravision.yml</code> by hand.</p>
+<p>See the <a href="../usage-guide/#ai-powered-annotations">AI-Powered Annotations</a> section of the Usage Guide for the full configuration table. You can also skip AI entirely and write your own <code>terravision.yml</code> by hand.</p>
 <hr>
 <h2 id="running-terravision">Running TerraVision<a class="headerlink" href="#running-terravision" title="Permanent link">¶</a></h2>
 <h3 id="can-i-run-it-fully-offline">Can I run it fully offline?<a class="headerlink" href="#can-i-run-it-fully-offline" title="Permanent link">¶</a></h3>

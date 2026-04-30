@@ -2052,7 +2052,8 @@
 <p>Optional extras for AI-annotation work:</p>
 <ul>
 <li><strong>Ollama</strong> — for testing <code>--ai-annotate ollama</code> locally. See <a href="../installation/#optional-install-ollama-for-local-ai-refinement">Installation → Ollama</a>.</li>
-<li><strong>AWS account with Bedrock access</strong> — for testing <code>--ai-annotate bedrock</code>.</li>
+<li><strong>AWS account with Bedrock access</strong> — for testing <code>--ai-annotate bedrock</code>. Authentication uses the standard <code>boto3</code> credential chain, so any AWS-CLI-compatible setup works (env vars, <code>~/.aws/credentials</code>, IAM role, SSO). Region and model id are overridable via <code>TV_BEDROCK_REGION</code> and <code>TV_BEDROCK_MODEL_ID</code>.</li>
+<li><strong>An OpenAI-compatible endpoint</strong> — for testing <code>--ai-annotate restapi</code>. Set <code>TV_RESTAPI_URL</code>, <code>TV_RESTAPI_KEY</code>, and <code>TV_RESTAPI_MODEL</code> to point at OpenAI, an Anthropic-via-LiteLLM proxy, a local vLLM/LM Studio, or any custom shim that speaks the OpenAI chat-completions schema.</li>
 </ul>
 <h3 id="running-tests">Running Tests<a class="headerlink" href="#running-tests" title="Permanent link">¶</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Run all tests</span>

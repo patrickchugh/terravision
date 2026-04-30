@@ -1068,10 +1068,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ai-refinement-backends" class="md-nav__link">
+  <a href="#ai-annotation-backends" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI Refinement Backends
+        AI Annotation Backends
       
     </span>
   </a>
@@ -1604,10 +1604,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ai-refinement-backends" class="md-nav__link">
+  <a href="#ai-annotation-backends" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AI Refinement Backends
+        AI Annotation Backends
       
     </span>
   </a>
@@ -1914,11 +1914,12 @@
 <li>Connections are matched by suffix: <code>web~1 → db~1</code>, <code>web~2 → db~2</code></li>
 <li>Security groups are extended to match numbered resources they protect</li>
 </ul>
-<h3 id="ai-refinement-backends">AI Refinement Backends<a class="headerlink" href="#ai-refinement-backends" title="Permanent link">¶</a></h3>
-<p>Two AI backends refine diagrams:</p>
-<p><strong>Bedrock</strong>: AWS API Gateway + Lambda + Bedrock (infrastructure in <code>ai-backend-terraform/</code>)
-<strong>Ollama</strong>: Local llama3 model (localhost:11434)</p>
-<p>Both use provider-specific prompts from <code>cloud_config_*.py</code> (<code>AWS_REFINEMENT_PROMPT</code>, <code>AZURE_REFINEMENT_PROMPT</code>, etc.) to fix groupings and connections.</p>
+<h3 id="ai-annotation-backends">AI Annotation Backends<a class="headerlink" href="#ai-annotation-backends" title="Permanent link">¶</a></h3>
+<p>Three AI backends generate the <code>terravision.ai.yml</code> annotation file:</p>
+<p><strong>Bedrock</strong>: AWS Bedrock Converse streaming via <code>boto3</code>. Authenticates through the standard AWS credential chain (env vars, <code>~/.aws/credentials</code>, IAM role, SSO). Region defaults to <code>us-east-1</code> (override via <code>TV_BEDROCK_REGION</code>); model defaults to <code>us.anthropic.claude-haiku-4-5-20251001-v1:0</code> (override via <code>TV_BEDROCK_MODEL_ID</code>).</p>
+<p><strong>Ollama</strong>: Local Ollama server. Host and model are configured per-provider via <code>OLLAMA_HOST</code> (default <code>http://localhost:11434</code>) and <code>OLLAMA_MODEL</code> (default <code>llama3</code>) in <code>modules/config/cloud_config_&lt;provider&gt;.py</code>. Any model already pulled to the server is valid.</p>
+<p><strong>REST API</strong>: Any OpenAI-compatible <code>/v1/chat/completions</code> endpoint with SSE streaming. Configured via <code>TV_RESTAPI_URL</code>, <code>TV_RESTAPI_KEY</code>, and <code>TV_RESTAPI_MODEL</code> (all required).</p>
+<p>All three use a single provider-agnostic prompt (<code>ANNOTATION_PROMPT</code> in <code>modules/llm.py</code>) — the LLM identifies the cloud provider from resource name prefixes inside the graphdict. The deterministic graph is never modified by AI; suggestions are written to <code>terravision.ai.yml</code> and merged with the user's <code>terravision.yml</code> at render time.</p>
 <h3 id="icon-libraries">Icon Libraries<a class="headerlink" href="#icon-libraries" title="Permanent link">¶</a></h3>
 <p>Icons are sourced from provider-specific directories defined in each config:</p>
 <ul>

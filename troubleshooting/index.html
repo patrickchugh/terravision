@@ -968,6 +968,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#-show-doesnt-open-the-diagram-on-wsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --show doesn't open the diagram on WSL
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1945,6 +1956,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#-show-doesnt-open-the-diagram-on-wsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --show doesn't open the diagram on WSL
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2580,35 +2602,43 @@
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
 </span></code></pre></div>
+<h4 id="-show-doesnt-open-the-diagram-on-wsl"><code>--show</code> doesn't open the diagram on WSL<a class="headerlink" href="#-show-doesnt-open-the-diagram-on-wsl" title="Permanent link">¶</a></h4>
+<p><strong>Problem</strong>: Running TerraVision under Windows Subsystem for Linux with <code>--show</code>, the diagram is generated successfully but no viewer opens. You may also see an error from <code>xdg-open</code> about no application being registered for the file type, or a warning that says <code>WSL detected but wslview is not installed</code>.</p>
+<p><strong>Cause</strong>: WSL ships without a Linux desktop database, so the standard <code>xdg-open</code> resolver has no <code>.desktop</code> files to consult and can't pick a handler.</p>
+<p><strong>Solution</strong>: Install the <code>wslu</code> package, which provides <code>wslview</code> — a tool that delegates the open back to Windows so the host's file associations are used:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>wslu
+</span></code></pre></div>
+<p>TerraVision automatically detects WSL at runtime and routes <code>--show</code> through <code>wslview</code> once it's available; no further configuration is needed. The diagram itself is always generated correctly regardless — <code>--show</code> only controls auto-opening.</p>
+<p>If you'd rather not install <code>wslu</code>, omit <code>--show</code> and open the output file from Windows Explorer (everything under <code>\\wsl$\&lt;distro&gt;\...</code> is reachable from Windows) or directly from your IDE.</p>
 <hr>
 <h3 id="pre-generated-plan-file-issues">Pre-Generated Plan File Issues<a class="headerlink" href="#pre-generated-plan-file-issues" title="Permanent link">¶</a></h3>
 <h4 id="this-appears-to-be-a-binary-terraform-plan-file">"This appears to be a binary Terraform plan file"<a class="headerlink" href="#this-appears-to-be-a-binary-terraform-plan-file" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: You passed a binary <code>.tfplan</code> file instead of JSON</p>
 <p><strong>Solution</strong>: Convert the binary plan to JSON first:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--planfile<span class="w"> </span>plan.json<span class="w"> </span>--graphfile<span class="w"> </span>graph.dot<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--planfile<span class="w"> </span>plan.json<span class="w"> </span>--graphfile<span class="w"> </span>graph.dot<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform
 </span></code></pre></div><p></p>
 <h4 id="plan-file-does-not-contain-resource_changes">"Plan file does not contain 'resource_changes'"<a class="headerlink" href="#plan-file-does-not-contain-resource_changes" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: The JSON file is not a valid Terraform plan output</p>
 <p><strong>Solution</strong>: Ensure you use <code>terraform show -json</code> to export the plan:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
 </span></code></pre></div><p></p>
 <p>Do not use <code>terraform plan -json</code> (streaming output) — use <code>terraform show -json</code> on a saved plan file.</p>
 <h4 id="plan-file-contains-no-resource-changes">"Plan file contains no resource changes"<a class="headerlink" href="#plan-file-contains-no-resource-changes" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: The Terraform plan has no resources to create, update, or destroy</p>
 <p><strong>Solution</strong>: Verify that <code>terraform plan</code> shows resources:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>terraform<span class="w"> </span>plan
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># Should show resources to create/update/destroy</span>
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>terraform<span class="w"> </span>plan
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1"># Should show resources to create/update/destroy</span>
 </span></code></pre></div><p></p>
 <p>If no resources appear, check your Terraform code and variable files.</p>
 <h4 id="-planfile-requires-graphfile-and-source">"--planfile requires --graphfile and --source"<a class="headerlink" href="#-planfile-requires-graphfile-and-source" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: You must provide all three options together</p>
 <p><strong>Solution</strong>: Always provide <code>--planfile</code>, <code>--graphfile</code>, and <code>--source</code>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span>--planfile<span class="w"> </span>plan.json<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>--graphfile<span class="w"> </span>graph.dot<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--source<span class="w"> </span>./path-to-your-terraform
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span>--planfile<span class="w"> </span>plan.json<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--graphfile<span class="w"> </span>graph.dot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>--source<span class="w"> </span>./path-to-your-terraform
 </span></code></pre></div><p></p>
 <h4 id="warning-workspace-varfile-ignored-with-planfile">"WARNING: --workspace/--varfile ignored with --planfile"<a class="headerlink" href="#warning-workspace-varfile-ignored-with-planfile" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: These options are irrelevant when using pre-generated plan files</p>
@@ -2619,25 +2649,25 @@
 <p><strong>Problem</strong>: Diagram is generated but shows no resources or is incomplete</p>
 <p><strong>Checklist</strong>:
 1. Run Terraform plan to ensure resources exist:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>terraform<span class="w"> </span>plan
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>terraform<span class="w"> </span>plan
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Check if resources are conditionally created:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Use appropriate variable files</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Use appropriate variable files</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Verify workspace:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Use correct workspace</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--workspace<span class="w"> </span>production
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Use correct workspace</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--workspace<span class="w"> </span>production
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Enable debug mode:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># Check tfdata.json for parsed resources</span>
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="c1"># Check tfdata.json for parsed resources</span>
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2645,19 +2675,19 @@
 <p><strong>Problem</strong>: Resources are overlapping or poorly positioned</p>
 <p><strong>Solutions</strong>:
 1. Try simplified mode:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Use different output format:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--format<span class="w"> </span>svg
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--format<span class="w"> </span>svg
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Use annotations to adjust layout:
-   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># terravision.yml</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nt">remove</span><span class="p">:</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_iam_role.*</span><span class="w">  </span><span class="c1"># Remove noisy resources</span>
+   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># terravision.yml</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nt">remove</span><span class="p">:</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_iam_role.*</span><span class="w">  </span><span class="c1"># Remove noisy resources</span>
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2665,20 +2695,20 @@
 <p><strong>Problem</strong>: Expected connections between resources are not shown</p>
 <p><strong>Solutions</strong>:
 1. Check if resources are actually connected in Terraform:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>terraform<span class="w"> </span>show
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>terraform<span class="w"> </span>show
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Add connections via annotations:
-   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># terravision.yml</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nt">connect</span><span class="p">:</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="nt">aws_lambda_function.api</span><span class="p">:</span>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">aws_rds_cluster.db</span><span class="p">:</span><span class="w"> </span><span class="s">"Database</span><span class="nv"> </span><span class="s">queries"</span>
+   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># terravision.yml</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="nt">connect</span><span class="p">:</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span><span class="nt">aws_lambda_function.api</span><span class="p">:</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">aws_rds_cluster.db</span><span class="p">:</span><span class="w"> </span><span class="s">"Database</span><span class="nv"> </span><span class="s">queries"</span>
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Enable debug mode to see connection processing:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2687,47 +2717,48 @@
 <h4 id="cannot-reach-ollama-server">"Cannot reach Ollama server"<a class="headerlink" href="#cannot-reach-ollama-server" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: Ollama server is not running or not accessible</p>
 <p><strong>Solution</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Check if Ollama is running</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># If not running, start Ollama</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>ollama<span class="w"> </span>serve
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># If port is in use, kill existing process</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>lsof<span class="w"> </span>-ti:11434<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-9
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>ollama<span class="w"> </span>serve
-</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>
-</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="c1"># Verify llama3 model is installed</span>
-</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>ollama<span class="w"> </span>list
-</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>ollama<span class="w"> </span>pull<span class="w"> </span>llama3
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Check if Ollama is running</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># If not running, start Ollama</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>ollama<span class="w"> </span>serve
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="c1"># If port is in use, kill existing process</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>lsof<span class="w"> </span>-ti:11434<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-9
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>ollama<span class="w"> </span>serve
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="c1"># Verify the configured model is installed (default is llama3 —</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="c1"># whatever you set in OLLAMA_MODEL inside cloud_config_&lt;provider&gt;.py)</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>ollama<span class="w"> </span>list
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>ollama<span class="w"> </span>pull<span class="w"> </span>llama3
 </span></code></pre></div><p></p>
 <h4 id="ollama-model-not-loaded">"Ollama model not loaded"<a class="headerlink" href="#ollama-model-not-loaded" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: Model unloads too quickly</p>
 <p><strong>Solution</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Extend keep-alive time (default is 5 minutes)</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_KEEP_ALIVE</span><span class="o">=</span>1h
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># Restart Ollama</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>ollama<span class="w"> </span>serve
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># Extend keep-alive time (default is 5 minutes)</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_KEEP_ALIVE</span><span class="o">=</span>1h
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># Restart Ollama</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>ollama<span class="w"> </span>serve
 </span></code></pre></div><p></p>
 <h4 id="bedrock-api-error">"Bedrock API error"<a class="headerlink" href="#bedrock-api-error" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: AWS Bedrock API is not configured or accessible</p>
 <p><strong>Solution</strong>:
 1. Verify API endpoint in <code>modules/cloud_config.py</code>:
-   </p><div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">BEDROCK_API_ENDPOINT</span> <span class="o">=</span> <span class="s2">"https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat"</span>
+   </p><div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">BEDROCK_API_ENDPOINT</span> <span class="o">=</span> <span class="s2">"https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat"</span>
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Check API Gateway is deployed:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nb">cd</span><span class="w"> </span>ai-backend-terraform
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>terraform<span class="w"> </span>output<span class="w"> </span>api_endpoint
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="nb">cd</span><span class="w"> </span>ai-backend-terraform
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>terraform<span class="w"> </span>output<span class="w"> </span>api_endpoint
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Verify API is accessible:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://your-api-endpoint/chat<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"message": "test"}'</span>
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://your-api-endpoint/chat<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"message": "test"}'</span>
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2736,26 +2767,26 @@
 <h4 id="ai-annotations-look-wrong">"AI Annotations Look Wrong"<a class="headerlink" href="#ai-annotations-look-wrong" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: AI-generated labels, flows, or external actors are inaccurate or unhelpful.</p>
 <p><strong>Solution</strong>: Edit your <code>terravision.yml</code> to override specific AI suggestions. The user file always takes precedence over <code>terravision.ai.yml</code>:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># terravision.yml - your overrides</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span>
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="s">"Correct</span><span class="nv"> </span><span class="s">Title</span><span class="nv"> </span><span class="s">Here"</span>
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="nt">connect</span><span class="p">:</span>
-</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="w">  </span><span class="nt">aws_lambda_function.api</span><span class="p">:</span>
-</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">aws_rds_cluster.db</span><span class="p">:</span><span class="w"> </span><span class="s">"Correct</span><span class="nv"> </span><span class="s">label</span><span class="nv"> </span><span class="s">here"</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># terravision.yml - your overrides</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="s">"Correct</span><span class="nv"> </span><span class="s">Title</span><span class="nv"> </span><span class="s">Here"</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="nt">connect</span><span class="p">:</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">  </span><span class="nt">aws_lambda_function.api</span><span class="p">:</span>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">aws_rds_cluster.db</span><span class="p">:</span><span class="w"> </span><span class="s">"Correct</span><span class="nv"> </span><span class="s">label</span><span class="nv"> </span><span class="s">here"</span>
 </span></code></pre></div>
 <p>Any annotation you define in <code>terravision.yml</code> replaces the corresponding AI-generated value. Annotations you do not override continue to use the AI suggestions.</p>
 <h4 id="ai-backend-unreachable">"AI Backend Unreachable"<a class="headerlink" href="#ai-backend-unreachable" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: Ollama server is down, or the Bedrock API endpoint is not accessible.</p>
 <p><strong>How TerraVision handles this</strong>: If the AI backend cannot be reached, TerraVision skips annotation generation and renders the diagram without AI annotations. The deterministic graph is never affected by AI availability -- you will always get a valid diagram.</p>
 <p><strong>To diagnose</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Check Ollama is running</span>
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
-</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
-</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1"># Check Bedrock endpoint (replace with your API URL)</span>
-</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"message": "test"}'</span>
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># Check Ollama is running</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># Check Bedrock endpoint (replace with your API URL)</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/chat<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"message": "test"}'</span>
 </span></code></pre></div><p></p>
 <p>If you have an existing <code>terravision.ai.yml</code> from a previous run, it will still be loaded and applied even when the backend is unreachable. Only the regeneration step is skipped.</p>
 <hr>
@@ -2764,24 +2795,24 @@
 <p><strong>Problem</strong>: TerraVision takes too long to generate diagrams</p>
 <p><strong>Solutions</strong>:
 1. Export to JSON first, then generate multiple formats:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--outfile<span class="w"> </span>graph.json
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>svg
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>png
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--outfile<span class="w"> </span>graph.json
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>svg
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>png
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Use simplified mode:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Use specific workspace to reduce scope:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--workspace<span class="w"> </span>production
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--workspace<span class="w"> </span>production
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Clear cache:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.terravision/
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.terravision/
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2789,19 +2820,19 @@
 <p><strong>Problem</strong>: Generated diagrams are too large</p>
 <p><strong>Solutions</strong>:
 1. Use SVG format (smaller and scalable):
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--format<span class="w"> </span>svg
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--format<span class="w"> </span>svg
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Use simplified mode:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--simplified
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Remove unnecessary resources via annotations:
-   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="nt">remove</span><span class="p">:</span>
-</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_iam_role.*</span>
-</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_cloudwatch_log_group.*</span>
+   </p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="nt">remove</span><span class="p">:</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_iam_role.*</span>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_cloudwatch_log_group.*</span>
 </span></code></pre></div><p></p>
 </li>
 </ol>
@@ -2812,30 +2843,30 @@
 <p><strong>Checklist</strong>:
 1. Verify file name is exactly <code>terravision.yml</code>
 2. Check YAML syntax:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="c1"># Use online YAML validator or</span>
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import yaml; yaml.safe_load(open('terravision.yml'))"</span>
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="c1"># Use online YAML validator or</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import yaml; yaml.safe_load(open('terravision.yml'))"</span>
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Verify resource names exist:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--show_services
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--show_services
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Enable debug mode:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
 </span></code></pre></div><p></p>
 </li>
 </ol>
 <h4 id="wildcards-not-matching">Wildcards Not Matching<a class="headerlink" href="#wildcards-not-matching" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: Wildcard patterns don't match expected resources</p>
 <p><strong>Solution</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="c1"># List all resources to verify patterns</span>
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--outfile<span class="w"> </span>resources.json
-</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>cat<span class="w"> </span>resources.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'keys'</span>
-</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>
-</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="c1"># Test specific patterns</span>
-</span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>grep<span class="w"> </span><span class="s2">"aws_lambda"</span><span class="w"> </span>resources.json
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="c1"># List all resources to verify patterns</span>
+</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--outfile<span class="w"> </span>resources.json
+</span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>cat<span class="w"> </span>resources.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'keys'</span>
+</span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>
+</span><span id="__span-43-5"><a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="c1"># Test specific patterns</span>
+</span><span id="__span-43-6"><a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>grep<span class="w"> </span><span class="s2">"aws_lambda"</span><span class="w"> </span>resources.json
 </span></code></pre></div><p></p>
 <hr>
 <h3 id="git-repository-issues">Git Repository Issues<a class="headerlink" href="#git-repository-issues" title="Permanent link">¶</a></h3>
@@ -2843,34 +2874,34 @@
 <p><strong>Problem</strong>: Can't access Git repository</p>
 <p><strong>Solutions</strong>:
 1. Verify repository URL:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/user/repo.git
 </span></code></pre></div><p></p>
 <ol>
 <li>
 <p>Check authentication:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="c1"># For private repos, use SSH or token</span>
-</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:user/repo.git
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="c1"># For private repos, use SSH or token</span>
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:user/repo.git
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p>Specify subfolder:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>https://github.com/user/repo.git//terraform/aws
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>https://github.com/user/repo.git//terraform/aws
 </span></code></pre></div><p></p>
 </li>
 </ol>
 <h4 id="module-source-not-found">"Module source not found"<a class="headerlink" href="#module-source-not-found" title="Permanent link">¶</a></h4>
 <p><strong>Problem</strong>: Terraform modules in Git can't be accessed</p>
 <p><strong>Solution</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="c1"># Ensure Git credentials are configured</span>
-</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>git<span class="w"> </span>config<span class="w"> </span>--global<span class="w"> </span>credential.helper<span class="w"> </span>store
-</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>
-</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="c1"># Or use SSH keys</span>
-</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a>ssh-add<span class="w"> </span>~/.ssh/id_rsa
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="c1"># Ensure Git credentials are configured</span>
+</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>git<span class="w"> </span>config<span class="w"> </span>--global<span class="w"> </span>credential.helper<span class="w"> </span>store
+</span><span id="__span-47-3"><a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>
+</span><span id="__span-47-4"><a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a><span class="c1"># Or use SSH keys</span>
+</span><span id="__span-47-5"><a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a>ssh-add<span class="w"> </span>~/.ssh/id_rsa
 </span></code></pre></div><p></p>
 <hr>
 <h2 id="debug-mode">Debug Mode<a class="headerlink" href="#debug-mode" title="Permanent link">¶</a></h2>
 <p>Enable debug mode for detailed troubleshooting:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/path/to/terraform<span class="w"> </span>--debug
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/path/to/terraform<span class="w"> </span>--debug
 </span></code></pre></div>
 <p><strong>Debug mode provides</strong>:
 - Detailed processing steps
@@ -2878,14 +2909,14 @@
 - Full error traces
 - Variable resolution details</p>
 <p><strong>Analyze debug output</strong>:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="c1"># Check parsed resources</span>
-</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict | keys'</span>
-</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>
-</span><span id="__span-48-4"><a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="c1"># Check metadata</span>
-</span><span id="__span-48-5"><a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.meta_data'</span>
-</span><span id="__span-48-6"><a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a>
-</span><span id="__span-48-7"><a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a><span class="c1"># Check connections</span>
-</span><span id="__span-48-8"><a id="__codelineno-48-8" name="__codelineno-48-8" href="#__codelineno-48-8"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict["aws_lambda_function.api"]'</span>
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="c1"># Check parsed resources</span>
+</span><span id="__span-49-2"><a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict | keys'</span>
+</span><span id="__span-49-3"><a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>
+</span><span id="__span-49-4"><a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a><span class="c1"># Check metadata</span>
+</span><span id="__span-49-5"><a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.meta_data'</span>
+</span><span id="__span-49-6"><a id="__codelineno-49-6" name="__codelineno-49-6" href="#__codelineno-49-6"></a>
+</span><span id="__span-49-7"><a id="__codelineno-49-7" name="__codelineno-49-7" href="#__codelineno-49-7"></a><span class="c1"># Check connections</span>
+</span><span id="__span-49-8"><a id="__codelineno-49-8" name="__codelineno-49-8" href="#__codelineno-49-8"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict["aws_lambda_function.api"]'</span>
 </span></code></pre></div><p></p>
 <hr>
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">¶</a></h2>
@@ -2896,9 +2927,9 @@
 <li><a href="../annotations/">Annotations Guide</a></li>
 </ul>
 <h3 id="command-help">Command Help<a class="headerlink" href="#command-help" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>terravision<span class="w"> </span>--help
-</span><span id="__span-49-2"><a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--help
-</span><span id="__span-49-3"><a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>terravision<span class="w"> </span>--help
+</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--help
+</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--help
 </span></code></pre></div>
 <h3 id="report-issues">Report Issues<a class="headerlink" href="#report-issues" title="Permanent link">¶</a></h3>
 <ul>
@@ -2917,31 +2948,31 @@
 <hr>
 <h2 id="quick-fixes">Quick Fixes<a class="headerlink" href="#quick-fixes" title="Permanent link">¶</a></h2>
 <h3 id="reset-everything">Reset Everything<a class="headerlink" href="#reset-everything" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a><span class="c1"># Clear all caches</span>
-</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.terravision/
-</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>rm<span class="w"> </span>-rf<span class="w"> </span>.terraform/
-</span><span id="__span-50-4"><a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a>rm<span class="w"> </span>-f<span class="w"> </span>tfdata.json
-</span><span id="__span-50-5"><a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a>
-</span><span id="__span-50-6"><a id="__codelineno-50-6" name="__codelineno-50-6" href="#__codelineno-50-6"></a><span class="c1"># Reinstall TerraVision</span>
-</span><span id="__span-50-7"><a id="__codelineno-50-7" name="__codelineno-50-7" href="#__codelineno-50-7"></a>pipx<span class="w"> </span>reinstall<span class="w"> </span>terravision<span class="w">         </span><span class="c1"># if installed with pipx</span>
-</span><span id="__span-50-8"><a id="__codelineno-50-8" name="__codelineno-50-8" href="#__codelineno-50-8"></a><span class="c1"># or: pip install --force-reinstall terravision</span>
-</span><span id="__span-50-9"><a id="__codelineno-50-9" name="__codelineno-50-9" href="#__codelineno-50-9"></a>
-</span><span id="__span-50-10"><a id="__codelineno-50-10" name="__codelineno-50-10" href="#__codelineno-50-10"></a><span class="c1"># Reinitialize Terraform</span>
-</span><span id="__span-50-11"><a id="__codelineno-50-11" name="__codelineno-50-11" href="#__codelineno-50-11"></a>terraform<span class="w"> </span>init
-</span><span id="__span-50-12"><a id="__codelineno-50-12" name="__codelineno-50-12" href="#__codelineno-50-12"></a>
-</span><span id="__span-50-13"><a id="__codelineno-50-13" name="__codelineno-50-13" href="#__codelineno-50-13"></a><span class="c1"># Try again</span>
-</span><span id="__span-50-14"><a id="__codelineno-50-14" name="__codelineno-50-14" href="#__codelineno-50-14"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="c1"># Clear all caches</span>
+</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.terravision/
+</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>rm<span class="w"> </span>-rf<span class="w"> </span>.terraform/
+</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>rm<span class="w"> </span>-f<span class="w"> </span>tfdata.json
+</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>
+</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a><span class="c1"># Reinstall TerraVision</span>
+</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a>pipx<span class="w"> </span>reinstall<span class="w"> </span>terravision<span class="w">         </span><span class="c1"># if installed with pipx</span>
+</span><span id="__span-51-8"><a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a><span class="c1"># or: pip install --force-reinstall terravision</span>
+</span><span id="__span-51-9"><a id="__codelineno-51-9" name="__codelineno-51-9" href="#__codelineno-51-9"></a>
+</span><span id="__span-51-10"><a id="__codelineno-51-10" name="__codelineno-51-10" href="#__codelineno-51-10"></a><span class="c1"># Reinitialize Terraform</span>
+</span><span id="__span-51-11"><a id="__codelineno-51-11" name="__codelineno-51-11" href="#__codelineno-51-11"></a>terraform<span class="w"> </span>init
+</span><span id="__span-51-12"><a id="__codelineno-51-12" name="__codelineno-51-12" href="#__codelineno-51-12"></a>
+</span><span id="__span-51-13"><a id="__codelineno-51-13" name="__codelineno-51-13" href="#__codelineno-51-13"></a><span class="c1"># Try again</span>
+</span><span id="__span-51-14"><a id="__codelineno-51-14" name="__codelineno-51-14" href="#__codelineno-51-14"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug
 </span></code></pre></div>
 <h3 id="verify-installation">Verify Installation<a class="headerlink" href="#verify-installation" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="c1"># Check all dependencies</span>
-</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>terraform<span class="w"> </span>version<span class="w">  </span><span class="c1"># Should be v1.0.0+</span>
-</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>python<span class="w"> </span>--version<span class="w">   </span><span class="c1"># Should be 3.10+</span>
-</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>dot<span class="w"> </span>-V<span class="w">            </span><span class="c1"># Should show Graphviz version</span>
-</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>git<span class="w"> </span>--version<span class="w">     </span><span class="c1"># Should show Git version</span>
-</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a>
-</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a><span class="c1"># Test TerraVision</span>
-</span><span id="__span-51-8"><a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a>terravision<span class="w"> </span>--version
-</span><span id="__span-51-9"><a id="__codelineno-51-9" name="__codelineno-51-9" href="#__codelineno-51-9"></a>terravision<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="c1"># Check all dependencies</span>
+</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>terraform<span class="w"> </span>version<span class="w">  </span><span class="c1"># Should be v1.0.0+</span>
+</span><span id="__span-52-3"><a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a>python<span class="w"> </span>--version<span class="w">   </span><span class="c1"># Should be 3.10+</span>
+</span><span id="__span-52-4"><a id="__codelineno-52-4" name="__codelineno-52-4" href="#__codelineno-52-4"></a>dot<span class="w"> </span>-V<span class="w">            </span><span class="c1"># Should show Graphviz version</span>
+</span><span id="__span-52-5"><a id="__codelineno-52-5" name="__codelineno-52-5" href="#__codelineno-52-5"></a>git<span class="w"> </span>--version<span class="w">     </span><span class="c1"># Should show Git version</span>
+</span><span id="__span-52-6"><a id="__codelineno-52-6" name="__codelineno-52-6" href="#__codelineno-52-6"></a>
+</span><span id="__span-52-7"><a id="__codelineno-52-7" name="__codelineno-52-7" href="#__codelineno-52-7"></a><span class="c1"># Test TerraVision</span>
+</span><span id="__span-52-8"><a id="__codelineno-52-8" name="__codelineno-52-8" href="#__codelineno-52-8"></a>terravision<span class="w"> </span>--version
+</span><span id="__span-52-9"><a id="__codelineno-52-9" name="__codelineno-52-9" href="#__codelineno-52-9"></a>terravision<span class="w"> </span>--help
 </span></code></pre></div>
 <hr>
 <h2 id="still-having-issues">Still Having Issues?<a class="headerlink" href="#still-having-issues" title="Permanent link">¶</a></h2>
@@ -2949,7 +2980,7 @@
 <ol>
 <li>
 <p><strong>Enable debug mode</strong> and save output:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug<span class="w"> </span>&gt;<span class="w"> </span>debug.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>.<span class="w"> </span>--debug<span class="w"> </span>&gt;<span class="w"> </span>debug.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 </span></code></pre></div><p></p>
 </li>
 <li>

@@ -831,6 +831,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AI-Powered Annotations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-a-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1819,6 +1858,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AI-Powered Annotations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-a-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a backend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -2103,7 +2181,7 @@
 </tr>
 <tr>
 <td><code>--ai-annotate</code></td>
-<td>Generate AI annotations with specified backend (bedrock, ollama)</td>
+<td>Generate AI annotations with specified backend (<code>bedrock</code>, <code>ollama</code>, <code>restapi</code>)</td>
 <td>None</td>
 <td><code>--ai-annotate ollama</code></td>
 </tr>
@@ -2484,20 +2562,155 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--simplified<span class="w"> </span>--outfile<span class="w"> </span>overview
 </span></code></pre></div>
 <h3 id="ai-powered-annotations">AI-Powered Annotations<a class="headerlink" href="#ai-powered-annotations" title="Permanent link">¶</a></h3>
-<p>When you pass <code>--ai-annotate &lt;backend&gt;</code>, TerraVision uses an LLM to generate a <code>terravision.ai.yml</code> annotation file containing AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is never modified by the AI -- all suggestions are written to the annotation file and merged with any existing <code>terravision.yml</code> at render time.</p>
+<p>When you pass <code>--ai-annotate &lt;backend&gt;</code>, TerraVision uses an LLM to generate a <code>terravision.ai.yml</code> annotation file containing AI-suggested edge labels, titles, external actors, and flow sequences. The deterministic graph is never modified by the AI — all suggestions are written to the annotation file and merged with any existing <code>terravision.yml</code> at render time.</p>
 <p>This replaces the old <code>refine_with_llm</code> behaviour, which modified the graph directly. The new approach is safer (the graph is byte-identical with or without <code>--ai-annotate</code>) and auditable (you can inspect <code>terravision.ai.yml</code> to see exactly what the AI suggested).</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Generate AI annotations with local Ollama</span>
+<h4 id="choosing-a-backend">Choosing a backend<a class="headerlink" href="#choosing-a-backend" title="Permanent link">¶</a></h4>
+<p>Three backends are supported. They produce equivalent output — pick the one that matches where you want the inference to run.</p>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Where inference runs</th>
+<th>Authentication</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ollama</code></td>
+<td>Local Ollama server (default <code>http://localhost:11434</code>)</td>
+<td>None</td>
+<td>Air-gapped / private setups, dev iteration without cloud cost</td>
+</tr>
+<tr>
+<td><code>bedrock</code></td>
+<td>AWS Bedrock via <code>boto3</code> (Converse streaming API)</td>
+<td>Standard AWS credential chain (env vars, <code>~/.aws/credentials</code>, IAM role, SSO)</td>
+<td>AWS-native users; CI runners with an IAM role already attached</td>
+</tr>
+<tr>
+<td><code>restapi</code></td>
+<td>Any OpenAI-compatible <code>/v1/chat/completions</code> endpoint</td>
+<td>Bearer token</td>
+<td>OpenAI, Anthropic via LiteLLM, vLLM, LM Studio, OpenRouter, custom proxies</td>
+</tr>
+</tbody>
+</table>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Local Ollama</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--ai-annotate<span class="w"> </span>ollama
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Generate AI annotations with AWS Bedrock</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># AWS Bedrock (uses your default AWS credentials)</span>
 </span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--ai-annotate<span class="w"> </span>bedrock
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># Generic OpenAI-compatible endpoint</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--ai-annotate<span class="w"> </span>restapi
 </span></code></pre></div>
-<p><strong>How it works:</strong>
-1. TerraVision builds the graph deterministically (identical to a non-AI run)
-2. The graph and HCL context are sent to the LLM, which returns YAML annotations
-3. The AI annotations are written to <code>terravision.ai.yml</code> in the source directory
-4. If a user <code>terravision.yml</code> also exists, both files are merged (user file takes precedence)
-5. The merged annotations are applied to the graph before rendering</p>
+<h4 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h4>
+<p>Backend behaviour is controlled by environment variables. Defaults are sensible for the common case so most users won't need to set anything.</p>
+<p><strong><code>bedrock</code></strong> — calls AWS Bedrock directly via <code>boto3</code>. Authentication uses the standard AWS credential chain, so anything that works for the <code>aws</code> CLI (env vars, <code>~/.aws/credentials</code>, IAM role, SSO) works here too. No infrastructure to deploy.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TV_BEDROCK_REGION</code></td>
+<td><code>us-east-1</code></td>
+<td>AWS region the Bedrock Runtime client is created in</td>
+</tr>
+<tr>
+<td><code>TV_BEDROCK_MODEL_ID</code></td>
+<td><code>us.anthropic.claude-haiku-4-5-20251001-v1:0</code></td>
+<td>Bedrock model id to invoke. Any Converse-compatible model works (Claude family, Nova, Llama, Mistral); cross-region inference profile ids are accepted as-is</td>
+</tr>
+</tbody>
+</table>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Override the model and region</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_BEDROCK_REGION</span><span class="o">=</span>eu-west-1
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_BEDROCK_MODEL_ID</span><span class="o">=</span>us.anthropic.claude-sonnet-4-5-20250929-v1:0
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./infra<span class="w"> </span>--ai-annotate<span class="w"> </span>bedrock
+</span></code></pre></div>
+<p><strong><code>restapi</code></strong> — POSTs an OpenAI-compatible chat-completions request and parses the streamed SSE response. All three variables are required; preflight will fail fast if any is missing.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TV_RESTAPI_URL</code></td>
+<td>yes</td>
+<td>Full URL including the <code>/v1/chat/completions</code> path</td>
+</tr>
+<tr>
+<td><code>TV_RESTAPI_KEY</code></td>
+<td>yes</td>
+<td>Bearer token sent as <code>Authorization: Bearer &lt;key&gt;</code></td>
+</tr>
+<tr>
+<td><code>TV_RESTAPI_MODEL</code></td>
+<td>yes</td>
+<td>Model id passed through verbatim in the request payload</td>
+</tr>
+</tbody>
+</table>
+<p>Examples for common setups:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># OpenAI direct</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_URL</span><span class="o">=</span>https://api.openai.com/v1/chat/completions
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_KEY</span><span class="o">=</span>sk-...
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_MODEL</span><span class="o">=</span>gpt-4o-mini
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># Anthropic via LiteLLM proxy (or any OpenAI-shim in front of Claude)</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_URL</span><span class="o">=</span>https://your-litellm-proxy.example/v1/chat/completions
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_KEY</span><span class="o">=</span>sk-litellm-...
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_MODEL</span><span class="o">=</span>claude-haiku-4-5
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a><span class="c1"># Local vLLM / LM Studio</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_URL</span><span class="o">=</span>http://localhost:8000/v1/chat/completions
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_KEY</span><span class="o">=</span>not-needed
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TV_RESTAPI_MODEL</span><span class="o">=</span>meta-llama/Llama-3.1-8B-Instruct
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./infra<span class="w"> </span>--ai-annotate<span class="w"> </span>restapi
+</span></code></pre></div>
+<p><strong><code>ollama</code></strong> — no environment variables. Server URL and model are configured per-provider via constants in <code>modules/config/cloud_config_&lt;provider&gt;.py</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OLLAMA_HOST</code></td>
+<td><code>http://localhost:11434</code></td>
+<td>Ollama server URL. Change to point at a remote Ollama instance</td>
+</tr>
+<tr>
+<td><code>OLLAMA_MODEL</code></td>
+<td><code>llama3</code></td>
+<td>Model tag to invoke. Must already be pulled on the server (<code>ollama pull &lt;model&gt;</code>). Any installed model works — <code>llama3.1</code>, <code>mistral</code>, <code>qwen2.5</code>, etc.</td>
+</tr>
+</tbody>
+</table>
+<p>The constants are duplicated across the three provider configs (<code>cloud_config_aws.py</code>, <code>cloud_config_azure.py</code>, <code>cloud_config_gcp.py</code>); update all three if you want a consistent default regardless of which cloud provider is detected in the source.</p>
+<h4 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h4>
+<ol>
+<li>TerraVision builds the graph deterministically (identical to a non-AI run)</li>
+<li>The graph inventory + edges + project context (README, HCL comments, tags) are sent to the LLM, which returns YAML annotations</li>
+<li>Every resource reference in the response is validated against the deterministic graphdict; references to non-existent nodes or edges are silently dropped before the file is written</li>
+<li>The surviving annotations are written to <code>terravision.ai.yml</code> in the source directory, with a <code>generated_by</code> block recording the backend, model, and timestamp</li>
+<li>If a user <code>terravision.yml</code> also exists, both files are merged (user file takes precedence)</li>
+<li>The merged annotations are applied to the graph before rendering</li>
+</ol>
 <h3 id="two-file-model">Two-File Model<a class="headerlink" href="#two-file-model" title="Permanent link">¶</a></h3>
 <p>TerraVision uses a two-file annotation model that separates AI-generated suggestions from your manual customizations:</p>
 <table>
@@ -2553,31 +2766,31 @@
 <h3 id="flow-annotations">Flow Annotations<a class="headerlink" href="#flow-annotations" title="Permanent link">¶</a></h3>
 <p>Flows describe named request paths through your architecture (e.g., "User Login", "Data Ingestion"). Each flow is a sequence of steps that map to resources in your diagram.</p>
 <p><strong>Example <code>terravision.yml</code> with flows:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Payment Processing Architecture</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="nt">flows</span><span class="p">:</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span><span class="nt">payment_request</span><span class="p">:</span>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Customer</span><span class="nv"> </span><span class="s">payment</span><span class="nv"> </span><span class="s">flow"</span>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Internet</span>
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"1.</span><span class="nv"> </span><span class="s">Customer</span><span class="nv"> </span><span class="s">submits</span><span class="nv"> </span><span class="s">payment"</span>
-</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">Internet</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_api_gateway_rest_api.payments</span><span class="p p-Indicator">]</span>
-</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"2.</span><span class="nv"> </span><span class="s">HTTPS</span><span class="nv"> </span><span class="s">POST</span><span class="nv"> </span><span class="s">/pay"</span>
-</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_lambda_function.process_payment</span>
-</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"3.</span><span class="nv"> </span><span class="s">Validate</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">process"</span>
-</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">aws_lambda_function.process_payment</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_dynamodb_table.transactions</span><span class="p p-Indicator">]</span>
-</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"4.</span><span class="nv"> </span><span class="s">Store</span><span class="nv"> </span><span class="s">transaction"</span>
-</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_sqs_queue.notifications</span>
-</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"5.</span><span class="nv"> </span><span class="s">Queue</span><span class="nv"> </span><span class="s">confirmation"</span>
-</span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a>
-</span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a><span class="w">  </span><span class="nt">refund_flow</span><span class="p">:</span>
-</span><span id="__span-21-20"><a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Refund</span><span class="nv"> </span><span class="s">processing"</span>
-</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_lambda_function.process_refund</span>
-</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"1.</span><span class="nv"> </span><span class="s">Initiate</span><span class="nv"> </span><span class="s">refund"</span>
-</span><span id="__span-21-24"><a id="__codelineno-21-24" name="__codelineno-21-24" href="#__codelineno-21-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">aws_lambda_function.process_refund</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_dynamodb_table.transactions</span><span class="p p-Indicator">]</span>
-</span><span id="__span-21-25"><a id="__codelineno-21-25" name="__codelineno-21-25" href="#__codelineno-21-25"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"2.</span><span class="nv"> </span><span class="s">Update</span><span class="nv"> </span><span class="s">transaction</span><span class="nv"> </span><span class="s">status"</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Payment Processing Architecture</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="nt">flows</span><span class="p">:</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span><span class="nt">payment_request</span><span class="p">:</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Customer</span><span class="nv"> </span><span class="s">payment</span><span class="nv"> </span><span class="s">flow"</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Internet</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"1.</span><span class="nv"> </span><span class="s">Customer</span><span class="nv"> </span><span class="s">submits</span><span class="nv"> </span><span class="s">payment"</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">Internet</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_api_gateway_rest_api.payments</span><span class="p p-Indicator">]</span>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"2.</span><span class="nv"> </span><span class="s">HTTPS</span><span class="nv"> </span><span class="s">POST</span><span class="nv"> </span><span class="s">/pay"</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_lambda_function.process_payment</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"3.</span><span class="nv"> </span><span class="s">Validate</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">process"</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">aws_lambda_function.process_payment</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_dynamodb_table.transactions</span><span class="p p-Indicator">]</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"4.</span><span class="nv"> </span><span class="s">Store</span><span class="nv"> </span><span class="s">transaction"</span>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_sqs_queue.notifications</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"5.</span><span class="nv"> </span><span class="s">Queue</span><span class="nv"> </span><span class="s">confirmation"</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="w">  </span><span class="nt">refund_flow</span><span class="p">:</span>
+</span><span id="__span-23-20"><a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Refund</span><span class="nv"> </span><span class="s">processing"</span>
+</span><span id="__span-23-21"><a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+</span><span id="__span-23-22"><a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">aws_lambda_function.process_refund</span>
+</span><span id="__span-23-23"><a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"1.</span><span class="nv"> </span><span class="s">Initiate</span><span class="nv"> </span><span class="s">refund"</span>
+</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">aws_lambda_function.process_refund</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">aws_dynamodb_table.transactions</span><span class="p p-Indicator">]</span>
+</span><span id="__span-23-25"><a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a><span class="w">        </span><span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="s">"2.</span><span class="nv"> </span><span class="s">Update</span><span class="nv"> </span><span class="s">transaction</span><span class="nv"> </span><span class="s">status"</span>
 </span></code></pre></div>
 <p><strong>How flows render on diagrams:</strong></p>
 <ul>
@@ -2588,7 +2801,7 @@
 </ul>
 <p><strong>Generating flows with AI:</strong></p>
 <p>When you use <code>--ai-annotate &lt;backend&gt;</code>, TerraVision can generate flow sequences automatically based on the architecture:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--ai-annotate<span class="w"> </span>ollama
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--ai-annotate<span class="w"> </span>ollama
 </span></code></pre></div>
 <p>The AI writes its suggested flows to <code>terravision.ai.yml</code>. To override a specific flow, define a flow with the same name in your <code>terravision.yml</code> -- the user version entirely replaces the AI version for that flow name.</p>
 <p>See <a href="../annotations/">annotations.md</a> for the full annotation file format and precedence rules.</p>
@@ -2598,46 +2811,46 @@
 <ol>
 <li>
 <p><strong>Use simplified mode</strong> for overview diagrams:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--simplified
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--simplified
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p><strong>Export to JSON first</strong>, then generate multiple variants:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--outfile<span class="w"> </span>graph.json
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>png
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>svg
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>terravision<span class="w"> </span>graphdata<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--outfile<span class="w"> </span>graph.json
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>png
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>graph.json<span class="w"> </span>--format<span class="w"> </span>svg
 </span></code></pre></div><p></p>
 </li>
 <li>
 <p><strong>Use specific workspaces</strong> to reduce scope:
-   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--workspace<span class="w"> </span>production
+   </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--workspace<span class="w"> </span>production
 </span></code></pre></div><p></p>
 </li>
 </ol>
 <h3 id="batch-processing">Batch Processing<a class="headerlink" href="#batch-processing" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Process multiple Terraform directories</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>terraform/*<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span><span class="nv">$dir</span><span class="w"> </span>--outfile<span class="w"> </span><span class="k">$(</span>basename<span class="w"> </span><span class="nv">$dir</span><span class="k">)</span>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="k">done</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Process multiple Terraform directories</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>terraform/*<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span><span class="nv">$dir</span><span class="w"> </span>--outfile<span class="w"> </span><span class="k">$(</span>basename<span class="w"> </span><span class="nv">$dir</span><span class="k">)</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="k">done</span>
 </span></code></pre></div>
 <hr>
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">¶</a></h2>
 <h3 id="daily-development">Daily Development<a class="headerlink" href="#daily-development" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># Quick check of current infrastructure</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--show
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Quick check of current infrastructure</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--show
 </span></code></pre></div>
 <h3 id="code-review">Code Review<a class="headerlink" href="#code-review" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Generate diagram for PR review</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>pr-<span class="si">${</span><span class="nv">PR_NUMBER</span><span class="si">}</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Generate diagram for PR review</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>pr-<span class="si">${</span><span class="nv">PR_NUMBER</span><span class="si">}</span>
 </span></code></pre></div>
 <h3 id="documentation-updates">Documentation Updates<a class="headerlink" href="#documentation-updates" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Generate all formats for documentation</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>png<span class="w"> </span>--outfile<span class="w"> </span>docs/images/architecture
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>docs/images/architecture
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Generate all formats for documentation</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>png<span class="w"> </span>--outfile<span class="w"> </span>docs/images/architecture
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>docs/images/architecture
 </span></code></pre></div>
 <h3 id="cicd-pipeline">CI/CD Pipeline<a class="headerlink" href="#cicd-pipeline" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Generate diagram with build number</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>architecture-<span class="si">${</span><span class="nv">BUILD_NUMBER</span><span class="si">}</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># Generate diagram with build number</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--format<span class="w"> </span>svg<span class="w"> </span>--outfile<span class="w"> </span>architecture-<span class="si">${</span><span class="nv">BUILD_NUMBER</span><span class="si">}</span>
 </span></code></pre></div>
 <p>See <a href="../cicd-integration/">cicd-integration.md</a> for complete CI/CD examples.</p>
 <hr>
