@@ -24,8 +24,9 @@ brew install graphviz
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get update
-sudo apt-get install graphviz
+sudo apt update
+sudo apt install graphviz
+sudo apt install libgvplugin-neato-layout8
 ```
 
 **Windows:**
