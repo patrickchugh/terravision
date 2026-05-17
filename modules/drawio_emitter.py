@@ -22,23 +22,23 @@ DPI = 72.0
 # Icon sizes matching draw.io's Sidebar-AWS4.js (s=1 scale factor).
 # Direct shapes (instance2, lambda_function, etc.) use 48×48.
 # resourceIcon shapes (ec2, s3, rds category icons) use 78×78.
-DIRECT_ICON_SIZE = 78
-RESICON_SIZE = 108
+DIRECT_ICON_SIZE = 100
+RESICON_SIZE = 130
 # Fallback for unmapped nodes.
-DEFAULT_ICON_SIZE = 78
+DEFAULT_ICON_SIZE = 100
 
 # Azure card: grey rounded rectangle behind SVG icon (matches PNG output).
-AZURE_CARD_SIZE = 110
-AZURE_CARD_ICON_SIZE = 56
+AZURE_CARD_SIZE = 130
+AZURE_CARD_ICON_SIZE = 70
 
 # GCP card: bordered table with icon left, text right (matches PNG output).
-GCP_CARD_WIDTH = 400
-GCP_CARD_HEIGHT = 100
-GCP_CARD_ICON_SIZE = 68
+GCP_CARD_WIDTH = 440
+GCP_CARD_HEIGHT = 120
+GCP_CARD_ICON_SIZE = 80
 GCP_CARD_ICON_MARGIN = 16
 
 # Padding inside cluster containers (pixels).
-CLUSTER_PADDING = 10
+CLUSTER_PADDING = 5
 
 # draw.io native group/container shapes for cluster types.
 # These render with official provider styling (border colors, corner icons).
