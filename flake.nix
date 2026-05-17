@@ -49,6 +49,7 @@
           build-system = [ pythonPackages.poetry-core ];
 
           dependencies = with pythonPackages; [
+            boto3
             click
             gitpython
             graphviz
