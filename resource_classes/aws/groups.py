@@ -90,7 +90,7 @@ class AvailabilityZone(Cluster):
             "labeljust": "c",
             "_shift": "0",
         }
-        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="30" color="#3399ff">{label}</FONT></TD></TR></TABLE>>'
+        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><FONT point-size="44" color="#3399ff">{label}</FONT></TD></TR></TABLE>>'
         super().__init__(cluster_label, defaultdir, graph_attrs)
 
 

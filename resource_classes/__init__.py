@@ -84,7 +84,7 @@ class Canvas:
         "overlap" : "false",
         "nodesep": "3",  # Horizontal spacing between nodes
         "fontname": "Sans-Serif",
-        "fontsize": "36",
+        "fontsize": "48",
         "fontcolor": "#2D3436",
         "labelloc" : "t",
         "concentrate": 'false',
@@ -99,19 +99,20 @@ class Canvas:
         "shape": "box",
         "style": "rounded",
         "fixedsize": "true",
-        "width": "1.4",
-        "height": "1.4",
+        "width": "2.8",
+        "height": "2.8",
         "labelloc": "b",
         "imagepos": "c",
         "imagescale": "true",
         "fontname": "Sans-Serif",
-        "fontsize": "18",
+        "fontsize": "28",
         "fontcolor": "#2D3436",
         "center": "true",
     }
     _default_edge_attrs = {
         "color": "#7B8894",
-
+        "penwidth": "2.0",
+        "arrowsize": "1.5",
     }
 
     # fmt: on
@@ -300,7 +301,7 @@ class Cluster:
         "labeljust": "l",
         "pencolor": "black",
         "fontname": "Sans-Serif",
-        "fontsize": "18",
+        "fontsize": "28",
     }
 
     def __init__(
@@ -372,7 +373,7 @@ class Node:
     _icon_dir = None
     _icon = None
 
-    _height = 1.9
+    _height = 3.8
 
     def __init__(self, label: str = "", **attrs: Dict):
         """Node represents a system component.
@@ -386,12 +387,18 @@ class Node:
         # fmt: off
         padding = 0.4 * (label.count('\n'))
         self._attrs = {
-            "shape": "none",
+            "shape": "box",
+            "penwidth": "0",
+            "color": "none",
+            "fillcolor": "none",
+            "style": "",
             "tf_resource_name" : "unknown",
             "height": str(self._height + padding),
             "image": self._load_icon(),
-            "nodesep": "1.0",    # Horizontal spacing between nodes/clusters (in inches)
-            "ranksep": "1.5",    # Vertical spacing between ranks/clusters (in inches)
+            "imagepos": "tc",
+            "imagescale": "true",
+            "nodesep": "1.0",
+            "ranksep": "1.5",
             "labelloc": "b"
         } if self._icon else {}
 
@@ -541,7 +548,7 @@ class Edge:
     _default_edge_attrs = {
         "fontcolor": "#2D3436",
         "fontname": "Sans-Serif",
-        "fontsize": "13",
+        "fontsize": "20",
     }
 
     def __init__(
@@ -579,7 +586,7 @@ class Edge:
 
         if label:
             self._attrs["xlabel"] = "  " + label + "  "
-            self._attrs["fontsize"] = "18"
+            self._attrs["fontsize"] = "28"
             self._attrs["fontcolor"] = "#5b9bd5"
         if color:
             self._attrs["color"] = color

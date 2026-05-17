@@ -48,7 +48,7 @@ class AZUREGroup(Cluster):
     def __init__(self, label="", badge_label=None, **kwargs):
         azure_graph_attrs = {
             "style": "invis",  # No border
-            "margin": "100",
+            "margin": "150",
             "ordering": "in",
             "center": "true",
             "labeljust": "l",
@@ -72,7 +72,7 @@ class ResourceGroupCluster(Cluster):
     def __init__(self, label="Resource Group", badge_label=None, **kwargs):
         graph_attrs = {
             "style": "dashed",
-            "margin": "30",
+            "margin": "60",
             "pencolor": "#0078D4",
             "penwidth": "1",
             "rank": "same",
@@ -95,7 +95,7 @@ class VNetGroup(Cluster):
         graph_attrs = {
             "style": "filled,dashed",  # Light blue fill with dotted dark blue border
             "fillcolor": "#E8F4FC",  # Light blue background
-            "margin": "40",
+            "margin": "80",
             "pencolor": "#0078D4",  # Dark blue border
             "penwidth": "1.5",
             "rank": "same",
@@ -121,7 +121,7 @@ class SubnetGroup(Cluster):
         graph_attrs = {
             "style": "filled",  # White fill with grey border (like Azure Architecture Center)
             "fillcolor": "#FFFFFF",
-            "margin": "20",
+            "margin": "50",
             "pencolor": "#CCCCCC",  # Grey border
             "penwidth": "1",
         }
@@ -143,7 +143,7 @@ class NSGGroup(Cluster):
     def __init__(self, label="Network Security Group", **kwargs):
         graph_attrs = {
             "style": "solid",
-            "margin": "50",
+            "margin": "80",
             "pencolor": "red",
             "center": "true",
             "labeljust": "c",
@@ -158,7 +158,7 @@ class AvailabilityZone(Cluster):
         graph_attrs = {
             "style": "rounded,filled",  # Rounded rectangle with fill
             "fillcolor": "#FAFAFA",  # Off-white/light gray
-            "margin": "30",
+            "margin": "60",
             "pencolor": "#FFB900",  # Azure yellow/orange
             "penwidth": "2",
             "labeljust": "c",
@@ -180,7 +180,7 @@ class VMSSGroup(Cluster):
     def __init__(self, label="VM Scale Set", **kwargs):
         graph_attrs = {
             "style": "dashed",
-            "margin": "30",
+            "margin": "60",
             "pencolor": "#0078D4",
             "penwidth": "1",
             "labeljust": "c",
@@ -193,7 +193,7 @@ class SharedServicesGroup(Cluster):
     def __init__(self, label="Shared Services", **kwargs):
         graph_attrs = {
             "style": "dashed",
-            "margin": "40",
+            "margin": "80",
             "pencolor": "#605E5C",
             "penwidth": "1",
         }

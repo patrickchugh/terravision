@@ -906,7 +906,7 @@ def generate_dot(
     title_style = {
         "_titlenode": "1",
         "shape": "plaintext",
-        "fontsize": "30",
+        "fontsize": "56",
         "fontname": "Sans-Serif",
         "fontcolor": "#2D3436",
         "label": title,
@@ -1006,9 +1006,10 @@ def generate_dot(
     footer_style = {
         "_footernode": "1",
         "shape": "record",
-        "width": "12",
-        "height": "1.5",
-        "fontsize": "14",
+        "width": "14",
+        "height": "2.0",
+        "fontsize": "20",
+        "margin": "0.4,0.3",
         "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
@@ -1219,7 +1220,7 @@ def render_diagram(
     title_style = {
         "_titlenode": "1",
         "shape": "plaintext",
-        "fontsize": "30",
+        "fontsize": "56",
         "fontname": "Sans-Serif",
         "fontcolor": "#2D3436",
         "label": title,
@@ -1319,9 +1320,10 @@ def render_diagram(
     footer_style = {
         "_footernode": "1",
         "shape": "record",
-        "width": "12",
-        "height": "1.5",
-        "fontsize": "14",
+        "width": "14",
+        "height": "2.0",
+        "fontsize": "20",
+        "margin": "0.4,0.3",
         "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)

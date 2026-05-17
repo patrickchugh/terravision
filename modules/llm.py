@@ -92,6 +92,7 @@ def _restapi_settings() -> Tuple[str, str, str]:
         )
     return url, key, model
 
+
 # ---------------------------------------------------------------------------
 # Backend reachability checks (preflight)
 # ---------------------------------------------------------------------------
@@ -928,9 +929,7 @@ def _validate_against_graphdict(
 # ---------------------------------------------------------------------------
 
 
-def _resolve_model_identifier(
-    backend: str, ollama_model: Optional[str] = None
-) -> str:
+def _resolve_model_identifier(backend: str, ollama_model: Optional[str] = None) -> str:
     """Best-effort identification of the model in use.
 
     Used in the ``generated_by`` provenance block so users can see what
