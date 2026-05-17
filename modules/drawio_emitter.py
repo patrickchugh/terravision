@@ -103,7 +103,7 @@ GROUP_CENTER_STYLE_MAP = {
         "recursiveResize=0;shape=mxgraph.aws4.groupCenter;"
         "grIcon=mxgraph.aws4.group_auto_scaling_group;grStroke=1;"
         "strokeColor=#D86613;fillColor=none;verticalAlign=top;"
-        "align=center;fontColor=#D86613;dashed=1;spacingTop=25;"
+        "align=center;fontColor=#D86613;dashed=1;spacingTop=35;"
     ),
     "GenericAutoScalingGroup": (
         f"{_PTS_2D};outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;"
@@ -111,7 +111,7 @@ GROUP_CENTER_STYLE_MAP = {
         "recursiveResize=0;shape=mxgraph.aws4.groupCenter;"
         "grIcon=mxgraph.aws4.group_auto_scaling_group;grStroke=1;"
         "strokeColor=#D86613;fillColor=none;verticalAlign=top;"
-        "align=center;fontColor=#D86613;dashed=1;spacingTop=25;"
+        "align=center;fontColor=#D86613;dashed=1;spacingTop=35;"
     ),
 }
 
@@ -439,7 +439,7 @@ def emit_drawio(
                 continue
             icon_path = img_match.group(1)
             icon_basename = os.path.basename(icon_path)
-            logo_size = _LOGO_ICON_SIZES.get(icon_basename, (180, 32))
+            logo_size = _LOGO_ICON_SIZES.get(icon_basename, (250, 44))
 
             b64 = _encode_icon_base64(icon_path)
             logo_id = _next_id()
@@ -955,9 +955,9 @@ _ICON_TO_DRAWIO_SVG = {
 # Cluster label icons that are logos (contain text, need larger sizing).
 # Values are (width, height) in pixels.
 _LOGO_ICON_SIZES = {
-    "azure.png": (200, 112),  # 500x281 original, scaled to fit
-    "gcp.png": (180, 32),  # 384x68 original, scaled to fit
-    "aws.png": (150, 90),
+    "azure.png": (280, 157),
+    "gcp.png": (250, 44),
+    "aws.png": (210, 126),
 }
 
 
@@ -978,8 +978,8 @@ def _build_cluster_label_style(
     text_parts = re.findall(r"<td[^>]*>([^<]+)</td>", label, re.IGNORECASE)
     clean_label = " ".join(t.strip() for t in text_parts if t.strip())
 
-    w_px = 40
-    h_px = 40
+    w_px = 70
+    h_px = 70
 
     if img_match:
         icon_path = img_match.group(1)
