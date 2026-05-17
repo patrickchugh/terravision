@@ -41,7 +41,7 @@ CLUSTER_PADDING = 10
 # Inset to shrink cluster bounding boxes from Graphviz layout.
 # Graphviz margins are tuned for large PNG icons; drawio icons are
 # much smaller so the same margins create excessive whitespace.
-CLUSTER_INSET = 30
+CLUSTER_INSET = 60
 
 # draw.io native group/container shapes for cluster types.
 # These render with official provider styling (border colors, corner icons).
