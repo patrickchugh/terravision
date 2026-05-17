@@ -22,23 +22,23 @@ DPI = 72.0
 # Icon sizes matching draw.io's Sidebar-AWS4.js (s=1 scale factor).
 # Direct shapes (instance2, lambda_function, etc.) use 48×48.
 # resourceIcon shapes (ec2, s3, rds category icons) use 78×78.
-DIRECT_ICON_SIZE = 100
-RESICON_SIZE = 130
+DIRECT_ICON_SIZE = 56
+RESICON_SIZE = 78
 # Fallback for unmapped nodes.
-DEFAULT_ICON_SIZE = 100
+DEFAULT_ICON_SIZE = 56
 
 # Azure card: grey rounded rectangle behind SVG icon (matches PNG output).
-AZURE_CARD_SIZE = 130
-AZURE_CARD_ICON_SIZE = 70
+AZURE_CARD_SIZE = 76
+AZURE_CARD_ICON_SIZE = 40
 
 # GCP card: bordered table with icon left, text right (matches PNG output).
-GCP_CARD_WIDTH = 440
-GCP_CARD_HEIGHT = 120
-GCP_CARD_ICON_SIZE = 80
-GCP_CARD_ICON_MARGIN = 16
+GCP_CARD_WIDTH = 280
+GCP_CARD_HEIGHT = 70
+GCP_CARD_ICON_SIZE = 48
+GCP_CARD_ICON_MARGIN = 12
 
 # Padding inside cluster containers (pixels).
-CLUSTER_PADDING = 5
+CLUSTER_PADDING = 10
 
 # draw.io native group/container shapes for cluster types.
 # These render with official provider styling (border colors, corner icons).
@@ -99,19 +99,19 @@ _PTS_2D = (
 GROUP_CENTER_STYLE_MAP = {
     "AutoscalingGroup": (
         f"{_PTS_2D};outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;"
-        "fontSize=16;fontStyle=0;container=1;pointerEvents=0;collapsible=0;"
+        "fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;"
         "recursiveResize=0;shape=mxgraph.aws4.groupCenter;"
         "grIcon=mxgraph.aws4.group_auto_scaling_group;grStroke=1;"
         "strokeColor=#D86613;fillColor=none;verticalAlign=top;"
-        "align=center;fontColor=#D86613;dashed=1;spacingTop=35;"
+        "align=center;fontColor=#D86613;dashed=1;spacingTop=25;"
     ),
     "GenericAutoScalingGroup": (
         f"{_PTS_2D};outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;"
-        "fontSize=16;fontStyle=0;container=1;pointerEvents=0;collapsible=0;"
+        "fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;"
         "recursiveResize=0;shape=mxgraph.aws4.groupCenter;"
         "grIcon=mxgraph.aws4.group_auto_scaling_group;grStroke=1;"
         "strokeColor=#D86613;fillColor=none;verticalAlign=top;"
-        "align=center;fontColor=#D86613;dashed=1;spacingTop=35;"
+        "align=center;fontColor=#D86613;dashed=1;spacingTop=25;"
     ),
 }
 
@@ -298,7 +298,7 @@ def emit_drawio(
             for n in xdot_graph.nodes.values()
         )
         if has_label_node:
-            dx_h += 50
+            dx_h += 30
 
         cluster_abs_pos[cluster_name] = (abs_x, abs_y)
 
@@ -334,7 +334,7 @@ def emit_drawio(
                 "gradientColor=none",
                 "html=1",
                 "whiteSpace=wrap",
-                "fontSize=16",
+                "fontSize=12",
                 "fontStyle=0",
                 "shape=mxgraph.aws4.group",
                 f"grIcon=mxgraph.aws4.{gr_icon}",
@@ -388,7 +388,7 @@ def emit_drawio(
                 "spacingLeft=10",
                 "spacingTop=5",
                 "fontStyle=1",
-                "fontSize=18",
+                "fontSize=14",
                 "container=1",
                 "collapsible=0",
             ]
@@ -439,7 +439,7 @@ def emit_drawio(
                 continue
             icon_path = img_match.group(1)
             icon_basename = os.path.basename(icon_path)
-            logo_size = _LOGO_ICON_SIZES.get(icon_basename, (250, 44))
+            logo_size = _LOGO_ICON_SIZES.get(icon_basename, (180, 32))
 
             b64 = _encode_icon_base64(icon_path)
             logo_id = _next_id()
@@ -626,7 +626,7 @@ def emit_drawio(
         subtitle_style = (
             "text;html=1;align=center;verticalAlign=top;"
             "resizable=0;points=[];autosize=1;strokeColor=none;"
-            "fillColor=none;fontSize=20;fontColor=#999999;"
+            "fillColor=none;fontSize=16;fontColor=#999999;"
         )
         sub_cell = ET.SubElement(
             root,
@@ -673,7 +673,7 @@ def emit_drawio(
         if parent_cluster:
             x1, y1, x2, y2 = parent_cluster.bb
             cluster_w = x2 - x1
-            cluster_h = y2 - y1 + 50  # padded height
+            cluster_h = y2 - y1 + 30  # padded height
             # Absolute position: cluster origin + offset within cluster
             abs_x = x1
             abs_y = _flip_y(y2)
@@ -817,7 +817,7 @@ def _build_node_style(
                 "align=center",
                 "verticalLabelPosition=bottom",
                 "verticalAlign=top",
-                "fontSize=16",
+                "fontSize=12",
                 "fontColor=#2C2C2C",
                 f"image={drawio_shape}",
                 f"imageWidth={AZURE_CARD_ICON_SIZE}",
@@ -852,7 +852,7 @@ def _build_node_style(
                 "verticalAlign=top",
                 "align=center",
                 "html=1",
-                "fontSize=16",
+                "fontSize=12",
                 "fontStyle=0",
                 "aspect=fixed",
                 "pointerEvents=1",
@@ -875,7 +875,7 @@ def _build_node_style(
                 "verticalAlign=top",
                 "align=center",
                 "html=1",
-                "fontSize=16",
+                "fontSize=12",
                 "fontStyle=0",
                 "aspect=fixed",
                 "shape=mxgraph.aws4.resourceIcon",
@@ -896,7 +896,7 @@ def _build_node_style(
             "verticalAlign=top",
             "align=center",
             "html=1",
-            "fontSize=16",
+            "fontSize=12",
             "fontStyle=0",
             "aspect=fixed",
             f"shape={shape_ref}",
@@ -925,13 +925,13 @@ def _build_special_node_style(node: XdotNode) -> str:
         return (
             "text;html=1;align=center;verticalAlign=middle;"
             "resizable=0;points=[];autosize=1;strokeColor=none;"
-            "fillColor=none;fontSize=36;fontStyle=1;fontColor=#2D3436;"
+            "fillColor=none;fontSize=28;fontStyle=1;fontColor=#2D3436;"
         )
     # Footer and legend
     return (
         "text;html=1;align=left;verticalAlign=middle;"
         "resizable=0;points=[];autosize=1;strokeColor=none;"
-        "fillColor=none;fontSize=18;fontColor=#666666;"
+        "fillColor=none;fontSize=14;fontColor=#666666;"
     )
 
 
@@ -955,9 +955,9 @@ _ICON_TO_DRAWIO_SVG = {
 # Cluster label icons that are logos (contain text, need larger sizing).
 # Values are (width, height) in pixels.
 _LOGO_ICON_SIZES = {
-    "azure.png": (280, 157),
-    "gcp.png": (250, 44),
-    "aws.png": (210, 126),
+    "azure.png": (200, 112),
+    "gcp.png": (180, 32),
+    "aws.png": (150, 90),
 }
 
 
@@ -978,8 +978,8 @@ def _build_cluster_label_style(
     text_parts = re.findall(r"<td[^>]*>([^<]+)</td>", label, re.IGNORECASE)
     clean_label = " ".join(t.strip() for t in text_parts if t.strip())
 
-    w_px = 70
-    h_px = 70
+    w_px = 40
+    h_px = 40
 
     if img_match:
         icon_path = img_match.group(1)
@@ -995,7 +995,7 @@ def _build_cluster_label_style(
             # Use draw.io's built-in SVG
             style = (
                 f"image;aspect=fixed;html=1;points=[];align=center;"
-                f"fontSize=18;image={svg_path};"
+                f"fontSize=14;image={svg_path};"
             )
         elif os.path.isfile(icon_path):
             b64 = _encode_icon_base64(icon_path)
@@ -1014,19 +1014,19 @@ def _build_cluster_label_style(
                     f"verticalLabelPosition=bottom;labelBackgroundColor=default;"
                     f"imageAspect=0;aspect=fixed;"
                     f"image=data:image/png,{b64};"
-                    f"fontSize=18;fontColor=#232F3E;"
+                    f"fontSize=14;fontColor=#232F3E;"
                 )
         else:
             style = (
                 "text;html=1;align=left;verticalAlign=middle;"
                 "resizable=0;points=[];autosize=1;strokeColor=none;"
-                "fillColor=none;fontSize=18;fontStyle=1;fontColor=#232F3E;"
+                "fillColor=none;fontSize=14;fontStyle=1;fontColor=#232F3E;"
             )
     else:
         style = (
             "text;html=1;align=left;verticalAlign=middle;"
             "resizable=0;points=[];autosize=1;strokeColor=none;"
-            "fillColor=none;fontSize=18;fontStyle=1;fontColor=#232F3E;"
+            "fillColor=none;fontSize=14;fontStyle=1;fontColor=#232F3E;"
         )
         if not clean_label:
             clean_label = _sanitize_label(label)
@@ -1123,7 +1123,7 @@ def _emit_gcp_card(
             f"imageWidth={icon_size};imageHeight={icon_size};"
             f"imageAlign=left;imageVerticalAlign=middle;"
             f"align=left;verticalAlign=middle;"
-            f"spacingLeft={spacing_left};fontSize=16;fontColor=#2D3436;"
+            f"spacingLeft={spacing_left};fontSize=12;fontColor=#2D3436;"
         )
     else:
         # No icon available — plain card
@@ -1131,7 +1131,7 @@ def _emit_gcp_card(
             "rounded=0;strokeColor=#DDDDDD;fillColor=none;"
             "html=1;whiteSpace=wrap;"
             "align=left;verticalAlign=middle;"
-            "fontSize=16;fontColor=#2D3436;"
+            "fontSize=12;fontColor=#2D3436;"
         )
 
     card_cell = ET.SubElement(
