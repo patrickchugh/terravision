@@ -19,12 +19,11 @@ from modules.xdot_parser import XdotCluster, XdotEdge, XdotGraph, XdotNode
 # Graphviz uses 72 DPI — 1 inch = 72 points.
 DPI = 72.0
 
-# Icon sizes matching draw.io Sidebar-AWS4.js exactly.
-# Direct shapes use s*48, resourceIcon shapes use s*78 (s=1).
-DIRECT_ICON_SIZE = 48
+# Icon sizes for draw.io output — uniform 78×78 to match the visual
+# size draw.io renders when shapes are dragged from the sidebar.
+DIRECT_ICON_SIZE = 78
 RESICON_SIZE = 78
-# Fallback for unmapped nodes — use direct shape size.
-DEFAULT_ICON_SIZE = 48
+DEFAULT_ICON_SIZE = 78
 
 # Azure card: grey rounded rectangle behind SVG icon (matches PNG output).
 AZURE_CARD_SIZE = 76
