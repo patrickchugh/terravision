@@ -261,7 +261,7 @@ class TestSpecialNodes:
         root = _parse_model(xml)
         cells = root.findall(".//mxCell")
         title = [c for c in cells if c.get("value") == "My Architecture"][0]
-        assert "fontSize=28" in title.get("style")
+        assert "fontSize=36" in title.get("style")
         assert "fontStyle=1" in title.get("style")
 
 
