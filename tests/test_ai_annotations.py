@@ -792,6 +792,9 @@ def test_us2_live_bedrock_title_and_actors(tmp_path):
     )
     output_dir = str(tmp_path)
 
+    if not llm.check_bedrock_credentials():
+        pytest.skip("AWS Bedrock credentials not available")
+
     result = llm.generate_ai_annotations(
         _build_minimal_tfdata_from_fixture(fixture),
         backend="bedrock",
