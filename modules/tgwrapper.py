@@ -329,9 +329,12 @@ def check_terragrunt_version() -> str:
         )
 
     # Parse version from output like "terragrunt version v0.67.4"
+    # Some installations report "terragrunt version latest" — treat as acceptable.
     output = result.stdout + result.stderr
     match = re.search(r"v?(\d+\.\d+\.\d+)", output)
     if not match:
+        if "latest" in output.lower():
+            return "latest"
         raise RuntimeError(
             f"Could not parse Terragrunt version from output: {output.strip()}"
         )
