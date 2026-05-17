@@ -39,6 +39,11 @@ GCP_CARD_ICON_MARGIN = 12
 # Padding inside cluster containers (pixels).
 CLUSTER_PADDING = 10
 
+# Inset to shrink cluster bounding boxes from Graphviz layout.
+# Graphviz margins are tuned for large PNG icons; drawio icons are
+# much smaller so the same margins create excessive whitespace.
+CLUSTER_INSET = 30
+
 # draw.io native group/container shapes for cluster types.
 # These render with official provider styling (border colors, corner icons).
 # Keys are the Python class names used in TerraVision's resource_classes.
@@ -282,8 +287,12 @@ def emit_drawio(
         if cluster.parent and cluster.parent in cluster_cell_ids:
             parent_id = cluster_cell_ids[cluster.parent]
 
-        # Bounding box → absolute draw.io coords
+        # Bounding box → absolute draw.io coords, shrunk by CLUSTER_INSET
         x1, y1, x2, y2 = cluster.bb
+        x1 += CLUSTER_INSET
+        y1 += CLUSTER_INSET
+        x2 -= CLUSTER_INSET
+        y2 -= CLUSTER_INSET
         abs_x = x1
         abs_y = _flip_y(y2)  # top-left in draw.io coords
         dx_w = x2 - x1
