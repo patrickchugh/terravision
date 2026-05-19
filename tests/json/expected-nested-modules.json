@@ -56,7 +56,6 @@
   ],
   "aws_iam_role.bastion": [
     "aws_iam_instance_profile.bastion",
-    "aws_iam_role_policy_attachment.ssm_core",
     "module.ssm_bastion_host.aws_instance.bastion"
   ],
   "aws_iam_role.ecs_pgadmin_task_execution_role": [],
@@ -67,7 +66,6 @@
   ],
   "aws_iam_role_policy.ecs_pgadmin_exec_secrets": [],
   "aws_iam_role_policy.ecs_task_role_policy": [],
-  "aws_iam_role_policy_attachment.ssm_core": [],
   "aws_internet_gateway.igw": [
     "tv_aws_internet.internet"
   ],
@@ -167,11 +165,7 @@
   ],
   "module.mkhan-test_aws_rds.aws_iam_role.rds_enhanced_monitoring": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
-    "module.mkhan-test_aws_rds.aws_db_instance.this",
-    "module.mkhan-test_aws_rds.aws_iam_role_policy_attachment.rds_enhanced_monitoring"
-  ],
-  "module.mkhan-test_aws_rds.aws_iam_role_policy_attachment.rds_enhanced_monitoring": [
-    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+    "module.mkhan-test_aws_rds.aws_db_instance.this"
   ],
   "module.mkhan-test_aws_rds.aws_vpc_security_group_egress_rule.all": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"

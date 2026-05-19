@@ -45,6 +45,26 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_iam_role_policy_attachment": {
+        "description": "Config-Only: Bridge IAM role connections through policy attachments to target policy",
+        "transformations": [
+            {
+                "operation": "link_via_common_connection",
+                "params": {
+                    "source_pattern": "aws_iam_role.",
+                    "target_pattern": "aws_iam_policy",
+                    "remove_shared_connection": False,
+                },
+            },
+            {
+                "operation": "delete_nodes",
+                "params": {
+                    "resource_pattern": "aws_iam_role_policy_attachment",
+                    "remove_from_parents": True,
+                },
+            },
+        ],
+    },
     "aws_autoscaling_group": {
         "description": "Expand autoscaling groups, launch templates and policies to numbered instances per subnet",
         "additional_handler_function": "expand_autoscaling_groups_to_subnets",

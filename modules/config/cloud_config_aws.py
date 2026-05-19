@@ -4,7 +4,6 @@
 
 from modules.config.resource_handler_configs_aws import RESOURCE_HANDLER_CONFIGS
 
-
 # Provider metadata
 PROVIDER_NAME = "AWS"
 PROVIDER_PREFIX = ["aws_"]
@@ -16,7 +15,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_route53": {
             "resource_name": "aws_route53_record.route_53",
             "import_location": "resource_classes.aws.network",
-            "edge_service": True,
         }
     },
     {
@@ -29,14 +27,12 @@ AWS_CONSOLIDATED_NODES = [
         "aws_cloudwatch_event": {
             "resource_name": "aws_cloudwatch_event_rule.eventbridge",
             "import_location": "resource_classes.aws.integration",
-            "edge_service": True,
         }
     },
     {
         "aws_sns_topic": {
             "resource_name": "aws_sns_topic.sns",
             "import_location": "resource_classes.aws.integration",
-            "edge_service": True,
         }
     },
     {
@@ -61,7 +57,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_dx": {
             "resource_name": "aws_dx_connection.directconnect",
             "import_location": "resource_classes.aws.network",
-            "edge_service": True,
         }
     },
     {
@@ -116,7 +111,6 @@ AWS_CONSOLIDATED_NODES = [
         "aws_appsync_graphql_api": {
             "resource_name": "aws_appsync_graphql_api.graphql_api",
             "import_location": "resource_classes.aws.network",
-            "edge_service": True,
         }
     },
     {
@@ -129,21 +123,18 @@ AWS_CONSOLIDATED_NODES = [
         "aws_cognito": {
             "resource_name": "aws_cognito_user_pool.cognito",
             "import_location": "resource_classes.aws.security",
-            "edge_service": True,
         }
     },
     {
         "aws_wafv2": {
             "resource_name": "aws_wafv2_web_acl.waf",
             "import_location": "resource_classes.aws.security",
-            "edge_service": True,
         }
     },
     {
         "aws_waf": {
             "resource_name": "aws_waf_web_acl.waf",
             "import_location": "resource_classes.aws.security",
-            "edge_service": True,
         }
     },
 ]
