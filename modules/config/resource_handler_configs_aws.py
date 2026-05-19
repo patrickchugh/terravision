@@ -118,26 +118,6 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
-    "aws_": {
-        "description": "Group shared AWS services into shared services group",
-        "transformations": [
-            {
-                "operation": "group_shared_services",
-                "params": {
-                    "service_patterns": [
-                        "aws_acm_certificate",
-                        "aws_cloudwatch_log_group",
-                        "aws_ecr_repository",
-                        "aws_efs_file_system",
-                        "aws_ssm_parameter",
-                        "aws_kms_key",
-                        "aws_eip",
-                    ],
-                    "group_name": "aws_group.shared_services",
-                },
-            },
-        ],
-    },
     "aws_cloudfront_distribution": {
         "description": "Connect CloudFront to load balancers and handle origins",
         "transformations": [
@@ -419,5 +399,38 @@ RESOURCE_HANDLER_CONFIGS = {
         # Creates transitive links and removes intermediary mapping node
         # Handles multiple event source types (SQS, Kinesis, DynamoDB Streams)
         "additional_handler_function": "aws_handle_lambda_event_source_mapping",
+    },
+    "aws_": {
+        "description": "Group shared services and auto-group duplicated resource types (runs last)",
+        "transformations": [
+            {
+                "operation": "group_shared_services",
+                "params": {
+                    "service_patterns": [
+                        "aws_acm_certificate",
+                        "aws_cloudwatch_log_group",
+                        "aws_ecr_repository",
+                        "aws_efs_file_system",
+                        "aws_ssm_parameter",
+                        "aws_kms_key",
+                        "aws_eip",
+                        "aws_secretsmanager",
+                    ],
+                    "group_name": "aws_group.shared_services",
+                },
+            },
+            {
+                "operation": "auto_group_by_type",
+                "params": {
+                    "resource_types": [
+                        "aws_dynamodb_table",
+                        "aws_lambda_function",
+                        "aws_cloudwatch_metric_alarm",
+                        "aws_iam_role_policy",
+                    ],
+                    "threshold": 3,
+                },
+            },
+        ],
     },
 }

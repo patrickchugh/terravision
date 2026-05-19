@@ -680,6 +680,60 @@ def group_shared_services(
     return tfdata
 
 
+def auto_group_by_type(
+    tfdata: Dict[str, Any],
+    resource_types: List[str],
+    threshold: int = 3,
+) -> Dict[str, Any]:
+    """Group resources of the same type into a visual cluster when count exceeds threshold.
+
+    Only groups resource types listed in `resource_types`. Resources are moved
+    from their current parents into an aws_group.* container that renders as a
+    dashed cluster.
+
+    Args:
+        tfdata: Terraform data dictionary
+        resource_types: Resource type prefixes to consider for grouping
+        threshold: Minimum count of a type to trigger grouping
+
+    Returns:
+        Updated tfdata with auto-generated group nodes
+    """
+    for resource_type in resource_types:
+        resources = helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], resource_type
+        )
+        resources = [
+            r
+            for r in resources
+            if helpers.get_no_module_name(r).split(".")[0] == resource_type
+        ]
+        if len(resources) < threshold:
+            continue
+
+        group_name = f"aws_group.{resource_type}"
+        tfdata = create_group_node(tfdata, group_name, resources)
+        tfdata.setdefault("auto_grouped_resources", set()).update(resources)
+
+        from modules.config.cloud_config_aws import AWS_GROUP_NODES as group_nodes
+
+        for parent in list(tfdata["graphdict"].keys()):
+            if parent == group_name:
+                continue
+            parent_type = helpers.get_no_module_name(parent).split(".")[0]
+            if parent_type not in group_nodes:
+                continue
+            children = tfdata["graphdict"][parent]
+            matched = [r for r in resources if r in children]
+            if matched:
+                for r in matched:
+                    children.remove(r)
+                if group_name not in children:
+                    children.append(group_name)
+
+    return tfdata
+
+
 def link_via_shared_child(
     tfdata: Dict[str, Any],
     source_pattern: str,

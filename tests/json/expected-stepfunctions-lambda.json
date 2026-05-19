@@ -1,5 +1,10 @@
 {
   "aws_cloudwatch_log_group.cloudwatch": [],
+  "aws_group.aws_lambda_function": [
+    "aws_lambda_function.notify",
+    "aws_lambda_function.process",
+    "aws_lambda_function.validate"
+  ],
   "aws_group.shared_services": [
     "aws_cloudwatch_log_group.cloudwatch",
     "aws_iam_group.of_services"

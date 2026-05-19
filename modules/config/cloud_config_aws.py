@@ -347,6 +347,7 @@ AWS_SHARED_SERVICES = [
     "aws_ssm_parameter",
     "aws_kms_key",
     "aws_eip",
+    "aws_secretsmanager",
 ]
 
 AWS_ALWAYS_DRAW_LINE = [

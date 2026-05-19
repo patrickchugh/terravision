@@ -48,6 +48,7 @@
   "aws_group.shared_services": [
     "aws_cloudwatch_log_group.cloudwatch",
     "aws_iam_group.of_services",
+    "aws_secretsmanager_secret.secretsmanager",
     "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
     "module.pgadmin_ecr_repository.aws_ecr_repository.this"
   ],

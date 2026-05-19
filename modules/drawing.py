@@ -440,6 +440,14 @@ def handle_nodes(
                     ):
                         connectedNode = tfdata["meta_data"][node_connection]["node"]
                     elif node_connection in tfdata["graphdict"].keys():
+                        # Defer auto-grouped resources so they draw inside their group
+                        if node_connection in tfdata.get(
+                            "auto_grouped_resources", set()
+                        ):
+                            tfdata["deferred_connections"].append(
+                                (resource, node_connection)
+                            )
+                            continue
                         # Node exists in graphdict, try to draw it
                         circular_reference = resource in tfdata["graphdict"].get(
                             node_connection, []
@@ -686,6 +694,7 @@ def handle_group(
     create_cluster_label_node(newGroup)
 
     # Add child nodes and subgroups
+    child_node_ids = []
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
@@ -730,8 +739,39 @@ def handle_group(
                         "label", helpers.pretty_name(node_connection)
                     )
                     newGroup.add_node(newNode._id, label=node_label)
+                    child_node_ids.append(newNode._id)
+                elif (
+                    node_connection in tfdata["meta_data"]
+                    and "node" in tfdata["meta_data"][node_connection]
+                ):
+                    child_node_ids.append(
+                        tfdata["meta_data"][node_connection]["node"]._id
+                    )
+
+    # Wrap groups with many children into a grid
+    if len(child_node_ids) > MAX_NODES_PER_ROW:
+        from graphviz import Digraph
+
+        rows = [
+            child_node_ids[i : i + MAX_NODES_PER_ROW]
+            for i in range(0, len(child_node_ids), MAX_NODES_PER_ROW)
+        ]
+        for row in rows:
+            if len(row) > 1:
+                rank_sub = Digraph()
+                rank_sub.attr(rank="same")
+                for nid in row:
+                    rank_sub.node(nid)
+                newGroup.dot.subgraph(rank_sub)
+        # Vertical column edges: node 1→7, 2→8, etc.
+        for r in range(len(rows) - 1):
+            for col in range(min(len(rows[r]), len(rows[r + 1]))):
+                newGroup.dot.edge(rows[r][col], rows[r + 1][col], style="invis")
 
     return newGroup, drawn_resources
+
+
+MAX_NODES_PER_ROW = 3
 
 
 def draw_objects(

@@ -899,6 +899,8 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     combined = re.sub(r"\s+", " ", combined).strip()
 
     final = _title_case_dedup(combined, acronyms_list)
+    if is_group and final.lower().startswith("group "):
+        final = final[6:].strip() + " Group"
     return final if is_group else _soft_break(final)
 
 
