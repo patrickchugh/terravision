@@ -510,31 +510,63 @@ def _handle_registry_url(
     subfolder = ""
     headers: Dict[str, str] = {}
 
-    # Determine if using Terraform Enterprise or public registry
+    # Determine if using private registry host or public registry
     if check_for_domain(sourceURL):
-        # Terraform Enterprise / Terraform Cloud private registry
         hostname = urlparse("https://" + sourceURL).netloc
-        registrypath = sourceURL.split(hostname)
-        gitaddress = registrypath[1]
-        domain = "https://" + hostname + "/api/registry/v1/modules/"
-        click.echo(f"    Assuming Terraform Enterprise API Server URL: {domain}")
+        registrypath = sourceURL.split(hostname, 1)
+        gitaddress = registrypath[1] if len(registrypath) > 1 else ""
 
-        # Build TF_TOKEN_* env var name (dots/dashes become underscores)
-        token_env_var = "TF_TOKEN_" + hostname.replace(".", "_").replace("-", "_")
-        token = os.environ.get(token_env_var)
-
-        if not token:
+        # Terraform service discovery
+        discovery_url = f"https://{hostname}/.well-known/terraform.json"
+        try:
+            disc_resp = requests.get(discovery_url, timeout=10)
+            disc_resp.raise_for_status()
+            discovery = disc_resp.json()
+        except Exception:
             click.echo(
                 click.style(
-                    f"\nERROR: No {token_env_var} environment variable set. "
-                    f"Unable to authorise with {hostname}",
+                    f"\nERROR: Service discovery failed for {hostname}. "
+                    f"Could not reach {discovery_url}",
                     fg="red",
                     bold=True,
                 )
             )
             exit()
 
-        headers = {"Authorization": "bearer " + token}
+        modules_v1 = discovery.get("modules.v1")
+        if not modules_v1:
+            click.echo(
+                click.style(
+                    f"\nERROR: modules.v1 not found in service discovery "
+                    f"response from {hostname}",
+                    fg="red",
+                    bold=True,
+                )
+            )
+            exit()
+
+        if modules_v1.startswith("/"):
+            domain = f"https://{hostname}{modules_v1}"
+        else:
+            domain = modules_v1
+        if not domain.endswith("/"):
+            domain += "/"
+        click.echo(f"    Registry URL (service discovery): {domain}")
+
+        # Optional auth via TF_TOKEN_<sanitized_hostname>
+        token_env_var = "TF_TOKEN_" + hostname.replace(".", "_").replace("-", "_")
+        token = os.environ.get(token_env_var)
+
+        if token:
+            headers = {"Authorization": "Bearer " + token}
+        else:
+            click.echo(
+                click.style(
+                    f"    WARNING: {token_env_var} not set; "
+                    f"trying anonymous registry access",
+                    fg="yellow",
+                )
+            )
     else:
         # Public Terraform Registry
         domain = "https://registry.terraform.io/v1/modules/"
@@ -560,7 +592,7 @@ def _handle_registry_url(
     except Exception:
         click.echo(
             click.style(
-                f"\nERROR: Cannot connect to Git Repo and Terraform Enterprise server. "
+                f"\nERROR: Cannot connect to module registry. "
                 f"Check authorisation token, server address and network settings\n\n "
                 f"Code: {r.status_code} - {r.reason}",
                 fg="red",
