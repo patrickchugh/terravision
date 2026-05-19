@@ -10,10 +10,21 @@ from modules.plan_resolver import (
     resolve_module_ref_from_plan,
     is_hcl_function_suffix,
 )
+import json
 import hcl2
 import click
 import re
 from pathlib import Path
+
+
+def _coerce_output_value(val: Any) -> str:
+    """Coerce a Terraform output value to a string for variable substitution."""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, (int, float, bool)):
+        return str(val)
+    return json.dumps(val)
+
 
 # "data.aws_availability_zones": ["AZ1", "AZ2", "AZ3"],
 DATA_REPLACEMENTS = {
@@ -303,6 +314,7 @@ def replace_module_vars(
                     # Found the right output file for this module
                     for i in tfdata["all_output"][ofile]:
                         if outputname in i.keys():
+                            out_val = _coerce_output_value(i[outputname]["value"])
                             # Check if this is a module output reference (not a resource)
                             if "module." in module_var and not re.search(
                                 r"module\.[\w-]+\.aws_", module_var
@@ -311,14 +323,12 @@ def replace_module_vars(
                                 if (
                                     "[" in module_var
                                     and "[*]" not in module_var
-                                    and "*.id" in i[outputname]["value"]
+                                    and "*.id" in out_val
                                 ):
                                     value = value.replace(
                                         module_var, f"module.{mod}.{module_var}"
                                     )
-                                    value = value.replace(
-                                        module_var, i[outputname]["value"]
-                                    )
+                                    value = value.replace(module_var, out_val)
                                     index = helpers.find_between(
                                         module_var, "[", "]"
                                     ).replace(" ", "")
@@ -329,13 +339,13 @@ def replace_module_vars(
                             # Recursively resolve if output contains other variables
                             if (
                                 (
-                                    "module." in i[outputname]["value"]
+                                    "module." in out_val
                                     and not not re.search(
                                         r"module\.\w+\.aws_", module_var
                                     )
                                 )
-                                or "var." in i[outputname]["value"]
-                                or "local." in i[outputname]["value"]
+                                or "var." in out_val
+                                or "local." in out_val
                             ):
                                 value = find_replace_values(
                                     value, mod, tfdata, recursion_depth + 1
@@ -350,9 +360,7 @@ def replace_module_vars(
                                     value = value.replace(
                                         module_var, f"module.{mod}.{module_var}"
                                     )
-                                value = value.replace(
-                                    module_var, i[outputname]["value"]
-                                )
+                                value = value.replace(module_var, out_val)
                                 value = helpers.remove_terraform_functions(value)
                                 value = helpers.cleanup_curlies(value).strip()
                 else:
