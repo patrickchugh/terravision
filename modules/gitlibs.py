@@ -301,6 +301,96 @@ def _is_git_hosting_url(sourceURL: str) -> bool:
     return any(domain in sourceURL for domain in GIT_HOSTING_DOMAINS)
 
 
+def _extract_registry_versions(payload: Dict[str, Any]) -> List[str]:
+    """Extract version strings from registry API responses.
+
+    Supports both the public registry shape and Artifactory's Terraform
+    registry shape returned from the /versions endpoint.
+    """
+    versions = payload.get("versions", [])
+    if versions:
+        if isinstance(versions[0], str):
+            return versions
+        return [item.get("version", "") for item in versions if item.get("version")]
+
+    modules = payload.get("modules", [])
+    if modules:
+        module_versions = modules[0].get("versions", [])
+        return [
+            item.get("version", "")
+            for item in module_versions
+            if isinstance(item, dict) and item.get("version")
+        ]
+
+    return []
+
+
+def _select_registry_version(
+    version_constraint: str, available_versions: List[str]
+) -> Optional[str]:
+    """Pick the best matching registry version.
+
+    When no constraint is provided, returns the latest parseable version.
+    """
+    if not available_versions:
+        return None
+
+    if version_constraint:
+        return _resolve_version_constraint(version_constraint, available_versions)
+
+    parseable_versions = [v for v in available_versions if _parse_version(v) is not None]
+    if not parseable_versions:
+        return None
+    parseable_versions.sort(key=_parse_version)
+    return parseable_versions[-1]
+
+
+def _resolve_registry_download_url(
+    domain: str, gitaddress: str, resolved_version: str, headers: Dict[str, str]
+) -> Optional[str]:
+    """Resolve a Terraform registry download URL.
+
+    Supports Artifactory's Terraform registry protocol, which returns the real
+    archive URL via X-Terraform-Get on the /<version>/download endpoint.
+    """
+    download_endpoint = f"{domain}{gitaddress}/{resolved_version}/download"
+
+    try:
+        response = requests.head(
+            download_endpoint,
+            headers=headers,
+            allow_redirects=False,
+            timeout=10,
+        )
+    except Exception:
+        response = requests.get(
+            download_endpoint,
+            headers=headers,
+            allow_redirects=False,
+            timeout=10,
+        )
+
+    terraform_get = response.headers.get("X-Terraform-Get")
+    if terraform_get:
+        return terraform_get
+
+    location = response.headers.get("Location")
+    if location:
+        return location
+
+    try:
+        payload = response.json()
+    except Exception:
+        return None
+
+    for key in ("download_url", "download"):
+        download_url = payload.get(key)
+        if download_url:
+            return download_url
+
+    return None
+
+
 def get_clone_url(sourceURL: str, version_constraint: str = "") -> Tuple[str, str, str]:
     """Parse source URL and extract git clone URL, subfolder, and tag.
 
@@ -515,6 +605,7 @@ def _handle_registry_url(
         hostname = urlparse("https://" + sourceURL).netloc
         registrypath = sourceURL.split(hostname, 1)
         gitaddress = registrypath[1] if len(registrypath) > 1 else ""
+        gitaddress = gitaddress.lstrip("/")
 
         # Terraform service discovery
         discovery_url = f"https://{hostname}/.well-known/terraform.json"
@@ -585,16 +676,49 @@ def _handle_registry_url(
         return gitaddress, subfolder, ""
 
     # Fetch module source URL from registry API
+    r: Optional[requests.Response] = None
     try:
-        r = requests.get(domain + gitaddress, headers=headers)
+        r = requests.get(domain + gitaddress, headers=headers, timeout=10)
         resp_json = r.json()
-        githubURL = resp_json["source"]
+        githubURL = resp_json.get("source", "")
     except Exception:
+        resp_json = {}
+        githubURL = ""
+
+    # Private registries such as Artifactory can expose module metadata only via
+    # /versions and provide the actual archive URL through /<version>/download.
+    available_versions = _extract_registry_versions(resp_json)
+    if not githubURL:
+        versions_endpoint = f"{domain}{gitaddress}/versions"
+        try:
+            versions_resp = requests.get(versions_endpoint, headers=headers, timeout=10)
+            versions_resp.raise_for_status()
+            versions_json = versions_resp.json()
+            available_versions = _extract_registry_versions(versions_json)
+            resolved_version = _select_registry_version(
+                version_constraint, available_versions
+            )
+            if resolved_version:
+                download_url = _resolve_registry_download_url(
+                    domain, gitaddress, resolved_version, headers
+                )
+                if download_url:
+                    click.echo(
+                        f"  Resolved private registry module '{gitaddress}' "
+                        f"to {resolved_version}"
+                    )
+                    return download_url, subfolder, ""
+        except Exception:
+            pass
+
+    if not githubURL:
+        status_code = r.status_code if r is not None else "unknown"
+        reason = r.reason if r is not None else "unknown"
         click.echo(
             click.style(
                 f"\nERROR: Cannot connect to module registry. "
                 f"Check authorisation token, server address and network settings\n\n "
-                f"Code: {r.status_code} - {r.reason}",
+                f"Code: {status_code} - {reason}",
                 fg="red",
                 bold=True,
             )
@@ -608,13 +732,12 @@ def _handle_registry_url(
     # Resolve version constraint to a git tag
     git_tag = ""
     if version_constraint:
-        available_versions = resp_json.get("versions", [])
         resolved = _resolve_version_constraint(version_constraint, available_versions)
         if resolved:
             # Fetch the specific version to get its git tag
             try:
                 ver_resp = requests.get(
-                    domain + gitaddress + "/" + resolved, headers=headers
+                    domain + gitaddress + "/" + resolved, headers=headers, timeout=10
                 )
                 ver_tag = ver_resp.json().get("tag", "")
                 if ver_tag:
@@ -775,7 +898,7 @@ def clone_files(
         click.echo(f"  Processing External Module named '{module}': {sourceURL}")
 
     # Determine if source is an HTTP archive, remote URL, or local directory
-    if _is_http_archive(sourceURL):
+    if _is_http_archive(githubURL) or _is_http_archive(sourceURL):
         # HTTP archive (e.g., .tgz, .zip from S3, GCS, or any HTTP server)
         _download_and_extract_archive(githubURL, codepath)
     elif helpers.check_for_domain(str(sourceURL)):
