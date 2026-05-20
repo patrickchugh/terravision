@@ -171,7 +171,12 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
-            # Iteratively resolve all variable references
+            # Iteratively resolve all variable references.
+            # Track seen values to detect cycles (e.g. local.A → local.B → local.A)
+            # where find_replace_values keeps producing a different string each
+            # iteration without ever fully resolving it. The existing `value ==
+            # old_value` guard only catches fixed points, not cycles.
+            _seen_values: set = set()
             while (
                 (
                     "var." in value
@@ -185,6 +190,15 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 and key != "depends_on"
                 and key != "original_count"
             ):
+                if value in _seen_values:
+                    click.echo(
+                        click.style(
+                            f"   WARNING: Cannot fully resolve {resource}.{key}, unresolved references remain",
+                            fg="yellow",
+                        )
+                    )
+                    break
+                _seen_values.add(value)
                 mod = attr_list["module"]
                 old_value = value
                 value = find_replace_values(value, mod, tfdata)
