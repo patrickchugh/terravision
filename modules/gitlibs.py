@@ -338,7 +338,9 @@ def _select_registry_version(
     if version_constraint:
         return _resolve_version_constraint(version_constraint, available_versions)
 
-    parseable_versions = [v for v in available_versions if _parse_version(v) is not None]
+    parseable_versions = [
+        v for v in available_versions if _parse_version(v) is not None
+    ]
     if not parseable_versions:
         return None
     parseable_versions.sort(key=_parse_version)
