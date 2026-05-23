@@ -37,6 +37,72 @@ from resource_classes.generic.blank import Blank
 avl_classes = []
 _loaded_provider = None
 
+# User-configurable diagram sizing (set by CLI or YAML annotations)
+DIAGRAM_FONTSIZE: Optional[int] = None
+DIAGRAM_ICONSIZE: Optional[int] = None
+
+
+_DEFAULT_FONTSIZE = 28
+_DEFAULT_NODE_WIDTH = 2.8
+_DEFAULT_NODE_HEIGHT = 2.8
+_DEFAULT_ICON_NODE_HEIGHT = 3.8
+_DEFAULT_NODESEP = 3.0
+_DEFAULT_RANKSEP = 6.0
+
+
+def _apply_size_overrides(tfdata: Dict[str, Any]) -> None:
+    """Apply user-specified fontsize/iconsize overrides to resource class defaults.
+
+    Reads from DIAGRAM_FONTSIZE / DIAGRAM_ICONSIZE globals (set by CLI) and
+    falls back to tfdata["annotations"] values. Scales the node layout box,
+    spacing, and label height proportionally so larger text doesn't overflow
+    cluster boundaries or overlap neighboring labels.
+    """
+    global DIAGRAM_FONTSIZE, DIAGRAM_ICONSIZE
+
+    annotations = tfdata.get("annotations") or {}
+    fontsize = DIAGRAM_FONTSIZE or annotations.get("fontsize")
+    iconsize = DIAGRAM_ICONSIZE or annotations.get("iconsize")
+
+    if not fontsize and not iconsize:
+        return
+
+    if fontsize:
+        fontsize = int(fontsize)
+        import math
+
+        linear = fontsize / _DEFAULT_FONTSIZE
+        sqrt_scale = math.sqrt(linear)
+
+        Canvas._default_node_attrs["fontsize"] = str(fontsize)
+        Cluster._default_graph_attrs["fontsize"] = str(int(24 * sqrt_scale))
+
+        # Node layout box scales linearly with fontsize
+        Canvas._default_node_attrs["width"] = f"{_DEFAULT_NODE_WIDTH * linear:.1f}"
+        Canvas._default_node_attrs["height"] = f"{_DEFAULT_NODE_HEIGHT * linear:.1f}"
+
+        # Spacing uses dampened sqrt scaling
+        Canvas._default_graph_attrs["nodesep"] = f"{_DEFAULT_NODESEP * sqrt_scale:.1f}"
+        Canvas._default_graph_attrs["ranksep"] = f"{_DEFAULT_RANKSEP * sqrt_scale:.1f}"
+
+        Node._height = _DEFAULT_ICON_NODE_HEIGHT * linear
+
+        Cluster._margin_scale = linear
+
+    if iconsize:
+        iconsize = int(iconsize)
+        node_inches = iconsize / 72 + 1.0
+        if fontsize:
+            linear = fontsize / _DEFAULT_FONTSIZE
+            node_inches = max(node_inches, _DEFAULT_NODE_WIDTH * linear)
+            Canvas._default_node_attrs["width"] = f"{node_inches:.1f}"
+            Canvas._default_node_attrs["height"] = f"{node_inches:.1f}"
+            Node._height = _DEFAULT_ICON_NODE_HEIGHT * linear
+        else:
+            Canvas._default_node_attrs["width"] = f"{node_inches:.1f}"
+            Canvas._default_node_attrs["height"] = f"{node_inches:.1f}"
+            Node._height = node_inches + 1.0
+
 
 def _load_provider_resources(provider: str) -> None:
     """Dynamically load resource classes for the specified cloud provider.
@@ -888,6 +954,8 @@ def generate_dot(
     ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
     NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
 
+    _apply_size_overrides(tfdata)
+
     # Snapshot meta_data before drawing (drawing overwrites entries with {"node": ...})
     # Used by HTML renderer to show metadata for drawn resources
     import copy as _copy
@@ -1206,6 +1274,8 @@ def render_diagram(
     SHARED_SERVICES = constants["SHARED_SERVICES"]
     ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
     NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
+
+    _apply_size_overrides(tfdata)
 
     # Track already drawn resources to prevent duplicates
     all_drawn_resources_list = list()

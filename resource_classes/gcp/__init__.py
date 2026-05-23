@@ -112,46 +112,46 @@ class _GCP(Node):
                 # No tf_resource_name or no dot, bold entire label
                 formatted_label = f"<B>{label_clean}</B>"
 
-            # Create HTML table styled to look like a record
-            # Make table full width to match the width attribute
-            # Increased dimensions: 360x140 points (was 252x94)
-            # Use nested table for text to ensure both lines are left-aligned
+            # Read user-configurable sizes from drawing module globals
+            import modules.drawing as _drawing
+
+            _fs = _drawing.DIAGRAM_FONTSIZE or 36
+            _is = _drawing.DIAGRAM_ICONSIZE or 200
+            node_fontsize = str(_fs)
+            icon_dim = str(_is)
+            table_width = str(_is + 340)
+            node_width = f"{int(table_width) / 72:.1f}"
 
             # Split formatted label into lines for explicit alignment control
             if "<BR/>" in formatted_label:
                 # Two-line label: split on BR tag
                 lines = formatted_label.split("<BR/>")
                 text_table = f"""<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
-      <TR><TD ALIGN="LEFT"><FONT FACE="Sans-Serif" POINT-SIZE="32">{lines[0]}</FONT></TD></TR>
-      <TR><TD ALIGN="LEFT"><FONT FACE="Sans-Serif" POINT-SIZE="32">{lines[1]}</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT FACE="Sans-Serif" POINT-SIZE="{node_fontsize}">{lines[0]}</FONT></TD></TR>
+      <TR><TD ALIGN="LEFT"><FONT FACE="Sans-Serif" POINT-SIZE="{node_fontsize}">{lines[1]}</FONT></TD></TR>
     </TABLE>"""
             else:
                 # Single-line label
-                text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="32">{formatted_label}</FONT>"""
+                text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="{node_fontsize}">{formatted_label}</FONT>"""
 
             # Outer nodes have no border (already extracted from attrs above)
             border = "0" if is_outer_node else "1"
             color_attr = "" if is_outer_node else ' COLOR="#999999"'
 
             html_label = f"""<
-<TABLE BORDER="{border}" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" WIDTH="540"{color_attr}>
+<TABLE BORDER="{border}" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" WIDTH="{table_width}"{color_attr}>
   <TR>
-    <TD FIXEDSIZE="TRUE" WIDTH="200" HEIGHT="200"><IMG SRC="{icon_path}"/></TD>
+    <TD FIXEDSIZE="TRUE" WIDTH="{icon_dim}" HEIGHT="{icon_dim}"><IMG SRC="{icon_path}"/></TD>
     <TD ALIGN="LEFT" VALIGN="MIDDLE">{text_table}</TD>
   </TR>
 </TABLE>>"""
 
-            # Also set fontsize at the node level
-            node_fontsize = "32"
-
-            # Set attributes for HTML-based node (no image attribute)
-            # Use width to force spacing, no fixed height to let content determine it
             self._attrs = {
                 "shape": "plaintext",
                 "tf_resource_name": "unknown",
-                "width": "7.5",  # 540 points / 72 dpi = 7.5 inches
+                "width": node_width,
                 "label": html_label,
-                "fontsize": node_fontsize,  # Set font size for the label
+                "fontsize": node_fontsize,
                 "margin": "0",
             }
         else:

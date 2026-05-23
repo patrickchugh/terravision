@@ -304,6 +304,8 @@ class Cluster:
         "fontsize": "28",
     }
 
+    _margin_scale = 1.0
+
     def __init__(
         self,
         label: str = "cluster",
@@ -331,6 +333,17 @@ class Cluster:
         if self._diagram is None:
             raise EnvironmentError("Global diagrams context not set up")
         self._parent = getcluster()
+
+        # Scale cluster margins when fontsize/iconsize overrides are active
+        if self._margin_scale != 1.0 and "margin" in graph_attr:
+            raw = graph_attr["margin"]
+            if "," in str(raw):
+                parts = str(raw).split(",")
+                scaled = ",".join(f"{float(p) * self._margin_scale:.1f}" for p in parts)
+                graph_attr["margin"] = scaled
+            else:
+                graph_attr["margin"] = str(int(float(raw) * self._margin_scale))
+
         # Merge passed in attributes
         self.dot.graph_attr.update(graph_attr)
 

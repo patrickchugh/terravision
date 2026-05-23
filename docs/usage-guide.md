@@ -94,6 +94,9 @@ terravision draw [OPTIONS]
 | `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
 | `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
 | `--ai-annotate` | Generate AI annotations with specified backend (`bedrock`, `ollama`, `restapi`) | None | `--ai-annotate ollama` |
+| `--use-resource-names` | Label nodes with actual deployed resource names from Terraform plan | False | `--use-resource-names` |
+| `--fontsize` | Font size for resource labels in points | `28` | `--fontsize 50` |
+| `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
@@ -126,6 +129,9 @@ terravision visualise [OPTIONS]
 | `--show` | Auto-open HTML in default browser | False | `--show` |
 | `--simplified` | Generate simplified high-level diagram | False | `--simplified` |
 | `--annotate` | Path to annotations YAML file | None | `--annotate custom.yml` |
+| `--use-resource-names` | Label nodes with actual deployed resource names from Terraform plan | False | `--use-resource-names` |
+| `--fontsize` | Font size for resource labels in points | `28` | `--fontsize 50` |
+| `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--debug` | Enable debug output | False | `--debug` |
@@ -339,6 +345,47 @@ See [CI/CD Integration](cicd-integration.md) for pipeline examples using pre-gen
 
 ---
 
+## Diagram Sizing
+
+Control label font size and icon size across all output formats (PNG, SVG, PDF, draw.io, and HTML visualiser).
+
+### CLI Flags
+
+```bash
+# Larger labels (default is 28pt)
+terravision draw --source ./infra --fontsize 50
+
+# Larger icons (default is 128px)
+terravision draw --source ./infra --iconsize 200
+
+# Both together
+terravision visualise --source ./infra --fontsize 40 --iconsize 180
+```
+
+### YAML Annotation Fallback
+
+If you prefer not to pass CLI flags every time, set defaults in your `terravision.yml`:
+
+```yaml
+format: 0.3
+fontsize: 40
+iconsize: 180
+```
+
+**Precedence:** CLI flag > YAML annotation > built-in default. A `--fontsize` flag always overrides the YAML value.
+
+### How Scaling Works
+
+When you increase `--fontsize`, TerraVision automatically adjusts:
+
+- **Node width and height** scale linearly with font size so labels don't spill outside node boundaries
+- **Node spacing** (`nodesep`, `ranksep`) scales with the square root of the font size ratio to avoid excessive whitespace
+- **Cluster margins** (VPCs, subnets, security groups) scale linearly so labels stay inside group boundaries
+
+These adjustments apply uniformly to all providers (AWS, Azure, GCP) and all output formats.
+
+---
+
 ## Advanced Usage
 
 ### Multiple Environments
@@ -523,6 +570,30 @@ poetry run terravision draw --source ./path-to-your-terraform --ai-annotate olla
 The AI writes its suggested flows to `terravision.ai.yml`. To override a specific flow, define a flow with the same name in your `terravision.yml` -- the user version entirely replaces the AI version for that flow name.
 
 See [annotations.md](annotations.md) for the full annotation file format and precedence rules.
+
+---
+
+## Resource Labelling
+
+By default, TerraVision generates human-readable labels from the Terraform resource type and instance name (e.g. `aws_lambda_function.api` becomes "Lambda Function API"). Two flags let you switch to alternative labelling:
+
+### `--use-resource-names`
+
+Labels nodes with the actual deployed resource name from the Terraform plan — the `name` attribute as it would appear in your cloud console (e.g. `func-myapp-prod-weu-001`).
+
+```bash
+terravision draw --source ./infra --use-resource-names
+```
+
+Resources without a `name` attribute (or where the name is only known after apply) fall back to the default human-readable label.
+
+### `--use-tf-names`
+
+Labels nodes with the full Terraform resource address (e.g. `module.vpc.aws_subnet.public[0]`). Useful for debugging or mapping diagram nodes back to specific `.tf` resources.
+
+```bash
+terravision draw --source ./infra --use-tf-names
+```
 
 ---
 
