@@ -2190,6 +2190,10 @@
 <td>Scalar: highest-precedence source wins</td>
 </tr>
 <tr>
+<td><code>fontsize</code> / <code>iconsize</code></td>
+<td>Scalar: highest-precedence source wins (CLI flag overrides both)</td>
+</tr>
+<tr>
 <td><code>add</code> / <code>remove</code></td>
 <td>List union (deduplicated)</td>
 </tr>
@@ -2215,32 +2219,40 @@
 <hr>
 <h2 id="annotation-file-format">Annotation File Format<a class="headerlink" href="#annotation-file-format" title="Permanent link">¶</a></h2>
 <h3 id="basic-structure">Basic Structure<a class="headerlink" href="#basic-structure" title="Permanent link">¶</a></h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span><span class="w">  </span><span class="c1"># Required: annotation format version (0.1 or 0.2)</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span><span class="w">  </span><span class="c1"># Required: annotation format version (0.1, 0.2, or 0.3)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="s">"Diagram</span><span class="nv"> </span><span class="s">Title"</span><span class="w">  </span><span class="c1"># Optional: main diagram heading</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nt">connect</span><span class="p">:</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="c1"># Add new connections</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nt">fontsize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span><span class="w">   </span><span class="c1"># Optional: label font size in points (default: 28, new in 0.3)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nt">iconsize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">180</span><span class="w">  </span><span class="c1"># Optional: icon size in pixels (default: 128, new in 0.3)</span>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nt">disconnect</span><span class="p">:</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="c1"># Remove connections</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nt">connect</span><span class="p">:</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="c1"># Add new connections</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nt">add</span><span class="p">:</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span><span class="c1"># Add new resources</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nt">disconnect</span><span class="p">:</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span><span class="c1"># Remove connections</span>
 </span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nt">remove</span><span class="p">:</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="c1"># Delete resources</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nt">add</span><span class="p">:</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="c1"># Add new resources</span>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="nt">update</span><span class="p">:</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="c1"># Modify existing resources</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="nt">remove</span><span class="p">:</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="c1"># Delete resources</span>
 </span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="nt">flows</span><span class="p">:</span>
-</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">  </span><span class="c1"># Numbered flow sequences (new in format 0.2)</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="nt">update</span><span class="p">:</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">  </span><span class="c1"># Modify existing resources</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="nt">flows</span><span class="p">:</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">  </span><span class="c1"># Numbered flow sequences (new in format 0.2)</span>
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">CLI flags take precedence</p>
+<p><code>--fontsize</code> and <code>--iconsize</code> CLI flags override the values in the annotation file. See <a href="../usage-guide/#diagram-sizing">Diagram Sizing</a> for details.</p>
+</div>
 <h3 id="format-versions">Format Versions<a class="headerlink" href="#format-versions" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>0.1</strong>: Original format supporting <code>title</code>, <code>connect</code>, <code>disconnect</code>, <code>add</code>, <code>remove</code>, <code>update</code>. Still fully supported.</li>
 <li><strong>0.2</strong>: Adds the <code>flows</code> section for numbered flow badges and the <code>generated_by</code> metadata block (used in AI-generated files). All 0.1 files parse unchanged.</li>
+<li><strong>0.3</strong>: Adds top-level <code>fontsize</code> and <code>iconsize</code> keys for diagram sizing. All 0.1/0.2 files parse unchanged.</li>
 </ul>
 <h3 id="file-location">File Location<a class="headerlink" href="#file-location" title="Permanent link">¶</a></h3>
 <p><strong>Option 1: Auto-load</strong> (recommended)
