@@ -13,7 +13,8 @@ import modules.helpers as helpers
 # Annotation schema versions accepted by the merger.
 # 0.1 is the legacy single-file format. 0.2 adds the `flows` section
 # and the two-file (terravision.yml + terravision.ai.yml) model.
-SUPPORTED_ANNOTATION_FORMATS = {"0.1", "0.2"}
+# 0.3 adds top-level `fontsize` and `iconsize` keys.
+SUPPORTED_ANNOTATION_FORMATS = {"0.1", "0.2", "0.3"}
 
 
 def _validate_format(annotations: Optional[Dict[str, Any]], source_label: str) -> None:

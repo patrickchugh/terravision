@@ -28,6 +28,13 @@ from modules.provider_detector import get_provider_for_resource
 # Set by the CLI --use-tf-names flag.
 USE_TF_NAMES: bool = False
 
+# When True, pretty_name() prefers the resource's `name` metadata attribute
+# (the actual deployed name) over the generated label. Falls back to the
+# default pretty_name if `name` is missing or computed ("known after apply").
+# Set by the CLI --use-resource-names flag.
+USE_RESOURCE_NAMES: bool = False
+_RESOURCE_ORIGINAL_META: Optional[Dict[str, Any]] = None
+
 
 def output_file_matches_module(
     filepath: str, module_name: str, tfdata: Dict[str, Any]
@@ -797,6 +804,11 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
 
     if USE_TF_NAMES:
         return _wrap_tf_name(name)
+
+    if USE_RESOURCE_NAMES and _RESOURCE_ORIGINAL_META is not None:
+        resource_name = _RESOURCE_ORIGINAL_META.get(name, {}).get("name")
+        if isinstance(resource_name, str) and resource_name:
+            return resource_name
 
     skip_keywords = {"null_", "random", "time_sleep", "empty", "blank"}
     if any(k in name for k in skip_keywords):

@@ -64,6 +64,7 @@ Precedence (highest to lowest):
 | Section | Merge Rule |
 |---------|------------|
 | `title` | Scalar: highest-precedence source wins |
+| `fontsize` / `iconsize` | Scalar: highest-precedence source wins (CLI flag overrides both) |
 | `add` / `remove` | List union (deduplicated) |
 | `connect` / `disconnect` | Dict merge by resource key, then list merge per resource; label conflicts use highest-precedence value |
 | `update` | Dict merge by resource key; per-attribute highest-precedence wins |
@@ -79,9 +80,12 @@ Precedence (highest to lowest):
 ### Basic Structure
 
 ```yaml
-format: 0.2  # Required: annotation format version (0.1 or 0.2)
+format: 0.3  # Required: annotation format version (0.1, 0.2, or 0.3)
 
 title: "Diagram Title"  # Optional: main diagram heading
+
+fontsize: 40   # Optional: label font size in points (default: 28, new in 0.3)
+iconsize: 180  # Optional: icon size in pixels (default: 128, new in 0.3)
 
 connect:
   # Add new connections
@@ -102,10 +106,14 @@ flows:
   # Numbered flow sequences (new in format 0.2)
 ```
 
+!!! note "CLI flags take precedence"
+    `--fontsize` and `--iconsize` CLI flags override the values in the annotation file. See [Diagram Sizing](usage-guide.md#diagram-sizing) for details.
+
 ### Format Versions
 
 - **0.1**: Original format supporting `title`, `connect`, `disconnect`, `add`, `remove`, `update`. Still fully supported.
 - **0.2**: Adds the `flows` section for numbered flow badges and the `generated_by` metadata block (used in AI-generated files). All 0.1 files parse unchanged.
+- **0.3**: Adds top-level `fontsize` and `iconsize` keys for diagram sizing. All 0.1/0.2 files parse unchanged.
 
 ### File Location
 

@@ -417,6 +417,24 @@ def cli(ctx) -> None:
     default=False,
     help="Label nodes and groups with full Terraform resource names",
 )
+@click.option(
+    "--use-resource-names",
+    is_flag=True,
+    default=False,
+    help="Label nodes with actual deployed resource names from Terraform plan",
+)
+@click.option(
+    "--fontsize",
+    default=None,
+    type=int,
+    help="Font size for resource labels in points (default: 36)",
+)
+@click.option(
+    "--iconsize",
+    default=None,
+    type=int,
+    help="Icon size in pixels (default: 128)",
+)
 def draw(
     debug: bool,
     source: str,
@@ -433,6 +451,9 @@ def draw(
     graphfile: str,
     upgrade: bool,
     use_tf_names: bool,
+    use_resource_names: bool,
+    fontsize: int,
+    iconsize: int,
 ) -> None:
     """Draw architecture diagram from Terraform code."""
     _install_excepthook(debug)
@@ -464,6 +485,12 @@ def draw(
         _print_graph_debug(tfdata["graphdict"], "Simplified graphviz dictionary")
 
     helpers.USE_TF_NAMES = use_tf_names
+    helpers.USE_RESOURCE_NAMES = use_resource_names
+    helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
+
+    # Apply CLI size overrides (take precedence over YAML annotations)
+    drawing.DIAGRAM_FONTSIZE = fontsize
+    drawing.DIAGRAM_ICONSIZE = iconsize
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
@@ -679,6 +706,24 @@ def graphdata(
     default=False,
     help="Label nodes with full Terraform resource names and append them to cluster labels",
 )
+@click.option(
+    "--use-resource-names",
+    is_flag=True,
+    default=False,
+    help="Label nodes with actual deployed resource names from Terraform plan",
+)
+@click.option(
+    "--fontsize",
+    default=None,
+    type=int,
+    help="Font size for resource labels in points (default: 36)",
+)
+@click.option(
+    "--iconsize",
+    default=None,
+    type=int,
+    help="Icon size in pixels (default: 128)",
+)
 def visualise(
     debug: bool,
     source: str,
@@ -695,6 +740,9 @@ def visualise(
     ai_annotate: str,
     avl_classes: Any,
     use_tf_names: bool,
+    use_resource_names: bool,
+    fontsize: int,
+    iconsize: int,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
     _install_excepthook(debug)
@@ -734,6 +782,12 @@ def visualise(
         graphmaker.simplify_graphdict(tfdata)
 
     helpers.USE_TF_NAMES = use_tf_names
+    helpers.USE_RESOURCE_NAMES = use_resource_names
+    helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
+
+    # Apply CLI size overrides (take precedence over YAML annotations)
+    drawing.DIAGRAM_FONTSIZE = fontsize
+    drawing.DIAGRAM_ICONSIZE = iconsize
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
