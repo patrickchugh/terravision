@@ -1,4 +1,5 @@
 import unittest, sys, os
+from unittest import mock
 
 # Get the parent directory
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -7,6 +8,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
 from modules.helpers import *
+import modules.helpers as helpers
 
 
 class TestCheckForDomain(unittest.TestCase):
@@ -50,6 +52,63 @@ class TestGetvar(unittest.TestCase):
     def test_getvar_not_found(self):
         result = getvar("not_found", {})
         self.assertEqual(result, "NOTFOUND")
+
+
+class TestTfBinaryResolver(unittest.TestCase):
+    """Resolution of the Terraform-compatible binary (terraform / tofu).
+
+    Given a Terravision invocation with an --engine value,
+    when the binary is resolved,
+    then the correct executable name is stored and returned.
+    """
+
+    def setUp(self):
+        # Each scenario starts with no previously resolved binary.
+        helpers._TF_BINARY = None
+
+    def tearDown(self):
+        helpers._TF_BINARY = None
+
+    def test_should_return_tofu_when_engine_is_tofu(self):
+        # given an explicit tofu engine / when resolved / then tofu is used
+        result = set_tf_binary("tofu")
+        self.assertEqual(result, "tofu")
+        self.assertEqual(get_tf_binary(), "tofu")
+
+    def test_should_return_terraform_when_engine_is_terraform(self):
+        # given an explicit terraform engine / when resolved / then terraform is used
+        result = set_tf_binary("terraform")
+        self.assertEqual(result, "terraform")
+        self.assertEqual(get_tf_binary(), "terraform")
+
+    def test_should_be_case_insensitive_for_explicit_engine(self):
+        # given an uppercase engine name / when resolved / then it is normalised
+        self.assertEqual(set_tf_binary("TOFU"), "tofu")
+
+    def test_should_prefer_terraform_when_auto_and_both_present(self):
+        # given both binaries on PATH / when auto / then terraform wins
+        with mock.patch.object(helpers.shutil, "which", return_value="/usr/bin/x"):
+            self.assertEqual(set_tf_binary("auto"), "terraform")
+
+    def test_should_fall_back_to_tofu_when_auto_and_terraform_absent(self):
+        # given only tofu on PATH / when auto / then tofu is used
+        def which(exe):
+            return "/usr/bin/tofu" if exe == "tofu" else None
+
+        with mock.patch.object(helpers.shutil, "which", side_effect=which):
+            self.assertEqual(set_tf_binary("auto"), "tofu")
+
+    def test_should_default_to_terraform_when_auto_and_neither_present(self):
+        # given neither binary on PATH / when auto / then terraform is reported
+        with mock.patch.object(helpers.shutil, "which", return_value=None):
+            self.assertEqual(set_tf_binary("auto"), "terraform")
+
+    def test_should_autodetect_when_get_called_before_set(self):
+        # given an unset binary / when get is called / then it autodetects via auto
+        with mock.patch.object(
+            helpers.shutil, "which", return_value="/usr/bin/terraform"
+        ):
+            self.assertEqual(get_tf_binary(), "terraform")
 
 
 if __name__ == "__main__":
