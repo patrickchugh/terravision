@@ -205,7 +205,7 @@ def _run_terraform_init(debug, upgrade, skip_reconfigure: bool = False):
     """
     click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
     click.echo("  Forcing temporary local backend to generate full infrastructure plan")
-    init_cmd = ["terraform", "init"]
+    init_cmd = [helpers.get_tf_binary(), "init"]
     if not skip_reconfigure:
         init_cmd.append("-reconfigure")
     if upgrade:
@@ -226,7 +226,7 @@ def _select_workspace(workspace, debug):
         click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
     )
     result = subprocess.run(
-        ["terraform", "workspace", "select", "-or-create=True", workspace],
+        [helpers.get_tf_binary(), "workspace", "select", "-or-create=True", workspace],
         capture_output=not debug,
         text=True,
     )
@@ -241,7 +241,7 @@ def _select_workspace(workspace, debug):
 def _run_terraform_plan(vfiles, tfplan_path, debug):
     """Generate terraform plan binary."""
     click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
-    plan_cmd = ["terraform", "plan", "-refresh=false"]
+    plan_cmd = [helpers.get_tf_binary(), "plan", "-refresh=false"]
     for vf in vfiles:
         plan_cmd.extend(["-var-file", vf])
     plan_cmd.extend(["-out", tfplan_path])
@@ -267,7 +267,7 @@ def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
     # Convert binary plan to JSON
     with open(tfplan_json_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "show", "-json", tfplan_path],
+            [helpers.get_tf_binary(), "show", "-json", tfplan_path],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
@@ -280,7 +280,7 @@ def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
     # Generate terraform graph
     with open(tfgraph_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "graph"],
+            [helpers.get_tf_binary(), "graph"],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,

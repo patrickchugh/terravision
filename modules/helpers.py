@@ -1759,9 +1759,50 @@ def safe_remove_connection(
     return False
 
 
+# Resolved Terraform-compatible binary: 'terraform' or 'tofu' (OpenTofu).
+# Set by the CLI --engine flag via set_tf_binary(); defaults to autodetection.
+_TF_BINARY: Optional[str] = None
+
+
+def set_tf_binary(engine: str = "auto") -> str:
+    """Resolve and store the Terraform-compatible binary to use.
+
+    Terraform and OpenTofu share an identical CLI for the subcommands
+    Terravision relies on (init, workspace, plan, show -json, graph), so the
+    only difference is the executable name.
+
+    Args:
+        engine: 'terraform', 'tofu', or 'auto'. With 'auto' we prefer
+            'terraform' when present on PATH and fall back to 'tofu'.
+
+    Returns:
+        The resolved binary name.
+    """
+    global _TF_BINARY
+    engine = (engine or "auto").lower()
+    if engine in ("terraform", "tofu"):
+        _TF_BINARY = engine
+    elif shutil.which("terraform"):
+        _TF_BINARY = "terraform"
+    elif shutil.which("tofu"):
+        _TF_BINARY = "tofu"
+    else:
+        # Neither found: keep 'terraform' so check_dependencies reports the
+        # missing-executable error against the default name.
+        _TF_BINARY = "terraform"
+    return _TF_BINARY
+
+
+def get_tf_binary() -> str:
+    """Return the resolved Terraform-compatible binary, autodetecting if unset."""
+    if _TF_BINARY is None:
+        return set_tf_binary("auto")
+    return _TF_BINARY
+
+
 def check_dependencies() -> None:
     """Check if required command-line tools are available."""
-    dependencies = ["dot", "gvpr", "git", "terraform"]
+    dependencies = ["dot", "gvpr", "git", get_tf_binary()]
     bundle_dir = Path(__file__).parent
     import sys
 
@@ -1782,22 +1823,27 @@ def check_dependencies() -> None:
 
 
 def check_terraform_version() -> None:
-    """Validate Terraform version is compatible."""
+    """Validate the Terraform/OpenTofu version is compatible.
+
+    Both engines report a ``v1.x.x`` line (``Terraform v1.x.x`` /
+    ``OpenTofu v1.x.x``), so the same major-version check covers both.
+    """
+    binary = get_tf_binary()
     try:
         result = subprocess.run(
-            ["terraform", "-v"], capture_output=True, text=True, check=True
+            [binary, "-v"], capture_output=True, text=True, check=True
         )
         version_output = result.stdout
 
         version_line = version_output.split("\n")[0]
-        print(f"  terraform version detected: {version_line}")
+        print(f"  {binary} version detected: {version_line}")
         tf_version = version_line.split(" ")[1].replace("v", "")
         version_major = tf_version.split(".")[0]
 
         if version_major != "1":
             click.echo(
                 click.style(
-                    f"\n  ERROR: Terraform Version '{tf_version}' is not supported. Please upgrade to >= v1.0.0",
+                    f"\n  ERROR: {binary} version '{tf_version}' is not supported. Please upgrade to >= v1.0.0",
                     fg="red",
                     bold=True,
                 )
@@ -1806,7 +1852,7 @@ def check_terraform_version() -> None:
     except (subprocess.CalledProcessError, IndexError, FileNotFoundError) as e:
         click.echo(
             click.style(
-                f"\n  ERROR: Failed to check Terraform version: {e}",
+                f"\n  ERROR: Failed to check {binary} version: {e}",
                 fg="red",
                 bold=True,
             )
