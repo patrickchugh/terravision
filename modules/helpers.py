@@ -7,6 +7,7 @@ data extraction and transformation.
 
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -22,7 +23,6 @@ import modules.helpers as helpers
 from modules.provider_detector import PROVIDER_PREFIXES
 from modules.config_loader import load_config
 from modules.provider_detector import get_provider_for_resource
-
 
 # When True, pretty_name() returns the raw Terraform resource name unchanged.
 # Set by the CLI --use-tf-names flag.
@@ -1759,26 +1759,135 @@ def safe_remove_connection(
     return False
 
 
+def _get_os_family() -> str:
+    """Detect the operating system family for install instructions."""
+    system = platform.system()
+    if system == "Darwin":
+        return "macos"
+    elif system == "Linux":
+        if is_wsl():
+            return "wsl"
+        try:
+            with open("/etc/os-release") as f:
+                content = f.read().lower()
+                if "ubuntu" in content or "debian" in content:
+                    return "debian"
+        except OSError:
+            pass
+        return "linux"
+    elif system == "Windows":
+        return "windows"
+    return "unknown"
+
+
 def check_dependencies() -> None:
-    """Check if required command-line tools are available."""
-    dependencies = ["dot", "gvpr", "git", "terraform"]
-    bundle_dir = Path(__file__).parent
+    """Check if required command-line tools are available.
+
+    Reports all missing dependencies together with OS-specific
+    installation instructions and a link to the documentation.
+    """
     import sys
 
+    dependency_info = {
+        "dot": ("Graphviz", "graphviz"),
+        "gvpr": ("Graphviz", "graphviz"),
+        "git": ("Git", "git"),
+        "terraform": ("Terraform", "terraform"),
+    }
+
+    bundle_dir = Path(__file__).parent
     sys.path.append(str(bundle_dir))
-    for exe in dependencies:
+
+    missing = []
+    for exe, (name, pkg) in dependency_info.items():
         location = shutil.which(exe) or os.path.isfile(exe)
         if location:
             click.echo(f"  {exe} command detected: {location}")
         else:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: {exe} command executable not detected in path. Please ensure you have installed all required dependencies first",
-                    fg="red",
-                    bold=True,
-                )
+            missing.append((exe, name, pkg))
+
+    if not missing:
+        return
+
+    packages_to_install: Dict[str, Dict[str, Any]] = {}
+    for exe, name, pkg in missing:
+        if pkg not in packages_to_install:
+            packages_to_install[pkg] = {"name": name, "exes": []}
+        packages_to_install[pkg]["exes"].append(exe)
+
+    click.echo("\n")
+    for pkg, info in packages_to_install.items():
+        exes_str = ", ".join(f"'{e}'" for e in info["exes"])
+        click.echo(
+            click.style(
+                f"  ERROR: {exes_str} not found in PATH.",
+                fg="red",
+                bold=True,
             )
-            exit()
+        )
+        click.echo(
+            click.style(
+                f"         {info['name']} is required but not installed.",
+                fg="red",
+            )
+        )
+
+    os_family = _get_os_family()
+
+    click.echo("\n  Install the missing dependencies:\n")
+
+    if os_family == "macos":
+        for pkg in packages_to_install:
+            if pkg == "graphviz":
+                click.echo("    brew install graphviz")
+            elif pkg == "git":
+                click.echo("    brew install git")
+            elif pkg == "terraform":
+                click.echo("    brew tap hashicorp/tap")
+                click.echo("    brew install hashicorp/terraform")
+    elif os_family in ("debian", "wsl"):
+        apt_packages = []
+        for pkg in packages_to_install:
+            if pkg == "graphviz":
+                apt_packages.append("graphviz")
+                apt_packages.append("libgvplugin-neato-layout8")
+            elif pkg == "git":
+                apt_packages.append("git")
+            elif pkg == "terraform":
+                click.echo("    # Terraform install steps:")
+                click.echo("    # https://developer.hashicorp.com/terraform/install")
+        if apt_packages:
+            click.echo("    sudo apt update")
+            click.echo(f"    sudo apt install {' '.join(apt_packages)}")
+    elif os_family == "windows":
+        click.echo("    # Download and install from the official websites:")
+        for pkg in packages_to_install:
+            if pkg == "graphviz":
+                click.echo("    # Graphviz: https://graphviz.org/download/")
+            elif pkg == "git":
+                click.echo("    # Git: https://git-scm.com/download/win")
+            elif pkg == "terraform":
+                click.echo(
+                    "    # Terraform: https://developer.hashicorp.com/terraform/install"
+                )
+    else:
+        for pkg in packages_to_install:
+            if pkg == "graphviz":
+                click.echo("    # Install Graphviz using your package manager")
+                click.echo("    # e.g. sudo apt install graphviz  (Debian/Ubuntu)")
+                click.echo("    #      sudo yum install graphviz   (RHEL/CentOS)")
+            elif pkg == "git":
+                click.echo("    # Install Git using your package manager")
+            elif pkg == "terraform":
+                click.echo(
+                    "    # Install Terraform: https://developer.hashicorp.com/terraform/install"
+                )
+
+    click.echo("\n  For detailed installation instructions:")
+    click.echo("    https://patrickchugh.github.io/terravision/installation/")
+    click.echo("    https://github.com/patrickchugh/terravision#install\n")
+
+    exit(1)
 
 
 def check_terraform_version() -> None:
