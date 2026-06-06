@@ -627,7 +627,9 @@ def _decode_tg_plan(
             cwd=cache_dir,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Terraform show failed:\n{result.stderr or ''}")
+        raise RuntimeError(
+            f"{helpers.get_tf_binary().title()} show failed:\n{result.stderr or ''}"
+        )
 
     with open(tfplan_json_path) as f:
         plan_data = json.load(f)
@@ -642,7 +644,9 @@ def _decode_tg_plan(
             cwd=cache_dir,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Terraform graph failed:\n{result.stderr or ''}")
+        raise RuntimeError(
+            f"{helpers.get_tf_binary().title()} graph failed:\n{result.stderr or ''}"
+        )
 
     # Convert DOT to JSON
     graph_data = tfwrapper.convert_dot_to_json(tfgraph_path)

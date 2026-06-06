@@ -72,7 +72,7 @@ def validate_planfile(planfile: str) -> dict:
                 click.echo(
                     click.style(
                         "\nERROR: File is not valid JSON. If this is a binary .tfplan file, "
-                        "convert it with: terraform show -json tfplan.bin > plan.json\n",
+                        f"convert it with: {helpers.get_tf_binary()} show -json tfplan.bin > plan.json\n",
                         fg="red",
                         bold=True,
                     )
@@ -93,7 +93,7 @@ def validate_planfile(planfile: str) -> dict:
         click.echo(
             click.style(
                 "\nERROR: Not a Terraform plan JSON. Missing 'resource_changes' key. "
-                "Generate with: terraform show -json tfplan.bin > plan.json\n",
+                f"Generate with: {helpers.get_tf_binary()} show -json tfplan.bin > plan.json\n",
                 fg="red",
                 bold=True,
             )
