@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Tuple
 import click
 import hcl2
 
+import modules.helpers as helpers
 import modules.tfwrapper as tfwrapper
 
 MIN_TERRAGRUNT_VERSION = "0.50.0"
@@ -515,7 +516,7 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
     # override reached the cache. A fresh `-reconfigure` reinitialises
     # the stored state to match the override (local).
     tf_result = subprocess.run(
-        ["terraform", "init", "-reconfigure", "-input=false"],
+        [helpers.get_tf_binary(), "init", "-reconfigure", "-input=false"],
         capture_output=not debug,
         text=True,
         cwd=cache_dir,
@@ -619,7 +620,7 @@ def _decode_tg_plan(
     # Generate plan JSON via terraform show directly in cache
     with open(tfplan_json_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "show", "-json", tfplan_path],
+            [helpers.get_tf_binary(), "show", "-json", tfplan_path],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
@@ -634,7 +635,7 @@ def _decode_tg_plan(
     # Generate graph DOT
     with open(tfgraph_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "graph"],
+            [helpers.get_tf_binary(), "graph"],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,

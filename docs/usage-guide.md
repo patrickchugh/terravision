@@ -99,6 +99,7 @@ terravision draw [OPTIONS]
 | `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
+| `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |
 | `--debug` | Enable debug output | False | `--debug` |
 
 ### `terravision visualise`
@@ -134,6 +135,7 @@ terravision visualise [OPTIONS]
 | `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
+| `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |
 | `--debug` | Enable debug output | False | `--debug` |
 
 **Interactive features in the generated HTML:**
@@ -186,6 +188,7 @@ terravision graphdata [OPTIONS]
 | `--show_services` | Show only unique services list | False | `--show_services` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
+| `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |
 
 ---
 
@@ -387,6 +390,31 @@ These adjustments apply uniformly to all providers (AWS, Azure, GCP) and all out
 ---
 
 ## Advanced Usage
+
+### OpenTofu
+
+TerraVision works with [OpenTofu](https://opentofu.org) as a drop-in alternative to Terraform — both share an identical CLI for the commands TerraVision relies on (`init`, `workspace`, `plan`, `show -json`, `graph`).
+
+By default (`--engine auto`) TerraVision uses the `terraform` binary if it is on your `PATH`, falling back to `tofu` (OpenTofu) otherwise. Force a specific engine with `--engine`:
+
+```bash
+# Force OpenTofu
+terravision draw --source ./path-to-your-terraform --engine tofu
+
+# Force Terraform (skip autodetection)
+terravision draw --source ./path-to-your-terraform --engine terraform
+```
+
+The `--engine` flag is available on `draw`, `visualise`, and `graphdata`. OpenTofu, like Terraform, must be a `v1.x` release.
+
+You can also set the engine via the `TERRAVISION_ENGINE` environment variable (the `--engine` flag takes precedence when both are given). This is handy in CI or on OpenTofu-only hosts where no `terraform` binary is installed:
+
+```bash
+export TERRAVISION_ENGINE=tofu
+terravision draw --source ./path-to-your-terraform
+```
+
+> **Terragrunt note:** when your source is a Terragrunt project, `--engine tofu` switches the direct `init`/`show`/`graph` calls to OpenTofu, but Terragrunt itself still invokes its own configured binary. To make Terragrunt drive OpenTofu, also set `TG_TF_PATH=tofu` (or `TERRAGRUNT_TFPATH=tofu`) in your environment.
 
 ### Multiple Environments
 
