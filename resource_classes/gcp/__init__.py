@@ -134,9 +134,15 @@ class _GCP(Node):
                 # Single-line label
                 text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="{node_fontsize}">{formatted_label}</FONT>"""
 
-            # Outer nodes have no border (already extracted from attrs above)
-            border = "0" if is_outer_node else "1"
-            color_attr = "" if is_outer_node else ' COLOR="#999999"'
+            # Outer nodes have no border or card background (already extracted
+            # from attrs above); regular nodes render as white cards with a
+            # thick black border per Google reference architecture diagrams
+            border = "0" if is_outer_node else "3"
+            color_attr = (
+                ""
+                if is_outer_node
+                else ' COLOR="#000000" BGCOLOR="white" STYLE="ROUNDED"'
+            )
 
             html_label = f"""<
 <TABLE BORDER="{border}" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" WIDTH="{table_width}"{color_attr}>
@@ -153,6 +159,10 @@ class _GCP(Node):
                 "label": html_label,
                 "fontsize": node_fontsize,
                 "margin": "0",
+                # Canvas defaults set fixedsize=true, but long labels make the
+                # HTML table wider than the declared width; the node box must
+                # grow with the label or cards overflow their cluster border
+                "fixedsize": "false",
             }
         else:
             # Fallback for nodes without icons - use parent's default logic
