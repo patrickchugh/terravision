@@ -47,7 +47,7 @@ class _GCP(Node):
         self._cluster = getcluster()
 
         # Extract custom TerraVision attributes (not passed to graphviz)
-        is_outer_node = attrs.pop("outer_node", False)
+        attrs.pop("outer_node", False)
 
         # Build attributes for GCP node with HTML table layout
         if self._icon:
@@ -134,15 +134,11 @@ class _GCP(Node):
                 # Single-line label
                 text_table = f"""<FONT FACE="Sans-Serif" POINT-SIZE="{node_fontsize}">{formatted_label}</FONT>"""
 
-            # Outer nodes have no border or card background (already extracted
-            # from attrs above); regular nodes render as white cards with a
-            # thick black border per Google reference architecture diagrams
-            border = "0" if is_outer_node else "3"
-            color_attr = (
-                ""
-                if is_outer_node
-                else ' COLOR="#000000" BGCOLOR="white" STYLE="ROUNDED"'
-            )
+            # All nodes (including outer/auto-annotated icons like Users)
+            # render as white rounded cards with a thick black border per
+            # Google reference architecture diagrams
+            border = "3"
+            color_attr = ' COLOR="#000000" BGCOLOR="white" STYLE="ROUNDED"'
 
             html_label = f"""<
 <TABLE BORDER="{border}" CELLBORDER="0" CELLSPACING="0" CELLPADDING="12" WIDTH="{table_width}"{color_attr}>
