@@ -5,7 +5,6 @@ and annotation files (YAML). It discovers files from local directories or Git
 repositories, parses HCL2 syntax, and extracts resources, modules, and variables.
 """
 
-import fileinput
 import io
 import json
 import os
@@ -257,17 +256,14 @@ def find_tf_files(
                 ai_annotations = yaml.safe_load(fh) or dict()
             continue
 
-        # Load user annotation YAML files if present
-        if (
-            file.lower().endswith("terravision.yml")
-            or file.lower().endswith("architecture.yaml")
-            and not yaml_detected
-        ):
+        # Load the user annotation file if present (terravision.yml). The
+        # legacy architecture.yaml name is no longer supported.
+        if file.lower().endswith("terravision.yml") and not yaml_detected:
             full_filepath = Path(source_location).joinpath(file)
-            with open(full_filepath, "r") as file:
-                click.echo(f"  Detected architecture annotation file : {file.name} \n")
+            with open(full_filepath, "r") as fh:
+                click.echo(f"  Detected architecture annotation file : {fh.name} \n")
                 yaml_detected = True
-                annotations = yaml.safe_load(file)
+                annotations = yaml.safe_load(fh)
 
     # Recursively search subdirectories if requested
     if recursive:
@@ -414,7 +410,13 @@ def iterative_parse(
                 preprocessed = _preprocess_hcl(raw_content)
                 hcl_dict[filename] = hcl2.load(io.StringIO(preprocessed))
             except Exception as error:
-                print("A Terraform HCL parsing error occurred:", filename, error)
+                click.echo(
+                    click.style(
+                        f"    WARNING: HCL parsing error in {filename} ({error}); "
+                        "resources declared in this file will be skipped",
+                        fg="yellow",
+                    )
+                )
                 continue
 
         # Extract specified sections from parsed HCL
@@ -595,57 +597,3 @@ def _preprocess_hcl(content: str) -> str:
     at the start of a new line.
     """
     return re.sub(r"\n(\s*)(&&|\|\|)", r" \2", content)
-
-
-def clean_file(filename: str, tempdir: str):
-    """Clean problematic characters from Terraform files.
-
-    Attempts to fix HCL parsing errors by removing or escaping problematic
-    characters and syntax that may cause parsing failures.
-
-    Args:
-        filename: Path to the Terraform file to clean
-        tempdir: Temporary directory to write cleaned file
-
-    Returns:
-        File handle to the cleaned temporary file
-    """
-    filepath = str(Path(tempdir, "cleaning.tmp"))
-    f_tmp = click.open_file(filepath, "w")
-
-    with fileinput.FileInput(filename, inplace=False) as file:
-        for line in file:
-            # Skip comment lines
-            if line.strip().startswith("#"):
-                continue
-
-            # Check for problematic characters
-            if (
-                '", "' in line
-                or ":" in line
-                or "*" in line
-                or "?" in line
-                or "[" in line
-                or '("' in line
-                or "==" in line
-                or "]" in line
-            ):
-                # Clean AWS resource references with special characters
-                if "aws_" in line and "resource" not in line:
-                    array = line.split("=")
-                    if len(array) > 1:
-                        badstring = array[1]
-                    else:
-                        badstring = line
-                    # Remove non-alphanumeric characters except dots and underscores
-                    cleaned_string = re.sub("[^0-9a-zA-Z._]+", " ", badstring)
-                    line = array[0] + ' = "' + cleaned_string + '"'
-                else:
-                    # Comment out problematic lines
-                    line = f"# {line}" + "\r"
-
-            f_tmp.write(line)
-
-    # Reopen file for reading
-    f_tmp = click.open_file(filepath, "r")
-    return f_tmp

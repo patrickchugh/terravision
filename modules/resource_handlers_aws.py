@@ -23,6 +23,21 @@ EDGE_NODES = cloud_config.AWS_EDGE_NODES
 DISCONNECT_SERVICES = cloud_config.AWS_DISCONNECT_LIST
 
 
+def _subnet_id_matches(tfdata: Dict[str, Any], subnet: str, id_refs: List[Any]) -> bool:
+    """Check whether a subnet's resolved id appears in any of the id references.
+
+    Subnet ids are usually unresolved at plan time: empty strings, or bool
+    True "known after apply" markers (which would crash the substring test).
+    An unresolvable id is deliberately treated as a wildcard that matches any
+    reference — expansion into subnets must still happen when ids are only
+    known at apply time.
+    """
+    subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
+    if not isinstance(subnet_id, str):
+        subnet_id = ""
+    return any(subnet_id in str(sid) for sid in id_refs)
+
+
 def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle special resource cases and disconnections.
 
@@ -359,9 +374,11 @@ def aws_handle_efs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     helpers.safe_remove_connection(tfdata, fs, fs_connection)
                 else:
                     # Move other connections to file system
-                    tfdata["graphdict"][fs_connection].append(fs)
+                    tfdata["graphdict"].setdefault(fs_connection, []).append(fs)
                     helpers.safe_remove_connection(tfdata, fs, fs_connection)
     # Replace EFS file system references with mount target
+    if not efs_mount_targets:
+        return tfdata
     for node in sorted(tfdata["graphdict"].keys()):
         connections = tfdata["graphdict"][node]
         if helpers.consolidated_node_check(node, tfdata):
@@ -747,15 +764,25 @@ def aws_handle_dbsubnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     for dbsubnet in db_subnet_list:
         db_grouping = helpers.list_of_parents(tfdata["graphdict"], dbsubnet)
         if db_grouping:
+            vpc = None
             # Move DB subnet group from subnet to VPC level
             for subnet in db_grouping:
                 if helpers.get_no_module_name(subnet).startswith("aws_subnet"):
                     helpers.safe_remove_connection(tfdata, subnet, dbsubnet)
-                    # Navigate up to VPC through AZ
-                    az = helpers.list_of_parents(tfdata["graphdict"], subnet)[0]
-                    vpc = helpers.list_of_parents(tfdata["graphdict"], az)[0]
+                    # Navigate up to VPC through AZ; either level may be absent
+                    az_parents = helpers.list_of_parents(tfdata["graphdict"], subnet)
+                    if not az_parents:
+                        continue
+                    vpc_parents = helpers.list_of_parents(
+                        tfdata["graphdict"], az_parents[0]
+                    )
+                    if not vpc_parents:
+                        continue
+                    vpc = vpc_parents[0]
                     if dbsubnet not in tfdata["graphdict"][vpc]:
                         tfdata["graphdict"][vpc].append(dbsubnet)
+            if vpc is None:
+                continue
             # If RDS has security group, use that instead
             for rds in sorted(tfdata["graphdict"][dbsubnet]):
                 rds_references = helpers.list_of_parents(tfdata["graphdict"], rds)
@@ -782,8 +809,11 @@ def aws_handle_vpcendpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     vpc_endpoints = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], "aws_vpc_endpoint"
     )
-    # Get the VPC node
-    vpc = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_vpc.")[0]
+    # Get the VPC node; it may be absent when the VPC comes from a data source
+    vpc_nodes = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_vpc.")
+    if not vpc_nodes:
+        return tfdata
+    vpc = vpc_nodes[0]
     # Move endpoints into VPC and remove as separate nodes
     for vpc_endpoint in vpc_endpoints:
         tfdata["graphdict"][vpc].append(vpc_endpoint)
@@ -884,16 +914,12 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
         )
         if isinstance(vpc_zone_identifier, str):
             vpc_zone_identifier = [vpc_zone_identifier]
+        if not isinstance(vpc_zone_identifier, list):
+            # "known after apply" markers arrive as bool True
+            continue
 
         matching_subnets = sorted(
-            [
-                s
-                for s in subnets
-                if any(
-                    tfdata["meta_data"].get(s, {}).get("id", "") in str(sid)
-                    for sid in vpc_zone_identifier
-                )
-            ]
+            [s for s in subnets if _subnet_id_matches(tfdata, s, vpc_zone_identifier)]
         )
 
         if len(matching_subnets) <= 1:
@@ -1296,13 +1322,15 @@ def match_node_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         subnet_ids = tfdata["meta_data"].get(node_group, {}).get("subnet_ids", [])
         if isinstance(subnet_ids, str):
             subnet_ids = [subnet_ids]
+        if not isinstance(subnet_ids, list):
+            # "known after apply" markers arrive as bool True
+            subnet_ids = []
 
         # Find matching subnets
         matching_subnets = []
         if subnet_ids and subnet_ids != []:
             for subnet in subnets:
-                subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
-                if any(subnet_id in str(sid) for sid in subnet_ids):
+                if _subnet_id_matches(tfdata, subnet, subnet_ids):
                     matching_subnets.append(subnet)
         else:
             # Fallback: use private subnets if no subnet_ids in metadata
@@ -1470,16 +1498,18 @@ def match_fargate_profiles_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             subnet_ids = tfdata["meta_data"][profile].get("subnet_ids", [])
             if isinstance(subnet_ids, str):
                 subnet_ids = [subnet_ids]
+            if not isinstance(subnet_ids, list):
+                # "known after apply" markers arrive as bool True
+                subnet_ids = []
 
         # Find matching subnets
         matching_subnets = []
         for subnet in subnets:
-            subnet_id = tfdata["meta_data"].get(subnet, {}).get("id", "")
             subnet_name = subnet.split(".")[-1]
 
             # Check if subnet matches by ID or name
-            if any(
-                subnet_id in str(sid) or subnet_name in str(sid) for sid in subnet_ids
+            if _subnet_id_matches(tfdata, subnet, subnet_ids) or any(
+                subnet_name in str(sid) for sid in subnet_ids
             ):
                 matching_subnets.append(subnet)
 

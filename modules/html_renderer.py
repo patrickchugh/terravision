@@ -14,6 +14,7 @@ import json
 import os
 import re
 import webbrowser
+from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Dict, Set, Tuple
 
@@ -531,11 +532,14 @@ def _assemble_html(
     with open(vendor_dir / "d3.min.js", "r", encoding="utf-8") as f:
         d3_js = f.read()
 
-    # Replace placeholders
-    html = html.replace("{{TITLE}}", title)
+    # Replace placeholders. The title comes from user annotations and the
+    # metadata JSON can contain decoded user_data, so both must be escaped:
+    # json.dumps does not escape "</script>", which would terminate the
+    # embedding <script> block and inject markup into the page.
+    html = html.replace("{{TITLE}}", _html_escape(title))
     html = html.replace("{{D3_JS}}", d3_js)
     html = html.replace("{{SVG_CONTENT}}", svg_string)
-    html = html.replace("{{METADATA_JSON}}", metadata_json)
+    html = html.replace("{{METADATA_JSON}}", metadata_json.replace("</", "<\\/"))
 
     # Write output file
     output_path = str(Path.cwd() / outfile)

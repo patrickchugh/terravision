@@ -632,21 +632,27 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 # e.g., "${tostring(count.index + 1)}" with vm~2 should become "2"
                 if "count.index" in zone and "~" in vm:
                     # Extract instance number from vm~X
-                    instance_num = int(vm.split("~")[1])
-                    # count.index is 0-based, so instance 1 has count.index = 0
-                    count_index = instance_num - 1
-                    # Replace count.index with the actual value
-                    zone = zone.replace("count.index", str(count_index))
-                    # Evaluate simple expressions like "0 + 1" -> "1"
-                    # Remove ${} and tostring() wrappers
-                    zone = zone.replace("${", "").replace("}", "")
-                    zone = zone.replace("tostring(", "").replace(")", "")
-                    # Evaluate the expression
                     try:
-                        zone = str(eval(zone))
-                    except Exception:
-                        # If evaluation fails, keep original
-                        pass
+                        instance_num = int(vm.split("~")[1])
+                    except ValueError:
+                        instance_num = None
+                    if instance_num is not None:
+                        # count.index is 0-based, so instance 1 has count.index = 0
+                        count_index = instance_num - 1
+                        # Replace count.index with the actual value
+                        zone = zone.replace("count.index", str(count_index))
+                        # Evaluate simple expressions like "0 + 1" -> "1"
+                        # Remove ${} and tostring() wrappers
+                        zone = zone.replace("${", "").replace("}", "")
+                        zone = zone.replace("tostring(", "").replace(")", "")
+                        # Only plain arithmetic may be evaluated — the zone
+                        # value originates from untrusted .tf metadata
+                        if re.fullmatch(r"[\d\s+\-*/()]+", zone):
+                            try:
+                                zone = str(eval(zone))
+                            except Exception:
+                                # If evaluation fails, keep original
+                                pass
 
                 if zone not in zones_used:
                     zones_used[zone] = []

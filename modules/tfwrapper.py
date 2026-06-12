@@ -336,7 +336,6 @@ def tf_initplan(
     Returns:
         Dictionary containing terraform plan and graph data
     """
-    debug = True
     override_dest = None
     cloud_backups: List[Tuple[str, str]] = []
     try:
@@ -590,12 +589,6 @@ def _process_edges(tfdata, gvid_table, reverse_arrow_list):
                     matched_connections = [
                         k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
                     ]
-                    matched_nodes = [
-                        k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
-                    ]
-                    # Use matched node if only one exists
-                    if node not in tfdata["graphdict"] and len(matched_nodes) == 1:
-                        node = matched_nodes[0]
                     if (
                         conn not in tfdata["graphdict"]
                         and len(matched_connections) == 1
@@ -736,7 +729,7 @@ def load_json_source(source: str) -> Dict[str, Any]:
         )
         tfdata = jsondata
         tfdata["graphdict"] = dict(tfdata["original_graphdict"])
-        tfdata["metadata"] = dict(tfdata["original_metadata"])
+        tfdata["meta_data"] = dict(tfdata["original_metadata"])
     else:
         click.echo(
             f"Source is a pre-generated JSON tfgraph file. Will not call {helpers.get_tf_binary()} binary or AI model."

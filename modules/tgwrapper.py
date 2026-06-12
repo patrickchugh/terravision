@@ -371,7 +371,16 @@ def _scan_dependency_dirs(module_path: str) -> List[str]:
     try:
         with open(hcl_path) as f:
             parsed = hcl2.load(f)
-    except Exception:
+    except Exception as e:
+        # python-hcl2 may not support every Terragrunt construct; warn so the
+        # user knows this module's dependencies were skipped
+        click.echo(
+            click.style(
+                f"WARNING: Could not parse {hcl_path} ({e}); "
+                "dependency overrides for this module will be skipped",
+                fg="yellow",
+            )
+        )
         return dep_dirs
 
     for dep_block in parsed.get("dependency", []):
@@ -757,7 +766,16 @@ def _parse_tg_dependencies(module_path: str) -> dict:
     try:
         with open(hcl_path) as f:
             parsed = hcl2.load(f)
-    except Exception:
+    except Exception as e:
+        # python-hcl2 may not support every Terragrunt construct; warn so the
+        # user knows cross-module links for this module are skipped
+        click.echo(
+            click.style(
+                f"WARNING: Could not parse {hcl_path} ({e}); "
+                "cross-module dependency links for this module will be skipped",
+                fg="yellow",
+            )
+        )
         return result
 
     # Extract dependency blocks: dependency "name" { config_path = "..." }

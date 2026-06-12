@@ -7,6 +7,7 @@ diagram generation.
 """
 
 import copy
+import importlib
 from typing import Dict, List, Any, Tuple, Generator, Optional, Set
 import re
 import click
@@ -1423,7 +1424,8 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Loop through all top level nodes and rename if variants exist
     for node in dict(tfdata["graphdict"]):
         node_title = helpers.get_no_module_name(node).split(".")[1]
-        if node[-1].isdigit() and node[-2] == "~":
+        # Strip a trailing ~N suffix of any width (~2, ~10, ...)
+        if "~" in node and node.rsplit("~", 1)[1].isdigit():
             node_name = node.split("~")[0]
         else:
             node_name = node
@@ -1450,9 +1452,9 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Go through each connection and rename
         for resource in list(tfdata["graphdict"][renamed_node]):
             variant_suffix = ""
-            if "~" in resource:
-                if resource[-1].isdigit() and resource[-2] == "~":
-                    connection_resource_name = resource.split("~")[0]
+            # Strip a trailing ~N suffix of any width (~2, ~10, ...)
+            if "~" in resource and resource.rsplit("~", 1)[1].isdigit():
+                connection_resource_name = resource.split("~")[0]
             else:
                 connection_resource_name = resource
             # Check if connection resource belongs to current provider
@@ -1521,11 +1523,8 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     )
     any_parent_has_count = helpers.any_parent_has_count(tfdata, resource)
     target_is_group = target_resource.split(".")[0] in GROUP_NODES
-    target_has_count = (
-        target_resource in tfdata["meta_data"]
-        and tfdata["meta_data"][target_resource].get("count")
-        and int(tfdata["meta_data"][target_resource].get("count")) >= 1
-    )
+    count_value = tfdata["meta_data"].get(target_resource, {}).get("count")
+    target_has_count = bool(count_value) and _parse_count_value(count_value) >= 1
     not_already_multiple = "~" not in target_resource
     no_special_handler = (
         resource.split(".")[0] not in SPECIAL_RESOURCES.keys()
@@ -1533,9 +1532,10 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     )
     not_shared_service = resource.split(".")[0] not in SHARED_SERVICES
     if helpers.get_no_module_name(resource).split(".")[0] == "aws_security_group":
+        # parent may be a synthetic/consolidated node absent from original_metadata
+        parent_count = tfdata["original_metadata"].get(parent, {}).get("count")
         security_group_with_count = (
-            tfdata["original_metadata"][parent].get("count")
-            and int(tfdata["original_metadata"][parent].get("count")) > 1
+            bool(parent_count) and _parse_count_value(parent_count) > 1
         )
     else:
         security_group_with_count = False
@@ -1561,134 +1561,6 @@ def needs_multiple(resource: str, parent: str, tfdata: Dict[str, Any]) -> bool:
     return False
 
 
-def add_multiples_to_parents(
-    i: int, resource: str, multi_resources: list, tfdata: dict
-):
-    parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
-    # Add numbered name to all original parents which may have been missed due to no count property
-    for parent in parents_list:
-        # Skip synthetic TerraVision nodes (tv_ prefix) - they represent
-        # logical groupings (zones, regions) not resources to be numbered
-        if parent.startswith("tv_"):
-            continue
-        if parent not in multi_resources:
-            if "~" in parent:
-                # We have a suffix so check it matches the i count
-                existing_suffix = parent.split("~")[1]
-                if existing_suffix == str(i + 1):
-                    suffixed_name = resource + "~" + str(i + 1)
-                else:
-                    suffixed_name = resource + "~" + existing_suffix
-            elif "~" not in resource:
-                suffixed_name = resource + "~" + str(i + 1)
-            else:
-                suffixed_name = resource
-            if (
-                parent.split("~")[0] in tfdata["meta_data"].keys()
-                and (tfdata["meta_data"][parent.split("~")[0]].get("count"))
-                and not parent.startswith("aws_group.shared")
-                and not suffixed_name in tfdata["graphdict"][parent]
-                and not ("cluster" in suffixed_name and "cluster" in parent)
-                and "aws_route_table." not in resource
-            ):
-                # Handle special case for security groups where if any parent has count>1, then create a numbered sg
-                if (
-                    helpers.any_parent_has_count(tfdata, resource)
-                    and helpers.get_no_module_name(parent).split(".")[0]
-                    == "aws_security_group"
-                    and "~" not in parent
-                ) or (
-                    helpers.any_parent_has_count(tfdata, resource)
-                    and helpers.get_no_module_name(parent).split(".")[0]
-                    == "aws_security_group"
-                    and "~" in parent
-                    and helpers.check_list_for_dash(tfdata["graphdict"][parent])
-                ):
-                    if (
-                        parent + "~" + str(i + 1) not in tfdata["graphdict"].keys()
-                        and "~" not in parent
-                    ):
-                        tfdata["graphdict"][parent + "~" + str(i + 1)] = list(
-                            tfdata["graphdict"][parent]
-                        )
-                    if (
-                        tfdata["graphdict"].get(parent + "~" + str(i + 1))
-                        and "~" not in parent
-                    ):
-                        if (
-                            suffixed_name
-                            not in tfdata["graphdict"][parent + "~" + str(i + 1)]
-                            # and "aws_security_group" not in suffixed_name.split(".")[0]
-                        ):
-                            tfdata["graphdict"][parent + "~" + str(i + 1)].append(
-                                suffixed_name
-                            )
-                        suffixed_parent = parent + "~" + str(i + 1)
-                        if (
-                            suffixed_parent in tfdata["graphdict"]
-                            and resource in tfdata["graphdict"][suffixed_parent]
-                        ):
-                            tfdata["graphdict"][suffixed_parent].remove(resource)
-                        tfdata["meta_data"][parent + "~" + str(i + 1)] = copy.deepcopy(
-                            tfdata["meta_data"][parent]
-                        )
-                else:
-                    helpers.safe_remove_connection(tfdata, parent, resource)
-                    if parent in tfdata["graphdict"]:
-                        sims_to_remove = [
-                            sim
-                            for sim in tfdata["graphdict"][parent]
-                            if sim.split("~")[0] == suffixed_name.split("~")[0]
-                        ]
-                        for sim in sims_to_remove:
-                            tfdata["graphdict"][parent].remove(sim)
-                        tfdata["graphdict"][parent].append(suffixed_name)
-
-    return tfdata
-
-
-def cleanup_originals(
-    multi_resources: List[str], tfdata: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Remove original resource names after creating numbered instances.
-
-    Cleans up base resource names that have been replaced with numbered
-    instances (e.g., removes 'resource' after creating 'resource~1', 'resource~2').
-
-    Args:
-        multi_resources: List of resources with multiple instances
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with original names removed
-    """
-    # Load provider-specific constants
-    constants = _load_config_constants(tfdata)
-    SHARED_SERVICES = constants["SHARED_SERVICES"]
-
-    # Now remove the original resource names
-    for resource in multi_resources:
-        if (
-            helpers.list_of_dictkeys_containing(tfdata["graphdict"], resource)
-            and not resource.split(".")[0] in SHARED_SERVICES
-        ):
-            helpers.delete_node(tfdata, resource, remove_from_connections=False)
-        parents_list = helpers.list_of_parents(tfdata["graphdict"], resource)
-        for parent in parents_list:
-            if not parent.startswith("aws_group.shared") and "~" not in parent:
-                helpers.safe_remove_connection(tfdata, parent, resource)
-    # Delete any original security group nodes that have been replaced with numbered suffixes
-    security_group_list = [
-        k
-        for k in tfdata["graphdict"]
-        if helpers.get_no_module_name(k).startswith("aws_security_group") and "~" in k
-    ]
-    for security_group in security_group_list:
-        check_original = security_group.split("~")[0]
-        helpers.delete_node(tfdata, check_original, remove_from_connections=False)
-    return tfdata
-
-
 def _load_handler_configs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Load provider-specific handler configurations.
 
@@ -1699,15 +1571,18 @@ def _load_handler_configs(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         RESOURCE_HANDLER_CONFIGS dict
     """
     provider = get_primary_provider_or_default(tfdata)
+    module_name = f"modules.config.resource_handler_configs_{provider}"
 
     try:
-        config_module = __import__(
-            f"modules.config.resource_handler_configs_{provider}",
-            fromlist=["RESOURCE_HANDLER_CONFIGS"],
-        )
+        config_module = importlib.import_module(module_name)
         return getattr(config_module, "RESOURCE_HANDLER_CONFIGS", {})
-    except ImportError:
-        return {}
+    except ModuleNotFoundError as e:
+        if e.name == module_name:
+            # Provider simply has no handler config module
+            return {}
+        # An import inside an existing config module failed — surface it,
+        # otherwise every special-resource handler is silently skipped
+        raise
 
 
 def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
