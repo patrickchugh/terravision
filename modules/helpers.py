@@ -7,6 +7,7 @@ data extraction and transformation.
 
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -22,7 +23,6 @@ import modules.helpers as helpers
 from modules.provider_detector import PROVIDER_PREFIXES
 from modules.config_loader import load_config
 from modules.provider_detector import get_provider_for_resource
-
 
 # When True, pretty_name() returns the raw Terraform resource name unchanged.
 # Set by the CLI --use-tf-names flag.
@@ -1759,6 +1759,27 @@ def safe_remove_connection(
     return False
 
 
+def _get_os_family() -> str:
+    """Detect the operating system family for install instructions."""
+    system = platform.system()
+    if system == "Darwin":
+        return "macos"
+    elif system == "Linux":
+        if is_wsl():
+            return "wsl"
+        try:
+            with open("/etc/os-release") as f:
+                content = f.read().lower()
+                if "ubuntu" in content or "debian" in content:
+                    return "debian"
+        except OSError:
+            pass
+        return "linux"
+    elif system == "Windows":
+        return "windows"
+    return "unknown"
+
+
 # Resolved Terraform-compatible binary: 'terraform' or 'tofu' (OpenTofu).
 # Set by the CLI --engine flag via set_tf_binary(); defaults to autodetection.
 _TF_BINARY: Optional[str] = None
@@ -1800,26 +1821,106 @@ def get_tf_binary() -> str:
     return _TF_BINARY
 
 
+# install commands are looked up by OS family, falling back to "default".
+# Lines starting with "#" are printed verbatim as guidance/doc links.
+# The terraform entry's executable is resolved at call time via
+# get_tf_binary(), so it follows the --engine flag (terraform or tofu).
+DEPENDENCIES: Dict[str, Dict[str, Any]] = {
+    "graphviz": {
+        "name": "Graphviz",
+        "executables": ["dot", "gvpr"],
+        "install": {
+            "macos": ["brew install graphviz"],
+            "debian": ["sudo apt update", "sudo apt install graphviz"],
+            "wsl": ["sudo apt update", "sudo apt install graphviz"],
+            "windows": ["# Graphviz: https://graphviz.org/download/"],
+            "default": [
+                "# Install Graphviz using your package manager:",
+                "#   sudo apt install graphviz   (Debian/Ubuntu)",
+                "#   sudo dnf install graphviz    (Fedora/RHEL)",
+                "# Or download from: https://graphviz.org/download/",
+            ],
+        },
+    },
+    "git": {
+        "name": "Git",
+        "executables": ["git"],
+        "install": {
+            "macos": ["brew install git"],
+            "debian": ["sudo apt update", "sudo apt install git"],
+            "wsl": ["sudo apt update", "sudo apt install git"],
+            "windows": ["# Git: https://git-scm.com/download/win"],
+            "default": ["# Install Git: https://git-scm.com/download"],
+        },
+    },
+    "terraform": {
+        "name": "Terraform",
+        "executables": [],
+        "install": {
+            "macos": [
+                "brew tap hashicorp/tap",
+                "brew install hashicorp/terraform",
+            ],
+            "default": [
+                "# Install Terraform: https://developer.hashicorp.com/terraform/install"
+            ],
+        },
+    },
+}
+
+
 def check_dependencies() -> None:
-    """Check if required command-line tools are available."""
-    dependencies = ["dot", "gvpr", "git", get_tf_binary()]
-    bundle_dir = Path(__file__).parent
+    """Check if required command-line tools are available.
+
+    Reports all missing dependencies together with OS-specific
+    installation instructions and a link to the documentation.
+    """
     import sys
 
+    bundle_dir = Path(__file__).parent
     sys.path.append(str(bundle_dir))
-    for exe in dependencies:
-        location = shutil.which(exe) or os.path.isfile(exe)
-        if location:
-            click.echo(f"  {exe} command detected: {location}")
-        else:
-            click.echo(
-                click.style(
-                    f"\n  ERROR: {exe} command executable not detected in path. Please ensure you have installed all required dependencies first",
-                    fg="red",
-                    bold=True,
-                )
+
+    missing: List[Tuple[Dict[str, Any], List[str]]] = []
+    for key, info in DEPENDENCIES.items():
+        executables = info["executables"] or [get_tf_binary()]
+        not_found = []
+        for exe in executables:
+            location = shutil.which(exe) or os.path.isfile(exe)
+            if location:
+                click.echo(f"  {exe} command detected: {location}")
+            else:
+                not_found.append(exe)
+        if not_found:
+            missing.append((info, not_found))
+
+    if not missing:
+        return
+
+    os_family = _get_os_family()
+
+    click.echo("\n")
+    for info, not_found in missing:
+        exes_str = ", ".join(f"'{e}'" for e in not_found)
+        click.echo(
+            click.style(f"  ERROR: {exes_str} not found in PATH.", fg="red", bold=True)
+        )
+        click.echo(
+            click.style(
+                f"         {info['name']} is required but not installed.", fg="red"
             )
-            exit()
+        )
+
+    click.echo("\n  Install the missing dependencies:\n")
+    for info, _ in missing:
+        commands = info["install"].get(os_family, info["install"]["default"])
+        for line in commands:
+            click.echo(f"    {line}")
+
+    click.echo("\n  For detailed installation instructions:")
+    click.echo("    https://patrickchugh.github.io/terravision/installation/")
+    click.echo("    https://github.com/patrickchugh/terravision#install\n")
+
+    exit(1)
 
 
 def check_terraform_version() -> None:
