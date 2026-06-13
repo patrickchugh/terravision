@@ -306,13 +306,15 @@ def compile_tfdata(
     return tfdata
 
 
-def preflight_check(ai_backend: Optional[str] = None) -> None:
-    """Check required dependencies and Terraform version compatibility.
+def preflight_check(ai_backend: Optional[str] = None, engine: str = "auto") -> None:
+    """Check required dependencies and Terraform/OpenTofu version compatibility.
 
     Args:
         ai_backend: AI backend to validate ('ollama', 'bedrock', or 'restapi')
+        engine: Infra engine to use: 'terraform', 'tofu', or 'auto' (detect).
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
+    helpers.set_tf_binary(engine)
     helpers.check_dependencies()
     helpers.check_terraform_version()
 
@@ -412,6 +414,13 @@ def cli(ctx) -> None:
     help="Run terraform init with -upgrade to update modules/providers",
 )
 @click.option(
+    "--engine",
+    default="auto",
+    envvar="TERRAVISION_ENGINE",
+    type=click.Choice(["auto", "terraform", "tofu"], case_sensitive=False),
+    help="Infra engine binary: 'terraform', 'tofu' (OpenTofu), or 'auto' (detect). Env: TERRAVISION_ENGINE",
+)
+@click.option(
     "--use-tf-names",
     is_flag=True,
     default=False,
@@ -450,6 +459,7 @@ def draw(
     planfile: str,
     graphfile: str,
     upgrade: bool,
+    engine: str,
     use_tf_names: bool,
     use_resource_names: bool,
     fontsize: int,
@@ -466,7 +476,7 @@ def draw(
                 fg="yellow",
             )
         )
-    preflight_check(ai_annotate if not planfile else None)
+    preflight_check(ai_annotate if not planfile else None, engine=engine)
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -569,6 +579,13 @@ def draw(
     default=False,
     help="Run terraform init with -upgrade to update modules/providers",
 )
+@click.option(
+    "--engine",
+    default="auto",
+    envvar="TERRAVISION_ENGINE",
+    type=click.Choice(["auto", "terraform", "tofu"], case_sensitive=False),
+    help="Infra engine binary: 'terraform', 'tofu' (OpenTofu), or 'auto' (detect). Env: TERRAVISION_ENGINE",
+)
 def graphdata(
     debug: bool,
     source: str,
@@ -583,6 +600,7 @@ def graphdata(
     planfile: str = "",
     graphfile: str = "",
     upgrade: bool = False,
+    engine: str = "auto",
 ) -> None:
     """List cloud resources and relations as drawable JSON."""
     _install_excepthook(debug)
@@ -595,7 +613,7 @@ def graphdata(
                 fg="yellow",
             )
         )
-    preflight_check(ai_annotate if not planfile else None)
+    preflight_check(ai_annotate if not planfile else None, engine=engine)
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -689,6 +707,13 @@ def graphdata(
     help="Run terraform init with -upgrade to update modules/providers",
 )
 @click.option(
+    "--engine",
+    default="auto",
+    envvar="TERRAVISION_ENGINE",
+    type=click.Choice(["auto", "terraform", "tofu"], case_sensitive=False),
+    help="Infra engine binary: 'terraform', 'tofu' (OpenTofu), or 'auto' (detect). Env: TERRAVISION_ENGINE",
+)
+@click.option(
     "--format",
     hidden=True,
     default="",
@@ -736,6 +761,7 @@ def visualise(
     planfile: str,
     graphfile: str,
     upgrade: bool,
+    engine: str,
     format: str,
     ai_annotate: str,
     avl_classes: Any,
@@ -764,7 +790,7 @@ def visualise(
             )
         )
 
-    preflight_check(ai_annotate if not planfile else None)
+    preflight_check(ai_annotate if not planfile else None, engine=engine)
     tfdata = _safe_compile_tfdata(
         debug,
         source,

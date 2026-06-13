@@ -9,6 +9,8 @@ import datetime
 import importlib
 import os
 import pkgutil
+import re
+import subprocess
 import sys
 import warnings
 from importlib.metadata import PackageNotFoundError, version
@@ -48,6 +50,31 @@ _DEFAULT_NODE_HEIGHT = 2.8
 _DEFAULT_ICON_NODE_HEIGHT = 3.8
 _DEFAULT_NODESEP = 3.0
 _DEFAULT_RANKSEP = 6.0
+
+
+def _run_gvpr_label_shift(path_to_predot: str, outfile: str) -> Path:
+    """Run the shiftLabel.gvpr post-processing script on a pre-rendered DOT file.
+
+    Returns the path to the post-processed DOT file. Raises if gvpr fails so
+    a stale or missing output file is never silently reused.
+    """
+    bundle_dir = Path(__file__).parent.parent
+    path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
+    path_to_postdot = Path.cwd() / f"{outfile}.dot"
+    subprocess.run(
+        [
+            "gvpr",
+            "-c",
+            "-q",
+            "-f",
+            str(path_to_script),
+            str(path_to_predot),
+            "-o",
+            str(path_to_postdot),
+        ],
+        check=True,
+    )
+    return path_to_postdot
 
 
 def _apply_size_overrides(tfdata: Dict[str, Any]) -> None:
@@ -912,25 +939,25 @@ def draw_objects(
     return all_drawn_resources_list
 
 
-def generate_dot(
+def _build_diagram(
     tfdata: Dict[str, Any],
     outfile: str,
     source: str,
-) -> Tuple[str, Set[str]]:
-    """Generate a post-processed DOT string from tfdata.
+    outformat: str,
+    show: bool,
+    announce_render: bool = False,
+):
+    """Build the complete Graphviz diagram and run gvpr post-processing.
 
-    Builds the complete Graphviz DOT graph (nodes, clusters, edges, footer),
-    runs the gvpr label positioning script, and returns the DOT string along
-    with the set of icon file paths referenced in the graph.
-
-    Args:
-        tfdata: Terraform data dictionary with graphdict, meta_data, annotations
-        outfile: Output filename stem (used for temp DOT files)
-        source: Source path or URL for footer attribution
+    Shared by generate_dot() (DOT/SVG/HTML path) and render_diagram()
+    (image/draw.io path): loads provider constants, draws all nodes, groups
+    and deferred connections, adds title/footer/legend, pre-renders the DOT
+    file and applies the shiftLabel.gvpr positioning script.
 
     Returns:
-        Tuple of (dot_string, icon_paths) where dot_string is the post-processed
-        DOT source and icon_paths is a set of absolute paths to icon files used.
+        Tuple of (canvas, path_to_predot, path_to_postdot). The canvas is left
+        set as the active diagram — callers must call setdiagram(None) when
+        they are finished with it.
     """
     # Load provider-specific configuration constants and set module globals
     global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
@@ -986,13 +1013,16 @@ def generate_dot(
         else tfdata["annotations"]["title"]
     )
     # Use 'neato' engine for all providers with neato_no_op=2
+    # GCP diagrams use black connectors per Google reference architecture style
+    edge_attr = {"color": "#000000"} if provider == "gcp" else {}
     myDiagram = Canvas(
         "",
         filename=outfile,
-        outformat="dot",
-        show=False,
+        outformat=outformat,
+        show=show,
         direction="TB",
         engine="neato",
+        edge_attr=edge_attr,
     )
     setdiagram(myDiagram)
 
@@ -1134,19 +1164,49 @@ def generate_dot(
     # Generate initial DOT file
     path_to_predot = myDiagram.pre_render()
 
+    if announce_render:
+        # Post-process with Graphviz
+        click.echo(
+            click.style(f"\nRendering Architecture Image...", fg="white", bold=True)
+        )
+
     # Apply label positioning script
-    bundle_dir = Path(__file__).parent.parent
-    path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
-    path_to_postdot = Path.cwd() / f"{outfile}.dot"
-    os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
+    path_to_postdot = _run_gvpr_label_shift(path_to_predot, outfile)
+
+    return myDiagram, path_to_predot, path_to_postdot
+
+
+def generate_dot(
+    tfdata: Dict[str, Any],
+    outfile: str,
+    source: str,
+) -> Tuple[str, Set[str], Dict[str, str], Dict[str, str]]:
+    """Generate a post-processed DOT string from tfdata.
+
+    Builds the complete Graphviz DOT graph (nodes, clusters, edges, footer),
+    runs the gvpr label positioning script, and returns the DOT string along
+    with the set of icon file paths referenced in the graph.
+
+    Args:
+        tfdata: Terraform data dictionary with graphdict, meta_data, annotations
+        outfile: Output filename stem (used for temp DOT files)
+        source: Source path or URL for footer attribution
+
+    Returns:
+        Tuple of (dot_string, icon_paths, node_id_map, cluster_id_map) where
+        dot_string is the post-processed DOT source, icon_paths is a set of
+        absolute paths to icon files used, node_id_map maps Graphviz node IDs
+        to Terraform addresses and cluster_id_map maps cluster IDs.
+    """
+    myDiagram, path_to_predot, path_to_postdot = _build_diagram(
+        tfdata, outfile, source, outformat="dot", show=False
+    )
 
     # Read the post-processed DOT string
     with open(path_to_postdot, "r", encoding="utf-8") as f:
         dot_string = f.read()
 
     # Extract icon file paths from DOT string (both image="..." and <img src="..."/>)
-    import re
-
     icon_paths = set(re.findall(r'image="([^"]+)"', dot_string))
     icon_paths.update(re.findall(r'<img src="([^"]+)"', dot_string))
 
@@ -1160,9 +1220,9 @@ def generate_dot(
             if hasattr(node_obj, "_id"):
                 node_id_map[node_obj._id] = tf_address
 
-    # Clean up temporary DOT files
+    # Clean up the pre-gvpr temporary DOT file (the post-processed
+    # <outfile>.dot is the deliverable and is kept)
     os.remove(path_to_predot)
-    pass  # os.remove(path_to_postdot)
 
     # Include cluster ID mapping
     cluster_id_map = tfdata.get("cluster_id_map", {})
@@ -1247,217 +1307,15 @@ def render_diagram(
         tfdata: Terraform data dictionary with graphdict, meta_data, annotations
         picshow: Whether to automatically open the diagram after generation
         outfile: Output filename without extension
-        format: Output format (png, svg, pdf, bmp)
+        format: Output format (png, svg, pdf, bmp, drawio)
         source: Source path or URL for footer attribution
 
     Returns:
         None (generates diagram file as side effect)
     """
-    # Load provider-specific configuration constants and set module globals
-    global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
-    global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
-    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
-
-    provider = get_primary_provider_or_default(tfdata)
-
-    # Dynamically load resource classes for the detected provider
-    _load_provider_resources(provider)
-
-    constants = _load_provider_constants(tfdata)
-    CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
-    GROUP_NODES = constants["GROUP_NODES"]
-    DRAW_ORDER = constants["DRAW_ORDER"]
-    NODE_VARIANTS = constants["NODE_VARIANTS"]
-    OUTER_NODES = constants["OUTER_NODES"]
-    AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
-    EDGE_NODES = constants["EDGE_NODES"]
-    SHARED_SERVICES = constants["SHARED_SERVICES"]
-    ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
-    NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
-
-    _apply_size_overrides(tfdata)
-
-    # Track already drawn resources to prevent duplicates
-    all_drawn_resources_list = list()
-    tfdata["deferred_connections"] = list()
-
-    # Pre-compute flow badges (US5) before drawing starts
-    from modules.annotations import compute_flow_step_numbers
-
-    _flows = (tfdata.get("annotations") or {}).get("flows") or {}
-    _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
-    tfdata["flow_badges"] = {
-        res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
-    }
-    tfdata["flow_edge_badges"] = {
-        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_badges.items()
-    }
-    tfdata["flow_legend_entries"] = _legend_entries
-
-    # Initialize diagram canvas
-    title = (
-        "Cloud Architecture Diagram"
-        if not tfdata["annotations"].get("title")
-        else tfdata["annotations"]["title"]
+    myDiagram, path_to_predot, path_to_postdot = _build_diagram(
+        tfdata, outfile, source, outformat=format, show=picshow, announce_render=True
     )
-    # Use 'neato' engine for all providers with neato_no_op=2
-    myDiagram = Canvas(
-        "",
-        filename=outfile,
-        outformat=format,
-        show=picshow,
-        direction="TB",
-        engine="neato",
-    )
-    setdiagram(myDiagram)
-
-    # Create main cloud provider boundary
-    # Dynamically select cloud group class based on provider (e.g., 'aws' -> 'AWSGroup', 'azure' -> 'AZUREGroup')
-    provider_group_name = provider.upper() + "Group"
-    cloud_group_class = globals().get(provider_group_name)
-    if cloud_group_class is None:
-        click.echo(
-            click.style(
-                f"\nERROR: No group class '{provider_group_name}' found for provider '{provider}'. Exiting.",
-                fg="red",
-                bold=True,
-            )
-        )
-        exit()
-
-    # Add title as a node at the top (positioned by gvpr for all providers)
-    setcluster(myDiagram)
-    title_style = {
-        "_titlenode": "1",
-        "shape": "plaintext",
-        "fontsize": "56",
-        "fontname": "Sans-Serif",
-        "fontcolor": "#2D3436",
-        "label": title,
-    }
-    getattr(sys.modules[__name__], "Node")(**title_style)
-
-    cloudGroup = cloud_group_class()
-    setcluster(cloudGroup)
-    tfdata["connected_nodes"] = dict()
-
-    # Draw resources in predefined order for optimal layout
-    for node_type_list in DRAW_ORDER:
-        # Outer nodes go directly on canvas, others in cloud group
-        targetGroup = cloudGroup
-        if node_type_list == OUTER_NODES:
-            targetGroup = myDiagram
-        setcluster(targetGroup)
-        all_drawn_resources_list = draw_objects(
-            node_type_list, all_drawn_resources_list, tfdata, myDiagram, cloudGroup
-        )
-
-    # Process deferred connections after all nodes are drawn
-    if tfdata.get("deferred_connections"):
-        for origin_resource, dest_resource in tfdata["deferred_connections"]:
-            if (
-                dest_resource in tfdata["meta_data"]
-                and "node" in tfdata["meta_data"][dest_resource]
-            ):
-                if (
-                    origin_resource in tfdata["meta_data"]
-                    and "node" in tfdata["meta_data"][origin_resource]
-                ):
-                    originNode = tfdata["meta_data"][origin_resource]["node"]
-                    connectedNode = tfdata["meta_data"][dest_resource]["node"]
-                    origin_type = helpers.get_no_module_name(origin_resource).split(
-                        "."
-                    )[0]
-                    dest_type = helpers.get_no_module_name(dest_resource).split(".")[0]
-
-                    if originNode != connectedNode and ok_to_connect(
-                        origin_type, dest_type
-                    ):
-                        label = get_edge_labels(originNode, connectedNode, tfdata)
-                        line_style = (
-                            "solid"
-                            if always_draw_edge(origin_type, dest_type, tfdata)
-                            else "invis"
-                        )
-                        # Check if this is a bidirectional link
-                        is_bidir = frozenset(
-                            (origin_resource, dest_resource)
-                        ) in tfdata.get("bidirectional_edges", set())
-                        originNode.connect(
-                            connectedNode,
-                            _make_edge_with_badge(
-                                tfdata,
-                                origin_resource,
-                                dest_resource,
-                                forward=True,
-                                reverse=is_bidir,
-                                label=label,
-                                style=line_style,
-                            ),
-                        )
-                        if not tfdata["connected_nodes"].get(originNode._id):
-                            tfdata["connected_nodes"][originNode._id] = list()
-                        tfdata["connected_nodes"][originNode._id] = (
-                            helpers.append_dictlist(
-                                tfdata["connected_nodes"][originNode._id],
-                                connectedNode._id,
-                            )
-                        )
-                        # For bidirectional edges, also track the reverse
-                        if is_bidir:
-                            if not tfdata["connected_nodes"].get(connectedNode._id):
-                                tfdata["connected_nodes"][connectedNode._id] = list()
-                            tfdata["connected_nodes"][connectedNode._id] = (
-                                helpers.append_dictlist(
-                                    tfdata["connected_nodes"][connectedNode._id],
-                                    originNode._id,
-                                )
-                            )
-
-    # Apply flow badge xlabels to drawn nodes (US5 T034)
-    _apply_flow_badges(tfdata, myDiagram, cloudGroup)
-
-    # Add footer with metadata
-    if source == ".":
-        source = os.getcwd()
-
-    # Set context to main diagram so footer is outside all clusters
-    setcluster(myDiagram)
-
-    # Add footer node (positioned by gvpr for all providers).
-    # Width kept moderate so the legend node (when present) fits
-    # alongside it on the same row instead of stacking below.
-    footer_style = {
-        "_footernode": "1",
-        "shape": "record",
-        "width": "14",
-        "height": "2.0",
-        "fontsize": "20",
-        "margin": "0.4,0.3",
-        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
-    }
-    getattr(sys.modules[__name__], "Node")(**footer_style)
-
-    # Add flow legend node if any flows were defined (US5 T036)
-    _add_legend_node(tfdata, myDiagram)
-
-    # Create label node for cloud group if it has label metadata
-    create_cluster_label_node(cloudGroup)
-
-    # Add cloud group to main canvas
-    myDiagram.subgraph(cloudGroup.dot)
-
-    # Generate initial DOT file
-    path_to_predot = myDiagram.pre_render()
-
-    # Post-process with Graphviz
-    click.echo(click.style(f"\nRendering Architecture Image...", fg="white", bold=True))
-
-    # Apply label positioning script
-    bundle_dir = Path(__file__).parent.parent
-    path_to_script = Path.cwd() / bundle_dir / "shiftLabel.gvpr"
-    path_to_postdot = Path.cwd() / f"{outfile}.dot"
-    os.system(f"gvpr -c -q -f {path_to_script} {path_to_predot} -o {path_to_postdot}")
 
     # Handle draw.io format conversion
     if format == "drawio":

@@ -6,7 +6,6 @@ Terraform Enterprise. Supports SSH, HTTPS, and registry URL formats.
 """
 
 import os
-import re
 import shutil
 import stat
 import tarfile
@@ -148,32 +147,6 @@ class CloneProgress(RemoteProgress):
         self.pbar.refresh()
 
 
-def handle_readme_source(resp: requests.Response) -> str:
-    """Extract and convert git URL from Bitbucket API response.
-
-    Args:
-        resp: HTTP response containing readme with git URL
-
-    Returns:
-        Formatted SSH git URL
-    """
-    readme = resp.json()["root"]["readme"]
-    githubURL = "ssh://git@" + find_between(readme, "(https://", ")")
-
-    # Convert domain format for SSH
-    found = re.findall(r"\.........\.net", githubURL)
-    for site in found:
-        githubURL = githubURL.replace(site, "-ssh" + site)
-
-    # Convert Bitbucket URL format to git SSH format
-    githubURL = githubURL.replace("/projects/", ":7999/")
-    githubURL = githubURL.replace("/repos/", "/")
-    startindex = githubURL.index("/browse?")
-    githubURL = githubURL[0:startindex] + ".git"
-
-    return githubURL
-
-
 # Known git hosting domains that should be cloned directly (not via registry API)
 GIT_HOSTING_DOMAINS = ["github.com", "gitlab.com", "bitbucket.org"]
 
@@ -246,7 +219,7 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
                 bold=True,
             )
         )
-        exit()
+        exit(1)
 
     # Write to a temp file, then extract
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
@@ -273,7 +246,11 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
             )
         ):
             with tarfile.open(tmp_path, "r:*") as tf:
-                tf.extractall(destination)
+                try:
+                    tf.extractall(destination, filter="data")
+                except TypeError:
+                    # Python < 3.12 has no filter= parameter
+                    tf.extractall(destination)
         else:
             click.echo(
                 click.style(
@@ -282,7 +259,7 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
                     bold=True,
                 )
             )
-            exit()
+            exit(1)
 
         click.echo(click.style(f"  Extracted archive to {destination}", fg="green"))
     finally:
@@ -364,7 +341,7 @@ def _resolve_registry_download_url(
             allow_redirects=False,
             timeout=10,
         )
-    except Exception:
+    except requests.RequestException:
         response = requests.get(
             download_endpoint,
             headers=headers,
@@ -382,7 +359,7 @@ def _resolve_registry_download_url(
 
     try:
         payload = response.json()
-    except Exception:
+    except ValueError:
         return None
 
     for key in ("download_url", "download"):
@@ -615,7 +592,7 @@ def _handle_registry_url(
             disc_resp = requests.get(discovery_url, timeout=10)
             disc_resp.raise_for_status()
             discovery = disc_resp.json()
-        except Exception:
+        except (requests.RequestException, ValueError):
             click.echo(
                 click.style(
                     f"\nERROR: Service discovery failed for {hostname}. "
@@ -624,7 +601,7 @@ def _handle_registry_url(
                     bold=True,
                 )
             )
-            exit()
+            exit(1)
 
         modules_v1 = discovery.get("modules.v1")
         if not modules_v1:
@@ -636,7 +613,7 @@ def _handle_registry_url(
                     bold=True,
                 )
             )
-            exit()
+            exit(1)
 
         if modules_v1.startswith("/"):
             domain = f"https://{hostname}{modules_v1}"
@@ -683,7 +660,7 @@ def _handle_registry_url(
         r = requests.get(domain + gitaddress, headers=headers, timeout=10)
         resp_json = r.json()
         githubURL = resp_json.get("source", "")
-    except Exception:
+    except (requests.RequestException, ValueError):
         resp_json = {}
         githubURL = ""
 
@@ -710,8 +687,10 @@ def _handle_registry_url(
                         f"to {resolved_version}"
                     )
                     return download_url, subfolder, ""
-        except Exception:
-            pass
+        except (requests.RequestException, ValueError) as e:
+            # Keep going — the generic registry error below is reported when
+            # no source URL could be resolved at all
+            click.echo(f"  WARNING: Private registry version lookup failed: {e}")
 
     if not githubURL:
         status_code = r.status_code if r is not None else "unknown"
@@ -725,11 +704,7 @@ def _handle_registry_url(
                 bold=True,
             )
         )
-        exit()
-
-    # Fallback to readme source if main source is empty
-    if githubURL == "":
-        githubURL = handle_readme_source(r)
+        exit(1)
 
     # Resolve version constraint to a git tag
     git_tag = ""
@@ -748,7 +723,7 @@ def _handle_registry_url(
                         f"  Resolved version constraint '{version_constraint}' "
                         f"to {resolved} (tag: {git_tag})"
                     )
-            except Exception:
+            except (requests.RequestException, ValueError):
                 click.echo(
                     f"  WARNING: Could not resolve version {resolved}, " f"using latest"
                 )
@@ -777,7 +752,7 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
     # Get or create remote origin
     try:
         origin = repo.remote("origin")
-    except Exception:
+    except ValueError:
         origin = repo.create_remote("origin", repo_url)
 
     # Enable sparse checkout in git config
@@ -1017,6 +992,6 @@ def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) ->
             )
         )
         shutil.rmtree(codepath, ignore_errors=True)
-        exit()
+        exit(1)
 
     return subfolder

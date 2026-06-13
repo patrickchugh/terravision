@@ -1780,8 +1780,51 @@ def _get_os_family() -> str:
     return "unknown"
 
 
+# Resolved Terraform-compatible binary: 'terraform' or 'tofu' (OpenTofu).
+# Set by the CLI --engine flag via set_tf_binary(); defaults to autodetection.
+_TF_BINARY: Optional[str] = None
+
+
+def set_tf_binary(engine: str = "auto") -> str:
+    """Resolve and store the Terraform-compatible binary to use.
+
+    Terraform and OpenTofu share an identical CLI for the subcommands
+    Terravision relies on (init, workspace, plan, show -json, graph), so the
+    only difference is the executable name.
+
+    Args:
+        engine: 'terraform', 'tofu', or 'auto'. With 'auto' we prefer
+            'terraform' when present on PATH and fall back to 'tofu'.
+
+    Returns:
+        The resolved binary name.
+    """
+    global _TF_BINARY
+    engine = (engine or "auto").lower()
+    if engine in ("terraform", "tofu"):
+        _TF_BINARY = engine
+    elif shutil.which("terraform"):
+        _TF_BINARY = "terraform"
+    elif shutil.which("tofu"):
+        _TF_BINARY = "tofu"
+    else:
+        # Neither found: keep 'terraform' so check_dependencies reports the
+        # missing-executable error against the default name.
+        _TF_BINARY = "terraform"
+    return _TF_BINARY
+
+
+def get_tf_binary() -> str:
+    """Return the resolved Terraform-compatible binary, autodetecting if unset."""
+    if _TF_BINARY is None:
+        return set_tf_binary("auto")
+    return _TF_BINARY
+
+
 # install commands are looked up by OS family, falling back to "default".
 # Lines starting with "#" are printed verbatim as guidance/doc links.
+# The terraform entry's executable is resolved at call time via
+# get_tf_binary(), so it follows the --engine flag (terraform or tofu).
 DEPENDENCIES: Dict[str, Dict[str, Any]] = {
     "graphviz": {
         "name": "Graphviz",
@@ -1812,7 +1855,7 @@ DEPENDENCIES: Dict[str, Dict[str, Any]] = {
     },
     "terraform": {
         "name": "Terraform",
-        "executables": ["terraform"],
+        "executables": [],
         "install": {
             "macos": [
                 "brew tap hashicorp/tap",
@@ -1838,9 +1881,10 @@ def check_dependencies() -> None:
     sys.path.append(str(bundle_dir))
 
     missing: List[Tuple[Dict[str, Any], List[str]]] = []
-    for info in DEPENDENCIES.values():
+    for key, info in DEPENDENCIES.items():
+        executables = info["executables"] or [get_tf_binary()]
         not_found = []
-        for exe in info["executables"]:
+        for exe in executables:
             location = shutil.which(exe) or os.path.isfile(exe)
             if location:
                 click.echo(f"  {exe} command detected: {location}")
@@ -1880,22 +1924,27 @@ def check_dependencies() -> None:
 
 
 def check_terraform_version() -> None:
-    """Validate Terraform version is compatible."""
+    """Validate the Terraform/OpenTofu version is compatible.
+
+    Both engines report a ``v1.x.x`` line (``Terraform v1.x.x`` /
+    ``OpenTofu v1.x.x``), so the same major-version check covers both.
+    """
+    binary = get_tf_binary()
     try:
         result = subprocess.run(
-            ["terraform", "-v"], capture_output=True, text=True, check=True
+            [binary, "-v"], capture_output=True, text=True, check=True
         )
         version_output = result.stdout
 
         version_line = version_output.split("\n")[0]
-        print(f"  terraform version detected: {version_line}")
+        print(f"  {binary} version detected: {version_line}")
         tf_version = version_line.split(" ")[1].replace("v", "")
         version_major = tf_version.split(".")[0]
 
         if version_major != "1":
             click.echo(
                 click.style(
-                    f"\n  ERROR: Terraform Version '{tf_version}' is not supported. Please upgrade to >= v1.0.0",
+                    f"\n  ERROR: {binary} version '{tf_version}' is not supported. Please upgrade to >= v1.0.0",
                     fg="red",
                     bold=True,
                 )
@@ -1904,7 +1953,7 @@ def check_terraform_version() -> None:
     except (subprocess.CalledProcessError, IndexError, FileNotFoundError) as e:
         click.echo(
             click.style(
-                f"\n  ERROR: Failed to check Terraform version: {e}",
+                f"\n  ERROR: Failed to check {binary} version: {e}",
                 fg="red",
                 bold=True,
             )

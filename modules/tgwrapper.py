@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Tuple
 import click
 import hcl2
 
+import modules.helpers as helpers
 import modules.tfwrapper as tfwrapper
 
 MIN_TERRAGRUNT_VERSION = "0.50.0"
@@ -370,7 +371,16 @@ def _scan_dependency_dirs(module_path: str) -> List[str]:
     try:
         with open(hcl_path) as f:
             parsed = hcl2.load(f)
-    except Exception:
+    except Exception as e:
+        # python-hcl2 may not support every Terragrunt construct; warn so the
+        # user knows this module's dependencies were skipped
+        click.echo(
+            click.style(
+                f"WARNING: Could not parse {hcl_path} ({e}); "
+                "dependency overrides for this module will be skipped",
+                fg="yellow",
+            )
+        )
         return dep_dirs
 
     for dep_block in parsed.get("dependency", []):
@@ -515,7 +525,7 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
     # override reached the cache. A fresh `-reconfigure` reinitialises
     # the stored state to match the override (local).
     tf_result = subprocess.run(
-        ["terraform", "init", "-reconfigure", "-input=false"],
+        [helpers.get_tf_binary(), "init", "-reconfigure", "-input=false"],
         capture_output=not debug,
         text=True,
         cwd=cache_dir,
@@ -619,14 +629,16 @@ def _decode_tg_plan(
     # Generate plan JSON via terraform show directly in cache
     with open(tfplan_json_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "show", "-json", tfplan_path],
+            [helpers.get_tf_binary(), "show", "-json", tfplan_path],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
             cwd=cache_dir,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Terraform show failed:\n{result.stderr or ''}")
+        raise RuntimeError(
+            f"{helpers.get_tf_binary().title()} show failed:\n{result.stderr or ''}"
+        )
 
     with open(tfplan_json_path) as f:
         plan_data = json.load(f)
@@ -634,14 +646,16 @@ def _decode_tg_plan(
     # Generate graph DOT
     with open(tfgraph_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "graph"],
+            [helpers.get_tf_binary(), "graph"],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
             cwd=cache_dir,
         )
     if result.returncode != 0:
-        raise RuntimeError(f"Terraform graph failed:\n{result.stderr or ''}")
+        raise RuntimeError(
+            f"{helpers.get_tf_binary().title()} graph failed:\n{result.stderr or ''}"
+        )
 
     # Convert DOT to JSON
     graph_data = tfwrapper.convert_dot_to_json(tfgraph_path)
@@ -752,7 +766,16 @@ def _parse_tg_dependencies(module_path: str) -> dict:
     try:
         with open(hcl_path) as f:
             parsed = hcl2.load(f)
-    except Exception:
+    except Exception as e:
+        # python-hcl2 may not support every Terragrunt construct; warn so the
+        # user knows cross-module links for this module are skipped
+        click.echo(
+            click.style(
+                f"WARNING: Could not parse {hcl_path} ({e}); "
+                "cross-module dependency links for this module will be skipped",
+                fg="yellow",
+            )
+        )
         return result
 
     # Extract dependency blocks: dependency "name" { config_path = "..." }

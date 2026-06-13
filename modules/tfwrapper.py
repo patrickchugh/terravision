@@ -203,9 +203,13 @@ def _run_terraform_init(debug, upgrade, skip_reconfigure: bool = False):
     -reconfigure is only valid for state backends; Terraform Cloud rejects it,
     so callers that have stripped a cloud block must pass skip_reconfigure=True.
     """
-    click.echo(click.style("\nCalling Terraform..", fg="white", bold=True))
+    click.echo(
+        click.style(
+            f"\nCalling {helpers.get_tf_binary()}..".title(), fg="white", bold=True
+        )
+    )
     click.echo("  Forcing temporary local backend to generate full infrastructure plan")
-    init_cmd = ["terraform", "init"]
+    init_cmd = [helpers.get_tf_binary(), "init"]
     if not skip_reconfigure:
         init_cmd.append("-reconfigure")
     if upgrade:
@@ -213,7 +217,7 @@ def _run_terraform_init(debug, upgrade, skip_reconfigure: bool = False):
     result = subprocess.run(init_cmd, capture_output=not debug, text=True)
     if result.returncode != 0:
         _tf_error(
-            "Cannot perform terraform init using provided source. "
+            f"Cannot perform {helpers.get_tf_binary()} init using provided source. "
             "Check providers and backend config.",
             debug,
             result,
@@ -226,13 +230,13 @@ def _select_workspace(workspace, debug):
         click.style(f"\nInitalising workspace: {workspace}\n", fg="white", bold=True)
     )
     result = subprocess.run(
-        ["terraform", "workspace", "select", "-or-create=True", workspace],
+        [helpers.get_tf_binary(), "workspace", "select", "-or-create=True", workspace],
         capture_output=not debug,
         text=True,
     )
     if result.returncode != 0:
         _tf_error(
-            f"Invalid output from 'terraform workspace select {workspace}' command.",
+            f"Invalid output from '{helpers.get_tf_binary()} workspace select {workspace}' command.",
             debug,
             result,
         )
@@ -240,16 +244,22 @@ def _select_workspace(workspace, debug):
 
 def _run_terraform_plan(vfiles, tfplan_path, debug):
     """Generate terraform plan binary."""
-    click.echo(click.style(f"\nGenerating Terraform Plan..\n", fg="white", bold=True))
-    plan_cmd = ["terraform", "plan", "-refresh=false"]
+    click.echo(
+        click.style(
+            f"\nGenerating {helpers.get_tf_binary().title()} Plan..\n",
+            fg="white",
+            bold=True,
+        )
+    )
+    plan_cmd = [helpers.get_tf_binary(), "plan", "-refresh=false"]
     for vf in vfiles:
         plan_cmd.extend(["-var-file", vf])
     plan_cmd.extend(["-out", tfplan_path])
     result = subprocess.run(plan_cmd, capture_output=not debug, text=True)
     if result.returncode != 0:
         _tf_error(
-            "Invalid output from 'terraform plan' command. "
-            "Try using the terraform CLI first to check source files have no errors.",
+            f"Invalid output from '{helpers.get_tf_binary()} plan' command. "
+            f"Try using the {helpers.get_tf_binary()} CLI first to check source files have no errors.",
             debug,
             result,
         )
@@ -263,31 +273,35 @@ def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
     """
     click.echo(click.style(f"\nDecoding plan..\n", fg="white", bold=True))
     if not os.path.exists(tfplan_path):
-        _tf_error(f"Terraform plan file not found at {tfplan_path}")
+        _tf_error(f"Plan file not found at {tfplan_path}")
     # Convert binary plan to JSON
     with open(tfplan_json_path, "w") as f:
         result = subprocess.run(
-            ["terraform", "show", "-json", tfplan_path],
-            stdout=f,
-            stderr=None if debug else subprocess.PIPE,
-            text=True,
-        )
-    if result.returncode != 0:
-        _tf_error("Invalid output from 'terraform show' command.", debug, result)
-    click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
-    with open(tfplan_json_path) as f:
-        plandata = json.load(f)
-    # Generate terraform graph
-    with open(tfgraph_path, "w") as f:
-        result = subprocess.run(
-            ["terraform", "graph"],
+            [helpers.get_tf_binary(), "show", "-json", tfplan_path],
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
         )
     if result.returncode != 0:
         _tf_error(
-            "Invalid output from 'terraform graph' command. "
+            f"Invalid output from '{helpers.get_tf_binary()} show' command.",
+            debug,
+            result,
+        )
+    click.echo(click.style(f"\nAnalysing plan..\n", fg="white", bold=True))
+    with open(tfplan_json_path) as f:
+        plandata = json.load(f)
+    # Generate terraform graph
+    with open(tfgraph_path, "w") as f:
+        result = subprocess.run(
+            [helpers.get_tf_binary(), "graph"],
+            stdout=f,
+            stderr=None if debug else subprocess.PIPE,
+            text=True,
+        )
+    if result.returncode != 0:
+        _tf_error(
+            f"Invalid output from '{helpers.get_tf_binary()} graph' command. "
             "Check your TF source files can generate a valid plan and graph",
             debug,
             result,
@@ -322,7 +336,6 @@ def tf_initplan(
     Returns:
         Dictionary containing terraform plan and graph data
     """
-    debug = True
     override_dest = None
     cloud_backups: List[Tuple[str, str]] = []
     try:
@@ -390,8 +403,8 @@ def make_tf_data(
         tfdata["tf_resources_created"] = plandata["resource_changes"]
     else:
         raise helpers.TerravisionError(
-            "Invalid output from 'terraform plan' command. Try using the terraform CLI "
-            "first to check source actually generates resources and has no errors.",
+            f"Invalid output from '{helpers.get_tf_binary()} plan' command. Try using the "
+            f"{helpers.get_tf_binary()} CLI first to check source actually generates resources and has no errors.",
             tfdata=tfdata,
         )
     tfdata["tfgraph"] = graphdata
@@ -576,12 +589,6 @@ def _process_edges(tfdata, gvid_table, reverse_arrow_list):
                     matched_connections = [
                         k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
                     ]
-                    matched_nodes = [
-                        k for k in tfdata["graphdict"] if k.startswith(gvid_table[head])
-                    ]
-                    # Use matched node if only one exists
-                    if node not in tfdata["graphdict"] and len(matched_nodes) == 1:
-                        node = matched_nodes[0]
                     if (
                         conn not in tfdata["graphdict"]
                         and len(matched_connections) == 1
@@ -718,14 +725,14 @@ def load_json_source(source: str) -> Dict[str, Any]:
     tfdata = {"annotations": {}, "meta_data": {}}
     if "all_resource" in jsondata:
         click.echo(
-            "Source appears to be a JSON of previous debug output. Will not call terraform binary."
+            f"Source appears to be a JSON of previous debug output. Will not call {helpers.get_tf_binary()} binary."
         )
         tfdata = jsondata
         tfdata["graphdict"] = dict(tfdata["original_graphdict"])
-        tfdata["metadata"] = dict(tfdata["original_metadata"])
+        tfdata["meta_data"] = dict(tfdata["original_metadata"])
     else:
         click.echo(
-            "Source is a pre-generated JSON tfgraph file. Will not call terraform binary or AI model."
+            f"Source is a pre-generated JSON tfgraph file. Will not call {helpers.get_tf_binary()} binary or AI model."
         )
         tfdata["graphdict"] = jsondata
     return tfdata

@@ -117,7 +117,7 @@ def check_ollama_server(ollama_host: str) -> None:
                     bold=True,
                 )
             )
-            sys.exit()
+            sys.exit(1)
     except requests.exceptions.RequestException as e:
         click.echo(
             click.style(
@@ -126,7 +126,7 @@ def check_ollama_server(ollama_host: str) -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
 
 
 def check_bedrock_credentials() -> None:
@@ -152,7 +152,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
 
     region = _bedrock_region()
     model_id = _bedrock_model_id()
@@ -172,7 +172,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
     except (BotoCoreError, ClientError) as e:
         click.echo(
             click.style(
@@ -181,7 +181,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
 
 
 def check_restapi_endpoint() -> None:
@@ -197,7 +197,7 @@ def check_restapi_endpoint() -> None:
         url, _, model = _restapi_settings()
     except RuntimeError as e:
         click.echo(click.style(f"\n  ERROR: {e}", fg="red", bold=True))
-        sys.exit()
+        sys.exit(1)
 
     try:
         # A bare GET on a chat-completions URL is expected to return 4xx.
@@ -215,7 +215,7 @@ def check_restapi_endpoint() -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
 
 
 def create_ollama_client(ollama_host: str) -> ollama.Client:

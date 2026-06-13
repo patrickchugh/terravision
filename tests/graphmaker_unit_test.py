@@ -10,7 +10,6 @@ from modules.graphmaker import (
     add_relations,
     consolidate_nodes,
     dict_generator,
-    cleanup_originals,
     add_number_suffix,
     extend_sg_groups,
 )
@@ -118,26 +117,6 @@ class TestDictGenerator(unittest.TestCase):
         data = {}
         result = list(dict_generator(data))
         self.assertEqual(len(result), 0)
-
-
-class TestCleanupOriginals(unittest.TestCase):
-    def test_cleanup_originals_basic(self):
-        tfdata = {
-            "graphdict": {"resource1": [], "resource2": []},
-            "meta_data": {"resource1": {}, "resource2": {}},
-            "provider_detection": {"primary_provider": "aws"},
-        }
-        result = cleanup_originals(["resource1"], tfdata)
-        self.assertNotIn("resource1", result["graphdict"])
-
-    def test_cleanup_originals_empty_list(self):
-        tfdata = {
-            "graphdict": {"resource1": []},
-            "meta_data": {"resource1": {}},
-            "provider_detection": {"primary_provider": "aws"},
-        }
-        result = cleanup_originals([], tfdata)
-        self.assertIn("resource1", result["graphdict"])
 
 
 class TestAddNumberSuffix(unittest.TestCase):

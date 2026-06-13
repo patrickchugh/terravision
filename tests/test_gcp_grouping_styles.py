@@ -1,12 +1,13 @@
 """
-Tests for GCP Grouping Zone Styles (Google Cloud Architecture 2024 Guidelines).
+Tests for GCP Grouping Zone Styles (Google Cloud reference architecture look).
 
-These tests verify that all GCP grouping zones comply with the 2024 guidelines:
-- 2px rounded corners (style="rounded,filled")
-- No shadows (Graphviz default)
-- Flat overlapping style (pencolor same as fillcolor, or dashed for optional)
+These tests verify that all GCP grouping zones comply with the reference
+architecture styling:
+- Cloud boundary: solid Google blue (#1A73E8) with white monochrome logo top-left
+- Regions: white fill with solid dark border
+- VPC networks: transparent fill with thick black squared border
+- Other zones: light blue or light green fill with dashed dark blue/green border
 - Text-only labels (no icons next to labels)
-- Exact hex colors from the 2024 guidelines table
 """
 
 import pytest
@@ -17,250 +18,186 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-# GCP 2024 Zone Color Reference Table
-GCP_2024_ZONE_COLORS = {
-    # Top-level zones
-    "UserZone": "#FFFFFF",
-    "SystemZone": "#F1F8E9",
-    "ProjectZone": "#F6F6F6",
-    "AccountZone": "#E8EAF6",
-    # Within User/System
-    "InfraSystemZone": "#F3E5F5",
-    "OnPremisesZone": "#EFEBE9",
-    # Within System (external)
-    "ExternalSaaSZone": "#FFEBEE",
-    "ExternalDataZone": "#FFF8E1",
-    "External3rdPartyZone": "#E0F2F1",
-    "External1stPartyZone": "#E1F5FE",
-    # Within Project
-    "LogicalGroupZone": "#E3F2FD",
-    "RegionZone": "#ECEFF1",
-    "KubernetesClusterZone": "#FCE4EC",
-    "VPCNetworkZone": "#E3F2FD",  # Same as LogicalGroupZone per research.md
-    # Within Region/LogicalGroup
-    "AvailabilityZone": "#FFF3E0",
-    # Within Zone
-    "SubNetworkZone": "#EDE7F6",
-    "FirewallZone": "#FBE9E7",
-    # Within Firewall/InstanceGroup
-    "InstanceGroupZone": "#F9FBE7",
-    "ReplicaPoolZone": "#E0F7FA",
-    # Within K8s
-    "PodZone": "#E8F5E9",
-    # Special
+# GCP Zone Fill Color Reference Table (reference architecture palette)
+GCP_ZONE_COLORS = {
+    # Blue family (light blue fill, dashed dark blue border)
+    "UserZone": "#E4EEFD",
+    "ProjectZone": "#E4EEFD",
+    "AccountZone": "#E4EEFD",
+    "InfraSystemZone": "#E4EEFD",
+    "External3rdPartyZone": "#E4EEFD",
+    "External1stPartyZone": "#E4EEFD",
+    "LogicalGroupZone": "#E4EEFD",
+    "KubernetesClusterZone": "#E4EEFD",
+    "SubNetworkZone": "#E4EEFD",
+    "InstanceGroupZone": "#E4EEFD",
+    # Green family (light green fill, dashed dark green border)
+    "SystemZone": "#E8F4EB",
+    "OnPremisesZone": "#E8F4EB",
+    "ExternalSaaSZone": "#E8F4EB",
+    "ExternalDataZone": "#E8F4EB",
+    "AvailabilityZone": "#E8F4EB",
+    "FirewallZone": "#E8F4EB",
+    "ReplicaPoolZone": "#E8F4EB",
+    "PodZone": "#E8F4EB",
+    # Special zones
+    "RegionZone": "#FFFFFF",  # White fill with solid dark border
+    "VPCNetworkZone": "none",  # Transparent with thick black squared border
     "OptionalComponentZone": "#FFFFFF",  # White fill with dashed blue border
-    # Legacy
-    "GCPGroup": "#F6F6F6",
+    "GCPGroup": "#1A73E8",  # Solid Google blue cloud boundary
 }
 
 
 class TestGCPZoneStyleAttributes:
     """Test that all zone classes have correct Graphviz style attributes."""
 
-    @pytest.fixture
-    def zone_classes(self):
-        """Import and return all GCP zone classes."""
-        from resource_classes.gcp import groups
+    def test_filled_zones_use_rounded_filled_style(self):
+        """Verify filled zones use rounded+filled style, dashed when bordered."""
+        from resource_classes.gcp.groups import (
+            _gcp_zone_attrs,
+            _gcp_blue_group_attrs,
+            _gcp_green_group_attrs,
+        )
 
-        return {
-            "ProjectZone": groups.ProjectZone,
-            "AccountZone": groups.AccountZone,
-            "UserZone": groups.UserZone,
-            "SystemZone": groups.SystemZone,
-            "InfraSystemZone": groups.InfraSystemZone,
-            "OnPremisesZone": groups.OnPremisesZone,
-            "ExternalSaaSZone": groups.ExternalSaaSZone,
-            "ExternalDataZone": groups.ExternalDataZone,
-            "External3rdPartyZone": groups.External3rdPartyZone,
-            "External1stPartyZone": groups.External1stPartyZone,
-            "LogicalGroupZone": groups.LogicalGroupZone,
-            "RegionZone": groups.RegionZone,
-            "KubernetesClusterZone": groups.KubernetesClusterZone,
-            "VPCNetworkZone": groups.VPCNetworkZone,
-            "AvailabilityZone": groups.AvailabilityZone,
-            "SubNetworkZone": groups.SubNetworkZone,
-            "FirewallZone": groups.FirewallZone,
-            "InstanceGroupZone": groups.InstanceGroupZone,
-            "ReplicaPoolZone": groups.ReplicaPoolZone,
-            "PodZone": groups.PodZone,
-            "OptionalComponentZone": groups.OptionalComponentZone,
-            "GCPGroup": groups.GCPGroup,
-        }
-
-    def test_all_zones_use_rounded_filled_style(self, zone_classes):
-        """Verify all zones use style='rounded,filled' (or 'dashed,rounded,filled' for optional)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        # Test the helper function directly
-        standard_attrs = _gcp_2024_attrs("#F6F6F6")
+        # Solid filled zone (e.g. region)
+        standard_attrs = _gcp_zone_attrs("#FFFFFF", "#202124")
         assert "rounded" in standard_attrs["style"]
         assert "filled" in standard_attrs["style"]
+        assert "dashed" not in standard_attrs["style"]
 
-        # Test optional component has dashed
-        optional_attrs = _gcp_2024_attrs("#FFFFFF", dashed=True)
-        assert "dashed" in optional_attrs["style"]
-        assert "rounded" in optional_attrs["style"]
-        assert "filled" in optional_attrs["style"]
+        # Blue/green groups have dashed borders
+        for attrs in (_gcp_blue_group_attrs(), _gcp_green_group_attrs()):
+            assert "dashed" in attrs["style"]
+            assert "rounded" in attrs["style"]
+            assert "filled" in attrs["style"]
 
-    def test_all_zones_have_no_border(self, zone_classes):
-        """Verify all zones have no border (penwidth='0')."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_borderless_zones_have_zero_penwidth(self):
+        """Zones without a border color get penwidth='0'."""
+        from resource_classes.gcp.groups import _gcp_zone_attrs
 
-        attrs = _gcp_2024_attrs("#F6F6F6")
+        attrs = _gcp_zone_attrs("#FFFFFF")
         assert attrs["penwidth"] == "0"
 
-    def test_all_zones_have_label_at_top_left(self, zone_classes):
-        """Verify all zones have labels at top-left (labeljust='l', labelloc='t')."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_bordered_zones_have_thick_penwidth(self):
+        """Bordered zones default to penwidth='3'."""
+        from resource_classes.gcp.groups import _gcp_zone_attrs
 
-        attrs = _gcp_2024_attrs("#F6F6F6")
+        attrs = _gcp_zone_attrs("#FFFFFF", "#202124")
+        assert attrs["penwidth"] == "3"
+
+    def test_all_zones_have_label_at_top_left(self):
+        """Verify all zones have labels at top-left (labeljust='l', labelloc='t')."""
+        from resource_classes.gcp.groups import _gcp_zone_attrs
+
+        attrs = _gcp_zone_attrs("#FFFFFF")
         assert attrs["labeljust"] == "l"
         assert attrs["labelloc"] == "t"
 
-    def test_standard_zones_have_no_border(self, zone_classes):
-        """Verify standard zones have no visible border (pencolor='none')."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_blue_group_attrs(self):
+        """Blue groups: light blue fill with dashed dark blue border."""
+        from resource_classes.gcp.groups import _gcp_blue_group_attrs
 
-        attrs = _gcp_2024_attrs("#F6F6F6")
-        # No border: pencolor set to 'none'
-        assert attrs["pencolor"] == "none"
-
-    def test_optional_zone_has_dashed_blue_border(self, zone_classes):
-        """Verify OptionalComponentZone has dashed blue border (#4284F3)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#FFFFFF", dashed=True)
-        assert attrs["pencolor"] == "#4284F3"
+        attrs = _gcp_blue_group_attrs()
+        assert attrs["fillcolor"] == "#E4EEFD"
+        assert attrs["pencolor"] == "#174EA6"
         assert "dashed" in attrs["style"]
+
+    def test_green_group_attrs(self):
+        """Green groups: light green fill with dashed dark green border."""
+        from resource_classes.gcp.groups import _gcp_green_group_attrs
+
+        attrs = _gcp_green_group_attrs()
+        assert attrs["fillcolor"] == "#E8F4EB"
+        assert attrs["pencolor"] == "#0D652D"
+        assert "dashed" in attrs["style"]
+
+    def test_vpc_zone_is_transparent_squared(self):
+        """VPC networks: transparent fill, black squared border."""
+        from resource_classes.gcp.groups import _gcp_zone_attrs
+
+        attrs = _gcp_zone_attrs("none", "#000000", rounded=False, penwidth="4")
+        assert attrs["fillcolor"] == "none"
+        assert attrs["pencolor"] == "#000000"
+        assert "rounded" not in attrs["style"]
+        assert "filled" not in attrs["style"]
+        assert attrs["penwidth"] == "4"
 
 
 class TestGCPZoneHexColors:
-    """Test that all zone classes have correct hex colors from 2024 guidelines."""
+    """Test that key zone classes have correct fill colors."""
 
-    def test_project_zone_color(self):
-        """ProjectZone should be #F6F6F6 (light grey)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    @staticmethod
+    def _zone_fillcolor(zone_cls):
+        """Instantiate a zone inside a throwaway diagram and read its fillcolor."""
+        from resource_classes import Canvas, setdiagram
 
-        # ProjectZone uses this color
-        attrs = _gcp_2024_attrs("#F6F6F6")
-        assert attrs["fillcolor"] == "#F6F6F6"
+        diagram = Canvas("test", "test_output", outformat="png", show=False)
+        setdiagram(diagram)
+        try:
+            zone = zone_cls()
+            return zone.dot.graph_attr["fillcolor"]
+        finally:
+            setdiagram(None)
 
-    def test_region_zone_color(self):
-        """RegionZone should be #ECEFF1 (blue-grey)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    @pytest.mark.parametrize("zone_name,expected_color", GCP_ZONE_COLORS.items())
+    def test_zone_fill_colors(self, zone_name, expected_color):
+        """Each zone class must use its reference architecture fill color."""
+        from resource_classes.gcp import groups
 
-        attrs = _gcp_2024_attrs("#ECEFF1")
-        assert attrs["fillcolor"] == "#ECEFF1"
+        zone_cls = getattr(groups, zone_name)
+        assert self._zone_fillcolor(zone_cls) == expected_color
 
-    def test_availability_zone_color(self):
-        """AvailabilityZone should be #FFF3E0 (light orange)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_cloud_boundary_is_google_blue(self):
+        """GCPGroup must be solid Google blue with white label text."""
+        from resource_classes import Canvas, setdiagram
+        from resource_classes.gcp.groups import GCPGroup
 
-        attrs = _gcp_2024_attrs("#FFF3E0")
-        assert attrs["fillcolor"] == "#FFF3E0"
+        diagram = Canvas("test", "test_output", outformat="png", show=False)
+        setdiagram(diagram)
+        try:
+            group = GCPGroup()
+            assert group.dot.graph_attr["fillcolor"] == "#1A73E8"
+            assert group.dot.graph_attr["fontcolor"] == "#FFFFFF"
+            # White monochrome logo at top-left
+            assert "gcp_white.png" in group.dot.graph_attr["label"]
+            assert group.dot.graph_attr["labelloc"] == "t"
+            assert group.dot.graph_attr["labeljust"] == "l"
+        finally:
+            setdiagram(None)
 
-    def test_subnet_zone_color(self):
-        """SubNetworkZone should be #EDE7F6 (light violet)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_region_zone_has_solid_dark_border(self):
+        """RegionZone must be white with a solid dark border."""
+        from resource_classes import Canvas, setdiagram
+        from resource_classes.gcp.groups import RegionZone
 
-        attrs = _gcp_2024_attrs("#EDE7F6")
-        assert attrs["fillcolor"] == "#EDE7F6"
+        diagram = Canvas("test", "test_output", outformat="png", show=False)
+        setdiagram(diagram)
+        try:
+            zone = RegionZone()
+            assert zone.dot.graph_attr["fillcolor"] == "#FFFFFF"
+            assert zone.dot.graph_attr["pencolor"] == "#202124"
+            assert "dashed" not in zone.dot.graph_attr["style"]
+        finally:
+            setdiagram(None)
 
-    def test_vpc_network_zone_color(self):
-        """VPCNetworkZone should be #E3F2FD (blue tint, same as LogicalGrouping)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
+    def test_white_logo_asset_exists(self):
+        """The white monochrome GCP logo must exist on disk."""
+        from resource_classes.gcp.groups import base_path
 
-        attrs = _gcp_2024_attrs("#E3F2FD")
-        assert attrs["fillcolor"] == "#E3F2FD"
-
-    def test_firewall_zone_color(self):
-        """FirewallZone should be #FBE9E7 (peach)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#FBE9E7")
-        assert attrs["fillcolor"] == "#FBE9E7"
-
-    def test_kubernetes_cluster_zone_color(self):
-        """KubernetesClusterZone should be #FCE4EC (pink)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#FCE4EC")
-        assert attrs["fillcolor"] == "#FCE4EC"
-
-    def test_instance_group_zone_color(self):
-        """InstanceGroupZone should be #F9FBE7 (lime tint)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#F9FBE7")
-        assert attrs["fillcolor"] == "#F9FBE7"
-
-    def test_pod_zone_color(self):
-        """PodZone should be #E8F5E9 (mint)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#E8F5E9")
-        assert attrs["fillcolor"] == "#E8F5E9"
-
-    def test_replica_pool_zone_color(self):
-        """ReplicaPoolZone should be #E0F7FA (cyan tint)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#E0F7FA")
-        assert attrs["fillcolor"] == "#E0F7FA"
-
-    def test_account_zone_color(self):
-        """AccountZone should be #E8EAF6 (indigo tint)."""
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        attrs = _gcp_2024_attrs("#E8EAF6")
-        assert attrs["fillcolor"] == "#E8EAF6"
-
-    def test_all_20_zone_colors(self):
-        """Verify all 20 zone types have correct colors from the 2024 guidelines table."""
-        expected_colors = {
-            "User": "#FFFFFF",
-            "System": "#F1F8E9",
-            "ProjectZone": "#F6F6F6",
-            "InfraSystem": "#F3E5F5",
-            "ExternalSaaS": "#FFEBEE",
-            "ExternalData": "#FFF8E1",
-            "OnPremises": "#EFEBE9",
-            "External3rdParty": "#E0F2F1",
-            "External1stParty": "#E1F5FE",
-            "LogicalGroup": "#E3F2FD",
-            "Region": "#ECEFF1",
-            "Zone": "#FFF3E0",
-            "SubNetwork": "#EDE7F6",
-            "Firewall": "#FBE9E7",
-            "KubernetesCluster": "#FCE4EC",
-            "InstanceGroup": "#F9FBE7",
-            "Pod": "#E8F5E9",
-            "ReplicaPool": "#E0F7FA",
-            "Account": "#E8EAF6",
-            "OptionalComponent": "#FFFFFF",  # White with blue dashed border
-        }
-
-        from resource_classes.gcp.groups import _gcp_2024_attrs
-
-        for zone_name, expected_color in expected_colors.items():
-            attrs = _gcp_2024_attrs(expected_color)
-            assert (
-                attrs["fillcolor"] == expected_color
-            ), f"{zone_name} should be {expected_color}"
+        logo = os.path.join(base_path, "resource_images", "gcp", "gcp_white.png")
+        assert os.path.exists(logo)
 
 
 class TestGCPZoneLabelFormat:
     """Test that zone labels are plain text (no HTML tables, no icons)."""
 
     def test_zone_labels_are_plain_text(self):
-        """Verify zone labels don't contain HTML image tags or table markup."""
+        """Verify zone style attrs don't contain image-related attributes."""
         from resource_classes.gcp import groups
 
-        # The new zones use plain text labels (just the label string)
-        # They don't use HTML tables with <img> tags like the old AWS/Azure zones
-
-        # Check that the _gcp_2024_attrs helper doesn't include image-related attributes
-        attrs = groups._gcp_2024_attrs("#F6F6F6")
+        # Check that the _gcp_zone_attrs helper doesn't include image-related
+        # attributes (the cloud boundary logo is an HTML label, not an attr)
+        attrs = groups._gcp_zone_attrs("#FFFFFF")
 
         # Should not have any image-related keys
         assert "image" not in attrs
