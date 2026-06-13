@@ -1780,6 +1780,52 @@ def _get_os_family() -> str:
     return "unknown"
 
 
+# install commands are looked up by OS family, falling back to "default".
+# Lines starting with "#" are printed verbatim as guidance/doc links.
+DEPENDENCIES: Dict[str, Dict[str, Any]] = {
+    "graphviz": {
+        "name": "Graphviz",
+        "executables": ["dot", "gvpr"],
+        "install": {
+            "macos": ["brew install graphviz"],
+            "debian": ["sudo apt update", "sudo apt install graphviz"],
+            "wsl": ["sudo apt update", "sudo apt install graphviz"],
+            "windows": ["# Graphviz: https://graphviz.org/download/"],
+            "default": [
+                "# Install Graphviz using your package manager:",
+                "#   sudo apt install graphviz   (Debian/Ubuntu)",
+                "#   sudo dnf install graphviz    (Fedora/RHEL)",
+                "# Or download from: https://graphviz.org/download/",
+            ],
+        },
+    },
+    "git": {
+        "name": "Git",
+        "executables": ["git"],
+        "install": {
+            "macos": ["brew install git"],
+            "debian": ["sudo apt update", "sudo apt install git"],
+            "wsl": ["sudo apt update", "sudo apt install git"],
+            "windows": ["# Git: https://git-scm.com/download/win"],
+            "default": ["# Install Git: https://git-scm.com/download"],
+        },
+    },
+    "terraform": {
+        "name": "Terraform",
+        "executables": ["terraform"],
+        "install": {
+            "macos": [
+                "brew tap hashicorp/tap",
+                "brew install hashicorp/terraform",
+            ],
+            "default": [
+                "# Install Terraform: https://developer.hashicorp.com/terraform/install"
+            ],
+        },
+    },
+}
+
+
 def check_dependencies() -> None:
     """Check if required command-line tools are available.
 
@@ -1788,100 +1834,43 @@ def check_dependencies() -> None:
     """
     import sys
 
-    dependency_info = {
-        "dot": ("Graphviz", "graphviz"),
-        "gvpr": ("Graphviz", "graphviz"),
-        "git": ("Git", "git"),
-        "terraform": ("Terraform", "terraform"),
-    }
-
     bundle_dir = Path(__file__).parent
     sys.path.append(str(bundle_dir))
 
-    missing = []
-    for exe, (name, pkg) in dependency_info.items():
-        location = shutil.which(exe) or os.path.isfile(exe)
-        if location:
-            click.echo(f"  {exe} command detected: {location}")
-        else:
-            missing.append((exe, name, pkg))
+    missing: List[Tuple[Dict[str, Any], List[str]]] = []
+    for info in DEPENDENCIES.values():
+        not_found = []
+        for exe in info["executables"]:
+            location = shutil.which(exe) or os.path.isfile(exe)
+            if location:
+                click.echo(f"  {exe} command detected: {location}")
+            else:
+                not_found.append(exe)
+        if not_found:
+            missing.append((info, not_found))
 
     if not missing:
         return
 
-    packages_to_install: Dict[str, Dict[str, Any]] = {}
-    for exe, name, pkg in missing:
-        if pkg not in packages_to_install:
-            packages_to_install[pkg] = {"name": name, "exes": []}
-        packages_to_install[pkg]["exes"].append(exe)
-
-    click.echo("\n")
-    for pkg, info in packages_to_install.items():
-        exes_str = ", ".join(f"'{e}'" for e in info["exes"])
-        click.echo(
-            click.style(
-                f"  ERROR: {exes_str} not found in PATH.",
-                fg="red",
-                bold=True,
-            )
-        )
-        click.echo(
-            click.style(
-                f"         {info['name']} is required but not installed.",
-                fg="red",
-            )
-        )
-
     os_family = _get_os_family()
 
-    click.echo("\n  Install the missing dependencies:\n")
+    click.echo("\n")
+    for info, not_found in missing:
+        exes_str = ", ".join(f"'{e}'" for e in not_found)
+        click.echo(
+            click.style(f"  ERROR: {exes_str} not found in PATH.", fg="red", bold=True)
+        )
+        click.echo(
+            click.style(
+                f"         {info['name']} is required but not installed.", fg="red"
+            )
+        )
 
-    if os_family == "macos":
-        for pkg in packages_to_install:
-            if pkg == "graphviz":
-                click.echo("    brew install graphviz")
-            elif pkg == "git":
-                click.echo("    brew install git")
-            elif pkg == "terraform":
-                click.echo("    brew tap hashicorp/tap")
-                click.echo("    brew install hashicorp/terraform")
-    elif os_family in ("debian", "wsl"):
-        apt_packages = []
-        for pkg in packages_to_install:
-            if pkg == "graphviz":
-                apt_packages.append("graphviz")
-                apt_packages.append("libgvplugin-neato-layout8")
-            elif pkg == "git":
-                apt_packages.append("git")
-            elif pkg == "terraform":
-                click.echo("    # Terraform install steps:")
-                click.echo("    # https://developer.hashicorp.com/terraform/install")
-        if apt_packages:
-            click.echo("    sudo apt update")
-            click.echo(f"    sudo apt install {' '.join(apt_packages)}")
-    elif os_family == "windows":
-        click.echo("    # Download and install from the official websites:")
-        for pkg in packages_to_install:
-            if pkg == "graphviz":
-                click.echo("    # Graphviz: https://graphviz.org/download/")
-            elif pkg == "git":
-                click.echo("    # Git: https://git-scm.com/download/win")
-            elif pkg == "terraform":
-                click.echo(
-                    "    # Terraform: https://developer.hashicorp.com/terraform/install"
-                )
-    else:
-        for pkg in packages_to_install:
-            if pkg == "graphviz":
-                click.echo("    # Install Graphviz using your package manager")
-                click.echo("    # e.g. sudo apt install graphviz  (Debian/Ubuntu)")
-                click.echo("    #      sudo yum install graphviz   (RHEL/CentOS)")
-            elif pkg == "git":
-                click.echo("    # Install Git using your package manager")
-            elif pkg == "terraform":
-                click.echo(
-                    "    # Install Terraform: https://developer.hashicorp.com/terraform/install"
-                )
+    click.echo("\n  Install the missing dependencies:\n")
+    for info, _ in missing:
+        commands = info["install"].get(os_family, info["install"]["default"])
+        for line in commands:
+            click.echo(f"    {line}")
 
     click.echo("\n  For detailed installation instructions:")
     click.echo("    https://patrickchugh.github.io/terravision/installation/")
