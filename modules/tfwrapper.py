@@ -352,7 +352,7 @@ def tf_initplan(
             vf if os.path.isabs(vf) else os.path.join(START_DIR, vf) for vf in varfile
         ]
         # Setup temporary file paths
-        tempdir = os.path.dirname(temp_dir.name)
+        tempdir = temp_dir.name
         tfplan_path = os.path.join(tempdir, "tfplan.bin")
         tfplan_json_path = os.path.join(tempdir, "tfplan.json")
         tfgraph_path = os.path.join(tempdir, "tfgraph.dot")
