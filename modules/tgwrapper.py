@@ -8,7 +8,6 @@ import json
 import os
 import re
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -679,9 +678,11 @@ def tg_initplan(
     check_terragrunt_version()
     codepath, override_files = _prepare_tg_source(source)
 
-    tfplan_path = os.path.join(tempfile.gettempdir(), "tg_tfplan.bin")
-    tfplan_json_path = os.path.join(tempfile.gettempdir(), "tg_tfplan.json")
-    tfgraph_path = os.path.join(tempfile.gettempdir(), "tg_tfgraph.dot")
+    # Write plan artifacts into the per-process temp dir (not the shared
+    # /tmp root) so concurrent terravision runs don't clobber each other.
+    tfplan_path = os.path.join(tfwrapper.temp_dir.name, "tg_tfplan.bin")
+    tfplan_json_path = os.path.join(tfwrapper.temp_dir.name, "tg_tfplan.json")
+    tfgraph_path = os.path.join(tfwrapper.temp_dir.name, "tg_tfgraph.dot")
 
     try:
         cache_dir = _run_terragrunt_init(codepath, debug)
