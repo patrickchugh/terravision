@@ -265,6 +265,11 @@ def replace_local_values(
     """
     # Loop through each local variable reference
     for localitem in found_list:
+        # A previous replacement may have resolved to a dict/list (e.g. a
+        # map-type variable); stringify so remaining references can still be
+        # substituted (GitHub issue #206)
+        if not isinstance(value, str):
+            value = str(value)
         lookup = helpers.cleanup(localitem.split("local.")[1])
         if tfdata["all_locals"]:
             # Check if local exists in current module
@@ -421,6 +426,11 @@ def replace_var_values(
     """
     # Loop through each variable reference
     for varitem in found_list:
+        # A previous replacement may have resolved to a dict/list (e.g. a
+        # map-type variable); stringify so remaining references can still be
+        # substituted (GitHub issue #206)
+        if not isinstance(value, str):
+            value = str(value)
         varitem_lower = varitem.lower()
         # Extract variable name from reference
         lookup = (
@@ -475,11 +485,11 @@ def replace_var_values(
                 )
         # Variable exists but still contains unresolved references
         elif lookup in tfdata["variable_map"][module].keys():
-            if "var." in tfdata["variable_map"][module].get(lookup):
+            if "var." in str(tfdata["variable_map"][module].get(lookup)):
                 value = helpers.find_replace(varitem, '"UNKNOWN"', value)
             else:
                 value = value.replace(
-                    varitem, str(tfdata["variable_map"][module].get(lookup), 1)
+                    varitem, str(tfdata["variable_map"][module].get(lookup)), 1
                 )
             break
         # Search parent modules for variable
@@ -497,7 +507,12 @@ def replace_var_values(
         # Variable not found anywhere
         else:
             if lookup.lower() in tfdata["variable_list"]:
-                value = tfdata["variable_list"][lookup.lower()]
+                replacement = tfdata["variable_list"][lookup.lower()]
+                if value.strip() == varitem:
+                    # Whole value is this reference; keep the raw object
+                    value = replacement
+                else:
+                    value = value.replace(varitem, str(replacement), 1)
             if not value:
                 click.echo(
                     click.style(

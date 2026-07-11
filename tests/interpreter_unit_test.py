@@ -9,10 +9,51 @@ from modules.interpreter import (
     find_replace_values,
     replace_data_values,
     replace_local_values,
+    replace_var_values,
     handle_implied_resources,
     handle_numbered_nodes,
     handle_module_vars,
 )
+
+
+class TestReplaceVarValuesNonString(unittest.TestCase):
+    """Regression: issue #206 - a map-type variable resolved mid-loop turns
+    value into a dict, and the next iteration crashed on value.count()."""
+
+    def _tfdata(self):
+        return {
+            "variable_map": {"main": {"region": "uksouth"}},
+            "variable_list": {"vpc_config": {"cidr": "10.0.0.0/16"}},
+        }
+
+    def test_dict_variable_followed_by_second_var_does_not_crash(self):
+        # First ref resolves wholesale to a dict, second ref used to raise
+        # AttributeError: 'dict' object has no attribute 'count'
+        result = replace_var_values(
+            ["var.vpc_config", "var.region"],
+            [],
+            "var.vpc_config var.region",
+            "main",
+            self._tfdata(),
+        )
+        self.assertIsInstance(result, str)
+        self.assertIn("uksouth", result)
+
+    def test_single_dict_variable_returns_raw_value(self):
+        # A lone reference resolving to a dict keeps returning the raw
+        # object (matches replace_data_values returning raw lists)
+        result = replace_var_values(
+            ["var.vpc_config"], [], "var.vpc_config", "main", self._tfdata()
+        )
+        self.assertEqual(result, {"cidr": "10.0.0.0/16"})
+
+    def test_find_replace_values_with_dict_and_local(self):
+        # Same crash path via find_replace_values with a trailing local ref
+        tfdata = self._tfdata()
+        tfdata["all_locals"] = {"main": {"env": "prod"}}
+        result = find_replace_values("var.vpc_config local.env", "main", tfdata)
+        self.assertIsInstance(result, str)
+        self.assertIn("prod", result)
 
 
 class TestHandleModuleVars(unittest.TestCase):
