@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Optional
 import json
 import sys
+import traceback
 import click
 
 import modules.annotations as annotations
@@ -112,6 +113,8 @@ def _safe_compile_tfdata(
             aibackend=aibackend,
         )
     except helpers.TerravisionError as e:
+        if debug:
+            traceback.print_exc()
         click.echo(click.style(f"\nERROR: {e}", fg="red", bold=True), err=True)
         if debug and e.tfdata is not None:
             try:
@@ -290,7 +293,21 @@ def compile_tfdata(
 
     if "all_resource" in tfdata:
         _print_graph_debug(tfdata["graphdict"], "Terraform JSON graph dictionary")
-        tfdata = _enrich_graph_data(tfdata, debug, already_processed)
+        try:
+            tfdata = _enrich_graph_data(tfdata, debug, already_processed)
+        except helpers.TerravisionError:
+            raise
+        except Exception as e:
+            # Crash-reporting boundary: convert unexpected bugs into a
+            # TerravisionError carrying the state at the failure point, so
+            # --debug runs get a traceback plus a replayable tfdata.json
+            raise helpers.TerravisionError(
+                f"Unexpected error while enriching the resource graph: {e}\n"
+                "This is likely a TerraVision bug. Please re-run with --debug "
+                "and open a GitHub issue attaching the traceback and the "
+                "tfdata.json replay file.",
+                tfdata=tfdata,
+            ) from e
         tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
         _print_graph_debug(tfdata["graphdict"], "Enriched graphviz dictionary")
 
