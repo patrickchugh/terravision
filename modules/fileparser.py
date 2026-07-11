@@ -492,6 +492,39 @@ def iterative_parse(
     return tfdata
 
 
+def load_varfile_values(varfile_list: List[str]) -> Dict[str, Any]:
+    """Parse .tfvars files into a merged {variable: value} dict.
+
+    Files are applied in list order so later files override earlier ones,
+    matching how interpreter.get_variable_values applies overrides.
+    Unreadable or unparseable files are skipped with a warning so partial
+    capture still succeeds (e.g. replaying a tfdata.json from another
+    machine where the recorded paths do not exist).
+
+    Args:
+        varfile_list: Paths to .tfvars files
+
+    Returns:
+        Dictionary of lowercased variable names to their values
+    """
+    varfile_values: Dict[str, Any] = dict()
+    for varfile in varfile_list:
+        try:
+            with click.open_file(varfile, encoding="utf8", mode="r") as f:
+                variable_values = hcl2.load(f)
+        except Exception as exc:
+            click.echo(
+                click.style(
+                    f"  WARNING: Could not read variable file {varfile}: {exc}",
+                    fg="yellow",
+                )
+            )
+            continue
+        for uservar in variable_values:
+            varfile_values[uservar.lower()] = variable_values[uservar]
+    return varfile_values
+
+
 def read_tfsource(
     source_list: Tuple[str, ...],
     varfile_list: Tuple[str, ...],
@@ -499,6 +532,9 @@ def read_tfsource(
     tfdata: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Parse all Terraform files from source locations.
+
+    Also captures .tfvars values into tfdata["varfile_values"] so debug
+    dumps carry them for offline replay.
 
     Main entry point for parsing Terraform source files. Discovers and parses
     .tf files, loads variable files, and processes annotation files.
@@ -580,6 +616,9 @@ def read_tfsource(
         varfile_list = list(tfdata["all_variable"].keys())
 
     tfdata["varfile_list"] = varfile_list
+    # Capture varfile values now so --debug tfdata.json dumps embed them and
+    # JSON replays can re-apply overrides without the original .tfvars files
+    tfdata["varfile_values"] = load_varfile_values(varfile_list)
     tfdata["tempdir"] = temp_dir
     tfdata["annotations"] = annotations
     tfdata["ai_annotations"] = ai_annotations

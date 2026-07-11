@@ -8,9 +8,42 @@ sys.path.append(parent_dir)
 
 from modules.fileparser import (
     handle_module,
+    load_varfile_values,
     _load_terraform_modules_json,
     _extract_comments_from_tf,
 )
+
+
+class TestLoadVarfileValues(unittest.TestCase):
+    """Varfile values are captured at parse time so --debug tfdata.json
+    dumps can be replayed without the original .tfvars files."""
+
+    def test_parses_and_merges_in_list_order(self):
+        with tempfile.TemporaryDirectory() as td:
+            first = os.path.join(td, "terraform.tfvars")
+            second = os.path.join(td, "override.auto.tfvars")
+            with open(first, "w") as f:
+                f.write('region = "us-east-1"\n')
+                f.write('vpc_config = { cidr = "10.0.0.0/16" }\n')
+            with open(second, "w") as f:
+                f.write('region = "uksouth"\n')
+            values = load_varfile_values([first, second])
+        self.assertEqual(values["region"], "uksouth")
+        self.assertEqual(values["vpc_config"], {"cidr": "10.0.0.0/16"})
+
+    def test_variable_names_are_lowercased(self):
+        with tempfile.TemporaryDirectory() as td:
+            varfile = os.path.join(td, "terraform.tfvars")
+            with open(varfile, "w") as f:
+                f.write('Region = "uksouth"\n')
+            values = load_varfile_values([varfile])
+        self.assertEqual(values, {"region": "uksouth"})
+
+    @patch("modules.fileparser.click.echo")
+    def test_missing_file_is_skipped_with_warning(self, mock_echo):
+        values = load_varfile_values([r"C:\Users\other\terraform.tfvars"])
+        self.assertEqual(values, {})
+        self.assertTrue(mock_echo.called)
 
 
 class TestExtractCommentsFromTf(unittest.TestCase):

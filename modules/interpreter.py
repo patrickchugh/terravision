@@ -5,13 +5,13 @@ Processes resource metadata and manages variable substitution across modules.
 """
 
 from typing import Dict, List, Any, Tuple
+import modules.fileparser as fileparser
 import modules.helpers as helpers
 from modules.plan_resolver import (
     resolve_module_ref_from_plan,
     is_hcl_function_suffix,
 )
 import json
-import hcl2
 import click
 import re
 from pathlib import Path
@@ -891,17 +891,22 @@ def get_variable_values(
                         if not var_mappings.get(mod):
                             var_mappings[mod] = {}
                         var_mappings[mod][variable] = params[variable]
-    # Override defaults with user-supplied varfile values
-    if tfdata.get("all_variable") and not already_processed:
-        for varfile in tfdata["varfile_list"]:
-            with click.open_file(varfile, encoding="utf8", mode="r") as f:
-                variable_values = hcl2.load(f)
-            # Apply user-supplied values
-            for uservar in variable_values:
-                var_data[uservar.lower()] = variable_values[uservar]
-                if not var_mappings.get("main"):
-                    var_mappings["main"] = {}
-                var_mappings["main"][uservar.lower()] = variable_values[uservar]
+    # Override defaults with user-supplied varfile values. Values captured
+    # at parse time (varfile_values) take priority so replaying a --debug
+    # tfdata.json works without the original .tfvars files on disk.
+    if tfdata.get("all_variable"):
+        varfile_values = tfdata.get("varfile_values")
+        if varfile_values is None and not already_processed:
+            # Older debug dumps / direct callers: read varfiles from disk
+            varfile_values = fileparser.load_varfile_values(
+                tfdata.get("varfile_list", [])
+            )
+        # Apply user-supplied values
+        for uservar, uservalue in (varfile_values or {}).items():
+            var_data[uservar.lower()] = uservalue
+            if not var_mappings.get("main"):
+                var_mappings["main"] = {}
+            var_mappings["main"][uservar.lower()] = uservalue
     # Store results in tfdata
     tfdata["variable_list"] = var_data
     tfdata["variable_map"] = var_mappings

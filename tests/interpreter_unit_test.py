@@ -7,6 +7,7 @@ sys.path.append(parent_dir)
 from modules.interpreter import (
     extract_locals,
     find_replace_values,
+    get_variable_values,
     replace_data_values,
     replace_local_values,
     replace_var_values,
@@ -14,6 +15,45 @@ from modules.interpreter import (
     handle_numbered_nodes,
     handle_module_vars,
 )
+
+
+class TestVarfileValuesReplay(unittest.TestCase):
+    """Varfile overrides captured in varfile_values must be re-applied when
+    replaying a --debug tfdata.json without the original .tfvars files."""
+
+    def _tfdata(self):
+        return {
+            "all_variable": {
+                "variables.tf": [
+                    {"region": {"default": "us-east-1"}},
+                    {"vpc_config": {}},
+                ]
+            },
+            # Paths from another machine; must never be opened on replay
+            "varfile_list": [r"C:\Users\other\terraform.tfvars"],
+            "varfile_values": {
+                "region": "uksouth",
+                "vpc_config": {"cidr": "10.0.0.0/16"},
+            },
+        }
+
+    def test_overrides_applied_on_replay(self):
+        result = get_variable_values(self._tfdata(), already_processed=True)
+        self.assertEqual(result["variable_list"]["region"], "uksouth")
+        self.assertEqual(
+            result["variable_map"]["main"]["vpc_config"],
+            {"cidr": "10.0.0.0/16"},
+        )
+
+    def test_overrides_applied_on_normal_run_without_disk_access(self):
+        result = get_variable_values(self._tfdata(), already_processed=False)
+        self.assertEqual(result["variable_list"]["region"], "uksouth")
+
+    def test_old_dump_without_varfile_values_keeps_defaults(self):
+        tfdata = self._tfdata()
+        del tfdata["varfile_values"]
+        result = get_variable_values(tfdata, already_processed=True)
+        self.assertEqual(result["variable_list"]["region"], '"us-east-1"')
 
 
 class TestReplaceVarValuesNonString(unittest.TestCase):
