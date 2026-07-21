@@ -16,7 +16,7 @@ import re
 import webbrowser
 from html import escape as _html_escape
 from pathlib import Path
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict
 
 
 def render_html(
@@ -121,38 +121,6 @@ Ensure your source contains valid Terraform configuration with at least one reso
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)
     return output_path
-
-
-def _embed_icons_as_base64(
-    dot_string: str, icon_paths: Set[str]
-) -> Tuple[str, Dict[str, str]]:
-    """Replace absolute icon file paths in DOT with base64 data URIs.
-
-    Returns the modified DOT string and a dict of failed paths (empty on success).
-    """
-    failed = {}
-    for icon_path in icon_paths:
-        if not os.path.isfile(icon_path):
-            failed[icon_path] = "File not found"
-            continue
-        try:
-            with open(icon_path, "rb") as f:
-                icon_data = f.read()
-            # Determine MIME type from extension
-            ext = os.path.splitext(icon_path)[1].lower()
-            mime = {
-                ".png": "image/png",
-                ".svg": "image/svg+xml",
-                ".jpg": "image/jpeg",
-                ".jpeg": "image/jpeg",
-                ".gif": "image/gif",
-            }.get(ext, "image/png")
-            b64 = base64.b64encode(icon_data).decode("ascii")
-            data_uri = f"data:{mime};base64,{b64}"
-            dot_string = dot_string.replace(icon_path, data_uri)
-        except Exception as e:
-            failed[icon_path] = str(e)
-    return dot_string, failed
 
 
 def _serialize_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:

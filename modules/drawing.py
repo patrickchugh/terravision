@@ -5,6 +5,7 @@ It processes the graph data structure and creates visual representations using G
 including nodes, clusters, connections, and edge labels.
 """
 
+import base64
 import datetime
 import importlib
 import os
@@ -1231,6 +1232,46 @@ def generate_dot(
     return dot_string, icon_paths, node_id_map, cluster_id_map
 
 
+def _embed_icons_as_data_uris(text: str, icon_paths: Set[str]) -> str:
+    """Replace local icon file paths in text with base64 data URIs.
+
+    Paths that don't exist on disk are left untouched.
+    """
+    for icon_path in icon_paths:
+        if os.path.isfile(icon_path):
+            with open(icon_path, "rb") as f:
+                icon_data = f.read()
+            ext = os.path.splitext(icon_path)[1].lower()
+            mime = {
+                ".png": "image/png",
+                ".svg": "image/svg+xml",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".gif": "image/gif",
+            }.get(ext, "image/png")
+            b64 = base64.b64encode(icon_data).decode("ascii")
+            data_uri = f"data:{mime};base64,{b64}"
+            text = text.replace(icon_path, data_uri)
+    return text
+
+
+def make_svg_portable(svg_path: str) -> None:
+    """Rewrite local image references in a rendered SVG file to data URIs.
+
+    Graphviz emits <image xlink:href="/abs/path/icon.png"> entries pointing at
+    icon files inside the TerraVision installation, which break when the SVG
+    is opened on another machine or served from a docs site. Embedding the
+    icons as base64 data URIs makes the SVG self-contained.
+    """
+    with open(svg_path, "r", encoding="utf-8") as f:
+        svg_string = f.read()
+    referenced = set(re.findall(r'(?:xlink:href|href)="([^"]+)"', svg_string))
+    icon_paths = {p for p in referenced if not p.startswith("data:")}
+    svg_string = _embed_icons_as_data_uris(svg_string, icon_paths)
+    with open(svg_path, "w", encoding="utf-8") as f:
+        f.write(svg_string)
+
+
 def generate_svg(
     tfdata: Dict[str, Any],
     outfile: str,
@@ -1271,22 +1312,7 @@ def generate_svg(
     os.remove(svg_path)
 
     # Now replace icon file paths with base64 data URIs in the SVG output
-    import base64
-
-    for icon_path in icon_paths:
-        if os.path.isfile(icon_path):
-            with open(icon_path, "rb") as f:
-                icon_data = f.read()
-            ext = os.path.splitext(icon_path)[1].lower()
-            mime = {
-                ".png": "image/png",
-                ".svg": "image/svg+xml",
-                ".jpg": "image/jpeg",
-                ".jpeg": "image/jpeg",
-            }.get(ext, "image/png")
-            b64 = base64.b64encode(icon_data).decode("ascii")
-            data_uri = f"data:{mime};base64,{b64}"
-            svg_string = svg_string.replace(icon_path, data_uri)
+    svg_string = _embed_icons_as_data_uris(svg_string, icon_paths)
 
     return svg_string, icon_paths, node_id_map, cluster_id_map
 
@@ -1377,7 +1403,11 @@ def render_diagram(
         os.remove(path_to_postdot)
     else:
         # Generate final output file using graphviz
-        click.echo(f"  Output file: {myDiagram.render()}")
+        rendered_file = myDiagram.render()
+        if format == "svg":
+            # Embed icons as data URIs so the SVG is portable (issue #207)
+            make_svg_portable(rendered_file)
+        click.echo(f"  Output file: {rendered_file}")
         # Clean up temporary files
         os.remove(path_to_predot)
         os.remove(path_to_postdot)

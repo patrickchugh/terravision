@@ -14,7 +14,6 @@ from modules.html_renderer import (
     _clean_metadata_dict,
     _clean_string_value,
     _deep_normalize,
-    _embed_icons_as_base64,
     _get_instance_info,
     _normalize_value,
     _serialize_metadata,
@@ -164,27 +163,6 @@ class TestGetInstanceInfo(unittest.TestCase):
         info = _get_instance_info("aws_efs.this[1]~2", tfdata)
         self.assertEqual(info["instance_number"], 2)
         self.assertEqual(info["total_instances"], 3)
-
-
-class TestEmbedIconsAsBase64(unittest.TestCase):
-    def test_replaces_existing_icon_path(self):
-        # Use a real icon file from resource_images
-        from pathlib import Path
-
-        icon_path = Path(parent_dir) / "resource_images" / "generic" / "generic.png"
-        if not icon_path.exists():
-            self.skipTest("Generic icon not available")
-
-        dot = f'node1 [image="{icon_path}"]'
-        result_dot, failed = _embed_icons_as_base64(dot, {str(icon_path)})
-        self.assertEqual(failed, {})
-        self.assertIn("data:image/png;base64,", result_dot)
-        self.assertNotIn(str(icon_path), result_dot)
-
-    def test_handles_missing_file(self):
-        dot = 'node1 [image="/nonexistent/icon.png"]'
-        result_dot, failed = _embed_icons_as_base64(dot, {"/nonexistent/icon.png"})
-        self.assertIn("/nonexistent/icon.png", failed)
 
 
 class TestSerializeMetadata(unittest.TestCase):
