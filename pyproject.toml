@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "terravision"
-version = "0.43.2"
+version = "0.44.0"
 description = "Terraform Architecture Visualizer"
 readme = "README.md"
 authors = [{ name = "Patrick Chugh", email = "terravisionapp@gmail.com" }]
@@ -26,12 +26,17 @@ dependencies = [
     "boto3>=1.35.0",
 ]
 
+[project.optional-dependencies]
+# Model Context Protocol server (`terravision mcp`). Optional so the default
+# install stays unchanged for users who only need the CLI.
+mcp = ["mcp>=2.0"]
+
 [project.scripts]
 terravision = "terravision.terravision:main"
 
 [tool.poetry]
 name = "terravision"
-version = "0.43.2"
+version = "0.44.0"
 description = "Terraform Architecture Visualizer"
 authors = ["Patrick Chugh <terravisionapp@gmail.com>"]
 license = "AGPL-3.0-only"
@@ -75,6 +80,9 @@ terravision = "terravision.terravision:main"
 pytest = "^7.3.1"
 black = "24.3.0"
 isort = "^5.12.0"
+# Installed for tests so CI covers the MCP server. Runtime users get this
+# from the `mcp` extra instead; it is never a required dependency.
+mcp = ">=2.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "<4.0"
