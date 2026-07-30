@@ -190,6 +190,31 @@ terravision graphdata [OPTIONS]
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |
 
+### `terravision mcp`
+
+Runs TerraVision as a [Model Context Protocol](https://modelcontextprotocol.io) server so AI agents can generate diagrams from your Terraform themselves. Requires the optional extra: `pip install "terravision[mcp]"`.
+
+**Syntax:**
+```bash
+terravision mcp [OPTIONS]
+```
+
+**Common Options:**
+
+| Option | Description | Default | Example |
+|--------|-------------|---------|---------|
+| `--transport` | MCP transport to serve on | `stdio` | `--transport stdio` |
+| `--output-dir` | Directory for generated diagrams | Current directory | `--output-dir ./diagrams` |
+
+This is meant to be launched by an MCP client rather than run by hand — it speaks JSON-RPC on stdin/stdout. It exposes one tool per command: `generate_architecture_graph` (`graphdata`), `generate_diagram` (`draw`) and `generate_interactive_html` (`visualise`).
+
+```bash
+# Register with Claude Code
+claude mcp add terravision -- terravision mcp
+```
+
+See the [MCP Server Guide](mcp-server.md) for client configuration, the full tool reference, and the credential-free setup.
+
 ---
 
 ## Usage Examples

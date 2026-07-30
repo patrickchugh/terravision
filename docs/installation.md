@@ -114,6 +114,23 @@ terravision --version
 !!! tip "Upgrading"
     `pipx upgrade terravision` or `pip install --upgrade terravision` pulls the latest release from PyPI.
 
+#### Optional: MCP server support
+
+To let AI agents drive TerraVision via the [Model Context Protocol](mcp-server.md), install the `mcp` extra:
+
+```bash
+# pipx, new install
+pipx install "terravision[mcp]"
+
+# pipx, existing install (pip install won't work inside a pipx environment)
+pipx inject terravision mcp
+
+# pip
+pip install "terravision[mcp]"
+```
+
+Then `terravision mcp --help` should work. Without the extra, every other command is unaffected.
+
 ### Method 2: Docker (Zero Setup)
 
 If you don't want to install Python, Graphviz, and Terraform locally, you can run everything inside the official Docker image. This is also the recommended method for containerized CI/CD systems.

@@ -34,6 +34,7 @@ TerraVision automatically converts your Terraform code into professional-grade c
 - ✅ **Editable draw.io export** — open in draw.io, Lucidchart, or any mxGraph editor
 - ✅ **Optional AI annotations** — labels, titles, and flow sequences from Ollama (local) or AWS Bedrock
 - ✅ **Terragrunt compatible** — auto-detects single- and multi-module Terragrunt projects
+- ✅ **MCP server** — let AI agents generate diagrams from your Terraform, [see the guide](docs/mcp-server.md)
 
 ---
 
@@ -173,6 +174,7 @@ The complete documentation lives at **[patrickchugh.github.io/terravision](https
 - [Usage Guide](docs/usage-guide.md)
 - [Annotations Guide](docs/annotations.md)
 - [CI/CD Integration](docs/cicd-integration.md)
+- [MCP Server Guide](docs/mcp-server.md)
 - [FAQ](docs/faq.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

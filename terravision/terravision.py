@@ -842,6 +842,52 @@ def visualise(
     html_renderer.render_html(tfdata, show, final_outfile, source)
 
 
+@cli.command(cls=ColorCommand)
+@click.option(
+    "--transport",
+    default="stdio",
+    type=click.Choice(["stdio"], case_sensitive=False),
+    help="MCP transport to serve on (stdio launches as a local subprocess)",
+)
+@click.option(
+    "--output-dir",
+    default="",
+    type=click.Path(),
+    help="Directory for generated diagrams (default: current directory)",
+)
+def mcp(transport: str, output_dir: str) -> None:
+    """Run as an MCP server so AI agents can call TerraVision.
+
+    Exposes one tool per command (graphdata, draw, visualise) over the Model
+    Context Protocol. Intended to be launched by an MCP client, not run by
+    hand: it speaks JSON-RPC on stdin/stdout and produces no terminal output.
+
+    Requires the optional 'mcp' dependency:
+    pipx inject terravision mcp   (or: pip install "terravision[mcp]")
+    """
+    # No banner and no echo here: under the stdio transport this process's
+    # stdout is the JSON-RPC channel.
+    try:
+        from modules import mcp_server
+    except ImportError as e:
+        # pipx is the installation method the docs recommend, and `pip
+        # install` inside a pipx-managed environment does not work, so lead
+        # with the pipx form.
+        raise click.ClickException(
+            "The MCP server needs the optional 'mcp' dependency.\n"
+            "  If you installed with pipx:  pipx inject terravision mcp\n"
+            '  If you installed with pip:   pip install "terravision[mcp]"\n'
+            f"  ({e})"
+        )
+
+    from modules.mcp_service import McpServiceError
+
+    try:
+        mcp_server.serve(transport=transport, output_dir=output_dir or None)
+    except McpServiceError as e:
+        raise click.ClickException(str(e))
+
+
 def main():
     cli(
         default_map={

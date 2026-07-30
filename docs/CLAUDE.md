@@ -49,6 +49,9 @@ poetry run terravision draw --source <path> --ai-annotate restapi     # OpenAI-c
 # Export graph data
 poetry run terravision graphdata --source <path> --outfile graph.json
 
+# Run as an MCP server for AI agents (needs the optional [mcp] extra)
+poetry run terravision mcp --output-dir ./diagrams
+
 # Debug mode (exports tfdata.json)
 poetry run terravision draw --source <path> --debug
 ```
@@ -174,6 +177,16 @@ Phase 4: Output (draw command only)
 **annotations.py**: Processes custom YAML annotations (`terravision.yml`) to add/remove/update nodes and connections.
 
 **helpers.py**: Utility functions for node manipulation, JSON extraction, resource matching.
+
+**mcp_service.py / mcp_server.py**: MCP server exposing TerraVision to AI agents (`terravision mcp`). `mcp_server.py` registers one tool per command — `generate_architecture_graph`, `generate_diagram`, `generate_interactive_html` — as thin wrappers over `mcp_service.py`, which reuses `compile_tfdata()`, `drawing.render_diagram()` and `html_renderer.render_html()` so tool output stays identical to the equivalent command.
+
+`mcp_service.py` holds three guards the CLI never needs, because a server outlives one command:
+
+1. **stdout isolation** — pipeline `click.echo` output is redirected to stderr. Under stdio transport, stdout carries JSON-RPC. (SDK 2.x also diverts fd 1 to stderr; the redirect covers its best-effort fallback path and non-stdio transports.)
+2. **Exit containment** — `sys.exit()` in the pipeline (e.g. `tfwrapper.setup_tfdata` on an empty plan) would kill the server, so `SystemExit` and `TerravisionError` become `McpServiceError`.
+3. **Global state restoration** — `drawing.DIAGRAM_FONTSIZE`/`ICONSIZE`, `helpers.USE_TF_NAMES`/`USE_RESOURCE_NAMES`/`_RESOURCE_ORIGINAL_META` and the `resource_classes` diagram contextvar are saved and restored per call, or options leak between requests.
+
+All pipeline work is serialised under one lock: output paths resolve against `Path.cwd()`, so directing output requires `chdir`, which is process-global. `mcp` is an optional dependency (`[project.optional-dependencies]`), imported lazily. AI annotation is deliberately not exposed. Tests: `tests/test_mcp_service.py` (no `mcp` import needed) and `tests/test_mcp_server.py` (`importorskip`, includes CLI-parity assertions). See `docs/mcp-server.md`.
 
 **detect_multi_instance_resources.py**: Configuration-driven detection of resources requiring synthetic count. Detects resources deployed across multiple subnets/zones/networks without explicit Terraform count, sets synthetic count attribute for automatic numbering.
 
