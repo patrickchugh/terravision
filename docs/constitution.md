@@ -1,22 +1,22 @@
 <!--
 Sync Impact Report:
-- Version change: 1.5.0 → 1.6.0 (clarified credentials boundary in Principle II;
-  expanded Principle I to explicitly require plan over state)
+- Version change: 1.6.0 → 1.7.0 (added Principle VIII covering agent-accessible
+  interfaces, prompted by the MCP server contribution for issue #191)
 - Modified principles:
-  - I. Code as Source of Truth — added explicit guidance on why plan is preferred
-    over state file as the input source. State is a snapshot of yesterday's
-    deployment; plan is the semantic content of the code.
-  - II. Client-Side Security & Privacy — clarified that TerraVision itself
-    requires no cloud credentials. Cloud API access happens only when Terraform
-    is invoked by TerraVision to generate a plan. Pre-generated plan/graph file
-    mode (`--planfile` / `--graphfile`) is fully credential-free.
-- Added sections: None
+  - VIII. Agent-Accessible Interfaces — NEW. Machine interfaces that expose
+    TerraVision to AI agents must mirror existing commands rather than invent
+    capability, must stay optional, and must remain local and credential-free
+    on the same terms as Principle II.
+- Added sections:
+  - Principle VIII (Core Principles)
+  - Agent Interface Standards, AG-001 through AG-008 (Technical Standards)
+  - CR-006 (Code Review Requirements)
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
-  ✅ CLAUDE.md - No changes required
+  ✅ CLAUDE.md - Updated with the mcp_service/mcp_server module description
 - Follow-up TODOs: None
 -->
 
@@ -87,13 +87,40 @@ AI refinement MUST NOT modify the deterministic graph data (graphdict, tfdata) �
 
 **Rationale**: AI improves diagram quality by applying architectural best practices and detecting missing relationships, but must remain optional to support air-gapped environments. Multiple backend support allows organizations to choose between convenience (cloud) and privacy (local). Resource grouping/simplification was explicitly removed from the mandated capabilities in v1.7.0 because the risk of the AI hiding load-bearing resources outweighed the readability benefit; grouping may return as an opt-in capability in a future amendment once a safe heuristic is proven.
 
+### VIII. Agent-Accessible Interfaces
+
+TerraVision MAY expose machine-facing interfaces (such as an MCP server) so AI agents can generate diagrams directly. Such an interface MUST be a **projection of the existing CLI, not a second product**: every capability it offers MUST correspond to a command that already exists, and MUST produce output identical to that command for the same inputs.
+
+An agent interface MUST be an optional dependency. Installing TerraVision without it MUST leave every other command byte-for-byte unaffected, and invoking the interface without it MUST fail with an actionable installation message rather than a traceback.
+
+An agent interface MUST NOT weaken Principle II. It MUST run locally as a subprocess of the calling client, MUST NOT open a network listener, and MUST NOT require cloud credentials of its own. The pre-generated plan path (`--planfile` / `--graphfile`) MUST be reachable through the interface so agents have a fully credential-free option.
+
+Interfaces that consume LLM backends on TerraVision's behalf (`--ai-annotate`) MUST NOT be exposed to an agent. An agent is already a model; having TerraVision call out to a second one inverts the control flow and drags credential handling into a component whose defining property is not needing any.
+
+**Rationale**: The value TerraVision offers an agent is accuracy — a diagram derived from `terraform plan` rather than one inferred from reading code. That value evaporates if the agent surface drifts from the CLI, because the two would then disagree about what the infrastructure is. Constraining the interface to a projection of existing commands keeps a single source of truth, keeps the review burden proportionate, and means agent support cannot become a parallel implementation that rots. Keeping it optional and local preserves the security posture that makes TerraVision adoptable inside strict environments; an agent-facing feature must not be the reason a security team rejects the tool.
+
 ## Technical Standards
+
+### Agent Interface Standards
+
+Requirements for any interface that exposes TerraVision to automated agents.
+
+- **AG-001**: Every agent-exposed operation MUST map to an existing CLI command. New capability MUST be added as a command first, then projected.
+- **AG-002**: Agent-exposed operations MUST produce output identical to the equivalent command for the same inputs, and this MUST be enforced by a parity test. Non-deterministic content (e.g. generation timestamps) MAY be normalised before comparison.
+- **AG-003**: Agent interface dependencies MUST be declared as optional extras, never as core dependencies. They MUST be imported lazily so a default install never pays for them.
+- **AG-004**: Agent interfaces MUST NOT expose AI-annotation backends, as required by Principle VIII.
+- **AG-005**: Operations that generate files MUST return paths rather than file contents, matching CLI behaviour, and MUST confine writes to a configured output directory. Filenames supplied by an agent MUST be rejected if they contain path separators or parent references.
+- **AG-006**: Long-lived interfaces MUST NOT let pipeline behaviour leak between requests. Module-level rendering state and the process working directory MUST be restored after every operation, and `sys.exit()` raised inside the pipeline MUST be contained and reported rather than terminating the process.
+- **AG-007**: Where the transport reserves a stream for protocol traffic (e.g. stdout under MCP stdio), pipeline output MUST be diverted away from it, and this MUST be covered by a test asserting the stream stays clean.
+- **AG-008**: Where an agent interface depends on behaviour that `tfdata.json` replay fixtures do not reach — notably `tfwrapper`'s init/plan path and the working directory it leaves behind — that dependency MUST be covered by a test that reproduces the behaviour explicitly. Replay sources bypass `tfwrapper` entirely, so a replay-only suite cannot exercise it. Tests that invoke Terraform directly to obtain this coverage MUST be marked `@pytest.mark.slow` per TS-007, and SHOULD be preferred only where the behaviour cannot be reproduced without it.
+
+**Rationale**: AG-006 through AG-008 exist because a server outlives a single command, which invalidates assumptions the CLI is entitled to make — process-global state is set once and never reset, `exit()` is a legitimate way to end a run, and stdout is free for human-readable progress. AG-008 is recorded specifically because a replay-only test suite passed while a real Terraform source silently wrote its diagram to the wrong directory. It requires the behaviour to be covered rather than requiring Terraform to be run, because the marker that identifies a slow test does not exclude it from CI — only from the pre-commit hook — so mandating live Terraform runs would tax every future build for coverage obtainable more cheaply.
 
 ### Supported Technologies
 
 - **Language**: Python 3.10+
 - **Required Dependencies**: Terraform 1.x, Git, Graphviz
-- **Optional Dependencies**: Ollama (for local AI), AWS Bedrock (for cloud AI)
+- **Optional Dependencies**: Ollama (for local AI), AWS Bedrock (for cloud AI), `mcp` (for the MCP server, installed via the `[mcp]` extra)
 - **Input Formats**: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON
 - **Output Formats**: PNG (default), SVG, PDF, BMP, JSON
 
@@ -190,6 +217,7 @@ A validation system has been implemented to enforce safeguards around expected J
 - **CR-003**: AI backend changes require testing with both Bedrock and Ollama
 - **CR-004**: Security-related changes require explicit threat model consideration
 - **CR-005**: Provider-specific code changes MUST NOT modify common modules (enforces CO-001 through CO-005)
+- **CR-006**: Changes to an agent-facing interface require evidence of a parity check against the equivalent CLI command (enforces AG-002), and a note on the trust boundary where agent-supplied values reach the filesystem or a subprocess (extends CR-004)
 
 ### Release Criteria
 
@@ -223,7 +251,7 @@ This constitution supersedes all other development practices and documentation. 
 ### Versioning Policy
 
 - **MAJOR**: Backward-incompatible changes to CLI interface, annotation format, or core principles
-- **MINOR**: New cloud provider support, new output formats, new AI backends, new principles, new technical standards
+- **MINOR**: New cloud provider support, new output formats, new AI backends, new agent-facing interfaces, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.6.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2026-04-06
+**Version**: 1.7.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2026-07-29
