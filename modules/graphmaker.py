@@ -518,6 +518,196 @@ def _numbered_nodes_match(matched_resource: str, resource_associated_with: str) 
     return True
 
 
+def _instance_base(node: str) -> str:
+    """Strip for_each keys, count indexes and ~N suffixes from a node name."""
+    return re.sub(r"~\d+$", "", helpers.remove_brackets_and_numbers(node))
+
+
+def _foreach_key(node: str) -> Optional[str]:
+    """Return a node's innermost quoted for_each key, if it has one.
+
+    Handles the legacy doubled form (``this["a"][a]``) written by older
+    versions, since replay files in the wild still contain it.
+    """
+    keys = re.findall(r'\["([^"]*)"\]', node)
+    return keys[-1] if keys else None
+
+
+def _resolved_metadata(node: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Prefer plan-resolved metadata over the HCL-merged view.
+
+    merge_metadata() overwrites plan values with the original HCL expressions
+    (that is how references are discovered in the first place), so the concrete
+    ids and names only survive in original_metadata.
+    """
+    resolved = tfdata.get("original_metadata", {}).get(node)
+    if resolved:
+        return resolved
+    return tfdata.get("meta_data", {}).get(node) or {}
+
+
+def _is_concrete(value: Any) -> bool:
+    """True for a usable resolved string.
+
+    Guards against unresolved interpolations and the boolean `True` that marks
+    "(known after apply)" attributes in plan output.
+    """
+    return isinstance(value, str) and bool(value) and "${" not in value
+
+
+def _identify_instance(
+    candidates: List[str],
+    source_node: str,
+    source_key: Optional[str],
+    tfdata: Dict[str, Any],
+) -> Optional[str]:
+    """Pick the single instance a resource refers to, or None if still unclear.
+
+    Three rules, most reliable first. Each needs exactly one winner - two
+    matches leaves the instance as ambiguous as none at all.
+    """
+    # Every concrete string the source resolved to - the haystack for rules 1 and 2
+    source_values = {
+        path[-1]
+        for path in dict_generator(_resolved_metadata(source_node, tfdata))
+        if _is_concrete(path[-1])
+    }
+
+    # 1. Provider-assigned id, matched two ways because providers differ:
+    #    - exact: AWS children carry an explicit pointer to the parent, so a
+    #      subnet's vpc_id IS the vpc's id ("vpc-0prod"). ARNs do not nest.
+    #    - prefix: Azure and GCP have no such pointer, but their ARM ids and
+    #      self_links nest, so a subnet id of ".../virtualNetworks/vnet-sec/
+    #      subnets/mgmt01" starts with its parent VNET's id.
+    by_id = []
+    for candidate in candidates:
+        metadata = _resolved_metadata(candidate, tfdata)
+        for attribute in ("id", "arn", "self_link"):  # most specific first
+            identity = metadata.get(attribute)
+            if not _is_concrete(identity):
+                continue
+            if identity in source_values or any(
+                value.startswith(identity + "/") for value in source_values
+            ):
+                by_id.append(candidate)
+                break
+    if len(by_id) == 1:
+        return by_id[0]
+
+    # 2. Resource name, as recorded in the plan
+    by_name = []
+    for candidate in candidates:
+        candidate_name = _resolved_metadata(candidate, tfdata).get("name")
+        if _is_concrete(candidate_name) and candidate_name in source_values:
+            by_name.append(candidate)
+    if len(by_name) == 1:
+        return by_name[0]
+
+    # 3. Instance key. Last resort for greenfield plans where ids and names are
+    #    still unknown; relies on the convention of nesting child keys under
+    #    parent keys ("apps.web" under "apps"), so it ranks below real values.
+    by_key = []
+    for candidate in candidates:
+        candidate_key = _foreach_key(candidate)
+        if not candidate_key or not source_key:
+            continue
+        # "apps.web" nests under "apps"; "prod-web" under "prod"
+        if candidate_key == source_key or any(
+            source_key.startswith(candidate_key + separator) for separator in ".-/"
+        ):
+            by_key.append(candidate)
+    if len(by_key) == 1:
+        return by_key[0]
+
+    return None
+
+
+def _record_ambiguous_instance(
+    source_node: str, candidates: List[str], tfdata: Dict[str, Any]
+) -> None:
+    """Warn about a connection we dropped because the instance was ambiguous.
+
+    Dropping beats guessing, but it must never be silent - a missing arrow is
+    otherwise indistinguishable from a resource that genuinely has no links.
+    The full list is kept in tfdata so `--debug` dumps record it too.
+    """
+    record = (
+        f"{source_node} -> {_instance_base(candidates[0])} "
+        f"({len(candidates)} instances, none identifiable)"
+    )
+    dropped = tfdata.setdefault("ambiguous_instance_refs", [])
+    if record in dropped:
+        return
+    dropped.append(record)
+    click.echo(
+        click.style(
+            f"   WARNING: ambiguous for_each reference, connection omitted: {record}",
+            fg="yellow",
+        )
+    )
+
+
+def _disambiguate_instances(
+    matching: List[str], source_node: str, path: List[Any], tfdata: Dict[str, Any]
+) -> List[str]:
+    """Narrow a fan-out of for_each instances down to the one that is referenced.
+
+    A reference like ${aws_vpc.this[each.key].id} matches every instance of
+    aws_vpc.this, because the key is only known to Terraform. Left alone, every
+    parent claims every child and the renderer can no longer nest anything.
+
+    Walks each set of same-resource candidates and decides between four cases.
+    """
+    if len(matching) < 2:
+        return matching
+
+    # Candidates of different resources are judged separately, so bucket them
+    # by base address: aws_vpc.this["a"] and aws_vpc.this["b"] land together.
+    groups: Dict[str, List[str]] = {}
+    for candidate in matching:
+        groups.setdefault(_instance_base(candidate), []).append(candidate)
+
+    source_key = _foreach_key(source_node)
+    narrowed: List[str] = []
+
+    for candidates in groups.values():
+        # Case 1: one candidate, or count instances like aws_subnet.this[0]~1,
+        # which _numbered_nodes_match() already pairs by position. Not ours.
+        if len(candidates) == 1 or not any(_foreach_key(c) for c in candidates):
+            narrowed.extend(candidates)
+            continue
+
+        # Case 2: one instance is positively identifiable, so use it. This is
+        # tried before the one-to-many check below because a resource that
+        # depends_on a whole for_each resource usually still *belongs* to one
+        # instance of it - a VNET peering waits on every subnet, but it sits in
+        # exactly one VNET.
+        winner = _identify_instance(candidates, source_node, source_key, tfdata)
+        if winner:
+            narrowed.append(winner)
+            continue
+
+        # Case 3: nothing singles one out, but a splat (aws_subnet.this[*].id)
+        # is one-to-many by definition, so keep every instance.
+        # NB depends_on is NOT treated this way even though Terraform waits on
+        # every instance: it expresses creation ORDER, not architecture. A VNET
+        # peering that depends_on a VPN gateway is saying "build that first",
+        # not "I am attached to it" - honouring it re-introduced fan-outs of
+        # 20+ nodes on real infrastructure. A bare `aws_subnet.this` is not
+        # one-to-many either, since `terraform show -json` normalises
+        # `this[each.key].id` down to the base address.
+        if path and "[*]" in str(path[-1]):
+            narrowed.extend(candidates)
+            continue
+
+        # Case 4: undecidable. Connect to nothing rather than to everything -
+        # one wrong parent stops the whole diagram nesting, one missing edge
+        # costs a single line.
+        _record_ambiguous_instance(source_node, candidates, tfdata)
+
+    return narrowed
+
+
 def _add_connection_pair(
     connection_pairs: List[str],
     matched_resource: str,
@@ -581,6 +771,11 @@ def check_relationship(
     for p in plist:
         param = str(p)
         matching = _find_matching_resources(param, nodes, resource_associated_with)
+        # A for_each reference matches every instance of the target resource;
+        # keep only the instance this resource actually points at
+        matching = _disambiguate_instances(
+            matching, resource_associated_with, plist, tfdata
+        )
         implied = _find_implied_connections(param, nodes, IMPLIED_CONNECTIONS)
         # Combine explicit and implied matches, avoiding duplicates
         matching.extend([m for m in implied if m not in matching])
@@ -1435,9 +1630,13 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             resource_name.startswith(prefix) for prefix in provider_prefixes
         )
         if is_provider_resource:
-            renamed_node = helpers.check_variant(
-                node, tfdata["meta_data"].get(node_name), tfdata
+            # Numbered instances keep their metadata under the full node key
+            # (fw01[0]~1), so fall back to it when the stripped name has none -
+            # otherwise check_variant() sees None and no variant ever matches
+            metadata = tfdata["meta_data"].get(node_name) or tfdata["meta_data"].get(
+                node
             )
+            renamed_node = helpers.check_variant(node, metadata, tfdata)
         else:
             renamed_node = False
         if (
