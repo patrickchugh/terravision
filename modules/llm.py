@@ -129,7 +129,7 @@ def check_ollama_server(ollama_host: str) -> None:
         sys.exit(1)
 
 
-def check_bedrock_credentials() -> None:
+def check_bedrock_credentials() -> bool:
     """Verify AWS credentials are configured for the Bedrock backend.
 
     Calls ``sts:GetCallerIdentity`` — the cheapest, read-only,
@@ -138,6 +138,11 @@ def check_bedrock_credentials() -> None:
     because that would require Bedrock IAM permissions just to run
     preflight; users may have valid creds but no Bedrock access until
     the real call. STS keeps the preflight permissionless.
+
+    Returns True when credentials resolve and False when they do not, so
+    callers that only want to know whether to bother — the slow Bedrock
+    test skips itself — can ask without being killed by the answer. Exiting
+    is the CLI's decision and is made at the call site.
     """
     click.echo("  checking AWS credentials for Bedrock..")
     try:
@@ -152,7 +157,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit(1)
+        return False
 
     region = _bedrock_region()
     model_id = _bedrock_model_id()
@@ -163,6 +168,7 @@ def check_bedrock_credentials() -> None:
             f"  AWS credentials OK (account={identity.get('Account')}, region={region})"
         )
         click.echo(f"  Bedrock model: {model_id}")
+        return True
     except NoCredentialsError:
         click.echo(
             click.style(
@@ -172,7 +178,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit(1)
+        return False
     except (BotoCoreError, ClientError) as e:
         click.echo(
             click.style(
@@ -181,7 +187,7 @@ def check_bedrock_credentials() -> None:
                 bold=True,
             )
         )
-        sys.exit(1)
+        return False
 
 
 def check_restapi_endpoint() -> None:
