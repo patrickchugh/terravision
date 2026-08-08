@@ -85,7 +85,7 @@ def azure_handle_resource_group(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if tfdata["meta_data"].get(resource):
                 rg_ref = tfdata["meta_data"][resource].get("resource_group_name", "")
                 # Check if this resource references our RG
-                if rg in str(rg_ref) or rg_name in str(rg_ref):
+                if _node_matches(rg, rg_ref, tfdata):
                     # Add VNets directly under RG
                     if resource_type == "azurerm_virtual_network":
                         if resource not in tfdata["graphdict"][rg]:
@@ -140,7 +140,7 @@ def azure_handle_vnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Check if subnet references this VNet
             if tfdata["meta_data"].get(subnet):
                 vnet_ref = tfdata["meta_data"][subnet].get("virtual_network_name", "")
-                if vnet in str(vnet_ref) or vnet_name in str(vnet_ref):
+                if _node_matches(vnet, vnet_ref, tfdata):
                     if subnet not in tfdata["graphdict"].get(vnet, []):
                         tfdata["graphdict"][vnet].append(subnet)
                     # Remove subnet from other parents that aren't VNets
@@ -189,7 +189,7 @@ def azure_handle_subnet(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for nic in nics:
             if tfdata["meta_data"].get(nic):
                 ip_config = tfdata["meta_data"][nic].get("ip_configuration", "")
-                if subnet in str(ip_config) or subnet_name in str(ip_config):
+                if _node_matches(subnet, ip_config, tfdata):
                     if nic not in tfdata["graphdict"].get(subnet, []):
                         tfdata["graphdict"][subnet].append(nic)
 
@@ -250,12 +250,12 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         ):
             if "association" in subnet:
                 continue
-            if subnet in str(subnet_id) or subnet.split(".")[-1] in str(subnet_id):
+            if _node_matches(subnet, subnet_id, tfdata):
                 target_subnet = subnet
                 break
 
         for nsg in nsgs:
-            if nsg in str(nsg_id) or nsg.split(".")[-1] in str(nsg_id):
+            if _node_matches(nsg, nsg_id, tfdata):
                 target_nsg = nsg
                 break
 
@@ -293,16 +293,12 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             if "association" in nic:
                 continue
             nic_azure_name = _value(nic, "name", tfdata)
-            if (
-                nic in str(nic_id)
-                or nic.split(".")[-1] in str(nic_id)
-                or (nic_azure_name and nic_azure_name in str(nic_id))
-            ):
+            if _node_matches(nic, nic_id, tfdata):
                 target_nic = nic
                 break
 
         for nsg in nsgs:
-            if nsg in str(nsg_id) or nsg.split(".")[-1] in str(nsg_id):
+            if _node_matches(nsg, nsg_id, tfdata):
                 target_nsg = nsg
                 break
 
@@ -366,7 +362,7 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # Link VMSS to subnet
         for subnet in subnets:
             subnet_name = subnet.split(".")[-1]
-            if subnet in str(network_profile) or subnet_name in str(network_profile):
+            if _node_matches(subnet, network_profile, tfdata):
                 if vmss not in tfdata["graphdict"].get(subnet, []):
                     tfdata["graphdict"][subnet].append(vmss)
                 break
@@ -377,7 +373,7 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         )
         for lb in load_balancers:
             lb_name = lb.split(".")[-1]
-            if lb in str(lb_backend) or lb_name in str(lb_backend):
+            if _node_matches(lb, lb_backend, tfdata):
                 # Link LB to VMSS
                 if vmss not in tfdata["graphdict"].get(lb, []):
                     tfdata["graphdict"][lb].append(vmss)
@@ -404,10 +400,7 @@ def azure_handle_vmss(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     parent_subnet = None
                     network_profile = metadata.get("network_profile", "")
                     for subnet in subnets:
-                        subnet_name = subnet.split(".")[-1]
-                        if subnet in str(network_profile) or subnet_name in str(
-                            network_profile
-                        ):
+                        if _node_matches(subnet, network_profile, tfdata):
                             parent_subnet = subnet
                             break
 
@@ -924,6 +917,33 @@ def _metadata_of(node: str, tfdata: Dict[str, Any], view: str) -> Dict[str, Any]
     return {}
 
 
+def _node_matches(node: str, reference: str, tfdata: Dict[str, Any]) -> bool:
+    """True when *reference* points at *node*.
+
+    A reference is either an HCL expression or a resolved ARM id, and neither
+    ever carries the ``~N`` suffix terravision appends to count instances. So a
+    plain substring test against the graph key silently fails for every
+    counted resource:
+
+        node in graph :  azurerm_network_interface.fw01-eth1-0[0]~1
+        reference     :  ${azurerm_network_interface.fw01-eth1-0[0].id}
+
+    That is why only the one NIC without a count ever got its NSG badge. The
+    suffix is stripped here so every caller matches consistently; the deployed
+    Azure name is tried last, for references that resolved to an ARM id.
+    """
+    if not reference:
+        return False
+    reference = str(reference)
+    base = node.split("~")[0]
+    if base in reference:
+        return True
+    if base.split(".", 1)[-1] in reference:
+        return True
+    azure_name = _value(node, "name", tfdata)
+    return bool(azure_name) and azure_name in reference
+
+
 def _value(node: str, key: str, tfdata: Dict[str, Any]) -> str:
     """A single attribute value, preferring the plan-resolved one."""
     for view in ("original_metadata", "meta_data"):
@@ -994,18 +1014,9 @@ def place_vms_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for nic in tfdata["graphdict"].get(subnet, []):
             if "azurerm_network_interface" not in nic:
                 continue
-            nic_name = helpers.get_no_module_name(nic)
-            # On a plan run against deployed infrastructure network_interface_ids
-            # holds resolved ARM ids, which carry the NIC's Azure name rather
-            # than its Terraform resource name - so match on both
-            nic_azure_name = _value(nic, "name", tfdata)
             for vm in vms:
                 vm_nic_ids = _search_text(vm, "network_interface_ids", tfdata)
-                if (
-                    nic in vm_nic_ids
-                    or nic_name in vm_nic_ids
-                    or (nic_azure_name and nic_azure_name in vm_nic_ids)
-                ):
+                if _node_matches(nic, vm_nic_ids, tfdata):
                     if subnet not in vm_subnets.setdefault(vm, []):
                         vm_subnets[vm].append(subnet)
 

@@ -330,7 +330,12 @@ def _badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], flo
     icon cell itself over the node's corner; graphviz only records where an
     xlabel ended up, never how wide it is.
     """
-    badge_resource = (tfdata.get("badges") or {}).get(target)
+    # Compared without the ~N count suffix: handlers record badges before
+    # create_multiple_resources() numbers the instances, so the names in
+    # tfdata["badges"] are the pre-numbering ones and a literal lookup misses
+    # every counted resource.
+    badges = {k.split("~")[0]: v for k, v in (tfdata.get("badges") or {}).items()}
+    badge_resource = badges.get(target.split("~")[0])
     if not badge_resource:
         return None, 0.0
 
@@ -359,8 +364,12 @@ def _badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], flo
 
 
 def _badged_nodes(tfdata: Dict[str, Any]) -> Set[str]:
-    """Resources already shown as a badge, so they must not draw twice."""
-    return set((tfdata.get("badges") or {}).values())
+    """Resources already shown as a badge, so they must not draw twice.
+
+    Returned without the ~N count suffix, for the same reason _badge_html()
+    strips it - compare with resource.split("~")[0].
+    """
+    return {v.split("~")[0] for v in (tfdata.get("badges") or {}).values()}
 
 
 def _drawn_node_inside(resource: str, tfdata: Dict[str, Any]):
@@ -666,8 +675,8 @@ def handle_nodes(
     if resource_type in tfdata["hidden"]:
         return None, drawn_resources
 
-    # An NSG drawn as a badge must not also appear as a standalone icon
-    if resource in _badged_nodes(tfdata):
+    # A resource drawn as a badge must not also appear as a standalone icon
+    if resource.split("~")[0] in _badged_nodes(tfdata):
         return None, drawn_resources
 
     # Reuse existing node if already drawn
