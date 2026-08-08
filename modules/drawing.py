@@ -508,7 +508,7 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
                 # boxes. Stacking halves the width it needs.
                 label_html = (
                     '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
-                    '<TR><TD FIXEDSIZE="TRUE" WIDTH="48" HEIGHT="48">'
+                    '<TR><TD FIXEDSIZE="TRUE" WIDTH="96" HEIGHT="96">'
                     f'<IMG SCALE="TRUE" SRC="{icon_path}"/></TD></TR>'
                     f'<TR><TD><FONT POINT-SIZE="24" COLOR="{colour}">{caption}'
                     "</FONT></TD></TR></TABLE>>"
