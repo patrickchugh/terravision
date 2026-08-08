@@ -778,6 +778,46 @@ def test_apply_ai_annotations_title_and_external_actor(
 # ---------------------------------------------------------------------------
 
 
+def _bedrock_can_be_invoked() -> bool:
+    """True when Bedrock can actually be called, not merely authenticated.
+
+    check_bedrock_credentials() probes STS on purpose - requiring Bedrock IAM
+    permissions just to run preflight would lock out users who have valid
+    credentials and no Bedrock access. That makes it the wrong guard for this
+    test: a CI role with credentials but without
+    bedrock:InvokeModelWithResponseStream sails past it and then dies on the
+    real ConverseStream call, and the backend swallows the error and returns
+    None so the failure surfaces as "Bedrock returned no annotations".
+
+    So probe the exact operation the test needs. Anything other than an
+    authorisation failure is left to propagate - a genuinely broken backend
+    should fail the test, not quietly skip it.
+    """
+    if not llm.check_bedrock_credentials():
+        return False
+    try:
+        import boto3
+        from botocore.exceptions import BotoCoreError, ClientError
+    except ImportError:
+        return False
+    try:
+        boto3.client(
+            "bedrock-runtime", region_name=llm._bedrock_region()
+        ).converse_stream(
+            modelId=llm._bedrock_model_id(),
+            messages=[{"role": "user", "content": [{"text": "ping"}]}],
+            inferenceConfig={"maxTokens": 1},
+        )
+        return True
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        if code in ("AccessDeniedException", "UnrecognizedClientException"):
+            return False
+        raise
+    except BotoCoreError:
+        return False
+
+
 @pytest.mark.slow
 def test_us2_live_bedrock_title_and_actors(tmp_path):
     """US2 T022: Slow integration test — run against a reference Terraform
@@ -792,8 +832,8 @@ def test_us2_live_bedrock_title_and_actors(tmp_path):
     )
     output_dir = str(tmp_path)
 
-    if not llm.check_bedrock_credentials():
-        pytest.skip("AWS Bedrock credentials not available")
+    if not _bedrock_can_be_invoked():
+        pytest.skip("AWS Bedrock model access not available")
 
     result = llm.generate_ai_annotations(
         _build_minimal_tfdata_from_fixture(fixture),
