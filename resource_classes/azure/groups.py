@@ -222,9 +222,13 @@ class OnPrem(Cluster):
             "labeljust": "l",
             "_shift": "1",
         }
-        icon = (
-            f"{base_path}/resource_images/azure/network/on-premises-data-gateways.png"
-        )
+        # Provider-neutral on purpose: this box is whatever sits at the far end
+        # of a VPN tunnel - a datacenter, a branch office, another cloud - and
+        # nothing in it is an Azure resource. The obvious Azure candidate,
+        # on-premises-data-gateways.png, is the branded icon for the Azure
+        # On-premises Data Gateway product, so using it would claim that
+        # specific service is deployed there.
+        icon = f"{base_path}/resource_images/generic/place/datacenter.png"
         html_label = (
             '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
             f'<TD><img src="{icon}"/></TD><TD>{label}</TD></TR></TABLE>>'
