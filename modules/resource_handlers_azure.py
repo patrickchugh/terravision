@@ -264,7 +264,7 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if target_subnet and target_nsg:
             if target_nsg not in tfdata["graphdict"].get(target_subnet, []):
                 tfdata["graphdict"][target_subnet].append(target_nsg)
-            tfdata.setdefault("nsg_badges", {})[target_subnet] = target_nsg
+            tfdata.setdefault("badges", {})[target_subnet] = target_nsg
 
         # Remove the association resource from graph (it's a linking resource)
         if assoc in tfdata["graphdict"]:
@@ -310,7 +310,7 @@ def azure_handle_nsg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if target_nic and target_nsg:
             if target_nic not in tfdata["graphdict"].get(target_nsg, []):
                 tfdata["graphdict"][target_nsg].append(target_nic)
-            tfdata.setdefault("nsg_badges", {})[target_nic] = target_nsg
+            tfdata.setdefault("badges", {})[target_nic] = target_nsg
 
         # Remove the association resource from graph
         if assoc in tfdata["graphdict"]:

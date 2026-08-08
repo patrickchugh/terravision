@@ -311,41 +311,56 @@ def _apply_flow_badges(
         cluster.dot.node(node_obj._id, xlabel=badge_html)
 
 
-def _nsg_badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], float]:
-    """Graphviz HTML label for an NSG shield badge, or None if not badged.
+def _badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], float]:
+    """Graphviz HTML label for a badge drawn on *target*, or None if unbadged.
 
-    Follows the Azure Architecture Center convention of a shield in the corner
-    of the protected resource rather than a separate icon wired up with a line.
-    The NSG name is included since there is room for it - drop the second cell
-    to match Microsoft's unlabelled style exactly.
+    A badge is an icon in the corner of the resource it applies to rather than
+    a separate node wired up with a line. Every provider's architecture guide
+    uses that convention for things which qualify a resource instead of sitting
+    beside it - Azure NSGs, AWS security groups, GCP firewall rules - and drawn
+    as ordinary nodes they read as devices traffic passes through, which they
+    are not.
+
+    Nothing here is provider-specific. A handler records {target: badge node}
+    in tfdata["badges"] and the icon is taken from the badge resource's own
+    node class, so any provider can badge any resource without adding code to
+    this module.
 
     Returns (html, width_in_points). The width lets shiftLabel.gvpr pin the
-    shield cell itself over the node's corner; graphviz only records where an
+    icon cell itself over the node's corner; graphviz only records where an
     xlabel ended up, never how wide it is.
     """
-    nsg = (tfdata.get("nsg_badges") or {}).get(target)
-    if not nsg:
+    badge_resource = (tfdata.get("badges") or {}).get(target)
+    if not badge_resource:
         return None, 0.0
+
+    resource_type = helpers.get_no_module_name(badge_resource).split(".")[0]
+    badge_class = _node_class_for(resource_type, tfdata)
+    icon_dir = getattr(badge_class, "_icon_dir", None)
+    icon_file = getattr(badge_class, "_icon", None)
+    if not icon_dir or not icon_file:
+        # Falls back to a generic class with no icon of its own; a badge is
+        # only meaningful as a picture, so skip rather than draw a bare label.
+        return None, 0.0
+
     repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
-    icon = (
-        f"{repo_root}/resource_images/azure/network/network-security-groups-classic.png"
-    )
-    name = helpers.pretty_name(nsg)
-    shield_pts = 64.0
+    icon = f"{repo_root}/{icon_dir}/{icon_file}"
+    name = helpers.pretty_name(badge_resource)
+    icon_pts = 64.0
     text_pts = len(name) * 22.0 * 0.55
     html = (
         '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
-        f'<TD FIXEDSIZE="TRUE" WIDTH="{shield_pts:.0f}" HEIGHT="{shield_pts:.0f}">'
+        f'<TD FIXEDSIZE="TRUE" WIDTH="{icon_pts:.0f}" HEIGHT="{icon_pts:.0f}">'
         f'<IMG SCALE="TRUE" SRC="{icon}"/></TD>'
         f'<TD><FONT POINT-SIZE="22">{name}</FONT></TD>'
         "</TR></TABLE>>"
     )
-    return html, shield_pts + text_pts
+    return html, icon_pts + text_pts
 
 
-def _badged_nsg_nodes(tfdata: Dict[str, Any]) -> Set[str]:
-    """NSGs already shown as a badge, so they must not draw a second time."""
-    return set((tfdata.get("nsg_badges") or {}).values())
+def _badged_nodes(tfdata: Dict[str, Any]) -> Set[str]:
+    """Resources already shown as a badge, so they must not draw twice."""
+    return set((tfdata.get("badges") or {}).values())
 
 
 def _drawn_node_inside(resource: str, tfdata: Dict[str, Any]):
@@ -652,7 +667,7 @@ def handle_nodes(
         return None, drawn_resources
 
     # An NSG drawn as a badge must not also appear as a standalone icon
-    if resource in _badged_nsg_nodes(tfdata):
+    if resource in _badged_nodes(tfdata):
         return None, drawn_resources
 
     # Reuse existing node if already drawn
@@ -670,12 +685,12 @@ def handle_nodes(
         extra_attrs = {}
         if is_edge:
             extra_attrs["_edgenode"] = "1"
-        # NIC-associated NSGs badge the NIC icon itself, mirroring how these
-        # are drawn by hand (a small shield on the interface)
-        nic_badge, nic_badge_w = _nsg_badge_html(resource, tfdata)
-        if nic_badge:
-            extra_attrs["xlabel"] = nic_badge
-            extra_attrs["_badgewidth"] = f"{nic_badge_w:.1f}"
+        # A badged resource carries its badge as an xlabel on its own icon,
+        # mirroring how these are drawn by hand (a small shield on the NIC)
+        node_badge, node_badge_w = _badge_html(resource, tfdata)
+        if node_badge:
+            extra_attrs["xlabel"] = node_badge
+            extra_attrs["_badgewidth"] = f"{node_badge_w:.1f}"
             # graphviz drops xlabels wherever they fit; _badgenode tells
             # shiftLabel.gvpr to pin this one to the node card's top-right
             extra_attrs["_badgenode"] = "1"
@@ -1019,9 +1034,9 @@ def handle_group(
     if cidr:
         node_label = f"{node_label} ({cidr})"
     group_class = getattr(sys.modules[__name__], resource_type)
-    # A subnet protected by an NSG gets a shield badge in its corner rather
-    # than a separate icon inside the box
-    badge, _badge_w = _nsg_badge_html(resource, tfdata)
+    # A badged group carries its badge in the corner of the box rather than
+    # as a separate icon inside it
+    badge, _badge_w = _badge_html(resource, tfdata)
     if badge:
         newGroup = group_class(label=node_label, badge_label=badge)
         newGroup.dot.graph_attr["labelloc"] = "t"
