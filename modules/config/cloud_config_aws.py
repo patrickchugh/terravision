@@ -465,6 +465,7 @@ AWS_GROUP_LINKS = [
     {
         "resource_type": "aws_vpc_peering_connection",
         "local_attribute": "vpc_id",
+        "icon": "resource_images/aws/network/vpc-peering.png",
         "remote_attribute": "peer_vpc_id",
         "label": "peering",
     },

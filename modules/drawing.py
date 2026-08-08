@@ -492,17 +492,40 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
                 continue
 
             drawn_pairs.add(pair)
+            colour = link.get("color", "#7B2CBF")
+            # An icon on the line, where the provider ships one, so the link
+            # reads as the service it is rather than a coloured line with a
+            # word next to it. Optional: providers without a peering icon fall
+            # back to the plain text label.
+            icon = link.get("icon")
+            caption = link.get("label", "")
+            if icon:
+                repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
+                icon_path = f"{repo_root}/{icon}"
+                # Stacked rather than side by side: these lines are clipped to
+                # the gap between two cluster borders, and clumped VNETs leave
+                # barely 100pt of it, so a wide label is squashed against the
+                # boxes. Stacking halves the width it needs.
+                label_html = (
+                    '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
+                    '<TR><TD FIXEDSIZE="TRUE" WIDTH="48" HEIGHT="48">'
+                    f'<IMG SCALE="TRUE" SRC="{icon_path}"/></TD></TR>'
+                    f'<TR><TD><FONT POINT-SIZE="24" COLOR="{colour}">{caption}'
+                    "</FONT></TD></TR></TABLE>>"
+                )
+            else:
+                label_html = caption
             diagram.dot.edge(
                 tail_node._id,
                 head_node._id,
                 ltail=clusters[owner],
                 lhead=clusters[remote],
                 dir="both",
-                color=link.get("color", "#7B2CBF"),
+                color=colour,
                 penwidth="4",
-                xlabel=link.get("label", ""),
+                xlabel=label_html,
                 fontsize="24",
-                fontcolor=link.get("color", "#7B2CBF"),
+                fontcolor=colour,
                 _grouplink="1",
             )
             tfdata.setdefault("group_links_drawn", []).append(

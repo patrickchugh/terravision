@@ -429,6 +429,7 @@ AZURE_GROUP_LINKS = [
         # Which group declares the link, and which it points at. Both are needed
         # because graph parentage cannot be trusted to say which is which.
         "local_attribute": "virtual_network_name",
+        "icon": "resource_images/azure/other/peerings.png",
         "remote_attribute": "remote_virtual_network_id",
         "label": "peering",
     },
