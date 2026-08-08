@@ -366,3 +366,10 @@ GCP_GROUP_LINKS = [
         "label": "peering",
     },
 ]
+
+# Nodes whose links always carry traffic both ways, so they are drawn with a
+# two-way arrow regardless of which direction Terraform happened to express.
+# The internet is a medium rather than a destination - a resource reaching out
+# and a user coming in are the same line - and a site-to-site VPN tunnel is
+# bidirectional by definition.
+GCP_BIDIRECTIONAL_NODES = ["tv_gcp_internet"]

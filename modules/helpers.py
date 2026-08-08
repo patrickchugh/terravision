@@ -189,9 +189,27 @@ def find_bidirectional_links(tfdata: dict):
     graphdict = tfdata.get("graphdict", {})
     bidirectional = set()
 
+    # Some links are two-way by nature and only ever appear once in the graph,
+    # because Terraform expresses a dependency in one direction. Declared per
+    # provider so the rule is not Azure-specific.
+    from modules.provider_detector import get_primary_provider_or_default
+
+    provider = get_primary_provider_or_default(tfdata)
+    always_two_way = getattr(
+        config_loader.load_config(provider),
+        f"{provider.upper()}_BIDIRECTIONAL_NODES",
+        [],
+    )
+
     for node_a in graphdict:
         for node_b in graphdict[node_a]:
             if node_b in graphdict and node_a in graphdict[node_b]:
+                bidirectional.add(frozenset((node_a, node_b)))
+            elif any(
+                get_no_module_name(n).startswith(prefix)
+                for n in (node_a, node_b)
+                for prefix in always_two_way
+            ):
                 bidirectional.add(frozenset((node_a, node_b)))
 
         for pair in bidirectional:

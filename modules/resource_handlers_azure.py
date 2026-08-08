@@ -968,9 +968,9 @@ def azure_handle_local_network_gateway(tfdata: Dict[str, Any]) -> Dict[str, Any]
     annotation was always for, and matches how AWS draws customer gateways
     behind a Corporate Datacenter boundary.
 
-    The link is made both ways so find_bidirectional_links() renders a single
-    two-way arrow: a site-to-site tunnel carries traffic in both directions,
-    and a single arrowhead is misleading whichever way it points.
+    The tunnel is drawn two-way via AZURE_BIDIRECTIONAL_NODES rather than by
+    adding a reverse edge here: the box is a cluster, so an edge into it would
+    make the VPN gateway a child and draw it inside the remote site.
     """
     onprem_boxes = [k for k in tfdata["graphdict"] if k.startswith("tv_azure_onprem.")]
     if not onprem_boxes:
@@ -985,26 +985,12 @@ def azure_handle_local_network_gateway(tfdata: Dict[str, Any]) -> Dict[str, Any]
     if not peers:
         return tfdata
 
-    gateways = [
-        k
-        for k in tfdata["graphdict"]
-        if helpers.get_no_module_name(k).startswith("azurerm_virtual_network_gateway.")
-        and "connection" not in k
-    ]
-
     for peer in peers:
         for parent in helpers.list_of_parents(tfdata["graphdict"], peer):
             if parent != box:
                 helpers.safe_remove_connection(tfdata, parent, peer)
         if peer not in tfdata["graphdict"][box]:
             tfdata["graphdict"][box].append(peer)
-
-    # Reverse edge so the tunnel reads as two-way rather than one-directional
-    for gateway in gateways:
-        if gateway not in tfdata["graphdict"].get(box, []):
-            tfdata["graphdict"][box].append(gateway)
-        if box not in tfdata["graphdict"].get(gateway, []):
-            tfdata["graphdict"][gateway].append(box)
 
     return tfdata
 
