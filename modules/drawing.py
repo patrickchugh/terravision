@@ -27,7 +27,11 @@ except PackageNotFoundError:
 
 import modules.config_loader as config_loader
 import modules.helpers as helpers
-from modules.provider_detector import get_primary_provider_or_default
+from modules.provider_detector import (
+    get_primary_provider_or_default,
+    get_provider_for_resource,
+    SUPPORTED_PROVIDERS,
+)
 
 # Import base resource classes
 # pylint: disable=unused-wildcard-import
@@ -202,6 +206,7 @@ OUTER_NODES = []
 AUTO_ANNOTATIONS = []
 EDGE_NODES = []
 SHARED_SERVICES = []
+GROUP_LINKS = []
 ALWAYS_DRAW_LINE = []
 NEVER_DRAW_LINE = []
 
@@ -306,6 +311,172 @@ def _apply_flow_badges(
         cluster.dot.node(node_obj._id, xlabel=badge_html)
 
 
+def _nsg_badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], float]:
+    """Graphviz HTML label for an NSG shield badge, or None if not badged.
+
+    Follows the Azure Architecture Center convention of a shield in the corner
+    of the protected resource rather than a separate icon wired up with a line.
+    The NSG name is included since there is room for it - drop the second cell
+    to match Microsoft's unlabelled style exactly.
+
+    Returns (html, width_in_points). The width lets shiftLabel.gvpr pin the
+    shield cell itself over the node's corner; graphviz only records where an
+    xlabel ended up, never how wide it is.
+    """
+    nsg = (tfdata.get("nsg_badges") or {}).get(target)
+    if not nsg:
+        return None, 0.0
+    repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
+    icon = (
+        f"{repo_root}/resource_images/azure/network/network-security-groups-classic.png"
+    )
+    name = helpers.pretty_name(nsg)
+    shield_pts = 64.0
+    text_pts = len(name) * 22.0 * 0.55
+    html = (
+        '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
+        f'<TD FIXEDSIZE="TRUE" WIDTH="{shield_pts:.0f}" HEIGHT="{shield_pts:.0f}">'
+        f'<IMG SCALE="TRUE" SRC="{icon}"/></TD>'
+        f'<TD><FONT POINT-SIZE="22">{name}</FONT></TD>'
+        "</TR></TABLE>>"
+    )
+    return html, shield_pts + text_pts
+
+
+def _badged_nsg_nodes(tfdata: Dict[str, Any]) -> Set[str]:
+    """NSGs already shown as a badge, so they must not draw a second time."""
+    return set((tfdata.get("nsg_badges") or {}).values())
+
+
+def _drawn_node_inside(resource: str, tfdata: Dict[str, Any]):
+    """Find any drawn node within a group, however deeply nested.
+
+    A cluster-to-cluster edge still has to name two real nodes as endpoints;
+    lhead/ltail only clip it back to the cluster borders.
+    """
+    seen = set()
+    queue = [resource]
+    while queue:
+        current = queue.pop(0)
+        if current in seen:
+            continue
+        seen.add(current)
+        node = tfdata.get("meta_data", {}).get(current, {}).get("node")
+        if node is not None and current != resource:
+            return node
+        queue.extend(tfdata["graphdict"].get(current, []))
+    return None
+
+
+def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
+    """Draw links between two group boxes as a clipped edge between the boxes.
+
+    Some resources describe a relationship between two whole networks rather
+    than anything inside them - VNet/VPC peerings, network peerings, transit
+    gateway attachments. Drawn as an icon inside one of the groups they read as
+    a device that lives there, which is not what they are.
+
+    Graphviz has no true cluster-to-cluster edge, but with compound=true an edge
+    between two member nodes is clipped at both cluster borders, so it reads as
+    a link between the boxes themselves.
+
+    Driven by <PROVIDER>_GROUP_LINKS so every provider gets this from config:
+    each entry names the linking resource type and the attribute holding the
+    remote group's identity.
+    """
+    link_types = GROUP_LINKS
+    if not link_types:
+        return
+
+    clusters = {res: name for name, res in (tfdata.get("cluster_id_map") or {}).items()}
+    if len(clusters) < 2:
+        return
+
+    def resolved(node: str) -> Dict[str, Any]:
+        return tfdata.get("original_metadata", {}).get(node) or tfdata.get(
+            "meta_data", {}
+        ).get(node, {})
+
+    # Index every drawn group by the values a link resource might reference it by
+    by_identity = {}
+    for group in clusters:
+        metadata = resolved(group)
+        for key in ("id", "self_link", "name"):
+            value = metadata.get(key)
+            if isinstance(value, str) and value:
+                by_identity[value] = group
+
+    drawn_pairs = set()
+    for owner in clusters:
+        for child in tfdata["graphdict"].get(owner, []):
+            child_type = helpers.get_no_module_name(child).split(".")[0]
+            link = next(
+                (l for l in link_types if l["resource_type"] == child_type), None
+            )
+            if not link:
+                continue
+
+            remote_ref = str(resolved(child).get(link["remote_attribute"], ""))
+            remote = next(
+                (g for identity, g in by_identity.items() if identity in remote_ref),
+                None,
+            )
+            # These are declared from both sides; one line between them is enough
+            if not remote or remote == owner:
+                continue
+            pair = frozenset((owner, remote))
+            if pair in drawn_pairs:
+                continue
+
+            tail_node = _drawn_node_inside(owner, tfdata)
+            head_node = _drawn_node_inside(remote, tfdata)
+            if tail_node is None or head_node is None:
+                continue
+
+            drawn_pairs.add(pair)
+            diagram.dot.edge(
+                tail_node._id,
+                head_node._id,
+                ltail=clusters[owner],
+                lhead=clusters[remote],
+                dir="both",
+                color=link.get("color", "#7B2CBF"),
+                penwidth="4",
+                xlabel=link.get("label", ""),
+                fontsize="24",
+                fontcolor=link.get("color", "#7B2CBF"),
+                _grouplink="1",
+            )
+            tfdata.setdefault("group_links_drawn", []).append(
+                f"{helpers.pretty_name(owner)} <-> {helpers.pretty_name(remote)}"
+            )
+
+
+def _node_class_for(resource_type: str, tfdata: Dict[str, Any]):
+    """Return the icon class for a resource type, falling back to a generic one.
+
+    Only the primary provider's icon package is loaded, so anything from a
+    second provider (Route53 records in an Azure-primary plan) or any type with
+    no icon yet used to fail the avl_classes check and vanish from the diagram
+    with no message at all. Drawing a generic box is far better than silently
+    losing infrastructure - and the warning says what to add an icon for.
+    """
+    node_class = getattr(sys.modules[__name__], resource_type, None)
+    if node_class is not None:
+        return node_class
+
+    missing = tfdata.setdefault("missing_icons", [])
+    if resource_type not in missing:
+        missing.append(resource_type)
+        click.echo(
+            click.style(
+                f"   WARNING: no icon for '{resource_type}', drawing a generic node",
+                fg="yellow",
+            )
+        )
+    return Blank
+
+
 def _make_edge_with_badge(
     tfdata: Dict[str, Any],
     origin_resource: str,
@@ -387,6 +558,7 @@ def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         "SHARED_SERVICES": getattr(config, f"{provider_upper}_SHARED_SERVICES", []),
         "ALWAYS_DRAW_LINE": getattr(config, f"{provider_upper}_ALWAYS_DRAW_LINE", []),
         "NEVER_DRAW_LINE": getattr(config, f"{provider_upper}_NEVER_DRAW_LINE", []),
+        "GROUP_LINKS": getattr(config, f"{provider_upper}_GROUP_LINKS", []),
     }
 
 
@@ -476,7 +648,11 @@ def handle_nodes(
         Tuple of (created Node object, updated drawn_resources list)
     """
     resource_type = helpers.get_no_module_name(resource).split(".")[0]
-    if resource_type not in avl_classes or resource_type in tfdata["hidden"]:
+    if resource_type in tfdata["hidden"]:
+        return None, drawn_resources
+
+    # An NSG drawn as a badge must not also appear as a standalone icon
+    if resource in _badged_nsg_nodes(tfdata):
         return None, drawn_resources
 
     # Reuse existing node if already drawn
@@ -489,11 +665,20 @@ def handle_nodes(
         targetGroup = diagramCanvas if is_outer else inGroup
         node_label = helpers.pretty_name(resource)
         setcluster(targetGroup)
-        nodeClass = getattr(sys.modules[__name__], resource_type)
+        nodeClass = _node_class_for(resource_type, tfdata)
         # Build extra node attrs
         extra_attrs = {}
         if is_edge:
             extra_attrs["_edgenode"] = "1"
+        # NIC-associated NSGs badge the NIC icon itself, mirroring how these
+        # are drawn by hand (a small shield on the interface)
+        nic_badge, nic_badge_w = _nsg_badge_html(resource, tfdata)
+        if nic_badge:
+            extra_attrs["xlabel"] = nic_badge
+            extra_attrs["_badgewidth"] = f"{nic_badge_w:.1f}"
+            # graphviz drops xlabels wherever they fit; _badgenode tells
+            # shiftLabel.gvpr to pin this one to the node card's top-right
+            extra_attrs["_badgenode"] = "1"
         # Only pass outer_node for GCP nodes (they use it for border styling)
         provider = get_primary_provider_or_default(tfdata)
         if provider == "gcp":
@@ -562,12 +747,21 @@ def handle_nodes(
                                 )
                                 continue
                         elif node_connection not in drawn_resources:
-                            nodeClass = getattr(sys.modules[__name__], node_type)
+                            # This branch draws a node itself rather than going
+                            # through handle_nodes(), so it has to repeat the
+                            # hidden check - otherwise anything reachable via a
+                            # circular reference ignores the hide list entirely.
+                            if node_type in tfdata["hidden"]:
+                                continue
+                            nodeClass = _node_class_for(node_type, tfdata)
                             connectedNode = nodeClass(
                                 label=helpers.pretty_name(node_connection),
                                 tf_resource_name=node_connection,
                             )
                             drawn_resources.append(node_connection)
+                            tfdata.setdefault("node_id_map", {})[
+                                connectedNode._id
+                            ] = node_connection
                             tfdata["meta_data"].update(
                                 {node_connection: {"node": connectedNode}}
                             )
@@ -708,24 +902,74 @@ def create_cluster_label_node(cluster_obj: Cluster) -> None:
     if not hasattr(cluster_obj, "label_text"):
         return
 
+    # Cluster captions stay on a single line - shiftLabel.gvpr widens the box
+    # to whatever the label needs, so there is no reason to stack "name (cidr)"
+    # onto two rows.
+    text = " ".join(cluster_obj.label_text.split())
+    # A caption should not compete with the resource labels inside the box, and
+    # a narrower label needs less of the box-widening in shiftLabel.gvpr, which
+    # is what pushes neighbouring boxes into each other
+    if text.strip():
+        text = (
+            '<FONT POINT-SIZE="' + str(CLUSTER_LABEL_FONTSIZE) + '">' + text + "</FONT>"
+        )
+
     # Build HTML table label with icon and text (or just text if no icon)
     if hasattr(cluster_obj, "label_icon") and cluster_obj.label_icon is not None:
         icon_first = getattr(cluster_obj, "label_icon_first", True)
-        if icon_first:
-            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{cluster_obj.label_icon}"/></TD><TD>{cluster_obj.label_text}</TD></TR></TABLE>>'
+        # A cluster can ask for its icon at a specific size (the Azure logo is
+        # a branding mark, not a glyph, so it wants to be bigger than a subnet
+        # chevron). Without this an image renders at its natural size.
+        icon_w = getattr(cluster_obj, "label_icon_width", None)
+        icon_h = getattr(cluster_obj, "label_icon_height", None)
+        if icon_w and icon_h:
+            icon_cell = (
+                f'<TD FIXEDSIZE="TRUE" WIDTH="{icon_w}" HEIGHT="{icon_h}">'
+                f'<IMG SCALE="TRUE" SRC="{cluster_obj.label_icon}"/></TD>'
+            )
         else:
-            label_html = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD>{cluster_obj.label_text}</TD><TD><img src="{cluster_obj.label_icon}"/></TD></TR></TABLE>>'
-    else:
-        label_html = cluster_obj.label_text
+            icon_cell = f'<TD><img src="{cluster_obj.label_icon}"/></TD>'
 
-    # Create label node with special attributes for gvpr positioning
+        cells = (
+            icon_cell + f"<TD>{text}</TD>"
+            if icon_first
+            else f"<TD>{text}</TD>" + icon_cell
+        )
+        label_html = (
+            '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
+            + cells
+            + "</TR></TABLE>>"
+        )
+    else:
+        label_html = text
+
+    # Create label node with special attributes for gvpr positioning.
+    #
+    # fixedsize/width/height are overridden per-node so graphviz sizes the box
+    # to the label instead of the 2.8in square in the graph-level node defaults.
+    # That matters twice over: the box now actually contains its text, and the
+    # measured width lands in the layout output where shiftLabel.gvpr can read
+    # it to align the label's edge with the cluster's corner. Inheriting the
+    # default made every label 2.8in wide no matter how long the text was, so
+    # any offset computed from it drifted as soon as label lengths changed.
+    #
+    # The node is declared on the ROOT graph rather than inside the cluster.
+    # shiftLabel.gvpr pins it to an absolute position anyway, so cluster
+    # membership buys nothing - and a label wider than the resources it sits
+    # under would otherwise stretch that cluster to fit, widening the whole
+    # diagram for nothing.
     label_node_id = f"_label_{cluster_obj.dot.name}"
     cluster_type = cluster_obj.__class__.__name__
-    cluster_obj.dot.node(
+    diagram = getdiagram()
+    target = diagram.dot if diagram is not None else cluster_obj.dot
+    target.node(
         label_node_id,
         label=label_html,
         shape="plaintext",
         pin="true",
+        fixedsize="false",
+        width="0",
+        height="0",
         _clusterlabel="1",
         _clusterid=cluster_obj.dot.name,
         _clustertype=cluster_type,
@@ -774,7 +1018,16 @@ def handle_group(
     cidr = helpers.get_cidr_label(resource, tfdata)
     if cidr:
         node_label = f"{node_label} ({cidr})"
-    newGroup = getattr(sys.modules[__name__], resource_type)(label=node_label)
+    group_class = getattr(sys.modules[__name__], resource_type)
+    # A subnet protected by an NSG gets a shield badge in its corner rather
+    # than a separate icon inside the box
+    badge, _badge_w = _nsg_badge_html(resource, tfdata)
+    if badge:
+        newGroup = group_class(label=node_label, badge_label=badge)
+        newGroup.dot.graph_attr["labelloc"] = "t"
+        newGroup.dot.graph_attr["labeljust"] = "r"
+    else:
+        newGroup = group_class(label=node_label)
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
@@ -789,6 +1042,7 @@ def handle_group(
 
     # Add child nodes and subgroups
     child_node_ids = []
+    child_group_ids = []
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
@@ -810,6 +1064,13 @@ def handle_group(
                 if subGroup is not None:
                     newGroup.subgraph(subGroup.dot)
                     drawn_resources.append(node_connection)
+                    # Remember one node from inside the subgroup. Clusters
+                    # cannot be ranked directly, but ranking a member node
+                    # drags its cluster with it, which is how the grid below
+                    # wraps subnets onto rows instead of one endless line.
+                    anchor = _drawn_node_inside(node_connection, tfdata)
+                    if anchor is not None:
+                        child_group_ids.append(anchor._id)
 
             # Handle regular nodes within the group
             elif (
@@ -842,30 +1103,57 @@ def handle_group(
                         tfdata["meta_data"][node_connection]["node"]._id
                     )
 
-    # Wrap groups with many children into a grid
-    if len(child_node_ids) > MAX_NODES_PER_ROW:
-        from graphviz import Digraph
-
-        rows = [
-            child_node_ids[i : i + MAX_NODES_PER_ROW]
-            for i in range(0, len(child_node_ids), MAX_NODES_PER_ROW)
-        ]
-        for row in rows:
-            if len(row) > 1:
-                rank_sub = Digraph()
-                rank_sub.attr(rank="same")
-                for nid in row:
-                    rank_sub.node(nid)
-                newGroup.dot.subgraph(rank_sub)
-        # Vertical column edges: node 1→7, 2→8, etc.
-        for r in range(len(rows) - 1):
-            for col in range(min(len(rows[r]), len(rows[r + 1]))):
-                newGroup.dot.edge(rows[r][col], rows[r + 1][col], style="invis")
+    # Wrap many children into a grid so a group cannot grow into one long row.
+    # Applies to plain nodes and to nested groups alike - a VNET with several
+    # subnets was previously laid out in a single line, which is most of why
+    # these diagrams end up far wider than they are tall.
+    _wrap_into_grid(newGroup, child_node_ids, MAX_NODES_PER_ROW)
+    # Nested groups get invisible edges only. Ranking their member nodes here
+    # would pull each node out of its own cluster ("already in a rankset,
+    # deleted from cluster"), which corrupts the nesting and segfaults dot.
+    _wrap_into_grid(newGroup, child_group_ids, MAX_GROUPS_PER_ROW, rank_rows=False)
 
     return newGroup, drawn_resources
 
 
+def _wrap_into_grid(
+    group: Cluster, node_ids: List[str], per_row: int, rank_rows: bool = True
+) -> None:
+    """Wrap node_ids into rows of per_row, joined by invisible column edges.
+
+    Graphviz has no "wrap after N" option: you get one row unless something
+    forces a new rank. Putting each row in a rank=same subgraph and joining the
+    rows with invisible edges is the standard way to build a grid.
+
+    rank_rows must be False when the ids belong to nested clusters: a node can
+    only be in one rankset, so ranking it here removes it from its own cluster.
+    The invisible edges alone still push later rows downwards.
+    """
+    if len(node_ids) <= per_row:
+        return
+
+    from graphviz import Digraph
+
+    rows = [node_ids[i : i + per_row] for i in range(0, len(node_ids), per_row)]
+    for row in rows:
+        if rank_rows and len(row) > 1:
+            rank_sub = Digraph()
+            rank_sub.attr(rank="same")
+            for nid in row:
+                rank_sub.node(nid)
+            group.dot.subgraph(rank_sub)
+    # Vertical column edges hold the rows apart: row1[0]->row2[0], etc.
+    for r in range(len(rows) - 1):
+        for col in range(min(len(rows[r]), len(rows[r + 1]))):
+            group.dot.edge(rows[r][col], rows[r + 1][col], style="invis")
+
+
+# Cluster captions are deliberately smaller than resource labels
+CLUSTER_LABEL_FONTSIZE = 20
+
 MAX_NODES_PER_ROW = 3
+# Groups are far wider than single icons, so wrap them sooner
+MAX_GROUPS_PER_ROW = 2
 
 
 def draw_objects(
@@ -904,11 +1192,14 @@ def draw_objects(
             resource_type = helpers.get_no_module_name(resource).split(".")[0]
             targetGroup = diagramCanvas if resource_type in OUTER_NODES else cloudGroup
 
-            if resource_type in avl_classes:
+            # Groups need a real Cluster class, but a plain node with no icon
+            # class still gets drawn via the generic fallback in handle_nodes()
+            is_group_type = resource_type in GROUP_NODES
+            if resource_type in avl_classes or not is_group_type:
                 # Draw group/cluster resources
                 if (
                     resource_type.startswith(node_check)
-                    and resource_type in GROUP_NODES
+                    and is_group_type
                     and resource not in all_drawn_resources_list
                 ):
                     node_groups, all_drawn_resources_list = handle_group(
@@ -925,7 +1216,7 @@ def draw_objects(
                 # Draw standalone node resources
                 elif (
                     resource_type.startswith(node_check)
-                    and resource_type not in GROUP_NODES
+                    and not is_group_type
                     and resource not in all_drawn_resources_list
                 ):
                     _, all_drawn_resources_list = handle_nodes(
@@ -963,7 +1254,7 @@ def _build_diagram(
     # Load provider-specific configuration constants and set module globals
     global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
     global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
-    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE, GROUP_LINKS
 
     provider = get_primary_provider_or_default(tfdata)
 
@@ -981,6 +1272,36 @@ def _build_diagram(
     SHARED_SERVICES = constants["SHARED_SERVICES"]
     ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
     NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
+    GROUP_LINKS = constants["GROUP_LINKS"]
+
+    # Refresh the hide list from the provider config rather than trusting what
+    # a replay file captured. A tfdata.json written before a hide rule existed
+    # would otherwise keep drawing nodes the config now says to leave out.
+    hide_nodes = getattr(
+        _get_provider_config(tfdata), f"{provider.upper()}_HIDE_NODES", []
+    )
+    tfdata["hidden"] = sorted(set(tfdata.get("hidden") or []) | set(hide_nodes))
+
+    # Only one provider's icon set is loaded, and clusters/grouping rules are
+    # all that provider's, so resources from another cloud cannot be placed
+    # meaningfully. Skip them rather than scatter them loose, but say so - a
+    # missing resource should never be a silent surprise.
+    foreign = set()
+    for resource in tfdata["graphdict"]:
+        resource_type = helpers.get_no_module_name(resource).split(".")[0]
+        other = get_provider_for_resource(resource)
+        if other in SUPPORTED_PROVIDERS and other != provider:
+            foreign.add(resource_type)
+    if foreign:
+        tfdata["hidden"] = sorted(set(tfdata["hidden"]) | foreign)
+        click.echo(
+            click.style(
+                f"\nSkipping {len(foreign)} resource type(s) from other clouds "
+                f"({', '.join(sorted(foreign))}) - diagrams render one provider "
+                "at a time.",
+                fg="yellow",
+            )
+        )
 
     _apply_size_overrides(tfdata)
 
@@ -1135,6 +1456,9 @@ def _build_diagram(
     # Add footer with metadata
     if source == ".":
         source = os.getcwd()
+
+    # Group-to-group links need every cluster to exist first
+    _draw_group_links(tfdata, myDiagram)
 
     # Set context to main diagram so footer is outside all clusters
     setcluster(myDiagram)

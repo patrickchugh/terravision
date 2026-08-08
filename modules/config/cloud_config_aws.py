@@ -458,3 +458,13 @@ OLLAMA_HOST = "http://localhost:11434"
 # the server has installed is valid — llama3, mistral, qwen2.5,
 # llama3.1, etc.
 OLLAMA_MODEL = "llama3"
+
+# Resources linking two group boxes together - drawn as an edge between the
+# boxes rather than an icon inside one of them (see _draw_group_links)
+AWS_GROUP_LINKS = [
+    {
+        "resource_type": "aws_vpc_peering_connection",
+        "remote_attribute": "peer_vpc_id",
+        "label": "peering",
+    },
+]

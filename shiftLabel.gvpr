@@ -3,11 +3,18 @@ BEGIN{
   double fudgeX, fudgeY;
   double cloudMinX, cloudMinY, cloudMaxX, cloudMaxY, cloudCenterX;
   double clusterMinX, clusterMinY, clusterMaxX, clusterMaxY, clusterCenterX;
-  double labelX, labelY;
+  double labelX, labelY, labelHalfW, labelPad;
+  double kidMinX, kidMinY, kidMaxX, kidMaxY;
+  // gap kept between a child cluster border and its parent border
+  double childGap = 30.0;
+  graph_t kidG, otherG;
+  double othMinX, othMinY, othMaxX, othMaxY;
   double topMostY, bottomMostY;
   int hasLegend;
   string fld[int];
   node_t n;
+  // $G is not addressable inside BEGIN, so BEG_G hands the root graph over
+  graph_t rootG;
 
   hasLegend = 0;
 
@@ -29,33 +36,105 @@ BEGIN{
 
       // Position cluster label nodes within this cluster
       sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &clusterMinX, &clusterMinY, &clusterMaxX, &clusterMaxY);
+
+      // Children are processed first (see the recursion above) and may have
+      // grown to fit their own labels. neato sized this box before any of that
+      // happened, so grow it now to contain them - otherwise a widened subnet
+      // sticks out through its VNET's border.
+      for (kidG = fstsubg(Gr); kidG; kidG = nxtsubg(kidG)) {
+        if (match(kidG.name, "cluster") == 0) {
+          sscanf (kidG.bb, "%lf,%lf,%lf,%lf", &kidMinX, &kidMinY, &kidMaxX, &kidMaxY);
+          if (kidMinX - childGap < clusterMinX) clusterMinX = kidMinX - childGap;
+          if (kidMinY - childGap < clusterMinY) clusterMinY = kidMinY - childGap;
+          if (kidMaxX + childGap > clusterMaxX) clusterMaxX = kidMaxX + childGap;
+          if (kidMaxY + childGap > clusterMaxY) clusterMaxY = kidMaxY + childGap;
+        }
+      }
+      Gr.bb = sprintf("%.1f,%.1f,%.1f,%.1f",
+                      clusterMinX, clusterMinY, clusterMaxX, clusterMaxY);
+
+      // Children widen themselves to fit their labels without being able to
+      // see their siblings, so two can end up overlapping. Pull the left one
+      // back to the gap - a label that slightly exceeds its box is far less
+      // confusing than two boxes drawn on top of each other.
+      for (kidG = fstsubg(Gr); kidG; kidG = nxtsubg(kidG)) {
+        if (match(kidG.name, "cluster") != 0) continue;
+        sscanf (kidG.bb, "%lf,%lf,%lf,%lf", &kidMinX, &kidMinY, &kidMaxX, &kidMaxY);
+        for (otherG = fstsubg(Gr); otherG; otherG = nxtsubg(otherG)) {
+          if (match(otherG.name, "cluster") != 0) continue;
+          if (otherG.name == kidG.name) continue;
+          sscanf (otherG.bb, "%lf,%lf,%lf,%lf", &othMinX, &othMinY, &othMaxX, &othMaxY);
+          // only siblings that share vertical space can collide
+          if (kidMinY < othMaxY && othMinY < kidMaxY) {
+            if (othMinX > kidMinX && othMinX < kidMaxX + childGap) {
+              kidMaxX = othMinX - childGap;
+              kidG.bb = sprintf("%.1f,%.1f,%.1f,%.1f",
+                                kidMinX, kidMinY, kidMaxX, kidMaxY);
+            }
+          }
+        }
+      }
+
       clusterCenterX = (clusterMinX + clusterMaxX) / 2.0;
 
-      for (n = fstnode(Gr); n; n = nxtnode_sg(Gr, n)) {
+      // Label nodes are declared on the root graph, not inside the cluster, so
+      // that an over-wide label cannot stretch the cluster it labels. Scan all
+      // nodes and let the _clusterid check below pick out this cluster's own.
+      for (n = fstnode(rootG); n; n = nxtnode(n)) {
         if (hasAttr(n, "_clusterlabel") && n._clusterlabel == "1") {
           // Only position label nodes that belong to THIS cluster (not nested subgraphs)
           if (hasAttr(n, "_clusterid") && hasAttr(n, "_labelposition")) {
             if (n._clusterid == Gr.name) {
               // Calculate position based on label_position attribute
               // Position inside cluster at bottom with X offset to prevent neato from moving them
+              // pos pins the node CENTRE, so half the label's own width has to
+              // be added to keep its left edge a fixed inset from the cluster
+              // border. A constant offset only lines up for one label length,
+              // and drifts left as soon as labels get longer (e.g. real
+              // resource names instead of generic ones).
+              // create_cluster_label_node() sets fixedsize=false and width=0 on
+              // these nodes so graphviz measures them from their own label -
+              // otherwise they inherit the 2.8in default and this is meaningless.
+              labelHalfW = 0.0;
+              if (hasAttr(n, "width")) {
+                sscanf (n.width, "%lf", &labelHalfW);
+                labelHalfW = (labelHalfW * 72.0) / 2.0;
+              }
+
+              // neato ignores a cluster's margin attribute completely (proven:
+              // identical bb at margin 50/100/200/300) and does not support
+              // native cluster labels, so there is no way to ask for room at
+              // the bottom up front. gvpr runs after layout though, so grow the
+              // box downwards here and drop the label into the space created.
+              // Every labelled cluster gets the same padding, parents included,
+              // so a padded child cannot push through its parent's border.
+              labelPad = 95.0;
+              clusterMinY = clusterMinY - labelPad;
+              // A box holding one icon is narrower than its own label, so the
+              // text would spill over its neighbour. labelHalfW comes from the
+              // laid-out label node, so this is the real width, not an estimate.
+              if (clusterMaxX - clusterMinX < (labelHalfW * 2.0) + 24.0) {
+                clusterMaxX = clusterMinX + (labelHalfW * 2.0) + 24.0;
+              }
+              Gr.bb = sprintf("%.1f,%.1f,%.1f,%.1f",
+                              clusterMinX, clusterMinY, clusterMaxX, clusterMaxY);
+
               if (n._labelposition == "bottom-left") {
-                // Different X offsets for different cluster types
-                labelY = clusterMinY + 50.0;
-                if (hasAttr(n, "_clustertype") && n._clustertype == "SubnetGroup") {
-                  labelX = clusterMinX + 120.0;
-                } else if (hasAttr(n, "_clustertype") && n._clustertype == "AZUREGroup") {
-                  labelX = clusterMinX + 250.0;
-                  labelY = clusterMinY - 20;
+                labelY = clusterMinY + (labelPad / 2.0);
+                if (hasAttr(n, "_clustertype") && n._clustertype == "AZUREGroup") {
+                  labelX = clusterMinX + labelHalfW + 20.0;
+                } else if (hasAttr(n, "_clustertype") && n._clustertype == "SubnetGroup") {
+                  labelX = clusterMinX + labelHalfW + 12.0;
                 } else {
-                  labelX = clusterMinX + 150.0;
+                  labelX = clusterMinX + labelHalfW + 20.0;
                 }
 
               } else if (n._labelposition == "bottom-right") {
-                labelX = clusterMaxX - 120.0;
-                labelY = clusterMinY + 50.0;
+                labelX = clusterMaxX - labelHalfW - 20.0;
+                labelY = clusterMinY + (labelPad / 2.0);
               } else if (n._labelposition == "bottom-center") {
                 labelX = clusterCenterX;
-                labelY = clusterMinY + 50.0;
+                labelY = clusterMinY + (labelPad / 2.0);
               }
 
               // Pin the node position
@@ -94,6 +173,7 @@ BEG_G{
   topMostY = 0;
   bottomMostY = 999999.0;
 
+  rootG = $G;
   labelShift($G);
 
   // Center edge nodes (CDN, API GW, etc.) among their targets so ortho edges
@@ -150,6 +230,32 @@ BEG_G{
     }
   }
 
+  // Pin NSG shield badges to the top-right corner of their node card.
+  // Graphviz places xlabels wherever they happen to fit, which leaves them
+  // floating off the icon; xlp is the xlabel's position and can be moved.
+  // Unlike the cluster label nodes, `width`/`height` are meaningful here:
+  // these nodes are fixedsize, so the inherited default IS the real size.
+  double badgeW, badgeH, shiftX;
+  for (n = fstnode($G); n; n = nxtnode(n)) {
+    if (!hasAttr(n, "_badgenode") || n._badgenode != "1") continue;
+    if (!hasAttr(n, "xlp")) continue;
+    badgeW = 2.8; badgeH = 3.8;
+    if (hasAttr(n, "width"))  sscanf (n.width,  "%lf", &badgeW);
+    if (hasAttr(n, "height")) sscanf (n.height, "%lf", &badgeH);
+    // xlp pins the badge's CENTRE. The badge is [shield][name], so shift right
+    // by half its width minus half the shield to sit the shield itself on the
+    // corner and let the name run outwards, instead of the whole badge
+    // straddling the corner and covering the icon.
+    shiftX = 0.0;
+    if (hasAttr(n, "_badgewidth")) {
+      sscanf (n._badgewidth, "%lf", &shiftX);
+      shiftX = (shiftX / 2.0) - 32.0;
+    }
+    n.xlp = sprintf("%.1f,%.1f",
+                    xOf(n.pos) + (badgeW * 72.0) / 2.0 + shiftX,
+                    yOf(n.pos) + (badgeH * 72.0) / 2.0 - 30.0);
+  }
+
   // Find topmost and bottommost node positions (including outer nodes).
   // Also note whether a legend node exists so the footer can be centred
   // when it has to stand alone.
@@ -195,3 +301,4 @@ N[_footernode=="1"]{
 N[_legendnode=="1"]{
   pos=sprintf("%.0f,%.0f!", cloudCenterX + 500, bottomMostY - 400);
 }
+
