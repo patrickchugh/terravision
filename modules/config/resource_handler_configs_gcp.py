@@ -15,6 +15,18 @@ See CLAUDE.md for detailed documentation on the handler architecture.
 # Resource handler configurations for GCP resources
 # Maps Terraform resource types to their handler configurations
 RESOURCE_HANDLER_CONFIGS = {
+    "google_compute_route": {
+        "description": "Give each subnet its own copy of a route shared with its siblings - a node can only be drawn in one cluster, so sharing leaves the other subnets empty and they drift out of their parent (Pure Config-Driven)",
+        "transformations": [
+            {
+                "operation": "expand_shared_children",
+                "params": {
+                    "parent_pattern": "google_compute_subnetwork.",
+                    "child_pattern": "google_compute_route.",
+                },
+            },
+        ],
+    },
     "google_compute_subnetwork": {
         "description": "Create region nodes and link to subnets (VPC→Subnet becomes VPC→Region→Subnet)",
         "handler_execution_order": "before",  # Run custom function FIRST to prepare metadata
