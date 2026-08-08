@@ -630,12 +630,19 @@ def remove_brackets_and_numbers(input_string: str) -> str:
     return output_string
 
 
-def _wrap_tf_name(name: str, max_width: int = 28) -> str:
-    """Wrap a raw Terraform resource name across multiple lines on `.` boundaries.
+def _wrap_tf_name(name: str, max_lines: int = 2, provider: str = "") -> str:
+    """Wrap a full Terraform address across lines on `.` boundaries.
 
-    TF names have no spaces, so the generic soft-break wrapper can't split them.
-    Pack dot-separated segments greedily into lines no wider than *max_width*.
+    Shows the address exactly as written, ``module.`` path and all - it is
+    requested precisely because the module path carries information the
+    prettified label throws away. TF names have no spaces, so the whitespace
+    wrapper cannot split them; dot-separated segments are packed greedily
+    instead, and anything past the last row ends in an ellipsis.
+
+    *max_lines* of 0 means unlimited, which is what cluster captions want:
+    shiftLabel.gvpr grows a group box to fit its label, so they never overflow.
     """
+    max_width = _card_chars(provider)
     if len(name) <= max_width:
         return name
     parts = name.split(".")
@@ -653,6 +660,108 @@ def _wrap_tf_name(name: str, max_width: int = 28) -> str:
             current = candidate
     if current:
         lines.append(current)
+    # Cap before trimming the rows, or the surplus arrives already ellipsised
+    # and the last row ends up with two sets of dots in it.
+    if max_lines and len(lines) > max_lines:
+        # Keep the END of the address on the last row. The head is the module
+        # path and resource type, which siblings share; the tail is the
+        # identifier that tells them apart, so cutting the tail would render
+        # every instance of one for_each block identical.
+        rest = "".join(lines[max_lines - 1 :])
+        lines = lines[: max_lines - 1] + ["..." + rest[-(max_width - 3) :]]
+    # A single segment can still be wider than the card on its own
+    return "\n".join(
+        l if len(l) <= max_width else l[: max_width - 3] + "..." for l in lines
+    )
+
+
+# Bundled resource icons are 256px squares
+_DEFAULT_ICON_POINTS = 256
+# Kept in step with the card in resource_classes/azure/__init__.py::_Azure
+_AZURE_CARD_INCHES = 3.8
+
+
+def _card_chars(provider: str = "") -> int:
+    """How many characters fit on one row of a node's label.
+
+    Width is read from the live node defaults so --fontsize / --iconsize keep
+    working. The 0.55 factor is measured, not guessed: across real labels at
+    fontsize 28, Sans-Serif lays out between 0.505 and 0.584 * fontsize per
+    character ("Disk Encryption Set" 14.1pt, "abc-POC-LAW-USEast" 16.4pt).
+    """
+    try:
+        from resource_classes import Canvas
+        import modules.drawing as drawing
+
+        node_pts = float(Canvas._default_node_attrs.get("width", 2.8)) * 72
+        fontsize = float(Canvas._default_node_attrs.get("fontsize", 28))
+        icon_pts = float(drawing.DIAGRAM_ICONSIZE or _DEFAULT_ICON_POINTS)
+    except Exception:
+        node_pts, fontsize, icon_pts = 201.6, 28.0, float(_DEFAULT_ICON_POINTS)
+
+    # Only Azure draws a card: _Azure gives every node a filled, bordered
+    # 3.8in rounded rectangle, so its labels have a visible edge to spill over
+    # and that width is a hard budget. AWS and GCP nodes are bare icons
+    # (penwidth 0, no fill), so nothing can be overflowed and the only limit is
+    # crowding the neighbour - they get half as much again.
+    if provider.lower() == "azure":
+        card_pts = _AZURE_CARD_INCHES * 72
+    else:
+        card_pts = max(node_pts, icon_pts) * 1.5
+    return max(8, int(card_pts / (fontsize * 0.55)))
+
+
+def _fit_to_card(
+    text: str, max_lines: int = 2, provider: str = "", elide: str = "end"
+) -> str:
+    """Wrap a label to the node card's width, cutting only what cannot wrap.
+
+    Wrapping comes first and truncation is the fallback, so an ellipsis only
+    ever appears on a run of text with no break point in it. "Route Table
+    Generic" wraps onto two rows; "RT.shared_services.rt_shared_services" is a
+    single unbreakable token and has to be cut. _soft_break() is no help for
+    the latter - it allows a 40-character line and only breaks on whitespace.
+
+    Width is read from the live node defaults so --fontsize / --iconsize keep
+    working. The 0.55 factor is measured, not guessed: across real labels at
+    fontsize 28, Sans-Serif lays out between 0.505 and 0.584 * fontsize per
+    character ("Disk Encryption Set" 14.1pt, "abc-POC-LAW-USEast" 16.4pt).
+    """
+    max_chars = _card_chars(provider)
+
+    def cut(w: str) -> str:
+        if len(w) <= max_chars:
+            return w
+        if elide == "middle":
+            # Siblings from one for_each block share a long head
+            # (generic_rt["security.…) and differ only at the tail, so cutting
+            # the end would render them all identical. Keep both ends.
+            head = (max_chars - 3) // 2
+            return w[:head] + "..." + w[len(w) - (max_chars - 3 - head) :]
+        return w[: max_chars - 3].rstrip() + "..."
+
+    lines = []
+    for word in text.split():
+        if lines and len(lines[-1]) + 1 + len(word) <= max_chars:
+            lines[-1] += " " + word
+        else:
+            lines.append(word)
+    lines = [cut(w) for w in lines]
+
+    # Widow control. Greedy wrapping packs the first row full and can strand a
+    # short tail on its own - "Route Table Generic" / "Rt" reads as if the name
+    # were cut off. Pull one word down so the break lands somewhere sensible.
+    if len(lines) > 1 and len(lines[-1]) <= 4 and " " in lines[-2]:
+        head, _, moved = lines[-2].rpartition(" ")
+        lines[-2], lines[-1] = head, f"{moved} {lines[-1]}"
+
+    # Past the last row there is nowhere left to put the text, so the sentence
+    # ends in an ellipsis rather than growing the card. Everything that did not
+    # fit is re-flowed onto the final row first, so the row is filled before it
+    # is cut - dropping the surplus wholesale spent the card on the words the
+    # siblings share and cut the ones that told them apart.
+    if len(lines) > max_lines:
+        lines = lines[: max_lines - 1] + [cut(" ".join(lines[max_lines - 1 :]))]
     return "\n".join(lines)
 
 
@@ -687,6 +796,34 @@ def _innermost_module_name(name: str) -> str:
         if parts[i] == "module" and i + 1 < len(parts):
             return parts[i + 1]
     return ""
+
+
+def _hcl_resource_name(name: str) -> str:
+    """The resource label exactly as written in the .tf file.
+
+    ``azurerm_route_table.generic_rt["apps.rt_apps"]`` -> ``generic_rt["apps.
+    rt_apps"]``. Splitting on "." is not enough because a for_each key may
+    contain dots of its own, so the bracket is peeled off first and the module
+    path dropped along with it.
+    """
+    m = re.match(r"^(?P<addr>[^\[]*?)(?P<key>\[.*\])?(?P<count>~\d+)?$", name)
+    if not m:
+        return name
+    return (
+        m.group("addr").split(".")[-1]
+        + (m.group("key") or "")
+        + (m.group("count") or "")
+    )
+
+
+def _foreach_key_words(name: str) -> str:
+    """The for_each key of *name* as spaced words, or "" when there is none.
+
+    ``...generic_rt["shared_services.rt_pvtDmz"]`` -> ``shared services rt
+    pvtDmz``, ready to be folded into the human-readable label.
+    """
+    m = re.search(r'\["([^"]+)"\]', name)
+    return " ".join(p for p in re.split(r"[._\-/]+", m.group(1)) if p) if m else ""
 
 
 def _normalize_resource_name(name: str) -> str:
@@ -775,6 +912,21 @@ def _title_case_dedup(text: str, acronyms_list: list) -> str:
     return " ".join(processed_words).strip()
 
 
+def _service_type_label(name: str, is_group: bool = False) -> str:
+    """The service-type half of a label ("Route Table", "Network Interface").
+
+    Reuses pretty_name's own formatting with the resource-name override turned
+    off, so the two stay consistent instead of drifting apart.
+    """
+    global USE_RESOURCE_NAMES
+    previous = USE_RESOURCE_NAMES
+    USE_RESOURCE_NAMES = False
+    try:
+        return pretty_name(name, show_title=False, is_group=is_group)
+    finally:
+        USE_RESOURCE_NAMES = previous
+
+
 def pretty_name(name: str, show_title=True, is_group=False) -> str:
     """
     Generate clean, human-readable labels for Terraform resource names.
@@ -803,12 +955,51 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
         return ""
 
     if USE_TF_NAMES:
-        return _wrap_tf_name(name)
+        # Cluster captions are uncapped - their box grows to fit
+        return _wrap_tf_name(
+            name,
+            max_lines=0 if is_group else 2,
+            provider=get_provider_for_resource(name),
+        )
 
-    if USE_RESOURCE_NAMES and _RESOURCE_ORIGINAL_META is not None:
-        resource_name = _RESOURCE_ORIGINAL_META.get(name, {}).get("name")
-        if isinstance(resource_name, str) and resource_name:
-            return resource_name
+    if USE_RESOURCE_NAMES:
+        # Cluster captions keep the deployed name. shiftLabel.gvpr widens a
+        # group box to whatever its label needs, so nothing can spill over, and
+        # "SUBNET.apps.web (10.253.1.0/24)" reads better as a boundary caption
+        # than the raw address would.
+        if is_group and _RESOURCE_ORIGINAL_META is not None:
+            resource_name = _RESOURCE_ORIGINAL_META.get(name, {}).get("name")
+            if not resource_name:
+                # handle_variants() renames the node but leaves its metadata
+                # under the original key, so fall back to the name part
+                tail = name.split(".", 1)[-1]
+                for key, meta in _RESOURCE_ORIGINAL_META.items():
+                    if key.split(".", 1)[-1] == tail:
+                        resource_name = meta.get("name")
+                        break
+            if isinstance(resource_name, str) and resource_name:
+                service = _service_type_label(name, is_group=True)
+                squash = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())
+                if not service.strip() or squash(resource_name).startswith(
+                    squash(service)
+                ):
+                    return resource_name
+                return f"{service}\n{resource_name}"
+
+        # Resource cards: what it is, then what it is called in the code. The
+        # HCL name is shown verbatim - the whole point of the flag is to name
+        # the thing you would grep for, so it gets no prettifying, only the
+        # truncation needed to keep it on its row.
+        if not is_group:
+            service = _service_type_label(name)
+            hcl = _hcl_resource_name(name)
+            prov = get_provider_for_resource(name)
+            if not service.strip():
+                return _fit_to_card(hcl, max_lines=1, provider=prov, elide="middle")
+            return (
+                f"{_fit_to_card(service, max_lines=1, provider=prov)}\n"
+                f"{_fit_to_card(hcl, max_lines=1, provider=prov, elide='middle')}"
+            )
 
     skip_keywords = {"null_", "random", "time_sleep", "empty", "blank"}
     if any(k in name for k in skip_keywords):
@@ -829,10 +1020,20 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     # Capture innermost module name before it is stripped
     innermost_module = _innermost_module_name(name)
 
+    # Capture the for_each key before normalising, which throws it away. It is
+    # the only thing telling sibling instances apart - every one of the seven
+    # generic_rt route tables reduced to the same "Route Table Generic Rt"
+    # without it.
+    foreach_key = _foreach_key_words(name)
+
     # Normalize: strip prefixes, modules, suffixes, indices
     name = _normalize_resource_name(name)
 
-    m = re.match(r"^([a-z0-9_]+)(?:\.([a-z0-9_]+))?$", name)
+    # The instance half is whatever the author called it, so it may contain
+    # capitals (DES_keyvault_access, VPN-VNG_Instance0). Restricting it to
+    # lowercase made every such resource fall through to the raw string below,
+    # losing the "Role Assignment" / "VPN Connection" service name entirely.
+    m = re.match(r"^([a-z0-9_]+)(?:\.([A-Za-z0-9_]+))?$", name)
     if not m:
         return (name or "") if is_group else (name or "")[:40]
 
@@ -904,6 +1105,15 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
         left_part = (left_raw or "").replace("_", " ").strip()
         right_part = (instance_raw or "").replace("_", " ").strip()
 
+    # The key rides on the instance half, so show_title=False still yields the
+    # bare service type - _service_type_label() depends on that. It replaces
+    # the instance label rather than joining it: a for_each block is usually
+    # named for the type it builds ("generic_rt"), which is identical across
+    # every sibling, so keeping both spent the whole card on the half that
+    # cannot tell them apart and truncated the half that can.
+    if foreach_key:
+        right_part = foreach_key
+
     if show_title and right_part:
         combined = f"{left_part} - {right_part}"
     else:
@@ -913,7 +1123,13 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     final = _title_case_dedup(combined, acronyms_list)
     if is_group and final.lower().startswith("group "):
         final = final[6:].strip() + " Group"
-    return final if is_group else _soft_break(final)
+    if is_group:
+        return final
+    # _fit_to_card does the wrapping on its own. Breaking with _soft_break
+    # first only got in its way: that cuts at a fixed 21 characters with no
+    # idea how wide the card is, so "Route Table Rt Apps" was split after "Rt"
+    # and the pieces could not be packed back together.
+    return _fit_to_card(final, provider=provider)
 
 
 def replace_variables(
