@@ -2,14 +2,12 @@
   "azurerm_application_gateway.appgw": [
     "azurerm_linux_virtual_machine.backend[0]~1",
     "azurerm_linux_virtual_machine.backend[1]~2",
-    "azurerm_linux_virtual_machine.backend[2]~3",
-    "azurerm_public_ip.public_ip"
+    "azurerm_linux_virtual_machine.backend[2]~3"
   ],
   "azurerm_lb.main": [
     "azurerm_linux_virtual_machine.backend[0]~1",
     "azurerm_linux_virtual_machine.backend[1]~2",
-    "azurerm_linux_virtual_machine.backend[2]~3",
-    "azurerm_public_ip.public_ip"
+    "azurerm_linux_virtual_machine.backend[2]~3"
   ],
   "azurerm_linux_virtual_machine.backend[0]~1": [
     "azurerm_network_interface.backend[0]~1"

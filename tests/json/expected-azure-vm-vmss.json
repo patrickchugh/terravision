@@ -2,8 +2,7 @@
   "azurerm_lb.main": [
     "azurerm_linux_virtual_machine_scale_set.main~1",
     "azurerm_linux_virtual_machine_scale_set.main~2",
-    "azurerm_linux_virtual_machine_scale_set.main~3",
-    "azurerm_public_ip.public_ip"
+    "azurerm_linux_virtual_machine_scale_set.main~3"
   ],
   "azurerm_linux_virtual_machine.main": [
     "azurerm_network_interface.vm"

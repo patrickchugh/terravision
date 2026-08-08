@@ -953,6 +953,62 @@ def _value(node: str, key: str, tfdata: Dict[str, Any]) -> str:
     return ""
 
 
+def azure_handle_local_network_gateway(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Put local network gateways inside the on-premises box.
+
+    A local network gateway is not a device in Azure - it is Azure's
+    representation of whatever sits at the far end of a VPN tunnel, holding
+    that peer's public address and routes. Drawn as a bare Azure icon it reads
+    as a resource in the subscription, which it is not, and a redundant tunnel
+    design scatters four near-identical icons across the canvas.
+
+    AZURE_AUTO_ANNOTATIONS already creates tv_azure_onprem.corporate_datacenter
+    and links the VPN gateway to it, but nothing was ever put inside, so the
+    empty box was dropped before drawing. Moving the peers into it is what the
+    annotation was always for, and matches how AWS draws customer gateways
+    behind a Corporate Datacenter boundary.
+
+    The link is made both ways so find_bidirectional_links() renders a single
+    two-way arrow: a site-to-site tunnel carries traffic in both directions,
+    and a single arrowhead is misleading whichever way it points.
+    """
+    onprem_boxes = [k for k in tfdata["graphdict"] if k.startswith("tv_azure_onprem.")]
+    if not onprem_boxes:
+        return tfdata
+    box = onprem_boxes[0]
+
+    peers = [
+        k
+        for k in tfdata["graphdict"]
+        if helpers.get_no_module_name(k).startswith("azurerm_local_network_gateway.")
+    ]
+    if not peers:
+        return tfdata
+
+    gateways = [
+        k
+        for k in tfdata["graphdict"]
+        if helpers.get_no_module_name(k).startswith("azurerm_virtual_network_gateway.")
+        and "connection" not in k
+    ]
+
+    for peer in peers:
+        for parent in helpers.list_of_parents(tfdata["graphdict"], peer):
+            if parent != box:
+                helpers.safe_remove_connection(tfdata, parent, peer)
+        if peer not in tfdata["graphdict"][box]:
+            tfdata["graphdict"][box].append(peer)
+
+    # Reverse edge so the tunnel reads as two-way rather than one-directional
+    for gateway in gateways:
+        if gateway not in tfdata["graphdict"].get(box, []):
+            tfdata["graphdict"][box].append(gateway)
+        if box not in tfdata["graphdict"].get(gateway, []):
+            tfdata["graphdict"][gateway].append(box)
+
+    return tfdata
+
+
 def _vnet_containing(subnets: List[str], tfdata: Dict[str, Any]) -> Optional[str]:
     """Return the VNET that holds the most of the given subnets, if any."""
     vnets = [

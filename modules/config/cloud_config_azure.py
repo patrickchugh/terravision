@@ -238,6 +238,11 @@ AZURE_REVERSE_ARROW_LIST = [
     "azurerm_subnet.",
     "azurerm_network_security_group.",
     "azurerm_dns_zone",
+    # A public IP is attached to a frontend rather than sitting behind it, so
+    # Terraform's "the load balancer references its IP" is a dependency, not a
+    # flow. Reversed, inbound traffic reads the way it actually travels:
+    # users -> public IP -> load balancer -> backend NICs.
+    "azurerm_public_ip.",
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only

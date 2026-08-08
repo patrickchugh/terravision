@@ -110,6 +110,13 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    # A local network gateway is Azure's stand-in for the far end of a VPN
+    # tunnel, not a device in the subscription, so it belongs in the
+    # on-premises box rather than loose on the canvas
+    "azurerm_local_network_gateway": {
+        "description": "Move VPN peers into the on-premises box and make the tunnel two-way (Pure Function)",
+        "additional_handler_function": "azure_handle_local_network_gateway",
+    },
     # Route tables: the association resource is pure plumbing, but it is the
     # only thing linking a subnet to its route table - so collapse rather than
     # hide, keeping subnet -> route table
