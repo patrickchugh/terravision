@@ -553,8 +553,21 @@ def _resolved_metadata(node: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Names survive far better (92% concrete) because they are usually written in
     the config rather than assigned, which is why rule 2 does the real work.
     """
-    hcl = tfdata.get("meta_data", {}).get(node) or {}
-    plan = tfdata.get("original_metadata", {}).get(node) or {}
+
+    def view(name: str) -> Dict[str, Any]:
+        """One view's entry, tolerating the ~N suffix on the node key.
+
+        Numbering is applied to the graph after metadata is collected, so a
+        counted instance is keyed as resource~1 in the graph but plainly as
+        resource in the plan. Looking up only the exact key silently returned
+        nothing and left the HCL expression standing where a resolved value
+        existed - which is how a VNET ended up named "VNET.${each.key}".
+        """
+        store = tfdata.get(name, {})
+        return store.get(node) or store.get(node.split("~")[0]) or {}
+
+    hcl = view("meta_data")
+    plan = view("original_metadata")
     if not plan:
         return hcl
     merged = dict(hcl)

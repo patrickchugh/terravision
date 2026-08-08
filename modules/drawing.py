@@ -416,19 +416,41 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
     if len(clusters) < 2:
         return
 
-    def resolved(node: str) -> Dict[str, Any]:
-        return tfdata.get("original_metadata", {}).get(node) or tfdata.get(
-            "meta_data", {}
-        ).get(node, {})
+    # Shared with the reference matching in graphmaker rather than
+    # reimplemented, because a link needs BOTH metadata views and which one
+    # holds the answer varies per attribute. A single peering shows it:
+    #   virtual_network_name      'VNET.apps'   the plan resolved this
+    #   remote_virtual_network_id True          only the HCL names the target
+    # terravision plans against empty state, so anything the provider assigns
+    # is usually unknown - reading the plan alone drew no peering at all.
+    from modules.graphmaker import _resolved_metadata as resolved_metadata
 
-    # Index every drawn group by the values a link resource might reference it by
+    def resolved(node: str) -> Dict[str, Any]:
+        return resolved_metadata(node, tfdata)
+
+    # Index every drawn group by the values a link resource might reference it
+    # by. The Terraform address is included because it is what survives when
+    # the id does not: the HCL expression left in place of an unknown id names
+    # its target as azurerm_virtual_network.generic_vnet["security"], which is
+    # the graph key rather than any provider identifier.
     by_identity = {}
     for group in clusters:
+        by_identity[group.split("~")[0]] = group
         metadata = resolved(group)
         for key in ("id", "self_link", "name"):
             value = metadata.get(key)
             if isinstance(value, str) and value:
                 by_identity[value] = group
+
+    def group_referenced_by(reference: str):
+        return next(
+            (
+                g
+                for identity, g in by_identity.items()
+                if identity and identity in reference
+            ),
+            None,
+        )
 
     drawn_pairs = set()
     for owner in clusters:
@@ -440,11 +462,23 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
             if not link:
                 continue
 
-            remote_ref = str(resolved(child).get(link["remote_attribute"], ""))
-            remote = next(
-                (g for identity, g in by_identity.items() if identity in remote_ref),
-                None,
+            remote = group_referenced_by(
+                str(resolved(child).get(link["remote_attribute"], ""))
             )
+
+            # Prefer the link's own idea of which group it belongs to. Graph
+            # parentage is unreliable here: a peering frequently ends up nested
+            # under the VNET it points AT rather than the one that declares it,
+            # which made both ends resolve to the same box and every line was
+            # skipped as a self-link.
+            local_attribute = link.get("local_attribute")
+            local = (
+                group_referenced_by(str(resolved(child).get(local_attribute, "")))
+                if local_attribute
+                else None
+            )
+            owner = local or owner
+
             # These are declared from both sides; one line between them is enough
             if not remote or remote == owner:
                 continue

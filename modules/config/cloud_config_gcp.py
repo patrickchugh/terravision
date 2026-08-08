@@ -362,6 +362,7 @@ OLLAMA_MODEL = "llama3"
 GCP_GROUP_LINKS = [
     {
         "resource_type": "google_compute_network_peering",
+        "local_attribute": "network",
         "remote_attribute": "peer_network",
         "label": "peering",
     },

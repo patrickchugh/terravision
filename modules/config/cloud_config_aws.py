@@ -464,6 +464,7 @@ OLLAMA_MODEL = "llama3"
 AWS_GROUP_LINKS = [
     {
         "resource_type": "aws_vpc_peering_connection",
+        "local_attribute": "vpc_id",
         "remote_attribute": "peer_vpc_id",
         "label": "peering",
     },

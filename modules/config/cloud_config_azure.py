@@ -426,6 +426,9 @@ OLLAMA_MODEL = "llama3"
 AZURE_GROUP_LINKS = [
     {
         "resource_type": "azurerm_virtual_network_peering",
+        # Which group declares the link, and which it points at. Both are needed
+        # because graph parentage cannot be trusted to say which is which.
+        "local_attribute": "virtual_network_name",
         "remote_attribute": "remote_virtual_network_id",
         "label": "peering",
     },
