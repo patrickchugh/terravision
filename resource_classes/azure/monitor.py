@@ -65,3 +65,5 @@ azurerm_monitor_autoscale_setting = AutoScale
 azurerm_log_analytics_workspace = LogAnalyticsWorkspaces
 azurerm_monitor_diagnostic_setting = DiagnosticsSettings
 azurerm_network_watcher = NetworkWatcher
+# Target of the azurerm_monitor consolidated node
+azurerm_monitor = Monitor

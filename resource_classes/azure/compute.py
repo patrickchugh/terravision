@@ -253,3 +253,4 @@ azurerm_virtual_machine = VirtualMachine
 azurerm_linux_virtual_machine_scale_set = VMScaleSet
 azurerm_windows_virtual_machine_scale_set = VMScaleSet
 azurerm_virtual_machine_scale_set = VMScaleSet
+azurerm_disk_encryption_set = DiskEncryptionSets

@@ -155,7 +155,8 @@ class RouteFilters(_Networking):
 
 
 class RouteTables(_Networking):
-    _icon = "route-tables.png"
+    # route-tables.png in the bundled set is mislabelled artwork (a person)
+    _icon = "virtual-router.png"
 
 
 class ServiceEndpointPolicies(_Networking):

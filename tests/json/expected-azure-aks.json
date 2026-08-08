@@ -2,6 +2,11 @@
   "azurerm_container_registry.acr": [
     "azurerm_role_assignment.aks_acr"
   ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.acr",
+    "azurerm_log_analytics_workspace.aks",
+    "azurerm_storage_account.aks"
+  ],
   "azurerm_kubernetes_cluster.aks": [
     "azurerm_container_registry.acr",
     "azurerm_kubernetes_cluster_node_pool.workload~1",
