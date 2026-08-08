@@ -1420,13 +1420,30 @@ def check_variant(
     config_constants = _get_provider_config_constants(tfdata)
     NODE_VARIANTS = config_constants["NODE_VARIANTS"]
 
+    def drop_empty(value):
+        """Strip attributes Terraform left unset, recursively.
+
+        The match below is a substring search over the stringified metadata, so
+        it hits attribute *names* as readily as values. "compute_config": []
+        means EKS auto mode is switched off, yet the bare name was enough to
+        rename the cluster to its auto variant. An attribute with no value
+        carries no signal, so it should not be in the haystack at all.
+        """
+        if isinstance(value, dict):
+            return {
+                k: drop_empty(v)
+                for k, v in value.items()
+                if v not in (None, "", [], {}, ())
+            }
+        if isinstance(value, list):
+            return [drop_empty(v) for v in value]
+        return value
+
+    haystack = str(drop_empty(metadata))
     for variant_service in NODE_VARIANTS:
         if resource.startswith(variant_service):
             for keyword in NODE_VARIANTS[variant_service]:
-                if (
-                    keyword in str(metadata)
-                    and NODE_VARIANTS[variant_service] != resource
-                ):
+                if keyword in haystack and NODE_VARIANTS[variant_service] != resource:
                     return NODE_VARIANTS[variant_service][keyword]
             return False
     return False

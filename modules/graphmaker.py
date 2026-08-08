@@ -534,25 +534,54 @@ def _foreach_key(node: str) -> Optional[str]:
 
 
 def _resolved_metadata(node: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Prefer plan-resolved metadata over the HCL-merged view.
+    """Both metadata views merged, with concrete plan values winning.
 
-    merge_metadata() overwrites plan values with the original HCL expressions
-    (that is how references are discovered in the first place), so the concrete
-    ids and names only survive in original_metadata.
+    There are two views of every resource and they disagree. The plan view has
+    values Terraform could resolve; merge_metadata() then overwrites them with
+    the original HCL expressions, which is how references are discovered in the
+    first place. Neither is sufficient alone.
+
+    Preferring the plan view outright was wrong. terravision forces a local
+    backend so the plan runs against empty state and reports every resource as
+    to-be-created - by design, so that a diagram shows the whole architecture.
+    Provider-assigned values are therefore almost never known: across the test
+    corpus only 21% of ids and 23% of arns are concrete, the rest arriving as
+    the bare "(known after apply)" marker. When an attribute is unknown the
+    HCL expression is the only evidence left, and it names the target instance
+    exactly, key and all.
+
+    Names survive far better (92% concrete) because they are usually written in
+    the config rather than assigned, which is why rule 2 does the real work.
     """
-    resolved = tfdata.get("original_metadata", {}).get(node)
-    if resolved:
-        return resolved
-    return tfdata.get("meta_data", {}).get(node) or {}
+    hcl = tfdata.get("meta_data", {}).get(node) or {}
+    plan = tfdata.get("original_metadata", {}).get(node) or {}
+    if not plan:
+        return hcl
+    merged = dict(hcl)
+    for attribute, value in plan.items():
+        if _is_concrete(value) or attribute not in merged:
+            merged[attribute] = value
+    return merged
 
 
 def _is_concrete(value: Any) -> bool:
     """True for a usable resolved string.
 
-    Guards against unresolved interpolations and the boolean `True` that marks
-    "(known after apply)" attributes in plan output.
+    Guards against unresolved interpolations and against the placeholders that
+    stand in for a value Terraform never supplied. Both survive as strings and
+    so used to pass this check:
+
+      * "(known after apply)" arrives from the plan as the boolean True, but
+        variable resolution rewrites it to the *string* "True" - which then
+        outranked the HCL expression naming the instance exactly.
+      * an unresolved variable is left as empty quotes ('"" ') or whitespace,
+        which is what stopped a marketplace appliance being recognised by its
+        publisher.
     """
-    return isinstance(value, str) and bool(value) and "${" not in value
+    if not isinstance(value, str) or "${" in value:
+        return False
+    stripped = value.strip().strip("\"'").strip()
+    return bool(stripped) and stripped != "True"
 
 
 def _identify_instance(
@@ -563,17 +592,36 @@ def _identify_instance(
 ) -> Optional[str]:
     """Pick the single instance a resource refers to, or None if still unclear.
 
-    Three rules, most reliable first. Each needs exactly one winner - two
+    Four rules, most reliable first. Each needs exactly one winner - two
     matches leaves the instance as ambiguous as none at all.
     """
-    # Every concrete string the source resolved to - the haystack for rules 1 and 2
+    source_metadata = _resolved_metadata(source_node, tfdata)
+    # Every concrete string the source resolved to - the haystack for rules 2 and 3
     source_values = {
-        path[-1]
-        for path in dict_generator(_resolved_metadata(source_node, tfdata))
-        if _is_concrete(path[-1])
+        path[-1] for path in dict_generator(source_metadata) if _is_concrete(path[-1])
     }
+    # Every string it carries, including the HCL expressions _is_concrete
+    # rejects - the haystack for rule 1
+    source_text = [
+        path[-1]
+        for path in dict_generator(source_metadata)
+        if isinstance(path[-1], str)
+    ]
 
-    # 1. Provider-assigned id, matched two ways because providers differ:
+    # 1. A reference naming the instance's own address. "${azurerm_x.y["k"].id}"
+    #    identifies its target exactly, so it outranks every inference below.
+    #    It ranks first because terravision plans against empty state, so on a
+    #    greenfield plan - which is most of them - this is the only evidence
+    #    that exists at all.
+    by_reference = [
+        candidate
+        for candidate in candidates
+        if any(candidate.split("~")[0] in value for value in source_text)
+    ]
+    if len(by_reference) == 1:
+        return by_reference[0]
+
+    # 2. Provider-assigned id, matched two ways because providers differ:
     #    - exact: AWS children carry an explicit pointer to the parent, so a
     #      subnet's vpc_id IS the vpc's id ("vpc-0prod"). ARNs do not nest.
     #    - prefix: Azure and GCP have no such pointer, but their ARM ids and
@@ -594,7 +642,10 @@ def _identify_instance(
     if len(by_id) == 1:
         return by_id[0]
 
-    # 2. Resource name, as recorded in the plan
+    # 3. Resource name, as recorded in the plan. This is the rule that does
+    #    most of the real work: names are usually written in the config rather
+    #    than assigned by the provider, so 92% of them are concrete against
+    #    21% of ids.
     by_name = []
     for candidate in candidates:
         candidate_name = _resolved_metadata(candidate, tfdata).get("name")
@@ -603,7 +654,7 @@ def _identify_instance(
     if len(by_name) == 1:
         return by_name[0]
 
-    # 3. Instance key. Last resort for greenfield plans where ids and names are
+    # 4. Instance key. Last resort for greenfield plans where ids and names are
     #    still unknown; relies on the convention of nesting child keys under
     #    parent keys ("apps.web" under "apps"), so it ranks below real values.
     by_key = []
@@ -1633,9 +1684,19 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             # Numbered instances keep their metadata under the full node key
             # (fw01[0]~1), so fall back to it when the stripped name has none -
             # otherwise check_variant() sees None and no variant ever matches
-            metadata = tfdata["meta_data"].get(node_name) or tfdata["meta_data"].get(
-                node
-            )
+            # Both views go in: check_variant() only substring-searches the
+            # stringified dict, and either view may be the one holding the
+            # evidence. A marketplace publisher ("paloaltonetworks") is
+            # resolved in the plan but left as empty quotes in the HCL view
+            # when its variable cannot be resolved, so reading HCL alone made
+            # a firewall appliance read as a plain VM.
+            metadata = {
+                view: store.get(node_name) or store.get(node)
+                for view, store in (
+                    ("plan", tfdata.get("original_metadata", {})),
+                    ("hcl", tfdata.get("meta_data", {})),
+                )
+            }
             renamed_node = helpers.check_variant(node, metadata, tfdata)
         else:
             renamed_node = False
