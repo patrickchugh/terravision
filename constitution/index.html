@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1073,6 +1073,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#viii-agent-accessible-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VIII. Agent-Accessible Interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1089,6 +1100,17 @@
   
     <nav class="md-nav" aria-label="Technical Standards">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agent-interface-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Interface Standards
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#supported-technologies" class="md-nav__link">
@@ -1565,6 +1587,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#viii-agent-accessible-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VIII. Agent-Accessible Interfaces
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1581,6 +1614,17 @@
   
     <nav class="md-nav" aria-label="Technical Standards">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agent-interface-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Interface Standards
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#supported-technologies" class="md-nav__link">
@@ -1808,23 +1852,23 @@
 
 <!--
 Sync Impact Report:
-- Version change: 1.5.0 → 1.6.0 (clarified credentials boundary in Principle II;
-  expanded Principle I to explicitly require plan over state)
+- Version change: 1.6.0 → 1.7.0 (added Principle VIII covering agent-accessible
+  interfaces, prompted by the MCP server contribution for issue #191)
 - Modified principles:
-  - I. Code as Source of Truth — added explicit guidance on why plan is preferred
-    over state file as the input source. State is a snapshot of yesterday's
-    deployment; plan is the semantic content of the code.
-  - II. Client-Side Security & Privacy — clarified that TerraVision itself
-    requires no cloud credentials. Cloud API access happens only when Terraform
-    is invoked by TerraVision to generate a plan. Pre-generated plan/graph file
-    mode (`--planfile` / `--graphfile`) is fully credential-free.
-- Added sections: None
+  - VIII. Agent-Accessible Interfaces — NEW. Machine interfaces that expose
+    TerraVision to AI agents must mirror existing commands rather than invent
+    capability, must stay optional, and must remain local and credential-free
+    on the same terms as Principle II.
+- Added sections:
+  - Principle VIII (Core Principles)
+  - Agent Interface Standards, AG-001 through AG-008 (Technical Standards)
+  - CR-006 (Code Review Requirements)
 - Removed sections: None
 - Templates status:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - Requirements sections align with testability principles
   ✅ tasks-template.md - Task organization reflects independent testing principles
-  ✅ CLAUDE.md - No changes required
+  ✅ CLAUDE.md - Updated with the mcp_service/mcp_server module description
 - Follow-up TODOs: None
 --><h1 id="terravision-constitution">TerraVision Constitution<a class="headerlink" href="#terravision-constitution" title="Permanent link">¶</a></h1>
 <h2 id="core-principles">Core Principles<a class="headerlink" href="#core-principles" title="Permanent link">¶</a></h2>
@@ -1866,12 +1910,31 @@ Sync Impact Report:
 <p>AI-powered diagram refinement MUST remain optional and support multiple backends (cloud-based, local). AI refinement MUST add missing connections, suggest meaningful diagram titles and external actors, generate numbered flow sequences where an end-to-end path exists, and enforce architectural conventions. Local AI options (Ollama) MUST be available for privacy-sensitive environments.</p>
 <p>AI refinement MUST NOT modify the deterministic graph data (graphdict, tfdata) — all AI output MUST be expressed as a separate annotation artifact (e.g., <code>terravision.ai.yml</code>) or as positional-only edits to a laid-out DOT file that pass a strict validation gate before image generation.</p>
 <p><strong>Rationale</strong>: AI improves diagram quality by applying architectural best practices and detecting missing relationships, but must remain optional to support air-gapped environments. Multiple backend support allows organizations to choose between convenience (cloud) and privacy (local). Resource grouping/simplification was explicitly removed from the mandated capabilities in v1.7.0 because the risk of the AI hiding load-bearing resources outweighed the readability benefit; grouping may return as an opt-in capability in a future amendment once a safe heuristic is proven.</p>
+<h3 id="viii-agent-accessible-interfaces">VIII. Agent-Accessible Interfaces<a class="headerlink" href="#viii-agent-accessible-interfaces" title="Permanent link">¶</a></h3>
+<p>TerraVision MAY expose machine-facing interfaces (such as an MCP server) so AI agents can generate diagrams directly. Such an interface MUST be a <strong>projection of the existing CLI, not a second product</strong>: every capability it offers MUST correspond to a command that already exists, and MUST produce output identical to that command for the same inputs.</p>
+<p>An agent interface MUST be an optional dependency. Installing TerraVision without it MUST leave every other command byte-for-byte unaffected, and invoking the interface without it MUST fail with an actionable installation message rather than a traceback.</p>
+<p>An agent interface MUST NOT weaken Principle II. It MUST run locally as a subprocess of the calling client, MUST NOT open a network listener, and MUST NOT require cloud credentials of its own. The pre-generated plan path (<code>--planfile</code> / <code>--graphfile</code>) MUST be reachable through the interface so agents have a fully credential-free option.</p>
+<p>Interfaces that consume LLM backends on TerraVision's behalf (<code>--ai-annotate</code>) MUST NOT be exposed to an agent. An agent is already a model; having TerraVision call out to a second one inverts the control flow and drags credential handling into a component whose defining property is not needing any.</p>
+<p><strong>Rationale</strong>: The value TerraVision offers an agent is accuracy — a diagram derived from <code>terraform plan</code> rather than one inferred from reading code. That value evaporates if the agent surface drifts from the CLI, because the two would then disagree about what the infrastructure is. Constraining the interface to a projection of existing commands keeps a single source of truth, keeps the review burden proportionate, and means agent support cannot become a parallel implementation that rots. Keeping it optional and local preserves the security posture that makes TerraVision adoptable inside strict environments; an agent-facing feature must not be the reason a security team rejects the tool.</p>
 <h2 id="technical-standards">Technical Standards<a class="headerlink" href="#technical-standards" title="Permanent link">¶</a></h2>
+<h3 id="agent-interface-standards">Agent Interface Standards<a class="headerlink" href="#agent-interface-standards" title="Permanent link">¶</a></h3>
+<p>Requirements for any interface that exposes TerraVision to automated agents.</p>
+<ul>
+<li><strong>AG-001</strong>: Every agent-exposed operation MUST map to an existing CLI command. New capability MUST be added as a command first, then projected.</li>
+<li><strong>AG-002</strong>: Agent-exposed operations MUST produce output identical to the equivalent command for the same inputs, and this MUST be enforced by a parity test. Non-deterministic content (e.g. generation timestamps) MAY be normalised before comparison.</li>
+<li><strong>AG-003</strong>: Agent interface dependencies MUST be declared as optional extras, never as core dependencies. They MUST be imported lazily so a default install never pays for them.</li>
+<li><strong>AG-004</strong>: Agent interfaces MUST NOT expose AI-annotation backends, as required by Principle VIII.</li>
+<li><strong>AG-005</strong>: Operations that generate files MUST return paths rather than file contents, matching CLI behaviour, and MUST confine writes to a configured output directory. Filenames supplied by an agent MUST be rejected if they contain path separators or parent references.</li>
+<li><strong>AG-006</strong>: Long-lived interfaces MUST NOT let pipeline behaviour leak between requests. Module-level rendering state and the process working directory MUST be restored after every operation, and <code>sys.exit()</code> raised inside the pipeline MUST be contained and reported rather than terminating the process.</li>
+<li><strong>AG-007</strong>: Where the transport reserves a stream for protocol traffic (e.g. stdout under MCP stdio), pipeline output MUST be diverted away from it, and this MUST be covered by a test asserting the stream stays clean.</li>
+<li><strong>AG-008</strong>: Where an agent interface depends on behaviour that <code>tfdata.json</code> replay fixtures do not reach — notably <code>tfwrapper</code>'s init/plan path and the working directory it leaves behind — that dependency MUST be covered by a test that reproduces the behaviour explicitly. Replay sources bypass <code>tfwrapper</code> entirely, so a replay-only suite cannot exercise it. Tests that invoke Terraform directly to obtain this coverage MUST be marked <code>@pytest.mark.slow</code> per TS-007, and SHOULD be preferred only where the behaviour cannot be reproduced without it.</li>
+</ul>
+<p><strong>Rationale</strong>: AG-006 through AG-008 exist because a server outlives a single command, which invalidates assumptions the CLI is entitled to make — process-global state is set once and never reset, <code>exit()</code> is a legitimate way to end a run, and stdout is free for human-readable progress. AG-008 is recorded specifically because a replay-only test suite passed while a real Terraform source silently wrote its diagram to the wrong directory. It requires the behaviour to be covered rather than requiring Terraform to be run, because the marker that identifies a slow test does not exclude it from CI — only from the pre-commit hook — so mandating live Terraform runs would tax every future build for coverage obtainable more cheaply.</p>
 <h3 id="supported-technologies">Supported Technologies<a class="headerlink" href="#supported-technologies" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>Language</strong>: Python 3.10+</li>
 <li><strong>Required Dependencies</strong>: Terraform 1.x, Git, Graphviz</li>
-<li><strong>Optional Dependencies</strong>: Ollama (for local AI), AWS Bedrock (for cloud AI)</li>
+<li><strong>Optional Dependencies</strong>: Ollama (for local AI), AWS Bedrock (for cloud AI), <code>mcp</code> (for the MCP server, installed via the <code>[mcp]</code> extra)</li>
 <li><strong>Input Formats</strong>: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON</li>
 <li><strong>Output Formats</strong>: PNG (default), SVG, PDF, BMP, JSON</li>
 </ul>
@@ -1954,6 +2017,7 @@ Sync Impact Report:
 <li><strong>CR-003</strong>: AI backend changes require testing with both Bedrock and Ollama</li>
 <li><strong>CR-004</strong>: Security-related changes require explicit threat model consideration</li>
 <li><strong>CR-005</strong>: Provider-specific code changes MUST NOT modify common modules (enforces CO-001 through CO-005)</li>
+<li><strong>CR-006</strong>: Changes to an agent-facing interface require evidence of a parity check against the equivalent CLI command (enforces AG-002), and a note on the trust boundary where agent-supplied values reach the filesystem or a subprocess (extends CR-004)</li>
 </ul>
 <h3 id="release-criteria">Release Criteria<a class="headerlink" href="#release-criteria" title="Permanent link">¶</a></h3>
 <ul>
@@ -1984,10 +2048,10 @@ Sync Impact Report:
 <h3 id="versioning-policy">Versioning Policy<a class="headerlink" href="#versioning-policy" title="Permanent link">¶</a></h3>
 <ul>
 <li><strong>MAJOR</strong>: Backward-incompatible changes to CLI interface, annotation format, or core principles</li>
-<li><strong>MINOR</strong>: New cloud provider support, new output formats, new AI backends, new principles, new technical standards</li>
+<li><strong>MINOR</strong>: New cloud provider support, new output formats, new AI backends, new agent-facing interfaces, new principles, new technical standards</li>
 <li><strong>PATCH</strong>: Bug fixes, documentation updates, icon additions, clarifications</li>
 </ul>
-<p><strong>Version</strong>: 1.6.0 | <strong>Ratified</strong>: 2025-12-07 | <strong>Last Amended</strong>: 2026-04-06</p>
+<p><strong>Version</strong>: 1.7.0 | <strong>Ratified</strong>: 2025-12-07 | <strong>Last Amended</strong>: 2026-07-29</p>
 
 
 
@@ -2088,7 +2152,7 @@ Sync Impact Report:
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "toc.follow", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   
