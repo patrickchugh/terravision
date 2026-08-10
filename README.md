@@ -1,5 +1,7 @@
 # TerraVision
 
+<!-- mcp-name: io.github.patrickchugh/terravision -->
+
 **Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)

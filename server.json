@@ -1,0 +1,40 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.patrickchugh/terravision",
+  "title": "TerraVision",
+  "description": "Cloud architecture diagrams generated from terraform plan, with official AWS, Azure, GCP icons",
+  "repository": {
+    "url": "https://github.com/patrickchugh/terravision",
+    "source": "github"
+  },
+  "websiteUrl": "https://patrickchugh.github.io/terravision/",
+  "version": "0.46.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "terravision",
+      "version": "0.46.1",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "terravision[mcp]",
+          "description": "The MCP server lives in the optional [mcp] extra; the bare package installs the CLI only."
+        }
+      ],
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "valueHint": "mcp",
+          "description": "Subcommand that starts the MCP server on the stdio transport."
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
