@@ -356,3 +356,21 @@ OLLAMA_HOST = "http://localhost:11434"
 # the server has installed is valid — llama3, mistral, qwen2.5,
 # llama3.1, etc.
 OLLAMA_MODEL = "llama3"
+
+# Resources linking two group boxes together - drawn as an edge between the
+# boxes rather than an icon inside one of them (see _draw_group_links)
+GCP_GROUP_LINKS = [
+    {
+        "resource_type": "google_compute_network_peering",
+        "local_attribute": "network",
+        "remote_attribute": "peer_network",
+        "label": "peering",
+    },
+]
+
+# Nodes whose links always carry traffic both ways, so they are drawn with a
+# two-way arrow regardless of which direction Terraform happened to express.
+# The internet is a medium rather than a destination - a resource reaching out
+# and a user coming in are the same line - and a site-to-site VPN tunnel is
+# bidirectional by definition.
+GCP_BIDIRECTIONAL_NODES = ["tv_gcp_internet"]

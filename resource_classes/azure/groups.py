@@ -58,6 +58,10 @@ class AZUREGroup(Cluster):
         # Store label info for creating separate label node at bottom
         self.label_text = label
         self.label_icon = f"{base_path}/resource_images/azure/azure.png"
+        # Branding mark rather than a glyph - drawn at 2x its natural size
+        # (source is 500x281, so keep that aspect ratio)
+        self.label_icon_width = 1000
+        self.label_icon_height = 562
         self.label_position = "bottom-left"  # Position at bottom-left
         self.label_icon_first = True  # Icon before text
 
@@ -200,6 +204,38 @@ class SharedServicesGroup(Cluster):
         super().__init__(label, defaultdir, graph_attrs)
 
 
+class OnPrem(Cluster):
+    """Box for infrastructure outside Azure that a VPN gateway connects to.
+
+    Referenced by AZURE_AUTO_ANNOTATIONS as tv_azure_onprem, which had no class
+    until now - so the box silently failed the avl_classes check and every
+    on-premises/peer end vanished from the diagram.
+    """
+
+    def __init__(self, label="Corporate Datacenter", **kwargs):
+        graph_attrs = {
+            "style": "solid",
+            "pencolor": "black",
+            "margin": "100",
+            "ordering": "in",
+            "center": "true",
+            "labeljust": "l",
+            "_shift": "1",
+        }
+        # Provider-neutral on purpose: this box is whatever sits at the far end
+        # of a VPN tunnel - a datacenter, a branch office, another cloud - and
+        # nothing in it is an Azure resource. The obvious Azure candidate,
+        # on-premises-data-gateways.png, is the branded icon for the Azure
+        # On-premises Data Gateway product, so using it would claim that
+        # specific service is deployed there.
+        icon = f"{base_path}/resource_images/generic/place/datacenter.png"
+        html_label = (
+            '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
+            f'<TD><img src="{icon}"/></TD><TD>{label}</TD></TR></TABLE>>'
+        )
+        super().__init__(html_label, defaultdir, graph_attrs)
+
+
 # Aliases for Terraform resource type names
 azurerm_resource_group = ResourceGroupCluster
 azurerm_virtual_network = VNetGroup
@@ -207,3 +243,4 @@ azurerm_subnet = SubnetGroup
 tv_azurerm_zone = AvailabilityZone  # Virtual zones for VMSS instances
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup
+tv_azure_onprem = OnPrem

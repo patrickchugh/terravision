@@ -17,6 +17,7 @@ def expand_to_numbered_instances(
     subnet_key: str = "subnet_ids",
     skip_if_numbered: bool = True,
     inherit_connections: bool = True,
+    parent_pattern: str = "aws_subnet",
 ) -> Dict[str, Any]:
     """Expand single resource into numbered instances (~1, ~2, ~3) per subnet.
 
@@ -29,6 +30,9 @@ def expand_to_numbered_instances(
                             If False, numbered instances start with empty connections.
                             Use False for visual-only resources (ElastiCache multi-AZ),
                             True for actual instances (EKS nodes, ASG instances).
+        parent_pattern: Group nodes to spread instances across. Defaults to
+                        "aws_subnet" for the existing AWS handlers; Azure and GCP
+                        pass their own subnet type.
 
     Returns:
         Updated tfdata with numbered instances
@@ -36,7 +40,7 @@ def expand_to_numbered_instances(
     resources = helpers.list_of_dictkeys_containing(
         tfdata["graphdict"], resource_pattern
     )
-    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], parent_pattern)
 
     for resource in list(resources):
         if skip_if_numbered and "~" in resource:
@@ -98,7 +102,7 @@ def expand_to_numbered_instances(
 
     # Cleanup: Ensure each subnet only contains numbered instances assigned to it
     # This prevents overlapping connections where subnet_a contains both resource~1 and resource~2
-    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], "aws_subnet")
+    subnets = helpers.list_of_dictkeys_containing(tfdata["graphdict"], parent_pattern)
     for subnet_idx, subnet in enumerate(sorted(subnets), start=1):
         subnet_connections = tfdata["graphdict"].get(subnet, [])[:]
 
@@ -112,6 +116,80 @@ def expand_to_numbered_instances(
                 # If this numbered instance doesn't match the subnet's position, remove it
                 if instance_num != subnet_idx:
                     helpers.safe_remove_connection(tfdata, subnet, connection)
+
+    return tfdata
+
+
+def expand_shared_children(
+    tfdata: Dict[str, Any],
+    parent_pattern: str,
+    child_pattern: str,
+    skip_if_numbered: bool = True,
+) -> Dict[str, Any]:
+    """Give each parent group its own copy of a child it shares with siblings.
+
+    A node can only be drawn inside one cluster, so when several group nodes
+    point at the same child - three subnets sharing one route table - only the
+    first group ends up containing it. The rest are left with no member of
+    their own, and a cluster with no members has nothing anchoring it inside
+    its parent, so the layout engine drops it anywhere on the canvas. On a real
+    landing zone that shows up as subnets floating outside their VNET and
+    overlapping each other.
+
+    Cloning the child per parent (child~1, child~2, ...) keeps every group
+    populated and correctly nested. This is the same numbered-instance fix the
+    codebase applies to count/for_each resources, generalised to any
+    parent/child pair so every provider can use it from config.
+
+    Args:
+        tfdata: Terraform data dictionary
+        parent_pattern: Pattern matching the group nodes (e.g. "azurerm_subnet.")
+        child_pattern: Pattern matching the shared child (e.g. "azurerm_route_table.")
+        skip_if_numbered: Leave children that are already numbered alone
+
+    Returns:
+        Updated tfdata with one numbered child per sharing parent
+    """
+    graphdict = tfdata["graphdict"]
+    parents = [p for p in graphdict if parent_pattern in p]
+    children = [c for c in graphdict if child_pattern in c]
+
+    for child in children:
+        if skip_if_numbered and "~" in child:
+            continue
+
+        owners = sorted(p for p in parents if child in graphdict.get(p, []))
+        if len(owners) < 2:
+            continue
+
+        for index, owner in enumerate(owners, start=1):
+            clone = f"{child}~{index}"
+            graphdict[clone] = list(graphdict.get(child, []))
+            for view in ("meta_data", "original_metadata"):
+                source = tfdata.get(view, {}).get(child)
+                if source is not None:
+                    tfdata.setdefault(view, {})[clone] = copy.deepcopy(source)
+            helpers.safe_remove_connection(tfdata, owner, child)
+            if clone not in graphdict[owner]:
+                graphdict[owner].append(clone)
+
+        # Anything else still pointing at the original (a route pointing at its
+        # route table, say) is moved onto the first clone, otherwise the
+        # original survives as an orphan copy sitting outside every group.
+        # exactmatch is essential: list_of_parents() otherwise matches on
+        # startswith, so the clones we just made (child~2, child~3) read as
+        # references to child, and every owner had ~1 appended on top of its
+        # own copy - putting ~1 in several clusters at once, which is the very
+        # thing this function exists to prevent.
+        first_clone = f"{child}~1"
+        for referrer in helpers.list_of_parents(graphdict, child, exactmatch=True):
+            helpers.safe_remove_connection(tfdata, referrer, child)
+            if first_clone not in graphdict.get(referrer, []):
+                graphdict[referrer].append(first_clone)
+
+        helpers.delete_node(
+            tfdata, child, remove_from_connections=False, delete_meta_data=True
+        )
 
     return tfdata
 
@@ -298,6 +376,7 @@ def group_shared_services(
     tfdata: Dict[str, Any],
     service_patterns: List[str],
     group_name: str = "aws_group.shared_services",
+    always_include: str = "aws_iam_group.of_services",
 ) -> Dict[str, Any]:
     """Group shared services into a shared services group.
 
@@ -305,21 +384,30 @@ def group_shared_services(
         tfdata: Terraform data dictionary
         service_patterns: List of patterns to match shared services
         group_name: Name of the shared services group
+        always_include: Node added to the group whether or not it exists in the
+            plan. Defaults to the AWS IAM node the AWS handlers expect; other
+            providers pass "" so an AWS node does not appear on their diagrams.
 
     Returns:
         Updated tfdata with shared services grouped
     """
-    # Create group if needed
+    matches = [
+        node
+        for node in sorted(tfdata["graphdict"].keys())
+        if any(pattern in node for pattern in service_patterns)
+    ]
+    # An empty box is worse than no box, and creating one unconditionally puts
+    # a stray node in every diagram whether or not it has shared services
+    if not matches and not always_include:
+        return tfdata
+
     if group_name not in tfdata["graphdict"]:
         tfdata["graphdict"][group_name] = []
         tfdata["meta_data"][group_name] = {}
 
-    # Find and add shared services (avoid duplicates)
-    for node in sorted(tfdata["graphdict"].keys()):
-        for pattern in service_patterns:
-            if pattern in node and node not in tfdata["graphdict"][group_name]:
-                tfdata["graphdict"][group_name].append(node)
-                break
+    for node in matches:
+        if node not in tfdata["graphdict"][group_name]:
+            tfdata["graphdict"][group_name].append(node)
 
     # Replace consolidated nodes with their consolidated names
     updated_services = []
@@ -334,9 +422,8 @@ def group_shared_services(
 
     tfdata["graphdict"][group_name] = updated_services
 
-    # Add default IAM service
-    if "aws_iam_group.iam" not in tfdata["graphdict"][group_name]:
-        tfdata["graphdict"][group_name].append("aws_iam_group.of_services")
+    if always_include and always_include not in tfdata["graphdict"][group_name]:
+        tfdata["graphdict"][group_name].append(always_include)
 
     return tfdata
 
@@ -564,6 +651,9 @@ def create_transitive_links(
         for intermediate in intermediates:
             if intermediate in graphdict.get(source, []):
                 for target in targets:
+                    # a→b→a would fold into a self-link, which means nothing
+                    if target == source:
+                        continue
                     if target in graphdict.get(intermediate, []):
                         # Create direct source → target link
                         if target not in graphdict[source]:

@@ -518,6 +518,260 @@ def _numbered_nodes_match(matched_resource: str, resource_associated_with: str) 
     return True
 
 
+def _instance_base(node: str) -> str:
+    """Strip for_each keys, count indexes and ~N suffixes from a node name."""
+    return re.sub(r"~\d+$", "", helpers.remove_brackets_and_numbers(node))
+
+
+def _foreach_key(node: str) -> Optional[str]:
+    """Return a node's innermost quoted for_each key, if it has one.
+
+    Handles the legacy doubled form (``this["a"][a]``) written by older
+    versions, since replay files in the wild still contain it.
+    """
+    keys = re.findall(r'\["([^"]*)"\]', node)
+    return keys[-1] if keys else None
+
+
+def _resolved_metadata(node: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Both metadata views merged, with concrete plan values winning.
+
+    There are two views of every resource and they disagree. The plan view has
+    values Terraform could resolve; merge_metadata() then overwrites them with
+    the original HCL expressions, which is how references are discovered in the
+    first place. Neither is sufficient alone.
+
+    Preferring the plan view outright was wrong. terravision forces a local
+    backend so the plan runs against empty state and reports every resource as
+    to-be-created - by design, so that a diagram shows the whole architecture.
+    Provider-assigned values are therefore almost never known: across the test
+    corpus only 21% of ids and 23% of arns are concrete, the rest arriving as
+    the bare "(known after apply)" marker. When an attribute is unknown the
+    HCL expression is the only evidence left, and it names the target instance
+    exactly, key and all.
+
+    Names survive far better (92% concrete) because they are usually written in
+    the config rather than assigned, which is why rule 2 does the real work.
+    """
+
+    def view(name: str) -> Dict[str, Any]:
+        """One view's entry, tolerating the ~N suffix on the node key.
+
+        Numbering is applied to the graph after metadata is collected, so a
+        counted instance is keyed as resource~1 in the graph but plainly as
+        resource in the plan. Looking up only the exact key silently returned
+        nothing and left the HCL expression standing where a resolved value
+        existed - which is how a VNET ended up named "VNET.${each.key}".
+        """
+        store = tfdata.get(name, {})
+        return store.get(node) or store.get(node.split("~")[0]) or {}
+
+    hcl = view("meta_data")
+    plan = view("original_metadata")
+    if not plan:
+        return hcl
+    merged = dict(hcl)
+    for attribute, value in plan.items():
+        if _is_concrete(value) or attribute not in merged:
+            merged[attribute] = value
+    return merged
+
+
+def _is_concrete(value: Any) -> bool:
+    """True for a usable resolved string.
+
+    Guards against unresolved interpolations and against the placeholders that
+    stand in for a value Terraform never supplied. Both survive as strings and
+    so used to pass this check:
+
+      * "(known after apply)" arrives from the plan as the boolean True, but
+        variable resolution rewrites it to the *string* "True" - which then
+        outranked the HCL expression naming the instance exactly.
+      * an unresolved variable is left as empty quotes ('"" ') or whitespace,
+        which is what stopped a marketplace appliance being recognised by its
+        publisher.
+    """
+    if not isinstance(value, str) or "${" in value:
+        return False
+    stripped = value.strip().strip("\"'").strip()
+    return bool(stripped) and stripped != "True"
+
+
+def _identify_instance(
+    candidates: List[str],
+    source_node: str,
+    source_key: Optional[str],
+    tfdata: Dict[str, Any],
+) -> Optional[str]:
+    """Pick the single instance a resource refers to, or None if still unclear.
+
+    Four rules, most reliable first. Each needs exactly one winner - two
+    matches leaves the instance as ambiguous as none at all.
+    """
+    source_metadata = _resolved_metadata(source_node, tfdata)
+    # Every concrete string the source resolved to - the haystack for rules 2 and 3
+    source_values = {
+        path[-1] for path in dict_generator(source_metadata) if _is_concrete(path[-1])
+    }
+    # Every string it carries, including the HCL expressions _is_concrete
+    # rejects - the haystack for rule 1
+    source_text = [
+        path[-1]
+        for path in dict_generator(source_metadata)
+        if isinstance(path[-1], str)
+    ]
+
+    # 1. A reference naming the instance's own address. "${azurerm_x.y["k"].id}"
+    #    identifies its target exactly, so it outranks every inference below.
+    #    It ranks first because terravision plans against empty state, so on a
+    #    greenfield plan - which is most of them - this is the only evidence
+    #    that exists at all.
+    by_reference = [
+        candidate
+        for candidate in candidates
+        if any(candidate.split("~")[0] in value for value in source_text)
+    ]
+    if len(by_reference) == 1:
+        return by_reference[0]
+
+    # 2. Provider-assigned id, matched two ways because providers differ:
+    #    - exact: AWS children carry an explicit pointer to the parent, so a
+    #      subnet's vpc_id IS the vpc's id ("vpc-0prod"). ARNs do not nest.
+    #    - prefix: Azure and GCP have no such pointer, but their ARM ids and
+    #      self_links nest, so a subnet id of ".../virtualNetworks/vnet-sec/
+    #      subnets/mgmt01" starts with its parent VNET's id.
+    by_id = []
+    for candidate in candidates:
+        metadata = _resolved_metadata(candidate, tfdata)
+        for attribute in ("id", "arn", "self_link"):  # most specific first
+            identity = metadata.get(attribute)
+            if not _is_concrete(identity):
+                continue
+            if identity in source_values or any(
+                value.startswith(identity + "/") for value in source_values
+            ):
+                by_id.append(candidate)
+                break
+    if len(by_id) == 1:
+        return by_id[0]
+
+    # 3. Resource name, as recorded in the plan. This is the rule that does
+    #    most of the real work: names are usually written in the config rather
+    #    than assigned by the provider, so 92% of them are concrete against
+    #    21% of ids.
+    by_name = []
+    for candidate in candidates:
+        candidate_name = _resolved_metadata(candidate, tfdata).get("name")
+        if _is_concrete(candidate_name) and candidate_name in source_values:
+            by_name.append(candidate)
+    if len(by_name) == 1:
+        return by_name[0]
+
+    # 4. Instance key. Last resort for greenfield plans where ids and names are
+    #    still unknown; relies on the convention of nesting child keys under
+    #    parent keys ("apps.web" under "apps"), so it ranks below real values.
+    by_key = []
+    for candidate in candidates:
+        candidate_key = _foreach_key(candidate)
+        if not candidate_key or not source_key:
+            continue
+        # "apps.web" nests under "apps"; "prod-web" under "prod"
+        if candidate_key == source_key or any(
+            source_key.startswith(candidate_key + separator) for separator in ".-/"
+        ):
+            by_key.append(candidate)
+    if len(by_key) == 1:
+        return by_key[0]
+
+    return None
+
+
+def _record_ambiguous_instance(
+    source_node: str, candidates: List[str], tfdata: Dict[str, Any]
+) -> None:
+    """Warn about a connection we dropped because the instance was ambiguous.
+
+    Dropping beats guessing, but it must never be silent - a missing arrow is
+    otherwise indistinguishable from a resource that genuinely has no links.
+    The full list is kept in tfdata so `--debug` dumps record it too.
+    """
+    record = (
+        f"{source_node} -> {_instance_base(candidates[0])} "
+        f"({len(candidates)} instances, none identifiable)"
+    )
+    dropped = tfdata.setdefault("ambiguous_instance_refs", [])
+    if record in dropped:
+        return
+    dropped.append(record)
+    click.echo(
+        click.style(
+            f"   WARNING: ambiguous for_each reference, connection omitted: {record}",
+            fg="yellow",
+        )
+    )
+
+
+def _disambiguate_instances(
+    matching: List[str], source_node: str, path: List[Any], tfdata: Dict[str, Any]
+) -> List[str]:
+    """Narrow a fan-out of for_each instances down to the one that is referenced.
+
+    A reference like ${aws_vpc.this[each.key].id} matches every instance of
+    aws_vpc.this, because the key is only known to Terraform. Left alone, every
+    parent claims every child and the renderer can no longer nest anything.
+
+    Walks each set of same-resource candidates and decides between four cases.
+    """
+    if len(matching) < 2:
+        return matching
+
+    # Candidates of different resources are judged separately, so bucket them
+    # by base address: aws_vpc.this["a"] and aws_vpc.this["b"] land together.
+    groups: Dict[str, List[str]] = {}
+    for candidate in matching:
+        groups.setdefault(_instance_base(candidate), []).append(candidate)
+
+    source_key = _foreach_key(source_node)
+    narrowed: List[str] = []
+
+    for candidates in groups.values():
+        # Case 1: one candidate, or count instances like aws_subnet.this[0]~1,
+        # which _numbered_nodes_match() already pairs by position. Not ours.
+        if len(candidates) == 1 or not any(_foreach_key(c) for c in candidates):
+            narrowed.extend(candidates)
+            continue
+
+        # Case 2: one instance is positively identifiable, so use it. This is
+        # tried before the one-to-many check below because a resource that
+        # depends_on a whole for_each resource usually still *belongs* to one
+        # instance of it - a VNET peering waits on every subnet, but it sits in
+        # exactly one VNET.
+        winner = _identify_instance(candidates, source_node, source_key, tfdata)
+        if winner:
+            narrowed.append(winner)
+            continue
+
+        # Case 3: nothing singles one out, but a splat (aws_subnet.this[*].id)
+        # is one-to-many by definition, so keep every instance.
+        # NB depends_on is NOT treated this way even though Terraform waits on
+        # every instance: it expresses creation ORDER, not architecture. A VNET
+        # peering that depends_on a VPN gateway is saying "build that first",
+        # not "I am attached to it" - honouring it re-introduced fan-outs of
+        # 20+ nodes on real infrastructure. A bare `aws_subnet.this` is not
+        # one-to-many either, since `terraform show -json` normalises
+        # `this[each.key].id` down to the base address.
+        if path and "[*]" in str(path[-1]):
+            narrowed.extend(candidates)
+            continue
+
+        # Case 4: undecidable. Connect to nothing rather than to everything -
+        # one wrong parent stops the whole diagram nesting, one missing edge
+        # costs a single line.
+        _record_ambiguous_instance(source_node, candidates, tfdata)
+
+    return narrowed
+
+
 def _add_connection_pair(
     connection_pairs: List[str],
     matched_resource: str,
@@ -581,6 +835,11 @@ def check_relationship(
     for p in plist:
         param = str(p)
         matching = _find_matching_resources(param, nodes, resource_associated_with)
+        # A for_each reference matches every instance of the target resource;
+        # keep only the instance this resource actually points at
+        matching = _disambiguate_instances(
+            matching, resource_associated_with, plist, tfdata
+        )
         implied = _find_implied_connections(param, nodes, IMPLIED_CONNECTIONS)
         # Combine explicit and implied matches, avoiding duplicates
         matching.extend([m for m in implied if m not in matching])
@@ -1435,9 +1694,23 @@ def handle_variants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             resource_name.startswith(prefix) for prefix in provider_prefixes
         )
         if is_provider_resource:
-            renamed_node = helpers.check_variant(
-                node, tfdata["meta_data"].get(node_name), tfdata
-            )
+            # Numbered instances keep their metadata under the full node key
+            # (fw01[0]~1), so fall back to it when the stripped name has none -
+            # otherwise check_variant() sees None and no variant ever matches
+            # Both views go in: check_variant() only substring-searches the
+            # stringified dict, and either view may be the one holding the
+            # evidence. A marketplace publisher ("paloaltonetworks") is
+            # resolved in the plan but left as empty quotes in the HCL view
+            # when its variable cannot be resolved, so reading HCL alone made
+            # a firewall appliance read as a plain VM.
+            metadata = {
+                view: store.get(node_name) or store.get(node)
+                for view, store in (
+                    ("plan", tfdata.get("original_metadata", {})),
+                    ("hcl", tfdata.get("meta_data", {})),
+                )
+            }
+            renamed_node = helpers.check_variant(node, metadata, tfdata)
         else:
             renamed_node = False
         if (

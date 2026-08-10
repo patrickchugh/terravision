@@ -84,3 +84,10 @@ architecture.json
 
 # MkDocs build output
 site/
+
+# Local debug and replay artefacts: terraform plan/graph dumps, saved
+# diagrams and backup copies (tfdata.json is already ignored above)
+/plan.json
+/graph.json
+/*.png
+*.orig

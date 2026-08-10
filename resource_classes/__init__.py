@@ -3,7 +3,7 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from random import randint
+from itertools import count as _count
 from typing import Dict, List, Union
 from graphviz import Digraph, Source
 import shutil
@@ -94,6 +94,10 @@ class Canvas:
         "forcelabels": "true",  # Force xlabel placement to avoid overlaps
         "center": "true",
         "pad" : "1.5",
+        # Required for lhead/ltail: lets an edge be clipped at a cluster border
+        # so links like VNET peerings read as box-to-box rather than terminating
+        # on an arbitrary node inside the box
+        "compound": "true",
     }
     _default_node_attrs = {
         "shape": "box",
@@ -291,6 +295,9 @@ class Canvas:
         return filename
 
 
+_CLUSTER_SEQUENCE = _count(1)
+
+
 class Cluster:
     __directions = ("TB", "BT", "LR", "RL")
     __bgcolors = ("#E5F5FD", "#EBF3E7", "#ECE8F6", "#FDF7E3")
@@ -319,7 +326,12 @@ class Cluster:
         :param graph_attr: Provide graph_attr dot config attributes.
         """
         self.label = label
-        self.name = "cluster_" + self.__class__.__name__ + "." + str(randint(1, 1000))
+        # A sequence, not a random number: randint(1, 1000) collided roughly
+        # one diagram in ten (14 clusters is already birthday-paradox
+        # territory), and two subgraphs sharing a name are MERGED by graphviz
+        # into a single cluster - silently combining two unrelated subnets and
+        # breaking anything keyed on the name (labels, lhead/ltail, cluster_id_map).
+        self.name = f"cluster_{self.__class__.__name__}.{next(_CLUSTER_SEQUENCE)}"
         self.dot = Digraph(self.name)
         # Set attributes.
         for k, v in self._default_graph_attrs.items():

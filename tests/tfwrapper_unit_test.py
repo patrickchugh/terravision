@@ -3,7 +3,11 @@
 import pytest
 
 from modules import helpers
-from modules.tfwrapper import find_node_in_gvid_table, _normalize_for_gvid_match
+from modules.tfwrapper import (
+    find_node_in_gvid_table,
+    setup_tfdata,
+    _normalize_for_gvid_match,
+)
 
 
 def test_exact_match():
@@ -58,3 +62,61 @@ def test_normalize_strips_all_brackets_and_tilde():
         _normalize_for_gvid_match('module.foo["k"].module.bar.aws_thing.x[0]~3')
         == "module.foo.module.bar.aws_thing.x"
     )
+
+
+# ---------------------------------------------------------------------------
+# setup_tfdata() node naming
+# ---------------------------------------------------------------------------
+
+
+def _resource_change(address, index=None, resource_type=None):
+    """Build a minimal `terraform show -json` resource_changes entry."""
+    obj = {
+        "address": address,
+        "mode": "managed",
+        "type": resource_type or address.split(".")[0],
+        "change": {"after": {"name": "x"}, "after_unknown": {}},
+    }
+    if index is not None:
+        obj["index"] = index
+    return obj
+
+
+def _nodes_for(*resource_changes):
+    tfdata = setup_tfdata({"tf_resources_created": list(resource_changes)})
+    return list(tfdata["graphdict"].keys())
+
+
+def test_for_each_key_is_not_appended_twice():
+    """Regression: plan `address` already carries the for_each key.
+
+    Appending `index` again produced `generic_subnet["apps"][apps]`, which
+    broke key matching and node labels.
+    """
+    nodes = _nodes_for(
+        _resource_change(
+            'azurerm_subnet.generic_subnet["security.rt_mgmt.mgmt01"]',
+            index="security.rt_mgmt.mgmt01",
+        )
+    )
+    assert nodes == ['azurerm_subnet.generic_subnet["security.rt_mgmt.mgmt01"]']
+
+
+def test_count_index_keeps_tilde_suffix():
+    """The ~N convention for count is relied on across the codebase."""
+    nodes = _nodes_for(
+        _resource_change("aws_subnet.private[0]", index=0),
+        _resource_change("aws_subnet.private[1]", index=1),
+    )
+    assert nodes == ["aws_subnet.private[0]~1", "aws_subnet.private[1]~2"]
+
+
+def test_resource_without_index_is_unchanged():
+    nodes = _nodes_for(_resource_change("aws_vpc.main"))
+    assert nodes == ["aws_vpc.main"]
+
+
+def test_for_each_key_appended_when_address_lacks_it():
+    """Defensive: honour `index` if a plan ever omits it from `address`."""
+    nodes = _nodes_for(_resource_change("aws_subnet.private", index="web"))
+    assert nodes == ["aws_subnet.private[web]"]

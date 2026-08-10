@@ -370,7 +370,43 @@ AWS_NEVER_DRAW_LINE = []
 AWS_DISCONNECT_LIST = []
 
 # Resources that should be hidden from the diagram by default
-AWS_HIDE_NODES = ["aws_security_group_rule"]
+AWS_HIDE_NODES = [
+    "aws_security_group_rule",
+    # Plumbing with no architectural meaning, and no icon in the AWS set - all
+    # of these were drawing as unlabelled generic boxes and emitting a
+    # "no icon" warning on every run.
+    # aws_route_table_association is the node that gets drawn, carrying the
+    # route table icon, because in Terraform it is the association that holds
+    # the link to the subnet. The table and its individual routes would draw
+    # the same icon again with nothing added.
+    "aws_route",
+    "aws_route_table",
+    "aws_vpc_dhcp_options",
+    "aws_vpc_dhcp_options_association",
+    # Wraps an IAM role for attachment to an instance; the role is what
+    # matters and is drawn already.
+    "aws_iam_instance_profile",
+    # AWS creates these with every VPC whether or not you use them, so they
+    # are noise on a diagram of what was actually designed.
+    "aws_default_route_table",
+    "aws_default_network_acl",
+    "aws_default_security_group",
+    # Settings applied TO a bucket rather than things in their own right - they
+    # would each draw a second bucket icon beside the bucket they configure.
+    "aws_s3_bucket_lifecycle_configuration",
+    "aws_s3_bucket_logging",
+    "aws_s3_bucket_policy",
+    "aws_s3_bucket_server_side_encryption_configuration",
+    "aws_s3_bucket_versioning",
+    # Rules inside a security group, like aws_security_group_rule above
+    "aws_vpc_security_group_egress_rule",
+    "aws_vpc_security_group_ingress_rule",
+    # Policies attached to a resource, not architecture
+    "aws_appautoscaling_policy",
+    "aws_ecr_lifecycle_policy",
+    # A generated value, not infrastructure
+    "random_password",
+]
 
 # Resources that should skip automatic expansion in handle_singular_references
 # These resources are manually matched to subnets by suffix in their handlers
@@ -458,3 +494,22 @@ OLLAMA_HOST = "http://localhost:11434"
 # the server has installed is valid — llama3, mistral, qwen2.5,
 # llama3.1, etc.
 OLLAMA_MODEL = "llama3"
+
+# Resources linking two group boxes together - drawn as an edge between the
+# boxes rather than an icon inside one of them (see _draw_group_links)
+AWS_GROUP_LINKS = [
+    {
+        "resource_type": "aws_vpc_peering_connection",
+        "local_attribute": "vpc_id",
+        "icon": "resource_images/aws/network/vpc-peering.png",
+        "remote_attribute": "peer_vpc_id",
+        "label": "peering",
+    },
+]
+
+# Nodes whose links always carry traffic both ways, so they are drawn with a
+# two-way arrow regardless of which direction Terraform happened to express.
+# The internet is a medium rather than a destination - a resource reaching out
+# and a user coming in are the same line - and a site-to-site VPN tunnel is
+# bidirectional by definition.
+AWS_BIDIRECTIONAL_NODES = ["tv_aws_internet", "tv_aws_onprem"]

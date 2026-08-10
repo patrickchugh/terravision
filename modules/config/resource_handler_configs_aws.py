@@ -154,6 +154,18 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_route_table": {
+        "description": "Give each subnet its own copy of a route table shared with its siblings - a node can only be drawn in one cluster, so sharing leaves the other subnets empty and they drift out of their parent (Pure Config-Driven)",
+        "transformations": [
+            {
+                "operation": "expand_shared_children",
+                "params": {
+                    "parent_pattern": "aws_subnet.",
+                    "child_pattern": "aws_route_table.",
+                },
+            },
+        ],
+    },
     "aws_subnet": {
         "description": "Create availability zone nodes and link to subnets",
         "handler_execution_order": "before",  # Run custom function FIRST to prepare metadata

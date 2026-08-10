@@ -28,16 +28,27 @@ AZURE_CONSOLIDATED_NODES = [
             "import_location": "resource_classes.azure.network",
         }
     },
+    # NOTE: azurerm_lb is deliberately NOT consolidated. Merging every load
+    # balancer into one node hides real topology - a hub firewall design has a
+    # separate external and internal NLB and collapsing them makes the traffic
+    # path unreadable. Sub-resources are folded into their own parent LB by the
+    # azurerm_lb handler config instead.
     {
-        "azurerm_lb": {
-            "resource_name": "azurerm_lb.lb",
-            "import_location": "resource_classes.azure.network",
+        "azurerm_storage_share": {
+            "resource_name": "azurerm_storage_share.share",
+            "import_location": "resource_classes.azure.storage",
         }
     },
     {
-        "azurerm_lb_backend_address_pool": {
-            "resource_name": "azurerm_lb.lb",
-            "import_location": "resource_classes.azure.network",
+        "azurerm_storage_share_directory": {
+            "resource_name": "azurerm_storage_share.share",
+            "import_location": "resource_classes.azure.storage",
+        }
+    },
+    {
+        "azurerm_storage_share_file": {
+            "resource_name": "azurerm_storage_share.share",
+            "import_location": "resource_classes.azure.storage",
         }
     },
     {
@@ -94,6 +105,9 @@ AZURE_CONSOLIDATED_NODES = [
 # Azure hierarchy: Resource Group > VNet > Subnet > NSG
 AZURE_GROUP_NODES = [
     "azurerm_resource_group",
+    # Shared services box - a Cluster class, so it must be declared as a group
+    # or the renderer instantiates it as a plain node and blows up on ._id
+    "azurerm_group",
     "azurerm_virtual_network",
     "azurerm_subnet",
     "tv_azurerm_zone",  # Availability zones for VMSS instances
@@ -134,7 +148,11 @@ AZURE_EDGE_NODES = [
 ]
 
 # Nodes outside Cloud boundary
-AZURE_OUTER_NODES = ["tv_azure_users", "tv_azurerm_internet "]
+# NB these must match the node types actually created (tv_azurerm_*). The old
+# values silently never matched - "tv_azure_users" was missing the "rm" and
+# "tv_azurerm_internet " had a trailing space - so Users and Internet were
+# drawn inside the cloud boundary instead of outside it.
+AZURE_OUTER_NODES = ["tv_azurerm_users", "tv_azurerm_internet"]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 AZURE_DRAW_ORDER = [
@@ -189,7 +207,20 @@ AZURE_AUTO_ANNOTATIONS = [
 ]
 
 # Variant icons for the same service - matches keyword in meta data and changes resource type
+# Marketplace network appliances are ordinary Linux VMs as far as Terraform is
+# concerned, so they draw as a generic server. The image publisher identifies
+# what the VM actually is; matching on it gives the appliance its real icon.
 AZURE_NODE_VARIANTS = {
+    "azurerm_linux_virtual_machine": {
+        # Marketplace publisher ids - distinctive enough to match safely, since
+        # check_variant() searches the whole metadata blob rather than a
+        # specific attribute
+        # NB not "azurerm_firewall" - that is the managed Azure Firewall
+        # service and an EDGE_NODE, which would pull the VM out of its VNET
+        "paloaltonetworks": "azurerm_virtual_machine_appliance",
+        "fortinet": "azurerm_virtual_machine_appliance",
+        "checkpoint": "azurerm_virtual_machine_appliance",
+    },
     "azurerm_virtual_machine": {
         "linux": "azurerm_linux_virtual_machine",
         "windows": "azurerm_windows_virtual_machine",
@@ -207,6 +238,11 @@ AZURE_REVERSE_ARROW_LIST = [
     "azurerm_subnet.",
     "azurerm_network_security_group.",
     "azurerm_dns_zone",
+    # A public IP is attached to a frontend rather than sitting behind it, so
+    # Terraform's "the load balancer references its IP" is a dependency, not a
+    # flow. Reversed, inbound traffic reads the way it actually travels:
+    # users -> public IP -> load balancer -> backend NICs.
+    "azurerm_public_ip.",
 ]
 
 # Force certain resources to be a destination connection only - original TF node relationships only
@@ -273,6 +309,39 @@ AZURE_NEVER_DRAW_LINE = ["azurerm_role_assignment"]
 
 AZURE_DISCONNECT_LIST = ["azurerm_role_assignment"]
 
+# Plumbing resources that carry no architectural meaning on a diagram. Hidden
+# nodes are skipped by both relationship detection and drawing, so only list
+# types whose links are represented some other way (an NSG association is
+# redundant once the NSG itself is drawn against the NIC).
+AZURE_HIDE_NODES = [
+    "azurerm_network_security_rule",
+    "azurerm_network_interface_security_group_association",
+    "azurerm_subnet_network_security_group_association",
+    # Peerings are drawn as a line between the two VNET boxes (AZURE_GROUP_LINKS),
+    # so an icon for them as well is a duplicate that also drags spurious edges
+    # onto whatever it was attached to.
+    "azurerm_virtual_network_peering",
+    # Individual routes are entries *inside* a route table and draw with the
+    # same icon as the table itself, so showing both doubles the route icons
+    # on the diagram without adding information. The route table stays.
+    "azurerm_route",
+    # Access control is not network architecture. These carry generated GUIDs
+    # as their deployed name, so they render as unreadable labels attached to
+    # whatever they grant rights over.
+    "azurerm_role_assignment",
+    "azurerm_role_definition",
+    "azurerm_user_assigned_identity",
+    "azuread_user",
+    "azuread_group",
+    "azuread_service_principal",
+    # Terraform glue with no cloud presence at all
+    "null_resource",
+    "terraform_data",
+    "time_sleep",
+    "local_file",
+    "random_string",
+]
+
 AZURE_ACRONYMS_LIST = [
     "vm",
     "vnet",
@@ -316,7 +385,7 @@ AZURE_NAME_REPLACEMENTS = {
 # - resource_pattern: Regex pattern to extract resource references from attribute values
 AZURE_MULTI_INSTANCE_PATTERNS = [
     {
-        "resource_types": ["azurerm_lb", "azurerm_public_ip"],
+        "resource_types": ["azurerm_public_ip"],
         "trigger_attributes": ["zones"],
         "also_expand_attributes": [],
         "resource_pattern": r"^(.+)$",  # Match plain zone strings: ["1", "2", "3"]
@@ -350,3 +419,26 @@ OLLAMA_HOST = "http://localhost:11434"
 # the server has installed is valid — llama3, mistral, qwen2.5,
 # llama3.1, etc.
 OLLAMA_MODEL = "llama3"
+
+# Resources that describe a relationship between two whole groups rather than
+# anything inside them. Rendered as an edge clipped to both group boundaries
+# instead of an icon sitting inside one of them (see _draw_group_links).
+AZURE_GROUP_LINKS = [
+    {
+        "resource_type": "azurerm_virtual_network_peering",
+        # Which group declares the link, and which it points at. Both are needed
+        # because graph parentage cannot be trusted to say which is which.
+        "local_attribute": "virtual_network_name",
+        "icon": "resource_images/azure/other/peerings.png",
+        "remote_attribute": "remote_virtual_network_id",
+        "label": "peering",
+    },
+]
+
+
+# Nodes whose links always carry traffic both ways, so they are drawn with a
+# two-way arrow regardless of which direction Terraform happened to express.
+# The internet is a medium rather than a destination - a resource reaching out
+# and a user coming in are the same line - and a site-to-site VPN tunnel is
+# bidirectional by definition.
+AZURE_BIDIRECTIONAL_NODES = ["tv_azurerm_internet", "tv_azure_onprem"]

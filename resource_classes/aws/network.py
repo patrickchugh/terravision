@@ -207,8 +207,10 @@ aws_nat_gateway = NATGateway
 aws_route53_zone = Route53
 aws_route53_record = Route53
 aws_route53_health_check = Route53
-# aws_route_table = RouteTable
-# aws_route = RouteTable
+# The association is what carries the subnet relationship in Terraform, so
+# that is what gets drawn - with the route table's icon. The table itself and
+# its individual routes are hidden; drawing them too would triple up the same
+# icon with no extra information.
 aws_route_table_association = RouteTable
 aws_vpn_connection = SiteToSiteVpn
 aws_vpn_gateway = VpnGateway

@@ -466,13 +466,17 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if object["mode"] == "managed":
             node = str(object["address"])
             # Handle count/for_each indexed resources
-            if "index" in object.keys():
-                # String index uses brackets, numeric uses tilde
-                if not isinstance(object["index"], int):
-                    suffix = "[" + object["index"] + "]"
-                else:
-                    suffix = "~" + str(int(object.get("index")) + 1)
-                node = node + suffix
+            index = object.get("index")
+            if index is not None:
+                if isinstance(index, int):
+                    # Numeric count index: append the ~N suffix that the rest
+                    # of the codebase matches on (aws_subnet.private[0]~1).
+                    node = node + "~" + str(index + 1)
+                elif not node.endswith('["' + str(index) + '"]'):
+                    # for_each key: `address` already carries it as ["key"], so
+                    # appending again produced a doubled ["key"][key] name that
+                    # matched nothing. Only append when the address lacks it.
+                    node = node + "[" + str(index) + "]"
             # Initialize node with empty connections
             tfdata["graphdict"][node] = list()
             tfdata["node_list"].append(node)

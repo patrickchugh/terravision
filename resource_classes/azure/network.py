@@ -87,7 +87,10 @@ class RouteFilters(_Network):
 
 
 class RouteTables(_Network):
-    _icon = "route-tables.png"
+    # route-tables.png in the bundled set is mislabelled artwork (a person).
+    # virtual-router.png is the correct routing glyph until the official
+    # Azure asset is re-sourced.
+    _icon = "virtual-router.png"
 
 
 class ServiceEndpointPolicies(_Network):
@@ -147,3 +150,6 @@ azurerm_virtual_network_gateway = VirtualNetworkGateways
 azurerm_virtual_wan = VirtualWans
 azurerm_vpn_gateway = VirtualNetworkGateways
 azurerm_network_security_group = NetworkSecurityGroupsClassic
+azurerm_network_watcher_flow_log = NetworkWatcher
+# Marketplace network appliances (Palo Alto, Fortinet...) running as VMs
+azurerm_virtual_machine_appliance = Firewall

@@ -342,7 +342,10 @@ def preflight_check(ai_backend: Optional[str] = None, engine: str = "auto") -> N
             default_config = load_config("aws")
             llm.check_ollama_server(default_config.OLLAMA_HOST)
         elif backend_lower == "bedrock":
-            llm.check_bedrock_credentials()
+            # The check reports rather than exits, so that callers who only
+            # want to know can ask; aborting the run is this caller's job.
+            if not llm.check_bedrock_credentials():
+                sys.exit(1)
         elif backend_lower == "restapi":
             llm.check_restapi_endpoint()
 

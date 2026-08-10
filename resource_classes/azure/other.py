@@ -519,3 +519,7 @@ class WorkerContainerApp(_Other):
 
 
 # Aliases
+
+
+# Aliases for Terraform resource type names
+azurerm_virtual_network_peering = Peerings
