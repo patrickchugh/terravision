@@ -1022,7 +1022,12 @@ def create_cluster_label_node(cluster_obj: Cluster) -> None:
             + "</TR></TABLE>>"
         )
     else:
-        label_html = text
+        # A bare "<FONT ...>text</FONT>" string is not a valid DOT HTML label:
+        # graphviz delimits HTML strings by *balanced* angle brackets, so the
+        # ">" closing the FONT tag would end the label early and leave the
+        # text dangling as a syntax error. Wrap in the outer <...> pair, as
+        # the TABLE branch above already does.
+        label_html = f"<{text}>" if text.strip() else text
 
     # Create label node with special attributes for gvpr positioning.
     #
@@ -1124,6 +1129,25 @@ def handle_group(
     # Add child nodes and subgroups
     child_node_ids = []
     child_group_ids = []
+    # Nodes that also live inside one of this group's nested groups must not
+    # be rank-wrapped at this level: a node can only be in one rankset, so
+    # ranking it here rips it out of its own cluster ("already in a rankset,
+    # deleted from cluster") and trips dot's mincross assertion. Azure zones
+    # hit this - the VMSS instances a zone contains are also direct graphdict
+    # children of the subnet and resource group.
+    nested_members = set()
+    pending = [
+        conn
+        for conn in tfdata["graphdict"].get(resource, [])
+        if str(helpers.get_no_module_name(conn).split(".")[0]) in GROUP_NODES
+    ]
+    while pending:
+        grp = pending.pop()
+        for member in tfdata["graphdict"].get(grp, []):
+            if member not in nested_members:
+                nested_members.add(member)
+                if str(helpers.get_no_module_name(member).split(".")[0]) in GROUP_NODES:
+                    pending.append(member)
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
@@ -1175,10 +1199,12 @@ def handle_group(
                         "label", helpers.pretty_name(node_connection)
                     )
                     newGroup.add_node(newNode._id, label=node_label)
-                    child_node_ids.append(newNode._id)
+                    if node_connection not in nested_members:
+                        child_node_ids.append(newNode._id)
                 elif (
                     node_connection in tfdata["meta_data"]
                     and "node" in tfdata["meta_data"][node_connection]
+                    and node_connection not in nested_members
                 ):
                     child_node_ids.append(
                         tfdata["meta_data"][node_connection]["node"]._id

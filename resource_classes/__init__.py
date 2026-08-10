@@ -428,6 +428,12 @@ class Node:
         } if self._icon else {}
 
         # fmt: on
+        # TerraVision-only kwarg consumed by the GCP node classes for border
+        # styling. It reaches this base class when a GCP diagram falls back to
+        # a generic node (no icon for the resource type), and must not be
+        # forwarded to graphviz: attribute values there must be strings, and
+        # a raw bool crashes graphviz's quoting.
+        attrs.pop("outer_node", None)
         self._attrs.update(attrs)
 
         # Node must belong to a resource_classes.
