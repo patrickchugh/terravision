@@ -128,6 +128,11 @@ google_compute_target_https_proxy = LoadBalancing
 google_compute_target_pool = LoadBalancing
 google_compute_health_check = LoadBalancing
 google_compute_region_health_check = LoadBalancing
+# Static IPs are drawn with the load-balancing glyph: in practice they exist
+# as the frontend address of an LB, and GCP's icon set has no dedicated
+# IP-address glyph.
+google_compute_global_address = LoadBalancing
+google_compute_address = LoadBalancing
 google_dns_managed_zone = CloudDNS
 google_dns_record_set = CloudDNS
 google_compute_security_policy = CloudArmor

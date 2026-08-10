@@ -66,3 +66,44 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
+
+  publish-mcp-registry:
+    # The registry validates the referenced PyPI version exists (and that its
+    # README carries the mcp-name token), so this must run after the PyPI
+    # publish. id-token: write grants the GitHub OIDC credential that
+    # authenticates the io.github.patrickchugh/* namespace - no stored secret.
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install mcp-publisher
+        # Version pinned: this job holds a publishing credential, so do not
+        # execute whatever binary "latest" resolves to on a given day.
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+
+      - name: Set version in server.json from tag
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          jq --arg v "$VERSION" '.version = $v | .packages[].version = $v' server.json > server.tmp && mv server.tmp server.json
+
+      - name: Wait for PyPI to serve the new version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          for i in $(seq 1 30); do
+            if curl -sf "https://pypi.org/pypi/terravision/${VERSION}/json" > /dev/null; then exit 0; fi
+            sleep 10
+          done
+          echo "PyPI never served terravision ${VERSION}" >&2
+          exit 1
+
+      - name: Authenticate to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish server to MCP Registry
+        run: ./mcp-publisher publish
