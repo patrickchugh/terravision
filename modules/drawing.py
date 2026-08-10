@@ -1571,16 +1571,18 @@ def _build_diagram(
     setcluster(myDiagram)
 
     # Add footer node (positioned by gvpr for all providers).
-    # Width kept moderate so the legend node (when present) fits
-    # alongside it on the same row instead of stacking below.
+    # Width and margin sized so the three record cells get breathing room
+    # around their text instead of butting against the separators; if the
+    # width changes, the ±750pt row offsets in shiftLabel.gvpr (footer and
+    # legend sharing one row) need to move with it.
     footer_style = {
         "_footernode": "1",
         "shape": "record",
-        "width": "14",
-        "height": "2.0",
+        "width": "18",
+        "height": "2.4",
         "fontsize": "20",
-        "margin": "0.4,0.3",
-        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION}|{{ Timestamp:|Source: }}|{{ {datetime.datetime.now()}|{source} }}",
+        "margin": "0.8,0.5",
+        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION} | {{ Timestamp: | Source: }} | {{ {datetime.datetime.now()} | {source} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 

@@ -58,10 +58,12 @@ class AZUREGroup(Cluster):
         # Store label info for creating separate label node at bottom
         self.label_text = label
         self.label_icon = f"{base_path}/resource_images/azure/azure.png"
-        # Branding mark rather than a glyph - drawn at 2x its natural size
-        # (source is 500x281, so keep that aspect ratio)
-        self.label_icon_width = 1000
-        self.label_icon_height = 562
+        # Branding mark rather than a glyph - drawn at its natural size
+        # (source is 500x281). 2x looked proportionate on sprawling diagrams
+        # but dominated small ones, and the label size cannot react to the
+        # final layout because it is fixed before graphviz runs.
+        self.label_icon_width = 500
+        self.label_icon_height = 281
         self.label_position = "bottom-left"  # Position at bottom-left
         self.label_icon_first = True  # Icon before text
 
