@@ -16,6 +16,16 @@ import click
 import re
 from pathlib import Path
 
+# find_replace_values() memo, keyed (value, module). Reset per
+# handle_metadata_vars() pass so nothing leaks across CLI runs.
+_FRV_CACHE: dict[tuple[str, str], str] = {}
+_FRV_STACK: set[tuple[str, str]] = set()
+# Cost cap: bound work per attribute so an unresolvable value bails out fast
+# instead of hanging (it would otherwise hit the depth>=50 UNKNOWN path anyway).
+_FRV_STATE: dict[str, int] = {"calls": 0}
+_FRV_MAX_CALLS = 50000
+_FRV_MAX_LEN = 20000
+
 
 def _coerce_output_value(val: Any) -> str:
     """Coerce a Terraform output value to a string for variable substitution."""
@@ -167,10 +177,14 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with resolved metadata variables
     """
+    # Reset memo caches for this pass (shared across all resources/attrs).
+    _FRV_CACHE.clear()
+    _FRV_STACK.clear()
     # Loop through each resource's metadata attributes
     for resource, attr_list in tfdata["meta_data"].items():
         for key, orig_value in attr_list.items():
             value = str(orig_value)
+            _FRV_STATE["calls"] = 0  # per-attribute budget for the cost cap
             # Iteratively resolve all variable references.
             # Track seen values to detect cycles (e.g. local.A → local.B → local.A)
             # where find_replace_values keeps producing a different string each
@@ -549,6 +563,22 @@ def find_replace_values(
         )
         return "UNKNOWN"
 
+    # Cost cap: bound per-attribute work (see module top).
+    _FRV_STATE["calls"] += 1
+    if _FRV_STATE["calls"] > _FRV_MAX_CALLS or len(str(varstring)) > _FRV_MAX_LEN:
+        return str(varstring)
+
+    # replace_module_vars re-runs this on the WHOLE string once per nested ref
+    # -> O(refs**depth), which hangs on large stacks. Memoize (value, module) and
+    # short-circuit re-entrant identical calls to make it ~linear. Resolution is
+    # a pure function of (value, module) here, so caching is safe.
+    _cache_key = (str(varstring), module)
+    if _cache_key in _FRV_CACHE:
+        return _FRV_CACHE[_cache_key]
+    if _cache_key in _FRV_STACK:  # already resolving this exact string; can't progress
+        return varstring
+    _FRV_STACK.add(_cache_key)
+
     # Regex string matching to create lists of different variable markers found
     value = helpers.strip_var_curlies(str(varstring))
     # Find all variable types using regex patterns
@@ -568,6 +598,8 @@ def find_replace_values(
         var_found_list, varobject_found_list, value, module, tfdata
     )
     value = replace_local_values(local_found_list, value, module, tfdata)
+    _FRV_STACK.discard(_cache_key)
+    _FRV_CACHE[_cache_key] = value
     return value
 
 
