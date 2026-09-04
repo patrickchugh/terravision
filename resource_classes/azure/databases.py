@@ -3,7 +3,7 @@ from . import _Azure
 
 class _Databases(_Azure):
     _type = "databases"
-    _icon_dir = "resource_images/azure/database"
+    _icon_dir = "resource_images/azure/databases"
 
 
 class AzureCosmosDb(_Databases):
