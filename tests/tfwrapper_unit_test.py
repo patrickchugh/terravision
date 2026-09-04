@@ -1,8 +1,10 @@
 """Unit tests for tfwrapper helper functions."""
 
+import subprocess
+
 import pytest
 
-from modules import helpers
+from modules import helpers, tfwrapper
 from modules.tfwrapper import (
     find_node_in_gvid_table,
     setup_tfdata,
@@ -120,3 +122,89 @@ def test_for_each_key_appended_when_address_lacks_it():
     """Defensive: honour `index` if a plan ever omits it from `address`."""
     nodes = _nodes_for(_resource_change("aws_subnet.private", index="web"))
     assert nodes == ["aws_subnet.private[web]"]
+
+
+# --- Issue #209: undefined variables must fail fast, not hang -------------
+
+TF_MISSING_VAR_STDERR = """
+Error: No value for required variable
+
+  on main.tf line 14:
+  14: variable "bucket_name" {}
+
+The root module input variable "bucket_name" is not set, and has no default
+value. Use a -var or -var-file command line argument to provide a value for
+this variable.
+
+Error: No value for required variable
+
+  on main.tf line 15:
+  15: variable "region" {}
+
+The root module input variable "region" is not set, and has no default
+value. Use a -var or -var-file command line argument to provide a value for
+this variable.
+"""
+
+
+def test_missing_variables_extracts_names_in_order():
+    assert tfwrapper._missing_variables(TF_MISSING_VAR_STDERR) == [
+        "bucket_name",
+        "region",
+    ]
+
+
+def test_missing_variables_ignores_unrelated_errors():
+    assert tfwrapper._missing_variables("Error: Invalid provider configuration") == []
+    assert tfwrapper._missing_variables("") == []
+
+
+def test_missing_variable_hint_lists_vars_and_remedies():
+    hint = tfwrapper._missing_variable_hint(["bucket_name", "region"])
+    assert "bucket_name, region" in hint
+    assert "--varfile" in hint
+    assert 'TF_VAR_bucket_name="value"' in hint
+
+
+def test_tf_error_appends_missing_variable_hint(capsys):
+    result = subprocess.CompletedProcess(
+        args=["terraform", "plan"],
+        returncode=1,
+        stdout="",
+        stderr=TF_MISSING_VAR_STDERR,
+    )
+    with pytest.raises(SystemExit):
+        tfwrapper._tf_error("plan failed", debug=False, result=result)
+    out = capsys.readouterr().out
+    assert "Required variable(s) with no value: bucket_name, region" in out
+    assert "cannot prompt for values" in out
+
+
+def _capture_run(monkeypatch):
+    """Record the args/kwargs of the next subprocess.run in tfwrapper."""
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(tfwrapper.subprocess, "run", fake_run)
+    return calls
+
+
+def test_terraform_plan_runs_non_interactively(monkeypatch):
+    calls = _capture_run(monkeypatch)
+    tfwrapper._run_terraform_plan([], "/tmp/tfplan.bin", debug=False)
+    cmd, kwargs = calls[0]
+    assert "-input=false" in cmd
+    assert kwargs["stdin"] is subprocess.DEVNULL
+    assert kwargs["env"]["TF_INPUT"] == "false"
+
+
+def test_terraform_init_runs_non_interactively(monkeypatch):
+    calls = _capture_run(monkeypatch)
+    tfwrapper._run_terraform_init(debug=False, upgrade=False)
+    cmd, kwargs = calls[0]
+    assert "-input=false" in cmd
+    assert kwargs["stdin"] is subprocess.DEVNULL
+    assert kwargs["env"]["TF_INPUT"] == "false"

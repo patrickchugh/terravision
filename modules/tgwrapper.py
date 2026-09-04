@@ -495,7 +495,12 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
     click.echo(click.style("\nRunning Terragrunt Init..\n", fg="white", bold=True))
     init_cmd = ["terragrunt", "init", "-reconfigure"]
     result = subprocess.run(
-        init_cmd, capture_output=not debug, text=True, cwd=workdir, env=_tg_env()
+        init_cmd,
+        capture_output=not debug,
+        text=True,
+        cwd=workdir,
+        env=_tg_env(),
+        stdin=subprocess.DEVNULL,
     )
 
     # Try to find the cache directory (should exist if source download succeeded)
@@ -528,6 +533,7 @@ def _run_terragrunt_init(workdir: str, debug: bool) -> str:
         capture_output=not debug,
         text=True,
         cwd=cache_dir,
+        stdin=subprocess.DEVNULL,
     )
     if tf_result.returncode != 0:
         stderr = (result.stderr or "") + (tf_result.stderr or "")
@@ -586,12 +592,17 @@ def _run_terragrunt_plan(
     """
     _tg_debug_snapshot("before terragrunt plan", cache_dir, debug)
     click.echo(click.style("\nGenerating Terragrunt Plan..\n", fg="white", bold=True))
-    plan_cmd = ["terragrunt", "plan", "-refresh=false"]
+    plan_cmd = ["terragrunt", "plan", "-refresh=false", "-input=false"]
     for vf in varfiles:
         plan_cmd.extend(["-var-file", vf])
     plan_cmd.extend(["-out", tfplan_path])
     result = subprocess.run(
-        plan_cmd, capture_output=not debug, text=True, cwd=workdir, env=_tg_env()
+        plan_cmd,
+        capture_output=not debug,
+        text=True,
+        cwd=workdir,
+        env=_tg_env(),
+        stdin=subprocess.DEVNULL,
     )
     _tg_debug_snapshot("after terragrunt plan", cache_dir, debug)
     if result.returncode != 0:
@@ -633,6 +644,7 @@ def _decode_tg_plan(
             stderr=None if debug else subprocess.PIPE,
             text=True,
             cwd=cache_dir,
+            stdin=subprocess.DEVNULL,
         )
     if result.returncode != 0:
         raise RuntimeError(
@@ -650,6 +662,7 @@ def _decode_tg_plan(
             stderr=None if debug else subprocess.PIPE,
             text=True,
             cwd=cache_dir,
+            stdin=subprocess.DEVNULL,
         )
     if result.returncode != 0:
         raise RuntimeError(

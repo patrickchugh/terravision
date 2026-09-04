@@ -152,6 +152,59 @@ def convert_dot_to_json(dot_file: str) -> dict:
             os.remove(json_file)
 
 
+# Terraform prompts on stdin for any required variable that has no value.
+# TerraVision captures subprocess output, so that prompt is invisible and the
+# process hangs forever waiting for an answer (issue #209).  Every terraform
+# call is therefore made non-interactive: TF_INPUT=false, -input=false where
+# the subcommand supports it, and stdin closed as a final backstop.
+_MISSING_VAR_PATTERNS = (
+    re.compile(r'input variable "([^"]+)" is not set'),
+    re.compile(r'No value for required variable.*?variable "([^"]+)"', re.DOTALL),
+)
+
+
+def _tf_env() -> dict:
+    """Build environment for terraform subprocess calls (never interactive)."""
+    env = dict(os.environ)
+    env["TF_INPUT"] = "false"
+    return env
+
+
+def _missing_variables(output: str) -> List[str]:
+    """Return root module variable names terraform reported as unset.
+
+    Args:
+        output: Combined stderr/stdout of a failed terraform command.
+
+    Returns:
+        Variable names in the order terraform reported them, deduplicated.
+    """
+    if not output:
+        return []
+    names = []
+    for pattern in _MISSING_VAR_PATTERNS:
+        for name in pattern.findall(output):
+            if name not in names:
+                names.append(name)
+        if names:
+            break
+    return names
+
+
+def _missing_variable_hint(names: List[str]) -> str:
+    """Build actionable guidance for undefined terraform variables."""
+    varlist = ", ".join(names)
+    example = names[0]
+    return (
+        f"\nRequired variable(s) with no value: {varlist}\n"
+        "TerraVision runs Terraform non-interactively, so it cannot prompt for "
+        "values. Supply them using any of:\n"
+        f"  terravision draw --source <path> --varfile <file.tfvars>\n"
+        f"  a terraform.tfvars or *.auto.tfvars file in the source directory\n"
+        f'  environment variables, e.g. export TF_VAR_{example}="value"'
+    )
+
+
 def _cleanup_override(override_dest):
     """Remove override.tf if it exists."""
     if override_dest and os.path.exists(override_dest):
@@ -159,10 +212,23 @@ def _cleanup_override(override_dest):
 
 
 def _tf_error(message, debug=True, result=None):
-    """Print a terraform error message and exit."""
+    """Print a terraform error message and exit.
+
+    When terraform failed because required input variables have no values
+    (issue #209), an extra hint listing them and how to supply them is
+    printed after terraform's own error output.
+    """
     click.echo(click.style(f"\nERROR: {message}", fg="red", bold=True))
     if not debug and result and result.stderr:
         click.echo(click.style(f"Details: {result.stderr}", fg="red"))
+    output = ""
+    if result is not None:
+        output = (getattr(result, "stderr", None) or "") + (
+            getattr(result, "stdout", None) or ""
+        )
+    missing = _missing_variables(output)
+    if missing:
+        click.echo(click.style(_missing_variable_hint(missing), fg="yellow", bold=True))
     exit(result.returncode if result and result.returncode else 1)
 
 
@@ -209,12 +275,18 @@ def _run_terraform_init(debug, upgrade, skip_reconfigure: bool = False):
         )
     )
     click.echo("  Forcing temporary local backend to generate full infrastructure plan")
-    init_cmd = [helpers.get_tf_binary(), "init"]
+    init_cmd = [helpers.get_tf_binary(), "init", "-input=false"]
     if not skip_reconfigure:
         init_cmd.append("-reconfigure")
     if upgrade:
         init_cmd.append("-upgrade")
-    result = subprocess.run(init_cmd, capture_output=not debug, text=True)
+    result = subprocess.run(
+        init_cmd,
+        capture_output=not debug,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=_tf_env(),
+    )
     if result.returncode != 0:
         _tf_error(
             f"Cannot perform {helpers.get_tf_binary()} init using provided source. "
@@ -233,6 +305,8 @@ def _select_workspace(workspace, debug):
         [helpers.get_tf_binary(), "workspace", "select", "-or-create=True", workspace],
         capture_output=not debug,
         text=True,
+        stdin=subprocess.DEVNULL,
+        env=_tf_env(),
     )
     if result.returncode != 0:
         _tf_error(
@@ -251,11 +325,17 @@ def _run_terraform_plan(vfiles, tfplan_path, debug):
             bold=True,
         )
     )
-    plan_cmd = [helpers.get_tf_binary(), "plan", "-refresh=false"]
+    plan_cmd = [helpers.get_tf_binary(), "plan", "-refresh=false", "-input=false"]
     for vf in vfiles:
         plan_cmd.extend(["-var-file", vf])
     plan_cmd.extend(["-out", tfplan_path])
-    result = subprocess.run(plan_cmd, capture_output=not debug, text=True)
+    result = subprocess.run(
+        plan_cmd,
+        capture_output=not debug,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=_tf_env(),
+    )
     if result.returncode != 0:
         _tf_error(
             f"Invalid output from '{helpers.get_tf_binary()} plan' command. "
@@ -281,6 +361,8 @@ def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
+            stdin=subprocess.DEVNULL,
+            env=_tf_env(),
         )
     if result.returncode != 0:
         _tf_error(
@@ -298,6 +380,8 @@ def _decode_plan(tfplan_path, tfplan_json_path, tfgraph_path, debug):
             stdout=f,
             stderr=None if debug else subprocess.PIPE,
             text=True,
+            stdin=subprocess.DEVNULL,
+            env=_tf_env(),
         )
     if result.returncode != 0:
         _tf_error(
