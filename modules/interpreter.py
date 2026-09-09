@@ -185,6 +185,7 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for key, orig_value in attr_list.items():
             value = str(orig_value)
             _FRV_STATE["calls"] = 0  # per-attribute budget for the cost cap
+            _FRV_STATE["warned"] = 0  # warn at most once per attribute
             # Iteratively resolve all variable references.
             # Track seen values to detect cycles (e.g. local.A → local.B → local.A)
             # where find_replace_values keeps producing a different string each
@@ -563,42 +564,63 @@ def find_replace_values(
         )
         return "UNKNOWN"
 
-    # Cost cap: bound per-attribute work (see module top).
-    _FRV_STATE["calls"] += 1
-    if _FRV_STATE["calls"] > _FRV_MAX_CALLS or len(str(varstring)) > _FRV_MAX_LEN:
-        return str(varstring)
-
-    # replace_module_vars re-runs this on the WHOLE string once per nested ref
-    # -> O(refs**depth), which hangs on large stacks. Memoize (value, module) and
-    # short-circuit re-entrant identical calls to make it ~linear. Resolution is
-    # a pure function of (value, module) here, so caching is safe.
-    _cache_key = (str(varstring), module)
+    # Memoize + guard re-entrant resolution FIRST, so cache hits and re-entrant
+    # calls are free and do NOT consume the cost budget below. replace_module_vars
+    # re-runs this on the WHOLE string once per nested ref -> O(refs**depth) and
+    # hangs on large stacks; memoizing (value, module) and short-circuiting
+    # re-entrant identical calls makes it ~linear. Resolution is a pure function
+    # of (value, module) here, so caching is safe.
+    _cache_key = (str(varstring), str(module))
     if _cache_key in _FRV_CACHE:
         return _FRV_CACHE[_cache_key]
     if _cache_key in _FRV_STACK:  # already resolving this exact string; can't progress
-        return varstring
-    _FRV_STACK.add(_cache_key)
+        return str(varstring)
 
-    # Regex string matching to create lists of different variable markers found
-    value = helpers.strip_var_curlies(str(varstring))
-    # Find all variable types using regex patterns
-    var_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+", value)
-    data_found_list = re.findall(r"data\.[A-Za-z0-9_\-\.\[\]]+", value)
-    varobject_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value)
-    local_found_list = re.findall(r"local\.[A-Za-z0-9_\-\.\[\]]+", value)
-    modulevar_found_list = [
-        m.rstrip("[") for m in re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
-    ]
-    # Replace found variable strings with actual values in order
-    value = replace_data_values(data_found_list, value, tfdata)
-    value = replace_module_vars(
-        modulevar_found_list, value, module, tfdata, recursion_depth
-    )
-    value = replace_var_values(
-        var_found_list, varobject_found_list, value, module, tfdata
-    )
-    value = replace_local_values(local_found_list, value, module, tfdata)
-    _FRV_STACK.discard(_cache_key)
+    # Cost cap: bound per-attribute work so a value the resolver can never fully
+    # resolve bails out in bounded time (it would otherwise reach the
+    # recursion_depth>=50 UNKNOWN path). Warn once per attribute if hit, so real
+    # stacks tripping the guard are visible.
+    _FRV_STATE["calls"] += 1
+    if _FRV_STATE["calls"] > _FRV_MAX_CALLS or len(str(varstring)) > _FRV_MAX_LEN:
+        if not _FRV_STATE.get("warned"):
+            click.echo(
+                click.style(
+                    f"   WARNING: variable resolver hit its cost cap "
+                    f"(calls>{_FRV_MAX_CALLS} or len>{_FRV_MAX_LEN}); leaving "
+                    f"'{str(varstring)[:60]}' partially resolved.",
+                    fg="yellow",
+                )
+            )
+            _FRV_STATE["warned"] = 1
+        return str(varstring)
+
+    _FRV_STACK.add(_cache_key)
+    try:
+        # Regex string matching to create lists of different variable markers
+        value = helpers.strip_var_curlies(str(varstring))
+        var_found_list = re.findall(r"var\.[A-Za-z0-9_\-]+", value)
+        data_found_list = re.findall(r"data\.[A-Za-z0-9_\-\.\[\]]+", value)
+        varobject_found_list = re.findall(
+            r"var\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", value
+        )
+        local_found_list = re.findall(r"local\.[A-Za-z0-9_\-\.\[\]]+", value)
+        modulevar_found_list = [
+            m.rstrip("[") for m in re.findall(r"module\.[A-Za-z0-9_\-\.\[\]]+", value)
+        ]
+        # Replace found variable strings with actual values in order
+        value = replace_data_values(data_found_list, value, tfdata)
+        value = replace_module_vars(
+            modulevar_found_list, value, module, tfdata, recursion_depth
+        )
+        value = replace_var_values(
+            var_found_list, varobject_found_list, value, module, tfdata
+        )
+        value = replace_local_values(local_found_list, value, module, tfdata)
+    finally:
+        # Always clear the in-progress marker, even on exception, so a raised
+        # error never leaves a stale entry that poisons later resolutions.
+        _FRV_STACK.discard(_cache_key)
+    value = value if isinstance(value, str) else str(value)
     _FRV_CACHE[_cache_key] = value
     return value
 
