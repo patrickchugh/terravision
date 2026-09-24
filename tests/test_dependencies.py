@@ -113,3 +113,39 @@ class TestGetOsFamily:
     def test_detects_unknown(self, mock_system):
         mock_system.return_value = "FreeBSD"
         assert _get_os_family() == "unknown"
+
+
+class TestGraphJsonSourceSkipsTerraform:
+    """A graph JSON source never runs Terraform, so it must not require it."""
+
+    def test_is_graph_json_source(self):
+        from modules.helpers import is_graph_json_source
+
+        assert is_graph_json_source("architecture.graph.json")
+        assert not is_graph_json_source("./infra")
+
+    @patch("modules.helpers.shutil.which")
+    @patch("modules.helpers.os.path.isfile")
+    def test_terraform_missing_is_fine_without_terraform(self, mock_isfile, mock_which):
+        mock_which.side_effect = lambda exe: (
+            None if exe in ("terraform", "tofu") else "/usr/bin/fake"
+        )
+        mock_isfile.return_value = False
+
+        check_dependencies(needs_terraform=False)  # must not exit
+
+        with pytest.raises(SystemExit):
+            check_dependencies()
+
+    def test_preflight_skips_terraform_version_check(self):
+        import terravision.terravision as tv
+
+        with (
+            patch.object(tv.helpers, "set_tf_binary"),
+            patch.object(tv.helpers, "check_dependencies") as deps,
+            patch.object(tv.helpers, "check_terraform_version") as version,
+        ):
+            tv.preflight_check(None, needs_terraform=False)
+
+        deps.assert_called_once_with(needs_terraform=False)
+        version.assert_not_called()

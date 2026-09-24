@@ -26,6 +26,7 @@ from modules.mcp_service import (
     _validate_outfile,
     get_output_dir,
     run_diagram,
+    run_render_graph,
     set_output_dir,
     supported_formats,
 )
@@ -381,7 +382,7 @@ def _stub_pipeline(monkeypatch, strand_to):
     """Make _compile's pipeline chdir away, as tfwrapper does."""
     import terravision.terravision as tv
 
-    monkeypatch.setattr(tv, "preflight_check", lambda *a, **k: None)
+    monkeypatch.setattr(tv, "preflight_check", lambda *args, **kwargs: None)
 
     def fake_compile(*args, **kwargs):
         os.chdir(strand_to)
@@ -397,7 +398,7 @@ def test_compile_restores_cwd_when_pipeline_strands_it(tmp_path, monkeypatch):
     strand.mkdir()
     outdir = set_output_dir(str(tmp_path / "generated"))
     _stub_pipeline(monkeypatch, strand)
-    monkeypatch.setattr(mcp_service, "_check_binaries", lambda: None)
+    monkeypatch.setattr(mcp_service, "_check_binaries", lambda *args, **kwargs: None)
 
     with _guarded():
         mcp_service._compile(
@@ -415,8 +416,8 @@ def test_cwd_restored_even_when_pipeline_raises(tmp_path, monkeypatch):
     strand = tmp_path / "elsewhere"
     strand.mkdir()
     outdir = set_output_dir(str(tmp_path / "generated"))
-    monkeypatch.setattr(mcp_service, "_check_binaries", lambda: None)
-    monkeypatch.setattr(tv, "preflight_check", lambda *a, **k: None)
+    monkeypatch.setattr(mcp_service, "_check_binaries", lambda *args, **kwargs: None)
+    monkeypatch.setattr(tv, "preflight_check", lambda *args, **kwargs: None)
 
     def failing_compile(*args, **kwargs):
         os.chdir(strand)
@@ -440,7 +441,7 @@ def test_outer_cwd_still_restored_after_a_stranding_call(tmp_path, monkeypatch):
     strand.mkdir()
     set_output_dir(str(tmp_path / "generated"))
     _stub_pipeline(monkeypatch, strand)
-    monkeypatch.setattr(mcp_service, "_check_binaries", lambda: None)
+    monkeypatch.setattr(mcp_service, "_check_binaries", lambda *args, **kwargs: None)
 
     before = Path.cwd()
     with _guarded():
@@ -462,7 +463,9 @@ def test_outer_cwd_still_restored_after_a_stranding_call(tmp_path, monkeypatch):
 def test_missing_binaries_reported_with_names(monkeypatch):
     import modules.mcp_service as mcp_service
 
-    monkeypatch.setattr(mcp_service, "_missing_binaries", lambda: ["dot", "terraform"])
+    monkeypatch.setattr(
+        mcp_service, "_missing_binaries", lambda *args, **kwargs: ["dot", "terraform"]
+    )
     with pytest.raises(McpServiceError) as excinfo:
         mcp_service._check_binaries()
 
@@ -474,7 +477,7 @@ def test_missing_binaries_reported_with_names(monkeypatch):
 def test_binary_check_passes_when_all_present(monkeypatch):
     import modules.mcp_service as mcp_service
 
-    monkeypatch.setattr(mcp_service, "_missing_binaries", lambda: [])
+    monkeypatch.setattr(mcp_service, "_missing_binaries", lambda *args, **kwargs: [])
     mcp_service._check_binaries()  # must not raise
 
 
@@ -482,7 +485,7 @@ def test_missing_binaries_deduplicates(monkeypatch):
     import modules.mcp_service as mcp_service
 
     monkeypatch.setattr(
-        mcp_service, "_missing_binaries", lambda: ["dot", "dot", "gvpr"]
+        mcp_service, "_missing_binaries", lambda *args, **kwargs: ["dot", "dot", "gvpr"]
     )
     with pytest.raises(McpServiceError) as excinfo:
         mcp_service._check_binaries()
@@ -502,7 +505,9 @@ def test_binary_failure_is_not_reported_as_a_plan_failure(monkeypatch):
     """Regression: the generic abort text misattributed a PATH problem."""
     import modules.mcp_service as mcp_service
 
-    monkeypatch.setattr(mcp_service, "_missing_binaries", lambda: ["dot"])
+    monkeypatch.setattr(
+        mcp_service, "_missing_binaries", lambda *args, **kwargs: ["dot"]
+    )
     with pytest.raises(McpServiceError) as excinfo:
         mcp_service._check_binaries()
     assert "could not produce a plan" not in str(excinfo.value)
@@ -521,3 +526,48 @@ def test_run_diagram_rejects_unknown_format_without_running_pipeline():
 def test_run_diagram_rejects_outfile_path_without_running_pipeline():
     with pytest.raises(McpServiceError):
         run_diagram("/nonexistent/source", format="png", outfile="../escape")
+
+
+def test_run_render_graph_inline(tmp_path):
+    """A graph passed inline renders without Terraform and reports its size."""
+    set_output_dir(str(tmp_path))
+    result = run_render_graph(
+        {
+            "tv_aws_users.u": ["aws_lambda_function.api"],
+            "aws_lambda_function.api": ["aws_dynamodb_table.t"],
+        },
+        format="svg",
+        outfile="t",
+    )
+    assert result["node_count"] == 3 and result["edge_count"] == 2
+    assert result["provider"] == "aws"
+    assert Path(result["path"]) == tmp_path / "t.dot.svg"
+    assert Path(result["path"]).exists()
+    assert (tmp_path / "t.graph.json").exists()
+
+
+def test_run_render_graph_rejects_bad_address(tmp_path):
+    set_output_dir(str(tmp_path))
+    with pytest.raises(McpServiceError):
+        run_render_graph({"not-an-address": []})
+
+
+def test_run_render_graph_rejects_bad_connection(tmp_path):
+    """Targets are validated too, not only the keys."""
+    set_output_dir(str(tmp_path))
+    with pytest.raises(McpServiceError, match="oops"):
+        run_render_graph({"aws_s3_bucket.a": ["oops"]})
+
+
+def test_run_render_graph_does_not_mutate_callers_graph(tmp_path, monkeypatch):
+    """Leaf nodes are added to a copy, never to the dict the caller passed."""
+    import modules.mcp_service as mcp_service
+
+    set_output_dir(str(tmp_path))
+    monkeypatch.setattr(
+        mcp_service, "run_diagram", lambda *args, **kwargs: {"provider": "aws"}
+    )
+    graph = {"aws_lambda_function.api": ["aws_dynamodb_table.t"]}
+    result = run_render_graph(graph, outfile="t")
+    assert graph == {"aws_lambda_function.api": ["aws_dynamodb_table.t"]}
+    assert result["node_count"] == 2

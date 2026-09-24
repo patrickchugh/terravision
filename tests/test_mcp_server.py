@@ -26,6 +26,7 @@ from mcp import Client  # noqa: E402
 from modules.mcp_server import build_server, serve  # noqa: E402
 
 EXPECTED_TOOLS = {
+    "render_graph",
     "generate_architecture_graph",
     "generate_diagram",
     "generate_interactive_html",
@@ -126,6 +127,10 @@ def test_tool_schema_exposes_expected_parameters(server, tool_name, expected):
 
 def test_source_is_the_only_required_parameter(server):
     for tool in _run(server.list_tools):
+        if tool.name == "render_graph":
+            # The renderer-only tool takes the graph inline instead of a source.
+            assert tool.input_schema["required"] == ["graph"]
+            continue
         assert tool.input_schema["required"] == ["source"]
 
 
@@ -232,6 +237,10 @@ def test_schemas_are_plain_json_types(server):
     for tool in _run(server.list_tools):
         for name, spec in tool.input_schema["properties"].items():
             declared = spec.get("type")
+            if tool.name == "render_graph" and name == "graph":
+                # The one intentional object parameter: the graph itself.
+                assert declared == "object"
+                continue
             if declared is None:  # optional params use anyOf
                 variants = spec.get("anyOf", [])
                 assert variants, f"{tool.name}.{name} has no usable type"

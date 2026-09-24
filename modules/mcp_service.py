@@ -266,24 +266,27 @@ def _guarded(change_dir: bool = True) -> Iterator[Optional[Path]]:
                 raise McpServiceError(f"{type(e).__name__}: {e}") from e
 
 
-def _missing_binaries() -> List[str]:
+def _missing_binaries(needs_terraform: bool = True) -> List[str]:
     """Return the required external executables that are not on PATH.
 
-    Reuses the CLI's own dependency table so the two cannot disagree.
+    Reuses the CLI's own dependency table so the two cannot disagree. A graph
+    JSON source never runs Terraform, so it is not required in that case.
     """
     import shutil
 
     from modules.helpers import DEPENDENCIES, get_tf_binary
 
     missing = []
-    for info in DEPENDENCIES.values():
+    for key, info in DEPENDENCIES.items():
+        if key == "terraform" and not needs_terraform:
+            continue
         for exe in info["executables"] or [get_tf_binary()]:
             if not shutil.which(exe):
                 missing.append(exe)
     return missing
 
 
-def _check_binaries() -> None:
+def _check_binaries(needs_terraform: bool = True) -> None:
     """Fail with an actionable message when an external dependency is absent.
 
     ``helpers.check_dependencies()`` calls ``exit(1)`` in this situation, which
@@ -298,14 +301,18 @@ def _check_binaries() -> None:
     Raises:
         McpServiceError: If any required executable is missing.
     """
-    missing = _missing_binaries()
+    missing = _missing_binaries(needs_terraform)
     if not missing:
         return
+    needed = (
+        "Graphviz and Git"
+        if not needs_terraform
+        else ("Graphviz, Git and Terraform (or OpenTofu)")
+    )
     raise McpServiceError(
         "TerraVision cannot run: "
         + ", ".join(sorted(set(missing)))
-        + " not found on PATH. TerraVision needs Graphviz, Git and "
-        "Terraform (or OpenTofu).\n"
+        + f" not found on PATH. TerraVision needs {needed}.\n"
         "If these are installed, the MCP server has inherited a stale "
         "environment from the client that launched it --- restart that "
         "client so it picks up the current PATH.\n"
@@ -331,11 +338,14 @@ def _compile(
     import modules.graphmaker as graphmaker
     from terravision.terravision import compile_tfdata, preflight_check
 
-    _check_binaries()
+    from modules.helpers import is_graph_json_source
+
+    needs_terraform = not is_graph_json_source(source)
+    _check_binaries(needs_terraform)
     intended_cwd = Path.cwd()
     try:
         # AI annotation is not exposed over MCP, so no backend is requested.
-        preflight_check(None)
+        preflight_check(None, needs_terraform=needs_terraform)
         tfdata = compile_tfdata(
             source,
             list(varfile or []),
@@ -573,3 +583,77 @@ def run_interactive_html(
             )
 
         return {"path": str(produced), "provider": provider}
+
+
+def run_render_graph(
+    graph: Dict[str, List[str]],
+    format: str = "png",
+    outfile: str = "architecture",
+    fontsize: Optional[int] = None,
+    iconsize: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Render a diagram from an inline TerraVision graph dictionary.
+
+    This is the renderer-only path: no Terraform, no cloud credentials, no
+    files to stage. ``graph`` maps each node address (``<provider_type>.<name>``,
+    e.g. ``aws_lambda_function.orders``) to the list of node addresses it
+    connects to or contains. See the Graph Format reference for the rules.
+
+    The graph is written to ``<outfile>.graph.json`` in the output directory
+    and then rendered exactly as ``terravision draw --source <that file>``
+    would, so the CLI and MCP paths cannot drift.
+
+    Returns:
+        ``{"path", "format", "provider", "graph_path", "node_count", "edge_count"}``.
+    """
+    import json
+
+    if not isinstance(graph, dict) or not graph:
+        raise McpServiceError(
+            "graph must be a non-empty JSON object mapping node addresses to "
+            "lists of connected node addresses."
+        )
+    for node, targets in graph.items():
+        if not isinstance(node, str) or "." not in node:
+            raise McpServiceError(
+                f"Invalid node address {node!r}: expected '<type>.<name>', "
+                "e.g. 'aws_s3_bucket.assets'."
+            )
+        if not isinstance(targets, list) or not all(
+            isinstance(t, str) for t in targets
+        ):
+            raise McpServiceError(
+                f"Connections for {node!r} must be a list of node address strings."
+            )
+        for t in targets:
+            if "." not in t:
+                raise McpServiceError(
+                    f"Invalid connection {t!r} from {node!r}: expected "
+                    "'<type>.<name>', e.g. 'aws_s3_bucket.assets'."
+                )
+    # Any target that has no entry of its own is a leaf; add it so the caller
+    # does not have to list every node twice. Copy first so the caller's dict
+    # is left untouched.
+    graph = {node: list(targets) for node, targets in graph.items()}
+    for targets in list(graph.values()):
+        for t in targets:
+            graph.setdefault(t, [])
+
+    name = _validate_outfile(outfile)
+    outdir = get_output_dir()
+    outdir.mkdir(parents=True, exist_ok=True)
+    graph_path = outdir / f"{name}.graph.json"
+    with open(graph_path, "w", encoding="utf-8") as fh:
+        json.dump(graph, fh, indent=2)
+
+    result = run_diagram(
+        source=str(graph_path),
+        format=format,
+        outfile=name,
+        fontsize=fontsize,
+        iconsize=iconsize,
+    )
+    result["graph_path"] = str(graph_path)
+    result["node_count"] = len(graph)
+    result["edge_count"] = sum(len(v) for v in graph.values())
+    return result

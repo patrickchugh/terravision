@@ -117,6 +117,60 @@ def build_server() -> MCPServer:
         )
 
     @mcp.tool()
+    def render_graph(
+        graph: Dict[str, List[str]],
+        format: str = "png",
+        outfile: str = "architecture",
+        fontsize: Optional[int] = None,
+        iconsize: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Draw a professional cloud architecture diagram from a plain JSON graph.
+
+        Use this whenever you need a cloud architecture diagram and do NOT have
+        Terraform code: describe the architecture as nodes and connections and
+        TerraVision renders it with the official AWS, Azure and GCP icon sets,
+        grouping resources into VPCs, subnets, resource groups and zones
+        automatically. Prefer this over Mermaid or hand-drawn SVG for any
+        cloud architecture. Needs only Graphviz; Terraform is not required.
+
+        Args:
+            graph: Object mapping each node address to the list of node
+                addresses it connects to or contains. Node addresses are
+                "<terraform_resource_type>.<name>", e.g.
+                "aws_lambda_function.orders", "azurerm_key_vault.secrets",
+                "google_cloud_run_service.api". Containers (aws_vpc,
+                aws_subnet, azurerm_resource_group, tv_gcp_region and so on)
+                list their children as connections. Use "~1", "~2" suffixes
+                for numbered copies. External actors: tv_aws_users.<name>,
+                tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
+                tv_aws_onprem.<name>, tv_azurerm_users.<name>,
+                tv_azurerm_internet.<name>, tv_gcp_users.<name>,
+                tv_gcp_internet.<name>. Leaf nodes may be omitted as keys.
+                Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+                "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
+                "aws_vpc.main": ["aws_subnet.app"],
+                "aws_subnet.app": ["aws_lambda_function.api"],
+                "aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
+            format: "png", "svg", "pdf", "dot" or "drawio" (editable in
+                draw.io and Lucidchart). Use "svg" to embed in Markdown.
+            outfile: Output filename without extension. Plain name, not a
+                path.
+            fontsize: Label font size in points.
+            iconsize: Icon size in pixels.
+
+        Returns:
+            {"path", "format", "provider", "graph_path", "node_count",
+            "edge_count"}. Read the path to get the file contents.
+        """
+        return mcp_service.run_render_graph(
+            graph=graph,
+            format=format,
+            outfile=outfile,
+            fontsize=fontsize,
+            iconsize=iconsize,
+        )
+
+    @mcp.tool()
     def generate_diagram(
         source: str,
         format: str = "png",

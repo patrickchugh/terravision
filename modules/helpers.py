@@ -2120,11 +2120,29 @@ DEPENDENCIES: Dict[str, Dict[str, Any]] = {
 }
 
 
-def check_dependencies() -> None:
+def is_graph_json_source(source: str) -> bool:
+    """Return True when ``source`` is a pre-built graph (or tfdata) JSON file.
+
+    Such sources are loaded directly and never run Terraform. This is the one
+    place that decides it, so preflight and compilation cannot disagree.
+    """
+    return source.endswith(
+        (
+            ".json",
+            ".JSON",
+        )
+    )
+
+
+def check_dependencies(needs_terraform: bool = True) -> None:
     """Check if required command-line tools are available.
 
     Reports all missing dependencies together with OS-specific
     installation instructions and a link to the documentation.
+
+    Args:
+        needs_terraform: When False (graph JSON source), the Terraform /
+            OpenTofu binary is not checked because it is never executed.
     """
     import sys
 
@@ -2133,6 +2151,8 @@ def check_dependencies() -> None:
 
     missing: List[Tuple[Dict[str, Any], List[str]]] = []
     for key, info in DEPENDENCIES.items():
+        if key == "terraform" and not needs_terraform:
+            continue
         executables = info["executables"] or [get_tf_binary()]
         not_found = []
         for exe in executables:

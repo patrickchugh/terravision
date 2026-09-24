@@ -220,7 +220,7 @@ def compile_tfdata(
         tfdata = tfwrapper.process_pregenerated_source(
             planfile, graphfile, source, annotate, debug
         )
-    elif source.endswith(".json"):
+    elif helpers.is_graph_json_source(source):
         validators.validate_source(source)
         tfdata = tfwrapper.load_json_source(source)
         already_processed = True
@@ -323,17 +323,29 @@ def compile_tfdata(
     return tfdata
 
 
-def preflight_check(ai_backend: Optional[str] = None, engine: str = "auto") -> None:
+def preflight_check(
+    ai_backend: Optional[str] = None,
+    engine: str = "auto",
+    needs_terraform: bool = True,
+) -> None:
     """Check required dependencies and Terraform/OpenTofu version compatibility.
 
     Args:
         ai_backend: AI backend to validate ('ollama', 'bedrock', or 'restapi')
         engine: Infra engine to use: 'terraform', 'tofu', or 'auto' (detect).
+        needs_terraform: False when the source is a pre-built graph JSON, in
+            which case Terraform is never invoked and need not be installed.
+            Only Graphviz (dot, gvpr) is required to render.
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     helpers.set_tf_binary(engine)
-    helpers.check_dependencies()
-    helpers.check_terraform_version()
+    helpers.check_dependencies(needs_terraform=needs_terraform)
+    if needs_terraform:
+        helpers.check_terraform_version()
+    else:
+        click.echo(
+            "  Graph JSON source: Terraform not required, skipping version check"
+        )
 
     if ai_backend:
         backend_lower = ai_backend.lower()
@@ -496,7 +508,11 @@ def draw(
                 fg="yellow",
             )
         )
-    preflight_check(ai_annotate if not planfile else None, engine=engine)
+    preflight_check(
+        ai_annotate if not planfile else None,
+        engine=engine,
+        needs_terraform=not helpers.is_graph_json_source(source),
+    )
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -633,7 +649,11 @@ def graphdata(
                 fg="yellow",
             )
         )
-    preflight_check(ai_annotate if not planfile else None, engine=engine)
+    preflight_check(
+        ai_annotate if not planfile else None,
+        engine=engine,
+        needs_terraform=not helpers.is_graph_json_source(source),
+    )
     tfdata = _safe_compile_tfdata(
         debug,
         source,
@@ -810,7 +830,11 @@ def visualise(
             )
         )
 
-    preflight_check(ai_annotate if not planfile else None, engine=engine)
+    preflight_check(
+        ai_annotate if not planfile else None,
+        engine=engine,
+        needs_terraform=not helpers.is_graph_json_source(source),
+    )
     tfdata = _safe_compile_tfdata(
         debug,
         source,
