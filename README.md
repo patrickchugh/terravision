@@ -135,6 +135,8 @@ codex plugin add terravision-cloud-diagrams@terravision
 gemini extensions install https://github.com/patrickchugh/terravision
 ```
 
+**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it. Diagrams then appear right in the chat, with buttons to open them, edit them in draw.io and copy the graph.
+
 Other agents that read skills (Cursor, Copilot) can use the [skill folder](skills/terravision-cloud-diagrams) directly, and any MCP client can run the [MCP server](docs/mcp-server.md), whose `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index of the docs, and [llms-full.txt](https://patrickchugh.github.io/terravision/llms-full.txt) adds the full node-type reference.
 
 ### Option 2 - Generate your  diagram from Terraform

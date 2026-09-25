@@ -63,7 +63,29 @@ The server speaks stdio: your client launches it as a local subprocess. It liste
 claude mcp add terravision -- terravision mcp
 ```
 
-**Claude Desktop / Cursor** — add to the MCP config file:
+**Claude Desktop** — install the extension: download `terravision-<version>.mcpb` from the
+[latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it,
+or drag it into Claude Desktop's **Settings → Extensions**. It asks where to save diagrams (by
+default `Documents/TerraVision`) and installs TerraVision itself; your computer only needs Graphviz
+and Git. The same release has `terravision-cloud-diagrams-skill-<version>.zip`, which you can upload
+under **Settings → Capabilities** so Claude also knows how to write good graphs.
+
+If extensions are turned off on your machine, add the server by hand instead (**Settings →
+Developer → Edit Config**). On macOS, give the full path to `uvx` (from `which uvx`), because
+Claude Desktop does not see your terminal's PATH:
+
+```json
+{
+  "mcpServers": {
+    "terravision": {
+      "command": "uvx",
+      "args": ["--from", "terravision[mcp]", "terravision", "mcp", "--output-dir", "/path/for/diagrams"]
+    }
+  }
+}
+```
+
+**Cursor** — add to the MCP config file:
 
 ```json
 {
@@ -85,8 +107,9 @@ The server implements the protocol rather than targeting any one client, so anyt
 MCP over stdio can use it — Codex CLI, GitHub Copilot in VS Code, Cursor, Zed, Claude Desktop and
 others. Protocol version is negotiated with the client and has been verified against `2024-11-05`
 (the original spec), `2025-03-26` and `2025-06-18`; an unrecognised version negotiates to the
-server's newest. Results are always returned as a `text` content block, the one response field
-present in every version of the spec, so no client depends on newer optional fields.
+server's newest. Every result starts with a `text` content block, the one response field present in
+every version of the spec, so no client depends on newer optional fields. Diagram results add a
+preview image and structured content for clients that use them.
 
 What differs between clients is only where the configuration lives and what it is called. They all
 need the same three things:
@@ -163,9 +186,10 @@ Renders a diagram from a graph passed directly as JSON, so an agent never has to
 connects to or contains; the [Graph Format](graph-format.md) page has the rules and the
 [node types](node-types.md) page the icons. The graph is saved as `<outfile>.tvg.json` in the
 output directory and rendered exactly as `terravision draw --source <that file>` would, so the two
-paths cannot drift. Returns `{path, format, provider, graph_path, node_count, edge_count}`.
+paths cannot drift. Returns the same result as `generate_diagram` plus `graph_path`, `node_count`
+and `edge_count`.
 
-Takes `format`, `outfile`, `fontsize`, `iconsize` and `title`. Needs only Graphviz and Git: no
+Takes `format`, `outfile`, `fontsize`, `iconsize`, `title` and `preview`. Needs only Graphviz and Git: no
 Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
 `google_*`) is rejected; draw one diagram per provider.
 
@@ -181,7 +205,12 @@ need to know what a stack is built from.
 
 ### `generate_diagram`
 
-Equivalent to `terravision draw`. Renders to a file and returns `{path, format, provider}`.
+Equivalent to `terravision draw`, but always saves the full set: the requested format plus a PNG, an
+SVG, an editable draw.io file and the graph as `.tvg.json` (exported from Terraform too, so it can be
+changed and rendered again with `render_graph`). Returns `{path, format, provider, title, files}`,
+where `files` maps `png`, `svg`, `drawio` and `graph` to paths and `path` is the requested format,
+followed by a **preview image** of the diagram (at most 1568 pixels on the long edge, usually well
+under 300 KB) so the model can check what it drew. `preview: false` leaves the image out.
 
 `format` accepts anything Graphviz supports (`png`, `svg`, `pdf`, `dot`, …) plus `drawio` for a file
 editable in draw.io, Lucidchart or any mxGraph editor.
@@ -190,6 +219,30 @@ editable in draw.io, Lucidchart or any mxGraph editor.
 
 Equivalent to `terravision visualise`. Produces a self-contained HTML page with clickable,
 searchable nodes and all resource metadata embedded, so it opens offline. Returns `{path, provider}`.
+
+### `open_diagram_file`
+
+Opens a file from a diagram result in the user's default app (the image viewer for `.png`, draw.io
+for `.drawio`), or with `reveal: true` shows it in its folder. It works because the server runs on
+the user's own computer. Only files this server rendered can be opened; any other path is refused.
+
+### `diagram_file`
+
+Returns a rendered file's contents to the diagram view. It is marked as app-only
+(`_meta.ui.visibility: ["app"]`) and, like `open_diagram_file`, refuses any file the server did not
+render.
+
+### The diagram view (MCP Apps)
+
+`render_graph` and `generate_diagram` link to an [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview)
+view, `ui://terravision/diagram.html`. In apps that support MCP Apps, such as Claude Desktop, VS
+Code with GitHub Copilot and Cursor, the diagram appears in the chat as soon as it is drawn, with
+zoom and pan, and buttons to **open the image**, **edit it in draw.io**, **show it in its folder**,
+**copy the graph JSON** and show it. Apps without MCP Apps still get the preview image and the file
+paths.
+
+The view is a single self-contained HTML page: it loads nothing from the internet and needs no
+permissions beyond writing to the clipboard.
 
 ### Common parameters
 
@@ -203,7 +256,8 @@ searchable nodes and all resource metadata embedded, so it opens offline. Return
 | `upgrade` | Run `terraform init -upgrade` to refresh modules |
 
 `generate_diagram` and `generate_interactive_html` also take `outfile`, `use_tf_names`,
-`use_resource_names`, `fontsize`, `iconsize` and `title` (overrides a title in the annotation file).
+`use_resource_names`, `fontsize`, `iconsize` and `title` (overrides a title in the annotation file);
+`generate_diagram` also takes `preview`.
 
 ## Things worth knowing
 

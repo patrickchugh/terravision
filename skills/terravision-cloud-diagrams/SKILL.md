@@ -5,7 +5,7 @@ license: AGPL-3.0-only
 metadata:
   author: patrickchugh
   homepage: https://github.com/patrickchugh/terravision
-  version: "1.3"
+  version: "1.4"
 ---
 
 # TerraVision cloud architecture diagrams
@@ -137,7 +137,7 @@ Validate before rendering: `python scripts/validate_graph.py architecture.tvg.js
 
 ## If you have the TerraVision MCP server
 
-Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title` and return the output path.
+Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`. Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself.
 
 ## Check every render, and fix the input
 
@@ -170,4 +170,4 @@ As soon as a render passes your check, do all of this in the same reply. Never w
    - `<name>.tvg.json`: the graph; edit it and render again
 4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
 
-With the MCP server, the files are in its output folder; report those paths the same way.
+With the MCP server, report the paths from `files` the same way. If the app showed the interactive view, the diagram is already in front of the user, so skip opening it and still show the JSON.
