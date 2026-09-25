@@ -1,7 +1,7 @@
 {
   "name": "terravision-cloud-diagrams",
   "description": "Draw professional cloud architecture diagrams (AWS, Azure, GCP) from a JSON graph or Terraform code using TerraVision.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": { "name": "Patrick Chugh", "url": "https://github.com/patrickchugh" },
   "homepage": "https://github.com/patrickchugh/terravision",
   "repository": "https://github.com/patrickchugh/terravision",
