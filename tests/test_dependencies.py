@@ -175,9 +175,9 @@ class TestWindowsGraphvizPath:
     def test_install_dir_is_appended_to_path(self, windows):
         import os
 
-        from modules.helpers import add_windows_graphviz_to_path
+        from modules.helpers import add_graphviz_to_path
 
-        assert add_windows_graphviz_to_path() == str(windows)
+        assert add_graphviz_to_path() == str(windows)
         assert os.environ["PATH"] == os.pathsep.join(["C:\\Windows", str(windows)])
 
     def test_dot_already_on_path_wins(self, windows, monkeypatch):
@@ -186,16 +186,16 @@ class TestWindowsGraphvizPath:
         import modules.helpers as helpers
 
         monkeypatch.setattr(helpers.shutil, "which", lambda exe: "C:\\other\\dot.exe")
-        assert helpers.add_windows_graphviz_to_path() is None
+        assert helpers.add_graphviz_to_path() is None
         assert os.environ["PATH"] == "C:\\Windows"
 
     def test_not_installed_changes_nothing(self, windows):
         import os
 
-        from modules.helpers import add_windows_graphviz_to_path
+        from modules.helpers import add_graphviz_to_path
 
         (windows / "dot.exe").unlink()
-        assert add_windows_graphviz_to_path() is None
+        assert add_graphviz_to_path() is None
         assert os.environ["PATH"] == "C:\\Windows"
 
     def test_other_platforms_are_untouched(self, windows, monkeypatch):
@@ -204,7 +204,7 @@ class TestWindowsGraphvizPath:
         import modules.helpers as helpers
 
         monkeypatch.setattr(helpers.platform, "system", lambda: "Linux")
-        assert helpers.add_windows_graphviz_to_path() is None
+        assert helpers.add_graphviz_to_path() is None
         assert os.environ["PATH"] == "C:\\Windows"
 
     def test_preflight_uses_it(self, windows, monkeypatch):
@@ -239,3 +239,59 @@ class TestWindowsGraphvizPath:
             ),
         )
         mcp_service._check_binaries(needs_terraform=False)
+
+
+class TestMacGraphvizPath:
+    """Apps started from the Dock get a PATH without Homebrew or MacPorts."""
+
+    @pytest.fixture
+    def mac(self, monkeypatch, tmp_path):
+        import modules.helpers as helpers
+
+        brew = tmp_path / "opt" / "homebrew" / "bin"
+        brew.mkdir(parents=True)
+        (brew / "dot").write_text("")
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Darwin")
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: None)
+        monkeypatch.setattr(helpers, "_graphviz_install_dirs", lambda: [brew])
+        monkeypatch.setenv("PATH", "/usr/bin:/bin")
+        return brew
+
+    def test_homebrew_dir_is_appended(self, mac):
+        import os
+
+        from modules.helpers import add_graphviz_to_path
+
+        assert add_graphviz_to_path() == str(mac)
+        assert os.environ["PATH"] == os.pathsep.join(["/usr/bin:/bin", str(mac)])
+
+    def test_standard_mac_locations(self, monkeypatch):
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Darwin")
+        assert [str(p) for p in helpers._graphviz_install_dirs()] == [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/opt/local/bin",
+        ]
+
+    def test_linux_has_no_extra_locations(self, monkeypatch):
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Linux")
+        assert helpers._graphviz_install_dirs() == []
+
+
+def test_mcp_missing_binary_message_has_install_commands(monkeypatch):
+    """A chat app shows the user the exact install command for their OS."""
+    import modules.helpers as helpers
+    import modules.mcp_service as mcp_service
+
+    monkeypatch.setattr(helpers.shutil, "which", lambda exe: None)
+    monkeypatch.setattr(helpers, "_graphviz_install_dirs", lambda: [])
+    monkeypatch.setattr(helpers, "_get_os_family", lambda: "macos")
+    with pytest.raises(mcp_service.McpServiceError) as excinfo:
+        mcp_service._check_binaries(needs_terraform=False)
+    message = str(excinfo.value)
+    assert "brew install graphviz" in message
+    assert "brew install git" in message

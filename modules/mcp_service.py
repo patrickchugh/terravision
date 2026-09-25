@@ -321,12 +321,26 @@ def _check_binaries(needs_terraform: bool = True) -> None:
     Raises:
         McpServiceError: If any required executable is missing.
     """
-    from modules.helpers import add_windows_graphviz_to_path
+    from modules.helpers import (
+        DEPENDENCIES,
+        _get_os_family,
+        add_graphviz_to_path,
+        get_tf_binary,
+    )
 
-    add_windows_graphviz_to_path()
+    add_graphviz_to_path()
     missing = _missing_binaries(needs_terraform)
     if not missing:
         return
+    # The same per-OS install commands the CLI prints, so a chat app can show
+    # the user exactly what to run.
+    os_family = _get_os_family()
+    commands = [
+        line
+        for info in DEPENDENCIES.values()
+        if set(info["executables"] or [get_tf_binary()]) & set(missing)
+        for line in info["install"].get(os_family, info["install"]["default"])
+    ]
     needed = (
         "Graphviz and Git"
         if not needs_terraform
@@ -339,7 +353,8 @@ def _check_binaries(needs_terraform: bool = True) -> None:
         "If these are installed, the MCP server has inherited a stale "
         "environment from the client that launched it --- restart that "
         "client so it picks up the current PATH.\n"
-        "Installation: https://patrickchugh.github.io/terravision/installation/"
+        + ("To install:\n  " + "\n  ".join(commands) + "\n" if commands else "")
+        + "Installation: https://patrickchugh.github.io/terravision/installation/"
     )
 
 

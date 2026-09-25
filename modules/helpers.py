@@ -2135,27 +2135,46 @@ def is_graph_json_source(source: str) -> bool:
     return source.lower().endswith(".json")
 
 
-def add_windows_graphviz_to_path() -> Optional[str]:
-    """Use a standard Windows Graphviz install that is not on PATH.
+def _graphviz_install_dirs() -> List[Path]:
+    """Standard Graphviz locations that may be missing from PATH.
 
-    The Graphviz Windows installer only adds itself to PATH when asked, and a
-    silent install such as ``winget install Graphviz.Graphviz`` never asks, so
-    ``dot`` is missing even though Graphviz is installed. When that is the
-    case, append the install's ``bin`` directory to this process's PATH, which
-    the graphviz library and the ``gvpr`` calls inherit. The user's PATH is
-    not changed, and an existing ``dot`` on PATH always wins.
+    Windows: the Graphviz installer only adds itself to PATH when asked, and a
+    silent install such as ``winget install Graphviz.Graphviz`` never asks.
+    macOS: apps started from the Dock or Finder, such as Claude Desktop and
+    the MCP servers it launches, get a minimal PATH without Homebrew
+    (``/opt/homebrew/bin`` on Apple silicon, ``/usr/local/bin`` on Intel) or
+    MacPorts (``/opt/local/bin``).
+    """
+    system = platform.system()
+    if system == "Windows":
+        return [
+            Path(os.environ[base]) / "Graphviz" / "bin"
+            for base in ("ProgramFiles", "ProgramFiles(x86)")
+            if os.environ.get(base)
+        ]
+    if system == "Darwin":
+        return [
+            Path(p) for p in ("/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin")
+        ]
+    return []
+
+
+def add_graphviz_to_path() -> Optional[str]:
+    """Use a standard Graphviz install that is not on PATH.
+
+    When ``dot`` is not on PATH but sits in one of the standard locations
+    above, append that directory to this process's PATH, which the graphviz
+    library and the ``gvpr`` calls inherit. The user's PATH is not changed,
+    and an existing ``dot`` on PATH always wins.
 
     Returns:
         The directory added to PATH, or None when nothing was changed.
     """
-    if platform.system() != "Windows" or shutil.which("dot"):
+    if shutil.which("dot"):
         return None
-    for base in ("ProgramFiles", "ProgramFiles(x86)"):
-        root = os.environ.get(base)
-        if not root:
-            continue
-        bin_dir = Path(root) / "Graphviz" / "bin"
-        if (bin_dir / "dot.exe").is_file():
+    exe = "dot.exe" if platform.system() == "Windows" else "dot"
+    for bin_dir in _graphviz_install_dirs():
+        if (bin_dir / exe).is_file():
             os.environ["PATH"] = os.pathsep.join(
                 p for p in (os.environ.get("PATH", ""), str(bin_dir)) if p
             )
@@ -2178,7 +2197,7 @@ def check_dependencies(needs_terraform: bool = True) -> None:
     bundle_dir = Path(__file__).parent
     sys.path.append(str(bundle_dir))
 
-    graphviz_dir = add_windows_graphviz_to_path()
+    graphviz_dir = add_graphviz_to_path()
     if graphviz_dir:
         click.echo(f"  Graphviz is installed but not on PATH; using {graphviz_dir}")
 
