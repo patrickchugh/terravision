@@ -6,6 +6,14 @@ on:
   push:
     tags:
       - 'v*.*.*'  # Triggers on tags like v0.9.7, v1.0.0, etc.
+  # Manual re-run of the MCP Registry step only, for a version already on
+  # PyPI (e.g. after a registry-side validation failure). Uses server.json
+  # from the branch it is run on; the PyPI job is skipped.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version already on PyPI to publish to the MCP Registry (e.g. 0.48.0)"
+        required: true
 
 permissions:
   contents: read
@@ -13,6 +21,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       #----------------------------------------------
@@ -73,10 +82,18 @@ jobs:
     # publish. id-token: write grants the GitHub OIDC credential that
     # authenticates the io.github.patrickchugh/* namespace - no stored secret.
     needs: publish
+    # A manual run skips the PyPI job, so run whenever it did not fail.
+    if: >-
+      always() && (needs.publish.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && needs.publish.result == 'skipped'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+    env:
+      # Passed through env rather than interpolated into scripts, and
+      # checked below, because workflow_dispatch input is user-supplied.
+      INPUT_VERSION: ${{ inputs.version }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -87,14 +104,25 @@ jobs:
         run: |
           curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
 
-      - name: Set version in server.json from tag
+      - name: Resolve version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Invalid version: $VERSION" >&2
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Set version in server.json
+        run: |
           jq --arg v "$VERSION" '.version = $v | .packages[].version = $v' server.json > server.tmp && mv server.tmp server.json
 
       - name: Wait for PyPI to serve the new version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
           for i in $(seq 1 30); do
             if curl -sf "https://pypi.org/pypi/terravision/${VERSION}/json" > /dev/null; then exit 0; fi
             sleep 10
