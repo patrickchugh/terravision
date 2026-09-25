@@ -123,6 +123,7 @@ def build_server() -> MCPServer:
         outfile: str = "architecture",
         fontsize: Optional[int] = None,
         iconsize: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
@@ -157,6 +158,8 @@ def build_server() -> MCPServer:
                 path.
             fontsize: Label font size in points.
             iconsize: Icon size in pixels.
+            title: Heading shown above the diagram, e.g. "Order Platform -
+                Production". Defaults to "Cloud Architecture Diagram".
 
         Returns:
             {"path", "format", "provider", "graph_path", "node_count",
@@ -168,6 +171,7 @@ def build_server() -> MCPServer:
             outfile=outfile,
             fontsize=fontsize,
             iconsize=iconsize,
+            title=title,
         )
 
     @mcp.tool()
@@ -186,6 +190,7 @@ def build_server() -> MCPServer:
         use_resource_names: bool = False,
         fontsize: Optional[int] = None,
         iconsize: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Render an architecture diagram from Terraform code to a file.
 
@@ -215,6 +220,8 @@ def build_server() -> MCPServer:
                 from the plan.
             fontsize: Label font size in points.
             iconsize: Icon size in pixels.
+            title: Heading shown above the diagram. Overrides any title in
+                the annotation file.
 
         Returns:
             {"path", "format", "provider"}. The file's contents are not
@@ -235,6 +242,7 @@ def build_server() -> MCPServer:
             use_resource_names=use_resource_names,
             fontsize=fontsize,
             iconsize=iconsize,
+            title=title,
         )
 
     @mcp.tool()
@@ -252,6 +260,7 @@ def build_server() -> MCPServer:
         use_resource_names: bool = False,
         fontsize: Optional[int] = None,
         iconsize: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Render a self-contained interactive HTML diagram for a human to open.
 
@@ -275,6 +284,8 @@ def build_server() -> MCPServer:
             use_resource_names: Label nodes with deployed resource names.
             fontsize: Label font size in points.
             iconsize: Icon size in pixels.
+            title: Heading shown on the page. Overrides any title in the
+                annotation file.
 
         Returns:
             {"path", "provider"} pointing at the generated .html file.
@@ -293,6 +304,7 @@ def build_server() -> MCPServer:
             use_resource_names=use_resource_names,
             fontsize=fontsize,
             iconsize=iconsize,
+            title=title,
         )
 
     return mcp

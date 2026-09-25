@@ -120,3 +120,58 @@ class TestSingleProviderGraph:
         assert result.exit_code != 0
         assert "Graph mixes aws_* and google_* resources" in result.output
         assert not list(tmp_path.glob("architecture*.png"))
+
+
+class TestDrawTitle:
+    """--title sets the diagram heading, which a graph file cannot carry."""
+
+    GRAPH = {"aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
+
+    def _draw(self, tmp_path, monkeypatch, *extra):
+        import json
+
+        from click.testing import CliRunner
+
+        from terravision.terravision import cli
+
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "g.tvg.json").write_text(json.dumps(self.GRAPH))
+        result = CliRunner().invoke(
+            cli,
+            ["draw", "--source", "g.tvg.json", "--format", "dot", *extra],
+            catch_exceptions=False,
+        )
+        assert result.exit_code == 0, result.output
+        return (tmp_path / "architecture.dot.dot").read_text()
+
+    def test_title_is_drawn(self, tmp_path, monkeypatch):
+        dot = self._draw(tmp_path, monkeypatch, "--title", "Order Platform")
+        assert 'label="Order Platform"' in dot
+        assert "Cloud Architecture Diagram" not in dot
+
+    def test_default_title_without_option(self, tmp_path, monkeypatch):
+        dot = self._draw(tmp_path, monkeypatch)
+        assert 'label="Cloud Architecture Diagram"' in dot
+
+
+def test_visualise_title(tmp_path, monkeypatch):
+    """--title reaches the interactive HTML page too."""
+    import json
+
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "g.tvg.json").write_text(
+        json.dumps({"aws_lambda_function.api": ["aws_dynamodb_table.orders"]})
+    )
+    result = CliRunner().invoke(
+        cli,
+        ["visualise", "--source", "g.tvg.json", "--title", "Order Platform"],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    html = (tmp_path / "architecture.html").read_text()
+    assert "<title>Order Platform - Architecture Diagram</title>" in html
+    assert "Cloud Architecture Diagram" not in html

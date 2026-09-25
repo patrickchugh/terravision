@@ -473,6 +473,7 @@ def run_diagram(
     use_resource_names: bool = False,
     fontsize: Optional[int] = None,
     iconsize: Optional[int] = None,
+    title: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Render an architecture diagram to a file.
 
@@ -512,6 +513,8 @@ def run_diagram(
         helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
         drawing.DIAGRAM_FONTSIZE = fontsize
         drawing.DIAGRAM_ICONSIZE = iconsize
+        if title:
+            tfdata.setdefault("annotations", {})["title"] = title
 
         final_name = _provider_suffixed(name, tfdata)
         drawing.render_diagram(tfdata, False, final_name, fmt, source)
@@ -546,6 +549,7 @@ def run_interactive_html(
     use_resource_names: bool = False,
     fontsize: Optional[int] = None,
     iconsize: Optional[int] = None,
+    title: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Render a self-contained interactive HTML diagram.
 
@@ -579,6 +583,8 @@ def run_interactive_html(
         helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
         drawing.DIAGRAM_FONTSIZE = fontsize
         drawing.DIAGRAM_ICONSIZE = iconsize
+        if title:
+            tfdata.setdefault("annotations", {})["title"] = title
 
         final_name = _provider_suffixed(name, tfdata)
         html_renderer.render_html(tfdata, False, final_name, source)
@@ -599,6 +605,7 @@ def run_render_graph(
     outfile: str = "architecture",
     fontsize: Optional[int] = None,
     iconsize: Optional[int] = None,
+    title: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Render a diagram from an inline TerraVision graph dictionary.
 
@@ -660,6 +667,7 @@ def run_render_graph(
         outfile=name,
         fontsize=fontsize,
         iconsize=iconsize,
+        title=title,
     )
     result["graph_path"] = str(graph_path)
     result["node_count"] = len(graph)

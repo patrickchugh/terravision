@@ -661,3 +661,16 @@ def test_render_graph_refuses_mixed_providers(tmp_path):
         mcp_service.run_render_graph(
             {"aws_lambda_function.fn": ["azurerm_storage_account.sa"]}
         )
+
+
+def test_render_graph_passes_title(tmp_path):
+    import modules.mcp_service as mcp_service
+
+    set_output_dir(str(tmp_path))
+    result = mcp_service.run_render_graph(
+        {"aws_lambda_function.api": ["aws_dynamodb_table.orders"]},
+        format="dot",
+        outfile="titled",
+        title="Order Platform",
+    )
+    assert 'label="Order Platform"' in Path(result["path"]).read_text()

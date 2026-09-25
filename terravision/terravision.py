@@ -476,6 +476,11 @@ def cli(ctx) -> None:
     type=int,
     help="Icon size in pixels (default: 128)",
 )
+@click.option(
+    "--title",
+    default="",
+    help="Diagram title (overrides any title in annotation files)",
+)
 def draw(
     debug: bool,
     source: str,
@@ -496,6 +501,7 @@ def draw(
     use_resource_names: bool,
     fontsize: int,
     iconsize: int,
+    title: str,
 ) -> None:
     """Draw architecture diagram from Terraform code."""
     _install_excepthook(debug)
@@ -534,9 +540,11 @@ def draw(
     helpers.USE_RESOURCE_NAMES = use_resource_names
     helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
 
-    # Apply CLI size overrides (take precedence over YAML annotations)
+    # Apply CLI size and title overrides (take precedence over YAML annotations)
     drawing.DIAGRAM_FONTSIZE = fontsize
     drawing.DIAGRAM_ICONSIZE = iconsize
+    if title:
+        tfdata.setdefault("annotations", {})["title"] = title
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
@@ -790,6 +798,11 @@ def graphdata(
     type=int,
     help="Icon size in pixels (default: 128)",
 )
+@click.option(
+    "--title",
+    default="",
+    help="Diagram title (overrides any title in annotation files)",
+)
 def visualise(
     debug: bool,
     source: str,
@@ -810,6 +823,7 @@ def visualise(
     use_resource_names: bool,
     fontsize: int,
     iconsize: int,
+    title: str,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
     _install_excepthook(debug)
@@ -856,9 +870,11 @@ def visualise(
     helpers.USE_RESOURCE_NAMES = use_resource_names
     helpers._RESOURCE_ORIGINAL_META = tfdata.get("original_metadata")
 
-    # Apply CLI size overrides (take precedence over YAML annotations)
+    # Apply CLI size and title overrides (take precedence over YAML annotations)
     drawing.DIAGRAM_FONTSIZE = fontsize
     drawing.DIAGRAM_ICONSIZE = iconsize
+    if title:
+        tfdata.setdefault("annotations", {})["title"] = title
 
     # Add provider suffix to output filename for non-AWS providers
     final_outfile = outfile
