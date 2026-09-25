@@ -3,7 +3,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents.">
+        <meta name="description" content="Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons.">
       
       
       
@@ -11,7 +11,7 @@
       
       
       
-        <link rel="next" href="installation/">
+        <link rel="next" href="graph-format/">
       
       
         
@@ -251,6 +251,44 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="graph-format/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Graph Format (JSON input)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="node-types/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Node types
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -477,10 +515,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#from-terraform-code-architecture-diagram" class="md-nav__link">
+  <a href="#from-json-or-terraform-architecture-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From Terraform Code → Architecture Diagram
+        From JSON or Terraform → Architecture Diagram
       
     </span>
   </a>
@@ -499,6 +537,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supported-cloud-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Cloud Providers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -506,6 +555,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagram-from-json-no-terraform-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram from JSON (no Terraform needed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagram-from-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram from Terraform
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -556,6 +633,60 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="graph-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Format (JSON input)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="node-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -572,10 +703,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -593,8 +724,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -689,10 +820,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -710,8 +841,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -777,6 +908,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://patrickchugh.github.io/terravision/llms.txt" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    llms.txt for AI agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -806,10 +993,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6">
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -827,8 +1014,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -923,10 +1110,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7">
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -944,8 +1131,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1096,10 +1283,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8">
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -1117,8 +1304,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1259,10 +1446,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#from-terraform-code-architecture-diagram" class="md-nav__link">
+  <a href="#from-json-or-terraform-architecture-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From Terraform Code → Architecture Diagram
+        From JSON or Terraform → Architecture Diagram
       
     </span>
   </a>
@@ -1281,6 +1468,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supported-cloud-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Cloud Providers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1288,6 +1486,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagram-from-json-no-terraform-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram from JSON (no Terraform needed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagram-from-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram from Terraform
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1352,7 +1578,7 @@
 
 
 <h1 id="terravision">TerraVision<a class="headerlink" href="#terravision" title="Permanent link">¶</a></h1>
-<p><strong>Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents</strong></p>
+<p><strong>Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons</strong></p>
 <p><a href="https://pypi.org/project/terravision/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/terravision?style=flat-square"></a>
 <a href="https://pypi.org/project/terravision/"><img alt="PyPI downloads" src="https://img.shields.io/pypi/dm/terravision?style=flat-square"></a>
 <a href="https://pypi.org/project/terravision/"><img alt="Python version" src="https://img.shields.io/pypi/pyversions/terravision?style=flat-square"></a>
@@ -1364,11 +1590,98 @@
 </iframe>
 </p>
 <hr>
-<h2 id="from-terraform-code-architecture-diagram">From Terraform Code → Architecture Diagram<a class="headerlink" href="#from-terraform-code-architecture-diagram" title="Permanent link">¶</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Input: Terraform</label><label for="__tabbed_1_2">Output: AWS</label><label for="__tabbed_1_3">Output: Azure</label><label for="__tabbed_1_4">Output: GCP</label></div>
+<h2 id="from-json-or-terraform-architecture-diagram">From JSON or Terraform → Architecture Diagram<a class="headerlink" href="#from-json-or-terraform-architecture-diagram" title="Permanent link">¶</a></h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:5"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><input id="__tabbed_1_4" name="__tabbed_1" type="radio"><input id="__tabbed_1_5" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Input: JSON graph</label><label for="__tabbed_1_2">Input: Terraform</label><label for="__tabbed_1_3">Output: AWS</label><label for="__tabbed_1_4">Output: Azure</label><label for="__tabbed_1_5">Output: GCP</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p><a class="glightbox" data-type="image" data-width="100%" data-height="auto" href="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/code.png" data-desc-position="bottom"><img alt="Terraform Code" src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/code.png"></a></p>
+<p>No Terraform needed: each key is <code>&lt;terraform_resource_type&gt;.&lt;name&gt;</code>, each value is what it connects to or contains. See the <a href="graph-format/">Graph Format</a>.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"tv_aws_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_cloudfront_distribution.cdn"</span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"aws_cloudfront_distribution.cdn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_s3_bucket.static_assets"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.web_alb~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.web_alb~2"</span><span class="p">],</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"aws_s3_bucket.static_assets"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"aws_vpc.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_az.us_east_1a"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_az.us_east_1b"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_internet_gateway.igw"</span><span class="p">],</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"aws_az.us_east_1a"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.data~1"</span><span class="p">],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"aws_az.us_east_1b"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.data~2"</span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"aws_subnet.public~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.web_alb~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_nat_gateway.nat~1"</span><span class="p">],</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">"aws_subnet.public~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.web_alb~2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_nat_gateway.nat~2"</span><span class="p">],</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">"aws_subnet.private~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_instance.app~1"</span><span class="p">],</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="nt">"aws_subnet.private~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_instance.app~2"</span><span class="p">],</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="nt">"aws_subnet.data~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_db_instance.postgres~1"</span><span class="p">],</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">"aws_subnet.data~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_db_instance.postgres~2"</span><span class="p">],</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nt">"aws_alb.web_alb~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_instance.app~1"</span><span class="p">],</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nt">"aws_alb.web_alb~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_instance.app~2"</span><span class="p">],</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="nt">"aws_instance.app~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_db_instance.postgres~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_elasticache_cluster.sessions"</span><span class="p">],</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="nt">"aws_instance.app~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_db_instance.postgres~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_elasticache_cluster.sessions"</span><span class="p">],</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nt">"aws_db_instance.postgres~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_db_instance.postgres~2"</span><span class="p">],</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="nt">"aws_db_instance.postgres~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="nt">"aws_elasticache_cluster.sessions"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="nt">"aws_nat_gateway.nat~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_internet_gateway.igw"</span><span class="p">],</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span><span class="nt">"aws_nat_gateway.nat~2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_internet_gateway.igw"</span><span class="p">],</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span><span class="nt">"aws_internet_gateway.igw"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"tv_aws_internet.internet"</span><span class="p">]</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="p">}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-hcl highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Excerpt from WordPress on ECS Fargate (the AWS output tab)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Full source: https://github.com/patrickchugh/terraform-examples/tree/main/aws/wordpress_fargate</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kr">module</span><span class="w"> </span><span class="nv">"vpc"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="na">source</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="s2">"terraform-aws-modules/vpc/aws"</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="na">cidr</span><span class="w">                   </span><span class="o">=</span><span class="w"> </span><span class="nv">var.vpc_cidr</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="na">azs</span><span class="w">                    </span><span class="o">=</span><span class="w"> </span><span class="nv">data.aws_availability_zones.this.names</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="na">private_subnets</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="nv">var.private_subnet_cidrs</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="na">public_subnets</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="nv">var.public_subnet_cidrs</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="na">enable_nat_gateway</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="no">true</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="na">single_nat_gateway</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="no">false</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="kr">module</span><span class="w"> </span><span class="nv">"alb"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="na">source</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="s2">"terraform-aws-modules/alb/aws"</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="na">load_balancer_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"application"</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="na">vpc_id</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="nv">module.vpc.vpc_id</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="na">subnets</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="nv">module.vpc.public_subnets</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="na">security_groups</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">aws_security_group.alb.id</span><span class="p">]</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">"aws_cloudfront_distribution"</span><span class="w"> </span><span class="nv">"this"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">  </span><span class="nb">origin</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span><span class="na">domain_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">module.alb.this_lb_dns_name</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="na">origin_id</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"alb"</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="c1">  # ...</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="p">}</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">"aws_ecs_service"</span><span class="w"> </span><span class="nv">"this"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">  </span><span class="na">cluster</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_ecs_cluster.this.id</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">  </span><span class="na">task_definition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_ecs_task_definition.this.arn</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="na">launch_type</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">"FARGATE"</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">  </span><span class="nb">network_configuration</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">    </span><span class="na">security_groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">aws_security_group.alb.id</span><span class="p">,</span><span class="w"> </span><span class="nv">aws_security_group.db.id</span><span class="p">,</span><span class="w"> </span><span class="nv">aws_security_group.efs.id</span><span class="p">]</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">    </span><span class="na">subnets</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="nv">module.vpc.private_subnets</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">  </span><span class="nb">load_balancer</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="w">    </span><span class="na">target_group_arn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_lb_target_group.this.id</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="w">    </span><span class="na">container_name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">"wordpress"</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">    </span><span class="na">container_port</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="m">80</span>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="p">}</span>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">"aws_rds_cluster"</span><span class="w"> </span><span class="nv">"this"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="w">  </span><span class="na">engine</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="s2">"aurora-mysql"</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="w">  </span><span class="na">engine_mode</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s2">"serverless"</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="w">  </span><span class="na">vpc_security_group_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">aws_security_group.db.id</span><span class="p">]</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">  </span><span class="na">db_subnet_group_name</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_db_subnet_group.this.name</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="p">}</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">"aws_efs_file_system"</span><span class="w"> </span><span class="nv">"this"</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">"aws_efs_mount_target"</span><span class="w"> </span><span class="nv">"this"</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="w">  </span><span class="na">count</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="nv">module.vpc.private_subnets</span><span class="p">)</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="w">  </span><span class="na">file_system_id</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nv">aws_efs_file_system.this.id</span>
+</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="w">  </span><span class="na">subnet_id</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nv">module.vpc.private_subnets[count.index</span><span class="p">]</span>
+</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="w">  </span><span class="na">security_groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">aws_security_group.efs.id</span><span class="p">]</span>
+</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="p">}</span>
+</span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p><a class="glightbox" data-type="image" data-width="100%" data-height="auto" href="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/architecture.png" data-desc-position="bottom"><img alt="AWS architecture diagram" src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/architecture.png"></a></p>
@@ -1385,6 +1698,11 @@
 <h2 id="why-terravision">Why TerraVision?<a class="headerlink" href="#why-terravision" title="Permanent link">¶</a></h2>
 <div class="grid cards">
 <ul>
+<li>
+<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 3h2v2H5v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5h2v2H5c-1.07-.27-2-.9-2-2v-4a2 2 0 0 0-2-2H0v-2h1a2 2 0 0 0 2-2V5a2 2 0 0 1 2-2m14 0a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1v2h-1a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2v-2h2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3zm-7 12a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m-4 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1m8 0a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1"></path></svg></span> <strong>JSON graph input</strong></p>
+<hr>
+<p>Describe an architecture in a few lines of JSON and render it. Resources match Terraform names, so there's no custom DSL to learn. See the <a href="graph-format/">Graph Format</a>.</p>
+</li>
 <li>
 <p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 12A10 10 0 1 0 12 2 10 10 0 0 0 2 12m13.6 1.72A4 4 0 0 0 16 12a4 4 0 0 0-4-4v2L8.88 7 12 4v2a6 6 0 0 1 6 6 5.9 5.9 0 0 1-.93 3.19M6 12a5.9 5.9 0 0 1 .93-3.19l1.47 1.47A4 4 0 0 0 8 12a4 4 0 0 0 4 4v-2l3 3-3 3v-2a6 6 0 0 1-6-6"></path></svg></span> <strong>Always up-to-date</strong></p>
 <hr>
@@ -1428,15 +1746,89 @@
 </ul>
 </div>
 <hr>
+<h2 id="supported-cloud-providers">Supported Cloud Providers<a class="headerlink" href="#supported-cloud-providers" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Status</th>
+<th>Resource types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AWS</strong></td>
+<td>✅ Full support</td>
+<td>385 types</td>
+</tr>
+<tr>
+<td><strong>Google Cloud</strong></td>
+<td>✅ Full support</td>
+<td>264 types</td>
+</tr>
+<tr>
+<td><strong>Azure</strong></td>
+<td>✅ Full support</td>
+<td>245 types</td>
+</tr>
+</tbody>
+</table>
+<p>Every supported resource type is listed on the <a href="node-types/">Node types</a> page. Types without an icon still appear on the diagram as a generic node, and the run prints which ones so an icon can be added.</p>
+<hr>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">¶</a></h2>
 <p>Install with pip:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision<span class="w">   </span><span class="c1"># or: pipx install terravision</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision<span class="w">   </span><span class="c1"># or: pipx install terravision</span>
 </span></code></pre></div>
-<p>Generate your first diagram:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--show
+<p>TerraVision needs <strong>Python 3.10+</strong>, <strong>Graphviz</strong> and <strong>Git</strong>. <strong>Terraform 1.x</strong> (or OpenTofu) is only needed when drawing from Terraform code.</p>
+<h3 id="diagram-from-json-no-terraform-needed">Diagram from JSON (no Terraform needed)<a class="headerlink" href="#diagram-from-json-no-terraform-needed" title="Permanent link">¶</a></h3>
+<p>Describe the architecture as nodes and connections, and save it as <code>architecture.tvg.json</code>:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">AWS</label><label for="__tabbed_2_2">Azure</label><label for="__tabbed_2_3">GCP</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">"tv_aws_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_cloudfront_distribution.cdn"</span><span class="p">],</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">"aws_cloudfront_distribution.cdn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_s3_bucket.static_site"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">"aws_vpc.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~1"</span><span class="p">],</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">"aws_subnet.public~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">"aws_subnet.private~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">"aws_alb.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">"aws_lambda_function.orders"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_dynamodb_table.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_sqs_queue.events"</span><span class="p">]</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
 </span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">"tv_azurerm_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_cdn_frontdoor_profile.edge"</span><span class="p">],</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">"azurerm_cdn_frontdoor_profile.edge"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_linux_web_app.api"</span><span class="p">],</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">"azurerm_resource_group.app"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_virtual_network.main"</span><span class="p">,</span><span class="w"> </span><span class="s2">"azurerm_mssql_database.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"azurerm_servicebus_queue.events"</span><span class="p">,</span><span class="w"> </span><span class="s2">"azurerm_key_vault.secrets"</span><span class="p">],</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">"azurerm_virtual_network.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_subnet.app"</span><span class="p">],</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">"azurerm_subnet.app"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_linux_web_app.api"</span><span class="p">],</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">"azurerm_linux_web_app.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"azurerm_mssql_database.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"azurerm_servicebus_queue.events"</span><span class="p">,</span><span class="w"> </span><span class="s2">"azurerm_key_vault.secrets"</span><span class="p">]</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">"tv_gcp_users_icon.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"google_compute_global_forwarding_rule.lb"</span><span class="p">],</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">"google_compute_global_forwarding_rule.lb"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"google_cloud_run_v2_service.api"</span><span class="p">],</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">"google_cloud_run_v2_service.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"google_sql_database_instance.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"google_pubsub_topic.events"</span><span class="p">,</span><span class="w"> </span><span class="s2">"google_storage_bucket.assets"</span><span class="p">],</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">"google_pubsub_topic.events"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"google_cloudfunctions2_function.worker"</span><span class="p">]</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>Render it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg
+</span></code></pre></div>
+<p>Each key is <code>&lt;terraform_resource_type&gt;.&lt;name&gt;</code>; each value is what it connects to or contains. That is the whole format. The <a href="graph-format/">Graph Format</a> page has the full rules, the JSON Schema and larger examples, and <a href="node-types/">Node types</a> lists every icon.</p>
+<p><strong>Using an AI assistant?</strong> Install the <a href="https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams">TerraVision skill</a> (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the <a href="mcp-server/">MCP server</a>; its <code>render_graph</code> tool takes this JSON directly. For agents reading docs, <a href="llms.txt">llms.txt</a> is a plain-text index of the docs, and <a href="llms-full.txt">llms-full.txt</a> adds the full node-type reference.</p>
+<h3 id="diagram-from-terraform">Diagram from Terraform<a class="headerlink" href="#diagram-from-terraform" title="Permanent link">¶</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--show
+</span></code></pre></div>
+<p>The diagram is derived from <code>terraform plan</code>, so it shows what the code actually deploys: conditionals, <code>count</code>, <code>for_each</code> and modules are resolved.</p>
 <p>Or try the interactive HTML output:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>terravision<span class="w"> </span>visualise<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform--show
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>terravision<span class="w"> </span>visualise<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--show
 </span></code></pre></div>
 <p>See the <a href="installation/">Installation Guide</a> for Docker, Nix, and platform-specific instructions, or jump straight into the <a href="usage-guide/">Usage Guide</a>.</p>
 <hr>

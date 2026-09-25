@@ -7,13 +7,13 @@
       
       
       
-        <link rel="canonical" href="https://patrickchugh.github.io/terravision/mcp-server/">
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/graph-format/">
       
       
-        <link rel="prev" href="../cicd-integration/">
+        <link rel="prev" href="..">
       
       
-        <link rel="next" href="../faq/">
+        <link rel="next" href="../node-types/">
       
       
         
@@ -24,7 +24,7 @@
     
     
       
-        <title>MCP Server - TerraVision</title>
+        <title>Graph Format (JSON input) - TerraVision</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mcp-server" class="md-skip">
+        <a href="#terravision-graph-format-tvg" class="md-skip">
           Skip to content
         </a>
       
@@ -121,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              MCP Server
+              Graph Format (JSON input)
             
           </span>
         </div>
@@ -250,9 +250,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../graph-format/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -308,12 +310,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../annotations/" class="md-tabs__link">
           
   
@@ -468,10 +468,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../graph-format/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Format (JSON input)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -487,6 +514,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-format-in-one-paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The format in one paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File extension
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-mermaid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not Mermaid?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting the graph from real infrastructure instead
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -639,31 +752,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked="">
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -681,7 +791,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -752,37 +862,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MCP Server
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../mcp-server/" class="md-nav__link">
         
   
   
@@ -798,192 +881,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-      
-        <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Install
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configure-your-client" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configure your client
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configure your client">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#other-mcp-clients" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Other MCP clients
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#if-tools-fail-with-not-found-on-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If tools fail with "not found on PATH"
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tools
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Tools">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#render_graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render_graph
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_architecture_graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_architecture_graph
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_diagram
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_interactive_html" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_interactive_html
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#common-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#things-worth-knowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Things worth knowing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#credentials" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Credentials
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#trust-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Trust boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1486,10 +1383,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#install" class="md-nav__link">
+  <a href="#the-format-in-one-paragraph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install
+        The format in one paragraph
       
     </span>
   </a>
@@ -1497,121 +1394,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configure-your-client" class="md-nav__link">
+  <a href="#file-extension" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configure your client
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Configure your client">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#other-mcp-clients" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Other MCP clients
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#if-tools-fail-with-not-found-on-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        If tools fail with "not found on PATH"
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tools
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Tools">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#render_graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        render_graph
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_architecture_graph" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_architecture_graph
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_diagram
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#generate_interactive_html" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        generate_interactive_html
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#common-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Common parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#things-worth-knowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Things worth knowing
+        File extension
       
     </span>
   </a>
@@ -1619,10 +1405,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#credentials" class="md-nav__link">
+  <a href="#rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Credentials
+        Rules
       
     </span>
   </a>
@@ -1630,10 +1416,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#trust-boundary" class="md-nav__link">
+  <a href="#full-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Trust boundary
+        Full examples
       
     </span>
   </a>
@@ -1641,10 +1427,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
+  <a href="#why-not-mermaid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Troubleshooting
+        Why not Mermaid?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting the graph from real infrastructure instead
       
     </span>
   </a>
@@ -1668,7 +1465,7 @@
 
 
   
-    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/mcp-server.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/graph-format.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
     </a>
@@ -1676,235 +1473,75 @@
   
 
 
-<h1 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">¶</a></h1>
-<p>TerraVision can run as a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server, letting AI
-agents generate architecture diagrams from Terraform code themselves.</p>
-<p>The useful property here is accuracy. An agent asked to draw an architecture will otherwise invent
-the diagram from whatever it can infer. Through this server it gets a diagram derived from
-<code>terraform plan</code> — the same output <code>terravision draw</code> produces, with conditionals, <code>count</code>,
-<code>for_each</code> and module expansion already resolved.</p>
-<h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">¶</a></h2>
-<p>The MCP server is an optional extra, so the default install is unchanged.</p>
-<p><strong>pipx</strong> (the recommended way to install TerraVision):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># New install</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Already have TerraVision? Add the dependency to its environment</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>pipx<span class="w"> </span>inject<span class="w"> </span>terravision<span class="w"> </span>mcp
+<h1 id="terravision-graph-format-tvg">TerraVision Graph Format (TVG)<a class="headerlink" href="#terravision-graph-format-tvg" title="Permanent link">¶</a></h1>
+<p>TerraVision can draw a professional cloud architecture diagram from a plain JSON file, with no Terraform code and no cloud credentials. This is the fastest way for a person or an AI agent to get a diagram that uses the official AWS, Azure and GCP icon sets and industry-standard grouping (VPCs, subnets, resource groups, regions, zones).</p>
+<p>Schema: <code>https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json</code></p>
+<h2 id="the-format-in-one-paragraph">The format in one paragraph<a class="headerlink" href="#the-format-in-one-paragraph" title="Permanent link">¶</a></h2>
+<p>A TVG file is a JSON object. Each key is a <strong>node address</strong>, <code>&lt;type&gt;.&lt;name&gt;</code>, where <code>&lt;type&gt;</code> is a Terraform resource type such as <code>aws_lambda_function</code>, <code>azurerm_key_vault</code> or <code>google_cloud_run_service</code>, and <code>&lt;name&gt;</code> is any label you like. Each value is the <strong>list of node addresses that node connects to or contains</strong>. That is the whole format.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"tv_aws_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_cloudfront_distribution.cdn"</span><span class="p">],</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"aws_cloudfront_distribution.cdn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_s3_bucket.static_site"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"aws_vpc.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~1"</span><span class="p">],</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"aws_subnet.public~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"aws_subnet.private~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"aws_alb.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"aws_lambda_function.orders"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_dynamodb_table.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_sqs_queue.events"</span><span class="p">]</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </span></code></pre></div>
-<p><code>pip install</code> will not work inside a pipx-managed environment — use <code>pipx inject</code>.</p>
-<p><strong>pip</strong>, if you are already in a virtualenv:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
+<p>Render it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg<span class="w">     </span><span class="c1"># also png, pdf, dot, drawio</span>
 </span></code></pre></div>
-<p><strong>Poetry</strong>, for development:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--extras<span class="w"> </span>mcp
-</span></code></pre></div>
-<p>Check it worked:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>terravision<span class="w"> </span>mcp<span class="w"> </span>--help
-</span></code></pre></div>
-<h2 id="configure-your-client">Configure your client<a class="headerlink" href="#configure-your-client" title="Permanent link">¶</a></h2>
-<p>The server speaks stdio: your client launches it as a local subprocess. It listens on no port.</p>
-<p><strong>Claude Code</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>claude<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>terravision<span class="w"> </span>--<span class="w"> </span>terravision<span class="w"> </span>mcp
-</span></code></pre></div>
-<p><strong>Claude Desktop / Cursor</strong> — add to the MCP config file:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/for/generated/diagrams"</span><span class="p">]</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
-</span></code></pre></div>
-<p><code>--output-dir</code> sets where generated files are written. It defaults to the directory the server was
-started in.</p>
-<h3 id="other-mcp-clients">Other MCP clients<a class="headerlink" href="#other-mcp-clients" title="Permanent link">¶</a></h3>
-<p>The server implements the protocol rather than targeting any one client, so anything that speaks
-MCP over stdio can use it — Codex CLI, GitHub Copilot in VS Code, Cursor, Zed, Claude Desktop and
-others. Protocol version is negotiated with the client and has been verified against <code>2024-11-05</code>
-(the original spec), <code>2025-03-26</code> and <code>2025-06-18</code>; an unrecognised version negotiates to the
-server's newest. Results are always returned as a <code>text</code> content block, the one response field
-present in every version of the spec, so no client depends on newer optional fields.</p>
-<p>What differs between clients is only where the configuration lives and what it is called. They all
-need the same three things:</p>
+<p>Only Graphviz and Git are required for this mode, the same minimum as every TerraVision command. Terraform is not invoked and does not need to be installed.</p>
+<h2 id="file-extension">File extension<a class="headerlink" href="#file-extension" title="Permanent link">¶</a></h2>
+<p>Save TVG files with the <code>.tvg.json</code> extension, for example <code>architecture.tvg.json</code>. It is still a JSON file, so every editor and JSON tool handles it, and the <code>.tvg</code> part marks it as a TerraVision Graph. TerraVision also accepts any other file ending in <code>.json</code>. <code>terravision graphdata</code> and the MCP <code>render_graph</code> tool both write <code>.tvg.json</code> files.</p>
+<h2 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">¶</a></h2>
+<ol>
+<li><strong>Node address</strong> = <code>&lt;type&gt;.&lt;name&gt;</code>. The type picks the icon. See <a href="../node-types/">node-types.md</a> for the full list; unknown types get a generic icon for their provider. Pick the specific type where Terraform has a generic one: use <code>aws_alb</code> (Application Load Balancer) or <code>aws_nlb</code> (Network Load Balancer) rather than <code>aws_lb</code>, which draws the generic Elastic Load Balancing icon because a graph file carries no <code>load_balancer_type</code>.</li>
+<li><strong>Connections vs containment.</strong> If the source node is a container (VPC, subnet, security group, resource group, virtual network, region, zone, <code>aws_group</code>, <code>aws_az</code>), its targets are drawn <em>inside</em> it. Otherwise an arrow is drawn from source to target.</li>
+<li><strong>Leaf nodes</strong> that only appear as targets may be left out as keys; they are drawn as nodes with no outgoing connections. Listing them with <code>[]</code> is equivalent, and is the complete form that <code>terravision graphdata</code> writes. When a node has numbered copies, target the copies (<code>aws_subnet.private~1</code>): an unnumbered name next to its numbered copies is treated as a stale reference and not drawn.</li>
+<li><strong>Numbered copies.</strong> Append <code>~1</code>, <code>~2</code>, ... to make distinct instances that share a name, typically one per availability zone.</li>
+<li><strong>External actors.</strong> Use pseudo-types: <code>tv_aws_users</code>, <code>tv_aws_internet</code>, <code>tv_aws_mobile_client</code>, <code>tv_aws_onprem</code>, <code>tv_azurerm_users</code>, <code>tv_azurerm_internet</code>, <code>tv_azure_onprem</code>, <code>tv_gcp_users_icon</code>. For GCP, <code>tv_gcp_users</code>, <code>tv_gcp_onprem</code> and <code>tv_gcp_external_saas</code> are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.</li>
+<li><strong>Regions and zones.</strong> <code>tv_aws_region.&lt;name&gt;</code>, <code>aws_az.&lt;name&gt;</code>, <code>tv_azurerm_zone.&lt;name&gt;</code>, <code>tv_gcp_region.&lt;name&gt;</code>, <code>tv_gcp_zone.&lt;name&gt;</code> are containers.</li>
+<li><strong>Modules.</strong> Prefix an address with <code>module.&lt;modname&gt;.</code> to group nodes under a module boundary.</li>
+<li><strong>Provider.</strong> The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) is detected from the resource type prefixes. Multi-cloud graphs are allowed.</li>
+<li><strong>Labels.</strong> Names are prettified automatically (<code>aws_db_instance.postgres~1</code> becomes "DB Instance Postgres"). Pass <code>--use-tf-names</code> to label with the raw address instead.</li>
+</ol>
+<h2 id="full-examples">Full examples<a class="headerlink" href="#full-examples" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
-<th></th>
-<th></th>
+<th>Example</th>
+<th>Provider</th>
+<th>File</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>command</td>
-<td><code>terravision</code> (or an absolute path to it)</td>
+<td>Three-tier web app: CloudFront, ALB, EC2 across two AZs, RDS, ElastiCache</td>
+<td>AWS</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/three-tier-web.tvg.json">three-tier-web.tvg.json</a></td>
 </tr>
 <tr>
-<td>args</td>
-<td><code>["mcp"]</code>, plus <code>--output-dir &lt;dir&gt;</code> if you want to control where files land</td>
+<td>Event-driven order pipeline: API Gateway, Lambda, SQS, SNS, DynamoDB, Firehose, Glue, Athena</td>
+<td>AWS</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-event-driven.tvg.json">aws-event-driven.tvg.json</a></td>
 </tr>
 <tr>
-<td>env</td>
-<td><code>PATH</code> including Graphviz and, for the <code>source</code> tools, Terraform — see below</td>
+<td>Web app with Front Door, App Service, Functions, SQL, Service Bus, Key Vault</td>
+<td>Azure</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-web-app.tvg.json">azure-web-app.tvg.json</a></td>
+</tr>
+<tr>
+<td>Serverless API: HTTPS LB, Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions, BigQuery</td>
+<td>GCP</td>
+<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-serverless-api.tvg.json">gcp-serverless-api.tvg.json</a></td>
 </tr>
 </tbody>
 </table>
-<p>Most clients use a JSON block of this shape, under a key such as <code>mcpServers</code> or <code>servers</code>:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"./diagrams"</span><span class="p">],</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"PATH"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/local/bin:/usr/bin:/bin"</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>Check your client's own documentation for the file location and exact key name, since those change
-more often than the protocol does.</p>
-<h3 id="if-tools-fail-with-not-found-on-path">If tools fail with "not found on PATH"<a class="headerlink" href="#if-tools-fail-with-not-found-on-path" title="Permanent link">¶</a></h3>
-<p>TerraVision needs <code>terraform</code> (or <code>tofu</code>), <code>dot</code>, <code>gvpr</code> and <code>git</code> on PATH. The MCP server is
-spawned as a child process and inherits its environment from the client, which is a common source
-of trouble:</p>
-<ul>
-<li>A client launched before PATH last changed passes down a stale copy. Restarting the client fixes
-  it.</li>
-<li>GUI clients on macOS and Windows often don't inherit your shell's PATH at all, so tools installed
-  via <code>brew</code>, <code>asdf</code> or an unzipped download may be invisible even though they work in a terminal.</li>
-</ul>
-<p>The reliable fix is to pin PATH at registration rather than rely on inheritance:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>claude<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>terravision<span class="w"> </span>-e<span class="w"> </span><span class="s2">"PATH=</span><span class="nv">$PATH</span><span class="s2">"</span><span class="w"> </span>--<span class="w"> </span>terravision<span class="w"> </span>mcp
-</span></code></pre></div>
-<p>Or in a client config file:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"mcp"</span><span class="p">],</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">      </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">        </span><span class="nt">"PATH"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin"</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="p">}</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>On Windows, include the directories holding <code>terraform.exe</code> and Graphviz's <code>bin</code> (typically
-<code>C:\Program Files\Graphviz\bin</code>).</p>
-<h2 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">¶</a></h2>
-<p><code>render_graph</code> takes a graph inline and never runs Terraform. The other three tools mirror
-TerraVision commands and take <code>source</code>, which may be a Terraform directory, a Git URL, a
-<code>.tvg.json</code> graph file or a TerraVision <code>tfdata.json</code> replay file.</p>
-<h3 id="render_graph"><code>render_graph</code><a class="headerlink" href="#render_graph" title="Permanent link">¶</a></h3>
-<p>Renders a diagram from a graph passed directly as JSON, so an agent never has to write a file.
-<code>graph</code> maps each node address (<code>&lt;terraform_resource_type&gt;.&lt;name&gt;</code>) to the list of addresses it
-connects to or contains; the <a href="../graph-format/">Graph Format</a> page has the rules and the
-<a href="../node-types/">node types</a> page the icons. The graph is saved as <code>&lt;outfile&gt;.tvg.json</code> in the
-output directory and rendered exactly as <code>terravision draw --source &lt;that file&gt;</code> would, so the two
-paths cannot drift. Returns <code>{path, format, provider, graph_path, node_count, edge_count}</code>.</p>
-<p>Takes <code>format</code>, <code>outfile</code>, <code>fontsize</code> and <code>iconsize</code>. Needs only Graphviz and Git: no Terraform, no
-credentials, no <code>source</code>.</p>
-<h3 id="generate_architecture_graph"><code>generate_architecture_graph</code><a class="headerlink" href="#generate_architecture_graph" title="Permanent link">¶</a></h3>
-<p>Equivalent to <code>terravision graphdata</code>. Returns the architecture as structured data — the tool to use
-for reasoning about a stack rather than looking at it.</p>
-<p>Returns <code>{graphdict, node_count, edge_count, provider}</code>, where <code>graphdict</code> maps each Terraform
-resource address to the addresses it connects to or contains. With <code>services_only: true</code> it instead
-returns <code>{services, count, provider}</code> — a much smaller payload, worth calling first when you only
-need to know what a stack is built from.</p>
-<h3 id="generate_diagram"><code>generate_diagram</code><a class="headerlink" href="#generate_diagram" title="Permanent link">¶</a></h3>
-<p>Equivalent to <code>terravision draw</code>. Renders to a file and returns <code>{path, format, provider}</code>.</p>
-<p><code>format</code> accepts anything Graphviz supports (<code>png</code>, <code>svg</code>, <code>pdf</code>, <code>dot</code>, …) plus <code>drawio</code> for a file
-editable in draw.io, Lucidchart or any mxGraph editor.</p>
-<h3 id="generate_interactive_html"><code>generate_interactive_html</code><a class="headerlink" href="#generate_interactive_html" title="Permanent link">¶</a></h3>
-<p>Equivalent to <code>terravision visualise</code>. Produces a self-contained HTML page with clickable,
-searchable nodes and all resource metadata embedded, so it opens offline. Returns <code>{path, provider}</code>.</p>
-<h3 id="common-parameters">Common parameters<a class="headerlink" href="#common-parameters" title="Permanent link">¶</a></h3>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>varfile</code></td>
-<td><code>.tfvars</code> files. Different var files against the same code give genuinely different architectures</td>
-</tr>
-<tr>
-<td><code>workspace</code></td>
-<td>Terraform workspace to select</td>
-</tr>
-<tr>
-<td><code>planfile</code> / <code>graphfile</code></td>
-<td>Consume Terraform output generated elsewhere; see below</td>
-</tr>
-<tr>
-<td><code>simplified</code></td>
-<td>Drop networking containers and show only services</td>
-</tr>
-<tr>
-<td><code>annotate</code></td>
-<td>Path to a <code>terravision.yml</code> <a href="../annotations/">annotation file</a></td>
-</tr>
-<tr>
-<td><code>upgrade</code></td>
-<td>Run <code>terraform init -upgrade</code> to refresh modules</td>
-</tr>
-</tbody>
-</table>
-<p><code>generate_diagram</code> and <code>generate_interactive_html</code> also take <code>outfile</code>, <code>use_tf_names</code>,
-<code>use_resource_names</code>, <code>fontsize</code> and <code>iconsize</code>.</p>
-<h2 id="things-worth-knowing">Things worth knowing<a class="headerlink" href="#things-worth-knowing" title="Permanent link">¶</a></h2>
-<p><strong>Tools return paths, not file contents.</strong> This matches the CLI. To inspect a generated <code>.drawio</code> or
-<code>.svg</code>, read the returned path.</p>
-<p><strong>Calls can take minutes.</strong> Every <code>source</code> tool runs <code>terraform init</code> and <code>terraform plan</code> against the
-source unless you supply <code>planfile</code>/<code>graphfile</code> or a JSON source; <code>render_graph</code> never does. Calls are
-executed one at a time.</p>
-<p><strong>A <code>.tvg.json</code> graph or <code>tfdata.json</code> source skips Terraform entirely</strong> and returns in seconds.
-Export a graph with <code>terravision graphdata</code>, or a replay file with <code>terravision draw --source &lt;path&gt; --debug</code>.
-Useful for iterating without repeated plan runs.</p>
-<p><strong>AI annotation is not exposed.</strong> <code>--ai-annotate</code> has TerraVision call out to Bedrock or Ollama.
-Doing that from a server that is itself being driven by a model is confused layering, and it would
-pull credential handling into a component whose main property is not needing any. Run the CLI
-directly if you want it.</p>
-<h2 id="credentials">Credentials<a class="headerlink" href="#credentials" title="Permanent link">¶</a></h2>
-<p>TerraVision needs no cloud credentials of its own, and the MCP server changes nothing about that.</p>
-<p>When <code>source</code> is raw Terraform, TerraVision invokes Terraform, and <em>Terraform</em> authenticates to your
-cloud provider to produce a plan. To avoid that entirely, pass <code>planfile</code> and <code>graphfile</code> pointing at
-output generated upstream — typically by a CI pipeline that already runs <code>terraform plan</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
-</span></code></pre></div>
-<p>The agent then calls a tool with <code>planfile: "plan.json"</code>, <code>graphfile: "graph.dot"</code> and the original
-<code>source</code> path. No Terraform run, no credentials.</p>
-<h2 id="trust-boundary">Trust boundary<a class="headerlink" href="#trust-boundary" title="Permanent link">¶</a></h2>
-<p>Worth being explicit, since the arguments come from a model:</p>
-<ul>
-<li><strong>Reads</strong> are unrestricted. A tool can read any Terraform the user running the server can read —
-  the same reach as the CLI.</li>
-<li><strong>Writes</strong> are confined. <code>outfile</code> must be a plain filename; separators and <code>..</code> are rejected, so
-  generated files always land in <code>--output-dir</code>.</li>
-<li><strong>Terraform still executes.</strong> <code>terraform init</code> downloads modules and providers from the sources the
-  code names, and <code>plan</code> reaches your cloud provider. Point the server at code you trust, exactly as
-  you would with the CLI. The <code>planfile</code>/<code>graphfile</code> path avoids this.</li>
-</ul>
-<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
-<p><strong><code>The MCP server needs the optional 'mcp' dependency</code></strong> — run <code>pipx inject terravision mcp</code> for a
-pipx install, or <code>pip install "terravision[mcp]"</code> otherwise. <code>pip install</code> on its own does nothing
-useful inside a pipx environment, which is the usual reason this message persists after a
-reinstall attempt.</p>
-<p><strong>The client reports the server failed to start</strong> — run <code>terravision mcp</code> by hand. It should sit
-silently waiting for JSON-RPC on stdin; anything printed to your terminal is stderr and safe.
-Ctrl-C to exit. If it exits immediately, the error is on stderr.</p>
-<p><strong>A tool call fails but the server stays up</strong> — that is intended. Errors are reported per call. The
-underlying message goes to stderr, which your client usually surfaces as server logs.</p>
-<p><strong>"TerraVision cannot run: … not found on PATH"</strong> — see
-<a href="#if-tools-fail-with-not-found-on-path">If tools fail with "not found on PATH"</a> above. Note that an
-agent investigating this on its own will often run <code>where terraform</code> in a shell that has the <em>same</em>
-stale environment, conclude the tool is not installed, and go looking for a workaround. Check the
-binary's real location before believing that.</p>
+<h2 id="why-not-mermaid">Why not Mermaid?<a class="headerlink" href="#why-not-mermaid" title="Permanent link">¶</a></h2>
+<p>Mermaid draws boxes and arrows. It has no notion of the AWS, Azure or GCP icon sets, of VPC and subnet nesting, or of the layout conventions cloud architects expect. TerraVision produces the diagram a cloud architect would draw by hand, from a JSON file an LLM can emit in one shot.</p>
+<h2 id="getting-the-graph-from-real-infrastructure-instead">Getting the graph from real infrastructure instead<a class="headerlink" href="#getting-the-graph-from-real-infrastructure-instead" title="Permanent link">¶</a></h2>
+<p>If you have Terraform, <code>terravision graphdata --source ./tf --outfile architecture.tvg.json</code> exports the real graph in exactly this format, so the same tooling works for diagrams of what is actually deployed.</p>
 
 
 
