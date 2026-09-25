@@ -823,9 +823,33 @@ def load_json_source(source: str) -> Dict[str, Any]:
         click.echo(
             f"Source is a pre-generated JSON tfgraph file. Will not call {helpers.get_tf_binary()} binary or AI model."
         )
+        _check_single_provider(jsondata)
         _add_leaf_targets(jsondata)
         tfdata["graphdict"] = jsondata
     return tfdata
+
+
+def _check_single_provider(graph: Dict[str, List[str]]) -> None:
+    """Refuse a graph file that mixes cloud providers.
+
+    A diagram is drawn with one provider's icons, container types and shared
+    services, and nodes of any other provider were silently left out. Failing
+    here tells the author to split the graph instead of losing half of it.
+    Types that belong to no cloud provider (random_, null_) are ignored.
+    """
+    nodes = set(graph) | {t for targets in graph.values() for t in targets}
+    providers = {provider_detector.get_graph_node_provider(n) for n in nodes}
+    providers.discard("unknown")
+    if len(providers) > 1:
+        prefixes = [f"{_RESOURCE_PREFIX[p]}*" for p in sorted(providers)]
+        raise helpers.TerravisionError(
+            f"Graph mixes {', '.join(prefixes[:-1])} and {prefixes[-1]} "
+            "resources; use one cloud provider per graph."
+        )
+
+
+# How each provider's resources are named, for messages.
+_RESOURCE_PREFIX = {"aws": "aws_", "azure": "azurerm_", "gcp": "google_"}
 
 
 def _base_address(address: str) -> str:

@@ -8,6 +8,7 @@ Terraform project data by analyzing resource name prefixes and provider blocks.
 
 from typing import Dict, List, Any, Tuple
 import logging
+import re
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -24,6 +25,18 @@ PROVIDER_PREFIXES = {
 }
 
 SUPPORTED_PROVIDERS = ["aws", "azure", "gcp"]
+
+# TerraVision's own pseudo-resources (users, internet, regions, on-prem) name
+# their provider after the tv_ prefix: tv_aws_users, tv_azurerm_internet.
+TV_PROVIDER_PREFIXES = {
+    "tv_aws_": "aws",
+    "tv_azurerm_": "azure",
+    "tv_azure_": "azure",
+    "tv_gcp_": "gcp",
+}
+
+# Leading module path of a graph node address, e.g. "module.app[0]."
+_MODULE_PATH = re.compile(r"^(module\.[A-Za-z0-9_-]+(\[[^\]]+\])?\.)+")
 
 
 # Error Classes
@@ -97,6 +110,35 @@ def get_provider_for_resource(resource_name: str) -> str:
         if resource_name.startswith(prefix):
             return provider
 
+    return "unknown"
+
+
+def get_graph_node_provider(node: str) -> str:
+    """
+    Determine cloud provider for a node address in a TerraVision graph file.
+
+    Unlike get_provider_for_resource, only the resource type is examined, so a
+    node name that happens to start with another provider's prefix
+    (tv_gcp_users_icon.aws_team) is not misread, and tv_ pseudo-resources are
+    recognised.
+
+    Args:
+        node: Graph node address (e.g., "module.app.aws_lambda_function.api~1")
+
+    Returns:
+        Provider name ('aws' | 'azure' | 'gcp' | 'unknown')
+
+    Examples:
+        >>> get_graph_node_provider("tv_azurerm_users.staff")
+        'azure'
+        >>> get_graph_node_provider("module.net.google_compute_network.vpc")
+        'gcp'
+    """
+    resource_type = _MODULE_PATH.sub("", node).split(".")[0]
+    for prefixes in (TV_PROVIDER_PREFIXES, PROVIDER_PREFIXES):
+        for prefix, provider in prefixes.items():
+            if resource_type.startswith(prefix):
+                return provider
     return "unknown"
 
 

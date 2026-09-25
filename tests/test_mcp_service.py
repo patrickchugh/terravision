@@ -620,3 +620,44 @@ def test_node_address_pattern_is_shared_with_schema_and_validator():
     validator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(validator)
     assert validator.ADDRESS.pattern == mcp_service._NODE_ADDRESS.pattern
+
+
+def _load_skill_validator():
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "validate_graph",
+        root / "skills/terravision-cloud-diagrams/scripts/validate_graph.py",
+    )
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    return validator
+
+
+def test_provider_prefixes_are_shared_with_validator():
+    from modules import provider_detector
+
+    validator = _load_skill_validator()
+    assert validator.PROVIDER_PREFIXES == {
+        **provider_detector.TV_PROVIDER_PREFIXES,
+        **provider_detector.PROVIDER_PREFIXES,
+    }
+    assert validator.MODULE_PATH.pattern == provider_detector._MODULE_PATH.pattern
+
+
+def test_validator_flags_mixed_providers():
+    validator = _load_skill_validator()
+    problems = validator.validate({"tv_aws_users.u": ["google_storage_bucket.b"]})
+    assert any("Graph mixes aws_* and google_* resources" in p for p in problems)
+    assert validator.validate({"tv_aws_users.u": ["aws_s3_bucket.b"]}) == []
+
+
+def test_render_graph_refuses_mixed_providers(tmp_path):
+    import modules.mcp_service as mcp_service
+
+    set_output_dir(str(tmp_path))
+    with pytest.raises(McpServiceError, match="Graph mixes"):
+        mcp_service.run_render_graph(
+            {"aws_lambda_function.fn": ["azurerm_storage_account.sa"]}
+        )

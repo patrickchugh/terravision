@@ -13,6 +13,31 @@ import sys
 ADDRESS = re.compile(
     r"^(module\.[A-Za-z0-9_-]+(\[[^\]]+\])?\.)*[a-z][a-z0-9_]*\.[A-Za-z0-9_-]+(\[[^\]]+\])*(~[0-9]+)?$"
 )
+MODULE_PATH = re.compile(r"^(module\.[A-Za-z0-9_-]+(\[[^\]]+\])?\.)+")
+
+# Resource type prefix -> provider. Keep identical to TV_PROVIDER_PREFIXES and
+# PROVIDER_PREFIXES in modules/provider_detector.py; a test compares them.
+PROVIDER_PREFIXES = {
+    "tv_aws_": "aws",
+    "tv_azurerm_": "azure",
+    "tv_azure_": "azure",
+    "tv_gcp_": "gcp",
+    "aws_": "aws",
+    "azurerm_": "azure",
+    "azuread_": "azure",
+    "azurestack_": "azure",
+    "azapi_": "azure",
+    "google_": "gcp",
+}
+RESOURCE_PREFIX = {"aws": "aws_", "azure": "azurerm_", "gcp": "google_"}
+
+
+def provider_of(node):
+    resource_type = MODULE_PATH.sub("", node).split(".")[0]
+    for prefix, provider in PROVIDER_PREFIXES.items():
+        if resource_type.startswith(prefix):
+            return provider
+    return None
 
 
 def validate(graph):
@@ -30,6 +55,18 @@ def validate(graph):
                 problems.append(f"{node!r}: bad target address {t!r}")
         if len(set(targets)) != len(targets):
             problems.append(f"{node!r}: duplicate targets")
+    providers = {
+        provider_of(node)
+        for node in set(graph)
+        | {t for v in graph.values() if isinstance(v, list) for t in v}
+        if isinstance(node, str) and provider_of(node)
+    }
+    if len(providers) > 1:
+        prefixes = [f"{RESOURCE_PREFIX[p]}*" for p in sorted(providers)]
+        problems.append(
+            f"Graph mixes {', '.join(prefixes[:-1])} and {prefixes[-1]} "
+            "resources; use one cloud provider per graph."
+        )
     return problems
 
 

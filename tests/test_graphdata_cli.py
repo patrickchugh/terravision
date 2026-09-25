@@ -64,3 +64,59 @@ def test_exported_terraform_dangling_targets_stay_undrawn():
     before = dict(graph)
     _add_leaf_targets(graph)
     assert graph == before
+
+
+class TestSingleProviderGraph:
+    """A graph file is drawn with one provider's conventions, so mixing
+    providers is refused instead of silently dropping the minority."""
+
+    @staticmethod
+    def _load(tmp_path, graph):
+        import json
+
+        from modules.tfwrapper import load_json_source
+
+        path = tmp_path / "g.tvg.json"
+        path.write_text(json.dumps(graph))
+        return load_json_source(str(path))
+
+    @pytest.mark.parametrize(
+        "graph",
+        [
+            {"aws_lambda_function.fn": ["azurerm_storage_account.sa"]},
+            {"tv_aws_users.u": ["azurerm_linux_web_app.web"]},
+            {"module.app.google_cloud_run_v2_service.api": ["aws_s3_bucket.b"]},
+        ],
+    )
+    def test_mixed_providers_refused(self, tmp_path, graph):
+        from modules.helpers import TerravisionError
+
+        with pytest.raises(TerravisionError, match="Graph mixes"):
+            self._load(tmp_path, graph)
+
+    @pytest.mark.parametrize(
+        "graph",
+        [
+            {"aws_lambda_function.fn": ["random_string.suffix"]},
+            {"tv_gcp_users_icon.aws_team": ["google_cloud_run_v2_service.api"]},
+            {"tv_azure_onprem.dc": ["azurerm_virtual_network_gateway.gw"]},
+        ],
+    )
+    def test_single_provider_accepted(self, tmp_path, graph):
+        assert self._load(tmp_path, graph)["graphdict"]
+
+    def test_draw_reports_mixed_providers(self, tmp_path, monkeypatch):
+        import json
+
+        from click.testing import CliRunner
+
+        from terravision.terravision import cli
+
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "g.tvg.json").write_text(
+            json.dumps({"aws_lambda_function.fn": ["google_storage_bucket.b"]})
+        )
+        result = CliRunner().invoke(cli, ["draw", "--source", "g.tvg.json"])
+        assert result.exit_code != 0
+        assert "Graph mixes aws_* and google_* resources" in result.output
+        assert not list(tmp_path.glob("architecture*.png"))
