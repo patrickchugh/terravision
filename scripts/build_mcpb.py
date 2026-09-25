@@ -3,11 +3,14 @@
 
     python scripts/build_mcpb.py                       # dist/terravision-<version>.mcpb
     python scripts/build_mcpb.py --local-wheel dist/terravision-X.whl
+    python scripts/build_mcpb.py --git-ref my-branch
 
 The extension in mcpb/ uses the uv runtime: Claude Desktop installs
 ``terravision[mcp]`` from PyPI with uv and runs it, so the bundle pins the
-exact version in pyproject.toml. ``--local-wheel`` points the bundle at a
-locally built wheel instead, for testing a release before it is on PyPI.
+exact version in pyproject.toml. For testing a release before it is on
+PyPI, ``--local-wheel`` points the bundle at a locally built wheel (this
+machine only) and ``--git-ref`` at a pushed branch or tag on GitHub (any
+machine with Git).
 
 The skill zip is the skills/terravision-cloud-diagrams folder, for apps where
 skills are uploaded by hand, such as Claude Desktop.
@@ -39,19 +42,26 @@ def mcpb(*args: str) -> None:
     subprocess.run(["npx", "--yes", MCPB_CLI, *args], check=True)
 
 
-def build_bundle(version: str, dist: Path, local_wheel: Path = None) -> Path:
+def build_bundle(
+    version: str, dist: Path, local_wheel: Path = None, git_ref: str = None
+) -> Path:
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "terravision"
         shutil.copytree(ROOT / "mcpb", stage)
         for name in ("manifest.json", "pyproject.toml"):
             path = stage / name
             path.write_text(path.read_text().replace("__VERSION__", version))
+        source = None
         if local_wheel:
+            source = local_wheel.resolve().as_uri()
+        elif git_ref:
+            source = f"git+https://github.com/patrickchugh/terravision@{git_ref}"
+        if source:
             pyproject = stage / "pyproject.toml"
             pyproject.write_text(
                 pyproject.read_text().replace(
                     f'"terravision[mcp]=={version}"',
-                    f'"terravision[mcp] @ {local_wheel.resolve().as_uri()}"',
+                    f'"terravision[mcp] @ {source}"',
                 )
             )
         mcpb("validate", str(stage / "manifest.json"))
@@ -77,11 +87,15 @@ def main() -> int:
         type=Path,
         help="install TerraVision from this wheel instead of PyPI (testing only)",
     )
+    parser.add_argument(
+        "--git-ref",
+        help="install TerraVision from this GitHub branch or tag (testing only)",
+    )
     args = parser.parse_args()
     version = release_version()
     args.dist.mkdir(parents=True, exist_ok=True)
     for built in (
-        build_bundle(version, args.dist, args.local_wheel),
+        build_bundle(version, args.dist, args.local_wheel, args.git_ref),
         build_skill_zip(version, args.dist),
     ):
         print(
