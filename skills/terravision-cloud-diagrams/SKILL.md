@@ -132,6 +132,16 @@ Validate before rendering: `python scripts/validate_graph.py architecture.tvg.js
 
 Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title` and return the output path.
 
+## Check every render, and fix the input
+
+TerraVision draws exactly what it is given. When a diagram looks wrong, assume the cause is in your input, not in TerraVision: usually a node missing from its container, a wrong type, a missing or extra connection, or one of the "Drawn as written" rules above.
+
+- **Fix the JSON, then render again.** Compare the image with the graph line by line to find the difference. Do not read, debug or modify TerraVision's source code, reinstall it, or work around it. For Terraform code (Path A), the diagram shows what the code deploys; explain any surprise to the user rather than changing TerraVision.
+- **Look at every render before showing it**, not only the first. After each render, including re-renders, read the PNG and check that every node is in the box you put it in and nothing is missing. Only then present it or say it is correct.
+- **Busy is fine.** Real architectures have many connections, and lines that cross, bend and run long are normal. Do not remove connections, drop nodes or restructure the graph to make the picture tidier: an accurate busy diagram is better than a tidy wrong one. If the user wants it simpler, offer `--simplified`, or the editable `--format drawio` file to rearrange by hand.
+- **Edit only what you mean to.** A node address can appear in several lists: under each node that connects to it, and under the container it sits in. To remove one connection, delete the address from that one source node's list. Never search-and-replace an address across the whole file: that also deletes it from its container's list, and the node drops out of its box. After every edit, run the validator and check that each node is still listed under the same container as before.
+- **If you are sure the JSON is right** and the image still disagrees with it, stop and tell the user what you expected and what you see, instead of investigating further.
+
 ## Troubleshooting
 
 - `'dot'` or `'git'` not found: see Install.
@@ -142,7 +152,5 @@ Call `render_graph` with the graph object directly (no file needed), or `generat
 - Diagram too tall: add `--simplified`, or reduce numbered copies to one per tier.
 
 ## What to tell the user
-
-Before presenting the diagram, look at the rendered PNG yourself if you can read images, and fix anything clearly wrong (a missing arrow, a node in the wrong box).
 
 Say which path you used and give the full path of the file, as a clickable link where the interface supports one. If the user is working on their own computer, offer to open it for them: `open <file>` on macOS, `xdg-open <file>` on Linux, `start <file>` on Windows. Mention `--format drawio` if they may want to edit it by hand.
