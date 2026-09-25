@@ -34,13 +34,20 @@ sudo apt install libgvplugin-neato-layout8
 sudo dnf install graphviz
 ```
 
-**Windows:** any one of these, or the installer from https://graphviz.org/download/
+**Windows:** Scoop or Chocolatey put `dot` and `gvpr` on your PATH for you:
+```powershell
+scoop install graphviz
+# or
+choco install graphviz
+```
+
+winget and the installer from https://graphviz.org/download/ work too, but a silent winget install does **not** add Graphviz to your PATH. Add it once in PowerShell, then open a new terminal:
 ```powershell
 winget install --id Graphviz.Graphviz
-choco install graphviz
-scoop install graphviz
+$gv = "$env:ProgramFiles\Graphviz\bin"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$gv", "User")
 ```
-Open a new terminal afterwards. If `dot` is still not found, add `C:\Program Files\Graphviz\bin` to your PATH.
+Restart any app that launches TerraVision's MCP server (Claude Code, Claude Desktop, Cursor) so it sees the new PATH.
 
 **Verify installation:**
 ```bash

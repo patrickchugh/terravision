@@ -49,9 +49,16 @@ If `terravision` is installed but not found, its folder is not on PATH: run `uv 
 | macOS | `brew install graphviz git` |
 | Debian / Ubuntu | `sudo apt install graphviz git` |
 | Fedora / RHEL | `sudo dnf install graphviz git` |
-| Windows | `winget install --id Graphviz.Graphviz` and `winget install --id Git.Git`, or `choco install graphviz git`, or `scoop install graphviz git` |
+| Windows | `scoop install graphviz git` or `choco install graphviz git`. Both put `dot` and `gvpr` on PATH. |
 
-On Windows, open a new terminal afterwards. If `dot` is still not found, add `C:\Program Files\Graphviz\bin` to PATH.
+On Windows with winget instead (`winget install --id Graphviz.Graphviz` and `winget install --id Git.Git`), the Graphviz installer does **not** add itself to PATH, so `dot` is not found afterwards. Add it to the user PATH in PowerShell:
+
+```powershell
+$gv = "$env:ProgramFiles\Graphviz\bin"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$gv", "User")
+```
+
+New terminals pick this up. For the shell you are already in, also run `$env:Path += ";$gv"` (PowerShell) or `export PATH="$PATH:/c/Program Files/Graphviz/bin"` (Git Bash). Restart the agent app so its MCP server sees the new PATH. Check with `dot -V` (capital V).
 
 **Terraform, for Path A only.** A JSON graph never runs Terraform. For Terraform code, check `terraform version` (must be 1.x); OpenTofu works too (`tofu version`, then add `--engine tofu`). To install Terraform:
 
