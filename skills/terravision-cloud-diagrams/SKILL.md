@@ -91,7 +91,7 @@ TerraVision draws the graph exactly as written; it does not add, move or group n
 
 Worked examples in `examples/`: `three-tier-web.tvg.json` (AWS), `aws-event-driven.tvg.json`, `azure-web-app.tvg.json`, `gcp-serverless-api.tvg.json`. Copy the closest one and edit.
 
-Validate before rendering: `python scripts/validate_graph.py architecture.tvg.json` checks addresses and that the graph uses one provider.
+Validate before rendering: `python scripts/validate_graph.py architecture.tvg.json`. It fails on bad addresses or mixed providers, and prints a `WARNING` for anything in the list above that will not draw the way it reads. Fix the warnings, or accept them if they are intended.
 
 ## If you have the TerraVision MCP server
 
