@@ -119,7 +119,22 @@ terravision draw --source architecture.tvg.json --format svg
 
 Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. Full spec, schema and more examples: [Graph Format](docs/graph-format.md). Works for AWS (`aws_*`), Azure (`azurerm_*`) and GCP (`google_*`).
 
-**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](docs/mcp-server.md); the `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index of the docs, and [llms-full.txt](https://patrickchugh.github.io/terravision/llms-full.txt) adds the full node-type reference.
+**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) and the [MCP server](docs/mcp-server.md) together as a plugin, then ask for a cloud architecture diagram as usual:
+
+```bash
+# Claude Code
+claude plugin marketplace add patrickchugh/terravision
+claude plugin install terravision-cloud-diagrams@terravision
+
+# OpenAI Codex CLI
+codex plugin marketplace add https://github.com/patrickchugh/terravision
+codex plugin add terravision-cloud-diagrams@terravision
+
+# Gemini CLI
+gemini extensions install https://github.com/patrickchugh/terravision
+```
+
+Other agents that read skills (Cursor, Copilot) can use the [skill folder](skills/terravision-cloud-diagrams) directly, and any MCP client can run the [MCP server](docs/mcp-server.md), whose `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index of the docs, and [llms-full.txt](https://patrickchugh.github.io/terravision/llms-full.txt) adds the full node-type reference.
 
 ### Option 2 - Generate your  diagram from Terraform
 

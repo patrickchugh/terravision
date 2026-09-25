@@ -23,7 +23,7 @@ SECTIONS = [
 ]
 HEADER = """# TerraVision node types
 
-Every key or value in a TerraVision graph is `<type>.<name>`. The `<type>` selects the icon; anything not listed still renders with a generic icon for its provider. Container types (VPC, subnet, resource group, network, region, zone) draw their connected nodes inside themselves.
+Every key or value in a TerraVision graph is `<type>.<name>`. The `<type>` selects the icon; anything not listed still renders with a generic icon for its provider. Container types draw their connected nodes inside themselves; the Graph Format rules list them all, including less obvious ones such as `aws_autoscaling_group` and `google_container_cluster`.
 
 Numbered copies: append `~1`, `~2` (for example one node per availability zone). Module grouping: prefix with `module.<name>.`.
 """

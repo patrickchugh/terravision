@@ -154,8 +154,9 @@ connects to or contains; the [Graph Format](graph-format.md) page has the rules 
 output directory and rendered exactly as `terravision draw --source <that file>` would, so the two
 paths cannot drift. Returns `{path, format, provider, graph_path, node_count, edge_count}`.
 
-Takes `format`, `outfile`, `fontsize` and `iconsize`. Needs only Graphviz and Git: no Terraform, no
-credentials, no `source`.
+Takes `format`, `outfile`, `fontsize`, `iconsize` and `title`. Needs only Graphviz and Git: no
+Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
+`google_*`) is rejected; draw one diagram per provider.
 
 ### `generate_architecture_graph`
 
@@ -191,7 +192,7 @@ searchable nodes and all resource metadata embedded, so it opens offline. Return
 | `upgrade` | Run `terraform init -upgrade` to refresh modules |
 
 `generate_diagram` and `generate_interactive_html` also take `outfile`, `use_tf_names`,
-`use_resource_names`, `fontsize` and `iconsize`.
+`use_resource_names`, `fontsize`, `iconsize` and `title` (overrides a title in the annotation file).
 
 ## Things worth knowing
 

@@ -107,7 +107,7 @@ flows:
 ```
 
 !!! note "CLI flags take precedence"
-    `--fontsize` and `--iconsize` CLI flags override the values in the annotation file. See [Diagram Sizing](usage-guide.md#diagram-sizing) for details.
+    `--fontsize`, `--iconsize` and `--title` CLI flags override the values in the annotation file. See [Diagram Sizing](usage-guide.md#diagram-sizing) for details.
 
 ### Format Versions
 

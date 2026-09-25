@@ -145,6 +145,7 @@ terravision draw [OPTIONS]
 | `--use-resource-names` | Label nodes with actual deployed resource names from Terraform plan | False | `--use-resource-names` |
 | `--fontsize` | Font size for resource labels in points | `28` | `--fontsize 50` |
 | `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
+| `--title` | Diagram title; overrides `title` in an annotation file | `Cloud Architecture Diagram` | `--title "Payments - Prod"` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |
@@ -181,6 +182,7 @@ terravision visualise [OPTIONS]
 | `--use-resource-names` | Label nodes with actual deployed resource names from Terraform plan | False | `--use-resource-names` |
 | `--fontsize` | Font size for resource labels in points | `28` | `--fontsize 50` |
 | `--iconsize` | Icon size in pixels | `128` | `--iconsize 200` |
+| `--title` | Diagram title; overrides `title` in an annotation file | `Cloud Architecture Diagram` | `--title "Payments - Prod"` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
 | `--engine` | Infra engine binary: `terraform`, `tofu` (OpenTofu), or `auto` (detect) | `auto` | `--engine tofu` |

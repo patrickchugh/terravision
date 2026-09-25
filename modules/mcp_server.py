@@ -146,7 +146,11 @@ def build_server() -> MCPServer:
                 tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
                 tv_aws_onprem.<name>, tv_azurerm_users.<name>,
                 tv_azurerm_internet.<name>, tv_gcp_users_icon.<name>.
-                Leaf nodes may be omitted as keys.
+                Leaf nodes may be omitted as keys. Use one cloud provider
+                per graph. The graph is drawn as written: arrows to
+                containers, and to shared services such as CloudWatch log
+                groups, ECR or Key Vault, are not drawn; list those services
+                in aws_group.shared_services or azurerm_group.shared_services.
                 Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
                 "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
                 "aws_vpc.main": ["aws_subnet.app"],

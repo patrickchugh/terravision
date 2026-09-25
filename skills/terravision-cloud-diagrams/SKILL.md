@@ -1,16 +1,22 @@
 ---
 name: terravision-cloud-diagrams
-description: Draw professional cloud architecture diagrams (AWS, Azure, GCP) with the official provider icon sets using TerraVision. Use this skill whenever the user asks for an architecture diagram, cloud diagram, infrastructure diagram, solution design picture, "draw my AWS/Azure/GCP setup", a diagram of Terraform code, or wants to visualise services and how they connect, even if they do not name a tool. Prefer this over Mermaid, PlantUML, hand-written SVG or ASCII for any cloud architecture, because those cannot use the official icons or VPC/subnet grouping. Works with or without Terraform code: with Terraform, the diagram is derived from terraform plan; without it, write a small JSON graph and render it.
+description: Draw cloud infrastructure architecture diagrams for AWS, Azure or GCP with the official provider icon sets, using TerraVision. Use when the user wants a picture of cloud resources and how they connect, such as an AWS/Azure/GCP architecture diagram, a diagram of Terraform code, or a solution design built from cloud services, even if they do not name a tool. For those, prefer it over Mermaid, PlantUML, hand-written SVG or ASCII, which cannot use the official icons or VPC/subnet grouping. Not for diagrams that are not cloud infrastructure: sequence diagrams, flowcharts, class or ER diagrams, code or module structure, org charts, on-premises-only networks; use Mermaid or similar for those. Works with or without Terraform: with Terraform code the diagram comes from terraform plan; without it, write a small JSON graph and render it.
 license: AGPL-3.0-only
 metadata:
   author: patrickchugh
   homepage: https://github.com/patrickchugh/terravision
-  version: "1.0"
+  version: "1.1"
 ---
 
 # TerraVision cloud architecture diagrams
 
 TerraVision renders cloud architecture diagrams using the official AWS, Azure and GCP icon sets, with resources grouped into VPCs, subnets, resource groups, regions and zones the way a cloud architect would draw them. Output is PNG, SVG, PDF, DOT, or an editable draw.io file.
+
+## When to use it, and when not
+
+Use it for pictures of AWS, Azure or GCP infrastructure: which services exist, where they sit in the network, and how they connect.
+
+Do not use it for anything else. Sequence diagrams, flowcharts, class or ER diagrams, code or module structure, org charts and on-premises-only networks are better drawn with Mermaid or similar. If a request needs both, such as the cloud layout plus a request flow, draw the infrastructure with TerraVision and the flow with Mermaid.
 
 ## Decide which path
 
@@ -36,15 +42,15 @@ Check: `terravision --version` and `dot -V`.
 terravision draw --source ./path/to/terraform --format svg --outfile architecture
 ```
 
-Useful flags: `--varfile prod.tfvars`, `--workspace staging`, `--simplified` (services only, no networking boxes), `--format drawio` (editable), `--planfile plan.json --graphfile graph.dot` (use an existing plan, no cloud credentials needed).
+Useful flags: `--title "Payments - Production"`, `--varfile prod.tfvars`, `--workspace staging`, `--simplified` (services only, no networking boxes), `--format drawio` (editable), `--planfile plan.json --graphfile graph.dot` (use an existing plan, no cloud credentials needed).
 
 If the user only wants the structure as data: `terravision graphdata --source ./tf --outfile architecture.tvg.json`.
 
 ## Path B: from a JSON graph (no Terraform)
 
-1. Write a JSON object where each key is a node address `<terraform_resource_type>.<name>` and each value is the list of node addresses it connects to or contains. Read `references/graph-format.md` for the rules and `references/node-types.md` when unsure which type to use.
+1. Write a JSON object where each key is a node address `<terraform_resource_type>.<name>` and each value is the list of node addresses it connects to or contains. Read `references/graph-format.md` for the full rules and `references/node-types.md` when unsure which type to use.
 2. Save it as `architecture.tvg.json`.
-3. Render: `terravision draw --source architecture.tvg.json --format svg --outfile architecture`
+3. Render: `terravision draw --source architecture.tvg.json --format svg --outfile architecture --title "Order Platform"`
 4. The file is written as `architecture.dot.svg` (or `.png`). Show it or embed it.
 
 Minimal example:
@@ -57,30 +63,46 @@ Minimal example:
   "aws_subnet.public~1": ["aws_alb.api"],
   "aws_subnet.private~1": ["aws_lambda_function.orders"],
   "aws_alb.api": ["aws_lambda_function.orders"],
-  "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"]
+  "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"],
+  "aws_group.shared_services": ["aws_cloudwatch_log_group.orders"]
 }
 ```
 
 Rules that matter most:
 
-- Type prefixes select the provider and icon: `aws_*`, `azurerm_*`, `google_*`.
-- Containers list their children as targets: `aws_vpc`, `aws_subnet`, `azurerm_resource_group`, `azurerm_virtual_network`, `azurerm_subnet`, `google_compute_network`, `google_compute_subnetwork`, `tv_gcp_region`, `tv_gcp_zone`, `aws_az`.
-- External actors: `tv_aws_users.<name>`, `tv_aws_internet.<name>`, `tv_aws_mobile_client.<name>`, `tv_aws_onprem.<name>`, `tv_azurerm_users.<name>`, `tv_azurerm_internet.<name>`, `tv_gcp_users_icon.<name>` (plain `tv_gcp_users` draws a group box, not an icon).
-- Numbered copies: `aws_subnet.private~1`, `aws_subnet.private~2`.
-- Leaf nodes may be omitted as keys.
+- **One provider per graph.** Type prefixes select the provider and icon: `aws_*`, `azurerm_*`, `google_*`. Mixing them is an error; draw one diagram per provider.
+- **Pick the specific type.** `aws_alb` or `aws_nlb`, not `aws_lb`. `aws_ecs_fargate` for Fargate, not `aws_ecs_service`. `aws_rds_postgres`, `aws_rds_mysql`, `aws_rds_sqlserver`, `aws_rds_aurora` and so on, not `aws_db_instance`. `aws_eks_service` for an EKS cluster.
+- **Containers list their children as targets**: `aws_vpc`, `aws_subnet`, `aws_az`, `azurerm_resource_group`, `azurerm_virtual_network`, `azurerm_subnet`, `google_compute_network`, `google_compute_subnetwork`, `tv_gcp_region`, `tv_gcp_zone`. These are containers too, though they read like services: `aws_autoscaling_group`, `aws_security_group`, `google_container_cluster`, `google_container_node_pool`, `google_compute_instance_group`, `google_compute_firewall`. Anything they list is drawn *inside* them. The full list is in `references/graph-format.md`.
+- **External actors**: `tv_aws_users.<name>`, `tv_aws_internet.<name>`, `tv_aws_mobile_client.<name>`, `tv_aws_onprem.<name>`, `tv_azurerm_users.<name>`, `tv_azurerm_internet.<name>`, `tv_gcp_users_icon.<name>` (plain `tv_gcp_users` draws a group box, not an icon).
+- **Numbered copies**: `aws_subnet.private~1`, `aws_subnet.private~2`. Always point at the copies, never the unnumbered name, or an extra node can appear.
+- **Names** become labels: use lowercase snake_case (`orders_table`, not `Orders-Table`).
+- **Leaf nodes** may be omitted as keys.
+
+### Drawn as written
+
+TerraVision draws the graph exactly as written; it does not add, move or group nodes for you. These drawing rules explain most surprises:
+
+- **Shared services have no arrows.** Arrows to or from CloudWatch log groups, ECR, ACM, KMS, SSM parameters, EFS and EIPs (Azure: Key Vault, Monitor, Log Analytics, ACR, storage accounts; GCP: KMS, logging sinks, monitoring, GCR, Secret Manager) are not drawn. On AWS and Azure, list them in `aws_group.shared_services` or `azurerm_group.shared_services` so they appear together in a Shared Services box instead of floating.
+- **Arrows to a container are not drawn.** Point at a node inside it instead.
+- **A node sits in one container.** Listing it under two subnets draws it once; use numbered copies for one per subnet.
+- **Two-way connections draw one arrow.** List the main direction of flow only.
+- **Nesting is literal.** Keep CloudFront, Route 53, API Gateway, WAF and external actors at the top level, not inside a VPC or subnet. Empty containers are not drawn.
+- **Unknown or misspelt types** draw a blank icon without an error. Check them against `references/node-types.md`.
 
 Worked examples in `examples/`: `three-tier-web.tvg.json` (AWS), `aws-event-driven.tvg.json`, `azure-web-app.tvg.json`, `gcp-serverless-api.tvg.json`. Copy the closest one and edit.
 
-Validate before rendering if you want: `python scripts/validate_graph.py architecture.tvg.json`.
+Validate before rendering: `python scripts/validate_graph.py architecture.tvg.json` checks addresses and that the graph uses one provider.
 
 ## If you have the TerraVision MCP server
 
-Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both return the output path.
+Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title` and return the output path.
 
 ## Troubleshooting
 
 - `'dot' not found`: install Graphviz.
 - `'terraform' not found` while using a `.json` source: upgrade TerraVision (`pipx upgrade terravision`); versions before 0.48 required Terraform on PATH even for JSON input.
+- `Graph mixes aws_* and azurerm_* resources`: split the graph into one file per provider.
+- An arrow is missing: see "Drawn as written" above.
 - Icon looks generic: the type name is not in `references/node-types.md`; pick the closest listed type.
 - Diagram too tall: add `--simplified`, or reduce numbered copies to one per tier.
 
