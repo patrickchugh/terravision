@@ -5,7 +5,7 @@ license: AGPL-3.0-only
 metadata:
   author: patrickchugh
   homepage: https://github.com/patrickchugh/terravision
-  version: "1.2"
+  version: "1.3"
 ---
 
 # TerraVision cloud architecture diagrams
@@ -84,9 +84,16 @@ If the user only wants the structure as data: `terravision graphdata --source ./
 ## Path B: from a JSON graph (no Terraform)
 
 1. Write a JSON object where each key is a node address `<terraform_resource_type>.<name>` and each value is the list of node addresses it connects to or contains. Read `references/graph-format.md` for the full rules and `references/node-types.md` when unsure which type to use.
-2. Save it as `architecture.tvg.json`.
-3. Render: `terravision draw --source architecture.tvg.json --format svg --outfile architecture --title "Order Platform"`
-4. The file is written as `architecture.dot.svg` (or `.png`). Show it or embed it.
+2. Save it as `<name>.tvg.json` in the user's current working directory, or a folder they name. The diagram files are the deliverable, so never put them in a temporary folder.
+3. Render a PNG to look at and a draw.io file to edit:
+
+   ```bash
+   terravision draw --source <name>.tvg.json --format png --outfile <name> --title "Order Platform"
+   terravision draw --source <name>.tvg.json --format drawio --outfile <name> --title "Order Platform"
+   ```
+
+   They are written as `<name>.dot.png` and `<name>.drawio`. Add `--format svg` as well if the user wants to embed it in documentation.
+4. Check the PNG ("Check every render" below), then deliver it ("Deliver the result" at the end).
 
 Minimal example:
 
@@ -151,6 +158,16 @@ TerraVision draws exactly what it is given. When a diagram looks wrong, assume t
 - Icon looks generic: the type name is not in `references/node-types.md`; pick the closest listed type.
 - Diagram too tall: add `--simplified`, or reduce numbered copies to one per tier.
 
-## What to tell the user
+## Deliver the result, without being asked
 
-Say which path you used and give the full path of the file, as a clickable link where the interface supports one. If the user is working on their own computer, offer to open it for them: `open <file>` on macOS, `xdg-open <file>` on Linux, `start <file>` on Windows. Mention `--format drawio` if they may want to edit it by hand.
+As soon as a render passes your check, do all of this in the same reply. Never wait for the user to ask to see the diagram or the JSON.
+
+1. **Show the diagram.** If your interface can display images inline, show the PNG there. Otherwise open it in the user's image viewer: `open <file>` on macOS, `xdg-open <file>` on Linux, `wslview <file>` on WSL, `start <file>` on Windows (`Invoke-Item <file>` in PowerShell). Skip this only on a remote or headless machine, such as Linux with neither `DISPLAY` nor `WAYLAND_DISPLAY` set, and say so.
+2. **Show the JSON graph** (Path B) in a `json` code block, so the user can read it and ask for changes.
+3. **List the files** with full paths, as clickable links where the interface supports them:
+   - `<name>.dot.png`: the diagram
+   - `<name>.drawio`: open in draw.io (diagrams.net) to edit by hand
+   - `<name>.tvg.json`: the graph; edit it and render again
+4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
+
+With the MCP server, the files are in its output folder; report those paths the same way.
