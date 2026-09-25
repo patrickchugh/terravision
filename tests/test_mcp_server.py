@@ -30,6 +30,8 @@ EXPECTED_TOOLS = {
     "generate_architecture_graph",
     "generate_diagram",
     "generate_interactive_html",
+    "open_diagram_file",
+    "diagram_file",
 }
 
 REPLAY_SOURCE = str(Path(__file__).parent / "json" / "bastion-tfdata.json")
@@ -98,6 +100,7 @@ def test_server_advertises_name_and_instructions(server):
                 "fontsize",
                 "iconsize",
                 "title",
+                "preview",
                 "upgrade",
             },
         ),
@@ -132,6 +135,10 @@ def test_source_is_the_only_required_parameter(server):
         if tool.name == "render_graph":
             # The renderer-only tool takes the graph inline instead of a source.
             assert tool.input_schema["required"] == ["graph"]
+            continue
+        if tool.name in ("open_diagram_file", "diagram_file"):
+            # Helpers act on a file an earlier diagram call wrote.
+            assert tool.input_schema["required"] == ["path"]
             continue
         assert tool.input_schema["required"] == ["source"]
 

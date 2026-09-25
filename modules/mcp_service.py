@@ -34,7 +34,7 @@ import sys
 import threading
 from collections import deque
 from pathlib import Path
-from typing import Any, Deque, Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Deque, Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 # Node address rule for graphs passed to render_graph. Keep identical to the
 # pattern in docs/schemas/terravision-graph-1.0.schema.json and the skill's
@@ -49,6 +49,18 @@ _PIPELINE_LOCK = threading.Lock()
 # Directory that generated files are written to. Configured once at server
 # startup by the ``terravision mcp`` command; defaults to the process CWD.
 _OUTPUT_DIR: Optional[Path] = None
+
+# Formats every diagram call writes, whatever format was asked for: a PNG to
+# look at, an SVG to embed and a draw.io file to edit.
+_DIAGRAM_SET = ("png", "svg", "drawio")
+
+# Files rendered by this server process. The diagram view's helper tools only
+# read or open paths in this set, so neither an agent nor a view can reach any
+# other file on the machine.
+_RENDERED: Set[Path] = set()
+
+# Heading drawing.render_diagram uses when no title is set.
+_DEFAULT_TITLE = "Cloud Architecture Diagram"
 
 # Formats accepted by ``generate_diagram``. Read from Canvas so this stays in
 # sync with the renderer instead of duplicating the list. ``drawio`` is
@@ -461,6 +473,102 @@ def run_architecture_graph(
         }
 
 
+def _output_file(outdir: Path, name: str, fmt: str) -> Path:
+    """Return the path render_diagram writes for ``fmt``.
+
+    render_diagram does not return its path, so it is reconstructed from the
+    CLI's naming scheme and checked by the caller rather than trusted.
+    """
+    return outdir / (f"{name}.drawio" if fmt == "drawio" else f"{name}.dot.{fmt}")
+
+
+def _render_set(
+    tfdata: Dict[str, Any], name: str, requested: str, source: str, outdir: Path
+) -> Dict[str, Path]:
+    """Render the requested format plus the standard set from one compile.
+
+    render_diagram stores drawing state such as Node objects in tfdata, so
+    each format is drawn from a fresh copy of the compiled data. That keeps
+    the pipeline, and any ``terraform plan``, to a single run.
+    """
+    import copy
+
+    import modules.drawing as drawing
+
+    files: Dict[str, Path] = {}
+    for fmt in dict.fromkeys((requested, *_DIAGRAM_SET)):
+        drawing.render_diagram(copy.deepcopy(tfdata), False, name, fmt, source)
+        produced = _output_file(outdir, name, fmt)
+        if not produced.exists():
+            raise McpServiceError(
+                f"Diagram generation reported success but {produced.name} was "
+                "not found. See the server log on stderr."
+            )
+        _RENDERED.add(produced.resolve())
+        files[fmt] = produced
+    return files
+
+
+def _write_graph(tfdata: Dict[str, Any], outdir: Path, name: str, source: str) -> Path:
+    """Save the compiled graph as ``<name>.tvg.json`` beside the diagram.
+
+    Gives every diagram, including one drawn from Terraform, a graph file the
+    user can edit and render again. A graph file that is itself the source is
+    left untouched.
+    """
+    import json
+
+    target = outdir / f"{name}.tvg.json"
+    src = Path(source)
+    if not (src.is_file() and src.resolve() == target.resolve()):
+        with open(target, "w", encoding="utf-8") as fh:
+            json.dump(tfdata.get("graphdict", {}), fh, indent=2, sort_keys=True)
+    _RENDERED.add(target.resolve())
+    return target
+
+
+def _preview_png(
+    path: Path, max_edge: int = 1568, max_bytes: int = 1_000_000
+) -> Optional[bytes]:
+    """Return a PNG small enough to send inline to a chat app, or None.
+
+    Rendered diagrams are several thousand pixels on each side. 1568 pixels
+    on the long edge is the largest size Claude models use without scaling
+    down, and a typical diagram stays under 300 KB at that size. Very large
+    diagrams fall back to a 256-colour palette, then to smaller sizes. The
+    preview is best effort: without Pillow, or on any error, the call still
+    succeeds and simply carries no image.
+    """
+    try:
+        import io
+
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        with Image.open(path) as img:
+            img.load()
+            edge, palette = max_edge, False
+            while True:
+                small = img.copy()
+                small.thumbnail((edge, edge), Image.Resampling.LANCZOS)
+                if palette:
+                    small = small.convert("RGBA").quantize(
+                        256, method=Image.Quantize.FASTOCTREE
+                    )
+                buf = io.BytesIO()
+                small.save(buf, "PNG", optimize=True)
+                data = buf.getvalue()
+                if len(data) <= max_bytes or edge <= 512:
+                    return data
+                if palette:
+                    edge = int(edge * 0.75)
+                palette = True
+    except Exception as e:  # noqa: BLE001 - a preview must never fail a render
+        print(f"TerraVision: no preview for {path.name}: {e}", file=sys.stderr)
+        return None
+
+
 def run_diagram(
     source: str,
     varfile: Optional[Sequence[str]] = None,
@@ -477,15 +585,21 @@ def run_diagram(
     fontsize: Optional[int] = None,
     iconsize: Optional[int] = None,
     title: Optional[str] = None,
+    preview: bool = True,
 ) -> Dict[str, Any]:
-    """Render an architecture diagram to a file.
+    """Render an architecture diagram to files.
 
-    Equivalent to ``terravision draw``. Returns the path to the generated
-    file rather than its contents; read the file to inspect text formats such
-    as ``drawio``, ``svg`` or ``dot``.
+    Equivalent to ``terravision draw``, but always writes the full set: the
+    requested format plus a PNG, an SVG, a draw.io file and the graph as
+    ``.tvg.json``, so the result can be viewed, embedded and edited straight
+    away. Returns paths rather than contents.
 
     Returns:
-        ``{"path", "format", "provider"}``.
+        ``{"path", "format", "provider", "title", "files"}``, where ``path``
+        is the file in the requested format and ``files`` maps ``png``,
+        ``svg``, ``drawio``, ``graph`` (and the requested format) to paths.
+        With ``preview``, ``_preview_png`` holds a small PNG as bytes, or
+        None; the MCP layer sends it inline and removes the key.
     """
     import modules.drawing as drawing
     import modules.helpers as helpers
@@ -520,22 +634,19 @@ def run_diagram(
             tfdata.setdefault("annotations", {})["title"] = title
 
         final_name = _provider_suffixed(name, tfdata)
-        drawing.render_diagram(tfdata, False, final_name, fmt, source)
+        files = _render_set(tfdata, final_name, fmt, source, outdir)
+        graph = _write_graph(tfdata, outdir, final_name, source)
 
-        # render_diagram writes the file but does not return its path, so it
-        # is reconstructed from the documented naming scheme and then checked
-        # rather than trusted.
-        if fmt == "drawio":
-            produced = outdir / f"{final_name}.drawio"
-        else:
-            produced = outdir / f"{final_name}.dot.{fmt}"
-        if not produced.exists():
-            raise McpServiceError(
-                f"Diagram generation reported success but {produced.name} was "
-                "not found. See the server log on stderr."
-            )
-
-        return {"path": str(produced), "format": fmt, "provider": provider}
+        result: Dict[str, Any] = {
+            "path": str(files[fmt]),
+            "format": fmt,
+            "provider": provider,
+            "title": tfdata.get("annotations", {}).get("title") or _DEFAULT_TITLE,
+            "files": {**{k: str(v) for k, v in files.items()}, "graph": str(graph)},
+        }
+        if preview:
+            result["_preview_png"] = _preview_png(files["png"])
+        return result
 
 
 def run_interactive_html(
@@ -609,6 +720,7 @@ def run_render_graph(
     fontsize: Optional[int] = None,
     iconsize: Optional[int] = None,
     title: Optional[str] = None,
+    preview: bool = True,
 ) -> Dict[str, Any]:
     """Render a diagram from an inline TerraVision graph dictionary.
 
@@ -622,7 +734,8 @@ def run_render_graph(
     would, so the CLI and MCP paths cannot drift.
 
     Returns:
-        ``{"path", "format", "provider", "graph_path", "node_count", "edge_count"}``.
+        :func:`run_diagram`'s result plus ``graph_path``, ``node_count`` and
+        ``edge_count``.
     """
     import json
 
@@ -671,8 +784,114 @@ def run_render_graph(
         fontsize=fontsize,
         iconsize=iconsize,
         title=title,
+        preview=preview,
     )
     result["graph_path"] = str(graph_path)
     result["node_count"] = len(graph)
     result["edge_count"] = sum(len(v) for v in graph.values())
     return result
+
+
+def _rendered_file(path: str) -> Path:
+    """Resolve ``path`` and check this server rendered it.
+
+    Raises:
+        McpServiceError: For any path outside the files this process wrote.
+    """
+    try:
+        resolved = Path(path).expanduser().resolve()
+    except (OSError, RuntimeError, ValueError):
+        resolved = None
+    if resolved is None or resolved not in _RENDERED or not resolved.is_file():
+        raise McpServiceError(
+            f"{path!r} is not a diagram file rendered by this TerraVision server."
+        )
+    return resolved
+
+
+# Media types for the files a diagram call writes. Text formats are returned
+# as text so the view can show and copy them without decoding.
+_TEXT_MEDIA_TYPES = {
+    ".svg": "image/svg+xml",
+    ".drawio": "application/vnd.jgraph.mxfile",
+    ".json": "application/json",
+    ".dot": "text/vnd.graphviz",
+}
+
+
+def read_output_file(path: str) -> Dict[str, Any]:
+    """Return the contents of a file this server rendered.
+
+    Used by the diagram view to show the SVG at full resolution and to copy
+    the graph JSON. Only files in the rendered set can be read.
+
+    Returns:
+        ``{"name", "mimeType", "text"}`` for text formats, otherwise
+        ``{"name", "mimeType", "blob"}`` with base64 content.
+    """
+    import base64
+    import mimetypes
+
+    resolved = _rendered_file(path)
+    media_type = _TEXT_MEDIA_TYPES.get(resolved.suffix.lower())
+    if media_type:
+        return {
+            "name": resolved.name,
+            "mimeType": media_type,
+            "text": resolved.read_text(encoding="utf-8"),
+        }
+    return {
+        "name": resolved.name,
+        "mimeType": mimetypes.guess_type(resolved.name)[0]
+        or "application/octet-stream",
+        "blob": base64.b64encode(resolved.read_bytes()).decode("ascii"),
+    }
+
+
+def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
+    """Open a rendered file in the user's default app, or show it in its folder.
+
+    The server runs on the user's own machine, so this works in every chat
+    app, including those whose sandbox blocks downloads. Only files in the
+    rendered set can be opened.
+
+    Raises:
+        McpServiceError: For an unknown path, or when there is no desktop to
+            open it on, for example a Linux server without a display.
+    """
+    import platform
+    import subprocess
+
+    import modules.helpers as helpers
+
+    resolved = _rendered_file(path)
+    target = str(resolved)
+    system = platform.system()
+    popen_kwargs: Dict[str, Any] = {
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
+    if system == "Windows":
+        if not reveal:
+            os.startfile(target)  # type: ignore[attr-defined]  # Windows only
+            return {"opened": target, "reveal": False}
+        command = ["explorer", f"/select,{target}"]
+    else:
+        popen_kwargs["start_new_session"] = True
+        if system == "Darwin":
+            command = ["open", "-R", target] if reveal else ["open", target]
+        elif helpers.is_wsl():
+            command = ["wslview", str(resolved.parent) if reveal else target]
+        else:
+            if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+                raise McpServiceError(
+                    f"There is no desktop session here to open files in. "
+                    f"The file is at {target}"
+                )
+            command = ["xdg-open", str(resolved.parent) if reveal else target]
+    try:
+        subprocess.Popen(command, **popen_kwargs)
+    except OSError as e:
+        raise McpServiceError(f"Could not open {target}: {e}") from e
+    return {"opened": target, "reveal": reveal}

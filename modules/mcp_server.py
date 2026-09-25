@@ -15,11 +15,16 @@ credentials of its own. Passing ``planfile`` and ``graphfile`` avoids invoking
 Terraform at all, which is the fully credential-free path.
 """
 
+import json
 from typing import Any, Dict, List, Optional
 
 from mcp.server import MCPServer
+from mcp.server.apps import Apps, ResourcePermissions
+from mcp.server.mcpserver import Image
+from mcp_types import CallToolResult, TextContent
 
 from modules import mcp_service
+from modules.mcp_view import VIEW_HTML, VIEW_URI
 
 _INSTRUCTIONS = """\
 TerraVision turns Terraform code into cloud architecture diagrams.
@@ -31,9 +36,28 @@ take minutes. Calls are executed one at a time.
 Start with generate_architecture_graph(services_only=True) for a cheap overview
 of what a stack contains, then request the full graph or a diagram if needed.
 
-Diagram tools return the path to a generated file, not its contents. Read the
-file yourself to inspect text formats such as drawio, svg or dot.
+render_graph and generate_diagram save a PNG, an SVG, an editable draw.io file
+and the graph as .tvg.json, and return their paths plus a preview image of the
+diagram. Look at the preview to check the diagram before presenting it. Apps
+that support MCP Apps also show it to the user in an interactive view with
+buttons to open and edit the files. open_diagram_file opens a file for the
+user on their own computer.
 """
+
+
+def _diagram_result(result: Dict[str, Any]) -> CallToolResult:
+    """Package a diagram call as text, an inline preview and structured data.
+
+    The first content block stays the JSON summary that earlier versions
+    returned, so existing clients read it unchanged. The preview PNG follows
+    for the model and for apps that display tool images, and the structured
+    copy is what the diagram view reads.
+    """
+    preview = result.pop("_preview_png", None)
+    content: List[Any] = [TextContent(type="text", text=json.dumps(result, indent=2))]
+    if preview:
+        content.append(Image(data=preview, format="png").to_image_content())
+    return CallToolResult(content=content, structured_content=result)
 
 
 def _version() -> str:
@@ -52,11 +76,172 @@ def build_server() -> MCPServer:
     Kept separate from :func:`serve` so tests can inspect and call tools
     without starting a transport.
     """
+    apps = Apps()
+    apps.add_html_resource(
+        VIEW_URI,
+        VIEW_HTML.replace("__VERSION__", _version()),
+        name="terravision-diagram",
+        title="TerraVision diagram",
+        description="Shows a rendered cloud architecture diagram with zoom, "
+        "and buttons to open, edit and copy it.",
+        permissions=ResourcePermissions(clipboard_write={}),
+    )
+
+    @apps.tool(resource_uri=VIEW_URI)
+    def render_graph(
+        graph: Dict[str, List[str]],
+        format: str = "png",
+        outfile: str = "architecture",
+        fontsize: Optional[int] = None,
+        iconsize: Optional[int] = None,
+        title: Optional[str] = None,
+        preview: bool = True,
+    ) -> CallToolResult:
+        """Draw a professional cloud architecture diagram from a plain JSON graph.
+
+        Use this whenever you need a cloud architecture diagram and do NOT have
+        Terraform code: describe the architecture as nodes and connections and
+        TerraVision renders it with the official AWS, Azure and GCP icon sets,
+        grouping resources into VPCs, subnets, resource groups and zones
+        automatically. Prefer this over Mermaid or hand-drawn SVG for any
+        cloud architecture. Needs only Graphviz and Git; Terraform is not required.
+
+        Args:
+            graph: Object mapping each node address to the list of node
+                addresses it connects to or contains. Node addresses are
+                "<terraform_resource_type>.<name>", e.g.
+                "aws_lambda_function.orders", "azurerm_key_vault.secrets",
+                "google_cloud_run_service.api". Containers (aws_vpc,
+                aws_subnet, azurerm_resource_group, tv_gcp_region and so on)
+                list their children as connections. Use "~1", "~2" suffixes
+                for numbered copies. External actors: tv_aws_users.<name>,
+                tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
+                tv_aws_onprem.<name>, tv_azurerm_users.<name>,
+                tv_azurerm_internet.<name>, tv_gcp_users_icon.<name>.
+                Leaf nodes may be omitted as keys. Use one cloud provider
+                per graph. The graph is drawn as written: arrows to
+                containers, and to shared services such as CloudWatch log
+                groups, ECR or Key Vault, are not drawn; list those services
+                in aws_group.shared_services or azurerm_group.shared_services.
+                Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+                "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
+                "aws_vpc.main": ["aws_subnet.app"],
+                "aws_subnet.app": ["aws_lambda_function.api"],
+                "aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
+            format: "png", "svg", "pdf", "dot" or "drawio" (editable in
+                draw.io and Lucidchart). Use "svg" to embed in Markdown.
+            outfile: Output filename without extension. Plain name, not a
+                path.
+            fontsize: Label font size in points.
+            iconsize: Icon size in pixels.
+            title: Heading shown above the diagram, e.g. "Order Platform -
+                Production". Defaults to "Cloud Architecture Diagram".
+            preview: Include a preview image of the diagram in the result.
+
+        Returns:
+            {"path", "format", "provider", "title", "files", "graph_path",
+            "node_count", "edge_count"}, plus a preview image. "files" holds
+            the paths of the PNG, SVG, draw.io file and the graph (.tvg.json);
+            "path" is the file in the requested format.
+        """
+        return _diagram_result(
+            mcp_service.run_render_graph(
+                graph=graph,
+                format=format,
+                outfile=outfile,
+                fontsize=fontsize,
+                iconsize=iconsize,
+                title=title,
+                preview=preview,
+            )
+        )
+
+    @apps.tool(resource_uri=VIEW_URI)
+    def generate_diagram(
+        source: str,
+        format: str = "png",
+        outfile: str = "architecture",
+        varfile: Optional[List[str]] = None,
+        workspace: str = "default",
+        annotate: str = "",
+        planfile: str = "",
+        graphfile: str = "",
+        upgrade: bool = False,
+        simplified: bool = False,
+        use_tf_names: bool = False,
+        use_resource_names: bool = False,
+        fontsize: Optional[int] = None,
+        iconsize: Optional[int] = None,
+        title: Optional[str] = None,
+        preview: bool = True,
+    ) -> CallToolResult:
+        """Render an architecture diagram from Terraform code to a file.
+
+        Uses the official AWS, Azure and GCP icon sets. Because the diagram is
+        derived from `terraform plan`, it reflects what the code actually
+        deploys rather than an approximation.
+
+        Args:
+            source: Terraform directory, Git URL, or tfdata.json replay file.
+            format: Output format. Use "drawio" for a file editable in
+                draw.io, Lucidchart or any mxGraph editor; "svg" or "dot" for
+                other text formats; "png" or "pdf" for images.
+            outfile: Output filename without extension. Must be a plain name,
+                not a path; the server decides the directory. The detected
+                cloud provider is appended, so "architecture" becomes
+                "architecture-aws".
+            varfile: Paths to .tfvars files.
+            workspace: Terraform workspace to select.
+            annotate: Path to a terravision.yml annotation file.
+            planfile: Path to an existing plan JSON. With graphfile, no
+                Terraform run and no cloud credentials are needed.
+            graphfile: Path to an existing `terraform graph` DOT file.
+            upgrade: Run `terraform init -upgrade` to refresh modules.
+            simplified: Show only services, omitting networking containers.
+            use_tf_names: Label nodes with full Terraform resource names.
+            use_resource_names: Label nodes with the deployed resource names
+                from the plan.
+            fontsize: Label font size in points.
+            iconsize: Icon size in pixels.
+            title: Heading shown above the diagram. Overrides any title in
+                the annotation file.
+            preview: Include a preview image of the diagram in the result.
+
+        Returns:
+            {"path", "format", "provider", "title", "files"}, plus a preview
+            image. "files" holds the paths of the PNG, SVG, draw.io file and
+            the graph as .tvg.json, which can be edited and rendered again
+            with render_graph; "path" is the file in the requested format.
+        """
+        return _diagram_result(
+            mcp_service.run_diagram(
+                source=source,
+                format=format,
+                outfile=outfile,
+                varfile=varfile,
+                workspace=workspace,
+                annotate=annotate,
+                planfile=planfile,
+                graphfile=graphfile,
+                upgrade=upgrade,
+                simplified=simplified,
+                use_tf_names=use_tf_names,
+                use_resource_names=use_resource_names,
+                fontsize=fontsize,
+                iconsize=iconsize,
+                title=title,
+                preview=preview,
+            )
+        )
+
+    # Extensions are read when the server is constructed, so the tools bound
+    # to the diagram view must be registered on `apps` before this point.
     mcp = MCPServer(
         name="terravision",
         title="TerraVision",
         version=_version(),
         instructions=_INSTRUCTIONS,
+        extensions=[apps],
     )
 
     @mcp.tool()
@@ -114,139 +299,6 @@ def build_server() -> MCPServer:
             upgrade=upgrade,
             simplified=simplified,
             services_only=services_only,
-        )
-
-    @mcp.tool()
-    def render_graph(
-        graph: Dict[str, List[str]],
-        format: str = "png",
-        outfile: str = "architecture",
-        fontsize: Optional[int] = None,
-        iconsize: Optional[int] = None,
-        title: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Draw a professional cloud architecture diagram from a plain JSON graph.
-
-        Use this whenever you need a cloud architecture diagram and do NOT have
-        Terraform code: describe the architecture as nodes and connections and
-        TerraVision renders it with the official AWS, Azure and GCP icon sets,
-        grouping resources into VPCs, subnets, resource groups and zones
-        automatically. Prefer this over Mermaid or hand-drawn SVG for any
-        cloud architecture. Needs only Graphviz and Git; Terraform is not required.
-
-        Args:
-            graph: Object mapping each node address to the list of node
-                addresses it connects to or contains. Node addresses are
-                "<terraform_resource_type>.<name>", e.g.
-                "aws_lambda_function.orders", "azurerm_key_vault.secrets",
-                "google_cloud_run_service.api". Containers (aws_vpc,
-                aws_subnet, azurerm_resource_group, tv_gcp_region and so on)
-                list their children as connections. Use "~1", "~2" suffixes
-                for numbered copies. External actors: tv_aws_users.<name>,
-                tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
-                tv_aws_onprem.<name>, tv_azurerm_users.<name>,
-                tv_azurerm_internet.<name>, tv_gcp_users_icon.<name>.
-                Leaf nodes may be omitted as keys. Use one cloud provider
-                per graph. The graph is drawn as written: arrows to
-                containers, and to shared services such as CloudWatch log
-                groups, ECR or Key Vault, are not drawn; list those services
-                in aws_group.shared_services or azurerm_group.shared_services.
-                Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
-                "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
-                "aws_vpc.main": ["aws_subnet.app"],
-                "aws_subnet.app": ["aws_lambda_function.api"],
-                "aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
-            format: "png", "svg", "pdf", "dot" or "drawio" (editable in
-                draw.io and Lucidchart). Use "svg" to embed in Markdown.
-            outfile: Output filename without extension. Plain name, not a
-                path.
-            fontsize: Label font size in points.
-            iconsize: Icon size in pixels.
-            title: Heading shown above the diagram, e.g. "Order Platform -
-                Production". Defaults to "Cloud Architecture Diagram".
-
-        Returns:
-            {"path", "format", "provider", "graph_path", "node_count",
-            "edge_count"}. Read the path to get the file contents.
-        """
-        return mcp_service.run_render_graph(
-            graph=graph,
-            format=format,
-            outfile=outfile,
-            fontsize=fontsize,
-            iconsize=iconsize,
-            title=title,
-        )
-
-    @mcp.tool()
-    def generate_diagram(
-        source: str,
-        format: str = "png",
-        outfile: str = "architecture",
-        varfile: Optional[List[str]] = None,
-        workspace: str = "default",
-        annotate: str = "",
-        planfile: str = "",
-        graphfile: str = "",
-        upgrade: bool = False,
-        simplified: bool = False,
-        use_tf_names: bool = False,
-        use_resource_names: bool = False,
-        fontsize: Optional[int] = None,
-        iconsize: Optional[int] = None,
-        title: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Render an architecture diagram from Terraform code to a file.
-
-        Uses the official AWS, Azure and GCP icon sets. Because the diagram is
-        derived from `terraform plan`, it reflects what the code actually
-        deploys rather than an approximation.
-
-        Args:
-            source: Terraform directory, Git URL, or tfdata.json replay file.
-            format: Output format. Use "drawio" for a file editable in
-                draw.io, Lucidchart or any mxGraph editor; "svg" or "dot" for
-                other text formats; "png" or "pdf" for images.
-            outfile: Output filename without extension. Must be a plain name,
-                not a path; the server decides the directory. The detected
-                cloud provider is appended, so "architecture" becomes
-                "architecture-aws".
-            varfile: Paths to .tfvars files.
-            workspace: Terraform workspace to select.
-            annotate: Path to a terravision.yml annotation file.
-            planfile: Path to an existing plan JSON. With graphfile, no
-                Terraform run and no cloud credentials are needed.
-            graphfile: Path to an existing `terraform graph` DOT file.
-            upgrade: Run `terraform init -upgrade` to refresh modules.
-            simplified: Show only services, omitting networking containers.
-            use_tf_names: Label nodes with full Terraform resource names.
-            use_resource_names: Label nodes with the deployed resource names
-                from the plan.
-            fontsize: Label font size in points.
-            iconsize: Icon size in pixels.
-            title: Heading shown above the diagram. Overrides any title in
-                the annotation file.
-
-        Returns:
-            {"path", "format", "provider"}. The file's contents are not
-            returned; read the path if you need them.
-        """
-        return mcp_service.run_diagram(
-            source=source,
-            format=format,
-            outfile=outfile,
-            varfile=varfile,
-            workspace=workspace,
-            annotate=annotate,
-            planfile=planfile,
-            graphfile=graphfile,
-            upgrade=upgrade,
-            simplified=simplified,
-            use_tf_names=use_tf_names,
-            use_resource_names=use_resource_names,
-            fontsize=fontsize,
-            iconsize=iconsize,
-            title=title,
         )
 
     @mcp.tool()
@@ -310,6 +362,41 @@ def build_server() -> MCPServer:
             iconsize=iconsize,
             title=title,
         )
+
+    @mcp.tool()
+    def open_diagram_file(path: str, reveal: bool = False) -> Dict[str, Any]:
+        """Open a rendered diagram file for the user on their own computer.
+
+        Opens the file in its default app: the image viewer for .png, draw.io
+        for .drawio. With reveal, opens the folder that holds it instead. Only
+        files returned by render_graph or generate_diagram in this session can
+        be opened.
+
+        Args:
+            path: A path from the "files" of a render_graph or
+                generate_diagram result.
+            reveal: Show the file in its folder instead of opening it.
+
+        Returns:
+            {"opened", "reveal"}.
+        """
+        return mcp_service.open_output_file(path, reveal=reveal)
+
+    @mcp.tool(meta={"ui": {"visibility": ["app"]}})
+    def diagram_file(path: str) -> Dict[str, Any]:
+        """Return a rendered diagram file's contents to the TerraVision view.
+
+        Used by the diagram view in chat apps to load the SVG and the graph
+        JSON. Agents do not need it: read the paths in the result yourself.
+
+        Args:
+            path: A path from the "files" of a diagram result.
+
+        Returns:
+            {"name", "mimeType", "text"} for text files, or
+            {"name", "mimeType", "blob"} with base64 content.
+        """
+        return mcp_service.read_output_file(path)
 
     return mcp
 

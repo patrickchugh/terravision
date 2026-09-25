@@ -43,8 +43,9 @@ dependencies = [
 
 [project.optional-dependencies]
 # Model Context Protocol server (`terravision mcp`). Optional so the default
-# install stays unchanged for users who only need the CLI.
-mcp = ["mcp>=2.0,<3"]
+# install stays unchanged for users who only need the CLI. Pillow scales the
+# diagram preview returned inline to chat apps.
+mcp = ["mcp>=2.0,<3", "pillow>=10"]
 
 [project.scripts]
 terravision = "terravision.terravision:main"
@@ -95,9 +96,10 @@ terravision = "terravision.terravision:main"
 pytest = "^7.3.1"
 black = "24.3.0"
 isort = "^5.12.0"
-# Installed for tests so CI covers the MCP server. Runtime users get this
-# from the `mcp` extra instead; it is never a required dependency.
+# Installed for tests so CI covers the MCP server. Runtime users get these
+# from the `mcp` extra instead; they are never required dependencies.
 mcp = ">=2.0,<3"
+pillow = ">=10"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "<4.0"
