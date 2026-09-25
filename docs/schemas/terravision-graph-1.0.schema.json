@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json",
+  "title": "TerraVision Graph Format (TVG) 1.0",
+  "description": "A plain JSON adjacency map describing a cloud architecture. Each key is a node address of the form '<terraform_resource_type>.<name>' (for example 'aws_lambda_function.orders', 'azurerm_key_vault.secrets', 'google_cloud_run_service.api') and each value is the list of node addresses that node connects to or contains. TerraVision renders this into a professional architecture diagram using the official AWS, Azure and GCP icon sets, grouping resources into VPCs, subnets, resource groups, regions and zones automatically. No Terraform code or cloud credentials are needed. Render with: terravision draw --source architecture.tvg.json --format svg",
+  "type": "object",
+  "minProperties": 1,
+  "propertyNames": {
+    "$ref": "#/$defs/nodeAddress"
+  },
+  "additionalProperties": {
+    "type": "array",
+    "description": "Node addresses this node connects to (an arrow is drawn) or contains (the node is drawn inside this one). Containment applies when the source is a container type such as aws_vpc, aws_subnet, aws_security_group, azurerm_resource_group, azurerm_virtual_network, azurerm_subnet, google_compute_network, google_compute_subnetwork, tv_gcp_region, tv_gcp_zone, aws_az or aws_group. Leaf nodes that only appear as targets may be omitted as keys.",
+    "items": {
+      "$ref": "#/$defs/nodeAddress"
+    },
+    "uniqueItems": true
+  },
+  "$defs": {
+    "nodeAddress": {
+      "type": "string",
+      "pattern": "^(module\\.[A-Za-z0-9_-]+(\\[[^\\]]+\\])?\\.)*[a-z][a-z0-9_]*\\.[A-Za-z0-9_-]+(\\[[^\\]]+\\])*(~[0-9]+)?$",
+      "description": "'<type>.<name>' where <type> is any Terraform resource type (aws_*, azurerm_*, google_* select the icon; other providers such as random_* get a generic icon) or a TerraVision pseudo-type (tv_aws_users, tv_aws_internet, tv_aws_mobile_client, tv_aws_onprem, tv_aws_region, tv_aws_az, tv_azurerm_users, tv_azurerm_internet, tv_azurerm_zone, tv_azure_onprem, tv_gcp_users_icon, tv_gcp_users, tv_gcp_region, tv_gcp_zone, tv_gcp_onprem, tv_gcp_load_balancer, tv_gcp_external_saas). Append '~1', '~2' for numbered copies (e.g. one per availability zone). A 'module.<name>.' prefix is allowed and groups nodes by module."
+    }
+  },
+  "examples": [
+    {
+      "tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+      "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.static_site", "aws_alb.api"],
+      "aws_vpc.main": ["aws_subnet.public~1", "aws_subnet.private~1"],
+      "aws_subnet.public~1": ["aws_alb.api"],
+      "aws_subnet.private~1": ["aws_lambda_function.orders"],
+      "aws_alb.api": ["aws_lambda_function.orders"],
+      "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"]
+    }
+  ]
+}

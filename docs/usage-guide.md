@@ -184,7 +184,7 @@ terravision graphdata [OPTIONS]
 | Option | Description | Default | Example |
 |--------|-------------|---------|---------|
 | `--source` | Source location | Current directory | `./path-to-your-terraform` |
-| `--outfile` | Output JSON filename | `architecture.json` | `--outfile resources.json` |
+| `--outfile` | Output JSON filename (`.tvg.json` added if no `.json` extension; `.json` with `--show_services`) | `architecture.tvg.json` | `--outfile resources.json` |
 | `--show_services` | Show only unique services list | False | `--show_services` |
 | `--planfile` | Pre-generated Terraform plan JSON | None | `--planfile plan.json` |
 | `--graphfile` | Pre-generated Terraform graph DOT | None | `--graphfile graph.dot` |
@@ -278,10 +278,10 @@ See [annotations.md](annotations.md) for annotation file format.
 
 ```bash
 # Export graph data
-terravision graphdata --source ./path-to-your-terraform --outfile graph.json
+terravision graphdata --source ./path-to-your-terraform --outfile architecture.tvg.json
 
 # Generate diagram from exported data (faster)
-terravision draw --source graph.json --format svg
+terravision draw --source architecture.tvg.json --format svg
 
 # Show only services used
 terravision graphdata --source ./path-to-your-terraform --show_services
@@ -661,9 +661,9 @@ terravision draw --source ./infra --use-tf-names
 
 2. **Export to JSON first**, then generate multiple variants:
    ```bash
-   terravision graphdata --source ./path-to-your-terraform --outfile graph.json
-   terravision draw --source graph.json --format png
-   terravision draw --source graph.json --format svg
+   terravision graphdata --source ./path-to-your-terraform --outfile architecture.tvg.json
+   terravision draw --source architecture.tvg.json --format png
+   terravision draw --source architecture.tvg.json --format svg
    ```
 
 3. **Use specific workspaces** to reduce scope:

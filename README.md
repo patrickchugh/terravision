@@ -2,7 +2,7 @@
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->
 
-**Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents**
+**Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -23,10 +23,13 @@
 ---
 ## What is TerraVision?
 
-TerraVision automatically converts your Terraform code into professional-grade cloud architecture diagrams using the official AWS, GCP, and Azure icon sets. Your diagrams stay in sync with your infrastructure — no more outdated Visio, draw.io or Lucidchart files.
+TerraVision automatically converts your Terraform code, or a plain JSON graph of Terraform resource names, into professional-grade cloud architecture diagrams using the official AWS, GCP, and Azure icon sets. Your diagrams stay in sync with your infrastructure — no more outdated Visio, draw.io or Lucidchart files.
+
+Most diagram tools that AI assistants reach for (Mermaid, PlantUML, hand-drawn SVG) produce boxes and arrows. TerraVision produces the diagram a cloud architect would draw: real provider icons, VPCs and subnets nested correctly, resource groups, regions and zones. It runs entirely on your machine, needs no cloud credentials, and outputs PNG, SVG, PDF or an editable draw.io file.
 
 ## Why TerraVision?
 
+- ✅ **JSON graph input** — describe an architecture in a few lines of JSON and render it, resources match Terraform names so no need to learn a custom DSL ([Graph Format](docs/graph-format.md))
 - ✅ **Always up-to-date** — diagrams generated directly from your Terraform code
 - ✅ **100% client-side** — no cloud access required, runs locally, your code never leaves your machine
 - ✅ **CI/CD ready** — automate diagram updates on every PR merge
@@ -36,17 +39,19 @@ TerraVision automatically converts your Terraform code into professional-grade c
 - ✅ **Editable draw.io export** — open in draw.io, Lucidchart, or any mxGraph editor
 - ✅ **Optional AI annotations** — labels, titles, and flow sequences from Ollama (local) or AWS Bedrock
 - ✅ **Terragrunt compatible** — auto-detects single- and multi-module Terragrunt projects
-- ✅ **MCP server** — let AI agents generate diagrams from your Terraform, [see the guide](docs/mcp-server.md)
+- ✅ **MCP server and agent skill** — let AI agents generate diagrams from a JSON graph or your Terraform, [see the guide](docs/mcp-server.md)
 
 ---
 
 ## Supported Cloud Providers
 
-| Provider         | Status             | Resources     |
-| ---------------- | ------------------ | ------------- |
-| **AWS**          | ✅ Full support    | 200+ services |
-| **Google Cloud** | 🔄 Partial support | Core services |
-| **Azure**        | 🔄 Partial support | Core services |
+| Provider         | Status          | Resource types |
+| ---------------- | --------------- | -------------- |
+| **AWS**          | ✅ Full support | 316 types      |
+| **Google Cloud** | ✅ Full support | 215 types      |
+| **Azure**        | ✅ Full support | 168 types      |
+
+Full list: [Node types](docs/node-types.md).
 
 ---
 
@@ -58,9 +63,35 @@ TerraVision automatically converts your Terraform code into professional-grade c
 pipx install terravision   # or: pip install terravision if in a virtual env
 ```
 
-You also need **Python 3.10+**, **Terraform 1.x**, **Graphviz**, and **Git**. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
+You also need **Python 3.10+**, **Graphviz** and **Git**, plus **Terraform 1.x** (or OpenTofu) when drawing from Terraform code; JSON graphs don't need it. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
 
-### Generate your first diagram
+### Diagram from JSON (no Terraform needed)
+
+Describe the architecture as nodes and connections:
+
+```json
+{
+  "tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+  "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.static_site", "aws_alb.api"],
+  "aws_vpc.main": ["aws_subnet.public~1", "aws_subnet.private~1"],
+  "aws_subnet.public~1": ["aws_alb.api"],
+  "aws_subnet.private~1": ["aws_lambda_function.orders"],
+  "aws_alb.api": ["aws_lambda_function.orders"],
+  "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"]
+}
+```
+
+Render it:
+
+```bash
+terravision draw --source architecture.tvg.json --format svg
+```
+
+Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. Full spec, schema and more examples: [Graph Format](docs/graph-format.md). Works for AWS (`aws_*`), Azure (`azurerm_*`) and GCP (`google_*`).
+
+**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](docs/mcp-server.md); the `render_graph` tool takes this JSON directly.
+
+### Generate your first diagram from Terraform
 
 ```bash
 git clone https://github.com/patrickchugh/terravision.git
@@ -76,7 +107,9 @@ terravision draw --source tests/fixtures/azure_terraform/test_vm_vmss --show
 terravision draw --source https://github.com/patrickchugh/terraform-examples.git//aws/wordpress_fargate --show
 ```
 
-That's it — your diagram is saved as `architecture.png` and opens automatically.
+That's it — your diagram is saved as `architecture-aws.dot.png` (the provider is appended to the name) and opens automatically.
+
+The diagram is derived from `terraform plan`, so it shows what the code actually deploys: conditionals, `count`, `for_each` and modules are resolved. Eraser and friends draw what the AI imagines; TerraVision proves what the code deploys.
 
 ### Generate an interactive HTML diagram
 

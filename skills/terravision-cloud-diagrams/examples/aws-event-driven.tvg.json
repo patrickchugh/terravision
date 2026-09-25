@@ -1,0 +1,14 @@
+{
+  "tv_aws_mobile_client.mobile": ["aws_api_gateway_rest_api.orders_api"],
+  "aws_api_gateway_rest_api.orders_api": ["aws_lambda_function.create_order"],
+  "aws_lambda_function.create_order": ["aws_dynamodb_table.orders", "aws_sqs_queue.order_events"],
+  "aws_sqs_queue.order_events": ["aws_lambda_function.fulfil_order"],
+  "aws_lambda_function.fulfil_order": ["aws_sns_topic.notifications", "aws_dynamodb_table.orders"],
+  "aws_sns_topic.notifications": ["aws_sqs_queue.email_dlq"],
+  "aws_dynamodb_table.orders": ["aws_kinesis_firehose_delivery_stream.archive"],
+  "aws_kinesis_firehose_delivery_stream.archive": ["aws_s3_bucket.order_archive"],
+  "aws_s3_bucket.order_archive": ["aws_glue_catalog_database.orders_lake"],
+  "aws_glue_catalog_database.orders_lake": ["aws_athena_workgroup.analytics"],
+  "aws_athena_workgroup.analytics": [],
+  "aws_sqs_queue.email_dlq": []
+}

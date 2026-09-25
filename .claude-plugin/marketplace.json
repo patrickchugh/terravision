@@ -1,0 +1,32 @@
+{
+  "name": "terravision",
+  "owner": {
+    "name": "Patrick Chugh",
+    "url": "https://github.com/patrickchugh"
+  },
+  "metadata": {
+    "description": "Cloud architecture diagrams with official AWS, Azure and GCP icons",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "terravision-cloud-diagrams",
+      "source": "./",
+      "description": "Draw professional cloud architecture diagrams (AWS, Azure, GCP) from a JSON graph or Terraform code using TerraVision. Replaces Mermaid for any cloud architecture picture.",
+      "version": "1.0.0",
+      "author": { "name": "Patrick Chugh" },
+      "homepage": "https://github.com/patrickchugh/terravision",
+      "repository": "https://github.com/patrickchugh/terravision",
+      "license": "AGPL-3.0-only",
+      "keywords": ["aws", "azure", "gcp", "architecture", "diagram", "terraform", "graphviz"],
+      "category": "development",
+      "skills": ["./skills/terravision-cloud-diagrams"],
+      "mcpServers": {
+        "terravision": {
+          "command": "uvx",
+          "args": ["--from", "terravision[mcp]", "terravision", "mcp", "--output-dir", "./diagrams"]
+        }
+      }
+    }
+  ]
+}

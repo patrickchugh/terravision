@@ -47,7 +47,7 @@ poetry run terravision draw --source <path> --ai-annotate ollama      # local Ol
 poetry run terravision draw --source <path> --ai-annotate restapi     # OpenAI-compatible /v1/chat/completions
 
 # Export graph data
-poetry run terravision graphdata --source <path> --outfile graph.json
+poetry run terravision graphdata --source <path> --outfile architecture.tvg.json
 
 # Run as an MCP server for AI agents (needs the optional [mcp] extra)
 poetry run terravision mcp --output-dir ./diagrams

@@ -1,0 +1,11 @@
+{
+  "tv_gcp_users_icon.users": ["google_compute_global_forwarding_rule.https_lb"],
+  "google_compute_global_forwarding_rule.https_lb": ["google_cloud_run_service.api"],
+  "google_cloud_run_service.api": ["google_sql_database_instance.postgres", "google_pubsub_topic.events", "google_secret_manager_secret.db_password"],
+  "google_pubsub_topic.events": ["google_cloudfunctions_function.processor"],
+  "google_cloudfunctions_function.processor": ["google_bigquery_dataset.analytics", "google_storage_bucket.raw_events"],
+  "google_sql_database_instance.postgres": [],
+  "google_bigquery_dataset.analytics": [],
+  "google_storage_bucket.raw_events": [],
+  "google_secret_manager_secret.db_password": []
+}

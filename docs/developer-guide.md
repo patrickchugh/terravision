@@ -21,7 +21,7 @@ poetry run terravision draw --source <path> --ai-annotate bedrock
 poetry run terravision draw --source <path> --ai-annotate ollama
 
 # Export graph data
-poetry run terravision graphdata --source <path> --outfile graph.json
+poetry run terravision graphdata --source <path> --outfile architecture.tvg.json
 
 # Debug mode (exports tfdata.json)
 poetry run terravision draw --source <path> --debug

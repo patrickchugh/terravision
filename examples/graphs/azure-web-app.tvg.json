@@ -1,0 +1,11 @@
+{
+  "tv_azurerm_users.users": ["azurerm_frontdoor.entry"],
+  "azurerm_frontdoor.entry": ["azurerm_linux_web_app.frontend"],
+  "azurerm_resource_group.rg": ["azurerm_linux_web_app.frontend", "azurerm_function_app.api", "azurerm_mssql_server.sql", "azurerm_storage_account.blobs", "azurerm_key_vault.secrets", "azurerm_servicebus_namespace.bus"],
+  "azurerm_linux_web_app.frontend": ["azurerm_function_app.api"],
+  "azurerm_function_app.api": ["azurerm_mssql_server.sql", "azurerm_servicebus_namespace.bus", "azurerm_key_vault.secrets"],
+  "azurerm_servicebus_namespace.bus": ["azurerm_storage_account.blobs"],
+  "azurerm_mssql_server.sql": [],
+  "azurerm_storage_account.blobs": [],
+  "azurerm_key_vault.secrets": []
+}

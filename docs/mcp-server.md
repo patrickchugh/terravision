@@ -84,7 +84,7 @@ need the same three things:
 |---|---|
 | command | `terravision` (or an absolute path to it) |
 | args | `["mcp"]`, plus `--output-dir <dir>` if you want to control where files land |
-| env | `PATH` including Terraform and Graphviz — see below |
+| env | `PATH` including Graphviz and, for the `source` tools, Terraform — see below |
 
 Most clients use a JSON block of this shape, under a key such as `mcpServers` or `servers`:
 
@@ -141,8 +141,21 @@ On Windows, include the directories holding `terraform.exe` and Graphviz's `bin`
 
 ## Tools
 
-One tool per TerraVision command. Every tool takes `source`, which may be a Terraform directory, a
-Git URL, or a TerraVision `tfdata.json` replay file.
+`render_graph` takes a graph inline and never runs Terraform. The other three tools mirror
+TerraVision commands and take `source`, which may be a Terraform directory, a Git URL, a
+`.tvg.json` graph file or a TerraVision `tfdata.json` replay file.
+
+### `render_graph`
+
+Renders a diagram from a graph passed directly as JSON, so an agent never has to write a file.
+`graph` maps each node address (`<terraform_resource_type>.<name>`) to the list of addresses it
+connects to or contains; the [Graph Format](graph-format.md) page has the rules and the
+[node types](node-types.md) page the icons. The graph is saved as `<outfile>.tvg.json` in the
+output directory and rendered exactly as `terravision draw --source <that file>` would, so the two
+paths cannot drift. Returns `{path, format, provider, graph_path, node_count, edge_count}`.
+
+Takes `format`, `outfile`, `fontsize` and `iconsize`. Needs only Graphviz and Git: no Terraform, no
+credentials, no `source`.
 
 ### `generate_architecture_graph`
 
@@ -185,11 +198,13 @@ searchable nodes and all resource metadata embedded, so it opens offline. Return
 **Tools return paths, not file contents.** This matches the CLI. To inspect a generated `.drawio` or
 `.svg`, read the returned path.
 
-**Calls can take minutes.** Every tool runs `terraform init` and `terraform plan` against the source
-unless you supply `planfile`/`graphfile`. Calls are executed one at a time.
+**Calls can take minutes.** Every `source` tool runs `terraform init` and `terraform plan` against the
+source unless you supply `planfile`/`graphfile` or a JSON source; `render_graph` never does. Calls are
+executed one at a time.
 
-**A `tfdata.json` source skips Terraform entirely** and returns in seconds. Generate one with
-`terravision draw --source <path> --debug`. Useful for iterating without repeated plan runs.
+**A `.tvg.json` graph or `tfdata.json` source skips Terraform entirely** and returns in seconds.
+Export a graph with `terravision graphdata`, or a replay file with `terravision draw --source <path> --debug`.
+Useful for iterating without repeated plan runs.
 
 **AI annotation is not exposed.** `--ai-annotate` has TerraVision call out to Bedrock or Ollama.
 Doing that from a server that is itself being driven by a model is confused layering, and it would

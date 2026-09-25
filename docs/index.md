@@ -6,7 +6,7 @@ hide:
 
 # TerraVision
 
-**Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents**
+**Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons**
 
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -28,11 +28,106 @@ hide:
 
 ---
 
-## From Terraform Code → Architecture Diagram
+## From JSON or Terraform → Architecture Diagram
+
+=== "Input: JSON graph"
+
+    No Terraform needed: each key is `<terraform_resource_type>.<name>`, each value is what it connects to or contains. See the [Graph Format](graph-format.md).
+
+    ```json
+    {
+      "tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+      "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.static_assets", "aws_alb.web_alb~1", "aws_alb.web_alb~2"],
+      "aws_s3_bucket.static_assets": [],
+      "aws_vpc.main": ["aws_az.us_east_1a", "aws_az.us_east_1b", "aws_internet_gateway.igw"],
+      "aws_az.us_east_1a": ["aws_subnet.public~1", "aws_subnet.private~1", "aws_subnet.data~1"],
+      "aws_az.us_east_1b": ["aws_subnet.public~2", "aws_subnet.private~2", "aws_subnet.data~2"],
+      "aws_subnet.public~1": ["aws_alb.web_alb~1", "aws_nat_gateway.nat~1"],
+      "aws_subnet.public~2": ["aws_alb.web_alb~2", "aws_nat_gateway.nat~2"],
+      "aws_subnet.private~1": ["aws_instance.app~1"],
+      "aws_subnet.private~2": ["aws_instance.app~2"],
+      "aws_subnet.data~1": ["aws_db_instance.postgres~1"],
+      "aws_subnet.data~2": ["aws_db_instance.postgres~2"],
+      "aws_alb.web_alb~1": ["aws_instance.app~1"],
+      "aws_alb.web_alb~2": ["aws_instance.app~2"],
+      "aws_instance.app~1": ["aws_db_instance.postgres~1", "aws_elasticache_cluster.sessions"],
+      "aws_instance.app~2": ["aws_db_instance.postgres~1", "aws_elasticache_cluster.sessions"],
+      "aws_db_instance.postgres~1": ["aws_db_instance.postgres~2"],
+      "aws_db_instance.postgres~2": [],
+      "aws_elasticache_cluster.sessions": [],
+      "aws_nat_gateway.nat~1": ["aws_internet_gateway.igw"],
+      "aws_nat_gateway.nat~2": ["aws_internet_gateway.igw"],
+      "aws_internet_gateway.igw": ["tv_aws_internet.internet"]
+    }
+    ```
+
+=== "Output: from JSON"
+
+    ![AWS three-tier web app diagram rendered from JSON](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png)
 
 === "Input: Terraform"
 
-    ![Terraform Code](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/code.png)
+    ```hcl
+    # Excerpt from WordPress on ECS Fargate (the AWS output tab)
+    # Full source: https://github.com/patrickchugh/terraform-examples/tree/main/aws/wordpress_fargate
+
+    module "vpc" {
+      source                 = "terraform-aws-modules/vpc/aws"
+      cidr                   = var.vpc_cidr
+      azs                    = data.aws_availability_zones.this.names
+      private_subnets        = var.private_subnet_cidrs
+      public_subnets         = var.public_subnet_cidrs
+      enable_nat_gateway     = true
+      single_nat_gateway     = false
+    }
+
+    module "alb" {
+      source             = "terraform-aws-modules/alb/aws"
+      load_balancer_type = "application"
+      vpc_id             = module.vpc.vpc_id
+      subnets            = module.vpc.public_subnets
+      security_groups    = [aws_security_group.alb.id]
+    }
+
+    resource "aws_cloudfront_distribution" "this" {
+      origin {
+        domain_name = module.alb.this_lb_dns_name
+        origin_id   = "alb"
+      }
+      # ...
+    }
+
+    resource "aws_ecs_service" "this" {
+      cluster         = aws_ecs_cluster.this.id
+      task_definition = aws_ecs_task_definition.this.arn
+      launch_type     = "FARGATE"
+      network_configuration {
+        security_groups = [aws_security_group.alb.id, aws_security_group.db.id, aws_security_group.efs.id]
+        subnets         = module.vpc.private_subnets
+      }
+      load_balancer {
+        target_group_arn = aws_lb_target_group.this.id
+        container_name   = "wordpress"
+        container_port   = 80
+      }
+    }
+
+    resource "aws_rds_cluster" "this" {
+      engine                 = "aurora-mysql"
+      engine_mode            = "serverless"
+      vpc_security_group_ids = [aws_security_group.db.id]
+      db_subnet_group_name   = aws_db_subnet_group.this.name
+    }
+
+    resource "aws_efs_file_system" "this" {}
+
+    resource "aws_efs_mount_target" "this" {
+      count           = length(module.vpc.private_subnets)
+      file_system_id  = aws_efs_file_system.this.id
+      subnet_id       = module.vpc.private_subnets[count.index]
+      security_groups = [aws_security_group.efs.id]
+    }
+    ```
 
 === "Output: AWS"
 
@@ -51,6 +146,12 @@ hide:
 ## Why TerraVision?
 
 <div class="grid cards" markdown>
+
+-   :material-code-json:{ .lg .middle } **JSON graph input**
+
+    ---
+
+    Describe an architecture in a few lines of JSON and render it. Resources match Terraform names, so there's no custom DSL to learn. See the [Graph Format](graph-format.md).
 
 -   :material-sync-circle:{ .lg .middle } **Always up-to-date**
 

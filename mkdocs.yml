@@ -1,5 +1,5 @@
 site_name: TerraVision
-site_description: Turn Terraform code into professional cloud architecture diagrams that stay in sync with your infrastructure — automatic, secure, living documents.
+site_description: Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons.
 site_url: https://patrickchugh.github.io/terravision/
 repo_url: https://github.com/patrickchugh/terravision
 repo_name: patrickchugh/terravision
@@ -92,12 +92,15 @@ plugins:
 
 nav:
   - Home: index.md
+  - Graph Format (JSON input): graph-format.md
+  - Node types: node-types.md
   - Getting Started:
       - Installation: installation.md
       - Usage Guide: usage-guide.md
   - Features:
       - Annotations: annotations.md
       - CI/CD Integration: cicd-integration.md
+      - MCP Server: mcp-server.md
   - Help:
       - FAQ: faq.md
       - Troubleshooting: troubleshooting.md

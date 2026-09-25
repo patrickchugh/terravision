@@ -456,9 +456,9 @@ If you have an existing `terravision.ai.yml` from a previous run, it will still 
 **Solutions**:
 1. Export to JSON first, then generate multiple formats:
    ```bash
-   terravision graphdata --source . --outfile graph.json
-   terravision draw --source graph.json --format svg
-   terravision draw --source graph.json --format png
+   terravision graphdata --source . --outfile architecture.tvg.json
+   terravision draw --source architecture.tvg.json --format svg
+   terravision draw --source architecture.tvg.json --format png
    ```
 
 2. Use simplified mode:
