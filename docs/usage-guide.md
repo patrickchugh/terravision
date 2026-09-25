@@ -2,6 +2,54 @@
 
 ## Quick Start Examples
 
+### Diagram from a JSON Graph (no Terraform)
+
+Save a graph as `architecture.tvg.json` and render it. No Terraform code or cloud credentials are needed:
+
+=== "AWS"
+
+    ```json
+    {
+      "tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+      "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.static_site", "aws_alb.api"],
+      "aws_vpc.main": ["aws_subnet.public~1", "aws_subnet.private~1"],
+      "aws_subnet.public~1": ["aws_alb.api"],
+      "aws_subnet.private~1": ["aws_lambda_function.orders"],
+      "aws_alb.api": ["aws_lambda_function.orders"],
+      "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"]
+    }
+    ```
+
+=== "Azure"
+
+    ```json
+    {
+      "tv_azurerm_users.users": ["azurerm_cdn_frontdoor_profile.edge"],
+      "azurerm_cdn_frontdoor_profile.edge": ["azurerm_linux_web_app.api"],
+      "azurerm_resource_group.app": ["azurerm_virtual_network.main", "azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"],
+      "azurerm_virtual_network.main": ["azurerm_subnet.app"],
+      "azurerm_subnet.app": ["azurerm_linux_web_app.api"],
+      "azurerm_linux_web_app.api": ["azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"]
+    }
+    ```
+
+=== "GCP"
+
+    ```json
+    {
+      "tv_gcp_users_icon.users": ["google_compute_global_forwarding_rule.lb"],
+      "google_compute_global_forwarding_rule.lb": ["google_cloud_run_v2_service.api"],
+      "google_cloud_run_v2_service.api": ["google_sql_database_instance.orders", "google_pubsub_topic.events", "google_storage_bucket.assets"],
+      "google_pubsub_topic.events": ["google_cloudfunctions2_function.worker"]
+    }
+    ```
+
+```bash
+terravision draw --source architecture.tvg.json --format svg
+```
+
+See the [Graph Format](graph-format.md) for the rules and [Node types](node-types.md) for every icon.
+
 ### Generate Your First Diagram
 
 ```bash

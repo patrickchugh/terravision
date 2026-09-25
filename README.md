@@ -47,9 +47,9 @@ Most diagram tools that AI assistants reach for (Mermaid, PlantUML, hand-drawn S
 
 | Provider         | Status          | Resource types |
 | ---------------- | --------------- | -------------- |
-| **AWS**          | ✅ Full support | 316 types      |
-| **Google Cloud** | ✅ Full support | 215 types      |
-| **Azure**        | ✅ Full support | 168 types      |
+| **AWS**          | ✅ Full support | 385 types      |
+| **Google Cloud** | ✅ Full support | 264 types      |
+| **Azure**        | ✅ Full support | 245 types      |
 
 Full list: [Node types](docs/node-types.md).
 
@@ -65,9 +65,9 @@ pipx install terravision   # or: pip install terravision if in a virtual env
 
 You also need **Python 3.10+**, **Graphviz** and **Git**, plus **Terraform 1.x** (or OpenTofu) when drawing from Terraform code; JSON graphs don't need it. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
 
-### Diagram from JSON (no Terraform needed)
+### Option 1 - Diagram from JSON (no Terraform needed)
 
-Describe the architecture as nodes and connections:
+Describe the architecture as nodes and connections. AWS is shown here; expand the Azure and GCP examples below.
 
 ```json
 {
@@ -81,6 +81,36 @@ Describe the architecture as nodes and connections:
 }
 ```
 
+<details>
+<summary><b>Azure example</b></summary>
+
+```json
+{
+  "tv_azurerm_users.users": ["azurerm_cdn_frontdoor_profile.edge"],
+  "azurerm_cdn_frontdoor_profile.edge": ["azurerm_linux_web_app.api"],
+  "azurerm_resource_group.app": ["azurerm_virtual_network.main", "azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"],
+  "azurerm_virtual_network.main": ["azurerm_subnet.app"],
+  "azurerm_subnet.app": ["azurerm_linux_web_app.api"],
+  "azurerm_linux_web_app.api": ["azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"]
+}
+```
+
+</details>
+
+<details>
+<summary><b>GCP example</b></summary>
+
+```json
+{
+  "tv_gcp_users_icon.users": ["google_compute_global_forwarding_rule.lb"],
+  "google_compute_global_forwarding_rule.lb": ["google_cloud_run_v2_service.api"],
+  "google_cloud_run_v2_service.api": ["google_sql_database_instance.orders", "google_pubsub_topic.events", "google_storage_bucket.assets"],
+  "google_pubsub_topic.events": ["google_cloudfunctions2_function.worker"]
+}
+```
+
+</details>
+
 Render it:
 
 ```bash
@@ -89,9 +119,9 @@ terravision draw --source architecture.tvg.json --format svg
 
 Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. Full spec, schema and more examples: [Graph Format](docs/graph-format.md). Works for AWS (`aws_*`), Azure (`azurerm_*`) and GCP (`google_*`).
 
-**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](docs/mcp-server.md); the `render_graph` tool takes this JSON directly.
+**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](docs/mcp-server.md); the `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index of the docs, and [llms-full.txt](https://patrickchugh.github.io/terravision/llms-full.txt) adds the full node-type reference.
 
-### Generate your first diagram from Terraform
+### Option 2 - Generate your  diagram from Terraform
 
 ```bash
 git clone https://github.com/patrickchugh/terravision.git
@@ -111,7 +141,7 @@ That's it — your diagram is saved as `architecture-aws.dot.png` (the provider 
 
 The diagram is derived from `terraform plan`, so it shows what the code actually deploys: conditionals, `count`, `for_each` and modules are resolved. Eraser and friends draw what the AI imagines; TerraVision proves what the code deploys.
 
-### Generate an interactive HTML diagram
+## Generate an interactive HTML diagram
 
 ```bash
 terravision visualise --source ./path-to-your-terraform --show
@@ -210,6 +240,7 @@ The complete documentation lives at **[patrickchugh.github.io/terravision](https
 - [Annotations Guide](docs/annotations.md)
 - [CI/CD Integration](docs/cicd-integration.md)
 - [MCP Server Guide](docs/mcp-server.md)
+- [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) (docs index for AI agents)
 - [FAQ](docs/faq.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

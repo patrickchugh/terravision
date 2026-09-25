@@ -61,10 +61,6 @@ hide:
     }
     ```
 
-=== "Output: from JSON"
-
-    ![AWS three-tier web app diagram rendered from JSON](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png)
-
 === "Input: Terraform"
 
     ```hcl
@@ -205,6 +201,18 @@ hide:
 
 ---
 
+## Supported Cloud Providers
+
+| Provider         | Status          | Resource types |
+| ---------------- | --------------- | -------------- |
+| **AWS**          | ✅ Full support | 385 types      |
+| **Google Cloud** | ✅ Full support | 264 types      |
+| **Azure**        | ✅ Full support | 245 types      |
+
+Every supported resource type is listed on the [Node types](node-types.md) page. Types without an icon still appear on the diagram as a generic node, and the run prints which ones so an icon can be added.
+
+---
+
 ## Quick Start
 
 Install with pip:
@@ -213,16 +221,72 @@ Install with pip:
 pip install terravision   # or: pipx install terravision
 ```
 
-Generate your first diagram:
+TerraVision needs **Python 3.10+**, **Graphviz** and **Git**. **Terraform 1.x** (or OpenTofu) is only needed when drawing from Terraform code.
+
+### Diagram from JSON (no Terraform needed)
+
+Describe the architecture as nodes and connections, and save it as `architecture.tvg.json`:
+
+=== "AWS"
+
+    ```json
+    {
+      "tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
+      "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.static_site", "aws_alb.api"],
+      "aws_vpc.main": ["aws_subnet.public~1", "aws_subnet.private~1"],
+      "aws_subnet.public~1": ["aws_alb.api"],
+      "aws_subnet.private~1": ["aws_lambda_function.orders"],
+      "aws_alb.api": ["aws_lambda_function.orders"],
+      "aws_lambda_function.orders": ["aws_dynamodb_table.orders", "aws_sqs_queue.events"]
+    }
+    ```
+
+=== "Azure"
+
+    ```json
+    {
+      "tv_azurerm_users.users": ["azurerm_cdn_frontdoor_profile.edge"],
+      "azurerm_cdn_frontdoor_profile.edge": ["azurerm_linux_web_app.api"],
+      "azurerm_resource_group.app": ["azurerm_virtual_network.main", "azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"],
+      "azurerm_virtual_network.main": ["azurerm_subnet.app"],
+      "azurerm_subnet.app": ["azurerm_linux_web_app.api"],
+      "azurerm_linux_web_app.api": ["azurerm_mssql_database.orders", "azurerm_servicebus_queue.events", "azurerm_key_vault.secrets"]
+    }
+    ```
+
+=== "GCP"
+
+    ```json
+    {
+      "tv_gcp_users_icon.users": ["google_compute_global_forwarding_rule.lb"],
+      "google_compute_global_forwarding_rule.lb": ["google_cloud_run_v2_service.api"],
+      "google_cloud_run_v2_service.api": ["google_sql_database_instance.orders", "google_pubsub_topic.events", "google_storage_bucket.assets"],
+      "google_pubsub_topic.events": ["google_cloudfunctions2_function.worker"]
+    }
+    ```
+
+Render it:
+
+```bash
+terravision draw --source architecture.tvg.json --format svg
+```
+
+Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. The [Graph Format](graph-format.md) page has the full rules, the JSON Schema and larger examples, and [Node types](node-types.md) lists every icon.
+
+**Using an AI assistant?** Install the [TerraVision skill](https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](mcp-server.md); its `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](llms.txt) is a plain-text index of the docs, and [llms-full.txt](llms-full.txt) adds the full node-type reference.
+
+### Diagram from Terraform
 
 ```bash
 terravision draw --source ./path-to-your-terraform --show
 ```
 
+The diagram is derived from `terraform plan`, so it shows what the code actually deploys: conditionals, `count`, `for_each` and modules are resolved.
+
 Or try the interactive HTML output:
 
 ```bash
-terravision visualise --source ./path-to-your-terraform--show
+terravision visualise --source ./path-to-your-terraform --show
 ```
 
 See the [Installation Guide](installation.md) for Docker, Nix, and platform-specific instructions, or jump straight into the [Usage Guide](usage-guide.md).

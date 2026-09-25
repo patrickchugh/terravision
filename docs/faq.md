@@ -137,11 +137,13 @@ Or use `--workspace` to target a specific Terraform workspace.
 
 ### Which cloud providers are supported?
 
-| Provider     | Status      | Scope                                                  |
-| ------------ | ----------- | ------------------------------------------------------ |
-| AWS          | Full        | 200+ services (compute, networking, storage, data, …)  |
-| Google Cloud | Partial     | Core services (GCE, GKE, Cloud SQL, VPC, Load Balancer, …) |
-| Azure        | Partial     | Core services (VM, VMSS, AKS, VNet, Load Balancer, …)  |
+| Provider         | Status          | Resource types |
+| ---------------- | --------------- | -------------- |
+| **AWS**          | ✅ Full support | 385 types      |
+| **Google Cloud** | ✅ Full support | 264 types      |
+| **Azure**        | ✅ Full support | 245 types      |
+
+The full list is on the [Node types](node-types.md) page.
 
 ### Can I use it for multi-cloud architectures?
 

@@ -3,13 +3,13 @@
 ## System Requirements
 
 - **Python 3.10+**
-- **Terraform 1.x** (v1.0.0 or higher) — not required when using `--planfile` mode
+- **Terraform 1.x** (v1.0.0 or higher) — not required for [JSON graph](graph-format.md) sources or `--planfile` mode
 - **Git**
 - **Graphviz**
 - **Ollama** (Optional — only for local AI refinement)
 - **wslu** (Optional — required only on WSL if you use `--show` to auto-open diagrams)
 
-> **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](usage-guide.md#pre-generated-plan-input) for details.
+> **Note**: If you use the `--planfile` and `--graphfile` options to provide pre-generated Terraform outputs, Terraform itself does not need to be installed. Only Python, Graphviz, and Git are required. See the [Usage Guide](usage-guide.md#pre-generated-plan-input) for details. The same applies when drawing from a [JSON graph](graph-format.md) (`.tvg.json`), which never runs Terraform.
 
 ---
 

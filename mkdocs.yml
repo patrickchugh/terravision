@@ -101,6 +101,7 @@ nav:
       - Annotations: annotations.md
       - CI/CD Integration: cicd-integration.md
       - MCP Server: mcp-server.md
+      - llms.txt for AI agents: https://patrickchugh.github.io/terravision/llms.txt
   - Help:
       - FAQ: faq.md
       - Troubleshooting: troubleshooting.md
