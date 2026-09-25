@@ -135,3 +135,42 @@ jobs:
 
       - name: Publish server to MCP Registry
         run: ./mcp-publisher publish
+
+  publish-desktop-extension:
+    # Builds the Claude Desktop extension (.mcpb) and the skill .zip and
+    # attaches them to this tag's GitHub release, creating a draft release
+    # when there is none yet (it stays private until published by hand). The
+    # extension installs this exact version from PyPI, so it runs after the
+    # PyPI publish.
+    needs: publish
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up node
+        # Runs the official @anthropic-ai/mcpb CLI that validates and packs
+        # the bundle.
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build the extension and the skill zip
+        run: python scripts/build_mcpb.py
+
+      - name: Attach them to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || \
+            gh release create "$TAG" --draft --title "$TAG" --notes "Release notes to follow."
+          gh release upload "$TAG" dist/*.mcpb dist/*-skill-*.zip --clobber

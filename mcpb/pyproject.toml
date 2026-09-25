@@ -1,0 +1,12 @@
+# Dependencies Claude Desktop installs with uv when it runs this extension.
+# The version is filled in by scripts/build_mcpb.py so the extension always
+# runs the TerraVision release it was built with.
+[project]
+name = "terravision-claude-desktop"
+version = "__VERSION__"
+description = "Claude Desktop extension for TerraVision"
+requires-python = ">=3.11"
+dependencies = ["terravision[mcp]==__VERSION__"]
+
+[tool.uv]
+package = false

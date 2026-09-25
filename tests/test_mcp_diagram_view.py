@@ -301,3 +301,30 @@ def test_open_tool_refuses_unknown_files(outdir, client_call):
     )
     assert result.is_error
     assert "not a diagram file" in result.content[0].text
+
+
+# ── The Claude Desktop extension (mcpb/) ────────────────────────────
+
+MCPB = Path(__file__).resolve().parents[1] / "mcpb"
+
+
+def test_extension_manifest_matches_the_server(client_call):
+    manifest = json.loads((MCPB / "manifest.json").read_text())
+    assert manifest["version"] == "__VERSION__"
+    assert manifest["server"]["type"] == "uv"
+    args = manifest["server"]["mcp_config"]["args"]
+    assert args[args.index("--output-dir") + 1] == "${user_config.output_dir}"
+    assert manifest["user_config"]["output_dir"]["type"] == "directory"
+    listed = {t["name"] for t in manifest["tools"]}
+    served = {t.name for t in client_call(lambda c: c.list_tools()).tools}
+    # diagram_file only serves the view, so it is not advertised to users.
+    assert listed == served - {"diagram_file"}
+
+
+def test_extension_pins_the_release_and_runs_the_mcp_command():
+    import tomllib
+
+    project = tomllib.loads((MCPB / "pyproject.toml").read_text())["project"]
+    assert project["dependencies"] == ["terravision[mcp]==__VERSION__"]
+    entry = (MCPB / "src" / "server.py").read_text()
+    assert '["terravision", "mcp", *sys.argv[1:]]' in entry

@@ -1,0 +1,74 @@
+{
+  "manifest_version": "0.4",
+  "name": "terravision",
+  "display_name": "TerraVision",
+  "version": "__VERSION__",
+  "description": "Professional cloud architecture diagrams with the official AWS, Azure and GCP icons, from a description or from Terraform code.",
+  "long_description": "Ask Claude for a cloud architecture diagram and TerraVision draws it with the official AWS, Azure and GCP icon sets, grouping resources into VPCs, subnets, resource groups and zones the way a cloud architect would.\n\nThe diagram appears right in the chat, with zoom and buttons to open the image, edit it in draw.io, show it in its folder or copy the graph JSON. Every diagram is saved as a PNG, an SVG, an editable draw.io file and a `.tvg.json` graph you can change and render again.\n\nWorks from a plain description (no Terraform needed) or from Terraform code, where the diagram is derived from `terraform plan`.\n\n**Requires Graphviz and Git** on your computer (macOS: `brew install graphviz git`; Windows: `winget install --id Graphviz.Graphviz`; Linux: `sudo apt install graphviz git`). Drawing from Terraform code also needs Terraform or OpenTofu.",
+  "author": {
+    "name": "Patrick Chugh",
+    "url": "https://github.com/patrickchugh"
+  },
+  "homepage": "https://github.com/patrickchugh/terravision",
+  "documentation": "https://patrickchugh.github.io/terravision/",
+  "support": "https://github.com/patrickchugh/terravision/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patrickchugh/terravision"
+  },
+  "icon": "icon.png",
+  "license": "AGPL-3.0-only",
+  "keywords": ["architecture", "diagram", "aws", "azure", "gcp", "terraform", "cloud", "drawio"],
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "src/server.py",
+        "--output-dir",
+        "${user_config.output_dir}"
+      ]
+    }
+  },
+  "user_config": {
+    "output_dir": {
+      "type": "directory",
+      "title": "Diagram folder",
+      "description": "Where TerraVision saves your diagrams (PNG, SVG, draw.io and the graph JSON).",
+      "default": "${DOCUMENTS}/TerraVision",
+      "required": false
+    }
+  },
+  "tools": [
+    {
+      "name": "render_graph",
+      "description": "Draw a cloud architecture diagram from a JSON graph of services and connections; no Terraform needed."
+    },
+    {
+      "name": "generate_diagram",
+      "description": "Draw a cloud architecture diagram from Terraform code, derived from terraform plan."
+    },
+    {
+      "name": "generate_architecture_graph",
+      "description": "Extract the architecture of Terraform code as structured data."
+    },
+    {
+      "name": "generate_interactive_html",
+      "description": "Create a self-contained interactive HTML diagram to explore in a browser."
+    },
+    {
+      "name": "open_diagram_file",
+      "description": "Open a rendered diagram in its default app, or show it in its folder."
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  }
+}
