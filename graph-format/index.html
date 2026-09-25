@@ -564,6 +564,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#drawn-as-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drawn as written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#full-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1416,6 +1427,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#drawn-as-written" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drawn as written
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#full-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1490,22 +1512,81 @@
 </span></code></pre></div>
 <p>Render it:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg<span class="w">     </span><span class="c1"># also png, pdf, dot, drawio</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--title<span class="w"> </span><span class="s2">"Order Platform - Production"</span>
 </span></code></pre></div>
 <p>Only Graphviz and Git are required for this mode, the same minimum as every TerraVision command. Terraform is not invoked and does not need to be installed.</p>
 <h2 id="file-extension">File extension<a class="headerlink" href="#file-extension" title="Permanent link">¶</a></h2>
 <p>Save TVG files with the <code>.tvg.json</code> extension, for example <code>architecture.tvg.json</code>. It is still a JSON file, so every editor and JSON tool handles it, and the <code>.tvg</code> part marks it as a TerraVision Graph. TerraVision also accepts any other file ending in <code>.json</code>. <code>terravision graphdata</code> and the MCP <code>render_graph</code> tool both write <code>.tvg.json</code> files.</p>
 <h2 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">¶</a></h2>
 <ol>
-<li><strong>Node address</strong> = <code>&lt;type&gt;.&lt;name&gt;</code>. The type picks the icon. See <a href="../node-types/">node-types.md</a> for the full list; unknown types get a generic icon for their provider. Pick the specific type where Terraform has a generic one: use <code>aws_alb</code> (Application Load Balancer) or <code>aws_nlb</code> (Network Load Balancer) rather than <code>aws_lb</code>, which draws the generic Elastic Load Balancing icon because a graph file carries no <code>load_balancer_type</code>.</li>
-<li><strong>Connections vs containment.</strong> If the source node is a container (VPC, subnet, security group, resource group, virtual network, region, zone, <code>aws_group</code>, <code>aws_az</code>), its targets are drawn <em>inside</em> it. Otherwise an arrow is drawn from source to target.</li>
-<li><strong>Leaf nodes</strong> that only appear as targets may be left out as keys; they are drawn as nodes with no outgoing connections. Listing them with <code>[]</code> is equivalent, and is the complete form that <code>terravision graphdata</code> writes. When a node has numbered copies, target the copies (<code>aws_subnet.private~1</code>): an unnumbered name next to its numbered copies is treated as a stale reference and not drawn.</li>
-<li><strong>Numbered copies.</strong> Append <code>~1</code>, <code>~2</code>, ... to make distinct instances that share a name, typically one per availability zone.</li>
-<li><strong>External actors.</strong> Use pseudo-types: <code>tv_aws_users</code>, <code>tv_aws_internet</code>, <code>tv_aws_mobile_client</code>, <code>tv_aws_onprem</code>, <code>tv_azurerm_users</code>, <code>tv_azurerm_internet</code>, <code>tv_azure_onprem</code>, <code>tv_gcp_users_icon</code>. For GCP, <code>tv_gcp_users</code>, <code>tv_gcp_onprem</code> and <code>tv_gcp_external_saas</code> are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.</li>
-<li><strong>Regions and zones.</strong> <code>tv_aws_region.&lt;name&gt;</code>, <code>aws_az.&lt;name&gt;</code>, <code>tv_azurerm_zone.&lt;name&gt;</code>, <code>tv_gcp_region.&lt;name&gt;</code>, <code>tv_gcp_zone.&lt;name&gt;</code> are containers.</li>
-<li><strong>Modules.</strong> Prefix an address with <code>module.&lt;modname&gt;.</code> to group nodes under a module boundary.</li>
-<li><strong>Provider.</strong> The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) is detected from the resource type prefixes. Multi-cloud graphs are allowed.</li>
-<li><strong>Labels.</strong> Names are prettified automatically (<code>aws_db_instance.postgres~1</code> becomes "DB Instance Postgres"). Pass <code>--use-tf-names</code> to label with the raw address instead.</li>
+<li>
+<p><strong>Node address</strong> = <code>&lt;type&gt;.&lt;name&gt;</code>. The type picks the icon. See <a href="../node-types/">node-types.md</a> for the full list; unknown types, including misspelt ones, get a generic icon for their provider without any error. Pick the specific type where Terraform has a generic one, because a graph file carries no attributes to refine it:</p>
+<table>
+<thead>
+<tr>
+<th>For</th>
+<th>Use</th>
+<th>Not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Application / Network Load Balancer</td>
+<td><code>aws_alb</code>, <code>aws_nlb</code></td>
+<td><code>aws_lb</code> (generic Elastic Load Balancing icon)</td>
+</tr>
+<tr>
+<td>ECS on Fargate</td>
+<td><code>aws_ecs_fargate</code></td>
+<td><code>aws_ecs_service</code> (generic ECS icon)</td>
+</tr>
+<tr>
+<td>RDS by engine</td>
+<td><code>aws_rds_postgres</code>, <code>aws_rds_mysql</code>, <code>aws_rds_sqlserver</code>, <code>aws_rds_oracle</code>, <code>aws_rds_mariadb</code>, <code>aws_rds_aurora</code></td>
+<td><code>aws_db_instance</code> (generic RDS icon)</td>
+</tr>
+<tr>
+<td>EKS cluster</td>
+<td><code>aws_eks_service</code></td>
+<td><code>aws_eks_cluster</code> (draws EC2 instances)</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Connections vs containment.</strong> If the source node is a container, its targets are drawn <em>inside</em> it. Otherwise an arrow is drawn from source to target. Container types:</p>
+<ul>
+<li>AWS: <code>aws_vpc</code>, <code>aws_subnet</code>, <code>aws_az</code>, <code>aws_security_group</code>, <code>aws_autoscaling_group</code>, <code>aws_appautoscaling_target</code>, <code>aws_group</code>, <code>aws_account</code>, <code>tv_aws_region</code>, <code>tv_aws_onprem</code></li>
+<li>Azure: <code>azurerm_resource_group</code>, <code>azurerm_virtual_network</code>, <code>azurerm_subnet</code>, <code>azurerm_group</code>, <code>tv_azurerm_zone</code>, <code>tv_azure_onprem</code></li>
+<li>GCP: <code>google_project</code>, <code>google_compute_network</code>, <code>google_compute_subnetwork</code>, <code>google_container_cluster</code>, <code>google_container_node_pool</code>, <code>google_compute_instance_group</code>, <code>google_compute_firewall</code>, <code>tv_gcp_region</code>, <code>tv_gcp_zone</code>, and the <code>tv_gcp_*</code> group boxes in rule 5</li>
+</ul>
+<p>Some of these read like single services but are boxes: "<code>google_container_cluster.gke</code> → <code>google_sql_database_instance.db</code>" draws Cloud SQL <em>inside</em> a GKE box, and an autoscaling group or security group contains its instances. To show a connection to one of them, point the arrow at a node inside it.
+3. <strong>Leaf nodes</strong> that only appear as targets may be left out as keys; they are drawn as nodes with no outgoing connections. Listing them with <code>[]</code> is equivalent, and is the complete form that <code>terravision graphdata</code> writes. When a node has numbered copies, target the copies (<code>aws_subnet.private~1</code>): an unnumbered name next to its numbered copies can be drawn as an extra, separate node.
+4. <strong>Numbered copies.</strong> Append <code>~1</code>, <code>~2</code>, ... to make distinct instances that share a name, typically one per availability zone.
+5. <strong>External actors.</strong> Use pseudo-types: <code>tv_aws_users</code>, <code>tv_aws_internet</code>, <code>tv_aws_mobile_client</code>, <code>tv_aws_onprem</code>, <code>tv_azurerm_users</code>, <code>tv_azurerm_internet</code>, <code>tv_azure_onprem</code>, <code>tv_gcp_users_icon</code>. For GCP, <code>tv_gcp_users</code>, <code>tv_gcp_onprem</code> and <code>tv_gcp_external_saas</code> are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.
+6. <strong>Regions and zones.</strong> <code>tv_aws_region.&lt;name&gt;</code>, <code>aws_az.&lt;name&gt;</code>, <code>tv_azurerm_zone.&lt;name&gt;</code>, <code>tv_gcp_region.&lt;name&gt;</code>, <code>tv_gcp_zone.&lt;name&gt;</code> are containers.
+7. <strong>Modules.</strong> Prefix an address with <code>module.&lt;modname&gt;.</code> to group nodes under a module boundary.
+8. <strong>One provider per graph.</strong> The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) and its drawing conventions come from the resource type prefixes. A graph that mixes <code>aws_*</code>, <code>azurerm_*</code> and <code>google_*</code> resources (including their <code>tv_*</code> actors) is rejected with an error; draw one diagram per provider.
+9. <strong>Labels and title.</strong> Names are prettified automatically (<code>aws_db_instance.postgres~1</code> becomes "DB Instance Postgres"). Use lowercase snake_case names: hyphens and capitals are mangled (<code>Orders-Table</code> becomes "Orders"). Pass <code>--use-tf-names</code> to label with the raw address instead. The graph cannot carry a title; pass <code>--title</code> (or <code>title</code> to the MCP tools), otherwise the heading is "Cloud Architecture Diagram".</p>
+</li>
 </ol>
+<h2 id="drawn-as-written">Drawn as written<a class="headerlink" href="#drawn-as-written" title="Permanent link">¶</a></h2>
+<p>TerraVision draws a graph file as written. Unlike a diagram from Terraform code, nothing is added, moved, grouped or merged for you. A few drawing rules still apply and explain most surprises:</p>
+<ul>
+<li>
+<p><strong>Shared services have no arrows.</strong> Arrows to or from these types are not drawn, because almost everything talks to them and the lines would cover the diagram:</p>
+<ul>
+<li>AWS: <code>aws_cloudwatch_log_group</code>, <code>aws_ecr_repository</code>, <code>aws_acm_certificate</code>, <code>aws_kms_key</code>, <code>aws_ssm_parameter</code>, <code>aws_efs_file_system</code>, <code>aws_eip</code></li>
+<li>Azure: <code>azurerm_key_vault</code>, <code>azurerm_monitor</code>, <code>azurerm_log_analytics_workspace</code>, <code>azurerm_container_registry</code>, <code>azurerm_storage_account</code></li>
+<li>GCP: <code>google_kms_key_ring</code>, <code>google_logging_project_sink</code>, <code>google_monitoring_dashboard</code>, <code>google_container_registry</code>, <code>google_secret_manager_secret</code></li>
+</ul>
+<p>On AWS and Azure, list them in <code>aws_group.shared_services</code> or <code>azurerm_group.shared_services</code> to draw them together in a Shared Services box; otherwise they float on their own. A few source types, such as <code>aws_ecs_service</code> and <code>aws_alb</code>, keep their arrows to a shared service.
+- <strong>Arrows to a container are not drawn.</strong> <code>aws_lambda_function.fn → aws_vpc.main</code> shows nothing; point at a node inside the container.
+- <strong>A node sits in one container.</strong> Listing it under two subnets draws it in only one of them; use numbered copies (<code>aws_alb.web~1</code>, <code>aws_alb.web~2</code>) for one per subnet.
+- <strong>Two-way connections draw one arrow.</strong> If A lists B and B lists A, only one direction is shown; list the main direction of flow.
+- <strong>Nesting is literal.</strong> Edge services (CloudFront, Route 53, API Gateway, WAF) and external actors stay wherever you nest them, so keep them at the top level rather than inside a VPC or subnet. Containers with nothing in them are not drawn.</p>
+</li>
+</ul>
 <h2 id="full-examples">Full examples<a class="headerlink" href="#full-examples" title="Permanent link">¶</a></h2>
 <table>
 <thead>
@@ -1540,6 +1621,7 @@
 </table>
 <h2 id="why-not-mermaid">Why not Mermaid?<a class="headerlink" href="#why-not-mermaid" title="Permanent link">¶</a></h2>
 <p>Mermaid draws boxes and arrows. It has no notion of the AWS, Azure or GCP icon sets, of VPC and subnet nesting, or of the layout conventions cloud architects expect. TerraVision produces the diagram a cloud architect would draw by hand, from a JSON file an LLM can emit in one shot.</p>
+<p>That advantage only applies to cloud infrastructure. For sequence diagrams, flowcharts, class or ER diagrams, code structure or anything that is not AWS, Azure or GCP resources, Mermaid or a similar tool remains the right choice.</p>
 <h2 id="getting-the-graph-from-real-infrastructure-instead">Getting the graph from real infrastructure instead<a class="headerlink" href="#getting-the-graph-from-real-infrastructure-instead" title="Permanent link">¶</a></h2>
 <p>If you have Terraform, <code>terravision graphdata --source ./tf --outfile architecture.tvg.json</code> exports the real graph in exactly this format, so the same tooling works for diagrams of what is actually deployed.</p>
 

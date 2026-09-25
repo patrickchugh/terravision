@@ -1802,8 +1802,9 @@ connects to or contains; the <a href="../graph-format/">Graph Format</a> page ha
 <a href="../node-types/">node types</a> page the icons. The graph is saved as <code>&lt;outfile&gt;.tvg.json</code> in the
 output directory and rendered exactly as <code>terravision draw --source &lt;that file&gt;</code> would, so the two
 paths cannot drift. Returns <code>{path, format, provider, graph_path, node_count, edge_count}</code>.</p>
-<p>Takes <code>format</code>, <code>outfile</code>, <code>fontsize</code> and <code>iconsize</code>. Needs only Graphviz and Git: no Terraform, no
-credentials, no <code>source</code>.</p>
+<p>Takes <code>format</code>, <code>outfile</code>, <code>fontsize</code>, <code>iconsize</code> and <code>title</code>. Needs only Graphviz and Git: no
+Terraform, no credentials, no <code>source</code>. A graph that mixes providers (<code>aws_*</code> with <code>azurerm_*</code> or
+<code>google_*</code>) is rejected; draw one diagram per provider.</p>
 <h3 id="generate_architecture_graph"><code>generate_architecture_graph</code><a class="headerlink" href="#generate_architecture_graph" title="Permanent link">¶</a></h3>
 <p>Equivalent to <code>terravision graphdata</code>. Returns the architecture as structured data — the tool to use
 for reasoning about a stack rather than looking at it.</p>
@@ -1854,7 +1855,7 @@ searchable nodes and all resource metadata embedded, so it opens offline. Return
 </tbody>
 </table>
 <p><code>generate_diagram</code> and <code>generate_interactive_html</code> also take <code>outfile</code>, <code>use_tf_names</code>,
-<code>use_resource_names</code>, <code>fontsize</code> and <code>iconsize</code>.</p>
+<code>use_resource_names</code>, <code>fontsize</code>, <code>iconsize</code> and <code>title</code> (overrides a title in the annotation file).</p>
 <h2 id="things-worth-knowing">Things worth knowing<a class="headerlink" href="#things-worth-knowing" title="Permanent link">¶</a></h2>
 <p><strong>Tools return paths, not file contents.</strong> This matches the CLI. To inspect a generated <code>.drawio</code> or
 <code>.svg</code>, read the returned path.</p>
