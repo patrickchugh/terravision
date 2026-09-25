@@ -2080,7 +2080,7 @@ Sync Impact Report:
 <p><strong>Rationale</strong>: AG-006 through AG-008 exist because a server outlives a single command, which invalidates assumptions the CLI is entitled to make — process-global state is set once and never reset, <code>exit()</code> is a legitimate way to end a run, and stdout is free for human-readable progress. AG-008 is recorded specifically because a replay-only test suite passed while a real Terraform source silently wrote its diagram to the wrong directory. It requires the behaviour to be covered rather than requiring Terraform to be run, because the marker that identifies a slow test does not exclude it from CI — only from the pre-commit hook — so mandating live Terraform runs would tax every future build for coverage obtainable more cheaply.</p>
 <h3 id="supported-technologies">Supported Technologies<a class="headerlink" href="#supported-technologies" title="Permanent link">¶</a></h3>
 <ul>
-<li><strong>Language</strong>: Python 3.10+</li>
+<li><strong>Language</strong>: Python 3.11+</li>
 <li><strong>Required Dependencies</strong>: Terraform 1.x, Git, Graphviz</li>
 <li><strong>Optional Dependencies</strong>: Ollama (for local AI), AWS Bedrock (for cloud AI), <code>mcp</code> (for the MCP server, installed via the <code>[mcp]</code> extra)</li>
 <li><strong>Input Formats</strong>: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON</li>

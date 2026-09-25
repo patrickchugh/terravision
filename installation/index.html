@@ -749,6 +749,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#using-uv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using uv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#using-pip-if-youre-already-in-a-virtualenv" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1827,6 +1838,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#using-uv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using uv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#using-pip-if-youre-already-in-a-virtualenv" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2147,7 +2169,7 @@
 <h1 id="installation-guide">Installation Guide<a class="headerlink" href="#installation-guide" title="Permanent link">¶</a></h1>
 <h2 id="system-requirements">System Requirements<a class="headerlink" href="#system-requirements" title="Permanent link">¶</a></h2>
 <ul>
-<li><strong>Python 3.10+</strong></li>
+<li><strong>Python 3.11+</strong> (not needed separately if you install with <a href="#using-uv">uv</a>, which fetches one)</li>
 <li><strong>Terraform 1.x</strong> (v1.0.0 or higher) — not required for <a href="../graph-format/">JSON graph</a> sources or <code>--planfile</code> mode</li>
 <li><strong>Git</strong></li>
 <li><strong>Graphviz</strong></li>
@@ -2168,35 +2190,46 @@
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>graphviz
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libgvplugin-neato-layout8
 </span></code></pre></div><p></p>
-<p><strong>Windows:</strong>
-Download from https://graphviz.org/download/</p>
+<p><strong>Fedora/RHEL:</strong>
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>graphviz
+</span></code></pre></div><p></p>
+<p><strong>Windows:</strong> any one of these, or the installer from https://graphviz.org/download/
+</p><div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Graphviz</span><span class="p">.</span><span class="n">Graphviz</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">choco</span> <span class="n">install</span> <span class="n">graphviz</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">graphviz</span>
+</span></code></pre></div>
+Open a new terminal afterwards. If <code>dot</code> is still not found, add <code>C:\Program Files\Graphviz\bin</code> to your PATH.<p></p>
 <p><strong>Verify installation:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dot<span class="w"> </span>-V
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>dot<span class="w"> </span>-V
 </span></code></pre></div><p></p>
 <h3 id="git">Git<a class="headerlink" href="#git" title="Permanent link">¶</a></h3>
 <p>Most systems have Git pre-installed. Verify:
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>--version
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>--version
 </span></code></pre></div><p></p>
-<p>If not installed, download from https://git-scm.com/downloads</p>
+<p>If not installed: <code>brew install git</code> (macOS), <code>sudo apt install git</code> (Ubuntu/Debian), <code>sudo dnf install git</code> (Fedora/RHEL), <code>winget install --id Git.Git</code> or <code>choco install git</code> (Windows), or download from https://git-scm.com/downloads</p>
 <h3 id="terraform">Terraform<a class="headerlink" href="#terraform" title="Permanent link">¶</a></h3>
 <p><strong>macOS:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>brew<span class="w"> </span>tap<span class="w"> </span>hashicorp/tap
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/terraform
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>brew<span class="w"> </span>tap<span class="w"> </span>hashicorp/tap
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/terraform
 </span></code></pre></div><p></p>
 <p><strong>Ubuntu/Debian:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>wget<span class="w"> </span>-O-<span class="w"> </span>https://apt.releases.hashicorp.com/gpg<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/hashicorp-archive-keyring.gpg
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com </span><span class="k">$(</span>lsb_release<span class="w"> </span>-cs<span class="k">)</span><span class="s2"> main"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/apt/sources.list.d/hashicorp.list
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>terraform
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>wget<span class="w"> </span>-O-<span class="w"> </span>https://apt.releases.hashicorp.com/gpg<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/hashicorp-archive-keyring.gpg
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com </span><span class="k">$(</span>lsb_release<span class="w"> </span>-cs<span class="k">)</span><span class="s2"> main"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/apt/sources.list.d/hashicorp.list
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>terraform
 </span></code></pre></div><p></p>
-<p><strong>Windows:</strong>
-Download from https://developer.hashicorp.com/terraform/downloads</p>
+<p><strong>Windows:</strong> any one of these, or the download from https://developer.hashicorp.com/terraform/install
+</p><div class="language-powershell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Hashicorp</span><span class="p">.</span><span class="n">Terraform</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">choco</span> <span class="n">install</span> <span class="n">terraform</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">scoop</span> <span class="n">install</span> <span class="n">terraform</span>
+</span></code></pre></div><p></p>
+<p><strong>OpenTofu</strong> works as a drop-in alternative: install it from https://opentofu.org/docs/intro/install/ (macOS: <code>brew install opentofu</code>) and pass <code>--engine tofu</code>, or leave <code>--engine auto</code> to detect whichever is installed.</p>
 <p><strong>Verify installation:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>terraform<span class="w"> </span>version
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># Must show v1.0.0 or higher</span>
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>terraform<span class="w"> </span>version
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># Must show v1.0.0 or higher</span>
 </span></code></pre></div><p></p>
 <h3 id="wsl-windows-subsystem-for-linux">WSL (Windows Subsystem for Linux)<a class="headerlink" href="#wsl-windows-subsystem-for-linux" title="Permanent link">¶</a></h3>
 <p>If you run TerraVision under WSL <strong>and</strong> intend to use the <code>--show</code> flag to auto-open generated diagrams, install <code>wslu</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>wslu
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>wslu
 </span></code></pre></div>
 <p><strong>Why:</strong> WSL ships without a real Linux desktop, so the standard <code>xdg-open</code> lookup chain has no application database to consult and fails silently. The <code>wslu</code> package provides <code>wslview</code>, which calls back into Windows and uses your host file associations (PNG → Photos, SVG → browser, etc.). TerraVision automatically detects WSL at runtime and routes opens through <code>wslview</code>; without it the diagram still gets generated correctly, you just have to open the file yourself.</p>
 <p>If <code>wslu</code> isn't installed, TerraVision prints a one-line <code>sudo apt install wslu</code> hint when <code>--show</code> is used. You can also skip <code>--show</code> entirely and open the output file from Windows Explorer or your editor.</p>
@@ -2206,65 +2239,82 @@ Download from https://developer.hashicorp.com/terraform/downloads</p>
 <p>TerraVision is published to PyPI, so a single command installs the CLI and wires it up on your PATH on macOS, Linux, and Windows.</p>
 <h4 id="using-pipx-preferred-isolated-environment">Using <code>pipx</code> (preferred — isolated environment)<a class="headerlink" href="#using-pipx-preferred-isolated-environment" title="Permanent link">¶</a></h4>
 <p><a href="https://pipx.pypa.io/"><code>pipx</code></a> installs the CLI into its own isolated virtualenv so it can't clash with other Python tooling on your system.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Install pipx first if you don't have it</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># macOS:          brew install pipx &amp;&amp; pipx ensurepath</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># Ubuntu/Debian:  sudo apt install pipx &amp;&amp; pipx ensurepath</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Windows:        python -m pip install --user pipx &amp;&amp; python -m pipx ensurepath</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>terravision<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Install pipx first if you don't have it</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># macOS:          brew install pipx &amp;&amp; pipx ensurepath</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Ubuntu/Debian:  sudo apt install pipx &amp;&amp; pipx ensurepath</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Windows:        python -m pip install --user pipx &amp;&amp; python -m pipx ensurepath</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>terravision<span class="w"> </span>--version
 </span></code></pre></div>
+<h4 id="using-uv">Using <code>uv</code><a class="headerlink" href="#using-uv" title="Permanent link">¶</a></h4>
+<p><a href="https://docs.astral.sh/uv/"><code>uv</code></a> also installs the CLI into its own environment, and downloads a suitable Python if yours is older than 3.11.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Install uv first if you don't have it</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1"># macOS/Linux:  curl -LsSf https://astral.sh/uv/install.sh | sh   (or: brew install uv)</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1"># Windows:      powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>terravision
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>terravision<span class="w"> </span>--version
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="c1"># Or run it without installing</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>uvx<span class="w"> </span>terravision<span class="w"> </span>--version
+</span></code></pre></div>
+<p>If <code>terravision</code> is not found afterwards, run <code>uv tool update-shell</code> and open a new terminal.</p>
 <h4 id="using-pip-if-youre-already-in-a-virtualenv">Using <code>pip</code> (if you're already in a virtualenv)<a class="headerlink" href="#using-pip-if-youre-already-in-a-virtualenv" title="Permanent link">¶</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>terravision<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>terravision<span class="w"> </span>--version
 </span></code></pre></div>
+<p>Outside a virtualenv, recent Ubuntu, Debian and Homebrew Pythons refuse <code>pip install</code> with an <code>externally-managed-environment</code> error. Create one first (<code>python3 -m venv ~/.venvs/terravision</code>, then use <code>~/.venvs/terravision/bin/pip</code>), or use pipx or uv.</p>
 <div class="admonition tip">
 <p class="admonition-title">Upgrading</p>
-<p><code>pipx upgrade terravision</code> or <code>pip install --upgrade terravision</code> pulls the latest release from PyPI.</p>
+<p><code>pipx upgrade terravision</code>, <code>uv tool upgrade terravision</code> or <code>pip install --upgrade terravision</code> pulls the latest release from PyPI.</p>
 </div>
 <h4 id="optional-mcp-server-support">Optional: MCP server support<a class="headerlink" href="#optional-mcp-server-support" title="Permanent link">¶</a></h4>
 <p>To let AI agents drive TerraVision via the <a href="../mcp-server/">Model Context Protocol</a>, install the <code>mcp</code> extra:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># pipx, new install</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># pipx, existing install (pip install won't work inside a pipx environment)</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>pipx<span class="w"> </span>inject<span class="w"> </span>terravision<span class="w"> </span>mcp
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># pip</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># pipx, new install</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># pipx, existing install (pip install won't work inside a pipx environment)</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>pipx<span class="w"> </span>inject<span class="w"> </span>terravision<span class="w"> </span>mcp
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># uv, new or existing install</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># pip</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"terravision[mcp]"</span>
 </span></code></pre></div>
 <p>Then <code>terravision mcp --help</code> should work. Without the extra, every other command is unaffected.</p>
 <h3 id="method-2-docker-zero-setup">Method 2: Docker (Zero Setup)<a class="headerlink" href="#method-2-docker-zero-setup" title="Permanent link">¶</a></h3>
 <p>If you don't want to install Python, Graphviz, and Terraform locally, you can run everything inside the official Docker image. This is also the recommended method for containerized CI/CD systems.</p>
 <h4 id="pull-the-image">Pull the image<a class="headerlink" href="#pull-the-image" title="Permanent link">¶</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>patrickchugh/terravision:latest
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>patrickchugh/terravision:latest
 </span></code></pre></div>
 <p>Or build it yourself:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>terravision
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>patrickchugh/terravision<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>terravision
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>patrickchugh/terravision<span class="w"> </span>.
 </span></code></pre></div>
 <h4 id="run-it-against-your-terraform-code">Run it against your Terraform code<a class="headerlink" href="#run-it-against-your-terraform-code" title="Permanent link">¶</a></h4>
 <p>Mount your project into the container so it can see your <code>.tf</code> files and write output back:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Local directory</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span>patrickchugh/terravision<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/<span class="w"> </span>--varfile<span class="w"> </span>/project/your.tfvars
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Remote Git repository with subfolder</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span>patrickchugh/terravision<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span>draw<span class="w"> </span>--source<span class="w"> </span>https://github.com/your-repo/terraform-examples.git//mysubfolder/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Local directory</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span>patrickchugh/terravision<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/<span class="w"> </span>--varfile<span class="w"> </span>/project/your.tfvars
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="c1"># Remote Git repository with subfolder</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span>patrickchugh/terravision<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">  </span>draw<span class="w"> </span>--source<span class="w"> </span>https://github.com/your-repo/terraform-examples.git//mysubfolder/
 </span></code></pre></div>
 <h4 id="passing-cloud-credentials">Passing cloud credentials<a class="headerlink" href="#passing-cloud-credentials" title="Permanent link">¶</a></h4>
 <p>If Terraform needs credentials to run <code>terraform plan</code>, pass them into the container. For AWS:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Mount your AWS credentials folder</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>-v<span class="w"> </span>~/.aws:/home/terravision/.aws:ro<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># Or pass credentials as environment variables</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span>your-access-key<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span>your-secret-key<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Mount your AWS credentials folder</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>-v<span class="w"> </span>~/.aws:/home/terravision/.aws:ro<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1"># Or pass credentials as environment variables</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span>your-access-key<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span>your-secret-key<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Skip credentials entirely</p>
@@ -2272,133 +2322,133 @@ Download from https://developer.hashicorp.com/terraform/downloads</p>
 </div>
 <h4 id="pinning-a-terraform-version">Pinning a Terraform version<a class="headerlink" href="#pinning-a-terraform-version" title="Permanent link">¶</a></h4>
 <p>The image includes <code>tfenv</code>, so you can install and select a specific Terraform version at runtime via <code>TFENV_TERRAFORM_VERSION</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">TFENV_TERRAFORM_VERSION</span><span class="o">=</span><span class="m">1</span>.9.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">:/project"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">TFENV_TERRAFORM_VERSION</span><span class="o">=</span><span class="m">1</span>.9.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>patrickchugh/terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/project/yourfiles/
 </span></code></pre></div>
 <p>If <code>TFENV_TERRAFORM_VERSION</code> is omitted, the container runs <code>terravision</code> directly with the image's default Terraform.</p>
 <h3 id="method-3-nix-reproducible-shell">Method 3: Nix (Reproducible Shell)<a class="headerlink" href="#method-3-nix-reproducible-shell" title="Permanent link">¶</a></h3>
 <p>If you have <a href="https://nixos.org/download/">Nix</a> installed with flakes enabled, you can get a fully reproducible development shell with TerraVision and every dependency pinned.</p>
 <h4 id="enter-a-dev-shell">Enter a dev shell<a class="headerlink" href="#enter-a-dev-shell" title="Permanent link">¶</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>terravision
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>nix<span class="w"> </span>develop
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>terravision
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>nix<span class="w"> </span>develop
 </span></code></pre></div>
 <p>This gives you <code>terravision</code>, <code>graphviz</code>, <code>terraform</code>, and <code>git</code> in your PATH with no system-level install needed.</p>
 <h4 id="one-shot-run-without-cloning">One-shot run without cloning<a class="headerlink" href="#one-shot-run-without-cloning" title="Permanent link">¶</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>nix<span class="w"> </span>run<span class="w"> </span>github:patrickchugh/terravision<span class="w"> </span>--<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/path/to/terraform<span class="w"> </span>--show
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>nix<span class="w"> </span>run<span class="w"> </span>github:patrickchugh/terravision<span class="w"> </span>--<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>/path/to/terraform<span class="w"> </span>--show
 </span></code></pre></div>
 <h3 id="method-4-install-from-source-with-poetry-for-contributors">Method 4: Install from Source with Poetry (For Contributors)<a class="headerlink" href="#method-4-install-from-source-with-poetry-for-contributors" title="Permanent link">¶</a></h3>
 <p>Use this method if you plan to hack on TerraVision itself. It's the workflow used by CI and every maintainer.</p>
 <h4 id="install-poetry">Install Poetry<a class="headerlink" href="#install-poetry" title="Permanent link">¶</a></h4>
 <p><strong>macOS/Linux:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>curl<span class="w"> </span>-sSL<span class="w"> </span>https://install.python-poetry.org<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>curl<span class="w"> </span>-sSL<span class="w"> </span>https://install.python-poetry.org<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-
 </span></code></pre></div><p></p>
 <p><strong>Windows:</strong>
-</p><div class="language-powershell highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="p">(</span><span class="nb">Invoke-WebRequest</span> <span class="n">-Uri</span> <span class="n">https</span><span class="p">://</span><span class="n">install</span><span class="p">.</span><span class="n">python-poetry</span><span class="p">.</span><span class="n">org</span> <span class="n">-UseBasicParsing</span><span class="p">).</span><span class="n">Content</span> <span class="p">|</span> <span class="n">py</span> <span class="p">-</span>
+</p><div class="language-powershell highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">(</span><span class="nb">Invoke-WebRequest</span> <span class="n">-Uri</span> <span class="n">https</span><span class="p">://</span><span class="n">install</span><span class="p">.</span><span class="n">python-poetry</span><span class="p">.</span><span class="n">org</span> <span class="n">-UseBasicParsing</span><span class="p">).</span><span class="n">Content</span> <span class="p">|</span> <span class="n">py</span> <span class="p">-</span>
 </span></code></pre></div><p></p>
 <h4 id="install-terravision-with-poetry">Install TerraVision with Poetry<a class="headerlink" href="#install-terravision-with-poetry" title="Permanent link">¶</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Clone repository</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="nb">cd</span><span class="w"> </span>terravision
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="c1"># Install dependencies in an isolated virtual environment</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>poetry<span class="w"> </span>install
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1"># Activate the venv (drop the `poetry run` prefix for subsequent commands)</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="nb">eval</span><span class="w"> </span><span class="k">$(</span>poetry<span class="w"> </span>env<span class="w"> </span>activate<span class="k">)</span>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>terravision<span class="w"> </span>--version
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="c1"># Or use `poetry run` for individual commands without activating</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Clone repository</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/patrickchugh/terravision.git
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="nb">cd</span><span class="w"> </span>terravision
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="c1"># Install dependencies in an isolated virtual environment</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>poetry<span class="w"> </span>install
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="c1"># Activate the venv (drop the `poetry run` prefix for subsequent commands)</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="nb">eval</span><span class="w"> </span><span class="k">$(</span>poetry<span class="w"> </span>env<span class="w"> </span>activate<span class="k">)</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>terravision<span class="w"> </span>--version
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="c1"># Or use `poetry run` for individual commands without activating</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>poetry<span class="w"> </span>run<span class="w"> </span>terravision<span class="w"> </span>--version
 </span></code></pre></div>
 <p>See the <a href="../CONTRIBUTING/">Contributing Guide</a> for coding standards, tests, and the PR process.</p>
 <hr>
 <h2 id="step-3-verify-installation">Step 3: Verify Installation<a class="headerlink" href="#step-3-verify-installation" title="Permanent link">¶</a></h2>
 <p>Run a test to ensure everything is working:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Check TerraVision version</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>terravision<span class="w"> </span>--version
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># Check help</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>terravision<span class="w"> </span>--help
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># Verify all dependencies</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>terraform<span class="w"> </span>version
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>git<span class="w"> </span>--version
-</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>dot<span class="w"> </span>-V
-</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>python<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Check TerraVision version</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>terravision<span class="w"> </span>--version
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># Check help</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>terravision<span class="w"> </span>--help
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># Verify all dependencies</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>terraform<span class="w"> </span>version
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>git<span class="w"> </span>--version
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>dot<span class="w"> </span>-V
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>python<span class="w"> </span>--version
 </span></code></pre></div>
 <hr>
 <h2 id="optional-install-ollama-for-local-ai-refinement">Optional: Install Ollama (For Local AI Refinement)<a class="headerlink" href="#optional-install-ollama-for-local-ai-refinement" title="Permanent link">¶</a></h2>
 <p>If you want to use local AI-powered diagram refinement:</p>
 <h3 id="install-ollama">Install Ollama<a class="headerlink" href="#install-ollama" title="Permanent link">¶</a></h3>
 <p><strong>macOS:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ollama
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>brew<span class="w"> </span>install<span class="w"> </span>ollama
 </span></code></pre></div><p></p>
 <p><strong>Linux:</strong>
-</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://ollama.com/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</p><div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://ollama.com/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div><p></p>
 <p><strong>Windows:</strong>
 Download from https://ollama.com/download</p>
 <h3 id="setup-ollama">Setup Ollama<a class="headerlink" href="#setup-ollama" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Start Ollama server (runs automatically on macOS/Linux after install)</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>ollama<span class="w"> </span>serve
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Pull the default model (llama3)</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>ollama<span class="w"> </span>pull<span class="w"> </span>llama3
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># Optional: Keep model loaded longer (default is 5 minutes)</span>
-</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_KEEP_ALIVE</span><span class="o">=</span>1h
-</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>
-</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="c1"># Verify Ollama is running</span>
-</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Start Ollama server (runs automatically on macOS/Linux after install)</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>ollama<span class="w"> </span>serve
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># Pull the default model (llama3)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>ollama<span class="w"> </span>pull<span class="w"> </span>llama3
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1"># Optional: Keep model loaded longer (default is 5 minutes)</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_KEEP_ALIVE</span><span class="o">=</span>1h
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="c1"># Verify Ollama is running</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
 </span></code></pre></div>
 <p><strong>Using a different model:</strong> Edit <code>OLLAMA_MODEL</code> in <code>modules/config/cloud_config_&lt;provider&gt;.py</code> (default <code>llama3</code>) to any tag you've pulled — <code>llama3.1</code>, <code>mistral</code>, <code>qwen2.5</code>, etc. Make sure the corresponding <code>ollama pull &lt;model&gt;</code> has been run first, otherwise the first chat call will return 404 and TerraVision falls back to non-AI rendering.</p>
 <hr>
 <h2 id="troubleshooting-installation">Troubleshooting Installation<a class="headerlink" href="#troubleshooting-installation" title="Permanent link">¶</a></h2>
 <h3 id="python-version-issues">Python Version Issues<a class="headerlink" href="#python-version-issues" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Check Python version</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>python<span class="w"> </span>--version
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># If Python 3.10+ not available, install it</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="c1"># macOS</span>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>brew<span class="w"> </span>install<span class="w"> </span>python@3.10
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="c1"># Ubuntu</span>
-</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3.10
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Check Python version</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>python<span class="w"> </span>--version
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="c1"># If Python 3.11+ not available, install it</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="c1"># macOS</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>brew<span class="w"> </span>install<span class="w"> </span>python@3.11
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="c1"># Ubuntu</span>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3.11
 </span></code></pre></div>
 <h3 id="permission-issues-linuxmacos">Permission Issues (Linux/macOS)<a class="headerlink" href="#permission-issues-linuxmacos" title="Permanent link">¶</a></h3>
 <p>If <code>pip install terravision</code> fails with permission errors, use <code>pipx</code> (recommended) or fall back to a user install / virtualenv:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Preferred: isolated install via pipx (no sudo ever needed)</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># Or user install</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>terravision
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="c1"># Or inside a virtualenv</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate
-</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Preferred: isolated install via pipx (no sudo ever needed)</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="c1"># Or user install</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>terravision
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="c1"># Or inside a virtualenv</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="nb">source</span><span class="w"> </span>venv/bin/activate
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
 </span></code></pre></div>
 <h3 id="path-issues">PATH Issues<a class="headerlink" href="#path-issues" title="Permanent link">¶</a></h3>
 <p>If <code>terravision</code> command is not found:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># Add to PATH temporarily</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/path/to/terravision
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># Add to PATH permanently (add to ~/.bashrc or ~/.zshrc)</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export PATH=$PATH:/path/to/terravision'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Add to PATH temporarily</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/path/to/terravision
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1"># Add to PATH permanently (add to ~/.bashrc or ~/.zshrc)</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export PATH=$PATH:/path/to/terravision'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
 </span></code></pre></div>
 <h3 id="graphviz-not-found">Graphviz Not Found<a class="headerlink" href="#graphviz-not-found" title="Permanent link">¶</a></h3>
 <p>If you get "dot command not found" error:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Verify Graphviz installation</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>which<span class="w"> </span>dot
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># If not found, reinstall Graphviz</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="c1"># macOS</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>brew<span class="w"> </span>reinstall<span class="w"> </span>graphviz
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="c1"># Ubuntu</span>
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>graphviz
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># Verify Graphviz installation</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>which<span class="w"> </span>dot
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># If not found, reinstall Graphviz</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="c1"># macOS</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>brew<span class="w"> </span>reinstall<span class="w"> </span>graphviz
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a><span class="c1"># Ubuntu</span>
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>graphviz
 </span></code></pre></div>
 <hr>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">¶</a></h2>

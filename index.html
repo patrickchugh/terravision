@@ -1776,10 +1776,11 @@
 <p>Every supported resource type is listed on the <a href="node-types/">Node types</a> page. Types without an icon still appear on the diagram as a generic node, and the run prints which ones so an icon can be added.</p>
 <hr>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">¶</a></h2>
-<p>Install with pip:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision<span class="w">   </span><span class="c1"># or: pipx install terravision</span>
+<p>Install with pipx, uv or pip:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision<span class="w">   </span><span class="c1"># or: uv tool install terravision</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">                           </span><span class="c1"># or: pip install terravision in a virtual env</span>
 </span></code></pre></div>
-<p>TerraVision needs <strong>Python 3.10+</strong>, <strong>Graphviz</strong> and <strong>Git</strong>. <strong>Terraform 1.x</strong> (or OpenTofu) is only needed when drawing from Terraform code.</p>
+<p>TerraVision needs <strong>Python 3.11+</strong> (uv installs one for you), <strong>Graphviz</strong> and <strong>Git</strong>. <strong>Terraform 1.x</strong> (or OpenTofu) is only needed when drawing from Terraform code.</p>
 <h3 id="diagram-from-json-no-terraform-needed">Diagram from JSON (no Terraform needed)<a class="headerlink" href="#diagram-from-json-no-terraform-needed" title="Permanent link">¶</a></h3>
 <p>Describe the architecture as nodes and connections, and save it as <code>architecture.tvg.json</code>:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">AWS</label><label for="__tabbed_2_2">Azure</label><label for="__tabbed_2_3">GCP</label></div>

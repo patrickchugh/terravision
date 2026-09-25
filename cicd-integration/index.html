@@ -2657,12 +2657,12 @@
 <tr>
 <td><strong>pip install</strong></td>
 <td>Any CI with Python available</td>
-<td>Python 3.10+, Graphviz, Terraform</td>
+<td>Python 3.11+, Graphviz, Terraform</td>
 </tr>
 <tr>
 <td><strong>pip install + <code>--planfile</code></strong></td>
 <td>Diagram step without Terraform</td>
-<td>Python 3.10+, Graphviz (no Terraform needed)</td>
+<td>Python 3.11+, Graphviz (no Terraform needed)</td>
 </tr>
 </tbody>
 </table>
@@ -3083,7 +3083,7 @@
 </span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a><span class="w">    </span><span class="o">}</span>
 </span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a><span class="o">}</span>
 </span></code></pre></div>
-<p><strong>Note</strong>: The non-Docker approach requires Python 3.10+, Graphviz, and Terraform pre-installed on the Jenkins agent.</p>
+<p><strong>Note</strong>: The non-Docker approach requires Python 3.11+, Graphviz, and Terraform pre-installed on the Jenkins agent.</p>
 <hr>
 <h2 id="azure-devops">Azure DevOps<a class="headerlink" href="#azure-devops" title="Permanent link">¶</a></h2>
 <h3 id="using-docker">Using Docker<a class="headerlink" href="#using-docker" title="Permanent link">¶</a></h3>
@@ -3129,8 +3129,8 @@
 </span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="nt">steps</span><span class="p">:</span>
 </span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">UsePythonVersion@0</span>
 </span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="w">  </span><span class="nt">inputs</span><span class="p">:</span>
-</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">    </span><span class="nt">versionSpec</span><span class="p">:</span><span class="w"> </span><span class="s">'3.10'</span>
-</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">  </span><span class="nt">displayName</span><span class="p">:</span><span class="w"> </span><span class="s">'Use</span><span class="nv"> </span><span class="s">Python</span><span class="nv"> </span><span class="s">3.10'</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">    </span><span class="nt">versionSpec</span><span class="p">:</span><span class="w"> </span><span class="s">'3.11'</span>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">  </span><span class="nt">displayName</span><span class="p">:</span><span class="w"> </span><span class="s">'Use</span><span class="nv"> </span><span class="s">Python</span><span class="nv"> </span><span class="s">3.11'</span>
 </span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>
 </span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformInstaller@1</span>
 </span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="w">  </span><span class="nt">inputs</span><span class="p">:</span>
@@ -3163,7 +3163,7 @@
 </span></code></pre></div>
 <p>This works in any CI system that supports Docker (CircleCI, Bitbucket Pipelines, Drone, etc.).</p>
 <h3 id="option-2-pip-install">Option 2: pip install<a class="headerlink" href="#option-2-pip-install" title="Permanent link">¶</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Prerequisites: Python 3.10+, Graphviz, Terraform</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Prerequisites: Python 3.11+, Graphviz, Terraform</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>pip<span class="w"> </span>install<span class="w"> </span>terravision
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./infrastructure<span class="w"> </span>--outfile<span class="w"> </span>architecture<span class="w"> </span>--format<span class="w"> </span>png
 </span></code></pre></div>
