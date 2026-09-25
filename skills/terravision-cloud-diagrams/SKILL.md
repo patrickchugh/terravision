@@ -29,12 +29,47 @@ Path B needs only Graphviz and Git. Path A also needs Terraform (or OpenTofu) on
 
 ## Install (once)
 
-```bash
-pipx install terravision          # or: pip install terravision  /  uvx terravision
-# Graphviz: brew install graphviz | apt install graphviz | choco install graphviz
-```
+Check what is already there: `terravision --version`, `dot -V` (Graphviz) and `git --version`. All three are needed, even for a JSON graph. Install only what is missing, and ask the user before installing anything system-wide.
 
-Check: `terravision --version` and `dot -V`.
+**TerraVision** needs Python 3.11 or newer. Use the first installer that exists on the machine:
+
+| Available | Command |
+|---|---|
+| `uv` | `uv tool install terravision`. uv fetches a suitable Python itself. To run without installing, prefix commands with `uvx`: `uvx terravision draw ...` |
+| `pipx` | `pipx install terravision` |
+| only `pip` | `python3 -m pip install --user terravision` (Windows: `py -m pip install --user terravision`). If pip refuses with `externally-managed-environment`, install into a virtual environment instead: `python3 -m venv ~/.venvs/terravision && ~/.venvs/terravision/bin/pip install terravision`, then run `~/.venvs/terravision/bin/terravision` (Windows: `py -m venv %USERPROFILE%\.venvs\terravision`, then use `%USERPROFILE%\.venvs\terravision\Scripts\terravision`) |
+| none of these | Install uv (https://docs.astral.sh/uv/getting-started/installation/), then use the first row |
+
+If `terravision` is installed but not found, its folder is not on PATH: run `uv tool update-shell` or `pipx ensurepath` and open a new terminal, or call it by its full path.
+
+**Graphviz and Git:**
+
+| OS | Command |
+|---|---|
+| macOS | `brew install graphviz git` |
+| Debian / Ubuntu | `sudo apt install graphviz git` |
+| Fedora / RHEL | `sudo dnf install graphviz git` |
+| Windows | `winget install --id Graphviz.Graphviz` and `winget install --id Git.Git`, or `choco install graphviz git`, or `scoop install graphviz git` |
+
+On Windows, open a new terminal afterwards. If `dot` is still not found, add `C:\Program Files\Graphviz\bin` to PATH.
+
+**Terraform, for Path A only.** A JSON graph never runs Terraform. For Terraform code, check `terraform version` (must be 1.x); OpenTofu works too (`tofu version`, then add `--engine tofu`). To install Terraform:
+
+| OS | Command |
+|---|---|
+| macOS | `brew tap hashicorp/tap && brew install hashicorp/tap/terraform` (OpenTofu: `brew install opentofu`) |
+| Debian / Ubuntu | add HashiCorp's apt repository, then `sudo apt install terraform`; steps at https://developer.hashicorp.com/terraform/install |
+| Windows | `winget install --id Hashicorp.Terraform`, or `choco install terraform`, or `scoop install terraform` |
+
+OpenTofu for other systems: https://opentofu.org/docs/intro/install/
+
+TerraVision runs `terraform init` and `terraform plan` on the user's code, so the plan needs whatever the user normally plans with: network access for providers and modules, and often cloud credentials. If that is not possible here, ask the user to run these where their Terraform works, then use Path A with `--planfile plan.json --graphfile graph.dot`:
+
+```bash
+terraform init && terraform plan -out=tfplan.bin
+terraform show -json tfplan.bin > plan.json
+terraform graph > graph.dot
+```
 
 ## Path A: from Terraform code
 
@@ -99,8 +134,8 @@ Call `render_graph` with the graph object directly (no file needed), or `generat
 
 ## Troubleshooting
 
-- `'dot' not found`: install Graphviz.
-- `'terraform' not found` while using a `.json` source: upgrade TerraVision (`pipx upgrade terravision`); versions before 0.48 required Terraform on PATH even for JSON input.
+- `'dot'` or `'git'` not found: see Install.
+- `'terraform' not found` while using a `.json` source, or `No such option: --title`: TerraVision is too old. Upgrade with the tool that installed it: `uv tool upgrade terravision`, `pipx upgrade terravision` or `python3 -m pip install -U terravision`.
 - `Graph mixes aws_* and azurerm_* resources`: split the graph into one file per provider.
 - An arrow is missing: see "Drawn as written" above.
 - Icon looks generic: the type name is not in `references/node-types.md`; pick the closest listed type.
@@ -108,4 +143,6 @@ Call `render_graph` with the graph object directly (no file needed), or `generat
 
 ## What to tell the user
 
-Say which path you used and where the file is. Mention `--format drawio` if they may want to edit it by hand.
+Before presenting the diagram, look at the rendered PNG yourself if you can read images, and fix anything clearly wrong (a missing arrow, a node in the wrong box).
+
+Say which path you used and give the full path of the file, as a clickable link where the interface supports one. If the user is working on their own computer, offer to open it for them: `open <file>` on macOS, `xdg-open <file>` on Linux, `start <file>` on Windows. Mention `--format drawio` if they may want to edit it by hand.

@@ -12,8 +12,8 @@ TerraVision can be integrated into any CI/CD system using one of these methods:
 |--------|----------|---------------|
 | **GitHub Action** | GitHub workflows | Terraform on PATH |
 | **Docker image** | GitLab, Jenkins, any container-based CI | None (self-contained) |
-| **pip install** | Any CI with Python available | Python 3.10+, Graphviz, Terraform |
-| **pip install + `--planfile`** | Diagram step without Terraform | Python 3.10+, Graphviz (no Terraform needed) |
+| **pip install** | Any CI with Python available | Python 3.11+, Graphviz, Terraform |
+| **pip install + `--planfile`** | Diagram step without Terraform | Python 3.11+, Graphviz (no Terraform needed) |
 
 ---
 
@@ -443,7 +443,7 @@ pipeline {
 }
 ```
 
-**Note**: The non-Docker approach requires Python 3.10+, Graphviz, and Terraform pre-installed on the Jenkins agent.
+**Note**: The non-Docker approach requires Python 3.11+, Graphviz, and Terraform pre-installed on the Jenkins agent.
 
 ---
 
@@ -497,8 +497,8 @@ pool:
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.10'
-  displayName: 'Use Python 3.10'
+    versionSpec: '3.11'
+  displayName: 'Use Python 3.11'
 
 - task: TerraformInstaller@1
   inputs:
@@ -542,7 +542,7 @@ This works in any CI system that supports Docker (CircleCI, Bitbucket Pipelines,
 ### Option 2: pip install
 
 ```bash
-# Prerequisites: Python 3.10+, Graphviz, Terraform
+# Prerequisites: Python 3.11+, Graphviz, Terraform
 pip install terravision
 terravision draw --source ./infrastructure --outfile architecture --format png
 ```

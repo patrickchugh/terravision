@@ -215,13 +215,14 @@ Every supported resource type is listed on the [Node types](node-types.md) page.
 
 ## Quick Start
 
-Install with pip:
+Install with pipx, uv or pip:
 
 ```bash
-pip install terravision   # or: pipx install terravision
+pipx install terravision   # or: uv tool install terravision
+                           # or: pip install terravision in a virtual env
 ```
 
-TerraVision needs **Python 3.10+**, **Graphviz** and **Git**. **Terraform 1.x** (or OpenTofu) is only needed when drawing from Terraform code.
+TerraVision needs **Python 3.11+** (uv installs one for you), **Graphviz** and **Git**. **Terraform 1.x** (or OpenTofu) is only needed when drawing from Terraform code.
 
 ### Diagram from JSON (no Terraform needed)
 

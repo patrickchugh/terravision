@@ -2,7 +2,7 @@
 
 ## System Requirements
 
-- **Python 3.10+**
+- **Python 3.11+** (not needed separately if you install with [uv](#using-uv), which fetches one)
 - **Terraform 1.x** (v1.0.0 or higher) — not required for [JSON graph](graph-format.md) sources or `--planfile` mode
 - **Git**
 - **Graphviz**
@@ -29,8 +29,18 @@ sudo apt install graphviz
 sudo apt install libgvplugin-neato-layout8
 ```
 
-**Windows:**
-Download from https://graphviz.org/download/
+**Fedora/RHEL:**
+```bash
+sudo dnf install graphviz
+```
+
+**Windows:** any one of these, or the installer from https://graphviz.org/download/
+```powershell
+winget install --id Graphviz.Graphviz
+choco install graphviz
+scoop install graphviz
+```
+Open a new terminal afterwards. If `dot` is still not found, add `C:\Program Files\Graphviz\bin` to your PATH.
 
 **Verify installation:**
 ```bash
@@ -44,7 +54,7 @@ Most systems have Git pre-installed. Verify:
 git --version
 ```
 
-If not installed, download from https://git-scm.com/downloads
+If not installed: `brew install git` (macOS), `sudo apt install git` (Ubuntu/Debian), `sudo dnf install git` (Fedora/RHEL), `winget install --id Git.Git` or `choco install git` (Windows), or download from https://git-scm.com/downloads
 
 ### Terraform
 
@@ -61,8 +71,14 @@ echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://
 sudo apt update && sudo apt install terraform
 ```
 
-**Windows:**
-Download from https://developer.hashicorp.com/terraform/downloads
+**Windows:** any one of these, or the download from https://developer.hashicorp.com/terraform/install
+```powershell
+winget install --id Hashicorp.Terraform
+choco install terraform
+scoop install terraform
+```
+
+**OpenTofu** works as a drop-in alternative: install it from https://opentofu.org/docs/intro/install/ (macOS: `brew install opentofu`) and pass `--engine tofu`, or leave `--engine auto` to detect whichever is installed.
 
 **Verify installation:**
 ```bash
@@ -104,6 +120,24 @@ pipx install terravision
 terravision --version
 ```
 
+#### Using `uv`
+
+[`uv`](https://docs.astral.sh/uv/) also installs the CLI into its own environment, and downloads a suitable Python if yours is older than 3.11.
+
+```bash
+# Install uv first if you don't have it
+# macOS/Linux:  curl -LsSf https://astral.sh/uv/install.sh | sh   (or: brew install uv)
+# Windows:      powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+uv tool install terravision
+terravision --version
+
+# Or run it without installing
+uvx terravision --version
+```
+
+If `terravision` is not found afterwards, run `uv tool update-shell` and open a new terminal.
+
 #### Using `pip` (if you're already in a virtualenv)
 
 ```bash
@@ -111,8 +145,10 @@ pip install terravision
 terravision --version
 ```
 
+Outside a virtualenv, recent Ubuntu, Debian and Homebrew Pythons refuse `pip install` with an `externally-managed-environment` error. Create one first (`python3 -m venv ~/.venvs/terravision`, then use `~/.venvs/terravision/bin/pip`), or use pipx or uv.
+
 !!! tip "Upgrading"
-    `pipx upgrade terravision` or `pip install --upgrade terravision` pulls the latest release from PyPI.
+    `pipx upgrade terravision`, `uv tool upgrade terravision` or `pip install --upgrade terravision` pulls the latest release from PyPI.
 
 #### Optional: MCP server support
 
@@ -124,6 +160,9 @@ pipx install "terravision[mcp]"
 
 # pipx, existing install (pip install won't work inside a pipx environment)
 pipx inject terravision mcp
+
+# uv, new or existing install
+uv tool install "terravision[mcp]"
 
 # pip
 pip install "terravision[mcp]"
@@ -318,12 +357,12 @@ curl http://localhost:11434/api/tags
 # Check Python version
 python --version
 
-# If Python 3.10+ not available, install it
+# If Python 3.11+ not available, install it
 # macOS
-brew install python@3.10
+brew install python@3.11
 
 # Ubuntu
-sudo apt-get install python3.10
+sudo apt-get install python3.11
 ```
 
 ### Permission Issues (Linux/macOS)

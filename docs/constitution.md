@@ -118,7 +118,7 @@ Requirements for any interface that exposes TerraVision to automated agents.
 
 ### Supported Technologies
 
-- **Language**: Python 3.10+
+- **Language**: Python 3.11+
 - **Required Dependencies**: Terraform 1.x, Git, Graphviz
 - **Optional Dependencies**: Ollama (for local AI), AWS Bedrock (for cloud AI), `mcp` (for the MCP server, installed via the `[mcp]` extra)
 - **Input Formats**: .tf, .tf.json, .tfvars, .tfvars.json, Git repositories, pre-generated JSON

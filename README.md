@@ -60,10 +60,11 @@ Full list: [Node types](docs/node-types.md).
 ### Install
 
 ```bash
-pipx install terravision   # or: pip install terravision if in a virtual env
+pipx install terravision   # or: uv tool install terravision
+                           # or: pip install terravision in a virtual env
 ```
 
-You also need **Python 3.10+**, **Graphviz** and **Git**, plus **Terraform 1.x** (or OpenTofu) when drawing from Terraform code; JSON graphs don't need it. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
+You also need **Python 3.11+** (uv installs one for you), **Graphviz** and **Git**, plus **Terraform 1.x** (or OpenTofu) when drawing from Terraform code; JSON graphs don't need it. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
 
 ### Option 1 - Diagram from JSON (no Terraform needed)
 

@@ -60,22 +60,29 @@ brew upgrade terraform  # macOS
 
 #### Python Version Issues
 
-**Problem**: Python 3.10+ not available
+**Problem**: Python 3.11+ not available
 
-**Solution**:
+**Solution**: the simplest fix is to install with [uv](https://docs.astral.sh/uv/), which downloads a suitable Python for TerraVision without touching your system Python:
+
+```bash
+uv tool install terravision
+```
+
+Or install a newer Python yourself:
+
 ```bash
 # Check Python version
 python --version
 
-# Install Python 3.10+
+# Install Python 3.11+
 # macOS
-brew install python@3.10
+brew install python@3.11
 
 # Ubuntu
-sudo apt-get install python3.10
+sudo apt-get install python3.11
 
 # Install TerraVision with a specific Python version
-python3.10 -m pip install terravision
+python3.11 -m pip install terravision
 ```
 
 ---
@@ -660,7 +667,7 @@ terravision draw --source . --debug
 ```bash
 # Check all dependencies
 terraform version  # Should be v1.0.0+
-python --version   # Should be 3.10+
+python --version   # Should be 3.11+
 dot -V            # Should show Graphviz version
 git --version     # Should show Git version
 

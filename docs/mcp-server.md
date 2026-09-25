@@ -24,6 +24,17 @@ pipx inject terravision mcp
 
 `pip install` will not work inside a pipx-managed environment — use `pipx inject`.
 
+**uv**:
+
+```bash
+# New install, or add the extra to an existing uv install
+uv tool install "terravision[mcp]"
+
+# Or run it without installing, which is how the Claude Code, Codex and
+# Gemini CLI plugins and the MCP Registry entry launch it
+uvx --from "terravision[mcp]" terravision mcp
+```
+
 **pip**, if you are already in a virtualenv:
 
 ```bash
