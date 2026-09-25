@@ -43,3 +43,6 @@ azurerm_container_registry = ContainerRegistries
 azurerm_kubernetes_cluster = KubernetesServices
 azurerm_service_fabric_cluster = ServiceFabricClusters
 azurerm_batch_account = BatchAccounts
+
+# Current azurerm resource types linked to existing icons
+azurerm_redhat_openshift_cluster = AzureRedHatOpenshift

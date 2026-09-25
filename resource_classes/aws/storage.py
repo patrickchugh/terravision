@@ -87,6 +87,12 @@ FSx = Fsx
 S3 = SimpleStorageServiceS3
 
 # Terraform aliases
+
+
+class S3AccessPoints(_Storage):
+    _icon = "s3-access-points.png"
+
+
 aws_backup_plan = Backup
 aws_backup_vault = Backup
 aws_backup_selection = Backup
@@ -106,3 +112,10 @@ aws_s3_object = S3Object
 aws_storagegateway_gateway = StorageGateway
 aws_storagegateway_smb_file_share = StorageGateway
 aws_storagegateway_nfs_file_share = StorageGateway
+
+# Current aws resource types linked to existing icons
+aws_s3_access_point = S3AccessPoints
+aws_s3control_multi_region_access_point = S3AccessPoints
+aws_s3tables_table_bucket = SimpleStorageServiceS3
+aws_s3vectors_vector_bucket = SimpleStorageServiceS3
+aws_drs_replication_configuration_template = CloudendureDisasterRecovery

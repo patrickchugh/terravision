@@ -113,6 +113,14 @@ class CloudProfiler(_Management):
 # Terraform resource aliases
 # Note: google_project is defined in groups.py as ProjectZone (Cluster) for zone rendering
 # The Project class here is for project management icon, not project boundaries
+
+
+class AppHub(_Management):
+    """App Hub application registry."""
+
+    _icon = "management.png"
+
+
 google_folder = ResourceManager
 google_organization = ResourceManager
 google_project_service = ServiceUsage
@@ -125,3 +133,7 @@ google_api_gateway_gateway = CloudAPI
 google_api_gateway_api_config = CloudAPI
 google_service_directory_namespace = ServiceManagement
 google_billing_account = Billing
+
+# Current google resource types linked to existing icons
+google_apphub_application = AppHub
+google_config_deployment = DeploymentManager

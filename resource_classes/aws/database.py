@@ -110,6 +110,16 @@ ElastiCache = Elasticache
 QLDB = QuantumLedgerDatabaseQldb
 
 # Terraform resource mappings
+
+
+class Keyspaces(_Database):
+    _icon = "keyspaces-managed-apache-cassandra-service.png"
+
+
+class ElasticacheForRedis(_Database):
+    _icon = "elasticache-for-redis.png"
+
+
 aws_rds_cluster = RDS
 aws_rds = RDS
 aws_rds_aurora = Aurora
@@ -131,3 +141,16 @@ aws_rds_mysql = RDSMysql
 aws_rds_mariadb = RDSMariadb
 aws_rds_oracle = RDSOracle
 aws_rds_sqlserver = RDSSqlServer
+
+# Current aws resource types linked to existing icons
+aws_keyspaces_keyspace = Keyspaces
+aws_keyspaces_table = Keyspaces
+aws_memorydb_cluster = ElasticacheForRedis
+aws_elasticache_serverless_cache = Elasticache
+aws_dsql_cluster = Aurora
+aws_rds_cluster_instance = Aurora
+aws_db_proxy = RDS
+aws_docdbelastic_cluster = DocumentDB
+aws_neptunegraph_graph = Neptune
+aws_timestreamwrite_database = Timestream
+aws_timestreaminfluxdb_db_instance = Timestream

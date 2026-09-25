@@ -212,3 +212,21 @@ class WebApplicationFirewallPolicieswaf(_Networking):
 
 
 # Aliases
+
+# Current azurerm resource types linked to existing icons
+azurerm_bastion_host = Bastions
+azurerm_nat_gateway = Nat
+azurerm_firewall_policy = AzureFirewallPolicy
+azurerm_web_application_firewall_policy = WebApplicationFirewallPolicieswaf
+azurerm_cdn_frontdoor_firewall_policy = WebApplicationFirewallPolicieswaf
+azurerm_frontdoor_firewall_policy = WebApplicationFirewallPolicieswaf
+azurerm_virtual_hub = VirtualWanHub
+azurerm_private_link_service = PrivateLinkService
+azurerm_private_dns_resolver = DNSPrivateResolver
+azurerm_public_ip_prefix = PublicIpPrefixes
+azurerm_ip_group = IpGroups
+azurerm_proximity_placement_group = ProximityPlacementGroups
+azurerm_express_route_gateway = VirtualNetworkGateways
+azurerm_point_to_site_vpn_gateway = VirtualNetworkGateways
+azurerm_vpn_site = LocalNetworkGateways
+azurerm_application_load_balancer = ApplicationGateways

@@ -52,3 +52,6 @@ class MachineLearningStudioWorkspaces(_Ml):
 azurerm_cognitive_account = CognitiveServices
 azurerm_bot_service_azure_bot = BotServices
 azurerm_machine_learning_workspace = MachineLearningServiceWorkspaces
+
+# Current azurerm resource types linked to existing icons
+azurerm_healthbot = BotServices

@@ -11,7 +11,7 @@ class Blank(_General):
 
 
 class InternetGateway(_General):
-    _icon = "Internet-gateway.png"
+    _icon = "internet-gateway.png"
 
 
 class Client(_General):

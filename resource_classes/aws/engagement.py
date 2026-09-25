@@ -28,3 +28,8 @@ aws_pinpoint_app = Pinpoint
 aws_ses_configuration_set = SimpleEmailServiceSes
 aws_ses_domain_identity = SimpleEmailServiceSes
 aws_ses_email_identity = SimpleEmailServiceSes
+
+# Current aws resource types linked to existing icons
+aws_sesv2_configuration_set = SimpleEmailServiceSes
+aws_sesv2_email_identity = SimpleEmailServiceSes
+aws_pinpointsmsvoicev2_phone_number = Pinpoint

@@ -111,6 +111,14 @@ Subnetwork = Subnet
 # Terraform resource aliases
 # Note: google_compute_network, google_compute_subnetwork, google_compute_firewall
 # are defined in groups.py as Cluster classes for zone rendering
+
+
+class ServerlessVPCAccess(_Networking):
+    """Serverless VPC Access connector."""
+
+    _icon = "networking.png"
+
+
 google_compute_router = CloudRouter
 google_compute_router_nat = CloudNAT
 google_compute_vpn_gateway = CloudVPN
@@ -141,3 +149,9 @@ google_service_directory_service = ServiceDirectory
 google_compute_service_attachment = PrivateServiceConnect
 google_network_connectivity_hub = NetworkConnectivityCenter
 google_network_connectivity_spoke = NetworkConnectivityCenter
+
+# Current google resource types linked to existing icons
+google_vpc_access_connector = ServerlessVPCAccess
+google_network_security_firewall_endpoint = Firewall
+google_dns_policy = CloudDNS
+google_clouddomains_registration = CloudDNS

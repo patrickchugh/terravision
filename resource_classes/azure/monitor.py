@@ -67,3 +67,6 @@ azurerm_monitor_diagnostic_setting = DiagnosticsSettings
 azurerm_network_watcher = NetworkWatcher
 # Target of the azurerm_monitor consolidated node
 azurerm_monitor = Monitor
+
+# Current azurerm resource types linked to existing icons
+azurerm_application_insights_workbook = AzureWorkbooks

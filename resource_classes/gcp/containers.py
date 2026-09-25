@@ -71,3 +71,7 @@ google_gke_hub_feature = Anthos
 google_artifact_registry_repository = ArtifactRegistry
 google_container_registry = ContainerRegistry
 google_binary_authorization_policy = BinaryAuthorization
+
+# Current google resource types linked to existing icons
+google_gkeonprem_vmware_cluster = GKEOnPrem
+google_gkeonprem_bare_metal_cluster = GKEOnPrem

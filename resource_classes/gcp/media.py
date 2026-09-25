@@ -64,3 +64,6 @@ VideoStitcher = VideoStitcherAPI
 # Terraform resource aliases
 google_video_transcoder_job = TranscoderAPI
 google_video_transcoder_job_template = TranscoderAPI
+
+# Current google resource types linked to existing icons
+google_transcoder_job = TranscoderAPI

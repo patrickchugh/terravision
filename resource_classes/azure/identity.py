@@ -177,3 +177,6 @@ azurerm_active_directory_domain_service = ADDomainServices
 azurerm_user_assigned_identity = ManagedIdentities
 azurerm_role_assignment = ActiveDirectory
 azurerm_role_definition = ActiveDirectory
+
+# Current azurerm resource types linked to existing icons
+azurerm_aadb2c_directory = AzureADB2C

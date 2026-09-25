@@ -105,3 +105,6 @@ azurerm_security_center_subscription_pricing = SecurityCenter
 azurerm_key_vault = KeyVaults
 azurerm_key_vault_key = KeyVaults
 azurerm_key_vault_secret = KeyVaults
+
+# Current azurerm resource types linked to existing icons
+azurerm_sentinel_log_analytics_workspace_onboarding = AzureSentinel

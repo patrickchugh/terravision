@@ -73,6 +73,26 @@ Storage = CloudStorage
 SSD = LocalSSD
 
 # Terraform resource aliases
+
+
+class NetAppVolumes(_Storage):
+    """Google Cloud NetApp Volumes."""
+
+    _icon = "storage.png"
+
+
+class Parallelstore(_Storage):
+    """Parallelstore high-performance parallel file system."""
+
+    _icon = "storage.png"
+
+
+class ManagedLustre(_Storage):
+    """Google Cloud Managed Lustre."""
+
+    _icon = "storage.png"
+
+
 google_storage_bucket = CloudStorage
 google_storage_bucket_object = CloudStorage
 google_storage_bucket_iam_binding = CloudStorage
@@ -82,3 +102,11 @@ google_compute_disk = PersistentDisk
 google_compute_region_disk = PersistentDisk
 google_storage_transfer_job = TransferService
 google_backup_dr_management_server = Backup
+
+# Current google resource types linked to existing icons
+google_netapp_volume = NetAppVolumes
+google_netapp_storage_pool = NetAppVolumes
+google_parallelstore_instance = Parallelstore
+google_lustre_instance = ManagedLustre
+google_backup_dr_backup_vault = Backup
+google_gke_backup_backup_plan = Backup

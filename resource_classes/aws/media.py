@@ -59,3 +59,6 @@ aws_media_convert_queue = ElementalMediaconvert
 aws_media_live_channel = ElementalMedialive
 aws_media_package_channel = ElementalMediapackage
 aws_media_store_container = ElementalMediastore
+
+# Current aws resource types linked to existing icons
+aws_medialive_channel = ElementalMedialive

@@ -135,3 +135,9 @@ azurerm_mssql_virtual_machine = AzureSQLVM
 azurerm_synapse_workspace = AzureSynapseAnalytics
 azurerm_redis_cache = CacheRedis
 azurerm_data_factory = DataFactories
+
+# Current azurerm resource types linked to existing icons
+azurerm_cosmosdb_postgresql_cluster = AzureDatabasePostgresqlServerGroup
+azurerm_managed_redis = CacheRedis
+azurerm_mongo_cluster = AzureCosmosDb
+azurerm_purview_account = AzurePurviewAccounts

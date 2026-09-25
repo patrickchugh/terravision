@@ -149,3 +149,6 @@ azurerm_automation_account = AutomationAccounts
 azurerm_policy_definition = Policy
 azurerm_policy_assignment = Policy
 azurerm_recovery_services_vault = RecoveryServicesVaults
+
+# Current azurerm resource types linked to existing icons
+azurerm_monitor_workspace = Monitor

@@ -31,3 +31,6 @@ aws_workdocs_user = Workdocs
 aws_worklink_fleet = Worklink
 aws_workspaces_directory = Workspaces
 aws_workspaces_workspace = Workspaces
+
+# Current aws resource types linked to existing icons
+aws_workspacesweb_portal = Workspaces

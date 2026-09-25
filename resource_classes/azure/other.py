@@ -523,3 +523,23 @@ class WorkerContainerApp(_Other):
 
 # Aliases for Terraform resource type names
 azurerm_virtual_network_peering = Peerings
+
+# Current azurerm resource types linked to existing icons
+azurerm_custom_ip_prefix = CustomIpPrefix
+azurerm_network_manager = NetworkManagers
+azurerm_express_route_port = ExpressrouteDirect
+azurerm_capacity_reservation_group = CapacityReservationGroups
+azurerm_vmware_private_cloud = AzureVmwareSolution
+azurerm_container_app_environment = ContainerAppsEnvironments
+azurerm_kubernetes_fleet_manager = KubernetesFleetManager
+azurerm_elastic_san = ElasticSan
+azurerm_data_protection_backup_vault = BackupVault
+azurerm_communication_service = AzureCommunicationServices
+azurerm_email_communication_service = AzureCommunicationServices
+azurerm_video_indexer_account = AzureVideoIndexer
+azurerm_key_vault_managed_hardware_security_module = DedicatedHsm
+azurerm_attestation_provider = Azureattestation
+azurerm_confidential_ledger = ConfidentialLedgers
+azurerm_dashboard_grafana = AzureManagedGrafana
+azurerm_iothub_device_update_account = DeviceUpdateIotHub
+azurerm_dev_center = MicrosoftDevBox

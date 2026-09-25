@@ -91,3 +91,7 @@ google_endpoints_service = CloudEndpoints
 google_workflows_workflow = Workflows
 google_integration_connectors_connection = Connectors
 google_integration_connectors_endpoint_attachment = Connectors
+
+# Current google resource types linked to existing icons
+google_apihub_api_hub_instance = Apigee
+google_integrations_client = ApplicationIntegration

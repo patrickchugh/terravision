@@ -165,6 +165,12 @@ ELB = ElasticLoadBalancing
 GAX = GlobalAccelerator
 
 # Terraform aliases
+
+
+class NetworkFirewall(_Network):
+    _icon = "network-firewall.png"
+
+
 aws_api_gateway_rest_api = APIGateway
 aws_api_gateway_stage = APIGateway
 aws_api_gateway_deployment = APIGateway
@@ -222,3 +228,6 @@ aws_vpc_peering_connection_accepter = VPCPeering
 aws_network_interface = VPCElasticNetworkInterface
 aws_efs_mount_target = VPCElasticNetworkInterface
 aws_vpc_flow_log = VPCFlowLogs
+
+# Current aws resource types linked to existing icons
+aws_networkfirewall_firewall = NetworkFirewall

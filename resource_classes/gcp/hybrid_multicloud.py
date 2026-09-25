@@ -78,3 +78,6 @@ google_gke_hub_feature_membership = Anthos
 google_gke_hub_fleet = GKEEnterprise
 google_gke_hub_namespace = GKEEnterprise
 google_gke_hub_scope = GKEEnterprise
+
+# Current google resource types linked to existing icons
+google_edgecontainer_cluster = DistributedCloudEdge

@@ -117,6 +117,16 @@ KMS = KeyManagementService
 RAM = ResourceAccessManager
 
 # Terraform aliases
+
+
+class SecurityLake(_Security):
+    _icon = "security-lake.png"
+
+
+class CertificateAuthority(_Security):
+    _icon = "certificate-authority.png"
+
+
 aws_acm_certificate = CertificateManager
 aws_acm_certificate_validation = CertificateManager
 aws_acm = CertificateManager
@@ -166,3 +176,8 @@ aws_waf_rule = WAF
 aws_waf_rule_group = WAF
 aws_wafregional_web_acl = WAF
 aws_wafregional_rule_group = WAF
+
+# Current aws resource types linked to existing icons
+aws_securitylake_data_lake = SecurityLake
+aws_acmpca_certificate_authority = CertificateAuthority
+aws_accessanalyzer_analyzer = IdentityAndAccessManagementIamAccessAnalyzer

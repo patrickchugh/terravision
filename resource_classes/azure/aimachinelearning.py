@@ -141,3 +141,9 @@ azurerm_cognitive_account = CognitiveServices
 azurerm_search_service = CognitiveSearch
 azurerm_bot_service_azure_bot = BotServices
 azurerm_machine_learning_workspace = MachineLearning
+
+# Current azurerm resource types linked to existing icons
+azurerm_ai_foundry = AIStudio
+azurerm_ai_foundry_project = AIStudio
+azurerm_machine_learning_compute_cluster = MachineLearning
+azurerm_machine_learning_compute_instance = MachineLearning

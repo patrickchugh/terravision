@@ -56,6 +56,12 @@ CLI = CommandLineInterface
 DevTools = DeveloperTools
 
 # Terraform Resource mappings
+
+
+class Codeartifact(_Devtools):
+    _icon = "codeartifact.png"
+
+
 aws_cloud9_environment_ec2 = Cloud9
 aws_codebuild_project = Codebuild
 aws_codecommit_repository = Codecommit
@@ -63,3 +69,8 @@ aws_codedeploy_app = Codedeploy
 aws_codepipeline = Codepipeline
 aws_codestarconnections_connection = Codestar
 aws_xray_group = XRay
+
+# Current aws resource types linked to existing icons
+aws_codeartifact_repository = Codeartifact
+aws_codeartifact_domain = Codeartifact
+aws_codeconnections_connection = Codestar

@@ -62,6 +62,14 @@ Deploy = CloudDeploy
 Artifacts = ArtifactRegistry
 
 # Terraform resource aliases
+
+
+class DeveloperConnect(_DevOps):
+    """Developer Connect source-control connections."""
+
+    _icon = "devops.png"
+
+
 google_cloudbuild_trigger = CloudBuild
 google_cloudbuild_worker_pool = CloudBuild
 google_clouddeploy_delivery_pipeline = CloudDeploy
@@ -71,3 +79,9 @@ google_artifact_registry_repository_iam_member = ArtifactRegistry
 google_sourcerepo_repository = SourceRepositories
 google_binary_authorization_policy = BinaryAuthorization
 google_binary_authorization_attestor = BinaryAuthorization
+
+# Current google resource types linked to existing icons
+google_cloudbuildv2_connection = CloudBuild
+google_cloudbuildv2_repository = CloudBuild
+google_developer_connect_connection = DeveloperConnect
+google_secure_source_manager_instance = SourceRepositories

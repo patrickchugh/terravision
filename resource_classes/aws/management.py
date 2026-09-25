@@ -85,6 +85,31 @@ ParameterStore = SystemsManagerParameterStore
 
 # Terraform aliases
 
+
+class ManagedGrafana(_Management):
+    _icon = "amazon-managed-grafana.png"
+
+
+class ManagedPrometheus(_Management):
+    _icon = "amazon-managed-prometheus.png"
+
+
+class ManagedWorkflowsApacheAirflow(_Management):
+    _icon = "amazon-managed-workflows-apache-airflow.png"
+
+
+class DevopsGuru(_Management):
+    _icon = "amazon-devops-guru.png"
+
+
+class Chatbot(_Management):
+    _icon = "chatbot.png"
+
+
+class SystemsManagerAppConfig(_Management):
+    _icon = "systems-manager-app-config.png"
+
+
 aws_cloudformation_stack = Cloudformation
 aws_cloudformation_stack_set = Cloudformation
 aws_cloudtrail = Cloudtrail
@@ -118,3 +143,18 @@ aws_ssm_maintenance_window = SystemsManager
 aws_ssm_association = SystemsManager
 aws_ssm_parameter = SystemsManagerParameterStore
 aws_cloudwatch_metric_alarm = CloudWatchAlarm
+
+# Current aws resource types linked to existing icons
+aws_grafana_workspace = ManagedGrafana
+aws_prometheus_workspace = ManagedPrometheus
+aws_prometheus_scraper = ManagedPrometheus
+aws_mwaa_environment = ManagedWorkflowsApacheAirflow
+aws_devopsguru_resource_collection = DevopsGuru
+aws_chatbot_slack_channel_configuration = Chatbot
+aws_appconfig_application = SystemsManagerAppConfig
+aws_ssmincidents_response_plan = SystemsManager
+aws_ssmcontacts_contact = SystemsManager
+aws_servicecatalogappregistry_application = ServiceCatalog
+aws_synthetics_canary = Cloudwatch
+aws_rum_app_monitor = Cloudwatch
+aws_internetmonitor_monitor = Cloudwatch

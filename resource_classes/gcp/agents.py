@@ -55,3 +55,7 @@ google_dialogflow_cx_page = DialogflowCX
 google_dialogflow_agent = DialogflowES
 google_dialogflow_intent = DialogflowES
 google_dialogflow_entity_type = DialogflowES
+
+# Current google resource types linked to existing icons
+google_discovery_engine_search_engine = AgentBuilder
+google_discovery_engine_data_store = AgentBuilder

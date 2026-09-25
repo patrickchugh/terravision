@@ -109,6 +109,14 @@ Pubsub = PubSub
 Datawarehouse = BigQuery
 
 # Terraform resource aliases
+
+
+class ManagedKafka(_Analytics):
+    """Managed Service for Apache Kafka."""
+
+    _icon = "analytics.png"
+
+
 google_bigquery_dataset = BigQuery
 google_bigquery_table = BigQuery
 google_bigquery_job = BigQuery
@@ -132,3 +140,13 @@ google_dataproc_metastore_service = DataprocMetastore
 google_healthcare_dataset = Healthcare
 google_healthcare_fhir_store = Healthcare
 google_healthcare_hl7_v2_store = Healthcare
+
+# Current google resource types linked to existing icons
+google_managed_kafka_cluster = ManagedKafka
+google_biglake_catalog = BigQuery
+google_dataform_repository = BigQuery
+google_bigquery_analytics_hub_data_exchange = BigQuery
+google_dataflow_flex_template_job = Dataflow
+google_dataproc_batch = Dataproc
+google_data_catalog_entry_group = DataCatalog
+google_pubsub_lite_topic = PubSub

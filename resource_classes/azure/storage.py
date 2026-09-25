@@ -125,3 +125,7 @@ azurerm_netapp_volume = NetappFiles
 azurerm_recovery_services_vault = RecoveryServicesVaults
 azurerm_backup_vault = RecoveryServicesVaults
 azurerm_storage_sync = StorageSyncServices
+
+# Current azurerm resource types linked to existing icons
+azurerm_storage_data_lake_gen2_filesystem = DataLakeStorage
+azurerm_data_share_account = DataShares

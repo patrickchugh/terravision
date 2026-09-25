@@ -254,3 +254,16 @@ azurerm_linux_virtual_machine_scale_set = VMScaleSet
 azurerm_windows_virtual_machine_scale_set = VMScaleSet
 azurerm_virtual_machine_scale_set = VMScaleSet
 azurerm_disk_encryption_set = DiskEncryptionSets
+
+# Current azurerm resource types linked to existing icons
+azurerm_orchestrated_virtual_machine_scale_set = VMScaleSets
+azurerm_dedicated_host = Hosts
+azurerm_dedicated_host_group = HostGroups
+azurerm_virtual_desktop_host_pool = HostPools
+azurerm_virtual_desktop_workspace = Workspaces
+azurerm_virtual_desktop_application_group = ApplicationGroup
+azurerm_container_app_job = ContainerApps
+azurerm_spring_cloud_service = AzureSpringApps
+azurerm_function_app_flex_consumption = FunctionApps
+azurerm_dev_test_linux_virtual_machine = VirtualMachine
+azurerm_dev_test_windows_virtual_machine = VirtualMachine

@@ -160,3 +160,9 @@ azurerm_relay_namespace = Relays
 azurerm_servicebus_namespace = ServiceBus
 azurerm_servicebus_queue = ServiceBus
 azurerm_servicebus_topic = ServiceBus
+
+# Current azurerm resource types linked to existing icons
+azurerm_logic_app_standard = LogicApps
+azurerm_logic_app_integration_account = IntegrationAccounts
+azurerm_eventgrid_system_topic = SystemTopic
+azurerm_eventgrid_namespace = EventGridTopics

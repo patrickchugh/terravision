@@ -73,6 +73,14 @@ SQL = CloudSQL
 CloudSpanner = Spanner
 
 # Terraform resource aliases
+
+
+class OracleDatabase(_Databases):
+    """Oracle Database@Google Cloud."""
+
+    _icon = "databases.png"
+
+
 google_sql_database_instance = CloudSQL
 google_sql_database = CloudSQL
 google_sql_user = CloudSQL
@@ -89,3 +97,9 @@ google_memcache_instance = Memorystore
 google_database_migration_service_connection_profile = DatabaseMigrationService
 google_datastream_stream = Datastream
 google_datastream_connection_profile = Datastream
+
+# Current google resource types linked to existing icons
+google_memorystore_instance = Memorystore
+google_redis_cluster = Memorystore
+google_oracle_database_autonomous_database = OracleDatabase
+google_oracle_database_cloud_vm_cluster = OracleDatabase

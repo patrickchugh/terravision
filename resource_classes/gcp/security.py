@@ -178,6 +178,20 @@ ACM = AccessContextManager
 Secrets = SecretManager
 
 # Terraform resource aliases
+
+
+class ManagedMicrosoftAD(_Security):
+    """Managed Service for Microsoft Active Directory."""
+
+    _icon = "security.png"
+
+
+class ModelArmor(_Security):
+    """Model Armor prompt and response screening for AI models."""
+
+    _icon = "security.png"
+
+
 google_service_account = ServiceAccount
 google_service_account_key = ServiceAccount
 google_project_iam_member = IAM
@@ -203,3 +217,9 @@ google_data_loss_prevention_inspect_template = DataLossPrevention
 google_data_loss_prevention_job_trigger = DataLossPrevention
 google_scc_source = SecurityCommandCenter
 google_scc_notification_config = SecurityCommandCenter
+
+# Current google resource types linked to existing icons
+google_active_directory_domain = ManagedMicrosoftAD
+google_beyondcorp_security_gateway = BeyondCorp
+google_model_armor_template = ModelArmor
+google_parameter_manager_parameter = SecretManager

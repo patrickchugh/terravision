@@ -103,6 +103,12 @@ class Redshift(_Analytics):
 ES = ElasticsearchService
 
 # Terraform aliases
+
+
+class OpenSearchService(_Analytics):
+    _icon = "amazon-opensearch-service.png"
+
+
 aws_athena_database = Athena
 aws_athena_workgroup = Athena
 aws_cloudsearch_domain = Cloudsearch
@@ -124,3 +130,16 @@ aws_msk_cluster = ManagedStreamingForKafka
 aws_quicksight_data_source = Quicksight
 aws_quicksight_user = Quicksight
 aws_redshift_cluster = Redshift
+
+# Current aws resource types linked to existing icons
+aws_opensearch_domain = OpenSearchService
+aws_opensearchserverless_collection = OpenSearchService
+aws_osis_pipeline = OpenSearchService
+aws_emrserverless_application = EMR
+aws_emrcontainers_virtual_cluster = EMR
+aws_redshiftserverless_workgroup = Redshift
+aws_redshiftserverless_namespace = Redshift
+aws_msk_serverless_cluster = ManagedStreamingForKafka
+aws_mskconnect_connector = ManagedStreamingForKafka
+aws_glue_workflow = Glue
+aws_glue_trigger = Glue

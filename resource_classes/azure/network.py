@@ -153,3 +153,6 @@ azurerm_network_security_group = NetworkSecurityGroupsClassic
 azurerm_network_watcher_flow_log = NetworkWatcher
 # Marketplace network appliances (Palo Alto, Fortinet...) running as VMs
 azurerm_virtual_machine_appliance = Firewall
+
+# Current azurerm resource types linked to existing icons
+azurerm_route_server = RouteTables

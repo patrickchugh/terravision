@@ -108,6 +108,24 @@ class Karpenter(_Compute):
 
 
 # Terraform aliases
+
+
+class AppRunner(_Compute):
+    _icon = "app-runner.png"
+
+
+class EC2SpotInstance(_Compute):
+    _icon = "ec2-spot-instance.png"
+
+
+class EC2ImageBuilder(_Compute):
+    _icon = "ec2-image-builder.png"
+
+
+class EC2Ami(_Compute):
+    _icon = "ec2-ami.png"
+
+
 aws_batch_compute_environment = Batch
 aws_ecr_repository = ElasticContainerRegistry
 aws_ecrpublic_repository = ElasticContainerRegistry
@@ -131,3 +149,11 @@ aws_lambda_function = Lambda
 aws_lightsail_instance = Lightsail
 aws_eip = ElasticIP
 tv_karpenter = Karpenter
+
+# Current aws resource types linked to existing icons
+aws_apprunner_service = AppRunner
+aws_spot_fleet_request = EC2SpotInstance
+aws_spot_instance_request = EC2SpotInstance
+aws_imagebuilder_image_pipeline = EC2ImageBuilder
+aws_ami = EC2Ami
+aws_ec2_fleet = EC2

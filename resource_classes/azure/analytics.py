@@ -102,3 +102,11 @@ azurerm_hdinsight_spark_cluster = HDInsightClusters
 azurerm_log_analytics_workspace = LogAnalyticsWorkspaces
 azurerm_powerbi_embedded = PowerBiEmbedded
 azurerm_stream_analytics_job = StreamAnalyticsJobs
+
+# Current azurerm resource types linked to existing icons
+azurerm_eventhub_cluster = EventHubClusters
+azurerm_synapse_spark_pool = AzureSynapseAnalytics
+azurerm_synapse_sql_pool = AzureSynapseAnalytics
+azurerm_hdinsight_kafka_cluster = HDInsightClusters
+azurerm_hdinsight_hbase_cluster = HDInsightClusters
+azurerm_hdinsight_interactive_query_cluster = HDInsightClusters

@@ -45,6 +45,16 @@ SQS = SimpleQueueServiceSqs
 SF = StepFunctions
 
 # Terraform aliases
+
+
+class EventbridgePipes(_Integration):
+    _icon = "eventbridge-pipes.png"
+
+
+class EventbridgeSchema(_Integration):
+    _icon = "eventbridge-schema.png"
+
+
 aws_appsync_graphql_api = Appsync
 aws_appsync_function = Appsync
 aws_appsync_datasource = Appsync
@@ -62,3 +72,7 @@ aws_sns_platform_application = SimpleNotificationServiceSns
 aws_sqs_queue = SimpleQueueServiceSqs
 aws_sfn_state_machine = StepFunctions
 aws_sfn_activity = StepFunctions
+
+# Current aws resource types linked to existing icons
+aws_pipes_pipe = EventbridgePipes
+aws_schemas_registry = EventbridgeSchema

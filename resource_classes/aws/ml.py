@@ -100,6 +100,20 @@ DLC = DeepLearningContainers
 
 
 # Terraform aliases
+
+
+class Bedrock(_ML):
+    _icon = "bedrock.png"
+
+
+class Kendra(_ML):
+    _icon = "kendra.png"
+
+
+class Q(_ML):
+    _icon = "q.png"
+
+
 aws_comprehend_document_classifier = Comprehend
 aws_forecast_dataset = Forecast
 aws_lex_bot = Lex
@@ -113,3 +127,14 @@ aws_sagemaker_endpoint = Sagemaker
 aws_sagemaker_notebook_instance = SagemakerNotebook
 aws_sagemaker_model = SagemakerModel
 aws_transcribe_vocabulary = Transcribe
+
+# Current aws resource types linked to existing icons
+aws_bedrock_guardrail = Bedrock
+aws_bedrockagent_agent = Bedrock
+aws_bedrockagent_knowledge_base = Bedrock
+aws_bedrock_custom_model = Bedrock
+aws_bedrock_provisioned_model_throughput = Bedrock
+aws_bedrockagentcore_agent_runtime = Bedrock
+aws_kendra_index = Kendra
+aws_qbusiness_application = Q
+aws_lexv2models_bot = Lex

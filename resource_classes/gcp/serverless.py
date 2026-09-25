@@ -77,3 +77,6 @@ google_cloud_tasks_queue = CloudTasks
 google_cloud_scheduler_job = CloudScheduler
 google_workflows_workflow = Workflows
 google_eventarc_trigger = Eventarc
+
+# Current google resource types linked to existing icons
+google_cloud_run_v2_worker_pool = CloudRun

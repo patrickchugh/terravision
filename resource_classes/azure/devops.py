@@ -84,3 +84,8 @@ class TestPlans(_Devops):
 azurerm_application_insights = ApplicationInsights
 azurerm_devtest_lab = DevtestLabs
 azurerm_devtest_virtual_network = DevtestLabs
+
+# Current azurerm resource types linked to existing icons
+azurerm_dev_test_lab = DevtestLabs
+azurerm_dev_test_virtual_network = DevtestLabs
+azurerm_load_test = LoadTesting

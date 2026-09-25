@@ -105,3 +105,7 @@ azurerm_cdn_frontdoor_endpoint = FrontDoorAndCDNProfiles
 azurerm_cdn_frontdoor_origin_group = FrontDoorAndCDNProfiles
 azurerm_cdn_frontdoor_origin = FrontDoorAndCDNProfiles
 azurerm_cdn_frontdoor_route = FrontDoorAndCDNProfiles
+
+# Current azurerm resource types linked to existing icons
+azurerm_app_service_environment_v3 = AppServiceEnvironments
+azurerm_web_pubsub = Signalr

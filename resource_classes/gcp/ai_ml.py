@@ -113,3 +113,13 @@ google_notebooks_runtime = VertexAI
 google_dialogflow_cx_agent = DialogflowCX
 google_dialogflow_cx_flow = DialogflowCX
 google_document_ai_processor = DocumentAI
+
+# Current google resource types linked to existing icons
+google_workbench_instance = VertexAI
+google_colab_runtime = VertexAI
+google_vertex_ai_index = VertexAI
+google_vertex_ai_index_endpoint = VertexAI
+google_vertex_ai_feature_online_store = VertexAI
+google_vertex_ai_reasoning_engine = VertexAI
+google_tpu_v2_vm = AIHypercomputer
+google_hypercomputecluster_cluster = AIHypercomputer
