@@ -121,8 +121,11 @@ class TestGraphJsonSourceSkipsTerraform:
     def test_is_graph_json_source(self):
         from modules.helpers import is_graph_json_source
 
-        assert is_graph_json_source("architecture.graph.json")
+        assert is_graph_json_source("architecture.tvg.json")
+        assert is_graph_json_source("graph.json")
+        assert is_graph_json_source("ARCHITECTURE.TVG.JSON")
         assert not is_graph_json_source("./infra")
+        assert not is_graph_json_source("graph.tvg")
 
     @patch("modules.helpers.shutil.which")
     @patch("modules.helpers.os.path.isfile")

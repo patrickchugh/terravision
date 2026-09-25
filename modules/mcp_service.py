@@ -29,11 +29,19 @@ dominant cost is ``terraform plan``, which is itself a subprocess.
 
 import contextlib
 import os
+import re
 import sys
 import threading
 from collections import deque
 from pathlib import Path
 from typing import Any, Deque, Dict, Iterator, List, Optional, Sequence, Tuple
+
+# Node address rule for graphs passed to render_graph. Keep identical to the
+# pattern in docs/schemas/terravision-graph-1.0.schema.json and the skill's
+# scripts/validate_graph.py; tests/test_mcp_service.py compares all three.
+_NODE_ADDRESS = re.compile(
+    r"^(module\.[A-Za-z0-9_-]+(\[[^\]]+\])?\.)*[a-z][a-z0-9_]*\.[A-Za-z0-9_-]+(\[[^\]]+\])*(~[0-9]+)?$"
+)
 
 # Serialises all pipeline execution. See module docstring.
 _PIPELINE_LOCK = threading.Lock()
@@ -599,7 +607,7 @@ def run_render_graph(
     e.g. ``aws_lambda_function.orders``) to the list of node addresses it
     connects to or contains. See the Graph Format reference for the rules.
 
-    The graph is written to ``<outfile>.graph.json`` in the output directory
+    The graph is written to ``<outfile>.tvg.json`` in the output directory
     and then rendered exactly as ``terravision draw --source <that file>``
     would, so the CLI and MCP paths cannot drift.
 
@@ -614,7 +622,7 @@ def run_render_graph(
             "lists of connected node addresses."
         )
     for node, targets in graph.items():
-        if not isinstance(node, str) or "." not in node:
+        if not isinstance(node, str) or not _NODE_ADDRESS.match(node):
             raise McpServiceError(
                 f"Invalid node address {node!r}: expected '<type>.<name>', "
                 "e.g. 'aws_s3_bucket.assets'."
@@ -626,7 +634,7 @@ def run_render_graph(
                 f"Connections for {node!r} must be a list of node address strings."
             )
         for t in targets:
-            if "." not in t:
+            if not _NODE_ADDRESS.match(t):
                 raise McpServiceError(
                     f"Invalid connection {t!r} from {node!r}: expected "
                     "'<type>.<name>', e.g. 'aws_s3_bucket.assets'."
@@ -642,7 +650,7 @@ def run_render_graph(
     name = _validate_outfile(outfile)
     outdir = get_output_dir()
     outdir.mkdir(parents=True, exist_ok=True)
-    graph_path = outdir / f"{name}.graph.json"
+    graph_path = outdir / f"{name}.tvg.json"
     with open(graph_path, "w", encoding="utf-8") as fh:
         json.dump(graph, fh, indent=2)
 

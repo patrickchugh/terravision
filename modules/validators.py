@@ -36,7 +36,7 @@ def validate_source(source: str) -> None:
         sys.exit()
     # Check if source looks like a local path (not a URL or JSON file)
     if (
-        not src.endswith(".json")
+        not helpers.is_graph_json_source(src)
         and not helpers.check_for_domain(src)
         and not src.startswith("git::")
         and not os.path.exists(src)
@@ -244,7 +244,7 @@ def validate_pregenerated_inputs(planfile: str, graphfile: str, source: str) -> 
             )
         )
         sys.exit(1)
-    if planfile and source.endswith(".json"):
+    if planfile and helpers.is_graph_json_source(source):
         click.echo(
             click.style(
                 "\nERROR: --source must be a directory when using --planfile.\n",

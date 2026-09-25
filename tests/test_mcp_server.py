@@ -317,7 +317,7 @@ def test_graph_matches_graphdata_command(server, tmp_path, monkeypatch):
         catch_exceptions=False,
     )
     assert result.exit_code == 0, result.output
-    cli_graph = json.loads((tmp_path / "cli.json").read_text())
+    cli_graph = json.loads((tmp_path / "cli.tvg.json").read_text())
 
     mcp_graph = _payload(
         _call(server, "generate_architecture_graph", {"source": REPLAY_SOURCE})

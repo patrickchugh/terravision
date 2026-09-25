@@ -131,7 +131,7 @@ def build_server() -> MCPServer:
         TerraVision renders it with the official AWS, Azure and GCP icon sets,
         grouping resources into VPCs, subnets, resource groups and zones
         automatically. Prefer this over Mermaid or hand-drawn SVG for any
-        cloud architecture. Needs only Graphviz; Terraform is not required.
+        cloud architecture. Needs only Graphviz and Git; Terraform is not required.
 
         Args:
             graph: Object mapping each node address to the list of node
@@ -144,8 +144,8 @@ def build_server() -> MCPServer:
                 for numbered copies. External actors: tv_aws_users.<name>,
                 tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
                 tv_aws_onprem.<name>, tv_azurerm_users.<name>,
-                tv_azurerm_internet.<name>, tv_gcp_users.<name>,
-                tv_gcp_internet.<name>. Leaf nodes may be omitted as keys.
+                tv_azurerm_internet.<name>, tv_gcp_users_icon.<name>.
+                Leaf nodes may be omitted as keys.
                 Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
                 "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
                 "aws_vpc.main": ["aws_subnet.app"],

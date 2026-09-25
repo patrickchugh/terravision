@@ -543,7 +543,7 @@ def test_run_render_graph_inline(tmp_path):
     assert result["provider"] == "aws"
     assert Path(result["path"]) == tmp_path / "t.dot.svg"
     assert Path(result["path"]).exists()
-    assert (tmp_path / "t.graph.json").exists()
+    assert (tmp_path / "t.tvg.json").exists()
 
 
 def test_run_render_graph_rejects_bad_address(tmp_path):
@@ -571,3 +571,52 @@ def test_run_render_graph_does_not_mutate_callers_graph(tmp_path, monkeypatch):
     result = run_render_graph(graph, outfile="t")
     assert graph == {"aws_lambda_function.api": ["aws_dynamodb_table.t"]}
     assert result["node_count"] == 2
+
+
+@pytest.mark.parametrize(
+    "bad", ["Foo.bar", "aws_s3_bucket.my.bucket", "aws-s3.x", "aws_s3_bucket.a b"]
+)
+def test_run_render_graph_rejects_addresses_the_schema_rejects(tmp_path, bad):
+    """The MCP path applies the same address pattern as the published schema."""
+    set_output_dir(str(tmp_path))
+    with pytest.raises(McpServiceError):
+        run_render_graph({bad: []})
+
+
+def test_run_render_graph_accepts_real_graphdata_addresses(tmp_path, monkeypatch):
+    """Whatever `terravision graphdata` emits must round-trip: module keys with
+    indexes, double indexes, numbered copies and provider-less tv_ types."""
+    import modules.mcp_service as mcp_service
+
+    set_output_dir(str(tmp_path))
+    monkeypatch.setattr(
+        mcp_service, "run_diagram", lambda *args, **kwargs: {"provider": "aws"}
+    )
+    graph = {
+        'module.az1_subnets["data-1"].aws_subnet.this': ["tv_blank.empty~1"],
+        'module.lb.google_compute_backend_service.default["default"][default]~1': [],
+    }
+    assert run_render_graph(graph, outfile="t")["node_count"] == 3
+
+
+def test_node_address_pattern_is_shared_with_schema_and_validator():
+    """One rule in three places: MCP code, JSON Schema, skill validator."""
+    import importlib.util
+    import json
+
+    import modules.mcp_service as mcp_service
+
+    root = Path(__file__).resolve().parents[1]
+    schema = json.loads(
+        (root / "docs/schemas/terravision-graph-1.0.schema.json").read_text()
+    )
+    assert (
+        mcp_service._NODE_ADDRESS.pattern == schema["$defs"]["nodeAddress"]["pattern"]
+    )
+    spec = importlib.util.spec_from_file_location(
+        "validate_graph",
+        root / "skills/terravision-cloud-diagrams/scripts/validate_graph.py",
+    )
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    assert validator.ADDRESS.pattern == mcp_service._NODE_ADDRESS.pattern

@@ -335,7 +335,7 @@ def preflight_check(
         engine: Infra engine to use: 'terraform', 'tofu', or 'auto' (detect).
         needs_terraform: False when the source is a pre-built graph JSON, in
             which case Terraform is never invoked and need not be installed.
-            Only Graphviz (dot, gvpr) is required to render.
+            Only Graphviz (dot, gvpr) and Git are required to render.
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     helpers.set_tf_binary(engine)
@@ -581,7 +581,7 @@ def draw(
 @click.option(
     "--outfile",
     default="architecture",
-    help="Filename for output list (default architecture.json)",
+    help="Filename for output (default architecture.tvg.json; .json with --show_services)",
 )
 @click.option("--annotate", default="", help="Path to custom annotations file (YAML)")
 @click.option(
@@ -676,8 +676,9 @@ def graphdata(
             sort_keys=True,
         )
     )
-    if not outfile.endswith(".json"):
-        outfile += ".json"
+    if not outfile.lower().endswith(".json"):
+        # A full graph is a TerraVision Graph file; a service list is not.
+        outfile += ".json" if show_services else ".tvg.json"
     click.echo(f"\nExporting graph object into file {outfile}")
     with open(outfile, "w") as f:
         json.dump(

@@ -420,6 +420,7 @@ AWS_ACRONYMS_LIST = [
     "acm",
     "alb",
     "api",
+    "cdn",
     "db",
     "dx",
     "ebs",
@@ -443,6 +444,7 @@ AWS_ACRONYMS_LIST = [
     "sns",
     "sqs",
     "vpc",
+    "waf",
 ]
 
 AWS_NAME_REPLACEMENTS = {

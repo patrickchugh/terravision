@@ -2125,13 +2125,10 @@ def is_graph_json_source(source: str) -> bool:
 
     Such sources are loaded directly and never run Terraform. This is the one
     place that decides it, so preflight and compilation cannot disagree.
+    TerraVision Graph files use the ``.tvg.json`` extension, which this also
+    matches; the check is case-insensitive.
     """
-    return source.endswith(
-        (
-            ".json",
-            ".JSON",
-        )
-    )
+    return source.lower().endswith(".json")
 
 
 def check_dependencies(needs_terraform: bool = True) -> None:
