@@ -5,6 +5,7 @@ output into internal data structures for diagram generation.
 """
 
 from typing import Dict, List, Tuple, Any
+import importlib
 import os
 import re
 import copy
@@ -822,8 +823,48 @@ def load_json_source(source: str) -> Dict[str, Any]:
         click.echo(
             f"Source is a pre-generated JSON tfgraph file. Will not call {helpers.get_tf_binary()} binary or AI model."
         )
+        _add_leaf_targets(jsondata)
         tfdata["graphdict"] = jsondata
     return tfdata
+
+
+def _base_address(address: str) -> str:
+    """Strip a numbered-copy suffix and trailing indexes from a node address.
+
+    ``aws_efs_mount_target.this[0]~1`` and ``aws_eks_node_group.main~2`` become
+    ``aws_efs_mount_target.this`` and ``aws_eks_node_group.main``.
+    """
+    return re.sub(r"(\[[^\]]*\])+$", "", address.split("~")[0])
+
+
+def _add_leaf_targets(graph: Dict[str, List[str]]) -> None:
+    """Give leaf targets their own empty entry so they are drawn.
+
+    The Graph Format lets a hand-written graph list a leaf node only as a
+    target, but drawing only follows targets that are keys, so such leaves
+    were silently dropped. Graphs exported from Terraform also carry dangling
+    targets that must stay undrawn, so a target is added only when:
+
+    - no key is a numbered or indexed copy of it (``main`` next to ``main~1``
+      is a stale reference to nodes that are already drawn), and
+    - at least one node pointing at it is visible; a target reachable only
+      through hidden types (a route table's associations) was never drawn.
+    """
+    hidden = set()
+    for provider in ("AWS", "AZURE", "GCP"):
+        config = importlib.import_module(
+            f"modules.config.cloud_config_{provider.lower()}"
+        )
+        hidden |= set(getattr(config, f"{provider}_HIDE_NODES", []))
+    key_bases = {_base_address(k) for k in graph}
+    for parent, targets in list(graph.items()):
+        parent_type = helpers.get_no_module_name(parent).split(".")[0]
+        if parent_type in hidden:
+            continue
+        for target in targets:
+            if target in graph or _base_address(target) in key_bases:
+                continue
+            graph[target] = []
 
 
 def process_pregenerated_source(
