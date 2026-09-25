@@ -309,6 +309,9 @@ def _check_binaries(needs_terraform: bool = True) -> None:
     Raises:
         McpServiceError: If any required executable is missing.
     """
+    from modules.helpers import add_windows_graphviz_to_path
+
+    add_windows_graphviz_to_path()
     missing = _missing_binaries(needs_terraform)
     if not missing:
         return

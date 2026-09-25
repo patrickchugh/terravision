@@ -152,3 +152,90 @@ class TestGraphJsonSourceSkipsTerraform:
 
         deps.assert_called_once_with(needs_terraform=False)
         version.assert_not_called()
+
+
+class TestWindowsGraphvizPath:
+    """A winget Graphviz install is not on PATH; TerraVision finds it anyway."""
+
+    @pytest.fixture
+    def windows(self, monkeypatch, tmp_path):
+        """Pretend to be Windows with Graphviz installed but not on PATH."""
+        import modules.helpers as helpers
+
+        bin_dir = tmp_path / "Graphviz" / "bin"
+        bin_dir.mkdir(parents=True)
+        (bin_dir / "dot.exe").write_text("")
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: None)
+        monkeypatch.setenv("ProgramFiles", str(tmp_path))
+        monkeypatch.delenv("ProgramFiles(x86)", raising=False)
+        monkeypatch.setenv("PATH", "C:\\Windows")
+        return bin_dir
+
+    def test_install_dir_is_appended_to_path(self, windows):
+        import os
+
+        from modules.helpers import add_windows_graphviz_to_path
+
+        assert add_windows_graphviz_to_path() == str(windows)
+        assert os.environ["PATH"] == os.pathsep.join(["C:\\Windows", str(windows)])
+
+    def test_dot_already_on_path_wins(self, windows, monkeypatch):
+        import os
+
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: "C:\\other\\dot.exe")
+        assert helpers.add_windows_graphviz_to_path() is None
+        assert os.environ["PATH"] == "C:\\Windows"
+
+    def test_not_installed_changes_nothing(self, windows):
+        import os
+
+        from modules.helpers import add_windows_graphviz_to_path
+
+        (windows / "dot.exe").unlink()
+        assert add_windows_graphviz_to_path() is None
+        assert os.environ["PATH"] == "C:\\Windows"
+
+    def test_other_platforms_are_untouched(self, windows, monkeypatch):
+        import os
+
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Linux")
+        assert helpers.add_windows_graphviz_to_path() is None
+        assert os.environ["PATH"] == "C:\\Windows"
+
+    def test_preflight_uses_it(self, windows, monkeypatch):
+        """check_dependencies passes once the install dir is on PATH."""
+        import os
+
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(
+            helpers.shutil,
+            "which",
+            lambda exe: (
+                "found" if exe != "dot" or str(windows) in os.environ["PATH"] else None
+            ),
+        )
+        helpers.check_dependencies(needs_terraform=False)
+        assert str(windows) in os.environ["PATH"]
+
+    def test_mcp_binary_check_uses_it(self, windows, monkeypatch):
+        import os
+
+        import modules.helpers as helpers
+        import modules.mcp_service as mcp_service
+
+        monkeypatch.setattr(
+            helpers.shutil,
+            "which",
+            lambda exe: (
+                "found"
+                if exe not in ("dot", "gvpr") or str(windows) in os.environ["PATH"]
+                else None
+            ),
+        )
+        mcp_service._check_binaries(needs_terraform=False)
