@@ -88,6 +88,11 @@ VIEW_HTML = r"""<!DOCTYPE html>
   }
   ul { margin: 6px 0 0; padding-left: 18px; color: var(--fg2); font-size: 12px; }
   li code { font-family: var(--mono); color: var(--fg); word-break: break-all; }
+  li button.path {
+    padding: 0; border: 0; background: none; text-align: left; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; color: var(--fg); text-decoration: underline;
+    word-break: break-all;
+  }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -166,7 +171,12 @@ VIEW_HTML = r"""<!DOCTYPE html>
     return request("tools/call", { name: name, arguments: args }).then(function (res) {
       if (!res) { throw new Error("No result"); }
       if (res.isError) { throw new Error(textOf(res) || "The tool reported an error"); }
-      if (res.structuredContent) { return res.structuredContent; }
+      var data = res.structuredContent;
+      // The MCP SDK wraps a tool's dictionary result as {"result": {...}}.
+      if (data && data.result && typeof data.result === "object" && Object.keys(data).length === 1) {
+        data = data.result;
+      }
+      if (data) { return data; }
       try { return JSON.parse(textOf(res)); } catch (e) { return {}; }
     });
   }
@@ -224,6 +234,8 @@ VIEW_HTML = r"""<!DOCTYPE html>
     (res.content || []).forEach(function (b) { if (!image && b.type === "image") { image = b; } });
     if (image) {
       showImage("data:" + (image.mimeType || "image/png") + ";base64," + image.data);
+      // Show the preview at once, then swap in the SVG so zooming stays sharp.
+      loadSvg(false);
     } else if (canCallTools()) {
       loadSvg(true);
     } else {
@@ -248,9 +260,22 @@ VIEW_HTML = r"""<!DOCTYPE html>
     Object.keys(f).forEach(function (kind) {
       var li = document.createElement("li");
       li.appendChild(document.createTextNode((labels[kind] || kind) + ": "));
-      var code = document.createElement("code");
-      code.textContent = f[kind];
-      li.appendChild(code);
+      var path = f[kind];
+      if (canCallTools()) {
+        // Clicking a path opens that file in its default app.
+        var link = document.createElement("button");
+        link.className = "path";
+        link.title = "Open this file";
+        link.textContent = path;
+        link.onclick = function () {
+          openFile(path, false, "Opened " + path.split(/[\\/]/).pop() + ".");
+        };
+        li.appendChild(link);
+      } else {
+        var code = document.createElement("code");
+        code.textContent = path;
+        li.appendChild(code);
+      }
       list.appendChild(li);
     });
     list.hidden = list.children.length === 0;
@@ -318,8 +343,9 @@ VIEW_HTML = r"""<!DOCTYPE html>
   })();
   window.addEventListener("resize", function () { if (view.fitted) { fit(); } });
 
-  // Swap the preview for the full-resolution SVG the first time the user zooms
-  // in, keeping the on-screen size so the view does not jump.
+  // Swap the preview for the SVG, which stays sharp at any zoom, keeping the
+  // on-screen size so the view does not jump. Also retried on zoom in case the
+  // first load failed.
   function loadSvg(initial) {
     if (svgLoaded || !canCallTools() || !files().svg) { return; }
     svgLoaded = true;

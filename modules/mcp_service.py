@@ -881,6 +881,44 @@ def read_output_file(path: str) -> Dict[str, Any]:
     }
 
 
+# Where X11 display sockets live on Linux.
+_X11_SOCKET_DIR = Path("/tmp/.X11-unix")
+
+
+def _linux_desktop_env() -> Optional[Dict[str, str]]:
+    """Return an environment that can reach the user's desktop, or None.
+
+    Desktop apps such as Claude Desktop start MCP servers with little more
+    than HOME and PATH, so DISPLAY, WAYLAND_DISPLAY and the D-Bus address that
+    xdg-open needs are missing even on a desktop. They are recovered from
+    their standard locations: the user's runtime directory
+    (``/run/user/<uid>``) holds the D-Bus and Wayland sockets, and
+    ``/tmp/.X11-unix`` the X11 ones. Returns None when there is no desktop
+    session at all, for example on a server reached over SSH.
+    """
+    env = dict(os.environ)
+    if env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"):
+        return env
+    runtime = Path(env.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
+    if runtime.is_dir():
+        env["XDG_RUNTIME_DIR"] = str(runtime)
+        bus = runtime / "bus"
+        if bus.exists() and not env.get("DBUS_SESSION_BUS_ADDRESS"):
+            env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={bus}"
+        wayland = sorted(
+            p.name for p in runtime.glob("wayland-*") if not p.name.endswith(".lock")
+        )
+        if wayland:
+            env["WAYLAND_DISPLAY"] = wayland[0]
+    if _X11_SOCKET_DIR.is_dir():
+        displays = sorted(
+            p.name[1:] for p in _X11_SOCKET_DIR.glob("X*") if p.name[1:].isdigit()
+        )
+        if displays:
+            env["DISPLAY"] = f":{displays[0]}"
+    return env if env.get("DISPLAY") or env.get("WAYLAND_DISPLAY") else None
+
+
 def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
     """Open a rendered file in the user's default app, or show it in its folder.
 
@@ -917,11 +955,13 @@ def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
         elif helpers.is_wsl():
             command = ["wslview", str(resolved.parent) if reveal else target]
         else:
-            if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+            desktop = _linux_desktop_env()
+            if desktop is None:
                 raise McpServiceError(
                     f"There is no desktop session here to open files in. "
                     f"The file is at {target}"
                 )
+            popen_kwargs["env"] = desktop
             command = ["xdg-open", str(resolved.parent) if reveal else target]
     try:
         subprocess.Popen(command, **popen_kwargs)

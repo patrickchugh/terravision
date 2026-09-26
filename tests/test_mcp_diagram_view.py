@@ -141,6 +141,13 @@ def test_only_rendered_files_can_be_read_or_opened(rendered, outdir, attempt):
 # ── Opening rendered files ──────────────────────────────────────────
 
 
+_LAUNCH = {}
+
+
+def launched_env():
+    return _LAUNCH["env"]
+
+
 @pytest.fixture
 def launched(monkeypatch):
     """Capture the command open_output_file would run instead of running it."""
@@ -149,7 +156,12 @@ def launched(monkeypatch):
     import modules.helpers as helpers
 
     calls = []
-    monkeypatch.setattr(subprocess, "Popen", lambda cmd, **kw: calls.append(cmd))
+
+    def fake_popen(cmd, **kwargs):
+        calls.append(cmd)
+        _LAUNCH["env"] = kwargs.get("env")
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
     monkeypatch.setattr(helpers, "is_wsl", lambda: False)
     return calls
 
@@ -169,13 +181,44 @@ def test_open_on_linux_desktop(rendered, launched, monkeypatch):
     assert launched == [["xdg-open", png], ["xdg-open", str(Path(png).parent)]]
 
 
-def test_open_on_linux_without_a_desktop(rendered, launched, monkeypatch):
+@pytest.fixture
+def stripped_env(monkeypatch, tmp_path):
+    """An environment like Claude Desktop gives MCP servers: no desktop vars."""
+    for var in ("DISPLAY", "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS"):
+        monkeypatch.delenv(var, raising=False)
+    runtime = tmp_path / "run-user"
+    runtime.mkdir()
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(runtime))
+    monkeypatch.setattr(mcp_service, "_X11_SOCKET_DIR", tmp_path / "no-x11")
+    return runtime
+
+
+def test_open_on_linux_without_a_desktop(rendered, launched, monkeypatch, stripped_env):
     _on(monkeypatch, "Linux")
-    monkeypatch.delenv("DISPLAY", raising=False)
-    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
     with pytest.raises(McpServiceError, match="no desktop session"):
         mcp_service.open_output_file(rendered["files"]["png"])
     assert launched == []
+
+
+def test_open_recovers_the_desktop_session(
+    rendered, launched, monkeypatch, stripped_env
+):
+    """Claude Desktop strips DISPLAY and friends; they are found again."""
+    _on(monkeypatch, "Linux")
+    for name in ("bus", "wayland-0", "wayland-0.lock"):
+        (stripped_env / name).touch()
+    x11 = stripped_env.parent / "x11"
+    x11.mkdir()
+    (x11 / "X1").touch()
+    monkeypatch.setattr(mcp_service, "_X11_SOCKET_DIR", x11)
+    png = rendered["files"]["png"]
+    mcp_service.open_output_file(png)
+    assert launched == [["xdg-open", png]]
+    env = launched_env()
+    assert env["WAYLAND_DISPLAY"] == "wayland-0"
+    assert env["DISPLAY"] == ":1"
+    assert env["DBUS_SESSION_BUS_ADDRESS"] == f"unix:path={stripped_env / 'bus'}"
+    assert env["XDG_RUNTIME_DIR"] == str(stripped_env)
 
 
 def test_open_on_macos(rendered, launched, monkeypatch):
@@ -293,6 +336,21 @@ def test_view_resource_is_served(client_call):
     assert contents[0].mime_type == "text/html;profile=mcp-app"
     assert "ui/initialize" in contents[0].text
     assert "__VERSION__" not in contents[0].text
+
+
+def test_diagram_file_result_is_wrapped_by_the_sdk(outdir, client_call):
+    """The SDK wraps a dict result as {"result": ...}; the view unwraps it."""
+
+    async def go(c):
+        rendered = await c.call_tool("render_graph", {"graph": GRAPH, "outfile": "w"})
+        graph = rendered.structured_content["files"]["graph"]
+        return await c.call_tool("diagram_file", {"path": graph})
+
+    result = client_call(go)
+    assert json.loads(result.structured_content["result"]["text"])
+    from modules.mcp_view import VIEW_HTML
+
+    assert "data.result" in VIEW_HTML
 
 
 def test_open_tool_refuses_unknown_files(outdir, client_call):
