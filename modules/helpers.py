@@ -2172,7 +2172,8 @@ def is_graph_file_source(source: str) -> bool:
 # Why visualise refuses graph files, shared by the CLI and the MCP server.
 VISUALISE_GRAPH_FILE_ERROR = (
     "visualise shows the Terraform attributes behind each resource, and a graph "
-    "file (.tvg.json) has none. Use `terravision draw` for graph files, or run "
+    "file (.tvg.json) has none. For a graph file, use `terravision draw --format "
+    "svg`: the SVG opens in any browser and embeds in HTML pages. Or run "
     "visualise on Terraform code or a tfdata.json replay (from --debug)."
 )
 

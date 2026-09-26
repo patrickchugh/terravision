@@ -240,7 +240,7 @@ editable in draw.io, Lucidchart or any mxGraph editor.
 Equivalent to `terravision visualise`. Produces a self-contained HTML page with clickable,
 searchable nodes and all resource metadata embedded, so it opens offline. Returns `{path, provider}`.
 It refuses a graph file (`.tvg.json`), which has no resource metadata to show; use `render_graph`
-or `generate_diagram` for those. A `tfdata.json` replay works.
+or `generate_diagram` for those, which also write a self-contained SVG that works in any browser. A `tfdata.json` replay works.
 
 ### `open_diagram_file`
 
