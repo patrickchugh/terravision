@@ -26,6 +26,8 @@ brew install graphviz
 ```bash
 sudo apt update
 sudo apt install graphviz
+# Ubuntu 26.04+ and Debian testing only: the neato layout engine TerraVision
+# uses is a separate package there (older releases include it in graphviz)
 sudo apt install libgvplugin-neato-layout8
 ```
 

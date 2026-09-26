@@ -2073,17 +2073,32 @@ def get_tf_binary() -> str:
 
 
 # install commands are looked up by OS family, falling back to "default".
+# Ubuntu 26.04+ and Debian testing ship Graphviz's layout engines as separate
+# packages, and `graphviz` does not pull in the neato one that TerraVision
+# renders with.
+NEATO_PLUGIN_HINT = (
+    "# Ubuntu 26.04+ / Debian testing also: sudo apt install libgvplugin-neato-layout8"
+)
+
 # Lines starting with "#" are printed verbatim as guidance/doc links.
 # The terraform entry's executable is resolved at call time via
 # get_tf_binary(), so it follows the --engine flag (terraform or tofu).
 DEPENDENCIES: Dict[str, Dict[str, Any]] = {
     "graphviz": {
         "name": "Graphviz",
-        "executables": ["dot", "gvpr"],
+        "executables": ["dot", "neato", "gvpr"],
         "install": {
             "macos": ["brew install graphviz"],
-            "debian": ["sudo apt update", "sudo apt install graphviz"],
-            "wsl": ["sudo apt update", "sudo apt install graphviz"],
+            "debian": [
+                "sudo apt update",
+                "sudo apt install graphviz",
+                NEATO_PLUGIN_HINT,
+            ],
+            "wsl": [
+                "sudo apt update",
+                "sudo apt install graphviz",
+                NEATO_PLUGIN_HINT,
+            ],
             "windows": [
                 "scoop install graphviz",
                 "# or: choco install graphviz",
@@ -2182,6 +2197,32 @@ def add_graphviz_to_path() -> Optional[str]:
     return None
 
 
+def neato_engine_error() -> Optional[str]:
+    """Return Graphviz's error when `neato` cannot lay out a graph, else None.
+
+    On Ubuntu 26.04+ and Debian testing the `neato` command comes with the
+    `graphviz` package, but its layout engine is the separate
+    libgvplugin-neato-layout8 package, so a PATH check passes and the first
+    render fails. A trivial layout (a few milliseconds, nothing written)
+    catches that. Only Linux splits the engine out, so other systems skip it.
+    """
+    if platform.system() != "Linux" or not shutil.which("neato"):
+        return None
+    try:
+        result = subprocess.run(
+            ["neato", "-Tdot"],
+            input="graph {}",
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return str(e)
+    if result.returncode == 0:
+        return None
+    return (result.stderr.strip().splitlines() or ["neato failed"])[0]
+
+
 def check_dependencies(needs_terraform: bool = True) -> None:
     """Check if required command-line tools are available.
 
@@ -2217,7 +2258,21 @@ def check_dependencies(needs_terraform: bool = True) -> None:
             missing.append((info, not_found))
 
     if not missing:
-        return
+        engine_error = neato_engine_error()
+        if not engine_error:
+            return
+        click.echo(
+            click.style(
+                f"\n  ERROR: Graphviz cannot run its neato layout engine: {engine_error}",
+                fg="red",
+                bold=True,
+            )
+        )
+        click.echo(
+            "\n  On Ubuntu 26.04+ and Debian testing it is a separate package:\n"
+            "    sudo apt install libgvplugin-neato-layout8\n"
+        )
+        exit(1)
 
     os_family = _get_os_family()
 

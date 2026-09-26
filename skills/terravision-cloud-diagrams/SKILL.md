@@ -47,7 +47,7 @@ If `terravision` is installed but not found, its folder is not on PATH: run `uv 
 | OS | Command |
 |---|---|
 | macOS | `brew install graphviz git` |
-| Debian / Ubuntu | `sudo apt install graphviz git` |
+| Debian / Ubuntu | `sudo apt install graphviz git`. On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`: the `neato` layout engine TerraVision uses is a separate package there |
 | Fedora / RHEL | `sudo dnf install graphviz git` |
 | Windows | `scoop install graphviz git`, `choco install graphviz git`, or `winget install --id Graphviz.Graphviz` and `winget install --id Git.Git` |
 

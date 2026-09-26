@@ -326,11 +326,19 @@ def _check_binaries(needs_terraform: bool = True) -> None:
         _get_os_family,
         add_graphviz_to_path,
         get_tf_binary,
+        neato_engine_error,
     )
 
     add_graphviz_to_path()
     missing = _missing_binaries(needs_terraform)
     if not missing:
+        engine_error = neato_engine_error()
+        if engine_error:
+            raise McpServiceError(
+                f"TerraVision cannot run: Graphviz cannot run its neato layout "
+                f"engine ({engine_error}). On Ubuntu 26.04+ and Debian testing it "
+                "is a separate package: sudo apt install libgvplugin-neato-layout8"
+            )
         return
     # The same per-OS install commands the CLI prints, so a chat app can show
     # the user exactly what to run.

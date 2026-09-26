@@ -295,3 +295,70 @@ def test_mcp_missing_binary_message_has_install_commands(monkeypatch):
     message = str(excinfo.value)
     assert "brew install graphviz" in message
     assert "brew install git" in message
+
+
+class TestNeatoEngine:
+    """Ubuntu 26.04+ ships neato's layout engine as a separate package, so
+    `neato` can be on PATH and still unable to lay out a graph."""
+
+    MISSING = 'There is no layout engine support for "neato"\n Use one of: dot\n'
+
+    @pytest.fixture
+    def neato_fails(self, monkeypatch):
+        import subprocess
+
+        import modules.helpers as helpers
+
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=self.MISSING)
+
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Linux")
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: f"/usr/bin/{exe}")
+        monkeypatch.setattr(helpers.subprocess, "run", fake_run)
+        return calls
+
+    def test_real_neato_works_here(self):
+        """CI and development machines have a working Graphviz."""
+        from modules.helpers import neato_engine_error
+
+        assert neato_engine_error() is None
+
+    def test_missing_engine_is_reported(self, neato_fails):
+        from modules.helpers import neato_engine_error
+
+        assert neato_engine_error() == 'There is no layout engine support for "neato"'
+        assert neato_fails == [["neato", "-Tdot"]]
+
+    def test_only_checked_on_linux(self, neato_fails, monkeypatch):
+        import modules.helpers as helpers
+
+        for system in ("Darwin", "Windows"):
+            monkeypatch.setattr(helpers.platform, "system", lambda s=system: s)
+            assert helpers.neato_engine_error() is None
+        assert neato_fails == []
+
+    def test_preflight_stops_with_the_apt_package(self, neato_fails, capsys):
+        with pytest.raises(SystemExit) as excinfo:
+            check_dependencies(needs_terraform=False)
+        assert excinfo.value.code == 1
+        assert "libgvplugin-neato-layout8" in capsys.readouterr().out
+
+    def test_mcp_check_reports_the_apt_package(self, neato_fails, monkeypatch):
+        import modules.helpers as helpers
+        import modules.mcp_service as mcp_service
+
+        monkeypatch.setattr(helpers, "_graphviz_install_dirs", lambda: [])
+        with pytest.raises(mcp_service.McpServiceError) as excinfo:
+            mcp_service._check_binaries(needs_terraform=False)
+        assert "libgvplugin-neato-layout8" in str(excinfo.value)
+
+    @patch("modules.helpers.shutil.which")
+    @patch("modules.helpers.os.path.isfile")
+    def test_neato_missing_from_path(self, mock_isfile, mock_which):
+        mock_which.side_effect = lambda exe: None if exe == "neato" else "/usr/bin/fake"
+        mock_isfile.return_value = False
+        with pytest.raises(SystemExit):
+            check_dependencies(needs_terraform=False)
