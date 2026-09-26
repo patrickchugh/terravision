@@ -546,3 +546,37 @@ def test_diagram_guide_lists_and_fetches_patterns():
 def test_diagram_guide_rejects_unknown_pattern():
     with pytest.raises(McpServiceError, match="Available: azure-aks"):
         mcp_service.diagram_guide("azure", pattern="aws-eks")
+
+
+# ── Warnings in render_graph results ────────────────────────────────
+
+
+def test_render_graph_warns_about_unknown_types_with_suggestions(outdir):
+    result = mcp_service.run_render_graph(
+        {"aws_lambda_function.fn": ["aws_rds_sql_server.db", "aws_vpc.main"]},
+        outfile="warn",
+        preview=False,
+    )
+    joined = "\n".join(result["warnings"])
+    assert "Unknown type 'aws_rds_sql_server'" in joined
+    assert "Did you mean aws_rds_sqlserver" in joined
+    assert "aws_vpc is a container" in joined
+
+
+def test_clean_graph_has_no_warnings(outdir):
+    result = mcp_service.run_render_graph(GRAPH, outfile="clean", preview=False)
+    assert "warnings" not in result
+
+
+def test_warnings_reach_the_model_and_the_view(outdir, client_call):
+    result = client_call(
+        lambda c: c.call_tool(
+            "render_graph",
+            {"graph": {"aws_lambda_function.fn": ["aws_lamda_function.typo"]}},
+        )
+    )
+    assert "Did you mean aws_lambda_function" in result.content[0].text
+    assert result.structured_content["warnings"]
+    from modules.mcp_view import VIEW_HTML
+
+    assert "result.warnings" in VIEW_HTML

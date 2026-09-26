@@ -6,6 +6,7 @@ Exits 1 with a list of errors when the graph cannot be drawn. Otherwise
 exits 0, first printing warnings for things that will draw differently from
 what was probably meant. No dependencies.
 """
+import difflib
 import json
 import re
 import sys
@@ -141,6 +142,19 @@ def validate(graph):
     return problems
 
 
+def suggestions(resource_type, candidates, limit=3):
+    """Closest supported types: those containing every word first, then typos.
+
+    ``google_sql_instance`` finds ``google_sql_database_instance`` (every
+    word matches, one is extra); ``aws_lamda_function`` finds
+    ``aws_lambda_function`` by spelling.
+    """
+    words = set(resource_type.split("_"))
+    containing = sorted((t for t in candidates if words <= set(t.split("_"))), key=len)
+    similar = difflib.get_close_matches(resource_type, candidates, n=limit)
+    return list(dict.fromkeys(containing + similar))[:limit]
+
+
 def warnings(graph):
     """Things that draw, but not the way the author probably meant.
 
@@ -158,10 +172,16 @@ def warnings(graph):
     known = known_types()
     if known is not None:
         for resource_type in sorted({type_of(n) for n in nodes} - known):
-            if provider_of(resource_type + ".x"):
+            provider = provider_of(resource_type + ".x")
+            if provider:
+                close = suggestions(
+                    resource_type,
+                    [t for t in known if provider_of(t + ".x") == provider],
+                )
+                hint = f" Did you mean {' or '.join(close)}?" if close else ""
                 found.append(
-                    f"Unknown type {resource_type!r} draws a blank icon; check "
-                    "the spelling against references/node-types.md."
+                    f"Unknown type {resource_type!r} draws a blank icon.{hint} "
+                    "Use a type from the supported node types list."
                 )
 
     for src, dst in edges:

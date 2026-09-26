@@ -48,7 +48,9 @@ overview of what a stack contains. Calls run one at a time.
 render_graph and generate_diagram save a PNG, an SVG, an editable draw.io file
 and the graph as .tvg.json, and return their paths plus a preview image. Look
 at the preview to check the diagram before presenting it; if it looks wrong,
-fix the graph, not TerraVision. Apps that support MCP Apps also show it to the
+fix the graph, not TerraVision. If a render_graph result has warnings (an
+unknown type with suggested replacements, arrows that will not be drawn), fix
+the graph and render again. Apps that support MCP Apps also show it to the
 user in an interactive view with buttons to open and edit the files.
 open_diagram_file opens a file for the user on their own computer. Show the
 user the graph JSON as well.
@@ -172,7 +174,10 @@ def build_server() -> MCPServer:
             {"path", "format", "provider", "title", "files", "graph_path",
             "node_count", "edge_count"}, plus a preview image. "files" holds
             the paths of the PNG, SVG, draw.io file and the graph (.tvg.json);
-            "path" is the file in the requested format.
+            "path" is the file in the requested format. "warnings" appears
+            when parts of the graph will not draw as they read, such as an
+            unknown type (with suggestions) or an arrow to a container: fix
+            the graph and call render_graph again.
         """
         with _tool_errors():
             return _diagram_result(

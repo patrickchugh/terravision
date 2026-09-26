@@ -137,7 +137,7 @@ Validate before rendering: `python scripts/validate_graph.py architecture.tvg.js
 
 ## If you have the TerraVision MCP server
 
-Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`. Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself.
+Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`. Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself. If the result has `warnings` (an unknown type with suggested replacements, arrows that will not be drawn), fix the graph and render again.
 
 ## Check every render, and fix the input
 

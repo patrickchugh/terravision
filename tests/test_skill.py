@@ -198,3 +198,22 @@ def test_patterns_are_valid_plain_single_provider_graphs(entry):
     nodes = set(graph) | {t for targets in graph.values() for t in targets}
     assert not any(n.startswith("module.") or "[" in n for n in nodes)
     assert {validator.provider_of(n) for n in nodes} - {None} == {entry["provider"]}
+
+
+@pytest.mark.parametrize(
+    "unknown, best",
+    [
+        ("google_sql_instance", "google_sql_database_instance"),
+        ("aws_lamda_function", "aws_lambda_function"),
+        ("aws_ecs_fargte", "aws_ecs_fargate"),
+        ("aws_rds_sql_server", "aws_rds_sqlserver"),
+    ],
+)
+def test_unknown_type_suggestions(unknown, best):
+    validator = _validator()
+    [warning] = [
+        w
+        for w in validator.warnings({f"{unknown}.x": []})
+        if w.startswith("Unknown type")
+    ]
+    assert f"Did you mean {best}" in warning

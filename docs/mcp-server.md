@@ -204,6 +204,11 @@ output directory and rendered exactly as `terravision draw --source <that file>`
 paths cannot drift. Returns the same result as `generate_diagram` plus `graph_path`, `node_count`
 and `edge_count`.
 
+When parts of the graph will not draw as they read, the result also has `warnings`: an unknown type
+(with the closest supported types suggested), an arrow to a container or a shared service, a node
+listed in two boxes. They come from the skill's validator, so the command-line check gives the same
+advice. The diagram is still drawn, and the view lists the warnings under it.
+
 Takes `format`, `outfile`, `fontsize`, `iconsize`, `title` and `preview`. Needs only Graphviz and Git: no
 Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
 `google_*`) is rejected; draw one diagram per provider.

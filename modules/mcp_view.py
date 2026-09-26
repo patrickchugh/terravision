@@ -35,6 +35,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
     --fg2: var(--color-text-secondary, #59636e);
     --border: var(--color-border-primary, #d0d7de);
     --danger: var(--color-text-danger, #cf222e);
+    --warning: var(--color-text-warning, #9a6700);
     --radius: var(--border-radius-md, 8px);
     --font: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
     --mono: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace);
@@ -87,6 +88,8 @@ VIEW_HTML = r"""<!DOCTYPE html>
     border: 1px solid var(--border); border-radius: var(--radius); font: 12px/1.45 var(--mono);
   }
   ul { margin: 6px 0 0; padding-left: 18px; color: var(--fg2); font-size: 12px; }
+  #warnings { color: var(--warning); }
+  #warnings li { margin-bottom: 2px; }
   li code { font-family: var(--mono); color: var(--fg); word-break: break-all; }
   li button.path {
     padding: 0; border: 0; background: none; text-align: left; cursor: pointer;
@@ -116,6 +119,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
 <div id="stage"><div id="message">Drawing the diagram&hellip;</div><img id="diagram" alt="Cloud architecture diagram" hidden></div>
 <div id="status"></div>
 <pre id="graph" hidden></pre>
+<ul id="warnings" hidden></ul>
 <ul id="files" hidden></ul>
 <script>
 (function () {
@@ -242,6 +246,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
       showMessage("The diagram was saved to the files listed below.", false);
     }
     listFiles();
+    listWarnings();
     $("actions").hidden = false;
     var tools = canCallTools();
     ["open", "edit", "reveal", "copy", "json"].forEach(function (id) { $(id).hidden = !tools; });
@@ -251,6 +256,17 @@ VIEW_HTML = r"""<!DOCTYPE html>
 
   function files() { return (result && result.files) || {}; }
   function canCallTools() { return !!hostCaps.serverTools; }
+
+  function listWarnings() {
+    var list = $("warnings");
+    list.textContent = "";
+    ((result && result.warnings) || []).forEach(function (text) {
+      var li = document.createElement("li");
+      li.textContent = text;
+      list.appendChild(li);
+    });
+    list.hidden = list.children.length === 0;
+  }
 
   function listFiles() {
     var list = $("files");

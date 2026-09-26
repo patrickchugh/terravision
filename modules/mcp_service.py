@@ -758,7 +758,8 @@ def run_render_graph(
 
     Returns:
         :func:`run_diagram`'s result plus ``graph_path``, ``node_count`` and
-        ``edge_count``.
+        ``edge_count``, and ``warnings`` when parts of the graph will not
+        draw the way they read (see :func:`graph_warnings`).
     """
     import json
 
@@ -785,6 +786,8 @@ def run_render_graph(
                     f"Invalid connection {t!r} from {node!r}: expected "
                     "'<type>.<name>', e.g. 'aws_s3_bucket.assets'."
                 )
+    found = graph_warnings(graph)
+
     # Refuse a graph that mixes providers before writing anything, so a
     # rejected call leaves no file behind.
     from modules.helpers import TerravisionError
@@ -820,6 +823,8 @@ def run_render_graph(
         preview=preview,
     )
     result["graph_path"] = str(graph_path)
+    if found:
+        result["warnings"] = found
     result["node_count"] = len(graph)
     result["edge_count"] = sum(len(v) for v in graph.values())
     return result
@@ -1071,3 +1076,35 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
             "diagram_guide(provider, pattern=<name>) and follow it too."
         ),
     }
+
+
+_VALIDATOR: Any = None
+
+
+def graph_warnings(graph: Dict[str, List[str]]) -> List[str]:
+    """Return the skill validator's warnings for a graph.
+
+    Things that draw, but not as the graph reads: an unknown type (a blank
+    icon, with the closest supported types suggested), arrows to containers
+    or shared services that are not drawn, a node listed in two boxes. The
+    validator ships with the skill in the package, so the MCP server and the
+    skill's command-line check give the same advice. Best effort: returns an
+    empty list if the validator cannot be loaded.
+    """
+    global _VALIDATOR
+    if _VALIDATOR is None:
+        import importlib.util
+
+        path = _SKILL_DIR / "scripts" / "validate_graph.py"
+        if not path.is_file():
+            return []
+        spec = importlib.util.spec_from_file_location(
+            "terravision_validate_graph", path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _VALIDATOR = module
+    try:
+        return list(_VALIDATOR.warnings(graph))
+    except Exception:  # noqa: BLE001 - advice must never fail a render
+        return []
