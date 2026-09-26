@@ -449,7 +449,7 @@ def test_extension_keeps_a_chosen_folder():
         (
             "azure",
             {"azurerm_linux_web_app", "azurerm_mssql_database", "tv_azurerm_users"},
-            "azure-web-app",
+            "azure-three-tier",
         ),
         (
             "gcp",
@@ -458,7 +458,7 @@ def test_extension_keeps_a_chosen_folder():
                 "google_sql_database_instance",
                 "tv_gcp_region",
             },
-            "gcp-serverless-api",
+            "gcp-three-tier",
         ),
     ],
 )
@@ -478,6 +478,44 @@ def test_aws_guide_example_has_the_detail_to_copy():
     types = {node.split(".")[0] for node in example}
     assert {"aws_az", "aws_nat_gateway", "aws_internet_gateway"} <= types
     assert any("tv_aws_internet" in t for targets in example.values() for t in targets)
+
+
+@pytest.mark.parametrize(
+    "provider, example, network_types",
+    [
+        (
+            "azure",
+            "azure-three-tier",
+            {
+                "azurerm_virtual_network",
+                "azurerm_subnet",
+                "tv_azurerm_zone",
+                "azurerm_nat_gateway",
+            },
+        ),
+        (
+            "gcp",
+            "gcp-three-tier",
+            {
+                "google_compute_network",
+                "tv_gcp_region",
+                "google_compute_subnetwork",
+                "tv_gcp_zone",
+                "google_compute_router_nat",
+            },
+        ),
+    ],
+)
+def test_azure_and_gcp_examples_have_the_detail_to_copy(
+    provider, example, network_types
+):
+    guide = mcp_service.diagram_guide(provider)
+    assert list(guide["examples"])[0] == example
+    graph = guide["examples"][example]
+    types = {
+        n.split(".")[0] for n in set(graph) | {t for v in graph.values() for t in v}
+    }
+    assert network_types <= types
 
 
 def test_diagram_guide_rejects_unknown_provider():

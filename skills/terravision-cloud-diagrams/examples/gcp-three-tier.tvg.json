@@ -1,0 +1,70 @@
+{
+  "tv_gcp_users_icon.users": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_target_https_proxy.web",
+    "google_compute_url_map.web",
+    "google_compute_backend_bucket.frontend",
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_target_https_proxy.web"
+  ],
+  "google_compute_target_https_proxy.web": [
+    "google_compute_url_map.web"
+  ],
+  "google_compute_url_map.web": [
+    "google_compute_backend_bucket.frontend",
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_security_policy.cloud_armor": [
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_backend_bucket.frontend": [
+    "google_storage_bucket.react_site"
+  ],
+  "google_compute_backend_service.api": [
+    "google_compute_instance_group_manager.api"
+  ],
+  "google_compute_network.main": [
+    "tv_gcp_region.us_central1",
+    "google_sql_database_instance.main",
+    "google_redis_instance.cache"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.app",
+    "google_compute_router.main",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.app": [
+    "google_compute_instance_group_manager.api",
+    "tv_gcp_zone.us_central1_a",
+    "tv_gcp_zone.us_central1_b"
+  ],
+  "tv_gcp_zone.us_central1_a": [
+    "google_compute_instance.api~1"
+  ],
+  "tv_gcp_zone.us_central1_b": [
+    "google_compute_instance.api~2"
+  ],
+  "google_compute_instance_group_manager.api": [
+    "google_compute_instance.api~1",
+    "google_compute_instance.api~2"
+  ],
+  "google_compute_instance.api~1": [
+    "google_sql_database_instance.main",
+    "google_redis_instance.cache"
+  ],
+  "google_compute_instance.api~2": [
+    "google_sql_database_instance.main",
+    "google_redis_instance.cache"
+  ],
+  "google_compute_router.main": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_secret_manager_secret.db_password": [],
+  "google_artifact_registry_repository.images": [],
+  "google_logging_project_sink.logs": []
+}

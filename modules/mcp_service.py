@@ -979,8 +979,8 @@ _SKILL_DIR = (
 # Worked example graphs for each provider, closest to common requests first.
 _EXAMPLES = {
     "aws": ("three-tier-web", "aws-event-driven"),
-    "azure": ("azure-web-app",),
-    "gcp": ("gcp-serverless-api",),
+    "azure": ("azure-three-tier", "azure-web-app"),
+    "gcp": ("gcp-three-tier", "gcp-serverless-api"),
 }
 
 # Node address prefixes for each provider, including its tv_ pseudo-nodes.

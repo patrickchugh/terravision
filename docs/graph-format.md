@@ -79,7 +79,9 @@ TerraVision draws a graph file as written. Unlike a diagram from Terraform code,
 |---|---|---|
 | Three-tier web app: CloudFront, ALB, EC2 across two AZs, RDS, ElastiCache | AWS | [three-tier-web.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/three-tier-web.tvg.json) |
 | Event-driven order pipeline: API Gateway, Lambda, SQS, SNS, DynamoDB, Firehose, Glue, Athena | AWS | [aws-event-driven.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-event-driven.tvg.json) |
+| Three-tier web app: Front Door with WAF, Application Gateway, Container Apps across two zones, Azure SQL via private endpoint, NAT gateway | Azure | [azure-three-tier.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-three-tier.tvg.json) |
 | Web app with Front Door, App Service, Functions, SQL, Service Bus, Key Vault | Azure | [azure-web-app.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-web-app.tvg.json) |
+| Three-tier web app: HTTPS LB with Cloud Armor, managed instance group across two zones, Cloud SQL, Memorystore, Cloud NAT | GCP | [gcp-three-tier.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-three-tier.tvg.json) |
 | Serverless API: HTTPS LB, Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions, BigQuery | GCP | [gcp-serverless-api.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-serverless-api.tvg.json) |
 
 ## Why not Mermaid?
