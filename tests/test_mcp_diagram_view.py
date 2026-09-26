@@ -590,3 +590,75 @@ def test_interactive_html_refuses_graph_files(outdir, client_call):
     )
     assert result.is_error
     assert "a graph file (.tvg.json) has none" in result.content[0].text
+
+
+# ── Setup status in diagram_guide ───────────────────────────────────
+
+
+def test_setup_status_here():
+    """CI and development machines always have Graphviz and Git."""
+    status = mcp_service.setup_status()
+    assert status["graphviz"] == "ok" and status["git"] == "ok"
+    assert status["ready_for_graphs"] is True
+
+
+@pytest.fixture
+def machine(monkeypatch):
+    """Pretend only some programs exist, on a chosen OS family."""
+    import shutil
+
+    import modules.helpers as helpers
+
+    installed = set()
+    monkeypatch.setattr(
+        shutil, "which", lambda exe: f"/bin/{exe}" if exe in installed else None
+    )
+    monkeypatch.setattr(helpers, "_graphviz_install_dirs", lambda: [])
+    monkeypatch.setattr(helpers, "neato_engine_error", lambda: None)
+
+    def setup(os_family, *programs):
+        installed.clear()
+        installed.update(programs)
+        monkeypatch.setattr(helpers, "_get_os_family", lambda: os_family)
+
+    return setup
+
+
+def test_missing_graphviz_on_macos(machine):
+    machine("macos", "git", "terraform")
+    status = mcp_service.setup_status()
+    assert status["graphviz"] == "missing: dot, neato, gvpr"
+    assert status["ready_for_graphs"] is False
+    assert "brew install graphviz" in status["install"]
+    guide = mcp_service.diagram_guide("aws")
+    assert guide["setup"] == status
+    assert guide["next_step"].startswith("Graphviz or Git is missing")
+
+
+def test_terraform_is_optional(machine):
+    machine("debian", "dot", "neato", "gvpr", "git")
+    status = mcp_service.setup_status()
+    assert status["ready_for_graphs"] is True
+    assert status["ready_for_terraform"] is False
+    assert status["terraform"].startswith("not found: only needed")
+    assert not mcp_service.diagram_guide("aws")["next_step"].startswith("Graphviz")
+
+
+def test_tofu_counts_as_terraform(machine):
+    machine("debian", "dot", "neato", "gvpr", "git", "tofu")
+    assert mcp_service.setup_status()["terraform"] == "ok (tofu)"
+
+
+def test_missing_neato_engine_is_explained(machine, monkeypatch):
+    import modules.helpers as helpers
+
+    machine("debian", "dot", "neato", "gvpr", "git", "terraform")
+    monkeypatch.setattr(
+        helpers,
+        "neato_engine_error",
+        lambda: 'There is no layout engine support for "neato"',
+    )
+    status = mcp_service.setup_status()
+    assert "libgvplugin-neato-layout8" in status["graphviz"]
+    assert status["ready_for_graphs"] is False
+    assert "install" not in status

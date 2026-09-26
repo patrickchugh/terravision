@@ -1062,21 +1062,30 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         for t in re.findall(r"`([a-z][a-z0-9_]*)`", types_doc)
         if t.startswith(_TYPE_PREFIXES[key])
     )
+    setup = setup_status()
+    next_step = (
+        "Start from the closest example, keep its structure (zones, public "
+        "and private subnets, internet path, shared services), use the most "
+        "specific node types, then call render_graph with a title. If a "
+        "pattern below matches the services asked for, fetch it with "
+        "diagram_guide(provider, pattern=<name>) and follow it too."
+    )
+    if not setup["ready_for_graphs"]:
+        next_step = (
+            "Graphviz or Git is missing, so diagrams cannot be drawn yet. Tell "
+            "the user what to install (see setup.install) and to restart the "
+            "app afterwards, before drafting the graph. " + next_step
+        )
     return {
         "provider": key,
+        "setup": setup,
         "rules": rules,
         "examples": examples,
         "node_types": node_types,
         "patterns": [
             {"name": e["name"], "description": e["description"]} for e in catalogue
         ],
-        "next_step": (
-            "Start from the closest example, keep its structure (zones, public "
-            "and private subnets, internet path, shared services), use the most "
-            "specific node types, then call render_graph with a title. If a "
-            "pattern below matches the services asked for, fetch it with "
-            "diagram_guide(provider, pattern=<name>) and follow it too."
-        ),
+        "next_step": next_step,
     }
 
 
@@ -1110,3 +1119,65 @@ def graph_warnings(graph: Dict[str, List[str]]) -> List[str]:
         return list(_VALIDATOR.warnings(graph))
     except Exception:  # noqa: BLE001 - advice must never fail a render
         return []
+
+
+def setup_status() -> Dict[str, Any]:
+    """Report whether the programs TerraVision needs are installed.
+
+    Graphviz (dot, neato and gvpr, with neato's layout engine on Linux) and
+    Git are needed for every diagram; Terraform or OpenTofu only for drawing
+    from Terraform code. Uses the same checks as a diagram call, including
+    finding Graphviz in its standard folders when it is not on PATH, so an
+    agent can tell the user what to install before drafting anything.
+    Installed extensions cannot check this themselves: Claude Desktop's
+    "requirements met" only covers the operating system and Python.
+    """
+    import shutil
+
+    from modules.helpers import (
+        DEPENDENCIES,
+        _get_os_family,
+        add_graphviz_to_path,
+        neato_engine_error,
+    )
+
+    add_graphviz_to_path()
+    missing_graphviz = [e for e in ("dot", "neato", "gvpr") if not shutil.which(e)]
+    engine_error = None if missing_graphviz else neato_engine_error()
+    if missing_graphviz:
+        graphviz = "missing: " + ", ".join(missing_graphviz)
+    elif engine_error:
+        graphviz = (
+            f"neato layout engine missing ({engine_error}); on Ubuntu 26.04+ and "
+            "Debian testing: sudo apt install libgvplugin-neato-layout8"
+        )
+    else:
+        graphviz = "ok"
+    git = "ok" if shutil.which("git") else "missing"
+    engine = next((e for e in ("terraform", "tofu") if shutil.which(e)), None)
+    terraform = (
+        f"ok ({engine})"
+        if engine
+        else "not found: only needed for drawing from Terraform code"
+    )
+
+    os_family = _get_os_family()
+    install = []
+    for key, needed in (
+        ("graphviz", graphviz != "ok" and not engine_error),
+        ("git", git != "ok"),
+        ("terraform", engine is None),
+    ):
+        if needed:
+            hints = DEPENDENCIES[key]["install"]
+            install += hints.get(os_family, hints["default"])
+    status: Dict[str, Any] = {
+        "graphviz": graphviz,
+        "git": git,
+        "terraform": terraform,
+        "ready_for_graphs": graphviz == "ok" and git == "ok",
+        "ready_for_terraform": graphviz == "ok" and git == "ok" and engine is not None,
+    }
+    if install:
+        status["install"] = install
+    return status

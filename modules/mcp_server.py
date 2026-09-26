@@ -408,7 +408,10 @@ def build_server() -> MCPServer:
 
         Returns the TerraVision graph rules (node types to prefer, which types
         are containers, what is drawn and what is hidden), worked example
-        graphs and every node type for the provider. Base your graph on the
+        graphs and every node type for the provider. It also reports in
+        "setup" whether Graphviz, Git and Terraform are installed: if
+        Graphviz or Git is missing, tell the user what to install before
+        drafting a diagram. Base your graph on the
         closest example and keep its level of detail: availability zones,
         public and private subnets, NAT gateways routed through an internet
         gateway to the internet, and shared services in their group.
@@ -423,9 +426,9 @@ def build_server() -> MCPServer:
             pattern: Name of a pattern from the "patterns" list, to fetch it.
 
         Returns:
-            {"provider", "rules", "examples", "node_types", "patterns",
-            "next_step"}; with pattern, {"provider", "pattern", "description",
-            "graph"}.
+            {"provider", "setup", "rules", "examples", "node_types",
+            "patterns", "next_step"}; with pattern, {"provider", "pattern",
+            "description", "graph"}.
         """
         with _tool_errors():
             return mcp_service.diagram_guide(provider, pattern)

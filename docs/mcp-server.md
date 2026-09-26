@@ -187,7 +187,10 @@ It gives apps that have the MCP server but not the [agent skill](https://github.
 such as Claude Desktop, the same guidance, so their diagrams use the specific icons (Fargate, RDS by
 engine) and the level of detail of the examples: availability zones, public and private subnets,
 the internet path and shared services. The server's instructions tell agents to call it once before
-`render_graph`.
+`render_graph`. It also reports in `setup` whether Graphviz, Git and Terraform (or OpenTofu) are
+installed, with the install commands for anything missing, so the agent can tell the user before
+drafting a diagram. Claude Desktop's "requirements met" check covers only the operating system
+and Python, not these programs.
 
 It also lists a library of patterns for that provider (EKS, ECS, Step Functions, SageMaker, Glue,
 GKE, AKS and others), each TerraVision's own output for real Terraform with the addresses written
