@@ -260,7 +260,8 @@ render.
 ### The diagram view (MCP Apps)
 
 `render_graph` and `generate_diagram` link to an [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview)
-view, `ui://terravision/diagram.html`. In apps that support MCP Apps, such as Claude Desktop, VS
+view, `ui://terravision/diagram-<hash>.html` (the hash changes whenever the view does, because
+hosts cache views by address). In apps that support MCP Apps, such as Claude Desktop, VS
 Code with GitHub Copilot and Cursor, the diagram appears in the chat as soon as it is drawn, with
 zoom and pan, and buttons to **open the image**, **edit it in draw.io**, **show it in its folder**,
 **copy the graph JSON** and show it. Apps without MCP Apps still get the preview image and the file

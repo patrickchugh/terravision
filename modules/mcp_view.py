@@ -19,7 +19,7 @@ Kept as a Python string rather than a separate file so it always ships inside
 the package.
 """
 
-VIEW_URI = "ui://terravision/diagram.html"
+import hashlib
 
 VIEW_HTML = r"""<!DOCTYPE html>
 <html lang="en">
@@ -478,3 +478,11 @@ VIEW_HTML = r"""<!DOCTYPE html>
 </body>
 </html>
 """
+
+# Hosts cache ui:// resources by URI: Claude Desktop reads the view once and
+# keeps showing that copy across restarts and reinstalls. A hash of the
+# page in the URI gives every changed view a new address.
+VIEW_URI = (
+    "ui://terravision/diagram-"
+    f"{hashlib.sha256(VIEW_HTML.encode()).hexdigest()[:12]}.html"
+)

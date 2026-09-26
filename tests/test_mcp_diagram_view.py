@@ -744,3 +744,13 @@ def test_view_explains_calls_that_get_no_answer():
     assert "CALL_TIMEOUT_MS" in VIEW_HTML
     assert "Promise.race" in VIEW_HTML
     assert "newest diagram in a conversation" in VIEW_HTML
+
+
+def test_view_uri_changes_with_the_view():
+    """Claude Desktop caches the view by URI, so a changed view needs a new one."""
+    import hashlib
+
+    from modules.mcp_view import VIEW_HTML, VIEW_URI
+
+    digest = hashlib.sha256(VIEW_HTML.encode()).hexdigest()[:12]
+    assert VIEW_URI == f"ui://terravision/diagram-{digest}.html"
