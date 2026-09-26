@@ -53,6 +53,10 @@
   },
   "tools": [
     {
+      "name": "diagram_guide",
+      "description": "The rules, worked examples and node types for writing a diagram graph for AWS, Azure or GCP."
+    },
+    {
       "name": "render_graph",
       "description": "Draw a cloud architecture diagram from a JSON graph of services and connections; no Terraform needed."
     },

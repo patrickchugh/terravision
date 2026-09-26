@@ -968,3 +968,74 @@ def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
     except OSError as e:
         raise McpServiceError(f"Could not open {target}: {e}") from e
     return {"opened": target, "reveal": reveal}
+
+
+# The agent skill's folder, installed alongside the package so the MCP server
+# can give the same guidance to apps that have the server but not the skill.
+_SKILL_DIR = (
+    Path(__file__).resolve().parents[1] / "skills" / "terravision-cloud-diagrams"
+)
+
+# Worked example graphs for each provider, closest to common requests first.
+_EXAMPLES = {
+    "aws": ("three-tier-web", "aws-event-driven"),
+    "azure": ("azure-web-app",),
+    "gcp": ("gcp-serverless-api",),
+}
+
+# Node address prefixes for each provider, including its tv_ pseudo-nodes.
+_TYPE_PREFIXES = {
+    "aws": ("aws_", "tv_aws_"),
+    "azure": ("azurerm_", "tv_azurerm_", "tv_azure_"),
+    "gcp": ("google_", "tv_gcp_"),
+}
+
+
+def diagram_guide(provider: str) -> Dict[str, Any]:
+    """Return what an agent needs to write a good graph for ``provider``.
+
+    The same material the agent skill gives Claude Code: the graph format
+    rules (type picks, containers, what is drawn and what is not), worked
+    example graphs and the node types this provider can use. The examples
+    carry most of the value: they show availability zones, public and
+    private subnets, NAT gateways routed to the internet and shared services
+    the way a cloud architect draws them.
+
+    Raises:
+        McpServiceError: For an unknown provider, or when the skill files
+            are missing from the installation.
+    """
+    import json
+
+    key = (provider or "").strip().lower()
+    if key not in _EXAMPLES:
+        raise McpServiceError(
+            f"Unknown provider {provider!r}. Use one of: aws, azure, gcp."
+        )
+    try:
+        rules = (_SKILL_DIR / "references" / "graph-format.md").read_text()
+        types_doc = (_SKILL_DIR / "references" / "node-types.md").read_text()
+        examples = {
+            name: json.loads((_SKILL_DIR / "examples" / f"{name}.tvg.json").read_text())
+            for name in _EXAMPLES[key]
+        }
+    except OSError as e:
+        raise McpServiceError(
+            f"The TerraVision guide files are missing from this installation: {e}"
+        ) from e
+    node_types = sorted(
+        t
+        for t in re.findall(r"`([a-z][a-z0-9_]*)`", types_doc)
+        if t.startswith(_TYPE_PREFIXES[key])
+    )
+    return {
+        "provider": key,
+        "rules": rules,
+        "examples": examples,
+        "node_types": node_types,
+        "next_step": (
+            "Start from the closest example, keep its structure (zones, public "
+            "and private subnets, internet path, shared services), use the most "
+            "specific node types, then call render_graph with a title."
+        ),
+    }

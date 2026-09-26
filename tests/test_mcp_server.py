@@ -32,6 +32,7 @@ EXPECTED_TOOLS = {
     "generate_interactive_html",
     "open_diagram_file",
     "diagram_file",
+    "diagram_guide",
 }
 
 REPLAY_SOURCE = str(Path(__file__).parent / "json" / "bastion-tfdata.json")
@@ -139,6 +140,9 @@ def test_source_is_the_only_required_parameter(server):
         if tool.name in ("open_diagram_file", "diagram_file"):
             # Helpers act on a file an earlier diagram call wrote.
             assert tool.input_schema["required"] == ["path"]
+            continue
+        if tool.name == "diagram_guide":
+            assert tool.input_schema["required"] == ["provider"]
             continue
         assert tool.input_schema["required"] == ["source"]
 

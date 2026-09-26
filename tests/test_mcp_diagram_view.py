@@ -427,3 +427,70 @@ def test_extension_keeps_a_chosen_folder():
         "--output-dir",
         "/home/me/diagrams",
     ]
+
+
+# ── The guide for apps without the skill ────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "provider, expected_types, example",
+    [
+        (
+            "aws",
+            {
+                "aws_ecs_fargate",
+                "aws_rds_sqlserver",
+                "aws_alb",
+                "aws_az",
+                "tv_aws_internet",
+            },
+            "three-tier-web",
+        ),
+        (
+            "azure",
+            {"azurerm_linux_web_app", "azurerm_mssql_database", "tv_azurerm_users"},
+            "azure-web-app",
+        ),
+        (
+            "gcp",
+            {
+                "google_cloud_run_v2_service",
+                "google_sql_database_instance",
+                "tv_gcp_region",
+            },
+            "gcp-serverless-api",
+        ),
+    ],
+)
+def test_diagram_guide(provider, expected_types, example):
+    guide = mcp_service.diagram_guide(provider.upper())
+    assert guide["provider"] == provider
+    assert "## Drawn as written" in guide["rules"]
+    assert expected_types <= set(guide["node_types"])
+    others = {"aws": "azurerm_", "azure": "google_", "gcp": "aws_"}[provider]
+    assert not any(t.startswith(others) for t in guide["node_types"])
+    assert example in guide["examples"]
+
+
+def test_aws_guide_example_has_the_detail_to_copy():
+    """The worked example is what gives diagrams zones and an internet path."""
+    example = mcp_service.diagram_guide("aws")["examples"]["three-tier-web"]
+    types = {node.split(".")[0] for node in example}
+    assert {"aws_az", "aws_nat_gateway", "aws_internet_gateway"} <= types
+    assert any("tv_aws_internet" in t for targets in example.values() for t in targets)
+
+
+def test_diagram_guide_rejects_unknown_provider():
+    with pytest.raises(McpServiceError, match="Use one of: aws, azure, gcp"):
+        mcp_service.diagram_guide("oracle")
+
+
+def test_skill_folder_ships_in_the_package():
+    """diagram_guide reads the skill's files, so the wheel must include them."""
+    import tomllib
+
+    pyproject = tomllib.loads(
+        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+    )
+    includes = [i["path"] for i in pyproject["tool"]["poetry"]["include"]]
+    assert "skills/**/*" in includes

@@ -29,21 +29,29 @@ from modules import mcp_service
 from modules.mcp_view import VIEW_HTML, VIEW_URI
 
 _INSTRUCTIONS = """\
-TerraVision turns Terraform code into cloud architecture diagrams.
+TerraVision draws cloud architecture diagrams with the official AWS, Azure and
+GCP icons, from a description or from Terraform code. Use it for pictures of
+cloud infrastructure only; use Mermaid or similar for sequence diagrams,
+flowcharts and other diagrams that are not cloud infrastructure.
 
-Every tool runs `terraform init` and `terraform plan` against the source unless
-you supply `planfile`/`graphfile`, so a first call against a real repository can
-take minutes. Calls are executed one at a time.
+From a description (no Terraform): call diagram_guide once with the provider
+(aws, azure or gcp) for the graph rules, worked examples and node types, then
+write the graph and call render_graph with a title. Start from the closest
+example and keep its level of detail: availability zones, public and private
+subnets, the path to the internet and shared services.
 
-Start with generate_architecture_graph(services_only=True) for a cheap overview
-of what a stack contains, then request the full graph or a diagram if needed.
+From Terraform code: generate_diagram runs `terraform init` and `terraform plan`
+against the source unless you supply planfile/graphfile, so a first call can
+take minutes. generate_architecture_graph(services_only=True) is a cheap
+overview of what a stack contains. Calls run one at a time.
 
 render_graph and generate_diagram save a PNG, an SVG, an editable draw.io file
-and the graph as .tvg.json, and return their paths plus a preview image of the
-diagram. Look at the preview to check the diagram before presenting it. Apps
-that support MCP Apps also show it to the user in an interactive view with
-buttons to open and edit the files. open_diagram_file opens a file for the
-user on their own computer.
+and the graph as .tvg.json, and return their paths plus a preview image. Look
+at the preview to check the diagram before presenting it; if it looks wrong,
+fix the graph, not TerraVision. Apps that support MCP Apps also show it to the
+user in an interactive view with buttons to open and edit the files.
+open_diagram_file opens a file for the user on their own computer. Show the
+user the graph JSON as well.
 """
 
 
@@ -118,11 +126,15 @@ def build_server() -> MCPServer:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
         Use this whenever you need a cloud architecture diagram and do NOT have
-        Terraform code: describe the architecture as nodes and connections and
-        TerraVision renders it with the official AWS, Azure and GCP icon sets,
-        grouping resources into VPCs, subnets, resource groups and zones
-        automatically. Prefer this over Mermaid or hand-drawn SVG for any
-        cloud architecture. Needs only Graphviz and Git; Terraform is not required.
+        Terraform code. Call diagram_guide first for the rules, worked
+        examples and node types. TerraVision renders the graph with the
+        official AWS, Azure and GCP icon sets and draws each resource inside
+        the VPC, subnet, zone or resource group you nest it in. Use the most
+        specific types: aws_ecs_fargate (not aws_ecs_service), aws_rds_sqlserver,
+        aws_rds_postgres, aws_rds_mysql or aws_rds_aurora (not
+        aws_db_instance), aws_alb or aws_nlb (not aws_lb). Prefer this over
+        Mermaid or hand-drawn SVG for any cloud architecture. Needs only
+        Graphviz and Git; Terraform is not required.
 
         Args:
             graph: Object mapping each node address to the list of node
@@ -384,6 +396,26 @@ def build_server() -> MCPServer:
                 iconsize=iconsize,
                 title=title,
             )
+
+    @mcp.tool()
+    def diagram_guide(provider: str) -> Dict[str, Any]:
+        """Read this once before calling render_graph.
+
+        Returns the TerraVision graph rules (node types to prefer, which types
+        are containers, what is drawn and what is hidden), worked example
+        graphs and every node type for the provider. Base your graph on the
+        closest example and keep its level of detail: availability zones,
+        public and private subnets, NAT gateways routed through an internet
+        gateway to the internet, and shared services in their group.
+
+        Args:
+            provider: "aws", "azure" or "gcp". One provider per diagram.
+
+        Returns:
+            {"provider", "rules", "examples", "node_types", "next_step"}.
+        """
+        with _tool_errors():
+            return mcp_service.diagram_guide(provider)
 
     @mcp.tool()
     def open_diagram_file(path: str, reveal: bool = False) -> Dict[str, Any]:

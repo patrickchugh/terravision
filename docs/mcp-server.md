@@ -68,8 +68,9 @@ claude mcp add terravision -- terravision mcp
 or drag it into Claude Desktop's **Settings → Extensions**. It asks where to save diagrams (by
 default `Documents/TerraVision`) and installs TerraVision itself; your computer needs Graphviz and
 Git, and on Linux also [uv](https://docs.astral.sh/uv/getting-started/installation/), which Claude
-Desktop uses there to run the extension. The same release has `terravision-cloud-diagrams-skill-<version>.zip`, which you can upload
-under **Settings → Capabilities** so Claude also knows how to write good graphs.
+Desktop uses there to run the extension. The server carries the same guidance as the agent skill (see `diagram_guide` below), so uploading
+`terravision-cloud-diagrams-skill-<version>.zip` from the same release under **Settings →
+Capabilities** is optional.
 
 If extensions are turned off on your machine, add the server by hand instead (**Settings →
 Developer → Edit Config**). On macOS, give the full path to `uvx` (from `which uvx`), because
@@ -179,6 +180,16 @@ On Windows, include the directories holding `terraform.exe` and Graphviz's `bin`
 `render_graph` takes a graph inline and never runs Terraform. The other three tools mirror
 TerraVision commands and take `source`, which may be a Terraform directory, a Git URL, a
 `.tvg.json` graph file or a TerraVision `tfdata.json` replay file.
+
+### `diagram_guide`
+
+Returns what an agent needs to write a good graph for one provider (`aws`, `azure` or `gcp`): the
+[Graph Format](graph-format.md) rules, worked example graphs and every node type for that provider.
+It gives apps that have the MCP server but not the [agent skill](https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams),
+such as Claude Desktop, the same guidance, so their diagrams use the specific icons (Fargate, RDS by
+engine) and the level of detail of the examples: availability zones, public and private subnets,
+the internet path and shared services. The server's instructions tell agents to call it once before
+`render_graph`.
 
 ### `render_graph`
 
