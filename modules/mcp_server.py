@@ -15,12 +15,14 @@ credentials of its own. Passing ``planfile`` and ``graphfile`` avoids invoking
 Terraform at all, which is the fully credential-free path.
 """
 
+import contextlib
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from mcp.server import MCPServer
 from mcp.server.apps import Apps, ResourcePermissions
 from mcp.server.mcpserver import Image
+from mcp.server.mcpserver.exceptions import ToolError
 from mcp_types import CallToolResult, TextContent
 
 from modules import mcp_service
@@ -43,6 +45,22 @@ that support MCP Apps also show it to the user in an interactive view with
 buttons to open and edit the files. open_diagram_file opens a file for the
 user on their own computer.
 """
+
+
+@contextlib.contextmanager
+def _tool_errors() -> Iterator[None]:
+    """Report service failures to the model as tool errors it can read.
+
+    From MCP SDK 2.2, any exception other than ``ToolError`` counts as a
+    crash and the model sees only "Error executing tool <name>". Service
+    failures carry actionable text, such as a missing Graphviz with its
+    install command or a graph that mixes providers, so they are re-raised
+    as ``ToolError``, whose message the SDK passes through.
+    """
+    try:
+        yield
+    except mcp_service.McpServiceError as e:
+        raise ToolError(str(e)) from e
 
 
 def _diagram_result(result: Dict[str, Any]) -> CallToolResult:
@@ -144,17 +162,18 @@ def build_server() -> MCPServer:
             the paths of the PNG, SVG, draw.io file and the graph (.tvg.json);
             "path" is the file in the requested format.
         """
-        return _diagram_result(
-            mcp_service.run_render_graph(
-                graph=graph,
-                format=format,
-                outfile=outfile,
-                fontsize=fontsize,
-                iconsize=iconsize,
-                title=title,
-                preview=preview,
+        with _tool_errors():
+            return _diagram_result(
+                mcp_service.run_render_graph(
+                    graph=graph,
+                    format=format,
+                    outfile=outfile,
+                    fontsize=fontsize,
+                    iconsize=iconsize,
+                    title=title,
+                    preview=preview,
+                )
             )
-        )
 
     @apps.tool(resource_uri=VIEW_URI)
     def generate_diagram(
@@ -213,26 +232,27 @@ def build_server() -> MCPServer:
             the graph as .tvg.json, which can be edited and rendered again
             with render_graph; "path" is the file in the requested format.
         """
-        return _diagram_result(
-            mcp_service.run_diagram(
-                source=source,
-                format=format,
-                outfile=outfile,
-                varfile=varfile,
-                workspace=workspace,
-                annotate=annotate,
-                planfile=planfile,
-                graphfile=graphfile,
-                upgrade=upgrade,
-                simplified=simplified,
-                use_tf_names=use_tf_names,
-                use_resource_names=use_resource_names,
-                fontsize=fontsize,
-                iconsize=iconsize,
-                title=title,
-                preview=preview,
+        with _tool_errors():
+            return _diagram_result(
+                mcp_service.run_diagram(
+                    source=source,
+                    format=format,
+                    outfile=outfile,
+                    varfile=varfile,
+                    workspace=workspace,
+                    annotate=annotate,
+                    planfile=planfile,
+                    graphfile=graphfile,
+                    upgrade=upgrade,
+                    simplified=simplified,
+                    use_tf_names=use_tf_names,
+                    use_resource_names=use_resource_names,
+                    fontsize=fontsize,
+                    iconsize=iconsize,
+                    title=title,
+                    preview=preview,
+                )
             )
-        )
 
     # Extensions are read when the server is constructed, so the tools bound
     # to the diagram view must be registered on `apps` before this point.
@@ -289,17 +309,18 @@ def build_server() -> MCPServer:
             graphdict maps each Terraform resource address to the addresses it
             connects to or contains.
         """
-        return mcp_service.run_architecture_graph(
-            source=source,
-            varfile=varfile,
-            workspace=workspace,
-            annotate=annotate,
-            planfile=planfile,
-            graphfile=graphfile,
-            upgrade=upgrade,
-            simplified=simplified,
-            services_only=services_only,
-        )
+        with _tool_errors():
+            return mcp_service.run_architecture_graph(
+                source=source,
+                varfile=varfile,
+                workspace=workspace,
+                annotate=annotate,
+                planfile=planfile,
+                graphfile=graphfile,
+                upgrade=upgrade,
+                simplified=simplified,
+                services_only=services_only,
+            )
 
     @mcp.tool()
     def generate_interactive_html(
@@ -346,22 +367,23 @@ def build_server() -> MCPServer:
         Returns:
             {"path", "provider"} pointing at the generated .html file.
         """
-        return mcp_service.run_interactive_html(
-            source=source,
-            outfile=outfile,
-            varfile=varfile,
-            workspace=workspace,
-            annotate=annotate,
-            planfile=planfile,
-            graphfile=graphfile,
-            upgrade=upgrade,
-            simplified=simplified,
-            use_tf_names=use_tf_names,
-            use_resource_names=use_resource_names,
-            fontsize=fontsize,
-            iconsize=iconsize,
-            title=title,
-        )
+        with _tool_errors():
+            return mcp_service.run_interactive_html(
+                source=source,
+                outfile=outfile,
+                varfile=varfile,
+                workspace=workspace,
+                annotate=annotate,
+                planfile=planfile,
+                graphfile=graphfile,
+                upgrade=upgrade,
+                simplified=simplified,
+                use_tf_names=use_tf_names,
+                use_resource_names=use_resource_names,
+                fontsize=fontsize,
+                iconsize=iconsize,
+                title=title,
+            )
 
     @mcp.tool()
     def open_diagram_file(path: str, reveal: bool = False) -> Dict[str, Any]:
@@ -380,7 +402,8 @@ def build_server() -> MCPServer:
         Returns:
             {"opened", "reveal"}.
         """
-        return mcp_service.open_output_file(path, reveal=reveal)
+        with _tool_errors():
+            return mcp_service.open_output_file(path, reveal=reveal)
 
     @mcp.tool(meta={"ui": {"visibility": ["app"]}})
     def diagram_file(path: str) -> Dict[str, Any]:
@@ -396,7 +419,8 @@ def build_server() -> MCPServer:
             {"name", "mimeType", "text"} for text files, or
             {"name", "mimeType", "blob"} with base64 content.
         """
-        return mcp_service.read_output_file(path)
+        with _tool_errors():
+            return mcp_service.read_output_file(path)
 
     return mcp
 

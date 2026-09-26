@@ -237,7 +237,20 @@ def test_errors_carry_a_text_content_block(server):
     )
     assert result.is_error
     assert result.content and result.content[0].type == "text"
-    assert result.content[0].text.strip()
+    # The reason must reach the model, not just a generic "Error executing
+    # tool": MCP SDK 2.2+ hides the text of anything but ToolError.
+    assert "Unsupported format 'notaformat'" in result.content[0].text
+
+
+def test_service_errors_reach_the_model(server):
+    """Actionable service errors must survive the SDK's crash masking."""
+    result = _call(
+        server,
+        "render_graph",
+        {"graph": {"aws_lambda_function.fn": ["azurerm_storage_account.sa"]}},
+    )
+    assert result.is_error
+    assert "Graph mixes aws_* and azurerm_* resources" in result.content[0].text
 
 
 def test_schemas_are_plain_json_types(server):
