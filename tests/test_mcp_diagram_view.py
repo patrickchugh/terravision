@@ -910,7 +910,10 @@ def test_plain_result_asks_the_model_to_offer_flows(outdir):
         edge_labels={"aws_alb.api -> aws_ecs_fargate.api": "Routes"},
         preview=False,
     )
-    assert "next_step" not in flowed and "next_step" not in labelled
+    assert "next_step" not in flowed
+    # Labels alone still get the flows offer, without offering labels again.
+    assert "numbered steps with a legend. On a yes" in labelled["next_step"]
+    assert "short labels" in plain["next_step"]
 
 
 def test_next_step_reaches_the_model(outdir, client_call):
