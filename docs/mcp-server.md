@@ -66,8 +66,9 @@ claude mcp add terravision -- terravision mcp
 **Claude Desktop** — install the extension: download `terravision-<version>.mcpb` from the
 [latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it,
 or drag it into Claude Desktop's **Settings → Extensions**. It asks where to save diagrams (by
-default `Documents/TerraVision`) and installs TerraVision itself; your computer only needs Graphviz
-and Git. The same release has `terravision-cloud-diagrams-skill-<version>.zip`, which you can upload
+default `Documents/TerraVision`) and installs TerraVision itself; your computer needs Graphviz and
+Git, and on Linux also [uv](https://docs.astral.sh/uv/getting-started/installation/), which Claude
+Desktop uses there to run the extension. The same release has `terravision-cloud-diagrams-skill-<version>.zip`, which you can upload
 under **Settings → Capabilities** so Claude also knows how to write good graphs.
 
 If extensions are turned off on your machine, add the server by hand instead (**Settings →

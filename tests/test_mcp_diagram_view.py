@@ -326,5 +326,46 @@ def test_extension_pins_the_release_and_runs_the_mcp_command():
 
     project = tomllib.loads((MCPB / "pyproject.toml").read_text())["project"]
     assert project["dependencies"] == ["terravision[mcp]==__VERSION__"]
-    entry = (MCPB / "src" / "server.py").read_text()
-    assert '["terravision", "mcp", *sys.argv[1:]]' in entry
+    assert (
+        "default"
+        not in json.loads((MCPB / "manifest.json").read_text())["user_config"][
+            "output_dir"
+        ]
+    ), "hosts may not expand ${DOCUMENTS}; server.py picks the default"
+
+
+def _entry():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "mcpb_server", MCPB / "src" / "server.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        [],
+        ["--output-dir"],
+        ["--output-dir", ""],
+        ["--output-dir", "${user_config.output_dir}"],
+        ["--output-dir", "${DOCUMENTS}/TerraVision"],
+    ],
+)
+def test_extension_falls_back_to_documents(argv):
+    entry = _entry()
+    args = entry.server_args(argv)
+    assert args[:2] == ["terravision", "mcp"]
+    assert args[args.index("--output-dir") + 1] == str(entry.DEFAULT_OUTPUT_DIR)
+
+
+def test_extension_keeps_a_chosen_folder():
+    assert _entry().server_args(["--output-dir", "/home/me/diagrams"]) == [
+        "terravision",
+        "mcp",
+        "--output-dir",
+        "/home/me/diagrams",
+    ]
