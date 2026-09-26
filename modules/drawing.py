@@ -1678,11 +1678,11 @@ def _build_diagram(
     setcluster(myDiagram)
 
     # Add footer node (positioned by gvpr for all providers). An HTML table
-    # rather than a record, so it can carry the TerraVision logo. The table
-    # keeps the old record's 18 x 2.4 inch size; if that changes, the ±750pt
-    # row offsets in shiftLabel.gvpr (footer and legend sharing one row) need
-    # to move with it. _footertext holds the same text in record syntax for
-    # the draw.io subtitle.
+    # rather than a record, so it can carry the TerraVision logo; it sizes to
+    # its text. If it grows much wider than 18in, the ±750pt row offsets in
+    # shiftLabel.gvpr (footer and legend sharing one row) need to move with
+    # it. _footertext holds the same text in record syntax for the draw.io
+    # subtitle.
     generated = f"Machine generated using TerraVision v{_TERRAVISION_VERSION}"
     timestamp = str(datetime.datetime.now())
     footer_style = {
@@ -1881,7 +1881,7 @@ def _footer_html(generated: str, timestamp: str, source: str) -> str:
 
     return (
         '<<TABLE BORDER="1" STYLE="ROUNDED" CELLBORDER="0" CELLSPACING="0" '
-        'CELLPADDING="18" COLUMNS="*" ROWS="*" WIDTH="1296">'
+        'CELLPADDING="18" COLUMNS="*" ROWS="*">'
         '<TR><TD ROWSPAN="2">'
         '<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR>'
         '<TD FIXEDSIZE="TRUE" WIDTH="72" HEIGHT="72">'

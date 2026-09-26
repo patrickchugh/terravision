@@ -25,10 +25,11 @@ ENV PATH=/home/terravision/.local/bin:$PATH
 
 USER root
 
-# Install terravision and dependencies
+# Install terravision and dependencies, with the [mcp] extra (MCP SDK and
+# Pillow for inline previews) so `terravision mcp` works in the container
 COPY --chown=terravision:terravision . /opt/terravision
 RUN cd /opt/terravision && \
-    pip install . && \
+    pip install ".[mcp]" && \
     mkdir -p /project && \
     chown -R terravision:terravision /project && \
     git clone --depth=1 https://github.com/tfutils/tfenv.git /home/terravision/.tfenv && \

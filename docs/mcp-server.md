@@ -137,6 +137,28 @@ Most clients use a JSON block of this shape, under a key such as `mcpServers` or
 Check your client's own documentation for the file location and exact key name, since those change
 more often than the protocol does.
 
+### Running the server from the Docker image
+
+The [Docker image](installation.md) includes the MCP server with Graphviz, Git and Terraform, so a
+client can run it with nothing else installed. Keep `-i` (the protocol runs over stdin) and mount the
+folder where diagrams should land:
+
+```json
+{
+  "mcpServers": {
+    "terravision": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-v", "/path/to/diagrams:/project",
+               "patrickchugh/terravision", "mcp", "--output-dir", "/project"]
+    }
+  }
+}
+```
+
+Paths in results are paths inside the container (`/project/...`), and `open_diagram_file` cannot
+open files there, since a container has no desktop: open them from the mounted folder instead. To
+draw Terraform code, mount it too and pass its container path as `source`.
+
 ### If tools fail with "not found on PATH"
 
 TerraVision needs `terraform` (or `tofu`), `dot`, `gvpr` and `git` on PATH. The MCP server is

@@ -209,6 +209,10 @@ docker run --rm -it -v "$(pwd):/project" patrickchugh/terravision \
   draw --source https://github.com/your-repo/terraform-examples.git//mysubfolder/
 ```
 
+#### Run the MCP server from it
+
+The image includes the MCP server; see [MCP server](mcp-server.md#running-the-server-from-the-docker-image) for the client configuration.
+
 #### Passing cloud credentials
 
 If Terraform needs credentials to run `terraform plan`, pass them into the container. For AWS:
