@@ -183,14 +183,23 @@ def test_open_on_linux_desktop(rendered, launched, monkeypatch):
 
 @pytest.fixture
 def stripped_env(monkeypatch, tmp_path):
-    """An environment like Claude Desktop gives MCP servers: no desktop vars."""
-    for var in ("DISPLAY", "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS"):
+    """An environment like Claude Desktop gives MCP servers: no desktop vars.
+
+    The systemd user manager is stubbed out and holds nothing; tests that
+    need a session put its variables in ``_SYSTEMD``.
+    """
+    for var in mcp_service._DESKTOP_VARS:
         monkeypatch.delenv(var, raising=False)
     runtime = tmp_path / "run-user"
     runtime.mkdir()
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(runtime))
     monkeypatch.setattr(mcp_service, "_X11_SOCKET_DIR", tmp_path / "no-x11")
+    _SYSTEMD.clear()
+    monkeypatch.setattr(mcp_service, "_systemd_session_env", lambda env: dict(_SYSTEMD))
     return runtime
+
+
+_SYSTEMD = {}
 
 
 def test_open_on_linux_without_a_desktop(rendered, launched, monkeypatch, stripped_env):
@@ -219,6 +228,66 @@ def test_open_recovers_the_desktop_session(
     assert env["DISPLAY"] == ":1"
     assert env["DBUS_SESSION_BUS_ADDRESS"] == f"unix:path={stripped_env / 'bus'}"
     assert env["XDG_RUNTIME_DIR"] == str(stripped_env)
+
+
+def test_open_uses_the_systemd_session(rendered, launched, monkeypatch, stripped_env):
+    """The session's own values win, so xdg-open picks the desktop's apps."""
+    _on(monkeypatch, "Linux")
+    _SYSTEMD.update(
+        DISPLAY=":0",
+        WAYLAND_DISPLAY="wayland-0",
+        XDG_CURRENT_DESKTOP="ubuntu:GNOME",
+        XDG_DATA_DIRS="/usr/share/ubuntu:/usr/share",
+    )
+    monkeypatch.setenv("XDG_DATA_DIRS", "/already/set")
+    mcp_service.open_output_file(rendered["files"]["png"])
+    env = launched_env()
+    assert env["XDG_CURRENT_DESKTOP"] == "ubuntu:GNOME"
+    assert env["DISPLAY"] == ":0"
+    assert env["XDG_DATA_DIRS"] == "/already/set"
+
+
+def test_systemd_session_env_parsing(monkeypatch):
+    import subprocess
+
+    output = (
+        "HOME=/home/me\n"
+        "DISPLAY=:0\n"
+        "XDG_CURRENT_DESKTOP=ubuntu:GNOME\n"
+        "DESKTOP_SESSION=$'odd\\nvalue'\n"
+        "not a variable\n"
+    )
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen["cmd"] = cmd
+        return subprocess.CompletedProcess(cmd, 0, stdout=output, stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    assert mcp_service._systemd_session_env({}) == {
+        "DISPLAY": ":0",
+        "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+    }
+    assert seen["cmd"] == ["systemctl", "--user", "show-environment"]
+
+
+@pytest.mark.parametrize(
+    "outcome",
+    [FileNotFoundError("systemctl"), "timeout", 1],
+    ids=["no systemctl", "timeout", "failed"],
+)
+def test_systemd_session_env_unavailable(monkeypatch, outcome):
+    import subprocess
+
+    def fake_run(cmd, **kwargs):
+        if isinstance(outcome, Exception):
+            raise outcome
+        if outcome == "timeout":
+            raise subprocess.TimeoutExpired(cmd, 5)
+        return subprocess.CompletedProcess(cmd, outcome, stdout="DISPLAY=:0", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    assert mcp_service._systemd_session_env({}) == {}
 
 
 def test_open_on_macos(rendered, launched, monkeypatch):
@@ -662,3 +731,16 @@ def test_missing_neato_engine_is_explained(machine, monkeypatch):
     assert "libgvplugin-neato-layout8" in status["graphviz"]
     assert status["ready_for_graphs"] is False
     assert "install" not in status
+
+
+def test_view_explains_calls_that_get_no_answer():
+    """Claude Desktop connects only the newest view in a conversation.
+
+    Calls from older views are never answered, so the view gives up after a
+    while and says why instead of doing nothing.
+    """
+    from modules.mcp_view import VIEW_HTML
+
+    assert "CALL_TIMEOUT_MS" in VIEW_HTML
+    assert "Promise.race" in VIEW_HTML
+    assert "newest diagram in a conversation" in VIEW_HTML

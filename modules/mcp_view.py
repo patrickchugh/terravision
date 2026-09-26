@@ -171,8 +171,21 @@ VIEW_HTML = r"""<!DOCTYPE html>
     }
   });
 
+  // Claude Desktop connects only the newest view in a conversation to the
+  // server; calls from older views are never answered, so they time out
+  // with an explanation instead of doing nothing.
+  var CALL_TIMEOUT_MS = 15000;
+  var STALE_VIEW = "This diagram can no longer reach TerraVision. The app connects only the " +
+    "newest diagram in a conversation, so use the buttons on the latest one.";
+
   function callTool(name, args) {
-    return request("tools/call", { name: name, arguments: args }).then(function (res) {
+    var timer;
+    var timeout = new Promise(function (resolve, reject) {
+      timer = setTimeout(function () { reject(new Error(STALE_VIEW)); }, CALL_TIMEOUT_MS);
+    });
+    var call = request("tools/call", { name: name, arguments: args });
+    call.then(function () { clearTimeout(timer); }, function () { clearTimeout(timer); });
+    return Promise.race([call, timeout]).then(function (res) {
       if (!res) { throw new Error("No result"); }
       if (res.isError) { throw new Error(textOf(res) || "The tool reported an error"); }
       var data = res.structuredContent;

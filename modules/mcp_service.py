@@ -892,32 +892,83 @@ def read_output_file(path: str) -> Dict[str, Any]:
 _X11_SOCKET_DIR = Path("/tmp/.X11-unix")
 
 
+# Session variables xdg-open needs: where to display, how to reach the
+# desktop's D-Bus, and which desktop it is, which decides the default apps.
+_DESKTOP_VARS = (
+    "DISPLAY",
+    "WAYLAND_DISPLAY",
+    "DBUS_SESSION_BUS_ADDRESS",
+    "XDG_CURRENT_DESKTOP",
+    "XDG_SESSION_TYPE",
+    "XDG_DATA_DIRS",
+    "DESKTOP_SESSION",
+)
+
+
+def _systemd_session_env(env: Dict[str, str]) -> Dict[str, str]:
+    """The desktop session's variables as the systemd user manager holds them.
+
+    GNOME, KDE and other systemd-based desktops register their session
+    environment there, so it is available even to a process started with
+    almost none. Returns an empty dict when systemd is not in use.
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["systemctl", "--user", "show-environment"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return {}
+    if result.returncode != 0:
+        return {}
+    found = {}
+    for line in result.stdout.splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key in _DESKTOP_VARS and not value.startswith("$'"):
+            found[key] = value
+    return found
+
+
 def _linux_desktop_env() -> Optional[Dict[str, str]]:
     """Return an environment that can reach the user's desktop, or None.
 
     Desktop apps such as Claude Desktop start MCP servers with little more
-    than HOME and PATH, so DISPLAY, WAYLAND_DISPLAY and the D-Bus address that
-    xdg-open needs are missing even on a desktop. They are recovered from
-    their standard locations: the user's runtime directory
-    (``/run/user/<uid>``) holds the D-Bus and Wayland sockets, and
-    ``/tmp/.X11-unix`` the X11 ones. Returns None when there is no desktop
-    session at all, for example on a server reached over SSH.
+    than HOME and PATH. Without DISPLAY or WAYLAND_DISPLAY xdg-open cannot
+    show anything, and without XDG_CURRENT_DESKTOP it ignores the desktop's
+    default apps (a PNG opened in a web browser instead of the image
+    viewer). The session's own values are read from the systemd user
+    manager; failing that, the display and D-Bus sockets are found in their
+    standard places: the user's runtime directory (``/run/user/<uid>``) and
+    ``/tmp/.X11-unix``. Variables already set are never replaced. Returns
+    None when there is no desktop session at all, for example over SSH.
     """
     env = dict(os.environ)
-    if env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"):
+    if (env.get("DISPLAY") or env.get("WAYLAND_DISPLAY")) and env.get(
+        "XDG_CURRENT_DESKTOP"
+    ):
         return env
     runtime = Path(env.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
     if runtime.is_dir():
-        env["XDG_RUNTIME_DIR"] = str(runtime)
+        env.setdefault("XDG_RUNTIME_DIR", str(runtime))
+        for key, value in _systemd_session_env(env).items():
+            env.setdefault(key, value)
         bus = runtime / "bus"
-        if bus.exists() and not env.get("DBUS_SESSION_BUS_ADDRESS"):
-            env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={bus}"
-        wayland = sorted(
-            p.name for p in runtime.glob("wayland-*") if not p.name.endswith(".lock")
-        )
-        if wayland:
-            env["WAYLAND_DISPLAY"] = wayland[0]
-    if _X11_SOCKET_DIR.is_dir():
+        if bus.exists():
+            env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path={bus}")
+        if not env.get("WAYLAND_DISPLAY"):
+            wayland = sorted(
+                p.name
+                for p in runtime.glob("wayland-*")
+                if not p.name.endswith(".lock")
+            )
+            if wayland:
+                env["WAYLAND_DISPLAY"] = wayland[0]
+    if not env.get("DISPLAY") and _X11_SOCKET_DIR.is_dir():
         displays = sorted(
             p.name[1:] for p in _X11_SOCKET_DIR.glob("X*") if p.name[1:].isdigit()
         )
