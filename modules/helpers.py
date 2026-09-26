@@ -2150,6 +2150,33 @@ def is_graph_json_source(source: str) -> bool:
     return source.lower().endswith(".json")
 
 
+def is_graph_file_source(source: str) -> bool:
+    """Return True when ``source`` is a plain graph file rather than a replay.
+
+    Both are JSON. A tfdata.json replay (written by ``--debug``, whatever it
+    is called) carries the Terraform data under ``all_resource``; a graph
+    file (``.tvg.json``) holds only nodes and connections. This is the same
+    test the loader uses. An unreadable file counts as neither, so the
+    normal loading errors still report it.
+    """
+    if not is_graph_json_source(source):
+        return False
+    try:
+        with open(source, "r") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return False
+    return isinstance(data, dict) and "all_resource" not in data
+
+
+# Why visualise refuses graph files, shared by the CLI and the MCP server.
+VISUALISE_GRAPH_FILE_ERROR = (
+    "visualise shows the Terraform attributes behind each resource, and a graph "
+    "file (.tvg.json) has none. Use `terravision draw` for graph files, or run "
+    "visualise on Terraform code or a tfdata.json replay (from --debug)."
+)
+
+
 def _graphviz_install_dirs() -> List[Path]:
     """Standard Graphviz locations that may be missing from PATH.
 

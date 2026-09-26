@@ -580,3 +580,13 @@ def test_warnings_reach_the_model_and_the_view(outdir, client_call):
     from modules.mcp_view import VIEW_HTML
 
     assert "result.warnings" in VIEW_HTML
+
+
+def test_interactive_html_refuses_graph_files(outdir, client_call):
+    graph = outdir / "g.tvg.json"
+    graph.write_text(json.dumps(GRAPH))
+    result = client_call(
+        lambda c: c.call_tool("generate_interactive_html", {"source": str(graph)})
+    )
+    assert result.is_error
+    assert "a graph file (.tvg.json) has none" in result.content[0].text

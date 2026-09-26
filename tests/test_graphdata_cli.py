@@ -154,27 +154,61 @@ class TestDrawTitle:
         assert 'label="Cloud Architecture Diagram"' in dot
 
 
+REPLAY = str(Path(__file__).parent / "json" / "bastion-tfdata.json")
+
+
 def test_visualise_title(tmp_path, monkeypatch):
     """--title reaches the interactive HTML page too."""
-    import json
-
     from click.testing import CliRunner
 
     from terravision.terravision import cli
 
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "g.tvg.json").write_text(
-        json.dumps({"aws_lambda_function.api": ["aws_dynamodb_table.orders"]})
-    )
     result = CliRunner().invoke(
         cli,
-        ["visualise", "--source", "g.tvg.json", "--title", "Order Platform"],
+        ["visualise", "--source", REPLAY, "--title", "Order Platform"],
         catch_exceptions=False,
     )
     assert result.exit_code == 0, result.output
-    html = (tmp_path / "architecture.html").read_text()
+    [page] = tmp_path.glob("*.html")
+    html = page.read_text()
     assert "<title>Order Platform - Architecture Diagram</title>" in html
     assert "Cloud Architecture Diagram" not in html
+
+
+class TestVisualiseNeedsTerraformData:
+    """visualise shows each resource's Terraform attributes, which a graph
+    file does not have; a tfdata.json replay does, whatever its name."""
+
+    def test_graph_file_is_refused(self, tmp_path, monkeypatch):
+        import json
+
+        from click.testing import CliRunner
+
+        from terravision.terravision import cli
+
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "g.tvg.json").write_text(
+            json.dumps({"aws_lambda_function.api": ["aws_dynamodb_table.orders"]})
+        )
+        result = CliRunner().invoke(cli, ["visualise", "--source", "g.tvg.json"])
+        assert result.exit_code == 1
+        assert "a graph file (.tvg.json) has none" in result.output
+        assert not list(tmp_path.glob("*.html"))
+
+    def test_replay_is_recognised_by_content(self, tmp_path):
+        import shutil
+
+        from modules.helpers import is_graph_file_source
+
+        renamed = tmp_path / "anything.json"
+        shutil.copy(REPLAY, renamed)
+        assert is_graph_file_source(str(renamed)) is False
+        graph = tmp_path / "g.tvg.json"
+        graph.write_text('{"aws_s3_bucket.b": []}')
+        assert is_graph_file_source(str(graph)) is True
+        assert is_graph_file_source(str(tmp_path / "missing.json")) is False
+        assert is_graph_file_source("./terraform") is False
 
 
 class TestUnusualSourcePaths:

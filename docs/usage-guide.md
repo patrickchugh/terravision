@@ -163,6 +163,10 @@ Generates a self-contained interactive HTML diagram with clickable resource node
 
 Click nodes to inspect metadata, use the search box, or pan/zoom around to explore.
 
+`visualise` needs the Terraform data behind each resource, so it works on Terraform code, a
+pre-generated plan or a `tfdata.json` replay, but not on a [graph file](graph-format.md)
+(`.tvg.json`), which has no attributes to inspect. Use `terravision draw` for graph files.
+
 **Syntax:**
 ```bash
 terravision visualise [OPTIONS]

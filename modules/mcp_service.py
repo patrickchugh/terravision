@@ -700,6 +700,8 @@ def run_interactive_html(
     import modules.helpers as helpers
     import modules.html_renderer as html_renderer
 
+    if helpers.is_graph_file_source(source):
+        raise McpServiceError(helpers.VISUALISE_GRAPH_FILE_ERROR)
     name = _validate_outfile(outfile)
 
     with _guarded() as outdir:

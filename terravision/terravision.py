@@ -826,6 +826,13 @@ def visualise(
     title: str,
 ) -> None:
     """Generate interactive HTML architecture diagram"""
+    if helpers.is_graph_file_source(source):
+        click.echo(
+            click.style(
+                f"\nERROR: {helpers.VISUALISE_GRAPH_FILE_ERROR}", fg="red", bold=True
+            )
+        )
+        sys.exit(1)
     _install_excepthook(debug)
     _show_banner()
 
