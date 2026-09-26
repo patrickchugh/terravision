@@ -242,8 +242,11 @@ def test_errors_carry_a_text_content_block(server):
     assert "Unsupported format 'notaformat'" in result.content[0].text
 
 
-def test_service_errors_reach_the_model(server):
+def test_service_errors_reach_the_model(server, tmp_path, monkeypatch):
     """Actionable service errors must survive the SDK's crash masking."""
+    from modules import mcp_service
+
+    monkeypatch.setattr(mcp_service, "_OUTPUT_DIR", tmp_path.resolve())
     result = _call(
         server,
         "render_graph",
@@ -251,6 +254,7 @@ def test_service_errors_reach_the_model(server):
     )
     assert result.is_error
     assert "Graph mixes aws_* and azurerm_* resources" in result.content[0].text
+    assert list(tmp_path.iterdir()) == [], "a rejected graph writes no files"
 
 
 def test_schemas_are_plain_json_types(server):

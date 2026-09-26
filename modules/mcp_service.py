@@ -785,6 +785,16 @@ def run_render_graph(
                     f"Invalid connection {t!r} from {node!r}: expected "
                     "'<type>.<name>', e.g. 'aws_s3_bucket.assets'."
                 )
+    # Refuse a graph that mixes providers before writing anything, so a
+    # rejected call leaves no file behind.
+    from modules.helpers import TerravisionError
+    from modules.tfwrapper import _check_single_provider
+
+    try:
+        _check_single_provider(graph)
+    except TerravisionError as e:
+        raise McpServiceError(str(e)) from e
+
     # Any target that has no entry of its own is a leaf; add it so the caller
     # does not have to list every node twice. Copy first so the caller's dict
     # is left untouched.

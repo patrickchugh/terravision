@@ -594,7 +594,7 @@ def test_run_render_graph_accepts_real_graphdata_addresses(tmp_path, monkeypatch
     )
     graph = {
         'module.az1_subnets["data-1"].aws_subnet.this': ["tv_blank.empty~1"],
-        'module.lb.google_compute_backend_service.default["default"][default]~1': [],
+        'module.lb.aws_lb_target_group.default["default"][default]~1': [],
     }
     assert run_render_graph(graph, outfile="t")["node_count"] == 3
 
