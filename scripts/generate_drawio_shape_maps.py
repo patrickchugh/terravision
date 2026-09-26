@@ -66,14 +66,18 @@ def fetch_sidebar_aws4_shapes() -> List[str]:
     #   shape=mxgraph.aws4.<name>  → any shape reference
     shapes = set()
 
-    # Direct shapes: n + '<name>;'
-    for m in re.finditer(r"n\s*\+\s*'([^']+);'", js_text):
+    # Direct shapes: n + '<name>;'. The \b keeps `gn + '.ecs;'` (a
+    # resourceIcon, picked up below) from matching as a direct ".ecs".
+    for m in re.finditer(r"\bn\s*\+\s*'([^']+);'", js_text):
         name = m.group(1)
         if "=" not in name:  # Skip style properties
             shapes.add(name)
 
     # resourceIcon shapes: resIcon=mxgraph.aws4.<name>;
     for m in re.finditer(r"resIcon=mxgraph\.aws4\.([^;'\"]+)", js_text):
+        shapes.add(m.group(1))
+    # resourceIcon shapes written as: 'resIcon=' + gn + '.<name>;'
+    for m in re.finditer(r"\bgn\s*\+\s*'\.([^';]+);'", js_text):
         shapes.add(m.group(1))
 
     # General shape references: shape=mxgraph.aws4.<name>

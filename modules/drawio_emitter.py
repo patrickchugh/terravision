@@ -806,10 +806,15 @@ def _build_node_style(
     )
     from modules.config.drawio_resicon_colors import AWS_RESICON_FILL_COLORS
 
-    drawio_shape = shape_map.get(resource_type)
+    drawio_shape = _AWS_SHAPE_OVERRIDES.get(resource_type) or shape_map.get(
+        resource_type
+    )
 
     if drawio_shape:
-        shape_ref = drawio_shape.replace(" ", "_")
+        # Generated names can carry a stray dot ("mxgraph.aws4..ecs").
+        shape_ref = re.sub(
+            r"^mxgraph\.aws4\.\.+", "mxgraph.aws4.", drawio_shape.replace(" ", "_")
+        )
         bare_name = (
             shape_ref.replace("mxgraph.aws4.", "")
             .replace("mxgraph.azure.", "")
@@ -927,6 +932,33 @@ def _build_node_style(
     ]
 
     return ";".join(parts) + ";", DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE
+
+
+# AWS types whose generated mapping names no draw.io shape, or a less exact
+# one than TerraVision's own icon (RDS engines, Fargate). Checked before the
+# generated map in drawio_shape_map_aws.py.
+_AWS_SHAPE_OVERRIDES = {
+    f"aws_{t}": f"mxgraph.aws4.{shape}"
+    for t, shape in {
+        "ecr_repository": "ecr",
+        "ecs_fargate": "fargate",
+        "rds_sqlserver": "rds_sql_server_instance",
+        "rds_mysql": "rds_mysql_instance",
+        "rds_postgres": "rds_postgresql_instance",
+        "rds_mariadb": "rds_mariadb_instance",
+        "rds_oracle": "rds_oracle_instance",
+        "rds_aurora": "aurora_instance",
+        "rds_aurora_mysql": "aurora_instance",
+        "rds_aurora_postgres": "aurora_instance",
+        "dx_gateway": "direct_connect",
+        "ebs_snapshot": "snapshot",
+        "msk_cluster": "managed_streaming_for_kafka",
+        "ssm_document": "systems_manager",
+        "ssm_parameter": "parameter_store",
+        "kms_key": "key_management_service",
+        "cloudwatch_metric_alarm": "alarm",
+    }.items()
+}
 
 
 def _build_special_node_style(node: XdotNode) -> str:

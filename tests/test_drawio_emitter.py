@@ -350,3 +350,49 @@ class TestNodeInsideCluster:
         node = XdotNode(id="n", pos=(300, 300), width=1, height=1)
         cluster = XdotCluster(name="c", bb=(50, 50, 200, 200))
         assert _node_inside_cluster(node, cluster) is False
+
+
+def test_every_aws_type_maps_to_a_real_drawio_shape():
+    """A name draw.io does not know draws a blank box instead of the icon.
+
+    The generated map once held 155 such names ("mxgraph.aws4..ecs",
+    "elastic container registry"), so ECR, Fargate and every RDS engine
+    lost their icons in the draw.io export.
+    """
+    import re
+
+    from modules.config.drawio_aws4_shapes import (
+        AWS4_DIRECT_SHAPE_NAMES,
+        AWS4_RESICON_NAMES,
+    )
+    from modules.config.drawio_shape_map_aws import DRAWIO_SHAPE_MAP_AWS
+    from modules.drawio_emitter import _build_node_style
+
+    known = set(AWS4_DIRECT_SHAPE_NAMES) | set(AWS4_RESICON_NAMES)
+    node = XdotNode(id="n", pos=(0, 0), width=1.0, height=1.0, label="x")
+    blank = []
+    for resource_type in DRAWIO_SHAPE_MAP_AWS:
+        style, _, _ = _build_node_style(resource_type, node, DRAWIO_SHAPE_MAP_AWS)
+        names = re.findall(r"(?:resIcon|shape)=mxgraph\.aws4\.([^;]+);", style)
+        if not any(n in known for n in names if n != "resourceIcon"):
+            blank.append(resource_type)
+    # Subnets and security groups are drawn as boxes, not icons.
+    assert sorted(blank) == ["aws_security_group", "aws_subnet"]
+
+
+@pytest.mark.parametrize(
+    "resource_type, shape",
+    [
+        ("aws_rds_sqlserver", "rds_sql_server_instance"),
+        ("aws_ecs_fargate", "fargate"),
+        ("aws_ecr_repository", "ecr"),
+        ("aws_rds_postgres", "rds_postgresql_instance"),
+    ],
+)
+def test_specific_aws_icons_in_drawio(resource_type, shape):
+    from modules.config.drawio_shape_map_aws import DRAWIO_SHAPE_MAP_AWS
+    from modules.drawio_emitter import _build_node_style
+
+    node = XdotNode(id="n", pos=(0, 0), width=1.0, height=1.0, label="x")
+    style, _, _ = _build_node_style(resource_type, node, DRAWIO_SHAPE_MAP_AWS)
+    assert f"mxgraph.aws4.{shape};" in style

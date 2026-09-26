@@ -561,6 +561,17 @@ def _check_flows(flows: Any) -> None:
         raise McpServiceError(str(e)) from e
 
 
+# Put in a result without flows or edge labels: the model reads tool results
+# far more reliably than its instructions at the moment it writes the reply.
+_OFFER_FLOWS = (
+    "Present the diagram, explaining how requests or data move through it. "
+    "Then end your reply with one line offering to add that flow to the "
+    "diagram as numbered steps with a legend, and short labels on the "
+    "connections. On a yes, render the same graph again with flows and "
+    "edge_labels. Do not add them before the user says yes."
+)
+
+
 def _check_edge_labels(edge_labels: Any) -> Dict[str, List[Dict[str, str]]]:
     """Convert edge_labels to the connect format, or raise McpServiceError."""
     import modules.annotations as annotations
@@ -746,6 +757,8 @@ def run_diagram(
             )
         if found:
             result["warnings"] = found
+        if not (flows or connect):
+            result["next_step"] = _OFFER_FLOWS
         if preview:
             result["_preview_png"] = _preview_png(files["png"])
         return result

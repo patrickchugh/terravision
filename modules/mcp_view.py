@@ -86,6 +86,15 @@ VIEW_HTML = r"""<!DOCTYPE html>
   #message.error { color: var(--danger); white-space: pre-wrap; }
   #status { min-height: 18px; margin-top: 6px; color: var(--fg2); font-size: 12px; }
   #status.error { color: var(--danger); }
+  #toast {
+    position: fixed; top: 10px; left: 50%; transform: translate(-50%, -8px); z-index: 10;
+    max-width: calc(100% - 32px); padding: 8px 14px; border-radius: var(--radius);
+    background: var(--fg); color: var(--bg); font-size: 13px; line-height: 1.4;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); opacity: 0; pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.error { background: var(--danger); color: #fff; }
   pre {
     margin: 8px 0 0; padding: 10px; max-height: 320px; overflow: auto; background: var(--bg2);
     border: 1px solid var(--border); border-radius: var(--radius); font: 12px/1.45 var(--mono);
@@ -122,6 +131,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
 </div>
 <div id="stage"><div id="message">Drawing the diagram&hellip;</div><img id="diagram" alt="Cloud architecture diagram" hidden></div>
 <div id="status"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <pre id="graph" hidden></pre>
 <ul id="warnings" hidden></ul>
 <ul id="files" hidden></ul>
@@ -233,10 +243,19 @@ VIEW_HTML = r"""<!DOCTYPE html>
     m.hidden = false;
     $("diagram").hidden = true;
   }
+  // Button feedback also appears as a toast near the toolbar: the status
+  // line sits under the diagram, often out of sight.
+  var toastTimer;
   function setStatus(text, isError) {
     var s = $("status");
     s.textContent = text || "";
     s.className = isError ? "error" : "";
+    if (!text) { return; }
+    var t = $("toast");
+    t.textContent = text;
+    t.className = "show" + (isError ? " error" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = isError ? "error" : ""; }, isError ? 6000 : 2000);
   }
 
   function showResult(res) {
@@ -425,7 +444,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
   };
   $("copy").onclick = function () {
     loadGraph().then(function (text) { return copyText(text); })
-      .then(function () { setStatus("Copied the graph JSON."); })
+      .then(function () { setStatus("Graph JSON copied to the clipboard."); })
       .catch(function (e) { setStatus("Could not copy: " + e.message, true); });
   };
   function copyText(text) {

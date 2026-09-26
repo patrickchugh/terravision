@@ -145,7 +145,7 @@ Numbered badges with a legend can show how a request or data moves through the d
 
 - **The user asks how something moves** (a request path, data flow, event sequence): include flows in the first render.
 - **Otherwise, don't add them.** Deliver the plain diagram, explain the flow in your reply as usual, and end with one line: "Want me to add this flow to the diagram as numbered steps, and label the connections?" On a yes, render the same graph again with the steps you explained as flows (and edge labels), so the reply and the diagram match.
-- **Edge labels** ("Reads secrets", "Publishes events") go on arrows the graph already has; add them in the first render when the user asks what the connections do.
+- **Edge labels** ("Reads secrets", "Publishes events") go on arrows the graph already has; add them in the first render only when the user asks what the connections do, and otherwise include them in the same offer.
 - Keep it to one or two flows of a few steps each, name numbered copies (`aws_alb.api~1`), and fix any step the result warns draws no badge.
 
 ## Check every render, and fix the input

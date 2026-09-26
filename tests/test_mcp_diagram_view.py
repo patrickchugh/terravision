@@ -887,3 +887,32 @@ def test_malformed_edge_labels_leave_no_files(outdir):
     with pytest.raises(McpServiceError, match="edge_labels"):
         mcp_service.run_render_graph(GRAPH, outfile="bad", edge_labels={"x": "y"})
     assert list(outdir.iterdir()) == []
+
+
+def test_button_feedback_shows_as_a_toast():
+    """The status line sits under the diagram, often out of sight."""
+    from modules.mcp_view import VIEW_HTML
+
+    assert '<div id="toast" role="status" aria-live="polite"></div>' in VIEW_HTML
+    assert "Graph JSON copied to the clipboard." in VIEW_HTML
+
+
+def test_plain_result_asks_the_model_to_offer_flows(outdir):
+    plain = mcp_service.run_render_graph(GRAPH, outfile="plain", preview=False)
+    assert "offering to add that flow" in plain["next_step"]
+    assert "Do not add them before the user says yes" in plain["next_step"]
+    flowed = mcp_service.run_render_graph(
+        GRAPH, outfile="flowed", flows=FLOWS, preview=False
+    )
+    labelled = mcp_service.run_render_graph(
+        GRAPH,
+        outfile="labelled",
+        edge_labels={"aws_alb.api -> aws_ecs_fargate.api": "Routes"},
+        preview=False,
+    )
+    assert "next_step" not in flowed and "next_step" not in labelled
+
+
+def test_next_step_reaches_the_model(outdir, client_call):
+    result = client_call(lambda c: c.call_tool("render_graph", {"graph": GRAPH}))
+    assert "offering to add that flow" in result.content[0].text
