@@ -68,9 +68,7 @@ claude mcp add terravision -- terravision mcp
 or drag it into Claude Desktop's **Settings → Extensions**. It asks where to save diagrams (by
 default `Documents/TerraVision`) and installs TerraVision itself; your computer needs Graphviz and
 Git, and on Linux also [uv](https://docs.astral.sh/uv/getting-started/installation/), which Claude
-Desktop uses there to run the extension. The server carries the same guidance as the agent skill (see `diagram_guide` below), so uploading
-`terravision-cloud-diagrams-skill-<version>.zip` from the same release under **Settings →
-Capabilities** is optional.
+Desktop uses there to run the extension.
 
 If extensions are turned off on your machine, add the server by hand instead (**Settings →
 Developer → Edit Config**). On macOS, give the full path to `uvx` (from `which uvx`), because

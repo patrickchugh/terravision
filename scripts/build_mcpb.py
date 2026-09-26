@@ -12,8 +12,9 @@ PyPI, ``--local-wheel`` points the bundle at a locally built wheel (this
 machine only) and ``--git-ref`` at a pushed branch or tag on GitHub (any
 machine with Git).
 
-The skill zip is the skills/terravision-cloud-diagrams folder, for apps where
-skills are uploaded by hand, such as Claude Desktop.
+The skill zip is the skills/terravision-cloud-diagrams folder, for apps that
+take uploaded skills but do not run the MCP server. The extension itself needs
+no skill: the server serves the same guidance through diagram_guide.
 
 Needs Node.js: the bundle is validated and packed with the official
 ``@anthropic-ai/mcpb`` CLI through npx.
