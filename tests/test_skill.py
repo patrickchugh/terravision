@@ -164,3 +164,37 @@ def test_cli_prints_warnings_and_succeeds(tmp_path):
         "WARNING: Arrow aws_lambda_function.fn -> aws_vpc.main"
     )
     assert result.stdout.rstrip().endswith("OK: 2 nodes, 1 edges")
+
+
+# ── Pattern library (examples/patterns) ─────────────────────────────
+
+PATTERNS = SKILL / "examples" / "patterns"
+
+
+def _index():
+    return json.loads((PATTERNS / "index.json").read_text())
+
+
+def test_pattern_index_matches_files_and_generator():
+    spec = importlib.util.spec_from_file_location(
+        "gen_example_patterns",
+        SKILL.parents[1] / "scripts" / "gen_example_patterns.py",
+    )
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    names = [entry["name"] for entry in _index()]
+    assert names == list(generator.PATTERNS)
+    assert sorted(
+        p.stem.removesuffix(".tvg") for p in PATTERNS.glob("*.tvg.json")
+    ) == sorted(names)
+    assert {entry["provider"] for entry in _index()} <= {"aws", "azure", "gcp"}
+
+
+@pytest.mark.parametrize("entry", _index(), ids=lambda e: e["name"])
+def test_patterns_are_valid_plain_single_provider_graphs(entry):
+    validator = _validator()
+    graph = json.loads((PATTERNS / f"{entry['name']}.tvg.json").read_text())
+    assert validator.validate(graph) == []
+    nodes = set(graph) | {t for targets in graph.values() for t in targets}
+    assert not any(n.startswith("module.") or "[" in n for n in nodes)
+    assert {validator.provider_of(n) for n in nodes} - {None} == {entry["provider"]}

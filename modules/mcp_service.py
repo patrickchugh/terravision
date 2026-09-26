@@ -991,8 +991,13 @@ _TYPE_PREFIXES = {
 }
 
 
-def diagram_guide(provider: str) -> Dict[str, Any]:
+def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any]:
     """Return what an agent needs to write a good graph for ``provider``.
+
+    With ``pattern``, returns just that graph from the pattern library, built
+    by scripts/gen_example_patterns.py from TerraVision's own output for real
+    Terraform, so a diagram of a service mix the main examples do not cover
+    keeps TerraVision's level of detail.
 
     The same material the agent skill gives Claude Code: the graph format
     rules (type picks, containers, what is drawn and what is not), worked
@@ -1012,6 +1017,28 @@ def diagram_guide(provider: str) -> Dict[str, Any]:
         raise McpServiceError(
             f"Unknown provider {provider!r}. Use one of: aws, azure, gcp."
         )
+    patterns_dir = _SKILL_DIR / "examples" / "patterns"
+    try:
+        catalogue = [
+            entry
+            for entry in json.loads((patterns_dir / "index.json").read_text())
+            if entry["provider"] == key
+        ]
+    except OSError:
+        catalogue = []
+    if pattern:
+        entry = next((e for e in catalogue if e["name"] == pattern), None)
+        if entry is None:
+            names = ", ".join(e["name"] for e in catalogue) or "none"
+            raise McpServiceError(
+                f"Unknown {key} pattern {pattern!r}. Available: {names}."
+            )
+        return {
+            "provider": key,
+            "pattern": pattern,
+            "description": entry["description"],
+            "graph": json.loads((patterns_dir / f"{pattern}.tvg.json").read_text()),
+        }
     try:
         rules = (_SKILL_DIR / "references" / "graph-format.md").read_text()
         types_doc = (_SKILL_DIR / "references" / "node-types.md").read_text()
@@ -1033,9 +1060,14 @@ def diagram_guide(provider: str) -> Dict[str, Any]:
         "rules": rules,
         "examples": examples,
         "node_types": node_types,
+        "patterns": [
+            {"name": e["name"], "description": e["description"]} for e in catalogue
+        ],
         "next_step": (
             "Start from the closest example, keep its structure (zones, public "
             "and private subnets, internet path, shared services), use the most "
-            "specific node types, then call render_graph with a title."
+            "specific node types, then call render_graph with a title. If a "
+            "pattern below matches the services asked for, fetch it with "
+            "diagram_guide(provider, pattern=<name>) and follow it too."
         ),
     }

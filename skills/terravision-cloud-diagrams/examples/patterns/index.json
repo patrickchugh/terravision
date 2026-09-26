@@ -1,0 +1,132 @@
+[
+  {
+    "name": "aws-api-gateway-lambda",
+    "provider": "aws",
+    "description": "REST API Gateway invoking a Lambda function"
+  },
+  {
+    "name": "aws-cognito-api-gateway",
+    "provider": "aws",
+    "description": "API Gateway with a Cognito user pool authoriser and Lambda backends"
+  },
+  {
+    "name": "aws-dynamodb-streams-lambda",
+    "provider": "aws",
+    "description": "DynamoDB table streaming changes to Lambda, with Kinesis"
+  },
+  {
+    "name": "aws-eks",
+    "provider": "aws",
+    "description": "EKS cluster with managed node groups across availability zones, ECR"
+  },
+  {
+    "name": "aws-ecs-fargate-elasticache",
+    "provider": "aws",
+    "description": "ECS on Fargate in private subnets using ElastiCache Redis, ECR"
+  },
+  {
+    "name": "aws-eventbridge-lambda",
+    "provider": "aws",
+    "description": "EventBridge rule triggering Lambda"
+  },
+  {
+    "name": "aws-firehose-lambda",
+    "provider": "aws",
+    "description": "Kinesis Data Firehose with Lambda transformation delivering to S3"
+  },
+  {
+    "name": "aws-glue-s3",
+    "provider": "aws",
+    "description": "Glue crawler and ETL job over an S3 data lake with a Glue catalog"
+  },
+  {
+    "name": "aws-s3-notification-lambda",
+    "provider": "aws",
+    "description": "S3 bucket notifications invoking Lambda"
+  },
+  {
+    "name": "aws-sagemaker-endpoint",
+    "provider": "aws",
+    "description": "SageMaker model and endpoint called by Lambda, artefacts in S3"
+  },
+  {
+    "name": "aws-sagemaker-notebook-vpc",
+    "provider": "aws",
+    "description": "SageMaker notebook instance inside a VPC with S3 access"
+  },
+  {
+    "name": "aws-secretsmanager-rds",
+    "provider": "aws",
+    "description": "RDS PostgreSQL with credentials in Secrets Manager, rotated by Lambda"
+  },
+  {
+    "name": "aws-sns-sqs-lambda",
+    "provider": "aws",
+    "description": "SNS topic fanning out to SQS queues processed by Lambda"
+  },
+  {
+    "name": "aws-static-website",
+    "provider": "aws",
+    "description": "Static website on S3 served through CloudFront"
+  },
+  {
+    "name": "aws-stepfunctions",
+    "provider": "aws",
+    "description": "Step Functions orchestrating Lambda, DynamoDB and SNS"
+  },
+  {
+    "name": "aws-waf-alb",
+    "provider": "aws",
+    "description": "Application Load Balancer protected by WAF"
+  },
+  {
+    "name": "aws-wordpress-ecs",
+    "provider": "aws",
+    "description": "WordPress on ECS with EFS, RDS, CloudFront, ALB and autoscaling"
+  },
+  {
+    "name": "azure-aks",
+    "provider": "azure",
+    "description": "AKS cluster with node pools across zones, ACR and Log Analytics"
+  },
+  {
+    "name": "azure-appgw-lb",
+    "provider": "azure",
+    "description": "Application Gateway and load balancer in front of VMs across zones"
+  },
+  {
+    "name": "azure-vm-vmss",
+    "provider": "azure",
+    "description": "Virtual machine scale set across zones behind a load balancer"
+  },
+  {
+    "name": "gcp-gke",
+    "provider": "gcp",
+    "description": "GKE cluster with a node pool and a container registry"
+  },
+  {
+    "name": "gcp-serverless",
+    "provider": "gcp",
+    "description": "Cloud Run and Cloud Functions with Pub/Sub and Cloud Storage"
+  },
+  {
+    "name": "gcp-pubsub-bigquery",
+    "provider": "gcp",
+    "description": "Pub/Sub pipeline into BigQuery with Cloud Run and Cloud Storage"
+  },
+  {
+    "name": "gcp-data-services",
+    "provider": "gcp",
+    "description": "Cloud SQL, Spanner, Memorystore and BigQuery used by a VM"
+  },
+  {
+    "name": "gcp-http-load-balancer",
+    "provider": "gcp",
+    "description": "External HTTP load balancer in front of a managed instance group"
+  },
+  {
+    "name": "gcp-internal-load-balancer",
+    "provider": "gcp",
+    "description": "Internal regional load balancer in front of a managed instance group"
+  }
+]

@@ -131,7 +131,7 @@ TerraVision draws the graph exactly as written; it does not add, move or group n
 - **Nesting is literal.** Keep CloudFront, Route 53, API Gateway, WAF and external actors at the top level, not inside a VPC or subnet. Empty containers are not drawn.
 - **Unknown or misspelt types** draw a blank icon without an error. Check them against `references/node-types.md`.
 
-Worked examples in `examples/`: three-tier web apps for each cloud (`three-tier-web.tvg.json` for AWS, `azure-three-tier.tvg.json`, `gcp-three-tier.tvg.json`), plus `aws-event-driven.tvg.json`, `azure-web-app.tvg.json` and `gcp-serverless-api.tvg.json`. Copy the closest one, keep its level of detail (zones, public and private subnets, the path to the internet, shared services) and edit.
+Worked examples in `examples/`: three-tier web apps for each cloud (`three-tier-web.tvg.json` for AWS, `azure-three-tier.tvg.json`, `gcp-three-tier.tvg.json`), plus `aws-event-driven.tvg.json`, `azure-web-app.tvg.json` and `gcp-serverless-api.tvg.json`. Copy the closest one, keep its level of detail (zones, public and private subnets, the path to the internet, shared services) and edit. For other service mixes, `examples/patterns/` holds 26 more (EKS, ECS, API Gateway, Step Functions, SageMaker, Glue, GKE, AKS and others), listed with descriptions in `examples/patterns/index.json`. They are TerraVision's own output for real Terraform, so following them keeps its level of detail.
 
 Validate before rendering: `python scripts/validate_graph.py architecture.tvg.json`. It fails on bad addresses or mixed providers, and prints a `WARNING` for anything in the list above that will not draw the way it reads. Fix the warnings, or accept them if they are intended.
 

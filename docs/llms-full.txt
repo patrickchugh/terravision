@@ -85,7 +85,7 @@ Save TVG files with the `.tvg.json` extension, for example `architecture.tvg.jso
 4. **Numbered copies.** Append `~1`, `~2`, ... to make distinct instances that share a name, typically one per availability zone.
 5. **External actors.** Use pseudo-types: `tv_aws_users`, `tv_aws_internet`, `tv_aws_mobile_client`, `tv_aws_onprem`, `tv_azurerm_users`, `tv_azurerm_internet`, `tv_azure_onprem`, `tv_gcp_users_icon`. For GCP, `tv_gcp_users`, `tv_gcp_onprem` and `tv_gcp_external_saas` are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.
 6. **Regions and zones.** `tv_aws_region.<name>`, `aws_az.<name>`, `tv_azurerm_zone.<name>`, `tv_gcp_region.<name>`, `tv_gcp_zone.<name>` are containers.
-7. **Modules.** Prefix an address with `module.<modname>.` to group nodes under a module boundary.
+7. **Modules.** A `module.<modname>.` prefix, as `terravision graphdata` writes it, is accepted but draws no module boundary; leave it out when writing a graph by hand.
 8. **One provider per graph.** The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) and its drawing conventions come from the resource type prefixes. A graph that mixes `aws_*`, `azurerm_*` and `google_*` resources (including their `tv_*` actors) is rejected with an error; draw one diagram per provider.
 9. **Labels and title.** Names are prettified automatically (`aws_db_instance.postgres~1` becomes "DB Instance Postgres"). Use lowercase snake_case names: hyphens and capitals are mangled (`Orders-Table` becomes "Orders"). Pass `--use-tf-names` to label with the raw address instead. The graph cannot carry a title; pass `--title` (or `title` to the MCP tools), otherwise the heading is "Cloud Architecture Diagram".
 

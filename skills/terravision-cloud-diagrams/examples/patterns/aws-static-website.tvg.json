@@ -1,0 +1,21 @@
+{
+  "aws_cloudfront_distribution.this~1": [
+    "aws_s3_bucket.this~1"
+  ],
+  "aws_group.shared_services": [
+    "aws_iam_group.of_services"
+  ],
+  "aws_s3_bucket.this~1": [],
+  "aws_s3_bucket_acl.this~1": [
+    "aws_s3_bucket.this~1"
+  ],
+  "aws_s3_bucket_public_access_block.this~1": [
+    "aws_s3_bucket.this~1"
+  ],
+  "aws_s3_bucket_website_configuration.this~1": [
+    "aws_s3_bucket.this~1"
+  ],
+  "tv_aws_users.users": [
+    "aws_cloudfront_distribution.this~1"
+  ]
+}

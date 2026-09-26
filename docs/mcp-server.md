@@ -189,6 +189,11 @@ engine) and the level of detail of the examples: availability zones, public and 
 the internet path and shared services. The server's instructions tell agents to call it once before
 `render_graph`.
 
+It also lists a library of patterns for that provider (EKS, ECS, Step Functions, SageMaker, Glue,
+GKE, AKS and others), each TerraVision's own output for real Terraform with the addresses written
+plainly. Pass `pattern: "<name>"` to fetch one. `scripts/gen_example_patterns.py` rebuilds the
+library from `tests/json` and refuses any pattern that would draw differently from the original.
+
 ### `render_graph`
 
 Renders a diagram from a graph passed directly as JSON, so an agent never has to write a file.

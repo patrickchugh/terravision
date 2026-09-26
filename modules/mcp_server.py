@@ -398,7 +398,7 @@ def build_server() -> MCPServer:
             )
 
     @mcp.tool()
-    def diagram_guide(provider: str) -> Dict[str, Any]:
+    def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any]:
         """Read this once before calling render_graph.
 
         Returns the TerraVision graph rules (node types to prefer, which types
@@ -408,14 +408,22 @@ def build_server() -> MCPServer:
         public and private subnets, NAT gateways routed through an internet
         gateway to the internet, and shared services in their group.
 
+        It also lists a library of patterns, such as EKS, SageMaker, Step
+        Functions, GKE or AKS, drawn from TerraVision's output for real
+        Terraform. Call again with pattern set to one of their names to get
+        that graph when it matches the request.
+
         Args:
             provider: "aws", "azure" or "gcp". One provider per diagram.
+            pattern: Name of a pattern from the "patterns" list, to fetch it.
 
         Returns:
-            {"provider", "rules", "examples", "node_types", "next_step"}.
+            {"provider", "rules", "examples", "node_types", "patterns",
+            "next_step"}; with pattern, {"provider", "pattern", "description",
+            "graph"}.
         """
         with _tool_errors():
-            return mcp_service.diagram_guide(provider)
+            return mcp_service.diagram_guide(provider, pattern)
 
     @mcp.tool()
     def open_diagram_file(path: str, reveal: bool = False) -> Dict[str, Any]:

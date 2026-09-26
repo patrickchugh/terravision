@@ -532,3 +532,17 @@ def test_skill_folder_ships_in_the_package():
     )
     includes = [i["path"] for i in pyproject["tool"]["poetry"]["include"]]
     assert "skills/**/*" in includes
+
+
+def test_diagram_guide_lists_and_fetches_patterns():
+    guide = mcp_service.diagram_guide("aws")
+    names = [p["name"] for p in guide["patterns"]]
+    assert "aws-eks" in names and all(n.startswith("aws-") for n in names)
+    eks = mcp_service.diagram_guide("aws", pattern="aws-eks")
+    assert set(eks) == {"provider", "pattern", "description", "graph"}
+    assert any(n.startswith("aws_eks") for n in eks["graph"])
+
+
+def test_diagram_guide_rejects_unknown_pattern():
+    with pytest.raises(McpServiceError, match="Available: azure-aks"):
+        mcp_service.diagram_guide("azure", pattern="aws-eks")
