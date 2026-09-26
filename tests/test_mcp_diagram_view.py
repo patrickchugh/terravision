@@ -754,3 +754,15 @@ def test_view_uri_changes_with_the_view():
 
     digest = hashlib.sha256(VIEW_HTML.encode()).hexdigest()[:12]
     assert VIEW_URI == f"ui://terravision/diagram-{digest}.html"
+
+
+def test_guide_next_step_explains_each_clouds_zones():
+    """AWS subnets are zonal; Azure and GCP subnets span zones."""
+    steps = {
+        p: mcp_service.diagram_guide(p)["next_step"] for p in ("aws", "azure", "gcp")
+    }
+    assert "one numbered copy in each zone's subnet" in steps["aws"]
+    assert "tv_azurerm_zone" in steps["azure"]
+    assert "tv_gcp_zone" in steps["gcp"]
+    for step in steps.values():
+        assert "Before rendering, check the graph against the request" in step

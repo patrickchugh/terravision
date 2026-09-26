@@ -1119,7 +1119,11 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         "and private subnets, internet path, shared services), use the most "
         "specific node types, then call render_graph with a title. If a "
         "pattern below matches the services asked for, fetch it with "
-        "diagram_guide(provider, pattern=<name>) and follow it too."
+        "diagram_guide(provider, pattern=<name>) and follow it too. "
+        + _ZONE_HINTS[key]
+        + " Before rendering, check the graph against the request: every "
+        "service asked for is there with its specific type, each zone has its "
+        "copies, and every node sits in the container you meant."
     )
     if not setup["ready_for_graphs"]:
         next_step = (
@@ -1138,6 +1142,20 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         ],
         "next_step": next_step,
     }
+
+
+# How each cloud draws resources that span availability zones, for next_step.
+_ZONE_HINTS = {
+    "aws": "AWS subnets are zonal: in a multi-AZ design, give every resource "
+    "that spans zones (load balancer, NAT gateway, compute tier, Multi-AZ "
+    "database) one numbered copy in each zone's subnet.",
+    "azure": "Azure subnets span zones: draw zone-redundant services once in "
+    "their subnet, and put per-zone instances in tv_azurerm_zone boxes inside "
+    "it.",
+    "gcp": "GCP subnets are regional: draw regional services (load balancers, "
+    "managed instance groups, Cloud NAT) once, and put per-zone instances in "
+    "tv_gcp_zone boxes inside the subnet.",
+}
 
 
 _VALIDATOR: Any = None
