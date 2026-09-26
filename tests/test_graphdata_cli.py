@@ -175,3 +175,49 @@ def test_visualise_title(tmp_path, monkeypatch):
     html = (tmp_path / "architecture.html").read_text()
     assert "<title>Order Platform - Architecture Diagram</title>" in html
     assert "Cloud Architecture Diagram" not in html
+
+
+class TestUnusualSourcePaths:
+    """The footer shows the source path inside a Graphviz record label, where
+    braces, bars, angle brackets and backslashes are syntax. An unexpanded
+    ${VAR} in an output folder once made every render fail."""
+
+    GRAPH = {"aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
+
+    def _draw(self, tmp_path, monkeypatch, fmt):
+        import json
+
+        from click.testing import CliRunner
+
+        from terravision.terravision import cli
+
+        folder = tmp_path / "${DOCUMENTS}" / "a|b"
+        folder.mkdir(parents=True)
+        (folder / "g.tvg.json").write_text(json.dumps(self.GRAPH))
+        monkeypatch.chdir(folder)
+        result = CliRunner().invoke(
+            cli,
+            ["draw", "--source", str(folder / "g.tvg.json"), "--format", fmt],
+            catch_exceptions=False,
+        )
+        assert result.exit_code == 0, result.output
+        return folder
+
+    def test_png_renders(self, tmp_path, monkeypatch):
+        folder = self._draw(tmp_path, monkeypatch, "png")
+        assert (folder / "architecture.dot.png").stat().st_size > 0
+
+    def test_drawio_shows_the_literal_path(self, tmp_path, monkeypatch):
+        folder = self._draw(tmp_path, monkeypatch, "drawio")
+        xml = (folder / "architecture.drawio").read_text()
+        assert "${DOCUMENTS}/a|b/g.tvg.json" in xml
+
+
+def test_record_escape():
+    from modules.drawing import _record_escape
+
+    assert (
+        _record_escape("C:\\Users\\Nodes\\x.json") == "C:\\\\Users\\\\Nodes\\\\x.json"
+    )
+    assert _record_escape("/a/${B}|<c>") == "/a/$\\{B\\}\\|\\<c\\>"
+    assert _record_escape("/plain/path.json") == "/plain/path.json"

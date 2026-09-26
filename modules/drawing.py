@@ -1582,7 +1582,7 @@ def _build_diagram(
         "height": "2.4",
         "fontsize": "20",
         "margin": "0.8,0.5",
-        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION} | {{ Timestamp: | Source: }} | {{ {datetime.datetime.now()} | {source} }}",
+        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION} | {{ Timestamp: | Source: }} | {{ {datetime.datetime.now()} | {_record_escape(str(source))} }}",
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
@@ -1748,6 +1748,18 @@ def generate_svg(
     svg_string = _embed_icons_as_data_uris(svg_string, icon_paths)
 
     return svg_string, icon_paths, node_id_map, cluster_id_map
+
+
+def _record_escape(text: str) -> str:
+    """Escape text for use inside a Graphviz record label.
+
+    Braces, vertical bars and angle brackets give a record its structure, and
+    a backslash starts an escape such as ``\\N`` or ``\\l``. A source path
+    containing any of them, such as a Windows path or an unexpanded
+    ``${VAR}``, made Graphviz fail with "bad label format" or garbled the
+    footer, so each is escaped with a backslash to appear literally.
+    """
+    return re.sub(r"([{}|<>\\])", r"\\\1", text)
 
 
 def render_diagram(

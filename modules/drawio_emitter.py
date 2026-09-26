@@ -1195,6 +1195,25 @@ def _convert_record_to_html(record: str) -> str:
 
         "<b>Title</b><br>Timestamp: 2026-04-16<br>Source: path/to/src"
     """
+    # Backslash-escaped characters (a source path with braces, bars or
+    # backslashes) are literal text, not structure: set them aside before
+    # splitting and restore them at the end. XML specials arrive already
+    # escaped as entities, so an escaped entity counts as one character.
+    literals: list = []
+
+    def _hide(match: "re.Match[str]") -> str:
+        literals.append(match.group(1))
+        return f"\ue000{len(literals) - 1}\ue001"
+
+    record = re.sub(r"\\(&(?:amp|lt|gt|quot);|.)", _hide, record)
+
+    def _restore(text: str) -> str:
+        def literal(match: "re.Match[str]") -> str:
+            char = literals[int(match.group(1))]
+            return {"<": "&lt;", ">": "&gt;", "&": "&amp;"}.get(char, char)
+
+        return re.sub("\ue000(\\d+)\ue001", literal, text)
+
     # Split into top-level groups by matching { ... } blocks
     groups: list = []
     current = ""
@@ -1216,7 +1235,7 @@ def _convert_record_to_html(record: str) -> str:
 
     # First group is the title
     if not groups:
-        return record
+        return _restore(record)
 
     title = groups[0].strip("{} ")
     result = f"<b>{title}</b>"
@@ -1238,7 +1257,7 @@ def _convert_record_to_html(record: str) -> str:
         for item in block_contents[0]:
             result += f"<br>{item}"
 
-    return result
+    return _restore(result)
 
 
 def _encode_icon_base64(icon_path: str) -> str:
