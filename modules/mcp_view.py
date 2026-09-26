@@ -284,7 +284,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
   function listFiles() {
     var list = $("files");
     list.textContent = "";
-    var labels = { png: "Image", svg: "SVG", drawio: "draw.io", graph: "Graph JSON", pdf: "PDF", dot: "DOT" };
+    var labels = { png: "Image", svg: "SVG", drawio: "draw.io", graph: "Graph JSON", pdf: "PDF", dot: "DOT", annotations: "Flows" };
     var f = files();
     Object.keys(f).forEach(function (kind) {
       var li = document.createElement("li");

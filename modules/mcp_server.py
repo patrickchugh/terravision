@@ -54,6 +54,12 @@ the graph and render again. Apps that support MCP Apps also show it to the
 user in an interactive view with buttons to open and edit the files.
 open_diagram_file opens a file for the user on their own computer. Show the
 user the graph JSON as well.
+
+Flows: pass flows to number the steps of a request path on the diagram, with
+a legend. Include them when the user asks how requests, data or events move.
+Otherwise deliver the plain diagram, explain the flow in the reply, and end
+with one line offering to add it as numbered steps; on a yes, render the same
+graph again with those steps as flows.
 """
 
 
@@ -124,6 +130,7 @@ def build_server() -> MCPServer:
         iconsize: Optional[int] = None,
         title: Optional[str] = None,
         preview: bool = True,
+        flows: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> CallToolResult:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
@@ -169,6 +176,17 @@ def build_server() -> MCPServer:
             title: Heading shown above the diagram, e.g. "Order Platform -
                 Production". Defaults to "Cloud Architecture Diagram".
             preview: Include a preview image of the diagram in the result.
+            flows: Optional numbered steps drawn as badges on the diagram,
+                with a legend. Keyed by flow name: {"order_request":
+                {"description": "A customer places an order", "steps": [
+                {"resource": "tv_aws_users.users", "detail": "Customer opens
+                the app"}, {"resource": "aws_alb.api~1 ->
+                aws_ecs_fargate.app~1", "detail": "Request routed to a
+                task"}]}}. A step names a node, or an arrow as "<node> ->
+                <node>" in either direction; use the numbered copy
+                (aws_alb.api~1), not the bare name. Steps are numbered
+                across flows. Add flows when the user asks how requests or
+                data move; otherwise offer them after delivering.
 
         Returns:
             {"path", "format", "provider", "title", "files", "graph_path",
@@ -176,8 +194,10 @@ def build_server() -> MCPServer:
             the paths of the PNG, SVG, draw.io file and the graph (.tvg.json);
             "path" is the file in the requested format. "warnings" appears
             when parts of the graph will not draw as they read, such as an
-            unknown type (with suggestions) or an arrow to a container: fix
-            the graph and call render_graph again.
+            unknown type (with suggestions) or an arrow to a container, or
+            a flow step that draws no badge: fix the graph or the step and
+            call render_graph again. With flows, "files" also has
+            "annotations", a YAML file for `terravision draw --annotate`.
         """
         with _tool_errors():
             return _diagram_result(
@@ -189,6 +209,7 @@ def build_server() -> MCPServer:
                     iconsize=iconsize,
                     title=title,
                     preview=preview,
+                    flows=flows,
                 )
             )
 
@@ -210,6 +231,7 @@ def build_server() -> MCPServer:
         iconsize: Optional[int] = None,
         title: Optional[str] = None,
         preview: bool = True,
+        flows: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> CallToolResult:
         """Render an architecture diagram from Terraform code to a file.
 
@@ -242,6 +264,10 @@ def build_server() -> MCPServer:
             title: Heading shown above the diagram. Overrides any title in
                 the annotation file.
             preview: Include a preview image of the diagram in the result.
+            flows: Optional numbered steps drawn as badges, with a legend;
+                the same shape as render_graph's flows. Name nodes as they
+                appear in the .tvg.json graph of an earlier render, which
+                can differ from the Terraform addresses.
 
         Returns:
             {"path", "format", "provider", "title", "files"}, plus a preview
@@ -268,6 +294,7 @@ def build_server() -> MCPServer:
                     iconsize=iconsize,
                     title=title,
                     preview=preview,
+                    flows=flows,
                 )
             )
 

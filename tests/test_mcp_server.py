@@ -102,6 +102,7 @@ def test_server_advertises_name_and_instructions(server):
                 "iconsize",
                 "title",
                 "preview",
+                "flows",
                 "upgrade",
             },
         ),
@@ -268,8 +269,12 @@ def test_schemas_are_plain_json_types(server):
         for name, spec in tool.input_schema["properties"].items():
             declared = spec.get("type")
             if tool.name == "render_graph" and name == "graph":
-                # The one intentional object parameter: the graph itself.
+                # An intentional object parameter: the graph itself.
                 assert declared == "object"
+                continue
+            if name == "flows":
+                # Also intentional: named flows, each with a list of steps.
+                assert {v.get("type") for v in spec["anyOf"]} == {"object", "null"}
                 continue
             if declared is None:  # optional params use anyOf
                 variants = spec.get("anyOf", [])

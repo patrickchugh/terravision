@@ -550,6 +550,41 @@ def _write_graph(tfdata: Dict[str, Any], outdir: Path, name: str, source: str) -
     return target
 
 
+def _check_flows(flows: Any) -> None:
+    """Raise McpServiceError for malformed flows, before anything is written."""
+    import modules.annotations as annotations
+    from modules.helpers import TerravisionError
+
+    try:
+        annotations.check_flows(flows)
+    except TerravisionError as e:
+        raise McpServiceError(str(e)) from e
+
+
+def _write_annotations(tfdata: Dict[str, Any], outdir: Path, name: str) -> Path:
+    """Save the title and flows as ``<name>.annotations.yml`` beside the graph.
+
+    ``terravision draw --source <name>.tvg.json --annotate <this file>``
+    then draws the same diagram, badges and legend included.
+    """
+    import yaml
+
+    from modules.annotations import GRAPH_ANNOTATION_KEYS
+
+    kept = {
+        k: v
+        for k, v in (tfdata.get("annotations") or {}).items()
+        if k in GRAPH_ANNOTATION_KEYS and k != "format"
+    }
+    target = outdir / f"{name}.annotations.yml"
+    with open(target, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(
+            {"format": "0.3", **kept}, fh, sort_keys=False, allow_unicode=True
+        )
+    _RENDERED.add(target.resolve())
+    return target
+
+
 def _preview_png(
     path: Path, max_edge: int = 1568, max_bytes: int = 1_000_000
 ) -> Optional[bytes]:
@@ -609,6 +644,7 @@ def run_diagram(
     iconsize: Optional[int] = None,
     title: Optional[str] = None,
     preview: bool = True,
+    flows: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Render an architecture diagram to files.
 
@@ -622,8 +658,11 @@ def run_diagram(
         is the file in the requested format and ``files`` maps ``png``,
         ``svg``, ``drawio``, ``graph`` (and the requested format) to paths.
         With ``preview``, ``_preview_png`` holds a small PNG as bytes, or
-        None; the MCP layer sends it inline and removes the key.
+        None; the MCP layer sends it inline and removes the key. With
+        ``flows``, ``files`` also has ``annotations``, and ``warnings``
+        lists steps that draw no badge.
     """
+    import modules.annotations as annotations
     import modules.drawing as drawing
     import modules.helpers as helpers
 
@@ -634,6 +673,8 @@ def run_diagram(
             f"Unsupported format {format!r}. Supported: {', '.join(allowed)}"
         )
     name = _validate_outfile(outfile)
+    if flows:
+        _check_flows(flows)
 
     with _guarded() as outdir:
         tfdata = _compile(
@@ -655,6 +696,12 @@ def run_diagram(
         drawing.DIAGRAM_ICONSIZE = iconsize
         if title:
             tfdata.setdefault("annotations", {})["title"] = title
+        found: List[str] = []
+        if flows:
+            # The agent's flows replace any of the same name from a file.
+            merged = {**(tfdata.get("annotations") or {}).get("flows", {}), **flows}
+            tfdata.setdefault("annotations", {})["flows"] = merged
+            found = annotations.flow_warnings(flows, tfdata.get("graphdict", {}))
 
         final_name = _provider_suffixed(name, tfdata)
         files = _render_set(tfdata, final_name, fmt, source, outdir)
@@ -667,6 +714,12 @@ def run_diagram(
             "title": tfdata.get("annotations", {}).get("title") or _DEFAULT_TITLE,
             "files": {**{k: str(v) for k, v in files.items()}, "graph": str(graph)},
         }
+        if flows:
+            result["files"]["annotations"] = str(
+                _write_annotations(tfdata, outdir, final_name)
+            )
+        if found:
+            result["warnings"] = found
         if preview:
             result["_preview_png"] = _preview_png(files["png"])
         return result
@@ -746,6 +799,7 @@ def run_render_graph(
     iconsize: Optional[int] = None,
     title: Optional[str] = None,
     preview: bool = True,
+    flows: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Render a diagram from an inline TerraVision graph dictionary.
 
@@ -761,7 +815,8 @@ def run_render_graph(
     Returns:
         :func:`run_diagram`'s result plus ``graph_path``, ``node_count`` and
         ``edge_count``, and ``warnings`` when parts of the graph will not
-        draw the way they read (see :func:`graph_warnings`).
+        draw the way they read (see :func:`graph_warnings`), or flow steps
+        draw no badge.
     """
     import json
 
@@ -799,6 +854,8 @@ def run_render_graph(
         _check_single_provider(graph)
     except TerravisionError as e:
         raise McpServiceError(str(e)) from e
+    if flows:
+        _check_flows(flows)
 
     # Any target that has no entry of its own is a leaf; add it so the caller
     # does not have to list every node twice. Copy first so the caller's dict
@@ -823,8 +880,10 @@ def run_render_graph(
         iconsize=iconsize,
         title=title,
         preview=preview,
+        flows=flows,
     )
     result["graph_path"] = str(graph_path)
+    found += result.pop("warnings", [])
     if found:
         result["warnings"] = found
     result["node_count"] = len(graph)
@@ -856,6 +915,7 @@ _TEXT_MEDIA_TYPES = {
     ".drawio": "application/vnd.jgraph.mxfile",
     ".json": "application/json",
     ".dot": "text/vnd.graphviz",
+    ".yml": "application/yaml",
 }
 
 

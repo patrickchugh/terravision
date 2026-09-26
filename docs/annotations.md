@@ -131,6 +131,11 @@ terravision draw --source ./path-to-your-terraform --annotate /path/to/annotatio
 - Run with `--ai-annotate <backend>` and TerraVision writes `terravision.ai.yml` in the source directory
 - This file is automatically discovered and merged with any existing `terravision.yml`
 
+**Graph files (`.tvg.json`)**: pass the file with `--annotate`; it is not auto-loaded. A graph is
+drawn exactly as written, so the file may hold only `title`, `flows`, `fontsize` and `iconsize`.
+`add`, `connect`, `disconnect`, `remove` and `update` would change the drawing and are refused:
+change the graph itself instead. A flow step that will draw no badge is reported as a warning.
+
 ---
 
 ## Annotation Operations

@@ -250,19 +250,25 @@ def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
     if not legend_entries:
         return '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" BGCOLOR="white"></TABLE>>'
 
+    import html
+
     rows: List[str] = []
     current_flow: Optional[str] = None
 
+    # Flow text is free text ("Client -> ALB", "R&D"); unescaped, a < > or &
+    # breaks the HTML label and with it the whole render.
     for entry in legend_entries:
         flow = entry["flow_name"]
         if flow != current_flow:
             current_flow = flow
-            rows.append(f'<TR><TD COLSPAN="3"><B>Flow: {flow}</B></TD></TR>')
+            rows.append(
+                f'<TR><TD COLSPAN="3"><B>Flow: {html.escape(str(flow))}</B></TD></TR>'
+            )
 
-        color = entry.get("color", "#E74C3C")
+        color = html.escape(str(entry.get("color", "#E74C3C")))
         num = entry["step_number"]
-        xlabel = entry.get("xlabel", "")
-        detail = entry.get("detail", "")
+        xlabel = html.escape(str(entry.get("xlabel", "")))
+        detail = html.escape(str(entry.get("detail", "")))
         rows.append(
             f"<TR>"
             f'<TD BGCOLOR="{color}" WIDTH="20" HEIGHT="20" STYLE="ROUNDED">'
@@ -567,7 +573,8 @@ def _make_edge_with_badge(
     """Create an Edge, injecting a flow-badge xlabel if one exists.
 
     Checks ``tfdata["flow_edge_badges"]`` for a badge matching the
-    ``(origin_resource, dest_resource)`` pair and, if found, sets the
+    ``(origin_resource, dest_resource)`` pair, which holds the steps written
+    in either direction, and, if found, sets the
     ``xlabel`` attribute on the Edge.
     """
     edge_badges = tfdata.get("flow_edge_badges") or {}
@@ -1430,8 +1437,15 @@ def _build_diagram(
     tfdata["flow_badges"] = {
         res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
     }
+    # A badge marks the connection, not the arrowhead: a step written against
+    # the arrow ("result returned to the client") still badges that line,
+    # and steps in both directions share one badge.
+    _edge_steps: Dict[tuple, set] = {}
+    for (_src, _tgt), nums in _edge_badges.items():
+        for key in ((_src, _tgt), (_tgt, _src)):
+            _edge_steps.setdefault(key, set()).update(nums)
     tfdata["flow_edge_badges"] = {
-        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_badges.items()
+        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_steps.items()
     }
     tfdata["flow_legend_entries"] = _legend_entries
 

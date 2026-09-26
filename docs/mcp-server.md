@@ -212,7 +212,12 @@ When parts of the graph will not draw as they read, the result also has `warning
 listed in two boxes. They come from the skill's validator, so the command-line check gives the same
 advice. The diagram is still drawn, and the view lists the warnings under it.
 
-Takes `format`, `outfile`, `fontsize`, `iconsize`, `title` and `preview`. Needs only Graphviz and Git: no
+Takes `format`, `outfile`, `fontsize`, `iconsize`, `title`, `preview` and `flows`: numbered steps drawn
+as badges with a legend (rule 10 of the [graph format](graph-format.md)). With `flows`, `files` also
+has `annotations`, a YAML file holding the title and flows, so
+`terravision draw --source <name>.tvg.json --annotate <name>.annotations.yml` draws the same
+diagram, and a step that draws no badge (a missing node or arrow, a container) is listed in
+`warnings`. Needs only Graphviz and Git: no
 Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
 `google_*`) is rejected; draw one diagram per provider.
 
@@ -283,7 +288,8 @@ permissions beyond writing to the clipboard.
 
 `generate_diagram` and `generate_interactive_html` also take `outfile`, `use_tf_names`,
 `use_resource_names`, `fontsize`, `iconsize` and `title` (overrides a title in the annotation file);
-`generate_diagram` also takes `preview`.
+`generate_diagram` also takes `preview` and `flows`, which name nodes as they appear in the `.tvg.json`
+of an earlier render and replace any flow of the same name from the annotation file.
 
 ## Things worth knowing
 

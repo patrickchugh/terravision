@@ -137,7 +137,15 @@ Validate before rendering: `python scripts/validate_graph.py architecture.tvg.js
 
 ## If you have the TerraVision MCP server
 
-Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`. Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself. If the result has `warnings` (an unknown type with suggested replacements, arrows that will not be drawn), fix the graph and render again.
+Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`, and optional `flows` (numbered steps; see "Flows" below). Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself. If the result has `warnings` (an unknown type with suggested replacements, arrows that will not be drawn), fix the graph and render again.
+
+## Flows: numbered steps, offered after the diagram
+
+Numbered badges with a legend can show how a request or data moves through the diagram. The format is rule 10 in `references/graph-format.md`: pass `flows` to the MCP tools, or on the command line put a `flows:` section in a YAML file and add `--annotate <file>`.
+
+- **The user asks how something moves** (a request path, data flow, event sequence): include flows in the first render.
+- **Otherwise, don't add them.** Deliver the plain diagram, explain the flow in your reply as usual, and end with one line: "Want me to add this flow to the diagram as numbered steps?" On a yes, render the same graph again with the steps you explained as flows, so the reply and the badges match.
+- Keep it to one or two flows of a few steps each, name numbered copies (`aws_alb.api~1`), and fix any step the result warns draws no badge.
 
 ## Check every render, and fix the input
 
@@ -169,6 +177,8 @@ As soon as a render passes your check, do all of this in the same reply. Never w
    - `<name>.dot.png`: the diagram
    - `<name>.drawio`: open in draw.io (diagrams.net) to edit by hand
    - `<name>.tvg.json`: the graph; edit it and render again
+   - `<name>.annotations.yml` (with flows): the title and flows, for `--annotate`
 4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
+5. **Offer flows** if the diagram has none: one line asking whether to add the flow you explained as numbered steps ("Flows" above).
 
 With the MCP server, report the paths from `files` the same way. If the app showed the interactive view, the diagram is already in front of the user, so skip opening it and still show the JSON.

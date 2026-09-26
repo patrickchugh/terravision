@@ -224,6 +224,10 @@ def compile_tfdata(
         validators.validate_source(source)
         tfdata = tfwrapper.load_json_source(source)
         already_processed = True
+        if annotate and "all_resource" not in tfdata:
+            tfdata["annotations"] = annotations.load_graph_annotations(
+                annotate, tfdata["graphdict"]
+            )
         if "all_resource" not in tfdata:
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:

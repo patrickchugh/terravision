@@ -749,3 +749,154 @@ def compute_flow_step_numbers(
             )
 
     return node_badges, edge_badges, legend_entries
+
+
+# Keys a flow and each of its steps may have (see docs/annotations.md).
+_FLOW_KEYS = {"description", "color", "steps"}
+_STEP_KEYS = {"resource", "detail", "xlabel"}
+
+
+def check_flows(flows: Any) -> Dict[str, Any]:
+    """Check the shape of a ``flows`` section and return it.
+
+    Flows arrive from agents as well as YAML files, so a malformed one gets
+    a message naming the problem rather than a traceback while drawing.
+
+    Raises:
+        helpers.TerravisionError: When the shape is wrong.
+    """
+
+    def fail(problem: str) -> None:
+        raise helpers.TerravisionError(
+            f'Invalid flows: {problem}. Expected {{<flow name>: {{"description": '
+            f'..., "steps": [{{"resource": "<node>" or "<node> -> <node>", '
+            f'"detail": ...}}]}}}}.'
+        )
+
+    if not isinstance(flows, dict) or not flows:
+        fail("flows must be a non-empty object keyed by flow name")
+    for name, flow in flows.items():
+        if not isinstance(flow, dict):
+            fail(f"flow {name!r} must be an object")
+        extra = sorted(set(flow) - _FLOW_KEYS)
+        if extra:
+            fail(f"flow {name!r} has unknown keys {extra}")
+        for key in ("description", "color"):
+            if key in flow and not isinstance(flow[key], str):
+                fail(f"{key} of flow {name!r} must be a string")
+        steps = flow.get("steps")
+        if not isinstance(steps, list) or not steps:
+            fail(f"flow {name!r} needs a non-empty list of steps")
+        for i, step in enumerate(steps, 1):
+            if not isinstance(step, dict):
+                fail(f"step {i} of flow {name!r} must be an object")
+            extra = sorted(set(step) - _STEP_KEYS)
+            if extra:
+                fail(f"step {i} of flow {name!r} has unknown keys {extra}")
+            if not isinstance(step.get("resource"), str) or not step["resource"]:
+                fail(f"step {i} of flow {name!r} needs a resource")
+            for key in ("detail", "xlabel"):
+                if key in step and not isinstance(step[key], str):
+                    fail(f"{key} of step {i} in flow {name!r} must be a string")
+    return flows
+
+
+def _container_types() -> set:
+    """Types drawn as boxes, which carry no step badge."""
+    from modules.config import cloud_config_aws, cloud_config_azure, cloud_config_gcp
+
+    return {
+        *cloud_config_aws.AWS_GROUP_NODES,
+        *cloud_config_azure.AZURE_GROUP_NODES,
+        *cloud_config_gcp.GCP_GROUP_NODES,
+    }
+
+
+def flow_warnings(flows: Dict[str, Any], graph: Dict[str, List[str]]) -> List[str]:
+    """Steps whose badge will not be drawn on this graph.
+
+    A step names a node, or an arrow as ``<node> -> <node>`` in either
+    direction. Anything else draws no badge, silently, while the legend
+    still lists the step.
+    """
+    nodes = set(graph) | {t for targets in graph.values() for t in targets}
+    containers = _container_types()
+
+    def type_of(address: str) -> str:
+        return address.split(".", 1)[0]
+
+    def missing(address: str) -> str:
+        copies = sorted(n for n in nodes if n.startswith(address + "~"))
+        if copies:
+            return f"{address} has numbered copies; name one, such as {copies[0]}"
+        return f"{address} is not in the graph"
+
+    found = []
+    number = 0
+    for name, flow in flows.items():
+        for step in flow.get("steps") or []:
+            number += 1
+            where = f"Step {number} of flow {name!r} draws no badge:"
+            ref = step["resource"]
+            if " -> " in ref:
+                src, dst = (part.strip() for part in ref.split(" -> ", 1))
+                absent = [n for n in (src, dst) if n not in nodes]
+                if absent:
+                    found.append(f"{where} {missing(absent[0])}.")
+                elif dst not in graph.get(src, []) and src not in graph.get(dst, []):
+                    found.append(f"{where} there is no arrow between {src} and {dst}.")
+                elif {type_of(src), type_of(dst)} & containers:
+                    found.append(
+                        f"{where} arrows to and from containers are not drawn."
+                    )
+            elif ref not in nodes:
+                found.append(f"{where} {missing(ref)}.")
+            elif type_of(ref) in containers:
+                found.append(f"{where} {ref} is a container; name a node inside it.")
+    return found
+
+
+# Annotation sections a graph file can take. A graph is drawn exactly as
+# written, so only sections that label the drawing apply; the others would
+# change it, and belong in the graph itself.
+GRAPH_ANNOTATION_KEYS = ("format", "title", "flows", "fontsize", "iconsize")
+
+
+def load_graph_annotations(path: str, graph: Dict[str, List[str]]) -> Dict[str, Any]:
+    """Load an ``--annotate`` file for a graph (.tvg.json) source.
+
+    Prints a warning for each flow step that will draw no badge.
+
+    Raises:
+        helpers.TerravisionError: For an unreadable file, a section other
+            than those in GRAPH_ANNOTATION_KEYS, or malformed flows.
+    """
+    import yaml
+
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            loaded = yaml.safe_load(fh) or {}
+    except (OSError, yaml.YAMLError) as e:
+        raise helpers.TerravisionError(f"Cannot read annotation file {path}: {e}")
+    if not isinstance(loaded, dict):
+        raise helpers.TerravisionError(
+            f"Annotation file {path} must be a YAML mapping."
+        )
+    other = sorted(set(loaded) - set(GRAPH_ANNOTATION_KEYS))
+    if other:
+        raise helpers.TerravisionError(
+            f"{path} has {', '.join(other)}, which a graph file does not take: a "
+            "graph is drawn as written, so change the graph itself instead. "
+            f"Allowed here: {', '.join(GRAPH_ANNOTATION_KEYS)}."
+        )
+    fmt = loaded.get("format")
+    if fmt is not None and str(fmt) not in SUPPORTED_ANNOTATION_FORMATS:
+        raise helpers.TerravisionError(
+            f"{path} declares unsupported format {fmt!r}. Accepted: "
+            f"{', '.join(sorted(SUPPORTED_ANNOTATION_FORMATS))}."
+        )
+    if "flows" in loaded:
+        check_flows(loaded["flows"])
+        for warning in flow_warnings(loaded["flows"], graph):
+            click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
+    return loaded

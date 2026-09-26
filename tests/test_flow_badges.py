@@ -357,3 +357,21 @@ class TestFlowBadgeIntegration:
         assert node_badges["aws_s3_bucket.data"] == [1]
         assert len(legend_entries) == 1
         assert legend_entries[0]["step_number"] == 1
+
+
+def test_legend_escapes_flow_text():
+    """Free text with < > & must not break the Graphviz HTML label."""
+    html = generate_legend_html(
+        [
+            {
+                "step_number": 1,
+                "flow_name": "R&D <flow>",
+                "xlabel": "a<b",
+                "detail": "Client -> ALB & back",
+                "color": "#E74C3C",
+            }
+        ]
+    )
+    assert "Flow: R&amp;D &lt;flow&gt;" in html
+    assert "a&lt;b" in html
+    assert "Client -&gt; ALB &amp; back" in html

@@ -766,3 +766,98 @@ def test_guide_next_step_explains_each_clouds_zones():
     assert "tv_gcp_zone" in steps["gcp"]
     for step in steps.values():
         assert "Before rendering, check the graph against the request" in step
+
+
+# ── Flows ────────────────────────────────────────────────────────────
+
+FLOWS = {
+    "order": {
+        "description": "A customer places an order",
+        "steps": [
+            {"resource": "tv_aws_users.users", "detail": "Customer opens the app"},
+            {
+                "resource": "aws_alb.api -> aws_ecs_fargate.api",
+                "detail": "Request -> Fargate task",
+            },
+            {"resource": "aws_rds_sqlserver.db", "detail": "Order saved"},
+        ],
+    }
+}
+
+
+def test_render_graph_draws_and_saves_flows(outdir):
+    import yaml
+
+    result = mcp_service.run_render_graph(
+        GRAPH, outfile="flows", title="Orders", flows=FLOWS, preview=False
+    )
+    assert "warnings" not in result
+    saved = yaml.safe_load(Path(result["files"]["annotations"]).read_text())
+    assert saved == {"format": "0.3", "title": "Orders", "flows": FLOWS}
+    drawio = Path(result["files"]["drawio"]).read_text()
+    assert "Order saved" in drawio
+    # The view may read it, like every file in the set.
+    assert (
+        "Customer opens"
+        in mcp_service.read_output_file(result["files"]["annotations"])["text"]
+    )
+
+
+def test_saved_flows_redraw_with_the_cli(outdir, monkeypatch):
+    """The .tvg.json and .annotations.yml reproduce the diagram."""
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    result = mcp_service.run_render_graph(
+        GRAPH, outfile="again", flows=FLOWS, preview=False
+    )
+    monkeypatch.chdir(outdir)
+    run = CliRunner().invoke(
+        cli,
+        ["draw", "--source", result["files"]["graph"], "--annotate",
+         result["files"]["annotations"], "--format", "dot", "--outfile", "cli"],
+    )  # fmt: skip
+    assert run.exit_code == 0, run.output
+    assert "Request -&gt; Fargate task" in (outdir / "cli.dot.dot").read_text()
+
+
+def test_flow_steps_without_a_badge_are_warnings(outdir):
+    flows = {"order": {"steps": [{"resource": "aws_ecs_fargate.missing"}]}}
+    result = mcp_service.run_render_graph(
+        GRAPH, outfile="flowwarn", flows=flows, preview=False
+    )
+    assert result["warnings"] == [
+        "Step 1 of flow 'order' draws no badge: aws_ecs_fargate.missing is not "
+        "in the graph."
+    ]
+
+
+def test_malformed_flows_leave_no_files(outdir):
+    with pytest.raises(McpServiceError, match="Invalid flows"):
+        mcp_service.run_render_graph(GRAPH, outfile="bad", flows={"order": {}})
+    assert list(outdir.iterdir()) == []
+
+
+def test_generate_diagram_takes_flows(outdir):
+    flows = {"order": {"steps": [{"resource": "aws_nothing.here"}]}}
+    result = mcp_service.run_diagram(
+        source=REPLAY_SOURCE, outfile="tf", flows=flows, preview=False
+    )
+    assert Path(result["files"]["annotations"]).is_file()
+    assert "aws_nothing.here is not in the graph" in result["warnings"][0]
+
+
+def test_diagram_tools_take_flows(client_call):
+    tools = {t.name: t for t in client_call(lambda c: c.list_tools()).tools}
+    for name in ("render_graph", "generate_diagram"):
+        assert "flows" in tools[name].input_schema["properties"]
+    assert "offer" in tools["render_graph"].description
+
+
+def test_instructions_offer_flows_after_delivering():
+    from modules.mcp_server import _INSTRUCTIONS
+
+    text = " ".join(_INSTRUCTIONS.split())
+    assert "Include them when the user asks how requests, data or events move" in text
+    assert "offering to add it as numbered steps" in text
