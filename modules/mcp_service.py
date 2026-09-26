@@ -561,8 +561,19 @@ def _check_flows(flows: Any) -> None:
         raise McpServiceError(str(e)) from e
 
 
+def _check_edge_labels(edge_labels: Any) -> Dict[str, List[Dict[str, str]]]:
+    """Convert edge_labels to the connect format, or raise McpServiceError."""
+    import modules.annotations as annotations
+    from modules.helpers import TerravisionError
+
+    try:
+        return annotations.edge_labels_to_connect(edge_labels)
+    except TerravisionError as e:
+        raise McpServiceError(str(e)) from e
+
+
 def _write_annotations(tfdata: Dict[str, Any], outdir: Path, name: str) -> Path:
-    """Save the title and flows as ``<name>.annotations.yml`` beside the graph.
+    """Save the title, flows and edge labels as ``<name>.annotations.yml``.
 
     ``terravision draw --source <name>.tvg.json --annotate <this file>``
     then draws the same diagram, badges and legend included.
@@ -645,6 +656,7 @@ def run_diagram(
     title: Optional[str] = None,
     preview: bool = True,
     flows: Optional[Dict[str, Any]] = None,
+    edge_labels: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """Render an architecture diagram to files.
 
@@ -659,8 +671,8 @@ def run_diagram(
         ``svg``, ``drawio``, ``graph`` (and the requested format) to paths.
         With ``preview``, ``_preview_png`` holds a small PNG as bytes, or
         None; the MCP layer sends it inline and removes the key. With
-        ``flows``, ``files`` also has ``annotations``, and ``warnings``
-        lists steps that draw no badge.
+        ``flows`` or ``edge_labels``, ``files`` also has ``annotations``,
+        and ``warnings`` lists steps and labels that are not drawn.
     """
     import modules.annotations as annotations
     import modules.drawing as drawing
@@ -675,6 +687,7 @@ def run_diagram(
     name = _validate_outfile(outfile)
     if flows:
         _check_flows(flows)
+    connect = _check_edge_labels(edge_labels) if edge_labels else None
 
     with _guarded() as outdir:
         tfdata = _compile(
@@ -702,6 +715,19 @@ def run_diagram(
             merged = {**(tfdata.get("annotations") or {}).get("flows", {}), **flows}
             tfdata.setdefault("annotations", {})["flows"] = merged
             found = annotations.flow_warnings(flows, tfdata.get("graphdict", {}))
+        if connect:
+            # The agent's labels win; they are also kept in the annotations
+            # so the saved file draws them again.
+            found += annotations.apply_edge_labels(tfdata, connect)
+            saved = tfdata.setdefault("annotations", {}).setdefault("connect", {})
+            for src, entries in connect.items():
+                ours = {dst for entry in entries for dst in entry}
+                kept = [
+                    e
+                    for e in saved.get(src, [])
+                    if not (isinstance(e, dict) and set(e) & ours)
+                ]
+                saved[src] = entries + kept
 
         final_name = _provider_suffixed(name, tfdata)
         files = _render_set(tfdata, final_name, fmt, source, outdir)
@@ -714,7 +740,7 @@ def run_diagram(
             "title": tfdata.get("annotations", {}).get("title") or _DEFAULT_TITLE,
             "files": {**{k: str(v) for k, v in files.items()}, "graph": str(graph)},
         }
-        if flows:
+        if flows or connect:
             result["files"]["annotations"] = str(
                 _write_annotations(tfdata, outdir, final_name)
             )
@@ -800,6 +826,7 @@ def run_render_graph(
     title: Optional[str] = None,
     preview: bool = True,
     flows: Optional[Dict[str, Any]] = None,
+    edge_labels: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """Render a diagram from an inline TerraVision graph dictionary.
 
@@ -816,7 +843,7 @@ def run_render_graph(
         :func:`run_diagram`'s result plus ``graph_path``, ``node_count`` and
         ``edge_count``, and ``warnings`` when parts of the graph will not
         draw the way they read (see :func:`graph_warnings`), or flow steps
-        draw no badge.
+        and edge labels are not drawn.
     """
     import json
 
@@ -856,6 +883,8 @@ def run_render_graph(
         raise McpServiceError(str(e)) from e
     if flows:
         _check_flows(flows)
+    if edge_labels:
+        _check_edge_labels(edge_labels)
 
     # Any target that has no entry of its own is a leaf; add it so the caller
     # does not have to list every node twice. Copy first so the caller's dict
@@ -881,6 +910,7 @@ def run_render_graph(
         title=title,
         preview=preview,
         flows=flows,
+        edge_labels=edge_labels,
     )
     result["graph_path"] = str(graph_path)
     found += result.pop("warnings", [])

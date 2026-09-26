@@ -19,6 +19,23 @@ from pathlib import Path
 from typing import Any, Dict
 
 
+def _favicon_data_uri() -> str:
+    """The TerraVision logo as a data URI, so the page stays self-contained."""
+    import base64
+
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "resource_images"
+        / "terravision"
+        / "terravision-icon.svg"
+    )
+    if not path.is_file():
+        return ""
+    return "data:image/svg+xml;base64," + base64.b64encode(path.read_bytes()).decode(
+        "ascii"
+    )
+
+
 def render_html(
     tfdata: Dict[str, Any],
     show: bool,
@@ -505,6 +522,7 @@ def _assemble_html(
     # json.dumps does not escape "</script>", which would terminate the
     # embedding <script> block and inject markup into the page.
     html = html.replace("{{TITLE}}", _html_escape(title))
+    html = html.replace("{{FAVICON}}", _favicon_data_uri())
     html = html.replace("{{D3_JS}}", d3_js)
     html = html.replace("{{SVG_CONTENT}}", svg_string)
     html = html.replace("{{METADATA_JSON}}", metadata_json.replace("</", "<\\/"))

@@ -10,6 +10,8 @@ docs_dir: docs
 
 theme:
   name: material
+  logo: assets/logo/terravision-icon.svg
+  favicon: assets/logo/favicon.ico
   palette:
     - scheme: slate
       primary: indigo

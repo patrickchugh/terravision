@@ -20,6 +20,8 @@ the package.
 """
 
 import hashlib
+import re
+from pathlib import Path
 
 VIEW_HTML = r"""<!DOCTYPE html>
 <html lang="en">
@@ -61,7 +63,8 @@ VIEW_HTML = r"""<!DOCTYPE html>
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 var(--font); }
   body { padding: 12px; }
-  header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  header .logo { width: 22px; height: 22px; flex: none; }
   h1 { font-size: 16px; font-weight: 600; margin: 0; }
   .sub { color: var(--fg2); font-size: 12px; }
   .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -101,6 +104,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
 </head>
 <body>
 <header>
+  __LOGO__
   <h1 id="title">TerraVision diagram</h1>
   <span class="sub" id="subtitle"></span>
 </header>
@@ -478,6 +482,28 @@ VIEW_HTML = r"""<!DOCTYPE html>
 </body>
 </html>
 """
+
+# The TerraVision logo in the header, inlined so the view stays self-contained.
+_LOGO = (
+    Path(__file__).resolve().parents[1]
+    / "resource_images"
+    / "terravision"
+    / "terravision-icon.svg"
+)
+VIEW_HTML = VIEW_HTML.replace(
+    "__LOGO__",
+    (
+        re.sub(
+            r' xmlns="[^"]*"| width="\d+" height="\d+" role="img" aria-label="[^"]*"',
+            lambda m: (
+                "" if "xmlns" in m.group(0) else ' class="logo" aria-hidden="true"'
+            ),
+            _LOGO.read_text(encoding="utf-8").strip(),
+        )
+        if _LOGO.is_file()
+        else ""
+    ),
+)
 
 # Hosts cache ui:// resources by URI: Claude Desktop reads the view once and
 # keeps showing that copy across restarts and reinstalls. A hash of the

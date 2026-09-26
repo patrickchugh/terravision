@@ -856,16 +856,99 @@ def flow_warnings(flows: Dict[str, Any], graph: Dict[str, List[str]]) -> List[st
     return found
 
 
+def edge_labels_to_connect(labels: Any) -> Dict[str, List[Dict[str, str]]]:
+    """Turn ``{"<node> -> <node>": "label"}`` into the ``connect`` format.
+
+    Raises:
+        helpers.TerravisionError: When the shape is wrong.
+    """
+    if not isinstance(labels, dict) or not labels:
+        raise helpers.TerravisionError(
+            "Invalid edge_labels: expected a non-empty object such as "
+            '{"aws_lambda_function.api -> aws_rds_postgres.db": "Reads records"}.'
+        )
+    connect: Dict[str, List[Dict[str, str]]] = {}
+    for arrow, label in labels.items():
+        if not isinstance(arrow, str) or " -> " not in arrow:
+            raise helpers.TerravisionError(
+                f"Invalid edge_labels key {arrow!r}: write the arrow as "
+                '"<node> -> <node>".'
+            )
+        if not isinstance(label, str):
+            raise helpers.TerravisionError(
+                f"The label for {arrow!r} in edge_labels must be a string."
+            )
+        src, dst = (part.strip() for part in arrow.split(" -> ", 1))
+        connect.setdefault(src, []).append({dst: label})
+    return connect
+
+
+def apply_edge_labels(
+    tfdata: Dict[str, Any], connect: Optional[Dict[str, Any]]
+) -> List[str]:
+    """Label arrows the graph already has, from a ``connect`` section.
+
+    For a graph, ``connect`` only labels: an entry names an arrow in either
+    direction and never adds one. Labels given here win over earlier ones
+    for the same arrow. Returns a warning for each label that is not drawn.
+    """
+    if not connect:
+        return []
+    if not isinstance(connect, dict):
+        raise helpers.TerravisionError(
+            "connect must map each source node to a list of {target: label}."
+        )
+    graph = tfdata.get("graphdict", {})
+    containers = _container_types()
+    metadata = tfdata.setdefault("meta_data", {})
+    found = []
+    for src, entries in connect.items():
+        if not isinstance(entries, list):
+            entries = [entries]
+        for entry in entries:
+            pairs = entry.items() if isinstance(entry, dict) else [(entry, "")]
+            for dst, label in pairs:
+                where = f"The label {label!r} on {src} -> {dst} is not drawn:"
+                if dst in graph.get(src, []):
+                    origin, target = src, dst
+                elif src in graph.get(dst, []):
+                    origin, target = dst, src
+                else:
+                    found.append(
+                        f"{where} there is no arrow between them. A label never "
+                        "adds an arrow; add it to the graph first."
+                    )
+                    continue
+                if {origin.split(".")[0], target.split(".")[0]} & containers:
+                    found.append(f"{where} arrows to containers are not drawn.")
+                    continue
+                if label:
+                    labels = metadata.setdefault(origin, {}).setdefault(
+                        "edge_labels", []
+                    )
+                    labels.insert(0, {target: str(label)})
+    return found
+
+
 # Annotation sections a graph file can take. A graph is drawn exactly as
-# written, so only sections that label the drawing apply; the others would
-# change it, and belong in the graph itself.
-GRAPH_ANNOTATION_KEYS = ("format", "title", "flows", "fontsize", "iconsize")
+# written, so only sections that label the drawing apply (connect only
+# labels arrows the graph already has); the others would change it, and
+# belong in the graph itself.
+GRAPH_ANNOTATION_KEYS = (
+    "format",
+    "title",
+    "flows",
+    "connect",
+    "fontsize",
+    "iconsize",
+)
 
 
 def load_graph_annotations(path: str, graph: Dict[str, List[str]]) -> Dict[str, Any]:
     """Load an ``--annotate`` file for a graph (.tvg.json) source.
 
-    Prints a warning for each flow step that will draw no badge.
+    Prints a warning for each flow step that will draw no badge. Edge labels
+    in ``connect`` are applied by :func:`apply_edge_labels`.
 
     Raises:
         helpers.TerravisionError: For an unreadable file, a section other
@@ -886,7 +969,8 @@ def load_graph_annotations(path: str, graph: Dict[str, List[str]]) -> Dict[str, 
     if other:
         raise helpers.TerravisionError(
             f"{path} has {', '.join(other)}, which a graph file does not take: a "
-            "graph is drawn as written, so change the graph itself instead. "
+            "graph is drawn as written, so change the graph itself instead "
+            "(connect is allowed, to label arrows the graph already has). "
             f"Allowed here: {', '.join(GRAPH_ANNOTATION_KEYS)}."
         )
     fmt = loaded.get("format")

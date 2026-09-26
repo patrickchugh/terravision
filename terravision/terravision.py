@@ -228,6 +228,10 @@ def compile_tfdata(
             tfdata["annotations"] = annotations.load_graph_annotations(
                 annotate, tfdata["graphdict"]
             )
+            for warning in annotations.apply_edge_labels(
+                tfdata, tfdata["annotations"].get("connect")
+            ):
+                click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
         if "all_resource" not in tfdata:
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:

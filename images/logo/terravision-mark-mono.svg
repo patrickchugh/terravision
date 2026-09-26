@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -83 160 160" width="512" height="512" role="img" aria-label="Terravision">
+  <g fill="currentColor" stroke="currentColor">
+    <g stroke-width="3" stroke-linecap="round" fill="none">
+      <line x1="-46" y1="-58" x2="46" y2="-22"/>
+      <line x1="0" y1="-40" x2="0" y2="52"/>
+    </g>
+    <g stroke="none">
+      <circle cx="-23" cy="-49" r="4"/><circle cx="23" cy="-31" r="4"/><circle cx="0" cy="-17" r="4"/><circle cx="0" cy="29" r="4"/>
+      <rect x="-61" y="-73" width="30" height="30" rx="6"/><rect x="-15" y="-55" width="30" height="30" rx="6"/><rect x="31" y="-37" width="30" height="30" rx="6"/><rect x="-15" y="-9" width="30" height="30" rx="6"/><rect x="-15" y="37" width="30" height="30" rx="6"/>
+    </g>
+  </g>
+</svg>

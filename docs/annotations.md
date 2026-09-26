@@ -132,9 +132,11 @@ terravision draw --source ./path-to-your-terraform --annotate /path/to/annotatio
 - This file is automatically discovered and merged with any existing `terravision.yml`
 
 **Graph files (`.tvg.json`)**: pass the file with `--annotate`; it is not auto-loaded. A graph is
-drawn exactly as written, so the file may hold only `title`, `flows`, `fontsize` and `iconsize`.
-`add`, `connect`, `disconnect`, `remove` and `update` would change the drawing and are refused:
-change the graph itself instead. A flow step that will draw no badge is reported as a warning.
+drawn exactly as written, so the file may hold only `title`, `flows`, `connect`, `fontsize` and
+`iconsize`. Here `connect` only labels arrows the graph already has (in either direction); it never
+adds one. `add`, `disconnect`, `remove` and `update` would change the drawing and are refused:
+change the graph itself instead. A flow step that will draw no badge, or a label that will not be
+drawn, is reported as a warning.
 
 ---
 

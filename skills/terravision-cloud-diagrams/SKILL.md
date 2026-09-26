@@ -137,14 +137,15 @@ Validate before rendering: `python scripts/validate_graph.py architecture.tvg.js
 
 ## If you have the TerraVision MCP server
 
-Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`, and optional `flows` (numbered steps; see "Flows" below). Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself. If the result has `warnings` (an unknown type with suggested replacements, arrows that will not be drawn), fix the graph and render again.
+Call `render_graph` with the graph object directly (no file needed), or `generate_diagram` with a Terraform `source`. Both take an optional `title`, optional `flows` (numbered steps; see "Flows" below) and optional `edge_labels` (a few words on existing arrows, rule 11 in `references/graph-format.md`). Each call saves a PNG, an SVG, an editable draw.io file and the graph as `.tvg.json`, and returns their paths under `files` plus a **preview image** of the diagram: look at it to check the diagram ("Check every render" below). In apps that support MCP Apps, such as Claude Desktop, VS Code and Cursor, the user also sees the diagram in an interactive view with buttons to open, edit and copy it. Elsewhere, call `open_diagram_file` with the PNG path to open it for the user, instead of running `open` or `xdg-open` yourself. If the result has `warnings` (an unknown type with suggested replacements, arrows that will not be drawn), fix the graph and render again.
 
 ## Flows: numbered steps, offered after the diagram
 
 Numbered badges with a legend can show how a request or data moves through the diagram. The format is rule 10 in `references/graph-format.md`: pass `flows` to the MCP tools, or on the command line put a `flows:` section in a YAML file and add `--annotate <file>`.
 
 - **The user asks how something moves** (a request path, data flow, event sequence): include flows in the first render.
-- **Otherwise, don't add them.** Deliver the plain diagram, explain the flow in your reply as usual, and end with one line: "Want me to add this flow to the diagram as numbered steps?" On a yes, render the same graph again with the steps you explained as flows, so the reply and the badges match.
+- **Otherwise, don't add them.** Deliver the plain diagram, explain the flow in your reply as usual, and end with one line: "Want me to add this flow to the diagram as numbered steps, and label the connections?" On a yes, render the same graph again with the steps you explained as flows (and edge labels), so the reply and the diagram match.
+- **Edge labels** ("Reads secrets", "Publishes events") go on arrows the graph already has; add them in the first render when the user asks what the connections do.
 - Keep it to one or two flows of a few steps each, name numbered copies (`aws_alb.api~1`), and fix any step the result warns draws no badge.
 
 ## Check every render, and fix the input

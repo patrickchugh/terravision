@@ -134,15 +134,20 @@ def test_draw_takes_flows_for_a_graph_file(tmp_path, monkeypatch):
     assert 'label="Order Platform"' in dot
     assert "step aws_alb.api~1 -&gt; aws_ecs_fargate.app~1" in dot  # legend
     # Steps 2 and 3 run both ways along one arrow and share its badge.
-    assert "<B>2, 3</B>" in dot
-    assert "<B>1</B>" in dot
+    from modules.drawing import _badge_image
+
+    for n in ("1", "2", "3"):
+        assert str(_badge_image(n, "#E74C3C")) in dot
+    # The arrow's badge holds circles 2 and 3 together.
+    two, three = (str(_badge_image(n, "#E74C3C")) for n in ("2", "3"))
+    assert any(two in line and three in line for line in dot.splitlines())
 
 
 @pytest.mark.parametrize(
     "annotations, message",
     [
         ({"add": {"aws_sqs_queue.q": {}}}, "has add, which a graph file"),
-        ({"connect": {}, "remove": []}, "has connect, remove"),
+        ({"disconnect": {}, "remove": []}, "has disconnect, remove"),
         ({"format": "9.9", "title": "x"}, "unsupported format '9.9'"),
         ({"flows": {"order": {"steps": []}}}, "Invalid flows"),
     ],
@@ -154,3 +159,64 @@ def test_draw_refuses_annotations_that_change_a_graph(
     assert result.exit_code == 1
     assert message in result.output
     assert not (tmp_path / "architecture.dot.dot").exists()
+
+
+# ── Edge labels ──────────────────────────────────────────────────────
+
+
+def test_edge_labels_to_connect():
+    from modules.annotations import edge_labels_to_connect
+
+    assert edge_labels_to_connect({"a.x -> b.y": "Reads", "a.x -> c.z": "Writes"}) == {
+        "a.x": [{"b.y": "Reads"}, {"c.z": "Writes"}]
+    }
+    for bad in ([], {}, {"a.x": "no arrow"}, {"a.x -> b.y": 3}):
+        with pytest.raises(TerravisionError, match="edge_labels"):
+            edge_labels_to_connect(bad)
+
+
+def test_edge_labels_label_existing_arrows_only():
+    from modules.annotations import apply_edge_labels
+
+    tfdata = {"graphdict": {k: list(v) for k, v in GRAPH.items()}}
+    warnings = apply_edge_labels(
+        tfdata,
+        {
+            "aws_alb.api~1": [{"aws_ecs_fargate.app~1": "Routes requests"}],
+            # Written against the arrow: stored on the drawn direction.
+            "aws_dynamodb_table.orders": [{"aws_ecs_fargate.app~1": "Returns rows"}],
+            "tv_aws_users.users": [{"aws_dynamodb_table.orders": "Nope"}],
+            "aws_vpc.main": [{"aws_subnet.public~1": "Box"}],
+        },
+    )
+    meta = tfdata["meta_data"]
+    assert meta["aws_alb.api~1"]["edge_labels"] == [
+        {"aws_ecs_fargate.app~1": "Routes requests"}
+    ]
+    assert meta["aws_ecs_fargate.app~1"]["edge_labels"] == [
+        {"aws_dynamodb_table.orders": "Returns rows"}
+    ]
+    assert tfdata["graphdict"] == GRAPH  # nothing added
+    assert len(warnings) == 2
+    assert "there is no arrow between them" in warnings[0]
+    assert "arrows to containers are not drawn" in warnings[1]
+
+
+def test_draw_labels_arrows_from_connect(tmp_path, monkeypatch):
+    result = _draw(
+        tmp_path,
+        monkeypatch,
+        {
+            "connect": {
+                "aws_ecs_fargate.app~1": [
+                    {"aws_dynamodb_table.orders": "Writes orders"}
+                ],
+                "aws_ecs_fargate.app~2": [{"aws_sqs_queue.new": "Would add an arrow"}],
+            }
+        },
+    )
+    assert result.exit_code == 0, result.output
+    assert "no arrow between them" in result.output
+    dot = (tmp_path / "architecture.dot.dot").read_text()
+    assert "Writes orders" in dot
+    assert "aws_sqs_queue" not in dot

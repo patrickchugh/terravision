@@ -7,12 +7,15 @@ including nodes, clusters, connections, and edge labels.
 
 import base64
 import datetime
+import hashlib
+import html
 import importlib
 import os
 import pkgutil
 import re
 import subprocess
 import sys
+import tempfile
 import warnings
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -216,24 +219,83 @@ NEVER_DRAW_LINE = []
 # ---------------------------------------------------------------------------
 
 
-def generate_badge_xlabel(step_numbers: List[int], color: str = "#E74C3C") -> str:
+# Step badges are circles. Graphviz caps a rounded table cell's corner radius
+# at a third of its size, so a cell can only ever be a rounded square; each
+# badge is instead a small circle image that Graphviz itself renders once and
+# caches here, keyed by its text and colour.
+_BADGE_DIR = Path(tempfile.gettempdir()) / "terravision-badges"
+_BADGE_FONTSIZE = 26
+_DEFAULT_BADGE_COLOR = "#E74C3C"
+
+
+def _badge_color(color: str) -> str:
+    """A colour safe to pass to Graphviz, or the default for anything else."""
+    color = str(color or "")
+    return (
+        color if re.fullmatch(r"#?[A-Za-z0-9]{1,20}", color) else _DEFAULT_BADGE_COLOR
+    )
+
+
+def _badge_diameter(text: str) -> int:
+    """Circle diameter in points: 44 for one or two digits, wider for three."""
+    return 44 + 13 * max(0, len(text) - 2)
+
+
+def _badge_image(text: str, color: str) -> Path:
+    """Path of a PNG of ``text`` in white on a filled circle of ``color``."""
+    color = _badge_color(color)
+    key = hashlib.sha256(f"{text}|{color}|{_BADGE_FONTSIZE}|1".encode()).hexdigest()
+    path = _BADGE_DIR / f"badge-{key[:16]}.png"
+    if path.is_file():
+        return path
+    _BADGE_DIR.mkdir(parents=True, exist_ok=True)
+    diameter = _badge_diameter(text) / 72.0
+    source = (
+        "graph { bgcolor=transparent pad=0.01 "
+        f"node [shape=circle style=filled fixedsize=true width={diameter:.3f} "
+        f'fillcolor="{color}" color="{color}" penwidth=0 fontcolor=white '
+        f'fontname="Sans-Serif" fontsize={_BADGE_FONTSIZE}] '
+        f"b [label=<<B>{html.escape(text)}</B>>] }}"
+    )
+    partial = path.with_name(f"{path.stem}.{os.getpid()}.tmp")
+    subprocess.run(
+        ["dot", "-Tpng", "-Gdpi=300", "-o", str(partial)],
+        input=source,
+        text=True,
+        check=True,
+        capture_output=True,
+    )
+    os.replace(partial, path)
+    return path
+
+
+def _badge_cell(text: str, color: str, diameter: Optional[int] = None) -> str:
+    """An HTML-label table cell holding the circle badge for ``text``."""
+    size = diameter or _badge_diameter(text)
+    src = html.escape(str(_badge_image(text, color)), quote=True)
+    return (
+        f'<TD FIXEDSIZE="TRUE" WIDTH="{size}" HEIGHT="{size}">'
+        f'<IMG SRC="{src}" SCALE="TRUE"/></TD>'
+    )
+
+
+def generate_badge_xlabel(
+    step_numbers: List[int], color: str = _DEFAULT_BADGE_COLOR
+) -> str:
     """Return an HTML-table xlabel badge for one or more step numbers.
 
     Args:
         step_numbers: Ordered list of step numbers to display in the badge.
-        color: Background colour of the badge circle.
+        color: Colour of the badge circle.
 
     Returns:
         A Graphviz HTML-label string (angle-bracket delimited) suitable
         for use as an ``xlabel`` attribute on a node or edge.
     """
-    nums = ", ".join(str(n) for n in step_numbers)
-    return (
-        f'<<TABLE BORDER="0"><TR>'
-        f'<TD BGCOLOR="{color}" STYLE="ROUNDED" WIDTH="24" HEIGHT="24">'
-        f'<FONT COLOR="white"><B>{nums}</B></FONT></TD>'
-        f"</TR></TABLE>>"
-    )
+    # One circle per step, side by side, so a shared node's badge stays the
+    # same size as any other instead of one ever larger circle.
+    cells = "".join(_badge_cell(str(n), color) for n in step_numbers)
+    return f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
 
 
 def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
@@ -250,8 +312,6 @@ def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
     if not legend_entries:
         return '<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="4" BGCOLOR="white"></TABLE>>'
 
-    import html
-
     rows: List[str] = []
     current_flow: Optional[str] = None
 
@@ -265,14 +325,12 @@ def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
                 f'<TR><TD COLSPAN="3"><B>Flow: {html.escape(str(flow))}</B></TD></TR>'
             )
 
-        color = html.escape(str(entry.get("color", "#E74C3C")))
-        num = entry["step_number"]
+        num = str(entry["step_number"])
         xlabel = html.escape(str(entry.get("xlabel", "")))
         detail = html.escape(str(entry.get("detail", "")))
+        badge = _badge_cell(num, entry.get("color", _DEFAULT_BADGE_COLOR), 36)
         rows.append(
-            f"<TR>"
-            f'<TD BGCOLOR="{color}" WIDTH="20" HEIGHT="20" STYLE="ROUNDED">'
-            f'<FONT COLOR="white"><B>{num}</B></FONT></TD>'
+            f"<TR>{badge}"
             f'<TD ALIGN="LEFT">{xlabel}</TD>'
             f'<TD ALIGN="LEFT">{detail}</TD>'
             f"</TR>"
@@ -284,6 +342,32 @@ def generate_legend_html(legend_entries: List[Dict[str, Any]]) -> str:
         f"{body}\n"
         f"</TABLE>>"
     )
+
+
+def generate_legend_drawio_html(legend_entries: List[Dict[str, Any]]) -> str:
+    """The legend as draw.io HTML: CSS circles for the step numbers.
+
+    The drawn legend's circles are images on this machine, which a draw.io
+    file cannot use, so the draw.io export takes this version instead.
+    """
+    lines: List[str] = []
+    current_flow: Optional[str] = None
+    for entry in legend_entries:
+        flow = entry["flow_name"]
+        if flow != current_flow:
+            current_flow = flow
+            lines.append(f"<b>Flow: {html.escape(str(flow))}</b>")
+        color = _badge_color(entry.get("color", _DEFAULT_BADGE_COLOR))
+        text = " ".join(
+            html.escape(str(entry.get(k) or "")) for k in ("xlabel", "detail")
+        ).strip()
+        lines.append(
+            "<span style='display:inline-block;width:20px;height:20px;"
+            f"line-height:20px;border-radius:50%;background:{color};color:#fff;"
+            f"text-align:center;font-weight:bold'>{entry['step_number']}</span> "
+            f"{text}"
+        )
+    return "<br>".join(lines)
 
 
 def _apply_flow_badges(
@@ -584,6 +668,12 @@ def _make_edge_with_badge(
     return Edge(**edge_kwargs)
 
 
+# Title, footer and legend nodes size to their label. Every node otherwise
+# inherits the icons' fixed 2.8in box, and the final render sizes the canvas
+# from that box, so a wider label ran off the edge of a narrow diagram.
+_SIZE_TO_LABEL = {"fixedsize": "false", "width": "0", "height": "0"}
+
+
 def _add_legend_node(
     tfdata: Dict[str, Any],
     diagram: "Canvas",
@@ -601,8 +691,10 @@ def _add_legend_node(
     setcluster(diagram)
     legend_style = {
         "_legendnode": "1",
+        "_legendhtml": generate_legend_drawio_html(legend_entries),
         "shape": "plaintext",
         "label": legend_html,
+        **_SIZE_TO_LABEL,
     }
     getattr(sys.modules[__name__], "Node")(**legend_style)
 
@@ -1491,6 +1583,7 @@ def _build_diagram(
         "fontname": "Sans-Serif",
         "fontcolor": "#2D3436",
         "label": title,
+        **_SIZE_TO_LABEL,
     }
     getattr(sys.modules[__name__], "Node")(**title_style)
 
@@ -1584,19 +1677,22 @@ def _build_diagram(
     # Set context to main diagram so footer is outside all clusters
     setcluster(myDiagram)
 
-    # Add footer node (positioned by gvpr for all providers).
-    # Width and margin sized so the three record cells get breathing room
-    # around their text instead of butting against the separators; if the
-    # width changes, the ±750pt row offsets in shiftLabel.gvpr (footer and
-    # legend sharing one row) need to move with it.
+    # Add footer node (positioned by gvpr for all providers). An HTML table
+    # rather than a record, so it can carry the TerraVision logo. The table
+    # keeps the old record's 18 x 2.4 inch size; if that changes, the ±750pt
+    # row offsets in shiftLabel.gvpr (footer and legend sharing one row) need
+    # to move with it. _footertext holds the same text in record syntax for
+    # the draw.io subtitle.
+    generated = f"Machine generated using TerraVision v{_TERRAVISION_VERSION}"
+    timestamp = str(datetime.datetime.now())
     footer_style = {
         "_footernode": "1",
-        "shape": "record",
-        "width": "18",
-        "height": "2.4",
+        "_footertext": f"{generated} | {{ Timestamp: | Source: }} | {{ {timestamp} | {_record_escape(str(source))} }}",
+        "shape": "plaintext",
         "fontsize": "20",
-        "margin": "0.8,0.5",
-        "label": f"Machine generated using TerraVision v{_TERRAVISION_VERSION} | {{ Timestamp: | Source: }} | {{ {datetime.datetime.now()} | {_record_escape(str(source))} }}",
+        "margin": "0",
+        "label": _footer_html(generated, timestamp, str(source)),
+        **_SIZE_TO_LABEL,
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
 
@@ -1762,6 +1858,40 @@ def generate_svg(
     svg_string = _embed_icons_as_data_uris(svg_string, icon_paths)
 
     return svg_string, icon_paths, node_id_map, cluster_id_map
+
+
+# The TerraVision logo drawn in every diagram's footer.
+_FOOTER_LOGO = (
+    Path(__file__).resolve().parents[1]
+    / "resource_images"
+    / "terravision"
+    / "terravision-icon-256.png"
+)
+
+
+def _footer_html(generated: str, timestamp: str, source: str) -> str:
+    """Graphviz HTML label for the footer: logo and version, then when and from what.
+
+    Rules between the columns and rows reproduce the record footer this
+    replaced; the logo sits in the same cell as the version line.
+    """
+
+    def esc(text: str) -> str:
+        return html.escape(text, quote=True)
+
+    return (
+        '<<TABLE BORDER="1" STYLE="ROUNDED" CELLBORDER="0" CELLSPACING="0" '
+        'CELLPADDING="18" COLUMNS="*" ROWS="*" WIDTH="1296">'
+        '<TR><TD ROWSPAN="2">'
+        '<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"><TR>'
+        '<TD FIXEDSIZE="TRUE" WIDTH="72" HEIGHT="72">'
+        f'<IMG SRC="{esc(str(_FOOTER_LOGO))}" SCALE="TRUE"/></TD>'
+        f"<TD>  {esc(generated)}</TD>"
+        "</TR></TABLE></TD>"
+        f"<TD>Timestamp:</TD><TD>{esc(timestamp)}</TD></TR>"
+        f"<TR><TD>Source:</TD><TD>{esc(source)}</TD></TR>"
+        "</TABLE>>"
+    )
 
 
 def _record_escape(text: str) -> str:

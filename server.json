@@ -8,6 +8,22 @@
     "source": "github"
   },
   "websiteUrl": "https://patrickchugh.github.io/terravision/",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/patrickchugh/terravision/main/images/logo/terravision-icon.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
+    },
+    {
+      "src": "https://raw.githubusercontent.com/patrickchugh/terravision/main/images/logo/terravision-icon-512.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    }
+  ],
   "version": "0.48.0",
   "packages": [
     {

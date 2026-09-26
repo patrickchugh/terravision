@@ -511,8 +511,10 @@ def emit_drawio(
         cx, cy = node.pos
 
         if is_footer:
-            # Skip footer — its content is merged into the title as a subtitle
-            footer_label = _sanitize_label(node.label)
+            # Skip footer — its content is merged into the title as a subtitle.
+            # The drawn footer is an HTML table; _footertext has its text in
+            # record syntax.
+            footer_label = _sanitize_label(node.attrs.get("_footertext") or node.label)
             continue
         elif is_title:
             # Title node — will have footer subtitle appended below
@@ -526,7 +528,9 @@ def emit_drawio(
             h_px = _pts_to_px(node.height)
         elif is_legend:
             style_str = _build_special_node_style(node)
-            label = _sanitize_label(node.label)
+            # The drawn legend's circles are local images; _legendhtml has
+            # the same legend with CSS circles.
+            label = node.attrs.get("_legendhtml") or _sanitize_label(node.label)
             parent_id = "1"
             w_px = _pts_to_px(node.width)
             h_px = _pts_to_px(node.height)

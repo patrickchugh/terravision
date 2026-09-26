@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/logo/terravision-icon.svg" alt="" width="96" align="right">
+
 # TerraVision
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->

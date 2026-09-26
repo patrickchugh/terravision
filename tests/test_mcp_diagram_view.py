@@ -861,3 +861,29 @@ def test_instructions_offer_flows_after_delivering():
     text = " ".join(_INSTRUCTIONS.split())
     assert "Include them when the user asks how requests, data or events move" in text
     assert "offering to add it as numbered steps" in text
+
+
+def test_render_graph_labels_arrows_and_saves_them(outdir):
+    import yaml
+
+    result = mcp_service.run_render_graph(
+        GRAPH,
+        outfile="labels",
+        edge_labels={
+            "aws_ecs_fargate.api -> aws_rds_sqlserver.db": "Reads orders",
+            "aws_rds_sqlserver.db -> tv_aws_users.users": "Nope",
+        },
+        preview=False,
+    )
+    assert "Reads orders" in Path(result["files"]["svg"]).read_text()
+    assert "no arrow between them" in result["warnings"][0]
+    saved = yaml.safe_load(Path(result["files"]["annotations"]).read_text())
+    assert saved["connect"]["aws_ecs_fargate.api"] == [
+        {"aws_rds_sqlserver.db": "Reads orders"}
+    ]
+
+
+def test_malformed_edge_labels_leave_no_files(outdir):
+    with pytest.raises(McpServiceError, match="edge_labels"):
+        mcp_service.run_render_graph(GRAPH, outfile="bad", edge_labels={"x": "y"})
+    assert list(outdir.iterdir()) == []

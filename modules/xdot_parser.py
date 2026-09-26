@@ -184,7 +184,9 @@ def _parse_object(obj, graph, gvid_to_name, parent):
         for key in (
             "_titlenode",
             "_footernode",
+            "_footertext",
             "_legendnode",
+            "_legendhtml",
             "_clusterlabel",
             "_edgenode",
             "_clusterid",

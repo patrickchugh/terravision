@@ -103,6 +103,7 @@ def test_server_advertises_name_and_instructions(server):
                 "title",
                 "preview",
                 "flows",
+                "edge_labels",
                 "upgrade",
             },
         ),
@@ -272,8 +273,8 @@ def test_schemas_are_plain_json_types(server):
                 # An intentional object parameter: the graph itself.
                 assert declared == "object"
                 continue
-            if name == "flows":
-                # Also intentional: named flows, each with a list of steps.
+            if name in ("flows", "edge_labels"):
+                # Also intentional: named flows, and labels keyed by arrow.
                 assert {v.get("type") for v in spec["anyOf"]} == {"object", "null"}
                 continue
             if declared is None:  # optional params use anyOf

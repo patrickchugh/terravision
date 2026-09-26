@@ -17,13 +17,14 @@ Terraform at all, which is the fully credential-free path.
 
 import contextlib
 import json
+from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
 from mcp.server import MCPServer
 from mcp.server.apps import Apps, ResourcePermissions
 from mcp.server.mcpserver import Image
 from mcp.server.mcpserver.exceptions import ToolError
-from mcp_types import CallToolResult, TextContent
+from mcp_types import CallToolResult, Icon, TextContent
 
 from modules import mcp_service
 from modules.mcp_view import VIEW_HTML, VIEW_URI
@@ -59,8 +60,35 @@ Flows: pass flows to number the steps of a request path on the diagram, with
 a legend. Include them when the user asks how requests, data or events move.
 Otherwise deliver the plain diagram, explain the flow in the reply, and end
 with one line offering to add it as numbered steps; on a yes, render the same
-graph again with those steps as flows.
+graph again with those steps as flows. edge_labels puts a few words on
+existing arrows to say what each connection does ("Reads secrets").
 """
+
+
+# The TerraVision logo, shipped in the package beside the diagram icons.
+_BRAND_DIR = Path(__file__).resolve().parents[1] / "resource_images" / "terravision"
+
+
+def _icons() -> List[Icon]:
+    """The logo for apps that show server icons, as data URIs (no network)."""
+    import base64
+
+    icons = []
+    for name, mime_type, sizes in (
+        ("terravision-icon.svg", "image/svg+xml", ["any"]),
+        ("terravision-icon-64.png", "image/png", ["64x64"]),
+    ):
+        path = _BRAND_DIR / name
+        if path.is_file():
+            data = base64.b64encode(path.read_bytes()).decode("ascii")
+            icons.append(
+                Icon(
+                    src=f"data:{mime_type};base64,{data}",
+                    mime_type=mime_type,
+                    sizes=sizes,
+                )
+            )
+    return icons
 
 
 @contextlib.contextmanager
@@ -131,6 +159,7 @@ def build_server() -> MCPServer:
         title: Optional[str] = None,
         preview: bool = True,
         flows: Optional[Dict[str, Dict[str, Any]]] = None,
+        edge_labels: Optional[Dict[str, str]] = None,
     ) -> CallToolResult:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
@@ -187,6 +216,11 @@ def build_server() -> MCPServer:
                 (aws_alb.api~1), not the bare name. Steps are numbered
                 across flows. Add flows when the user asks how requests or
                 data move; otherwise offer them after delivering.
+            edge_labels: Optional text on arrows the graph already has, to
+                say what each connection does: {"aws_ecs_fargate.app~1 ->
+                aws_rds_sqlserver.db": "Reads orders"}. Either direction
+                names the arrow; a label never adds one. Keep labels to a
+                few words.
 
         Returns:
             {"path", "format", "provider", "title", "files", "graph_path",
@@ -195,9 +229,10 @@ def build_server() -> MCPServer:
             "path" is the file in the requested format. "warnings" appears
             when parts of the graph will not draw as they read, such as an
             unknown type (with suggestions) or an arrow to a container, or
-            a flow step that draws no badge: fix the graph or the step and
-            call render_graph again. With flows, "files" also has
-            "annotations", a YAML file for `terravision draw --annotate`.
+            a flow step or edge label that is not drawn: fix the graph, the
+            step or the label and call render_graph again. With flows or
+            edge_labels, "files" also has "annotations", a YAML file for
+            `terravision draw --annotate`.
         """
         with _tool_errors():
             return _diagram_result(
@@ -210,6 +245,7 @@ def build_server() -> MCPServer:
                     title=title,
                     preview=preview,
                     flows=flows,
+                    edge_labels=edge_labels,
                 )
             )
 
@@ -232,6 +268,7 @@ def build_server() -> MCPServer:
         title: Optional[str] = None,
         preview: bool = True,
         flows: Optional[Dict[str, Dict[str, Any]]] = None,
+        edge_labels: Optional[Dict[str, str]] = None,
     ) -> CallToolResult:
         """Render an architecture diagram from Terraform code to a file.
 
@@ -268,6 +305,9 @@ def build_server() -> MCPServer:
                 the same shape as render_graph's flows. Name nodes as they
                 appear in the .tvg.json graph of an earlier render, which
                 can differ from the Terraform addresses.
+            edge_labels: Optional text on existing arrows, the same shape
+                as render_graph's edge_labels, naming nodes as in the
+                .tvg.json graph.
 
         Returns:
             {"path", "format", "provider", "title", "files"}, plus a preview
@@ -295,6 +335,7 @@ def build_server() -> MCPServer:
                     title=title,
                     preview=preview,
                     flows=flows,
+                    edge_labels=edge_labels,
                 )
             )
 
@@ -305,6 +346,8 @@ def build_server() -> MCPServer:
         title="TerraVision",
         version=_version(),
         instructions=_INSTRUCTIONS,
+        website_url="https://patrickchugh.github.io/terravision/",
+        icons=_icons(),
         extensions=[apps],
     )
 

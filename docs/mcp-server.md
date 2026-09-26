@@ -217,7 +217,10 @@ as badges with a legend (rule 10 of the [graph format](graph-format.md)). With `
 has `annotations`, a YAML file holding the title and flows, so
 `terravision draw --source <name>.tvg.json --annotate <name>.annotations.yml` draws the same
 diagram, and a step that draws no badge (a missing node or arrow, a container) is listed in
-`warnings`. Needs only Graphviz and Git: no
+`warnings`. `edge_labels` puts a few words on arrows the graph already has, keyed by arrow:
+`{"aws_ecs_fargate.app -> aws_rds_sqlserver.db": "Reads orders"}` (rule 11); a label never adds an
+arrow, and one that is not drawn is listed in `warnings`. Labels are saved in the same
+`.annotations.yml`, under `connect`. Needs only Graphviz and Git: no
 Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
 `google_*`) is rejected; draw one diagram per provider.
 
@@ -288,7 +291,7 @@ permissions beyond writing to the clipboard.
 
 `generate_diagram` and `generate_interactive_html` also take `outfile`, `use_tf_names`,
 `use_resource_names`, `fontsize`, `iconsize` and `title` (overrides a title in the annotation file);
-`generate_diagram` also takes `preview` and `flows`, which name nodes as they appear in the `.tvg.json`
+`generate_diagram` also takes `preview`, `flows` and `edge_labels`, which name nodes as they appear in the `.tvg.json`
 of an earlier render and replace any flow of the same name from the annotation file.
 
 ## Things worth knowing

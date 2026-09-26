@@ -4,6 +4,8 @@ hide:
   - toc
 ---
 
+<img src="assets/logo/terravision-icon.svg" alt="" width="96" align="right">
+
 # TerraVision
 
 **Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons**

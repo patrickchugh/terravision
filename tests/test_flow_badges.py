@@ -17,37 +17,52 @@ from modules.drawing import generate_badge_xlabel, generate_legend_html
 # ---------------------------------------------------------------------------
 
 
+def _badge_png(xlabel):
+    """The circle image a badge xlabel points at, and the cell's size."""
+    import re
+
+    from PIL import Image
+
+    src = re.search(r'<IMG SRC="([^"]+)"', xlabel).group(1)
+    width = int(re.search(r'WIDTH="(\d+)"', xlabel).group(1))
+    return Image.open(src).convert("RGBA"), width
+
+
 class TestBadgeXlabelGeneration:
-    """T027: generate_badge_xlabel produces the correct HTML <TABLE> string."""
+    """T027: badges are circles with the step numbers, drawn as images.
 
-    def test_single_step_badge(self):
-        result = generate_badge_xlabel([1])
-        expected = (
-            '<<TABLE BORDER="0"><TR>'
-            '<TD BGCOLOR="#E74C3C" STYLE="ROUNDED" WIDTH="24" HEIGHT="24">'
-            '<FONT COLOR="white"><B>1</B></FONT></TD>'
-            "</TR></TABLE>>"
-        )
-        assert result == expected
+    Graphviz can only round a table cell into a rounded square, so each
+    badge is a circle image rendered by Graphviz and cached.
+    """
 
-    def test_multi_step_badge(self):
-        result = generate_badge_xlabel([1, 5])
-        expected = (
-            '<<TABLE BORDER="0"><TR>'
-            '<TD BGCOLOR="#E74C3C" STYLE="ROUNDED" WIDTH="24" HEIGHT="24">'
-            '<FONT COLOR="white"><B>1, 5</B></FONT></TD>'
-            "</TR></TABLE>>"
-        )
-        assert result == expected
+    def test_single_step_badge_is_a_circle(self):
+        image, width = _badge_png(generate_badge_xlabel([1]))
+        w, h = image.size
+        assert abs(w - h) <= 2
+        assert image.getpixel((w // 2, h // 5))[:3] == (0xE7, 0x4C, 0x3C)
+        # Transparent near the corner, where a rounded square is still filled.
+        assert image.getpixel((int(w * 0.12), int(h * 0.12)))[3] == 0
+        assert width == 44
+
+    def test_multi_step_badge_is_one_circle_per_step(self):
+        xlabel = generate_badge_xlabel([1, 5, 12])
+        assert xlabel.count("<IMG SRC=") == 3
+        assert xlabel.count('WIDTH="44"') == 3
 
     def test_custom_color(self):
-        result = generate_badge_xlabel([3], color="#3498DB")
-        assert '#3498DB"' in result
-        assert "<B>3</B>" in result
+        image, _ = _badge_png(generate_badge_xlabel([3], color="#3498DB"))
+        w, h = image.size
+        assert image.getpixel((w // 2, h // 5))[:3] == (0x34, 0x98, 0xDB)
 
-    def test_three_steps(self):
-        result = generate_badge_xlabel([2, 4, 7])
-        assert "<B>2, 4, 7</B>" in result
+    def test_each_text_gets_its_own_image(self):
+        first = generate_badge_xlabel([2, 4, 7])
+        assert first == generate_badge_xlabel([2, 4, 7])  # cached
+        assert first != generate_badge_xlabel([2, 4, 8])
+
+    def test_unsafe_color_falls_back_to_the_default(self):
+        image, _ = _badge_png(generate_badge_xlabel([1], color='red" shape=box'))
+        w, h = image.size
+        assert image.getpixel((w // 2, h // 5))[:3] == (0xE7, 0x4C, 0x3C)
 
 
 # ---------------------------------------------------------------------------
@@ -131,7 +146,7 @@ class TestMultiBadge:
         xlabel = generate_badge_xlabel(
             sorted(node_badges["aws_lambda_function.shared"])
         )
-        assert "<B>1, 3</B>" in xlabel
+        assert xlabel == generate_badge_xlabel([1, 3])
 
 
 # ---------------------------------------------------------------------------
@@ -311,9 +326,8 @@ class TestFlowBadgeIntegration:
         assert html.endswith(">")
         # Should contain flow name as header
         assert "<B>Flow: user-request</B>" in html
-        # Should contain step numbers
-        assert "<B>1</B>" in html
-        assert "<B>2</B>" in html
+        # Should contain a circle badge per step
+        assert html.count("<IMG SRC=") == 2
         # Should contain detail text
         assert "User sends HTTPS request" in html
         assert "Lambda processes the request" in html
