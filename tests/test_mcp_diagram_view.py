@@ -899,8 +899,8 @@ def test_button_feedback_shows_as_a_toast():
 
 def test_plain_result_asks_the_model_to_offer_flows(outdir):
     plain = mcp_service.run_render_graph(GRAPH, outfile="plain", preview=False)
-    assert "offering to add that flow" in plain["next_step"]
-    assert "Do not add them before the user says yes" in plain["next_step"]
+    assert "adding that flow to the diagram" in plain["next_step"]
+    assert "Do neither before the user says yes" in plain["next_step"]
     flowed = mcp_service.run_render_graph(
         GRAPH, outfile="flowed", flows=FLOWS, preview=False
     )
@@ -912,10 +912,22 @@ def test_plain_result_asks_the_model_to_offer_flows(outdir):
     )
     assert "next_step" not in flowed
     # Labels alone still get the flows offer, without offering labels again.
-    assert "numbered steps with a legend. On a yes" in labelled["next_step"]
+    assert "short labels" not in labelled["next_step"]
     assert "short labels" in plain["next_step"]
+
+
+def test_graph_diagrams_offer_terraform_and_terraform_diagrams_do_not(outdir):
+    """A diagram from a description has no code yet; one from Terraform does."""
+    graph = mcp_service.run_render_graph(GRAPH, outfile="g", preview=False)
+    assert "writing Terraform for this architecture" in graph["next_step"]
+    assert "needs cloud credentials" in graph["next_step"]
+    terraform = mcp_service.run_diagram(
+        source=REPLAY_SOURCE, outfile="tf", preview=False
+    )
+    assert "adding that flow" in terraform["next_step"]
+    assert "Terraform" not in terraform["next_step"]
 
 
 def test_next_step_reaches_the_model(outdir, client_call):
     result = client_call(lambda c: c.call_tool("render_graph", {"graph": GRAPH}))
-    assert "offering to add that flow" in result.content[0].text
+    assert "adding that flow to the diagram" in result.content[0].text

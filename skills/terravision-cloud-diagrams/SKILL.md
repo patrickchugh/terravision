@@ -180,6 +180,6 @@ As soon as a render passes your check, do all of this in the same reply. Never w
    - `<name>.tvg.json`: the graph; edit it and render again
    - `<name>.annotations.yml` (with flows): the title and flows, for `--annotate`
 4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
-5. **Offer flows** if the diagram has none: one line asking whether to add the flow you explained as numbered steps ("Flows" above).
+5. **Offer the next step** in one line: adding the flow you explained as numbered steps if the diagram has none ("Flows" above), and, for a diagram drawn from a description (Path B), writing Terraform for the architecture. Do neither before the user says yes. Write Terraform that creates the resources, zones and connections in the diagram; do not promise to check it by drawing it with TerraVision, since that runs `terraform plan`, which needs cloud credentials.
 
 With the MCP server, report the paths from `files` the same way. If the app showed the interactive view, the diagram is already in front of the user, so skip opening it and still show the JSON.

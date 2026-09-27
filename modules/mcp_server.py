@@ -62,8 +62,9 @@ Otherwise deliver the plain diagram, explain the flow in the reply, and end
 with one line offering to add it as numbered steps; on a yes, render the same
 graph again with those steps as flows. edge_labels puts a few words on
 existing arrows to say what each connection does ("Reads secrets"); offer
-them with the flows rather than adding them unasked. A result's next_step
-says what to do after presenting it.
+them with the flows rather than adding them unasked. For a diagram drawn
+from a description, also offer to write Terraform for the architecture. A
+result's next_step says what to do after presenting it.
 """
 
 
