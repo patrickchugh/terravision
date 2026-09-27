@@ -220,3 +220,55 @@ def test_draw_labels_arrows_from_connect(tmp_path, monkeypatch):
     dot = (tmp_path / "architecture.dot.dot").read_text()
     assert "Writes orders" in dot
     assert "aws_sqs_queue" not in dot
+
+
+# ── Badges in draw.io, and badges beside edge labels ─────────────────
+
+
+def _render(tmp_path, monkeypatch, fmt, annotations):
+    import yaml
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "g.tvg.json").write_text(json.dumps(GRAPH))
+    (tmp_path / "a.yml").write_text(yaml.safe_dump(annotations))
+    result = CliRunner().invoke(
+        cli,
+        ["draw", "--source", "g.tvg.json", "--annotate", "a.yml", "--format", fmt],
+    )
+    assert result.exit_code == 0, result.output
+
+
+FLOW_AND_LABEL = {
+    "flows": _flow("aws_alb.api~1", "aws_alb.api~1 -> aws_ecs_fargate.app~1"),
+    "connect": {"aws_alb.api~1": [{"aws_ecs_fargate.app~1": "Routes requests"}]},
+}
+
+
+def test_an_edge_keeps_its_label_beside_its_badge(tmp_path, monkeypatch):
+    """Edge labels are xlabels too; the badge used to replace the label."""
+    from modules.drawing import _badge_image
+
+    _render(tmp_path, monkeypatch, "dot", FLOW_AND_LABEL)
+    dot = (tmp_path / "architecture.dot.dot").read_text()
+    badge = str(_badge_image("2", "#E74C3C"))
+    assert any(badge in l and "Routes requests" in l for l in dot.splitlines())
+
+
+def test_drawio_draws_step_badges_on_their_cells(tmp_path, monkeypatch):
+    import xml.etree.ElementTree as ET
+
+    _render(tmp_path, monkeypatch, "drawio", FLOW_AND_LABEL)
+    root = ET.parse(tmp_path / "architecture.drawio").getroot()
+    cells = {c.get("id"): c for c in root.iter("mxCell")}
+    badges = [c for c in cells.values() if (c.get("style") or "").startswith("ellipse")]
+    assert sorted(c.get("value") for c in badges) == ["1", "2"]
+    parents = {c.get("value"): cells[c.get("parent")] for c in badges}
+    # Step 1 sits on the ALB's node cell, step 2 on the arrow it labels.
+    assert parents["1"].get("vertex") == "1"
+    assert parents["2"].get("edge") == "1"
+    assert parents["2"].get("value") == "Routes requests"
+    for c in badges:
+        assert c.find("mxGeometry").get("relative") == "1"

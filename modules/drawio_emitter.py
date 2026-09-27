@@ -764,6 +764,19 @@ def emit_drawio(
         # Let draw.io's orthogonalEdgeStyle handle routing natively.
         # Graphviz spline waypoints caused edges to cross through containers.
 
+        # Flow step badges ride on the edge, a little before its middle so
+        # they clear any label there.
+        if edge.flow_steps:
+            _emit_step_badges(root, eid, edge.flow_steps, -0.4, 0.0, _next_id)
+
+    # ── Flow step badges on nodes ────────────────────────────────────
+    # Children of the node's cell, on its top-left corner, so they move with
+    # it. The drawn badges are images; draw.io gets its own circles.
+    for node_name, node in xdot_graph.nodes.items():
+        steps = node.attrs.get("_flowsteps")
+        if steps and node_name in cell_ids:
+            _emit_step_badges(root, cell_ids[node_name], steps, 0.0, 0.0, _next_id)
+
     # Wrap in draw.io's <mxfile><diagram> structure for full compatibility
     ET.indent(mx_model, space="      ")
     graph_xml = ET.tostring(mx_model, encoding="unicode")
@@ -777,6 +790,54 @@ def emit_drawio(
         "</mxfile>\n"
     )
     return xml_str
+
+
+# Circle size and gap for draw.io step badges, in pixels.
+_BADGE_PX = 24
+_BADGE_GAP = 4
+_BADGE_STYLE = (
+    "ellipse;html=1;aspect=fixed;resizable=0;connectable=0;"
+    "fillColor=#E74C3C;strokeColor=#FFFFFF;strokeWidth=1;"
+    "fontColor=#FFFFFF;fontStyle=1;fontSize=12;align=center;verticalAlign=middle;"
+)
+
+
+def _emit_step_badges(root, parent_id, steps, x, y, next_id) -> None:
+    """Draw one circle per step number as children of a node or edge cell.
+
+    ``x`` and ``y`` place the row relative to the parent: for a node, 0,0 is
+    its top-left corner; for an edge, ``x`` runs from -1 at the source to 1
+    at the target. The row is centred on that point.
+    """
+    numbers = [n for n in str(steps).split(",") if n]
+    width = len(numbers) * _BADGE_PX + (len(numbers) - 1) * _BADGE_GAP
+    for i, number in enumerate(numbers):
+        cell = ET.SubElement(
+            root,
+            "mxCell",
+            id=next_id(),
+            value=number,
+            style=_BADGE_STYLE,
+            vertex="1",
+            parent=parent_id,
+        )
+        geo = ET.SubElement(
+            cell,
+            "mxGeometry",
+            x=str(x),
+            y=str(y),
+            width=str(_BADGE_PX),
+            height=str(_BADGE_PX),
+            relative="1",
+        )
+        geo.set("as", "geometry")
+        offset = ET.SubElement(
+            geo,
+            "mxPoint",
+            x=str(-width / 2 + i * (_BADGE_PX + _BADGE_GAP)),
+            y=str(-_BADGE_PX / 2),
+        )
+        offset.set("as", "offset")
 
 
 # ── Style builders ────────────────────────────────────────────────────

@@ -398,7 +398,12 @@ def _apply_flow_badges(
         # ID simply appends a second node statement whose attributes
         # merge with the first.
         cluster = node_obj._cluster or diagram
-        cluster.dot.node(node_obj._id, xlabel=badge_html)
+        steps = (tfdata.get("flow_badge_steps") or {}).get(resource, [])
+        cluster.dot.node(
+            node_obj._id,
+            xlabel=badge_html,
+            _flowsteps=",".join(str(n) for n in steps),
+        )
 
 
 def _badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], float]:
@@ -656,15 +661,28 @@ def _make_edge_with_badge(
 ) -> "Edge":
     """Create an Edge, injecting a flow-badge xlabel if one exists.
 
-    Checks ``tfdata["flow_edge_badges"]`` for a badge matching the
+    Checks ``tfdata["flow_edge_steps"]`` for steps on the
     ``(origin_resource, dest_resource)`` pair, which holds the steps written
-    in either direction, and, if found, sets the
-    ``xlabel`` attribute on the Edge.
+    in either direction, and, if found, draws them as circles in the
+    Edge's ``xlabel``, beside any edge label.
     """
-    edge_badges = tfdata.get("flow_edge_badges") or {}
-    badge = edge_badges.get((origin_resource, dest_resource))
-    if badge:
-        edge_kwargs["xlabel"] = badge
+    steps = (tfdata.get("flow_edge_steps") or {}).get((origin_resource, dest_resource))
+    if not steps:
+        return Edge(**edge_kwargs)
+    # An edge label is also an xlabel, so the badge would replace it: draw
+    # both in one label, circles first. _flowsteps and _edgetext keep the
+    # parts apart for the draw.io export.
+    text = edge_kwargs.pop("label", "") or ""
+    edge_kwargs["_flowsteps"] = ",".join(str(n) for n in steps)
+    cells = "".join(_badge_cell(str(n), _DEFAULT_BADGE_COLOR) for n in steps)
+    if text:
+        edge_kwargs["_edgetext"] = text
+        cells += (
+            f'<TD><FONT POINT-SIZE="28" COLOR="#5b9bd5">{html.escape(text)}</FONT></TD>'
+        )
+    edge_kwargs["xlabel"] = (
+        f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
+    )
     return Edge(**edge_kwargs)
 
 
@@ -1529,6 +1547,10 @@ def _build_diagram(
     tfdata["flow_badges"] = {
         res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
     }
+    # The step numbers too: the draw.io export draws its own badges from them.
+    tfdata["flow_badge_steps"] = {
+        res: sorted(nums) for res, nums in _node_badges.items()
+    }
     # A badge marks the connection, not the arrowhead: a step written against
     # the arrow ("result returned to the client") still badges that line,
     # and steps in both directions share one badge.
@@ -1539,6 +1561,7 @@ def _build_diagram(
     tfdata["flow_edge_badges"] = {
         key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_steps.items()
     }
+    tfdata["flow_edge_steps"] = {key: sorted(nums) for key, nums in _edge_steps.items()}
     tfdata["flow_legend_entries"] = _legend_entries
 
     # Initialize diagram canvas

@@ -45,6 +45,8 @@ class XdotEdge:
     label: Optional[str] = None
     label_pos: Optional[Tuple[float, float]] = None
     is_bidirectional: bool = False
+    # Flow steps badged on this edge, "2,3", from the _flowsteps attribute.
+    flow_steps: str = ""
     spline_points: List[Tuple[float, float]] = field(default_factory=list)
 
 
@@ -97,7 +99,12 @@ def parse_xdot(json_text: str) -> XdotGraph:
             edge_data.get("head"), str(edge_data.get("head", ""))
         )
 
-        label = edge_data.get("xlabel") or edge_data.get("label")
+        # A badged edge's xlabel holds the badge; its text is in _edgetext.
+        flow_steps = edge_data.get("_flowsteps", "")
+        if flow_steps:
+            label = edge_data.get("_edgetext") or edge_data.get("label")
+        else:
+            label = edge_data.get("xlabel") or edge_data.get("label")
         label_pos = None
         if "lp" in edge_data:
             label_pos = _parse_pos(edge_data["lp"])
@@ -118,6 +125,7 @@ def parse_xdot(json_text: str) -> XdotGraph:
                 label_pos=label_pos,
                 is_bidirectional=is_bidi,
                 spline_points=spline_points,
+                flow_steps=flow_steps,
             )
         )
 
@@ -185,6 +193,7 @@ def _parse_object(obj, graph, gvid_to_name, parent):
             "_titlenode",
             "_footernode",
             "_footertext",
+            "_flowsteps",
             "_legendnode",
             "_legendhtml",
             "_clusterlabel",
