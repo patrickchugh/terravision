@@ -1,10 +1,11 @@
 # Use TerraVision with AI assistants
 
-Ask your AI assistant for a cloud architecture diagram in plain English, and TerraVision draws it with the official AWS, Azure and GCP icons, grouped into VPCs, subnets, zones and resource groups the way a cloud architect would. It works in three directions:
+Ask your AI assistant for a cloud architecture diagram in plain English, and TerraVision draws it with the official AWS, Azure and GCP icons, grouped into VPCs, subnets, zones and resource groups the way a cloud architect would. It fits every stage of an architecture's life:
 
 1. **A description → a diagram.** Describe the system, or let the assistant design one, and get a diagram in seconds. No Terraform needed.
 2. **Terraform → a diagram.** Point the assistant at Terraform code and get a diagram of what that code actually deploys.
 3. **A diagram → Terraform.** Once a design looks right, ask the assistant to write the Terraform for it.
+4. **Terraform → an up-to-date diagram, automatically.** A CI workflow redraws the diagram whenever the Terraform changes.
 
 TerraVision itself runs on your own computer: nothing is uploaded anywhere beyond the conversation you are already having with your assistant.
 
@@ -76,7 +77,7 @@ Then keep talking to it:
 - *"Show how a request moves through it."* The steps appear on the diagram as numbered circles, with a legend.
 - *"Label the connections."* Short labels such as "Reads orders" go on the arrows.
 
-After each diagram, the assistant offers the natural next steps: adding the request flow, or writing the Terraform (see 3 below). It won't add either until you say yes.
+After each diagram, the assistant offers the natural next step: adding the request flow, or writing the Terraform (see 3 below). It won't do either until you say yes.
 
 ## 2. From Terraform code to a diagram
 
@@ -105,7 +106,17 @@ When a design drawn from a description looks right, ask for the code:
 
 The assistant writes Terraform that creates the resources, zones and connections in the diagram. To see how close it is, draw the new code (workflow 2) and compare the two diagrams. That runs `terraform plan`, so it needs cloud credentials.
 
+If the design has flows or labels, the assistant also writes a `terravision.yml` next to the Terraform. It carries the title, flows and labels over to the Terraform's own resource names, and adds the users and other external actors, which Terraform has no resources for. TerraVision reads that file whenever it draws the Terraform, so later diagrams keep the design's numbered steps and labels.
+
 Treat generated Terraform as a first draft: review it, and run `terraform plan` yourself, before you apply anything.
+
+## 4. Keep the diagram up to date in CI
+
+Once the Terraform is in a repository, the diagram can redraw itself whenever the code changes, so it never goes stale. After writing Terraform, the assistant offers to set this up. You can also ask:
+
+> Add a GitHub Actions workflow that redraws the architecture diagram when the Terraform changes.
+
+On GitHub it uses the [TerraVision GitHub Action](cicd-integration.md#github-actions). GitLab, Jenkins, Azure DevOps and others are covered in [CI/CD Integration](cicd-integration.md), including a mode that keeps cloud credentials out of the diagram step. The `terravision.yml` from step 3 is picked up there too, so the flows and labels carry on into every new version of the diagram.
 
 ## What you see
 

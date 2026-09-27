@@ -189,6 +189,11 @@ As soon as a render passes your check, do all of this in the same reply. Never w
    - `<name>.tvg.json`: the graph; edit it and render again
    - `<name>.annotations.yml` (with flows): the title and flows, for `--annotate`
 4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
-5. **Offer the next step** in one line: adding the flow you explained as numbered steps if the diagram has none ("Flows" above), and, for a diagram drawn from a description (Path B), writing Terraform for the architecture. Do neither before the user says yes. Write Terraform that creates the resources, zones and connections in the diagram; do not promise to check it by drawing it with TerraVision, since that runs `terraform plan`, which needs cloud credentials.
+5. **Offer the next step** in one line: adding the flow you explained as numbered steps if the diagram has none ("Flows" above), and, for a diagram drawn from a description (Path B), writing Terraform for the architecture. Do neither before the user says yes.
+
+**If the user asks for Terraform:**
+- Write code that creates the resources, zones and connections in the diagram. Do not promise to check it by drawing it with TerraVision: that runs `terraform plan`, which needs cloud credentials.
+- If the diagram has flows or edge labels, also write `terravision.yml` in the Terraform folder from the diagram's `.annotations.yml`: keep the title, rename every node in `flows` and `connect` to the Terraform address that creates it (`aws_ecs_fargate.api` becomes `aws_ecs_service.api`; numbered copies such as `aws_alb.web~1` become the one resource), and add the external actors (users, internet) under `add:`, since Terraform has none. TerraVision loads that file whenever it draws the Terraform, including in CI.
+- End that reply with one line offering a CI workflow that redraws the diagram whenever the Terraform changes: `patrickchugh/terravision-action` for GitHub Actions, and setups for GitLab, Jenkins, Azure DevOps and others at https://patrickchugh.github.io/terravision/cicd-integration/.
 
 With the MCP server, report the paths from `files` the same way. If the app showed the interactive view, the diagram is already in front of the user, so skip opening it and still show the JSON.

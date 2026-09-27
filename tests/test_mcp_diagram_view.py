@@ -920,10 +920,40 @@ def test_plain_result_asks_the_model_to_offer_flows(outdir):
         edge_labels={"aws_alb.api -> aws_ecs_fargate.api": "Routes"},
         preview=False,
     )
-    assert "next_step" not in flowed
+    # With flows already added, only Terraform is left to offer.
+    assert "numbered steps" not in flowed["next_step"]
+    assert "write Terraform" in flowed["next_step"]
     # Labels alone still get the flows offer, without offering labels again.
     assert "short labels" not in labelled["next_step"]
     assert "short labels" in plain["next_step"]
+
+
+@pytest.mark.parametrize(
+    "has_flows, has_labels, from_graph, expect",
+    [
+        (False, False, True, {"flow", "terraform", "ci"}),
+        (False, True, True, {"flow", "terraform", "ci", "carry"}),
+        (True, False, True, {"terraform", "ci", "carry"}),
+        (True, True, True, {"terraform", "ci", "carry"}),
+        (False, False, False, {"flow"}),
+        (True, False, False, set()),
+    ],
+)
+def test_next_step_offers_what_fits(has_flows, has_labels, from_graph, expect):
+    """Flows are offered until added; Terraform for designs, with the CI
+    workflow after it; the annotations carried over only when there are any."""
+    step = mcp_service._next_step(has_flows, has_labels, from_graph) or ""
+    found = {
+        name
+        for name, marker in {
+            "flow": "numbered steps with a legend",
+            "terraform": "writing Terraform" if not has_flows else "write Terraform",
+            "ci": "terravision-action",
+            "carry": "terravision.yml",
+        }.items()
+        if marker in step
+    }
+    assert found == expect
 
 
 def test_graph_diagrams_offer_terraform_and_terraform_diagrams_do_not(outdir):

@@ -577,31 +577,67 @@ def _check_flows(flows: Any) -> None:
         raise McpServiceError(str(e)) from e
 
 
-# Put in a result without flows: the model reads tool results far more
-# reliably than its instructions at the moment it writes the reply. A
-# diagram drawn from a description also gets the offer of Terraform for it;
-# one drawn from Terraform already has its code.
-def _offer_flows(has_labels: bool, offer_terraform: bool) -> str:
+# What to offer after presenting a diagram, put in the result itself: the
+# model reads tool results far more reliably than its instructions at the
+# moment it writes the reply. A diagram drawn from a description is offered
+# Terraform; one drawn from Terraform already has its code, and is offered
+# only the flow.
+_TERRAFORM_OFFER = (
+    "For Terraform, write code that creates the resources, zones and "
+    "connections in the diagram; do not promise to check it with TerraVision, "
+    "since drawing Terraform runs terraform plan, which needs cloud credentials. "
+    "After writing it, end that reply with one line offering to add a CI "
+    "workflow that redraws the diagram whenever the Terraform changes: "
+    "patrickchugh/terravision-action for GitHub Actions, and setups for "
+    "GitLab, Jenkins, Azure DevOps and others at "
+    "https://patrickchugh.github.io/terravision/cicd-integration/ ."
+)
+
+# Carries the design's annotations over to the Terraform, so diagrams drawn
+# from it later (by hand, or in CI) keep the title, flows and labels. They
+# must be translated: design names such as aws_ecs_fargate.api or
+# tv_aws_users.users do not exist in Terraform.
+_CARRY_ANNOTATIONS = (
+    "Because this diagram has flows or edge labels, also write terravision.yml "
+    "in the Terraform folder from the diagram's .annotations.yml file: keep the "
+    "title, rename every node in the flows and connect sections to the "
+    "Terraform address that creates it (aws_ecs_fargate.api becomes "
+    "aws_ecs_service.api, numbered copies such as aws_alb.web~1 become the one "
+    "resource), and add the external actors (users, internet) under add:, "
+    "since Terraform has none. TerraVision loads that file whenever it draws "
+    "the Terraform, including in CI."
+)
+
+
+def _next_step(
+    has_flows: bool, has_labels: bool, offer_terraform: bool
+) -> Optional[str]:
+    """What the model should offer after presenting a diagram, if anything."""
+    present = "Present the diagram, explaining how requests or data move through it. "
+    carry = f" {_CARRY_ANNOTATIONS}" if has_flows or has_labels else ""
+    if has_flows:
+        if not offer_terraform:
+            return None
+        return (
+            f"{present}Then end your reply with one line offering to write "
+            f"Terraform for this architecture. {_TERRAFORM_OFFER}{carry} Do not "
+            "write it before the user says yes."
+        )
     flow = "adding that flow to the diagram as numbered steps with a legend"
     if not has_labels:
         flow += " and short labels on the connections"
     again = "flows" if has_labels else "flows and edge_labels"
     if offer_terraform:
         return (
-            "Present the diagram, explaining how requests or data move through "
-            f"it. Then end your reply with one line offering two next steps: {flow}, "
-            "or writing Terraform for this architecture. On a yes to the flow, "
-            f"render the same graph again with {again}. For Terraform, write code "
-            "that creates the resources, zones and connections in the diagram; do "
-            "not promise to check it with TerraVision, since drawing Terraform runs "
-            "terraform plan, which needs cloud credentials. Do neither before the "
-            "user says yes."
+            f"{present}Then end your reply with one line offering two next steps: "
+            f"{flow}, or writing Terraform for this architecture. On a yes to the "
+            f"flow, render the same graph again with {again}. {_TERRAFORM_OFFER}"
+            f"{carry} Do neither before the user says yes."
         )
     return (
-        "Present the diagram, explaining how requests or data move through it. "
-        f"Then end your reply with one line offering {flow}. On a yes, render "
-        f"the same graph again with {again}. Do not add them before the user "
-        "says yes."
+        f"{present}Then end your reply with one line offering {flow}. On a yes, "
+        f"render the same graph again with {again}. Do not add them before the "
+        "user says yes."
     )
 
 
@@ -790,10 +826,11 @@ def run_diagram(
             )
         if found:
             result["warnings"] = found
-        if not flows:
-            result["next_step"] = _offer_flows(
-                bool(connect), helpers.is_graph_file_source(source)
-            )
+        step = _next_step(
+            bool(flows), bool(connect), helpers.is_graph_file_source(source)
+        )
+        if step:
+            result["next_step"] = step
         if preview:
             result["_preview_png"] = _preview_png(files["png"])
         return result
