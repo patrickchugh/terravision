@@ -545,7 +545,7 @@ def test_aws_guide_example_has_the_detail_to_copy():
     """The worked example is what gives diagrams zones and an internet path."""
     example = mcp_service.diagram_guide("aws")["examples"]["three-tier-web"]
     types = {node.split(".")[0] for node in example}
-    assert {"aws_az", "aws_nat_gateway", "aws_internet_gateway"} <= types
+    assert {"tv_aws_az", "aws_nat_gateway", "aws_internet_gateway"} <= types
     assert any("tv_aws_internet" in t for targets in example.values() for t in targets)
 
 

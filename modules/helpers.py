@@ -1023,6 +1023,10 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     if any(k in name for k in skip_keywords):
         return " "
 
+    # tv_aws_az is the documented name for an availability zone and aws_az
+    # the older one; both are labelled "Availability Zone <name>".
+    name = re.sub(r"(^|\.)tv_aws_az\.", r"\1aws_az.", name)
+
     # Unknown provider → simple formatted name
     provider = get_provider_for_resource(name)
     if provider == "unknown":

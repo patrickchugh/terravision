@@ -2,14 +2,6 @@
   "aws_account.eks_control_plane_main": [
     "aws_eks_cluster.main"
   ],
-  "aws_az.availability_zone_us_east_1a~1": [
-    "aws_subnet.private~1",
-    "aws_subnet.public~1"
-  ],
-  "aws_az.availability_zone_us_east_1b~2": [
-    "aws_subnet.private~2",
-    "aws_subnet.public~2"
-  ],
   "aws_cloudwatch_log_group.cloudwatch": [],
   "aws_ecr_repository.ecr": [],
   "aws_eip.elastic_ip": [
@@ -74,9 +66,17 @@
     "aws_eks_node_group.main~4"
   ],
   "aws_vpc.main": [
-    "aws_az.availability_zone_us_east_1a~1",
-    "aws_az.availability_zone_us_east_1b~2",
+    "tv_aws_az.availability_zone_us_east_1a~1",
+    "tv_aws_az.availability_zone_us_east_1b~2",
     "aws_internet_gateway.igw"
+  ],
+  "tv_aws_az.availability_zone_us_east_1a~1": [
+    "aws_subnet.private~1",
+    "aws_subnet.public~1"
+  ],
+  "tv_aws_az.availability_zone_us_east_1b~2": [
+    "aws_subnet.private~2",
+    "aws_subnet.public~2"
   ],
   "tv_aws_internet.internet": []
 }

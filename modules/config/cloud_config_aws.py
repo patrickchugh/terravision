@@ -142,7 +142,8 @@ AWS_CONSOLIDATED_NODES = [
 # List of Group type nodes and order to draw them in
 AWS_GROUP_NODES = [
     "aws_vpc",
-    "aws_az",
+    "aws_az",  # older name for tv_aws_az, kept so existing graphs still draw
+    "tv_aws_az",
     "aws_group",
     "aws_account",
     "aws_appautoscaling_target",
@@ -158,6 +159,7 @@ AWS_SIMPLIFIED_REMOVE_NODES = [
     # Group/container nodes
     "aws_vpc",
     "aws_az",
+    "tv_aws_az",
     "aws_subnet",
     "aws_security_group",
     "aws_account",

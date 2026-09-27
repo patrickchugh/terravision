@@ -1,7 +1,4 @@
 {
-  "aws_az.availability_zone_us_east_1a~1": [
-    "aws_subnet.private"
-  ],
   "aws_group.shared_services": [
     "aws_iam_group.of_services"
   ],
@@ -17,6 +14,9 @@
     "aws_security_group.notebook_sg_ml_notebook"
   ],
   "aws_vpc.main": [
-    "aws_az.availability_zone_us_east_1a~1"
+    "tv_aws_az.availability_zone_us_east_1a~1"
+  ],
+  "tv_aws_az.availability_zone_us_east_1a~1": [
+    "aws_subnet.private"
   ]
 }

@@ -39,7 +39,7 @@ RESOURCE_PREFIX = {"aws": "aws_", "azure": "azurerm_", "gcp": "google_"}
 # script runs without TerraVision installed; a test keeps them identical.
 # Types drawn as boxes around the nodes they list (<PROVIDER>_GROUP_NODES).
 CONTAINER_TYPES = {
-    "aws_vpc", "aws_az", "aws_group", "aws_account", "aws_appautoscaling_target",
+    "aws_vpc", "aws_az", "tv_aws_az", "aws_group", "aws_account", "aws_appautoscaling_target",
     "aws_autoscaling_group", "aws_subnet", "aws_security_group", "tv_aws_onprem",
     "tv_aws_region",
     "azurerm_resource_group", "azurerm_group", "azurerm_virtual_network",

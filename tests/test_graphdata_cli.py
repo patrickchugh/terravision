@@ -255,3 +255,45 @@ def test_record_escape():
     )
     assert _record_escape("/a/${B}|<c>") == "/a/$\\{B\\}\\|\\<c\\>"
     assert _record_escape("/plain/path.json") == "/plain/path.json"
+
+
+@pytest.mark.parametrize("zone", ["tv_aws_az", "aws_az"])
+def test_availability_zone_names_draw_the_same(tmp_path, monkeypatch, zone):
+    """tv_aws_az is the documented name; aws_az is kept for older graphs.
+
+    tv_aws_az was missing from the container list, so a graph using it,
+    the name the node types page gives, failed to render.
+    """
+    import json
+
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    monkeypatch.chdir(tmp_path)
+    graph = {
+        "aws_vpc.main": [f"{zone}.a", f"{zone}.b"],
+        f"{zone}.a": ["aws_subnet.app~1"],
+        f"{zone}.b": ["aws_subnet.app~2"],
+        "aws_subnet.app~1": ["aws_instance.web~1"],
+        "aws_subnet.app~2": ["aws_instance.web~2"],
+    }
+    (tmp_path / "g.tvg.json").write_text(json.dumps(graph))
+    result = CliRunner().invoke(
+        cli, ["draw", "--source", "g.tvg.json", "--format", "dot"]
+    )
+    assert result.exit_code == 0, result.output
+    dot = (tmp_path / "architecture.dot.dot").read_text()
+    assert "Availability Zone A" in dot and "Availability Zone B" in dot
+
+
+def test_agent_facing_graphs_use_tv_aws_az():
+    import re
+
+    root = Path(__file__).resolve().parents[1]
+    skill = root / "skills" / "terravision-cloud-diagrams"
+    for path in [
+        *skill.glob("examples/**/*.tvg.json"),
+        *(root / "examples" / "graphs").glob("*.tvg.json"),
+    ]:
+        assert not re.search(r'"aws_az\.', path.read_text()), path

@@ -147,12 +147,17 @@ _INDEX = re.compile(r"\[([^\]]*)\]")
 
 
 def simple_address(address: str) -> str:
-    """Drop module paths and indexes, keeping the type, name and ~N copy."""
+    """Drop module paths and indexes, keeping the type, name and ~N copy.
+
+    TerraVision's pipeline still names availability zones aws_az; patterns use
+    the documented tv_aws_az, which draws the same.
+    """
     copy = ""
     match = re.search(r"~\d+$", address)
     if match:
         copy, address = match.group(0), address[: match.start()]
     address = _INDEX.sub("", _MODULE_PATH.sub("", address))
+    address = re.sub(r"^aws_az\.", "tv_aws_az.", address)
     return address + copy
 
 
