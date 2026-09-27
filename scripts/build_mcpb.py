@@ -8,9 +8,9 @@
 The extension in mcpb/ uses the uv runtime: Claude Desktop installs
 ``terravision[mcp]`` from PyPI with uv and runs it, so the bundle pins the
 exact version in pyproject.toml. For testing a release before it is on
-PyPI, ``--local-wheel`` points the bundle at a locally built wheel (this
-machine only) and ``--git-ref`` at a pushed branch or tag on GitHub (any
-machine with Git).
+PyPI, ``--local-wheel`` puts a locally built wheel inside the bundle, so the
+test extension installs on any machine (macOS, Windows or Linux), and
+``--git-ref`` points it at a pushed branch or tag on GitHub.
 
 The skill zip is the skills/terravision-cloud-diagrams folder, for apps that
 take uploaded skills but do not run the MCP server. The extension itself needs
@@ -52,13 +52,20 @@ def build_bundle(
         for name in ("manifest.json", "pyproject.toml"):
             path = stage / name
             path.write_text(path.read_text().replace("__VERSION__", version))
-        source = None
+        pyproject = stage / "pyproject.toml"
         if local_wheel:
-            source = local_wheel.resolve().as_uri()
+            # Carried inside the bundle and found by a relative path, so the
+            # test extension installs on any machine, not only this one.
+            wheels = stage / "wheels"
+            wheels.mkdir()
+            shutil.copy2(local_wheel, wheels / local_wheel.name)
+            pyproject.write_text(
+                pyproject.read_text()
+                + "\n[tool.uv.sources]\n"
+                + f'terravision = {{ path = "wheels/{local_wheel.name}" }}\n'
+            )
         elif git_ref:
             source = f"git+https://github.com/patrickchugh/terravision@{git_ref}"
-        if source:
-            pyproject = stage / "pyproject.toml"
             pyproject.write_text(
                 pyproject.read_text().replace(
                     f'"terravision[mcp]=={version}"',
@@ -86,7 +93,7 @@ def main() -> int:
     parser.add_argument(
         "--local-wheel",
         type=Path,
-        help="install TerraVision from this wheel instead of PyPI (testing only)",
+        help="bundle this wheel and install TerraVision from it instead of PyPI (testing only)",
     )
     parser.add_argument(
         "--git-ref",
