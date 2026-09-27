@@ -103,11 +103,8 @@ VIEW_HTML = r"""<!DOCTYPE html>
   #warnings { color: var(--warning); }
   #warnings li { margin-bottom: 2px; }
   li code { font-family: var(--mono); color: var(--fg); word-break: break-all; }
-  li button.path {
-    padding: 0; border: 0; background: none; text-align: left; cursor: pointer;
-    font-family: var(--mono); font-size: 12px; color: var(--fg); text-decoration: underline;
-    word-break: break-all;
-  }
+  #saved { margin-top: 6px; color: var(--fg2); font-size: 12px; }
+  #saved code { font-family: var(--mono); color: var(--fg); word-break: break-all; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -134,6 +131,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
 <div id="toast" role="status" aria-live="polite"></div>
 <pre id="graph" hidden></pre>
 <ul id="warnings" hidden></ul>
+<div id="saved" hidden></div>
 <ul id="files" hidden></ul>
 <script>
 (function () {
@@ -305,32 +303,36 @@ VIEW_HTML = r"""<!DOCTYPE html>
   }
 
   function listFiles() {
-    var list = $("files");
+    var list = $("files"), saved = $("saved");
     list.textContent = "";
-    var labels = { png: "Image", svg: "SVG", drawio: "draw.io", graph: "Graph JSON", pdf: "PDF", dot: "DOT", annotations: "Flows" };
+    saved.textContent = "";
     var f = files();
+    var paths = Object.keys(f).map(function (kind) { return f[kind]; });
+    if (!paths.length) { list.hidden = saved.hidden = true; return; }
+    if (canCallTools()) {
+      // The buttons open every file, so only say where they are.
+      var first = paths[0];
+      var folder = first.slice(0, Math.max(first.lastIndexOf("/"), first.lastIndexOf("\\"))) || first;
+      saved.appendChild(document.createTextNode("Saved in "));
+      var code = document.createElement("code");
+      code.textContent = folder;
+      saved.appendChild(code);
+      saved.hidden = false;
+      list.hidden = true;
+      return;
+    }
+    // No buttons in this app: list the paths so the files can be found.
+    var labels = { png: "Image", svg: "SVG", drawio: "draw.io", graph: "Graph JSON", pdf: "PDF", dot: "DOT", annotations: "Flows" };
     Object.keys(f).forEach(function (kind) {
       var li = document.createElement("li");
       li.appendChild(document.createTextNode((labels[kind] || kind) + ": "));
-      var path = f[kind];
-      if (canCallTools()) {
-        // Clicking a path opens that file in its default app.
-        var link = document.createElement("button");
-        link.className = "path";
-        link.title = "Open this file";
-        link.textContent = path;
-        link.onclick = function () {
-          openFile(path, false, "Opened " + path.split(/[\\/]/).pop() + ".");
-        };
-        li.appendChild(link);
-      } else {
-        var code = document.createElement("code");
-        code.textContent = path;
-        li.appendChild(code);
-      }
+      var path = document.createElement("code");
+      path.textContent = f[kind];
+      li.appendChild(path);
       list.appendChild(li);
     });
-    list.hidden = list.children.length === 0;
+    saved.hidden = true;
+    list.hidden = false;
   }
 
   // ---- Zoom and pan ------------------------------------------------------------
