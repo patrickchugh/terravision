@@ -312,6 +312,7 @@ VIEW_HTML = r"""<!DOCTYPE html>
     $("tab-annotations").hidden = !files().annotations;
     if (!files().annotations && sourceTab === "annotations") { sourceTab = "graph"; }
     if (!$("source-panel").hidden) { showTab(sourceTab); }
+    resized();
   }
 
   function files() { return (result && result.files) || {}; }
@@ -468,14 +469,16 @@ VIEW_HTML = r"""<!DOCTYPE html>
     sourceTab = tab;
     $("tab-graph").setAttribute("aria-pressed", String(tab === "graph"));
     $("tab-annotations").setAttribute("aria-pressed", String(tab === "annotations"));
-    loadSource(tab).then(function (text) { $("graph").textContent = text; })
+    loadSource(tab).then(function (text) { $("graph").textContent = text; resized(); })
       .catch(function (e) { setStatus(e.message, true); });
   }
   $("source").onclick = function () {
     var panel = $("source-panel");
     panel.hidden = !panel.hidden;
     $("source").setAttribute("aria-expanded", String(!panel.hidden));
+    $("source").textContent = panel.hidden ? "Source" : "Hide source";
     if (!panel.hidden) { showTab(sourceTab); }
+    resized();
   };
   $("tab-graph").onclick = function () { showTab("graph"); };
   $("tab-annotations").onclick = function () { showTab("annotations"); };
@@ -515,12 +518,21 @@ VIEW_HTML = r"""<!DOCTYPE html>
   // ---- Size reporting and start-up ------------------------------------------------
   var lastSize = "";
   function reportSize() {
+    // Measure the content, not the document: the document is never shorter
+    // than the frame, so once the host grew the frame (Source open), closing
+    // the panel would never let it shrink back.
     var w = Math.ceil(document.documentElement.scrollWidth);
-    var h = Math.ceil(document.documentElement.scrollHeight);
+    var h = Math.ceil(document.body.getBoundingClientRect().height);
     var key = w + "x" + h;
     if (key !== lastSize) { lastSize = key; notify("ui/notifications/size-changed", { width: w, height: h }); }
   }
   if (window.ResizeObserver) { new ResizeObserver(reportSize).observe(document.body); }
+  // Also report after the view changes itself: some hosts deliver no resize
+  // notification when content shrinks inside a frame they have grown.
+  function resized() {
+    reportSize();  // measuring forces layout, so this is already the new size
+    if (window.requestAnimationFrame) { requestAnimationFrame(reportSize); }
+  }
 
   request("ui/initialize", {
     appInfo: { name: "TerraVision diagram", version: APP_VERSION },
