@@ -6,6 +6,7 @@ Install: `uv tool install terravision`, `pipx install terravision`, or `pip inst
 
 ## Docs
 
+- [Use with AI assistants](https://patrickchugh.github.io/terravision/ai-assistants/): setup per app; description to diagram, Terraform to diagram, diagram to Terraform
 - [Graph Format (JSON input spec)](https://patrickchugh.github.io/terravision/graph-format/): the format an AI agent should emit; rules, examples, schema
 - [Node types](https://patrickchugh.github.io/terravision/node-types/): every supported `aws_*`, `azurerm_*`, `google_*` and `tv_*` type
 - [Usage guide](https://patrickchugh.github.io/terravision/usage-guide/): CLI commands and flags

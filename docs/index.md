@@ -215,6 +215,18 @@ Every supported resource type is listed on the [Node types](node-types.md) page.
 
 ---
 
+## Use it with an AI assistant
+
+Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
+
+| You have | Ask something like | You get |
+|---|---|---|
+| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
+| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
+
+Setup takes one command in Claude Code, Codex CLI and Gemini CLI, and one download for Claude Desktop, where the diagram appears right in the chat: **[Use TerraVision with AI assistants](ai-assistants.md)**.
+
 ## Quick Start
 
 Install with pipx, uv or pip:
@@ -276,7 +288,7 @@ terravision draw --source architecture.tvg.json --format svg
 
 Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. The [Graph Format](graph-format.md) page has the full rules, the JSON Schema and larger examples, and [Node types](node-types.md) lists every icon.
 
-**Using an AI assistant?** Install the [TerraVision skill](https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams) (Claude Code, Codex, Gemini CLI, Cursor, Copilot) or the [MCP server](mcp-server.md); its `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](llms.txt) is a plain-text index of the docs, and [llms-full.txt](llms-full.txt) adds the full node-type reference.
+**Using an AI assistant?** It can write this JSON for you: see [Use TerraVision with AI assistants](ai-assistants.md). For agents reading docs, [llms.txt](llms.txt) is a plain-text index of the docs, and [llms-full.txt](llms-full.txt) adds the full node-type reference.
 
 ### Diagram from Terraform
 

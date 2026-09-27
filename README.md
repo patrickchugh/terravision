@@ -4,7 +4,7 @@
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->
 
-**Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons**
+**Turn Terraform or JSON into professional cloud architecture diagrams in official AWS, Azure and GCP style**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -56,6 +56,37 @@ Most diagram tools that AI assistants reach for (Mermaid, PlantUML, hand-drawn S
 Full list: [Node types](docs/node-types.md).
 
 ---
+
+## Use it with an AI assistant
+
+Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
+
+| You have | Ask something like | You get |
+|---|---|---|
+| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
+| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
+
+Set it up once:
+
+```bash
+# Claude Code (terminal, VS Code or JetBrains): the skill and MCP server together
+claude plugin marketplace add patrickchugh/terravision
+claude plugin install terravision-cloud-diagrams@terravision
+
+# OpenAI Codex CLI
+codex plugin marketplace add https://github.com/patrickchugh/terravision
+codex plugin add terravision-cloud-diagrams@terravision
+
+# Gemini CLI
+gemini extensions install https://github.com/patrickchugh/terravision
+```
+
+**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it. Diagrams appear right in the chat, with buttons to open them, edit them in draw.io and see their source.
+
+**VS Code with Copilot, Cursor and other MCP clients:** add the [MCP server](docs/mcp-server.md) (`uvx --from "terravision[mcp]" terravision mcp`).
+
+The full guide, with example prompts for each way of working, is **[Use TerraVision with AI assistants](https://patrickchugh.github.io/terravision/ai-assistants/)**. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index.
 
 ## Quick Start
 
@@ -122,24 +153,7 @@ terravision draw --source architecture.tvg.json --format svg
 
 Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. Full spec, schema and more examples: [Graph Format](docs/graph-format.md). Works for AWS (`aws_*`), Azure (`azurerm_*`) and GCP (`google_*`).
 
-**Using an AI assistant?** Install the [TerraVision skill](skills/terravision-cloud-diagrams) and the [MCP server](docs/mcp-server.md) together as a plugin, then ask for a cloud architecture diagram as usual:
-
-```bash
-# Claude Code
-claude plugin marketplace add patrickchugh/terravision
-claude plugin install terravision-cloud-diagrams@terravision
-
-# OpenAI Codex CLI
-codex plugin marketplace add https://github.com/patrickchugh/terravision
-codex plugin add terravision-cloud-diagrams@terravision
-
-# Gemini CLI
-gemini extensions install https://github.com/patrickchugh/terravision
-```
-
-**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it. Diagrams then appear right in the chat, with buttons to open them, edit them in draw.io and copy the graph.
-
-Other agents that read skills (Cursor, Copilot) can use the [skill folder](skills/terravision-cloud-diagrams) directly, and any MCP client can run the [MCP server](docs/mcp-server.md), whose `render_graph` tool takes this JSON directly. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index of the docs, and [llms-full.txt](https://patrickchugh.github.io/terravision/llms-full.txt) adds the full node-type reference.
+**Using an AI assistant?** It can write this JSON for you: see [Use it with an AI assistant](#use-it-with-an-ai-assistant).
 
 ### Option 2 - Generate your  diagram from Terraform
 
