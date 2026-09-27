@@ -5,8 +5,8 @@ A single self-contained HTML document, served as the ``ui://`` resource that
 sandboxed iframe and passes it the tool result, which already carries a
 preview PNG, so the diagram appears immediately. Buttons call the server's
 ``open_diagram_file`` and ``diagram_file`` tools through the host to open
-files on the user's machine, load the SVG at full resolution and copy the
-graph JSON.
+files on the user's machine, load the SVG at full resolution and show and
+copy the source: the graph JSON and, when saved, the annotations YAML.
 
 It talks to the host with raw JSON-RPC over ``postMessage`` as defined by the
 MCP Apps specification (protocol version 2026-01-26), so it needs no
@@ -75,6 +75,15 @@ VIEW_HTML = r"""<!DOCTYPE html>
   button:hover { border-color: var(--fg2); }
   button:disabled { opacity: 0.5; cursor: default; }
   .spacer { flex: 1; }
+  .icons { display: flex; gap: 4px; }
+  button.icon { min-width: 30px; padding: 5px 7px; }
+  button.icon svg { width: 14px; height: 14px; display: block; margin: auto; fill: none;
+    stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  #fullscreen .exit, .fullscreen #fullscreen .enter { display: none; }
+  .fullscreen #fullscreen .exit { display: block; }
+  #source-panel { margin-top: 8px; }
+  .tabs { display: flex; gap: 4px; align-items: center; }
+  .tab[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
   #stage {
     position: relative; height: 560px; overflow: hidden; background: #ffffff;
     border: 1px solid var(--border); border-radius: var(--radius); cursor: grab; touch-action: none;
@@ -118,18 +127,27 @@ VIEW_HTML = r"""<!DOCTYPE html>
   <button id="open">Open image</button>
   <button id="edit">Edit in draw.io</button>
   <button id="reveal">Show in folder</button>
-  <button id="copy">Copy JSON</button>
-  <button id="json">Show JSON</button>
+  <button id="source" aria-expanded="false">Source</button>
   <span class="spacer"></span>
-  <button id="zoomout" title="Zoom out">&minus;</button>
-  <button id="fit" title="Fit to view">Fit</button>
-  <button id="zoomin" title="Zoom in">+</button>
-  <button id="fullscreen" hidden>Full screen</button>
+  <span class="icons">
+    <button id="zoomout" class="icon" title="Zoom out" aria-label="Zoom out">&minus;</button>
+    <button id="fit" class="icon" title="Fit to view" aria-label="Fit to view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg></button>
+    <button id="zoomin" class="icon" title="Zoom in" aria-label="Zoom in">+</button>
+    <button id="fullscreen" class="icon" title="Full screen" aria-label="Full screen" hidden><svg class="enter" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4M10 2h4v4M14 10v4h-4M2 10v4h4M2 2l4 4M14 2l-4 4M14 14l-4-4M2 14l4-4"/></svg><svg class="exit" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h4V2M14 6h-4V2M10 14v-4h4M6 14v-4H2M2 2l4 4M14 2l-4 4M14 14l-4-4M2 14l4-4"/></svg></button>
+  </span>
 </div>
 <div id="stage"><div id="message">Drawing the diagram&hellip;</div><img id="diagram" alt="Cloud architecture diagram" hidden></div>
 <div id="status"></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<pre id="graph" hidden></pre>
+<div id="source-panel" hidden>
+  <div class="tabs">
+    <button id="tab-graph" class="tab" aria-pressed="true">Graph JSON</button>
+    <button id="tab-annotations" class="tab" aria-pressed="false" hidden>Annotations</button>
+    <span class="spacer"></span>
+    <button id="copy">Copy</button>
+  </div>
+  <pre id="graph"></pre>
+</div>
 <ul id="warnings" hidden></ul>
 <div id="saved" hidden></div>
 <ul id="files" hidden></ul>
@@ -144,7 +162,8 @@ VIEW_HTML = r"""<!DOCTYPE html>
   var hostContext = {};
   var result = null;
   var svgLoaded = false;
-  var graphText = null;
+  var sourceCache = {};
+  var sourceTab = "graph";
   var view = { scale: 1, x: 0, y: 0, fitted: true };
   var $ = function (id) { return document.getElementById(id); };
 
@@ -224,7 +243,9 @@ VIEW_HTML = r"""<!DOCTYPE html>
       for (var name in vars) { if (vars[name]) { document.documentElement.style.setProperty(name, vars[name]); } }
     }
     document.body.classList.toggle("fullscreen", hostContext.displayMode === "fullscreen");
-    $("fullscreen").textContent = hostContext.displayMode === "fullscreen" ? "Exit full screen" : "Full screen";
+    var fsLabel = hostContext.displayMode === "fullscreen" ? "Exit full screen" : "Full screen";
+    $("fullscreen").title = fsLabel;
+    $("fullscreen").setAttribute("aria-label", fsLabel);
     var modes = hostContext.availableDisplayModes || [];
     $("fullscreen").hidden = modes.indexOf("fullscreen") < 0;
     if (view.fitted) { fit(); }
@@ -283,9 +304,14 @@ VIEW_HTML = r"""<!DOCTYPE html>
     listWarnings();
     $("actions").hidden = false;
     var tools = canCallTools();
-    ["open", "edit", "reveal", "copy", "json"].forEach(function (id) { $(id).hidden = !tools; });
+    ["open", "edit", "reveal", "source"].forEach(function (id) { $(id).hidden = !tools; });
     $("edit").hidden = !tools || !files().drawio;
-    $("copy").hidden = $("json").hidden = !tools || !files().graph;
+    $("source").hidden = !tools || !files().graph;
+    // A new result: forget the old source, and offer annotations if saved.
+    sourceCache = {};
+    $("tab-annotations").hidden = !files().annotations;
+    if (!files().annotations && sourceTab === "annotations") { sourceTab = "graph"; }
+    if (!$("source-panel").hidden) { showTab(sourceTab); }
   }
 
   function files() { return (result && result.files) || {}; }
@@ -428,25 +454,35 @@ VIEW_HTML = r"""<!DOCTYPE html>
   $("edit").onclick = function () { openFile(files().drawio, false, "Opened the draw.io file. Save it there after editing."); };
   $("reveal").onclick = function () { openFile(files().png, true, "Opened the folder with the diagram files."); };
 
-  function loadGraph() {
-    if (graphText !== null) { return Promise.resolve(graphText); }
-    return callTool("diagram_file", { path: files().graph }).then(function (file) {
-      graphText = (file && file.text) || "";
-      return graphText;
+  // The Source panel: the graph JSON, and the annotations YAML once flows or
+  // edge labels are saved. Copy copies whichever tab is showing.
+  function sourcePath(tab) { return tab === "annotations" ? files().annotations : files().graph; }
+  function loadSource(tab) {
+    if (Object.prototype.hasOwnProperty.call(sourceCache, tab)) { return Promise.resolve(sourceCache[tab]); }
+    return callTool("diagram_file", { path: sourcePath(tab) }).then(function (file) {
+      sourceCache[tab] = (file && file.text) || "";
+      return sourceCache[tab];
     });
   }
-  $("json").onclick = function () {
-    var pre = $("graph");
-    if (!pre.hidden) { pre.hidden = true; $("json").textContent = "Show JSON"; return; }
-    loadGraph().then(function (text) {
-      pre.textContent = text;
-      pre.hidden = false;
-      $("json").textContent = "Hide JSON";
-    }).catch(function (e) { setStatus(e.message, true); });
+  function showTab(tab) {
+    sourceTab = tab;
+    $("tab-graph").setAttribute("aria-pressed", String(tab === "graph"));
+    $("tab-annotations").setAttribute("aria-pressed", String(tab === "annotations"));
+    loadSource(tab).then(function (text) { $("graph").textContent = text; })
+      .catch(function (e) { setStatus(e.message, true); });
+  }
+  $("source").onclick = function () {
+    var panel = $("source-panel");
+    panel.hidden = !panel.hidden;
+    $("source").setAttribute("aria-expanded", String(!panel.hidden));
+    if (!panel.hidden) { showTab(sourceTab); }
   };
+  $("tab-graph").onclick = function () { showTab("graph"); };
+  $("tab-annotations").onclick = function () { showTab("annotations"); };
   $("copy").onclick = function () {
-    loadGraph().then(function (text) { return copyText(text); })
-      .then(function () { setStatus("Graph JSON copied to the clipboard."); })
+    var what = sourceTab === "annotations" ? "Annotations" : "Graph JSON";
+    loadSource(sourceTab).then(function (text) { return copyText(text); })
+      .then(function () { setStatus(what + " copied to the clipboard."); })
       .catch(function (e) { setStatus("Could not copy: " + e.message, true); });
   };
   function copyText(text) {

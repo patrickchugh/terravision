@@ -894,7 +894,17 @@ def test_button_feedback_shows_as_a_toast():
     from modules.mcp_view import VIEW_HTML
 
     assert '<div id="toast" role="status" aria-live="polite"></div>' in VIEW_HTML
-    assert "Graph JSON copied to the clipboard." in VIEW_HTML
+    assert '" copied to the clipboard."' in VIEW_HTML
+
+
+def test_source_panel_holds_the_graph_and_annotations():
+    """One Source button instead of Show JSON and Copy JSON, to keep the
+    toolbar short; the annotations tab appears once flows are saved."""
+    from modules.mcp_view import VIEW_HTML
+
+    assert 'id="source"' in VIEW_HTML and 'id="tab-annotations"' in VIEW_HTML
+    assert 'id="json"' not in VIEW_HTML
+    assert "files().annotations" in VIEW_HTML
 
 
 def test_plain_result_asks_the_model_to_offer_flows(outdir):
