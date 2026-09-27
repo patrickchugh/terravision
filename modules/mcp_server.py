@@ -201,8 +201,9 @@ def build_server() -> MCPServer:
                 "aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
             format: "png", "svg", "pdf", "dot" or "drawio" (editable in
                 draw.io and Lucidchart). Use "svg" to embed in Markdown.
-            outfile: Output filename without extension. Plain name, not a
-                path.
+            outfile: Output file name without extension, e.g.
+                "three_tier". Files always go to the server's output
+                folder; from a path, only the last part is used.
             fontsize: Label font size in points.
             iconsize: Icon size in pixels.
             title: Heading shown above the diagram, e.g. "Order Platform -
@@ -284,8 +285,9 @@ def build_server() -> MCPServer:
             format: Output format. Use "drawio" for a file editable in
                 draw.io, Lucidchart or any mxGraph editor; "svg" or "dot" for
                 other text formats; "png" or "pdf" for images.
-            outfile: Output filename without extension. Must be a plain name,
-                not a path; the server decides the directory. The detected
+            outfile: Output file name without extension. Files always go to
+                the server's output folder; from a path, only the last part
+                is used. The detected
                 cloud provider is appended, so "architecture" becomes
                 "architecture-aws".
             varfile: Paths to .tfvars files.
@@ -438,8 +440,8 @@ def build_server() -> MCPServer:
 
         Args:
             source: Terraform directory, Git URL, or tfdata.json replay file.
-            outfile: Output filename without extension. Must be a plain name,
-                not a path. The detected provider is appended.
+            outfile: Output file name without extension; from a path, only
+                the last part is used. The detected provider is appended.
             varfile: Paths to .tfvars files.
             workspace: Terraform workspace to select.
             annotate: Path to a terravision.yml annotation file.

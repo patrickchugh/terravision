@@ -54,29 +54,34 @@ def test_validate_outfile_accepts_plain_names(name):
 
 
 @pytest.mark.parametrize(
-    "name",
-    ["", "   ", "..", "../evil", "../../etc/passwd", "sub/name", "sub\\name"],
+    "name, expected",
+    [
+        ("/home/me/project/three_tier", "three_tier"),
+        ("C:\\Users\\me\\diagram", "diagram"),
+        ("sub/name", "name"),
+        ("sub\\name", "name"),
+        ("../evil", "evil"),
+        ("../../etc/passwd", "passwd"),
+        ("architecture.png", "architecture"),
+        ("orders.tvg.json", "orders"),
+        ("orders.drawio", "orders"),
+    ],
 )
-def test_validate_outfile_rejects_paths_and_traversal(name):
-    """An agent-supplied name must not be able to escape the output dir."""
+def test_validate_outfile_keeps_only_the_name(name, expected):
+    """Coding agents pass paths; only the last part is used, so files still
+    land in the output directory, whatever the path says. Both separators
+    count on every platform, so an agent gets the same answer on any host."""
+    assert _validate_outfile(name) == expected
+
+
+@pytest.mark.parametrize("name", ["", "   ", "..", "/", "sub/", ".png", ".hidden"])
+def test_validate_outfile_rejects_names_left_empty_or_hidden(name):
     with pytest.raises(McpServiceError):
         _validate_outfile(name)
 
 
 def test_validate_outfile_strips_surrounding_whitespace():
     assert _validate_outfile("  architecture  ") == "architecture"
-
-
-def test_validate_outfile_rejects_both_separators_on_every_platform():
-    """Rejection must not depend on the host OS.
-
-    Deferring to os.path.sep/altsep would let "sub\\name" through on POSIX,
-    where altsep is None -- so the same agent request would be refused on
-    Windows and accepted on Linux.
-    """
-    for name in ("sub/name", "sub\\name"):
-        with pytest.raises(McpServiceError):
-            _validate_outfile(name)
 
 
 # ── Output directory ──────────────────────────────────────────────────
@@ -523,9 +528,9 @@ def test_run_diagram_rejects_unknown_format_without_running_pipeline():
     assert "Unsupported format" in str(excinfo.value)
 
 
-def test_run_diagram_rejects_outfile_path_without_running_pipeline():
-    with pytest.raises(McpServiceError):
-        run_diagram("/nonexistent/source", format="png", outfile="../escape")
+def test_run_diagram_rejects_an_empty_outfile_without_running_pipeline():
+    with pytest.raises(McpServiceError, match="outfile must name a file"):
+        run_diagram("/nonexistent/source", format="png", outfile="..")
 
 
 def test_run_render_graph_inline(tmp_path):

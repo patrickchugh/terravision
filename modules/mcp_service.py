@@ -114,36 +114,52 @@ def supported_formats() -> Tuple[str, ...]:
     return tuple(sorted(set(graphviz_formats) | set(_EXTRA_FORMATS)))
 
 
-def _validate_outfile(outfile: str) -> str:
-    """Validate that ``outfile`` is a bare filename, not a path.
+# Extensions an agent may add to a name; the server adds its own.
+_OUTFILE_SUFFIXES = (
+    ".tvg.json",
+    ".dot.png",
+    ".dot.svg",
+    ".annotations.yml",
+    ".drawio",
+    ".html",
+    ".json",
+    ".png",
+    ".svg",
+    ".pdf",
+    ".dot",
+)
 
-    Generated files always land in the configured output directory. Rejecting
-    separators and parent references keeps an agent-supplied name from writing
-    outside it. Mirrors the CLI, where ``--outfile`` is also a bare name.
+
+def _validate_outfile(outfile: str) -> str:
+    """Return the file name to write, from a name or a path.
+
+    Generated files always land in the configured output directory. Coding
+    agents think in paths, and rejecting one cost a whole retry, so a path
+    is reduced to its last part instead: only the name is ever used, which
+    keeps writes inside the output directory. A diagram extension is
+    dropped too, since the server adds its own ("architecture.png" would
+    otherwise become "architecture.png.dot.png").
 
     Args:
-        outfile: Requested output filename, without extension.
+        outfile: Requested output name or path, without extension.
 
     Returns:
-        The validated filename.
+        The file name, without directories or extension.
 
     Raises:
-        McpServiceError: If the name is empty or contains path components.
+        McpServiceError: If no usable name is left.
     """
-    name = (outfile or "").strip()
-    if not name:
-        raise McpServiceError("outfile must not be empty")
-    # Both separators are rejected on every platform rather than deferring to
-    # os.path.sep/altsep, which would let "sub\name" through on POSIX (altsep
-    # is None there). Neither character is ever legitimate in a bare filename,
-    # and an agent should get the same answer regardless of the host OS.
-    if "/" in name or "\\" in name:
+    # Both separators on every platform, rather than os.path.sep/altsep, so
+    # "sub\\name" is treated the same on POSIX as on Windows.
+    name = re.split(r"[\\/]", (outfile or "").strip())[-1].strip()
+    for suffix in _OUTFILE_SUFFIXES:
+        if name.lower().endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+            break
+    if not name or name.startswith("."):
         raise McpServiceError(
-            f"outfile must be a filename, not a path: {outfile!r}. "
-            "Output location is set by the server's --output-dir."
+            f"outfile must name a file, such as 'architecture': {outfile!r}"
         )
-    if name in (".", "..") or name.startswith(".."):
-        raise McpServiceError(f"Invalid outfile name: {outfile!r}")
     return name
 
 

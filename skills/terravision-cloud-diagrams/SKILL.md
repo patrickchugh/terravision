@@ -16,7 +16,16 @@ TerraVision renders cloud architecture diagrams using the official AWS, Azure an
 
 Use it for pictures of AWS, Azure or GCP infrastructure: which services exist, where they sit in the network, and how they connect.
 
-Do not use it for anything else. Sequence diagrams, flowcharts, class or ER diagrams, code or module structure, org charts and on-premises-only networks are better drawn with Mermaid or similar. If a request needs both, such as the cloud layout plus a request flow, draw the infrastructure with TerraVision and the flow with Mermaid.
+Do not use it for anything else. Sequence diagrams, flowcharts, class or ER diagrams, code or module structure, org charts and on-premises-only networks are better drawn with Mermaid or similar. A request flow through the infrastructure belongs on the TerraVision diagram itself, as numbered steps ("Flows" below).
+
+## If the TerraVision MCP tools are available, use them
+
+If you can call `diagram_guide` and `render_graph` (the TerraVision MCP server), use them instead of the command line, and skip Install, the validator, and the files under `references/` and `examples/`:
+
+- `diagram_guide(provider)` returns, in one call, the graph rules, a detailed worked example, the supported node types, a library of patterns and whether Graphviz is installed.
+- `render_graph(graph, outfile="three_tier", title=...)` checks the graph, returns warnings and a preview image, and saves the PNG, SVG, draw.io file and graph. Pass `outfile` as a name; files always go to the server's output folder.
+
+Everything else here still applies: the rules, "Drawn as written", "Check every render" and "Deliver the result".
 
 ## Decide which path
 

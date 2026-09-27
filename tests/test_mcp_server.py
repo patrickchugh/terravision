@@ -325,13 +325,22 @@ def test_unsupported_format_is_reported(server):
     assert "Unsupported format" in result.content[0].text
 
 
-def test_outfile_path_traversal_is_rejected(server):
+def test_outfile_path_stays_in_the_output_dir(server, tmp_path, monkeypatch):
+    """A path in outfile is reduced to its name, so "../escape" is written
+    as escape inside the output directory, never beside it."""
+    from modules import mcp_service
+
+    monkeypatch.setattr(mcp_service, "_OUTPUT_DIR", tmp_path.resolve())
     result = _call(
         server,
         "generate_diagram",
-        {"source": REPLAY_SOURCE, "outfile": "../escape"},
+        {"source": REPLAY_SOURCE, "outfile": "../escape", "preview": False},
     )
-    assert result.is_error
+    assert not result.is_error
+    written = Path(json.loads(result.content[0].text)["path"])
+    assert written.parent == tmp_path.resolve()
+    assert not (tmp_path.parent / "escape-aws.dot.png").exists()
+    assert written.name.startswith("escape")
 
 
 # ── Parity with the equivalent CLI command ────────────────────────────
