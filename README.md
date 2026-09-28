@@ -1,6 +1,4 @@
-<img src="./images/logo/terravision-icon.svg" alt="" width="96" align="left">
-
-# TerraVision
+# <img src="./images/logo/terravision-icon.svg" alt="" width="48" height="48"> TerraVision
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->
 
