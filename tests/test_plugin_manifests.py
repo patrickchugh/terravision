@@ -46,3 +46,26 @@ def test_mcp_server_is_pinned_to_this_release(path):
             f'"terravision[mcp]=={_version()}" so plugin updates install the '
             "matching server"
         )
+
+
+def test_plugin_versions_agree():
+    """Installed plugins update only when this version rises, so every place
+    that states it must move together (bump it whenever the skill changes)."""
+    import re
+
+    plugin = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())["version"]
+    market = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
+    gemini = json.loads((ROOT / "gemini-extension.json").read_text())["version"]
+    skill = re.search(
+        r'^  version: "([^"]+)"',
+        (ROOT / "skills/terravision-cloud-diagrams/SKILL.md").read_text(),
+        re.M,
+    ).group(1)
+    versions = {
+        "plugin.json": plugin,
+        "marketplace metadata": market["metadata"]["version"],
+        "marketplace plugin": market["plugins"][0]["version"],
+        "gemini-extension.json": gemini,
+        "SKILL.md": skill,
+    }
+    assert len(set(versions.values())) == 1, versions
