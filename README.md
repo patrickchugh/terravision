@@ -78,6 +78,8 @@ claude plugin install terravision-cloud-diagrams@terravision
 
 Then start a new Claude Code session. Diagrams are saved in a `diagrams` folder in your project.
 
+The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If `/mcp` shows TerraVision failed to connect, choose **Reconnect**. To avoid it, install it ahead of time: `uvx --from "terravision[mcp]" terravision --version`.
+
 **OpenAI Codex CLI:**
 
 ```bash

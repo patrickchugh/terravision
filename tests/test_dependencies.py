@@ -474,3 +474,41 @@ class TestNeatoEngine:
         mock_isfile.return_value = False
         with pytest.raises(SystemExit):
             check_dependencies(needs_terraform=False)
+
+
+def test_cidr_network_matches_ipaddr_behaviour():
+    """ipaddr (a Python 2 era package that needed building from source on
+    Windows) was replaced by the standard library for subnet-to-VPC linking."""
+    from modules.tfwrapper import _cidr_network
+
+    vpc = _cidr_network("10.0.0.0/16")
+    assert _cidr_network("10.0.1.0/24").overlaps(vpc)
+    assert _cidr_network("10.0.1.5/24").overlaps(vpc)  # host bits allowed
+    assert not _cidr_network("172.16.0.0/24").overlaps(vpc)
+    assert not _cidr_network("2001:db8::/64").overlaps(vpc)
+    # "(known after apply)" arrives as True, which must not read as 0.0.0.1
+    for value in (True, None, "", "not-a-cidr", 5):
+        assert _cidr_network(value) is None
+
+
+def test_subnets_join_the_vpc_whose_range_holds_them():
+    from modules.tfwrapper import add_vpc_implied_relations
+
+    tfdata = {
+        "graphdict": {
+            "aws_vpc.main": [],
+            "aws_subnet.inside": [],
+            "aws_subnet.outside": [],
+            "aws_subnet.unknown": [],
+            "module.other.aws_subnet.inside": [],
+        },
+        "meta_data": {
+            "aws_vpc.main": {"cidr_block": "10.0.0.0/16"},
+            "aws_subnet.inside": {"cidr_block": "10.0.1.0/24"},
+            "aws_subnet.outside": {"cidr_block": "172.16.0.0/24"},
+            "aws_subnet.unknown": {"cidr_block": True},
+            "module.other.aws_subnet.inside": {"cidr_block": "10.0.2.0/24"},
+        },
+    }
+    result = add_vpc_implied_relations(tfdata)
+    assert result["graphdict"]["aws_vpc.main"] == ["aws_subnet.inside"]

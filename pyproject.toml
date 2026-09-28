@@ -32,8 +32,6 @@ dependencies = [
     "tqdm>=4.65.0",
     "python-hcl2==4.3.0",
     "PyYAML>=6.0",
-    "debugpy>=1.8.0",
-    "ipaddr>=2.2.0",
     "ollama>=0.6.1",
     "requests>=2.32.3",
     "typing-extensions>=4.0.0",
@@ -83,8 +81,6 @@ tqdm = "4.65.0"
 python-hcl2 = "4.3.0"
 python = ">=3.11"
 PyYAML = ">=6.0"
-debugpy = "^1.8.0"
-ipaddr = "^2.2.0"
 ollama = "^0.6.1"
 requests = ">=2.32.3"
 typing-extensions = "^4.0.0"

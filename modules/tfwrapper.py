@@ -4,7 +4,7 @@ Handles terraform init, plan, graph generation, and conversion of terraform
 output into internal data structures for diagram generation.
 """
 
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 import importlib
 import os
 import re
@@ -19,7 +19,7 @@ import modules.fileparser as fileparser
 import modules.validators as validators
 import tempfile
 import json
-import ipaddr
+import ipaddress
 import modules.config_loader as config_loader
 import modules.provider_detector as provider_detector
 
@@ -777,9 +777,8 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Link subnets to VPCs based on CIDR overlap (within same module only)
     if len(vpc_resources) > 0 and len(subnet_resources) > 0:
         for vpc in vpc_resources:
-            try:
-                vpc_cidr = ipaddr.IPNetwork(tfdata["meta_data"][vpc]["cidr_block"])
-            except (ValueError, KeyError):
+            vpc_cidr = _cidr_network(tfdata["meta_data"].get(vpc, {}).get("cidr_block"))
+            if vpc_cidr is None:
                 continue
             # Extract module prefix (e.g., "module.gitlab_vpc." from "module.gitlab_vpc.aws_vpc.vpc")
             vpc_module = (
@@ -794,11 +793,10 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 if vpc_module != subnet_module:
                     continue
-                try:
-                    subnet_cidr = ipaddr.IPNetwork(
-                        tfdata["meta_data"][subnet]["cidr_block"]
-                    )
-                except (ValueError, KeyError):
+                subnet_cidr = _cidr_network(
+                    tfdata["meta_data"].get(subnet, {}).get("cidr_block")
+                )
+                if subnet_cidr is None:
                     continue
                 # Add subnet to VPC if CIDR ranges overlap and not already present
                 if (
@@ -807,6 +805,21 @@ def add_vpc_implied_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 ):
                     tfdata["graphdict"][vpc].append(subnet)
     return tfdata
+
+
+def _cidr_network(cidr: Any) -> Optional[ipaddress._BaseNetwork]:
+    """The network a CIDR string describes, or None if it is not one.
+
+    Only strings count: a "(known after apply)" value arrives as the boolean
+    True, which ipaddress would read as the integer 1 (0.0.0.1/32). Host bits
+    are allowed, as Terraform allows them.
+    """
+    if not isinstance(cidr, str):
+        return None
+    try:
+        return ipaddress.ip_network(cidr, strict=False)
+    except ValueError:
+        return None
 
 
 def load_json_source(source: str) -> Dict[str, Any]:

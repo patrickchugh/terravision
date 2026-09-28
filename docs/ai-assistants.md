@@ -66,6 +66,8 @@ If anything is still missing later, the assistant says what to install. To check
 
     This installs the TerraVision skill and its MCP server together. Start a new Claude Code session afterwards. Diagrams are saved in a `diagrams` folder in your project.
 
+    The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If `/mcp` shows TerraVision failed to connect, choose **Reconnect**. To avoid it, install it ahead of time: `uvx --from "terravision[mcp]" terravision --version`.
+
 === "Codex CLI"
 
     ```bash

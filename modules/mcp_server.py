@@ -18,9 +18,10 @@ Terraform at all, which is the fully credential-free path.
 import contextlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Annotated, Any, Dict, Iterator, List, Optional
 
 from mcp.server import MCPServer
+from pydantic import Field
 from mcp.server.apps import Apps, ResourcePermissions
 from mcp.server.mcpserver import Image
 from mcp.server.mcpserver.exceptions import ToolError
@@ -31,40 +32,33 @@ from modules.mcp_view import VIEW_HTML, VIEW_URI
 
 _INSTRUCTIONS = """\
 TerraVision draws cloud architecture diagrams with the official AWS, Azure and
-GCP icons, from a description or from Terraform code. Use it for pictures of
-cloud infrastructure only; use Mermaid or similar for sequence diagrams,
-flowcharts and other diagrams that are not cloud infrastructure.
+GCP icons, from a description or from Terraform code. Use it for cloud
+infrastructure only; use Mermaid or similar for sequence diagrams, flowcharts
+and other diagrams.
 
-From a description (no Terraform): call diagram_guide once with the provider
-(aws, azure or gcp) for the graph rules, worked examples and node types, then
-write the graph and call render_graph with a title. Start from the closest
-example and keep its level of detail: availability zones, public and private
-subnets, the path to the internet and shared services.
+From a description: call diagram_guide once with the provider (aws, azure or
+gcp) for the rules, worked examples and node types, then write the graph and
+call render_graph with a title. Keep the closest example's level of detail:
+availability zones, public and private subnets, the path to the internet and
+shared services.
 
-From Terraform code: generate_diagram runs `terraform init` and `terraform plan`
-against the source unless you supply planfile/graphfile, so a first call can
-take minutes. generate_architecture_graph(services_only=True) is a cheap
-overview of what a stack contains. Calls run one at a time.
+From Terraform: generate_diagram runs terraform init and plan unless given
+planfile and graphfile, so a first call can take minutes.
+generate_architecture_graph(services_only=True) is a cheap overview.
 
-render_graph and generate_diagram save a PNG, an SVG, an editable draw.io file
-and the graph as .tvg.json, and return their paths plus a preview image. Look
-at the preview to check the diagram before presenting it; if it looks wrong,
-fix the graph, not TerraVision. If a render_graph result has warnings (an
-unknown type with suggested replacements, arrows that will not be drawn), fix
-the graph and render again. Apps that support MCP Apps also show it to the
-user in an interactive view with buttons to open and edit the files.
-open_diagram_file opens a file for the user on their own computer. Show the
-user the graph JSON as well.
+render_graph and generate_diagram save a PNG, SVG, draw.io file and the graph
+(.tvg.json), and return their paths and a preview image. Check the preview
+before presenting it; if it looks wrong, fix the graph, not TerraVision. Fix
+any warnings and render again. Show the user the graph JSON too.
+open_diagram_file opens a file on the user's computer.
 
-Flows: pass flows to number the steps of a request path on the diagram, with
-a legend. Include them when the user asks how requests, data or events move.
-Otherwise deliver the plain diagram, explain the flow in the reply, and end
-with one line offering to add it as numbered steps; on a yes, render the same
-graph again with those steps as flows. edge_labels puts a few words on
-existing arrows to say what each connection does ("Reads secrets"); offer
-them with the flows rather than adding them unasked. For a diagram drawn
-from a description, also offer to write Terraform for the architecture. A
-result's next_step says what to do after presenting it.
+Include flows (numbered steps with a legend) when the user asks how requests,
+data or events move. Otherwise deliver the plain diagram, explain the flow,
+and end with one line offering to add it as numbered steps; on a yes, render
+again with those steps as flows. Offer edge_labels (a few words on arrows)
+with the flows rather than adding them unasked. For a diagram drawn from a
+description, also offer to write Terraform for it. A result's next_step says
+what to offer after presenting it.
 """
 
 
@@ -92,6 +86,71 @@ def _icons() -> List[Icon]:
                 )
             )
     return icons
+
+
+# Parameter documentation, in each parameter's schema rather than the tool
+# description: clients such as Claude Code cut tool descriptions at 2048
+# characters, which dropped everything after the first few parameters.
+_GRAPH_DOC = (
+    "Object mapping each node address to the list of node addresses it "
+    'connects to or contains. Addresses are "<terraform_resource_type>.<name>", '
+    'e.g. "aws_lambda_function.orders", "azurerm_key_vault.secrets", '
+    '"google_cloud_run_service.api". Containers (aws_vpc, aws_subnet, '
+    "tv_aws_az, azurerm_resource_group, tv_gcp_region and so on) list their "
+    'children as connections. Use "~1", "~2" suffixes for numbered copies. '
+    "External actors: tv_aws_users.<name>, tv_aws_internet.<name>, "
+    "tv_aws_mobile_client.<name>, tv_aws_onprem.<name>, "
+    "tv_azurerm_users.<name>, tv_azurerm_internet.<name>, "
+    "tv_gcp_users_icon.<name>. Leaf nodes may be omitted as keys. One cloud "
+    "provider per graph. Drawn as written: arrows to containers, and to "
+    "shared services such as CloudWatch log groups, ECR or Key Vault, are not "
+    "drawn; list those services in aws_group.shared_services or "
+    'azurerm_group.shared_services. Example: {"tv_aws_users.users": '
+    '["aws_cloudfront_distribution.cdn"], "aws_cloudfront_distribution.cdn": '
+    '["aws_s3_bucket.site"], "aws_vpc.main": ["aws_subnet.app"], '
+    '"aws_subnet.app": ["aws_lambda_function.api"], "aws_lambda_function.api": '
+    '["aws_dynamodb_table.orders"]}'
+)
+_FORMAT_DOC = (
+    '"png", "svg", "pdf", "dot" or "drawio" (editable in draw.io and '
+    'Lucidchart). The full set is always saved; use "svg" to embed in Markdown.'
+)
+_OUTFILE_DOC = (
+    'Output file name without extension, e.g. "three_tier". Files always go '
+    "to the server's output folder; from a path, only the last part is used."
+)
+_FONTSIZE_DOC = "Label font size in points."
+_ICONSIZE_DOC = "Icon size in pixels."
+_TITLE_DOC = (
+    'Heading shown above the diagram, e.g. "Order Platform - Production". '
+    'Defaults to "Cloud Architecture Diagram".'
+)
+_PREVIEW_DOC = "Include a preview image of the diagram in the result."
+_SOURCE_DOC = (
+    "Terraform directory, Git URL, or tfdata.json replay file. Add //folder "
+    "to a Git URL for a folder inside the repository, e.g. "
+    '"https://github.com/org/repo//examples". A repository whose root is a '
+    "reusable module plans no resources: draw a folder that uses it instead "
+    "(examples/, an environment)."
+)
+_FLOWS_DOC = (
+    "Optional numbered steps drawn as badges on the diagram, with a legend. "
+    'Keyed by flow name: {"order_request": {"description": "A customer places '
+    'an order", "steps": [{"resource": "tv_aws_users.users", "detail": '
+    '"Customer opens the app"}, {"resource": "aws_alb.api~1 -> '
+    'aws_ecs_fargate.app~1", "detail": "Request routed to a task"}]}}. A step '
+    'names a node, or an arrow as "<node> -> <node>" in either direction; use '
+    "the numbered copy (aws_alb.api~1), not the bare name. Steps are "
+    "numbered across flows. Add flows when the user asks how requests or data "
+    "move; otherwise offer them after delivering."
+)
+_EDGE_LABELS_DOC = (
+    "Optional text on arrows the graph already has, to say what each "
+    'connection does: {"aws_ecs_fargate.app~1 -> aws_rds_sqlserver.db": '
+    '"Reads orders"}. Either direction names the arrow; a label never adds '
+    "one. Keep labels to a few words; offer them with the flows rather than "
+    "adding them unasked."
+)
 
 
 @contextlib.contextmanager
@@ -154,15 +213,19 @@ def build_server() -> MCPServer:
 
     @apps.tool(resource_uri=VIEW_URI)
     def render_graph(
-        graph: Dict[str, List[str]],
-        format: str = "png",
-        outfile: str = "architecture",
-        fontsize: Optional[int] = None,
-        iconsize: Optional[int] = None,
-        title: Optional[str] = None,
-        preview: bool = True,
-        flows: Optional[Dict[str, Dict[str, Any]]] = None,
-        edge_labels: Optional[Dict[str, str]] = None,
+        graph: Annotated[Dict[str, List[str]], Field(description=_GRAPH_DOC)],
+        format: Annotated[str, Field(description=_FORMAT_DOC)] = "png",
+        outfile: Annotated[str, Field(description=_OUTFILE_DOC)] = "architecture",
+        fontsize: Annotated[Optional[int], Field(description=_FONTSIZE_DOC)] = None,
+        iconsize: Annotated[Optional[int], Field(description=_ICONSIZE_DOC)] = None,
+        title: Annotated[Optional[str], Field(description=_TITLE_DOC)] = None,
+        preview: Annotated[bool, Field(description=_PREVIEW_DOC)] = True,
+        flows: Annotated[
+            Optional[Dict[str, Dict[str, Any]]], Field(description=_FLOWS_DOC)
+        ] = None,
+        edge_labels: Annotated[
+            Optional[Dict[str, str]], Field(description=_EDGE_LABELS_DOC)
+        ] = None,
     ) -> CallToolResult:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
@@ -177,66 +240,15 @@ def build_server() -> MCPServer:
         Mermaid or hand-drawn SVG for any cloud architecture. Needs only
         Graphviz and Git; Terraform is not required.
 
-        Args:
-            graph: Object mapping each node address to the list of node
-                addresses it connects to or contains. Node addresses are
-                "<terraform_resource_type>.<name>", e.g.
-                "aws_lambda_function.orders", "azurerm_key_vault.secrets",
-                "google_cloud_run_service.api". Containers (aws_vpc,
-                aws_subnet, azurerm_resource_group, tv_gcp_region and so on)
-                list their children as connections. Use "~1", "~2" suffixes
-                for numbered copies. External actors: tv_aws_users.<name>,
-                tv_aws_internet.<name>, tv_aws_mobile_client.<name>,
-                tv_aws_onprem.<name>, tv_azurerm_users.<name>,
-                tv_azurerm_internet.<name>, tv_gcp_users_icon.<name>.
-                Leaf nodes may be omitted as keys. Use one cloud provider
-                per graph. The graph is drawn as written: arrows to
-                containers, and to shared services such as CloudWatch log
-                groups, ECR or Key Vault, are not drawn; list those services
-                in aws_group.shared_services or azurerm_group.shared_services.
-                Example: {"tv_aws_users.users": ["aws_cloudfront_distribution.cdn"],
-                "aws_cloudfront_distribution.cdn": ["aws_s3_bucket.site"],
-                "aws_vpc.main": ["aws_subnet.app"],
-                "aws_subnet.app": ["aws_lambda_function.api"],
-                "aws_lambda_function.api": ["aws_dynamodb_table.orders"]}
-            format: "png", "svg", "pdf", "dot" or "drawio" (editable in
-                draw.io and Lucidchart). Use "svg" to embed in Markdown.
-            outfile: Output file name without extension, e.g.
-                "three_tier". Files always go to the server's output
-                folder; from a path, only the last part is used.
-            fontsize: Label font size in points.
-            iconsize: Icon size in pixels.
-            title: Heading shown above the diagram, e.g. "Order Platform -
-                Production". Defaults to "Cloud Architecture Diagram".
-            preview: Include a preview image of the diagram in the result.
-            flows: Optional numbered steps drawn as badges on the diagram,
-                with a legend. Keyed by flow name: {"order_request":
-                {"description": "A customer places an order", "steps": [
-                {"resource": "tv_aws_users.users", "detail": "Customer opens
-                the app"}, {"resource": "aws_alb.api~1 ->
-                aws_ecs_fargate.app~1", "detail": "Request routed to a
-                task"}]}}. A step names a node, or an arrow as "<node> ->
-                <node>" in either direction; use the numbered copy
-                (aws_alb.api~1), not the bare name. Steps are numbered
-                across flows. Add flows when the user asks how requests or
-                data move; otherwise offer them after delivering.
-            edge_labels: Optional text on arrows the graph already has, to
-                say what each connection does: {"aws_ecs_fargate.app~1 ->
-                aws_rds_sqlserver.db": "Reads orders"}. Either direction
-                names the arrow; a label never adds one. Keep labels to a
-                few words.
-
-        Returns:
-            {"path", "format", "provider", "title", "files", "graph_path",
-            "node_count", "edge_count"}, plus a preview image. "files" holds
-            the paths of the PNG, SVG, draw.io file and the graph (.tvg.json);
-            "path" is the file in the requested format. "warnings" appears
-            when parts of the graph will not draw as they read, such as an
-            unknown type (with suggestions) or an arrow to a container, or
-            a flow step or edge label that is not drawn: fix the graph, the
-            step or the label and call render_graph again. With flows or
-            edge_labels, "files" also has "annotations", a YAML file for
-            `terravision draw --annotate`.
+        Returns {"path", "format", "provider", "title", "files", "graph_path",
+        "node_count", "edge_count"}, plus a preview image: look at it before
+        presenting the diagram. "files" holds the PNG, SVG, draw.io file and
+        graph (.tvg.json), plus "annotations" (YAML for `terravision draw
+        --annotate`) when flows or edge labels were given. "warnings" lists
+        parts that will not draw as they read (an unknown type, with
+        suggestions; an arrow to a container; a flow step or label not
+        drawn): fix the graph and call again. "next_step" says what to offer
+        the user after presenting it.
         """
         with _tool_errors():
             return _diagram_result(
@@ -255,74 +267,88 @@ def build_server() -> MCPServer:
 
     @apps.tool(resource_uri=VIEW_URI)
     def generate_diagram(
-        source: str,
-        format: str = "png",
-        outfile: str = "architecture",
-        varfile: Optional[List[str]] = None,
-        workspace: str = "default",
-        annotate: str = "",
-        planfile: str = "",
-        graphfile: str = "",
-        upgrade: bool = False,
-        simplified: bool = False,
-        use_tf_names: bool = False,
-        use_resource_names: bool = False,
-        fontsize: Optional[int] = None,
-        iconsize: Optional[int] = None,
-        title: Optional[str] = None,
-        preview: bool = True,
-        flows: Optional[Dict[str, Dict[str, Any]]] = None,
-        edge_labels: Optional[Dict[str, str]] = None,
+        source: Annotated[str, Field(description=_SOURCE_DOC)],
+        format: Annotated[str, Field(description=_FORMAT_DOC)] = "png",
+        outfile: Annotated[
+            str,
+            Field(
+                description=_OUTFILE_DOC
+                + ' The cloud provider is appended: "architecture" becomes'
+                ' "architecture-aws".'
+            ),
+        ] = "architecture",
+        varfile: Annotated[
+            Optional[List[str]], Field(description="Paths to .tfvars files.")
+        ] = None,
+        workspace: Annotated[
+            str, Field(description="Terraform workspace to select.")
+        ] = "default",
+        annotate: Annotated[
+            str, Field(description="Path to a terravision.yml annotation file.")
+        ] = "",
+        planfile: Annotated[
+            str,
+            Field(
+                description="Path to an existing plan JSON (terraform show -json). "
+                "With graphfile, no Terraform run and no cloud credentials are needed."
+            ),
+        ] = "",
+        graphfile: Annotated[
+            str, Field(description="Path to an existing `terraform graph` DOT file.")
+        ] = "",
+        upgrade: Annotated[
+            bool, Field(description="Run `terraform init -upgrade` to refresh modules.")
+        ] = False,
+        simplified: Annotated[
+            bool,
+            Field(description="Show only services, omitting networking containers."),
+        ] = False,
+        use_tf_names: Annotated[
+            bool, Field(description="Label nodes with full Terraform resource names.")
+        ] = False,
+        use_resource_names: Annotated[
+            bool,
+            Field(
+                description="Label nodes with the deployed resource names from the plan."
+            ),
+        ] = False,
+        fontsize: Annotated[Optional[int], Field(description=_FONTSIZE_DOC)] = None,
+        iconsize: Annotated[Optional[int], Field(description=_ICONSIZE_DOC)] = None,
+        title: Annotated[
+            Optional[str],
+            Field(
+                description=_TITLE_DOC + " Overrides a title in the annotation file."
+            ),
+        ] = None,
+        preview: Annotated[bool, Field(description=_PREVIEW_DOC)] = True,
+        flows: Annotated[
+            Optional[Dict[str, Dict[str, Any]]],
+            Field(
+                description=_FLOWS_DOC
+                + " Name nodes as they appear in the .tvg.json graph of an"
+                " earlier render, which can differ from the Terraform addresses."
+            ),
+        ] = None,
+        edge_labels: Annotated[
+            Optional[Dict[str, str]],
+            Field(
+                description=_EDGE_LABELS_DOC
+                + " Name nodes as in the .tvg.json graph of an earlier render."
+            ),
+        ] = None,
     ) -> CallToolResult:
         """Render an architecture diagram from Terraform code to a file.
 
         Uses the official AWS, Azure and GCP icon sets. Because the diagram is
         derived from `terraform plan`, it reflects what the code actually
-        deploys rather than an approximation.
+        deploys rather than an approximation. Runs `terraform init` and
+        `terraform plan` (cloud credentials needed) unless planfile and
+        graphfile are given, so a first call can take minutes.
 
-        Args:
-            source: Terraform directory, Git URL, or tfdata.json replay file.
-                Add //folder to a Git URL for a folder inside the repository,
-                e.g. "https://github.com/org/repo//examples". A repository
-                whose root is a reusable module plans no resources: draw a
-                folder that uses it instead (examples/, an environment).
-            format: Output format. Use "drawio" for a file editable in
-                draw.io, Lucidchart or any mxGraph editor; "svg" or "dot" for
-                other text formats; "png" or "pdf" for images.
-            outfile: Output file name without extension. Files always go to
-                the server's output folder; from a path, only the last part
-                is used. The detected
-                cloud provider is appended, so "architecture" becomes
-                "architecture-aws".
-            varfile: Paths to .tfvars files.
-            workspace: Terraform workspace to select.
-            annotate: Path to a terravision.yml annotation file.
-            planfile: Path to an existing plan JSON. With graphfile, no
-                Terraform run and no cloud credentials are needed.
-            graphfile: Path to an existing `terraform graph` DOT file.
-            upgrade: Run `terraform init -upgrade` to refresh modules.
-            simplified: Show only services, omitting networking containers.
-            use_tf_names: Label nodes with full Terraform resource names.
-            use_resource_names: Label nodes with the deployed resource names
-                from the plan.
-            fontsize: Label font size in points.
-            iconsize: Icon size in pixels.
-            title: Heading shown above the diagram. Overrides any title in
-                the annotation file.
-            preview: Include a preview image of the diagram in the result.
-            flows: Optional numbered steps drawn as badges, with a legend;
-                the same shape as render_graph's flows. Name nodes as they
-                appear in the .tvg.json graph of an earlier render, which
-                can differ from the Terraform addresses.
-            edge_labels: Optional text on existing arrows, the same shape
-                as render_graph's edge_labels, naming nodes as in the
-                .tvg.json graph.
-
-        Returns:
-            {"path", "format", "provider", "title", "files"}, plus a preview
-            image. "files" holds the paths of the PNG, SVG, draw.io file and
-            the graph as .tvg.json, which can be edited and rendered again
-            with render_graph; "path" is the file in the requested format.
+        Returns {"path", "format", "provider", "title", "files"}, plus a
+        preview image. "files" holds the PNG, SVG, draw.io file and the
+        graph as .tvg.json, which can be edited and rendered again with
+        render_graph; "path" is the file in the requested format.
         """
         with _tool_errors():
             return _diagram_result(

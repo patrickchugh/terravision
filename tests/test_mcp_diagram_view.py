@@ -863,7 +863,7 @@ def test_instructions_offer_flows_after_delivering():
     from modules.mcp_server import _INSTRUCTIONS
 
     text = " ".join(_INSTRUCTIONS.split())
-    assert "Include them when the user asks how requests, data or events move" in text
+    assert "when the user asks how requests, data or events move" in text
     assert "offering to add it as numbered steps" in text
 
 
@@ -975,3 +975,29 @@ def test_graph_diagrams_offer_terraform_and_terraform_diagrams_do_not(outdir):
 def test_next_step_reaches_the_model(outdir, client_call):
     result = client_call(lambda c: c.call_tool("render_graph", {"graph": GRAPH}))
     assert "adding that flow to the diagram" in result.content[0].text
+
+
+def test_everything_the_model_reads_fits_claude_codes_limit(client_call):
+    """Claude Code cuts server instructions and each tool description at 2048
+    characters. render_graph's description was 4249, so the flows and
+    edge_labels documentation never reached the model; parameter docs now
+    live in each parameter's schema."""
+    from modules.mcp_server import _INSTRUCTIONS
+
+    assert len(_INSTRUCTIONS) <= 2048
+    for tool in client_call(lambda c: c.list_tools()).tools:
+        assert len(tool.description or "") <= 2048, tool.name
+        for name, spec in tool.input_schema.get("properties", {}).items():
+            assert len(spec.get("description") or "") <= 2048, f"{tool.name}.{name}"
+
+
+def test_diagram_tool_parameters_are_documented(client_call):
+    tools = {t.name: t for t in client_call(lambda c: c.list_tools()).tools}
+    for name in ("render_graph", "generate_diagram"):
+        props = tools[name].input_schema["properties"]
+        undocumented = [p for p, spec in props.items() if not spec.get("description")]
+        assert not undocumented, f"{name}: {undocumented}"
+    assert (
+        "numbered copy"
+        in tools["render_graph"].input_schema["properties"]["flows"]["description"]
+    )
