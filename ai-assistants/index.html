@@ -1571,20 +1571,21 @@
 </ol>
 <p>TerraVision itself runs on your own computer: nothing is uploaded anywhere beyond the conversation you are already having with your assistant.</p>
 <h2 id="set-up-once">Set up (once)<a class="headerlink" href="#set-up-once" title="Permanent link">¶</a></h2>
-<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw), <strong>Git</strong> and <strong>uv</strong> (which runs TerraVision for your assistant). <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
+<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw) and <strong>Git</strong>. <strong>uv</strong> runs TerraVision for Claude Code, Codex, Gemini CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">Windows</label><label for="__tabbed_1_3">Linux</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>With <a href="https://brew.sh">Homebrew</a>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git<span class="w"> </span>uv
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/tap/terraform<span class="w">   </span><span class="c1"># optional: to draw from Terraform code</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>uv<span class="w">                        </span><span class="c1"># not needed for Claude Desktop</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/tap/terraform<span class="w">   </span><span class="c1"># optional: to draw from Terraform code</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>In PowerShell:</p>
 <div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Graphviz</span><span class="p">.</span><span class="n">Graphviz</span> <span class="n">-e</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Git</span><span class="p">.</span><span class="n">Git</span> <span class="n">-e</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">astral-sh</span><span class="p">.</span><span class="n">uv</span> <span class="n">-e</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">astral-sh</span><span class="p">.</span><span class="n">uv</span> <span class="n">-e</span>    <span class="c"># not needed for Claude Desktop</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Hashicorp</span><span class="p">.</span><span class="n">Terraform</span> <span class="n">-e</span>   <span class="c"># optional: to draw from Terraform code</span>
 </span></code></pre></div>
 <p>Then open a <strong>new</strong> terminal, and restart your AI app, so they see the new programs.</p>
@@ -1592,7 +1593,7 @@
 <div class="tabbed-block">
 <p>On Debian and Ubuntu:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh<span class="w">   </span><span class="c1"># Claude Desktop on Linux needs it too</span>
 </span></code></pre></div>
 <p>On Ubuntu 26.04+ and Debian testing, also <code>sudo apt install libgvplugin-neato-layout8</code>. For Terraform, see <a href="https://developer.hashicorp.com/terraform/install">HashiCorp's install guide</a>.</p>
 </div>
