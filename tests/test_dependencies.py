@@ -241,6 +241,118 @@ class TestWindowsGraphvizPath:
         mcp_service._check_binaries(needs_terraform=False)
 
 
+class TestWindowsGitAndSavedPath:
+    """Claude Desktop on Windows starts extensions with a bare PATH, so a Git
+    the user can run in a terminal was invisible, and GitPython's import
+    check took the whole server down."""
+
+    @pytest.fixture
+    def windows(self, monkeypatch, tmp_path):
+        import modules.helpers as helpers
+
+        git_dir = tmp_path / "Git" / "cmd"
+        git_dir.mkdir(parents=True)
+        (git_dir / "git.exe").write_text("")
+        monkeypatch.setattr(helpers.platform, "system", lambda: "Windows")
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: None)
+        monkeypatch.setattr(helpers, "_windows_saved_path", lambda: [])
+        monkeypatch.setattr(helpers, "TOOL_DIRS_ADDED", [])
+        monkeypatch.setenv("ProgramFiles", str(tmp_path))
+        monkeypatch.delenv("ProgramFiles(x86)", raising=False)
+        monkeypatch.delenv("LOCALAPPDATA", raising=False)
+        monkeypatch.setenv("PATH", "C:\\Windows")
+        return git_dir
+
+    def test_git_install_dir_is_appended_to_path(self, windows):
+        import os
+
+        import modules.helpers as helpers
+
+        assert helpers.add_git_to_path() == str(windows)
+        assert os.environ["PATH"] == os.pathsep.join(["C:\\Windows", str(windows)])
+        assert helpers.TOOL_DIRS_ADDED == [("Git", str(windows))]
+
+    def test_git_already_on_path_wins(self, windows, monkeypatch):
+        import os
+
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(helpers.shutil, "which", lambda exe: "C:\\other\\git.exe")
+        assert helpers.add_git_to_path() is None
+        assert os.environ["PATH"] == "C:\\Windows"
+
+    def test_saved_path_entries_are_restored(self, windows, monkeypatch, tmp_path):
+        """Entries from the registry that exist and are missing are added once;
+        missing folders and ones already on PATH (trailing slash or not) are
+        skipped. Folder names avoid ':' so the test also holds on POSIX, where
+        it is the PATH separator."""
+        import os
+
+        import modules.helpers as helpers
+
+        system_dir = tmp_path / "System32"
+        winget_links = tmp_path / "WinGet" / "Links"
+        system_dir.mkdir()
+        winget_links.mkdir(parents=True)
+        monkeypatch.setenv("PATH", str(system_dir))
+        monkeypatch.setattr(
+            helpers,
+            "_windows_saved_path",
+            lambda: [
+                str(system_dir) + "\\",
+                str(winget_links),
+                str(tmp_path / "gone"),
+                str(winget_links),
+            ],
+        )
+        (windows / "git.exe").unlink()
+        helpers.restore_tool_paths()
+        assert os.environ["PATH"].split(os.pathsep) == [
+            str(system_dir),
+            str(winget_links),
+        ]
+
+    def test_preflight_reports_what_it_found(self, windows, monkeypatch, capsys):
+        import os
+
+        import modules.helpers as helpers
+
+        monkeypatch.setattr(
+            helpers.shutil,
+            "which",
+            lambda exe: (
+                "found" if exe != "git" or str(windows) in os.environ["PATH"] else None
+            ),
+        )
+        helpers.check_dependencies(needs_terraform=False)
+        assert (
+            f"Git is installed but not on PATH; using {windows}"
+            in capsys.readouterr().out
+        )
+
+
+def test_import_never_fails_without_git(tmp_path):
+    """With no git anywhere on PATH, TerraVision still imports, so the MCP
+    server starts and can tell the user to install Git."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    env = {
+        k: v for k, v in __import__("os").environ.items() if not k.startswith("GIT_")
+    }
+    env["PATH"] = str(tmp_path)  # an empty folder: no git, nothing else
+    result = subprocess.run(
+        [sys.executable, "-c", "import modules.gitlibs, terravision.terravision"],
+        cwd=Path(__file__).resolve().parents[1],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr[-2000:]
+
+
 class TestMacGraphvizPath:
     """Apps started from the Dock get a PATH without Homebrew or MacPorts."""
 

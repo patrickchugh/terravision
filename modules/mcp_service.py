@@ -340,12 +340,12 @@ def _check_binaries(needs_terraform: bool = True) -> None:
     from modules.helpers import (
         DEPENDENCIES,
         _get_os_family,
-        add_graphviz_to_path,
+        restore_tool_paths,
         get_tf_binary,
         neato_engine_error,
     )
 
-    add_graphviz_to_path()
+    restore_tool_paths()
     missing = _missing_binaries(needs_terraform)
     if not missing:
         engine_error = neato_engine_error()
@@ -1381,11 +1381,11 @@ def setup_status() -> Dict[str, Any]:
     from modules.helpers import (
         DEPENDENCIES,
         _get_os_family,
-        add_graphviz_to_path,
+        restore_tool_paths,
         neato_engine_error,
     )
 
-    add_graphviz_to_path()
+    restore_tool_paths()
     missing_graphviz = [e for e in ("dot", "neato", "gvpr") if not shutil.which(e)]
     engine_error = None if missing_graphviz else neato_engine_error()
     if missing_graphviz:

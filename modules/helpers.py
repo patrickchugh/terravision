@@ -2110,9 +2110,9 @@ DEPENDENCIES: Dict[str, Dict[str, Any]] = {
                 NEATO_PLUGIN_HINT,
             ],
             "windows": [
-                "scoop install graphviz",
+                "winget install --id Graphviz.Graphviz -e",
+                "# or: scoop install graphviz",
                 "# or: choco install graphviz",
-                "# or: winget install --id Graphviz.Graphviz",
             ],
             "default": [
                 "# Install Graphviz using your package manager:",
@@ -2129,7 +2129,7 @@ DEPENDENCIES: Dict[str, Dict[str, Any]] = {
             "macos": ["brew install git"],
             "debian": ["sudo apt update", "sudo apt install git"],
             "wsl": ["sudo apt update", "sudo apt install git"],
-            "windows": ["scoop install git   # or: winget install --id Git.Git"],
+            "windows": ["winget install --id Git.Git -e   # or: scoop install git"],
             "default": ["# Install Git: https://git-scm.com/download"],
         },
     },
@@ -2188,6 +2188,18 @@ VISUALISE_GRAPH_FILE_ERROR = (
 )
 
 
+# Folders added to this process's PATH because a tool was installed but not on
+# PATH, as (tool, folder); the dependency check reports them.
+TOOL_DIRS_ADDED: List[Tuple[str, str]] = []
+
+
+def _append_tool_dir(directory: str, tool: str) -> None:
+    os.environ["PATH"] = os.pathsep.join(
+        p for p in (os.environ.get("PATH", ""), directory) if p
+    )
+    TOOL_DIRS_ADDED.append((tool, directory))
+
+
 def _graphviz_install_dirs() -> List[Path]:
     """Standard Graphviz locations that may be missing from PATH.
 
@@ -2228,11 +2240,109 @@ def add_graphviz_to_path() -> Optional[str]:
     exe = "dot.exe" if platform.system() == "Windows" else "dot"
     for bin_dir in _graphviz_install_dirs():
         if (bin_dir / exe).is_file():
-            os.environ["PATH"] = os.pathsep.join(
-                p for p in (os.environ.get("PATH", ""), str(bin_dir)) if p
-            )
+            _append_tool_dir(str(bin_dir), "Graphviz")
             return str(bin_dir)
     return None
+
+
+def _git_install_dirs() -> List[Path]:
+    """Standard Git locations that may be missing from PATH.
+
+    Apps such as Claude Desktop start their MCP servers with a bare PATH
+    (on Windows, little beyond C:\\Windows\\System32), so a Git the user can
+    run from a terminal is invisible to them. Windows: Git for Windows,
+    installed for all users or just one, and scoop. macOS: Homebrew and
+    MacPorts, as for Graphviz.
+    """
+    system = platform.system()
+    if system == "Windows":
+        dirs = [
+            Path(os.environ[base]) / "Git" / "cmd"
+            for base in ("ProgramFiles", "ProgramFiles(x86)")
+            if os.environ.get(base)
+        ]
+        if os.environ.get("LOCALAPPDATA"):
+            dirs.append(Path(os.environ["LOCALAPPDATA"]) / "Programs" / "Git" / "cmd")
+        dirs.append(Path.home() / "scoop" / "shims")
+        return dirs
+    if system == "Darwin":
+        return [
+            Path(p) for p in ("/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin")
+        ]
+    return []
+
+
+def add_git_to_path() -> Optional[str]:
+    """Use a standard Git install that is not on PATH, as for Graphviz.
+
+    Returns:
+        The directory added to PATH, or None when nothing was changed.
+    """
+    if shutil.which("git"):
+        return None
+    exe = "git.exe" if platform.system() == "Windows" else "git"
+    for bin_dir in _git_install_dirs():
+        if (bin_dir / exe).is_file():
+            _append_tool_dir(str(bin_dir), "Git")
+            return str(bin_dir)
+    return None
+
+
+def _windows_saved_path() -> List[str]:
+    """PATH entries saved for this machine and this user in the registry.
+
+    Every installer (Git, Terraform, winget's Links folder, scoop) records
+    itself here, so it is the PATH a new terminal would get, whatever the
+    starting app passed on.
+    """
+    try:
+        import winreg
+    except ImportError:
+        return []
+    keys = (
+        (
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+        ),
+        (winreg.HKEY_CURRENT_USER, "Environment"),
+    )
+    entries: List[str] = []
+    for root, key in keys:
+        try:
+            with winreg.OpenKey(root, key) as handle:
+                value, _ = winreg.QueryValueEx(handle, "Path")
+        except OSError:
+            continue
+        entries += [os.path.expandvars(e) for e in str(value).split(";") if e.strip()]
+    return entries
+
+
+def restore_tool_paths() -> None:
+    """Make Git, Graphviz and Terraform findable when started without PATH.
+
+    On Windows, the user's and the machine's saved PATH entries that this
+    process lacks are added first; then the standard Git and Graphviz
+    locations. Entries already on PATH are left alone and keep priority.
+    Safe to call more than once.
+    """
+    if platform.system() == "Windows":
+        present = {
+            e.rstrip("\\").lower()
+            for e in os.environ.get("PATH", "").split(os.pathsep)
+            if e
+        }
+        missing = []
+        for entry in _windows_saved_path():
+            key = entry.rstrip("\\").lower()
+            if key not in present and Path(entry).is_dir():
+                present.add(key)
+                missing.append(entry)
+        if missing:
+            os.environ["PATH"] = os.pathsep.join(
+                p for p in (os.environ.get("PATH", ""), *missing) if p
+            )
+    add_git_to_path()
+    add_graphviz_to_path()
 
 
 def neato_engine_error() -> Optional[str]:
@@ -2276,9 +2386,9 @@ def check_dependencies(needs_terraform: bool = True) -> None:
     bundle_dir = Path(__file__).parent
     sys.path.append(str(bundle_dir))
 
-    graphviz_dir = add_graphviz_to_path()
-    if graphviz_dir:
-        click.echo(f"  Graphviz is installed but not on PATH; using {graphviz_dir}")
+    restore_tool_paths()
+    for tool, directory in TOOL_DIRS_ADDED:
+        click.echo(f"  {tool} is installed but not on PATH; using {directory}")
 
     missing: List[Tuple[Dict[str, Any], List[str]]] = []
     for key, info in DEPENDENCIES.items():

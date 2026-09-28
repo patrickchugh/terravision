@@ -17,13 +17,22 @@ from typing import Dict, List, Tuple, Any, Optional
 from urllib.parse import urlparse
 
 import click
-import git
 import requests
-from git import RemoteProgress
 from tqdm import tqdm
 
 import modules.helpers as helpers
-from modules.helpers import *
+
+# GitPython looks for git when it is imported and, by default, raises if it
+# is missing, which took down the whole MCP server in apps that start it
+# with a bare PATH (Claude Desktop on Windows). Find a standard install
+# first, and never fail at import: the dependency checks report a missing
+# Git with the command to install it.
+helpers.restore_tool_paths()
+os.environ.setdefault("GIT_PYTHON_REFRESH", "quiet")
+import git  # noqa: E402
+from git import RemoteProgress  # noqa: E402
+
+from modules.helpers import *  # noqa: E402
 
 
 def _parse_version(version_str: str) -> Optional[Tuple[int, ...]]:
