@@ -2,7 +2,7 @@
 
 
 !!! tip "Using an AI assistant?"
-    You don't need this page. Follow **[Use TerraVision with AI assistants](ai-assistants.md)**: install Graphviz, Git and uv, then connect Claude, Codex, Gemini or Copilot, which install TerraVision themselves.
+    You don't need this page. Follow **[Use TerraVision with AI assistants](ai-assistants.md)**: install Graphviz and Git (and uv, except for Claude Desktop on Windows and macOS), then connect Claude, Codex, Gemini or Copilot, which install TerraVision themselves.
 
 ## System Requirements
 

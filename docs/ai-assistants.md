@@ -11,14 +11,15 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
 ## Set up (once)
 
-**First, the prerequisites.** TerraVision needs **Graphviz** (to draw), **Git** and **uv** (which runs TerraVision for your assistant). **Terraform** (or OpenTofu) is only needed to draw from Terraform code.
+**First, the prerequisites.** TerraVision needs **Graphviz** (to draw) and **Git**. **uv** runs TerraVision for Claude Code, Codex, Gemini CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. **Terraform** (or OpenTofu) is only needed to draw from Terraform code.
 
 === "macOS"
 
     With [Homebrew](https://brew.sh):
 
     ```bash
-    brew install graphviz git uv
+    brew install graphviz git
+    brew install uv                        # not needed for Claude Desktop
     brew install hashicorp/tap/terraform   # optional: to draw from Terraform code
     ```
 
@@ -29,7 +30,7 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
     ```powershell
     winget install --id Graphviz.Graphviz -e
     winget install --id Git.Git -e
-    winget install --id astral-sh.uv -e
+    winget install --id astral-sh.uv -e    # not needed for Claude Desktop
     winget install --id Hashicorp.Terraform -e   # optional: to draw from Terraform code
     ```
 
@@ -41,7 +42,7 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
     ```bash
     sudo apt install graphviz git
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs it too
     ```
 
     On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. For Terraform, see [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).

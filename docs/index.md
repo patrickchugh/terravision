@@ -31,7 +31,7 @@ Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain E
 | A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
 | Terraform in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
 
-Install Graphviz, Git and uv once, then connect your assistant: one command in Claude Code, Codex CLI and Gemini CLI, or one download for Claude Desktop, where the diagram appears right in the chat. Step-by-step for macOS, Windows and Linux: **[Use TerraVision with AI assistants](ai-assistants.md)**.
+Install Graphviz and Git once (plus uv, except for Claude Desktop on Windows and macOS), then connect your assistant: one command in Claude Code, Codex CLI and Gemini CLI, or one download for Claude Desktop, where the diagram appears right in the chat. Step-by-step for macOS, Windows and Linux: **[Use TerraVision with AI assistants](ai-assistants.md)**.
 
 For DevOps teams: the [GitHub Action and CI/CD setups](cicd-integration.md) redraw the diagram whenever the Terraform changes.
 

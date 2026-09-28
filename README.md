@@ -2,7 +2,7 @@
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->
 
-**Turn Terraform or JSON into professional cloud architecture diagrams in official AWS, Azure and GCP style**
+**Turn Terraform or JSON into professional cloud architecture diagrams with official AWS, Azure and GCP styles**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -22,7 +22,7 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ### 1. Install the prerequisites (once)
 
-TerraVision needs **Graphviz** (to draw), **Git** and **uv** (which runs TerraVision for your assistant). **Terraform** is only needed to draw from Terraform code.
+TerraVision needs **Graphviz** (to draw) and **Git**. **uv** runs TerraVision for Claude Code, Codex, Gemini CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. **Terraform** is only needed to draw from Terraform code.
 
 <details open>
 <summary><b>macOS</b></summary>
@@ -30,7 +30,8 @@ TerraVision needs **Graphviz** (to draw), **Git** and **uv** (which runs TerraVi
 With [Homebrew](https://brew.sh):
 
 ```bash
-brew install graphviz git uv
+brew install graphviz git
+brew install uv                        # not needed for Claude Desktop
 brew install hashicorp/tap/terraform   # optional: to draw from Terraform code
 ```
 
@@ -44,7 +45,7 @@ In PowerShell:
 ```powershell
 winget install --id Graphviz.Graphviz -e
 winget install --id Git.Git -e
-winget install --id astral-sh.uv -e
+winget install --id astral-sh.uv -e    # not needed for Claude Desktop
 winget install --id Hashicorp.Terraform -e   # optional: to draw from Terraform code
 ```
 
@@ -57,7 +58,7 @@ Then open a **new** terminal, and restart your AI app, so they see the new progr
 
 ```bash
 sudo apt install graphviz git
-curl -LsSf https://astral.sh/uv/install.sh | sh
+curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs it too
 ```
 
 On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. For Terraform, see [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
@@ -266,7 +267,7 @@ Click any of these to see the interactive HTML output TerraVision produces:
 
 ---
 
-## Basic Usage
+## Advanced Usage Examples
 
 ### Generate a diagram
 
