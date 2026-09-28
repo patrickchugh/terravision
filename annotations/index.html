@@ -2455,7 +2455,7 @@
 </p><div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--annotate<span class="w"> </span>/path/to/annotations.yml
 </span></code></pre></div><p></p>
 <p><strong>Option 3: AI-generated</strong> (automatic)
-- Run with <code>--ai-annotate &lt;backend&gt;</code> and TerraVision writes <code>terravision.ai.yml</code> in the source directory
+- Run with <code>--ai-annotate &lt;backend&gt;</code> and TerraVision writes <code>terravision.ai.yml</code> in the current directory (where you run it)
 - This file is automatically discovered and merged with any existing <code>terravision.yml</code></p>
 <p><strong>Graph files (<code>.tvg.json</code>)</strong>: pass the file with <code>--annotate</code>; it is not auto-loaded. A graph is
 drawn exactly as written, so the file may hold only <code>title</code>, <code>flows</code>, <code>connect</code>, <code>fontsize</code> and
