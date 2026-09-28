@@ -1654,7 +1654,7 @@
 <p>Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.</p>
 <hr>
 <h2 id="get-started-with-your-ai-assistant">Get started with your AI assistant<a class="headerlink" href="#get-started-with-your-ai-assistant" title="Permanent link">¶</a></h2>
-<p>Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:</p>
+<p>Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons:</p>
 <table>
 <thead>
 <tr>
@@ -1671,13 +1671,18 @@
 </tr>
 <tr>
 <td>Terraform code, local or on GitHub</td>
-<td><em>"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"</em></td>
+<td><em>"Draw the architecture of the Terraform in ./infra"</em> or <em>"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"</em></td>
 <td>A diagram of what <code>terraform plan</code> says the code deploys</td>
 </tr>
 <tr>
 <td>A diagram you like</td>
 <td><em>"Write the Terraform for this architecture"</em></td>
-<td>Terraform for the resources, zones and connections in the diagram</td>
+<td>Terraform for the resources, zones and connections, with the diagram's flows and labels kept</td>
+</tr>
+<tr>
+<td>Terraform in a repository</td>
+<td><em>"Keep this diagram up to date in CI"</em></td>
+<td>A workflow that redraws the diagram whenever the Terraform changes</td>
 </tr>
 </tbody>
 </table>
