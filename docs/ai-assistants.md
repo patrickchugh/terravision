@@ -120,7 +120,9 @@ After each diagram, the assistant offers the natural next step: adding the reque
 
 > Draw the architecture of the Terraform in `./infra`.
 
-> Diagram https://github.com/your-org/platform.git//environments/prod
+> Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples
+
+Local folders and Git repositories both work, including private ones you have access to. The `//examples` part points at a folder inside the repository. Many repositories keep a reusable module at their root, which describes nothing on its own; the diagram comes from a folder that uses it, like `examples/` or an environment folder. If you only give the repository, the assistant looks for that folder itself.
 
 TerraVision runs `terraform init` and `terraform plan` on the code and draws what the plan says will be deployed, so conditionals, `count`, `for_each` and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.
 

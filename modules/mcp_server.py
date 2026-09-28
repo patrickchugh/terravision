@@ -282,6 +282,10 @@ def build_server() -> MCPServer:
 
         Args:
             source: Terraform directory, Git URL, or tfdata.json replay file.
+                Add //folder to a Git URL for a folder inside the repository,
+                e.g. "https://github.com/org/repo//examples". A repository
+                whose root is a reusable module plans no resources: draw a
+                folder that uses it instead (examples/, an environment).
             format: Output format. Use "drawio" for a file editable in
                 draw.io, Lucidchart or any mxGraph editor; "svg" or "dot" for
                 other text formats; "png" or "pdf" for images.

@@ -340,7 +340,8 @@ def _run_terraform_plan(vfiles, tfplan_path, debug):
     if result.returncode != 0:
         _tf_error(
             f"Invalid output from '{helpers.get_tf_binary()} plan' command. "
-            f"Try using the {helpers.get_tf_binary()} CLI first to check source files have no errors.",
+            f"Try using the {helpers.get_tf_binary()} CLI first to check source files have no errors. "
+            f"{_MODULE_HINT}",
             debug,
             result,
         )
@@ -465,6 +466,15 @@ def tf_initplan(
         _restore_cloud_backups(cloud_backups)
 
 
+# Many repositories hold a reusable module at their root, which plans nothing
+# (or asks for required variables) until something calls it.
+_MODULE_HINT = (
+    "If the source is a reusable module, draw a folder that uses it instead, "
+    "such as examples/ or an environment folder; for a Git repository, add "
+    "//<folder> to the URL, e.g. https://github.com/org/repo//examples."
+)
+
+
 def make_tf_data(
     tfdata: Dict[str, Any],
     plandata: Dict[str, Any],
@@ -488,8 +498,7 @@ def make_tf_data(
         tfdata["tf_resources_created"] = plandata["resource_changes"]
     else:
         raise helpers.TerravisionError(
-            f"Invalid output from '{helpers.get_tf_binary()} plan' command. Try using the "
-            f"{helpers.get_tf_binary()} CLI first to check source actually generates resources and has no errors.",
+            f"'{helpers.get_tf_binary()} plan' found no resources to create. {_MODULE_HINT}",
             tfdata=tfdata,
         )
     tfdata["tfgraph"] = graphdata

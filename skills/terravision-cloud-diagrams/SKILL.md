@@ -90,6 +90,8 @@ Useful flags: `--title "Payments - Production"`, `--varfile prod.tfvars`, `--wor
 
 If the user only wants the structure as data: `terravision graphdata --source ./tf --outfile architecture.tvg.json`.
 
+**Git repositories** work as the source too, public or private (with the user's Git access): `--source https://github.com/org/repo`, or `https://github.com/org/repo//examples` for a folder inside it. Many repositories hold a reusable module at their root, which plans no resources on its own. If the root fails with "found no resources" or asks for required variables, look in the repository for a folder that uses the module (`examples/`, `environments/prod`, anything with a `provider` block) and draw that with `//folder`.
+
 ## Path B: from a JSON graph (no Terraform)
 
 1. Write a JSON object where each key is a node address `<terraform_resource_type>.<name>` and each value is the list of node addresses it connects to or contains. Read `references/graph-format.md` for the full rules and `references/node-types.md` when unsure which type to use.
