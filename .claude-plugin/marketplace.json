@@ -24,7 +24,7 @@
       "mcpServers": {
         "terravision": {
           "command": "uvx",
-          "args": ["--from", "terravision[mcp]==0.48.2", "terravision", "mcp", "--output-dir", "./diagrams"]
+          "args": ["--from", "terravision[mcp]==0.50.0", "terravision", "mcp", "--output-dir", "./diagrams"]
         }
       }
     }
