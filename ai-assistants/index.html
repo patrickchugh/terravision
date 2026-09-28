@@ -1658,8 +1658,9 @@
 <h2 id="2-from-terraform-code-to-a-diagram">2. From Terraform code to a diagram<a class="headerlink" href="#2-from-terraform-code-to-a-diagram" title="Permanent link">¶</a></h2>
 <blockquote>
 <p>Draw the architecture of the Terraform in <code>./infra</code>.</p>
-<p>Diagram https://github.com/your-org/platform.git//environments/prod</p>
+<p>Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples</p>
 </blockquote>
+<p>Local folders and Git repositories both work, including private ones you have access to. The <code>//examples</code> part points at a folder inside the repository. Many repositories keep a reusable module at their root, which describes nothing on its own; the diagram comes from a folder that uses it, like <code>examples/</code> or an environment folder. If you only give the repository, the assistant looks for that folder itself.</p>
 <p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> on the code and draws what the plan says will be deployed, so conditionals, <code>count</code>, <code>for_each</code> and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.</p>
 <p><code>terraform plan</code> needs the same cloud credentials you would use to run Terraform. Without them, generate the plan once where credentials exist and hand TerraVision the files; no credentials are needed after that:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
