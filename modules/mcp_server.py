@@ -92,22 +92,17 @@ def _icons() -> List[Icon]:
 # description: clients such as Claude Code cut tool descriptions at 2048
 # characters, which dropped everything after the first few parameters.
 _GRAPH_DOC = (
-    "Object mapping each node address to the list of node addresses it "
-    'connects to or contains. Addresses are "<terraform_resource_type>.<name>", '
-    'e.g. "aws_lambda_function.orders", "azurerm_key_vault.secrets", '
-    '"google_cloud_run_service.api". Containers (aws_vpc, aws_subnet, '
-    "tv_aws_az, azurerm_resource_group, tv_gcp_region and so on) list their "
-    'children as connections. Use "~1", "~2" suffixes for numbered copies. '
-    "External actors: tv_aws_users.<name>, tv_aws_internet.<name>, "
-    "tv_aws_mobile_client.<name>, tv_aws_onprem.<name>, "
-    "tv_azurerm_users.<name>, tv_azurerm_internet.<name>, "
-    "tv_gcp_users_icon.<name>. Leaf nodes may be omitted as keys. One cloud "
-    "provider per graph. Drawn as written: arrows to containers, and to "
-    "shared services such as CloudWatch log groups, ECR or Key Vault, are not "
-    "drawn; list those services in aws_group.shared_services or "
+    "Object mapping each node address to the node addresses it connects to or "
+    'contains. Addresses are "<terraform_resource_type>.<name>", e.g. '
+    '"aws_lambda_function.orders". Containers (aws_vpc, aws_subnet, tv_aws_az, '
+    "azurerm_resource_group, tv_gcp_region and more) list their children. Use "
+    '"~1", "~2" for numbered copies. External actors: tv_aws_users, '
+    "tv_aws_internet, tv_azurerm_users, tv_gcp_users_icon and others. Leaf "
+    "nodes may be omitted as keys. One cloud provider per graph. Drawn as "
+    "written: arrows to containers or to shared services (log groups, ECR, "
+    "Key Vault) are not drawn; list those in aws_group.shared_services or "
     'azurerm_group.shared_services. Example: {"tv_aws_users.users": '
-    '["aws_cloudfront_distribution.cdn"], "aws_cloudfront_distribution.cdn": '
-    '["aws_s3_bucket.site"], "aws_vpc.main": ["aws_subnet.app"], '
+    '["aws_cloudfront_distribution.cdn"], "aws_vpc.main": ["aws_subnet.app"], '
     '"aws_subnet.app": ["aws_lambda_function.api"], "aws_lambda_function.api": '
     '["aws_dynamodb_table.orders"]}'
 )
@@ -151,6 +146,47 @@ _EDGE_LABELS_DOC = (
     "one. Keep labels to a few words; offer them with the flows rather than "
     "adding them unasked."
 )
+
+
+# Terraform options shared by the tools that read Terraform code.
+_VarfileArg = Annotated[
+    Optional[List[str]],
+    Field(
+        description="Paths to .tfvars files; different var files can produce "
+        "different architectures from the same code."
+    ),
+]
+_WorkspaceArg = Annotated[str, Field(description="Terraform workspace to select.")]
+_AnnotateArg = Annotated[
+    str, Field(description="Path to a terravision.yml annotation file.")
+]
+_PlanfileArg = Annotated[
+    str,
+    Field(
+        description="Path to an existing plan JSON (terraform show -json). With "
+        "graphfile, Terraform is never run and no cloud credentials are needed."
+    ),
+]
+_GraphfileArg = Annotated[
+    str, Field(description="Path to an existing `terraform graph` DOT file.")
+]
+_UpgradeArg = Annotated[
+    bool, Field(description="Run `terraform init -upgrade` to refresh modules.")
+]
+_SimplifiedArg = Annotated[
+    bool,
+    Field(
+        description="Drop networking containers (VPCs, subnets, security groups) "
+        "and show only the services."
+    ),
+]
+_UseTfNamesArg = Annotated[
+    bool, Field(description="Label nodes with full Terraform resource names.")
+]
+_UseResourceNamesArg = Annotated[
+    bool,
+    Field(description="Label nodes with the deployed resource names from the plan."),
+]
 
 
 @contextlib.contextmanager
@@ -229,26 +265,18 @@ def build_server() -> MCPServer:
     ) -> CallToolResult:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
-        Use this whenever you need a cloud architecture diagram and do NOT have
-        Terraform code. Call diagram_guide first for the rules, worked
-        examples and node types. TerraVision renders the graph with the
-        official AWS, Azure and GCP icon sets and draws each resource inside
-        the VPC, subnet, zone or resource group you nest it in. Use the most
-        specific types: aws_ecs_fargate (not aws_ecs_service), aws_rds_sqlserver,
-        aws_rds_postgres, aws_rds_mysql or aws_rds_aurora (not
-        aws_db_instance), aws_alb or aws_nlb (not aws_lb). Prefer this over
-        Mermaid or hand-drawn SVG for any cloud architecture. Needs only
-        Graphviz and Git; Terraform is not required.
+        Use this for any cloud architecture diagram when you do NOT have
+        Terraform code; prefer it over Mermaid or hand-drawn SVG. Call
+        diagram_guide first for the rules, examples and node types. Each
+        resource is drawn with the official AWS, Azure or GCP icon inside the
+        VPC, subnet, zone or resource group it is nested in. Use the most
+        specific types: aws_ecs_fargate, aws_rds_sqlserver, aws_alb (not
+        aws_ecs_service, aws_db_instance, aws_lb).
 
-        Returns {"path", "format", "provider", "title", "files", "graph_path",
-        "node_count", "edge_count"}, plus a preview image: look at it before
-        presenting the diagram. "files" holds the PNG, SVG, draw.io file and
-        graph (.tvg.json), plus "annotations" (YAML for `terravision draw
-        --annotate`) when flows or edge labels were given. "warnings" lists
-        parts that will not draw as they read (an unknown type, with
-        suggestions; an arrow to a container; a flow step or label not
-        drawn): fix the graph and call again. "next_step" says what to offer
-        the user after presenting it.
+        Returns the saved files (PNG, SVG, draw.io, .tvg.json graph, and
+        annotations YAML when flows or labels were given) and a preview image:
+        check it before presenting the diagram. Fix any "warnings" and call
+        again. "next_step" says what to offer the user afterwards.
         """
         with _tool_errors():
             return _diagram_result(
@@ -388,48 +416,35 @@ def build_server() -> MCPServer:
 
     @mcp.tool()
     def generate_architecture_graph(
-        source: str,
-        varfile: Optional[List[str]] = None,
-        workspace: str = "default",
-        annotate: str = "",
-        planfile: str = "",
-        graphfile: str = "",
-        upgrade: bool = False,
-        simplified: bool = False,
-        services_only: bool = False,
+        source: Annotated[str, Field(description=_SOURCE_DOC)],
+        varfile: _VarfileArg = None,
+        workspace: _WorkspaceArg = "default",
+        annotate: _AnnotateArg = "",
+        planfile: _PlanfileArg = "",
+        graphfile: _GraphfileArg = "",
+        upgrade: _UpgradeArg = False,
+        simplified: _SimplifiedArg = False,
+        services_only: Annotated[
+            bool,
+            Field(
+                description="Return just the deduplicated list of cloud service "
+                "types instead of the full graph. Much smaller; use this first "
+                "when you only need to know what a stack is built from."
+            ),
+        ] = False,
     ) -> Dict[str, Any]:
         """Extract the cloud architecture of Terraform code as structured data.
 
         Runs Terraform, resolves variables, expands count/for_each, groups
         resources into their VPCs, subnets and availability zones, and infers
-        the connections between them. This is the tool to use to reason about
-        an architecture; the diagram tools render this same graph.
+        the connections between them. Use it to reason about an architecture;
+        the diagram tools render this same graph. A tfdata.json source skips
+        Terraform and returns in seconds.
 
-        Args:
-            source: Terraform directory, a Git URL, or a TerraVision
-                tfdata.json replay file. A .json source skips Terraform
-                entirely and returns in seconds.
-            varfile: Paths to .tfvars files. Different var files against the
-                same code produce genuinely different architectures.
-            workspace: Terraform workspace to select.
-            annotate: Path to a terravision.yml annotation file that adds,
-                removes or relabels nodes and connections.
-            planfile: Path to an existing `terraform show -json` plan. With
-                graphfile, Terraform is never invoked and no cloud
-                credentials are needed.
-            graphfile: Path to an existing `terraform graph` DOT file.
-            upgrade: Run `terraform init -upgrade` to refresh modules.
-            simplified: Drop networking containers (VPCs, subnets, security
-                groups) and show only the services.
-            services_only: Return just the deduplicated list of cloud service
-                types instead of the full graph. Much smaller; use this first
-                when you only need to know what a stack is built from.
-
-        Returns:
-            With services_only, {"services", "count", "provider"}. Otherwise
-            {"graphdict", "node_count", "edge_count", "provider"}, where
-            graphdict maps each Terraform resource address to the addresses it
-            connects to or contains.
+        Returns {"graphdict", "node_count", "edge_count", "provider"}, where
+        graphdict maps each Terraform resource address to the addresses it
+        connects to or contains; with services_only, {"services", "count",
+        "provider"}.
         """
         with _tool_errors():
             return mcp_service.run_architecture_graph(
@@ -446,48 +461,39 @@ def build_server() -> MCPServer:
 
     @mcp.tool()
     def generate_interactive_html(
-        source: str,
-        outfile: str = "architecture",
-        varfile: Optional[List[str]] = None,
-        workspace: str = "default",
-        annotate: str = "",
-        planfile: str = "",
-        graphfile: str = "",
-        upgrade: bool = False,
-        simplified: bool = False,
-        use_tf_names: bool = False,
-        use_resource_names: bool = False,
-        fontsize: Optional[int] = None,
-        iconsize: Optional[int] = None,
-        title: Optional[str] = None,
+        source: Annotated[str, Field(description=_SOURCE_DOC)],
+        outfile: Annotated[
+            str,
+            Field(description=_OUTFILE_DOC + " The cloud provider is appended."),
+        ] = "architecture",
+        varfile: _VarfileArg = None,
+        workspace: _WorkspaceArg = "default",
+        annotate: _AnnotateArg = "",
+        planfile: _PlanfileArg = "",
+        graphfile: _GraphfileArg = "",
+        upgrade: _UpgradeArg = False,
+        simplified: _SimplifiedArg = False,
+        use_tf_names: _UseTfNamesArg = False,
+        use_resource_names: _UseResourceNamesArg = False,
+        fontsize: Annotated[Optional[int], Field(description=_FONTSIZE_DOC)] = None,
+        iconsize: Annotated[Optional[int], Field(description=_ICONSIZE_DOC)] = None,
+        title: Annotated[
+            Optional[str],
+            Field(
+                description="Heading shown on the page. Overrides a title in the "
+                "annotation file."
+            ),
+        ] = None,
     ) -> Dict[str, Any]:
         """Render a self-contained interactive HTML diagram for a human to open.
 
         The page embeds the diagram, every resource's metadata and its own
-        JavaScript, so it works offline with no server. Nodes are clickable and
-        searchable. Produce this when someone wants to explore an architecture
-        themselves rather than read a static picture.
+        JavaScript, so it works offline with no server. Nodes are clickable
+        and searchable. Produce this when someone wants to explore an
+        architecture themselves rather than read a static picture. Needs
+        Terraform code; for a JSON graph use render_graph with format "svg".
 
-        Args:
-            source: Terraform directory, Git URL, or tfdata.json replay file.
-            outfile: Output file name without extension; from a path, only
-                the last part is used. The detected provider is appended.
-            varfile: Paths to .tfvars files.
-            workspace: Terraform workspace to select.
-            annotate: Path to a terravision.yml annotation file.
-            planfile: Path to an existing plan JSON.
-            graphfile: Path to an existing `terraform graph` DOT file.
-            upgrade: Run `terraform init -upgrade` to refresh modules.
-            simplified: Show only services, omitting networking containers.
-            use_tf_names: Label nodes with full Terraform resource names.
-            use_resource_names: Label nodes with deployed resource names.
-            fontsize: Label font size in points.
-            iconsize: Icon size in pixels.
-            title: Heading shown on the page. Overrides any title in the
-                annotation file.
-
-        Returns:
-            {"path", "provider"} pointing at the generated .html file.
+        Returns {"path", "provider"} pointing at the generated .html file.
         """
         with _tool_errors():
             return mcp_service.run_interactive_html(
@@ -508,32 +514,31 @@ def build_server() -> MCPServer:
             )
 
     @mcp.tool()
-    def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any]:
+    def diagram_guide(
+        provider: Annotated[
+            str,
+            Field(description='"aws", "azure" or "gcp". One provider per diagram.'),
+        ],
+        pattern: Annotated[
+            Optional[str],
+            Field(
+                description='Name of a pattern from the "patterns" list, to fetch '
+                "that graph."
+            ),
+        ] = None,
+    ) -> Dict[str, Any]:
         """Read this once before calling render_graph.
 
-        Returns the TerraVision graph rules (node types to prefer, which types
-        are containers, what is drawn and what is hidden), worked example
-        graphs and every node type for the provider. It also reports in
-        "setup" whether Graphviz, Git and Terraform are installed: if
-        Graphviz or Git is missing, tell the user what to install before
-        drafting a diagram. Base your graph on the
+        Returns the TerraVision graph rules (types to prefer, containers,
+        what is drawn and what is hidden), worked example graphs, every node
+        type for the provider, and in "setup" whether Graphviz, Git and
+        Terraform are installed: if Graphviz or Git is missing, tell the user
+        what to install before drafting a diagram. Base your graph on the
         closest example and keep its level of detail: availability zones,
-        public and private subnets, NAT gateways routed through an internet
-        gateway to the internet, and shared services in their group.
-
-        It also lists a library of patterns, such as EKS, SageMaker, Step
-        Functions, GKE or AKS, drawn from TerraVision's output for real
-        Terraform. Call again with pattern set to one of their names to get
-        that graph when it matches the request.
-
-        Args:
-            provider: "aws", "azure" or "gcp". One provider per diagram.
-            pattern: Name of a pattern from the "patterns" list, to fetch it.
-
-        Returns:
-            {"provider", "setup", "rules", "examples", "node_types",
-            "patterns", "next_step"}; with pattern, {"provider", "pattern",
-            "description", "graph"}.
+        public and private subnets, NAT gateways routed to the internet, and
+        shared services in their group. It also lists patterns (EKS,
+        SageMaker, Step Functions, GKE, AKS and more) drawn from TerraVision's
+        output for real Terraform; call again with pattern to get one.
         """
         with _tool_errors():
             return mcp_service.diagram_guide(provider, pattern)

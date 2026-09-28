@@ -977,23 +977,30 @@ def test_next_step_reaches_the_model(outdir, client_call):
     assert "adding that flow to the diagram" in result.content[0].text
 
 
-def test_everything_the_model_reads_fits_claude_codes_limit(client_call):
-    """Claude Code cuts server instructions and each tool description at 2048
-    characters. render_graph's description was 4249, so the flows and
-    edge_labels documentation never reached the model; parameter docs now
-    live in each parameter's schema."""
+def test_everything_the_model_reads_fits_client_limits(client_call):
+    """Tool and parameter descriptions stay within 1024 characters, the
+    tightest limit known: OpenAI's API rejects longer function descriptions,
+    and Claude Code cuts at 2048 (render_graph's was 4249, so its flows and
+    edge_labels docs never reached the model there). Server instructions
+    stay within Claude Code's 2048."""
     from modules.mcp_server import _INSTRUCTIONS
 
     assert len(_INSTRUCTIONS) <= 2048
     for tool in client_call(lambda c: c.list_tools()).tools:
-        assert len(tool.description or "") <= 2048, tool.name
+        assert len(tool.description or "") <= 1024, tool.name
         for name, spec in tool.input_schema.get("properties", {}).items():
-            assert len(spec.get("description") or "") <= 2048, f"{tool.name}.{name}"
+            assert len(spec.get("description") or "") <= 1024, f"{tool.name}.{name}"
 
 
 def test_diagram_tool_parameters_are_documented(client_call):
     tools = {t.name: t for t in client_call(lambda c: c.list_tools()).tools}
-    for name in ("render_graph", "generate_diagram"):
+    for name in (
+        "render_graph",
+        "generate_diagram",
+        "generate_architecture_graph",
+        "generate_interactive_html",
+        "diagram_guide",
+    ):
         props = tools[name].input_schema["properties"]
         undocumented = [p for p, spec in props.items() if not spec.get("description")]
         assert not undocumented, f"{name}: {undocumented}"
