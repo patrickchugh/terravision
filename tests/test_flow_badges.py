@@ -17,6 +17,18 @@ from modules.drawing import generate_badge_xlabel, generate_legend_html
 # ---------------------------------------------------------------------------
 
 
+def _fill(image):
+    """The circle's colour: the most common opaque pixel.
+
+    Sampling a single pixel is not enough: where the number lands depends
+    on the fonts Graphviz finds, which differ between machines.
+    """
+    from collections import Counter
+
+    opaque = [p[:3] for p in image.getdata() if p[3] == 255]
+    return Counter(opaque).most_common(1)[0][0]
+
+
 def _badge_png(xlabel):
     """The circle image a badge xlabel points at, and the cell's size."""
     import re
@@ -39,7 +51,7 @@ class TestBadgeXlabelGeneration:
         image, width = _badge_png(generate_badge_xlabel([1]))
         w, h = image.size
         assert abs(w - h) <= 2
-        assert image.getpixel((w // 2, h // 5))[:3] == (0xE7, 0x4C, 0x3C)
+        assert _fill(image) == (0xE7, 0x4C, 0x3C)
         # Transparent near the corner, where a rounded square is still filled.
         assert image.getpixel((int(w * 0.12), int(h * 0.12)))[3] == 0
         assert width == 44
@@ -51,8 +63,7 @@ class TestBadgeXlabelGeneration:
 
     def test_custom_color(self):
         image, _ = _badge_png(generate_badge_xlabel([3], color="#3498DB"))
-        w, h = image.size
-        assert image.getpixel((w // 2, h // 5))[:3] == (0x34, 0x98, 0xDB)
+        assert _fill(image) == (0x34, 0x98, 0xDB)
 
     def test_each_text_gets_its_own_image(self):
         first = generate_badge_xlabel([2, 4, 7])
@@ -61,8 +72,7 @@ class TestBadgeXlabelGeneration:
 
     def test_unsafe_color_falls_back_to_the_default(self):
         image, _ = _badge_png(generate_badge_xlabel([1], color='red" shape=box'))
-        w, h = image.size
-        assert image.getpixel((w // 2, h // 5))[:3] == (0xE7, 0x4C, 0x3C)
+        assert _fill(image) == (0xE7, 0x4C, 0x3C)
 
 
 # ---------------------------------------------------------------------------

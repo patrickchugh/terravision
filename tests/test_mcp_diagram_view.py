@@ -163,6 +163,10 @@ def launched(monkeypatch):
 
     monkeypatch.setattr(subprocess, "Popen", fake_popen)
     monkeypatch.setattr(helpers, "is_wsl", lambda: False)
+    # The desktop lookup runs systemctl through subprocess.run, which needs the
+    # real Popen; on a machine without a desktop session (CI) it would be
+    # reached. Tests that need a session set it up themselves.
+    monkeypatch.setattr(mcp_service, "_systemd_session_env", lambda env: {})
     return calls
 
 
