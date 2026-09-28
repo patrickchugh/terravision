@@ -597,12 +597,21 @@ poetry run terravision draw --source ./infra --ai-annotate restapi
 
 The constants are duplicated across the three provider configs (`cloud_config_aws.py`, `cloud_config_azure.py`, `cloud_config_gcp.py`); update all three if you want a consistent default regardless of which cloud provider is detected in the source.
 
+**All backends** share two sampling settings:
+
+| Variable | Default | Description |
+|---|---|---|
+| `TV_AI_TEMPERATURE` | `0` | Sampling temperature. Set it empty (`TV_AI_TEMPERATURE=`) or to `none` to leave it out of the request, for models that reject it |
+| `TV_AI_MAX_TOKENS` | `10000` | Output token budget (`maxTokens` on Bedrock, `max_tokens` on REST APIs). Raise it for reasoning models, which spend part of it thinking; lower it for models with a smaller output limit |
+
+Some models do not accept a temperature at all, such as OpenAI's GPT models on Bedrock. When Bedrock or a REST endpoint rejects the request for that reason, TerraVision says so and retries once without it, so these models work without any setting.
+
 #### How it works
 
 1. TerraVision builds the graph deterministically (identical to a non-AI run)
 2. The graph inventory + edges + project context (README, HCL comments, tags) are sent to the LLM, which returns YAML annotations
 3. Every resource reference in the response is validated against the deterministic graphdict; references to non-existent nodes or edges are silently dropped before the file is written
-4. The surviving annotations are written to `terravision.ai.yml` in the source directory, with a `generated_by` block recording the backend, model, and timestamp
+4. The surviving annotations are written to `terravision.ai.yml` in the current directory, with a `generated_by` block recording the backend, model, and timestamp
 5. If a user `terravision.yml` also exists, both files are merged (user file takes precedence)
 6. The merged annotations are applied to the graph before rendering
 
@@ -615,7 +624,7 @@ TerraVision uses a two-file annotation model that separates AI-generated suggest
 | `terravision.yml` | User-authored annotations | You (manually) |
 | `terravision.ai.yml` | AI-generated annotations | TerraVision with `--ai-annotate <backend>` |
 
-Both files use the same YAML schema (format 0.2). When both are present in the source directory, they are merged automatically at render time. You never need to edit `terravision.ai.yml` by hand -- it is regenerated on each AI-enabled run.
+Both files use the same YAML schema (format 0.2). TerraVision finds `terravision.ai.yml` in the current directory or the Terraform source directory, and merges it with `terravision.yml` automatically at render time, with or without `--ai-annotate`. You never need to edit `terravision.ai.yml` by hand -- it is regenerated on each AI-enabled run.
 
 **Precedence (highest to lowest):**
 

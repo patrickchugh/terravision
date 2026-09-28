@@ -1,0 +1,9 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_glue_catalog_database.analytics" [label="aws_glue_catalog_database.analytics"];
+  "aws_glue_catalog_table.report" [label="aws_glue_catalog_table.report"];
+  "aws_s3_bucket.reports" [label="aws_s3_bucket.reports"];
+  "aws_glue_catalog_table.report" -> "aws_glue_catalog_database.analytics";
+  "aws_glue_catalog_table.report" -> "aws_s3_bucket.reports";
+}

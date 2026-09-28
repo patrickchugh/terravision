@@ -934,7 +934,7 @@ steps:
       OLLAMA_HOST: http://ollama:11434
 ```
 
-The AI annotations are written to `terravision.ai.yml` in the source directory. You can commit this file alongside the diagram so that subsequent non-AI runs still benefit from the generated labels and flows. If the AI backend is unreachable, the diagram renders without AI annotations (graceful fallback).
+The AI annotations are written to `terravision.ai.yml` in the current directory, where TerraVision runs. You can commit this file alongside the diagram so that subsequent non-AI runs still benefit from the generated labels and flows. If the AI backend is unreachable, a saved `terravision.ai.yml` is used instead; without one, the diagram renders without AI annotations.
 
 ### Pattern 6: Multi-Region/Multi-Environment
 

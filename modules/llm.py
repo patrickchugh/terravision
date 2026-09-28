@@ -59,6 +59,77 @@ _ENV_RESTAPI_KEY = "TV_RESTAPI_KEY"
 _ENV_RESTAPI_MODEL = "TV_RESTAPI_MODEL"
 
 
+# Sampling settings shared by every backend (only one runs per call).
+# Some models reject a temperature outright (e.g. OpenAI GPT-6 Luna on
+# Bedrock), and reasoning models spend part of the output budget thinking
+# (issue #215).
+_ENV_AI_TEMPERATURE = "TV_AI_TEMPERATURE"
+_ENV_AI_MAX_TOKENS = "TV_AI_MAX_TOKENS"
+_DEFAULT_TEMPERATURE = 0.0
+_DEFAULT_MAX_TOKENS = 10000
+
+
+def _ai_temperature() -> Optional[float]:
+    """Temperature to send, or None to leave it out of the request.
+
+    TV_AI_TEMPERATURE unset means 0. Set it empty or to "none" to omit the
+    field for models that reject it.
+    """
+    raw = os.environ.get(_ENV_AI_TEMPERATURE)
+    if raw is None:
+        return _DEFAULT_TEMPERATURE
+    raw = raw.strip()
+    if raw == "" or raw.lower() == "none":
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        click.echo(
+            click.style(
+                f"  WARNING: {_ENV_AI_TEMPERATURE}={raw!r} is not a number; "
+                f"using {_DEFAULT_TEMPERATURE}. Set it empty to leave it out.",
+                fg="yellow",
+            )
+        )
+        return _DEFAULT_TEMPERATURE
+
+
+def _ai_max_tokens() -> int:
+    """Output token budget, from TV_AI_MAX_TOKENS (default 10000)."""
+    raw = (os.environ.get(_ENV_AI_MAX_TOKENS) or "").strip()
+    if not raw:
+        return _DEFAULT_MAX_TOKENS
+    try:
+        value = int(raw)
+        if value > 0:
+            return value
+    except ValueError:
+        pass
+    click.echo(
+        click.style(
+            f"  WARNING: {_ENV_AI_MAX_TOKENS}={raw!r} is not a positive whole "
+            f"number; using {_DEFAULT_MAX_TOKENS}.",
+            fg="yellow",
+        )
+    )
+    return _DEFAULT_MAX_TOKENS
+
+
+def _rejects_temperature(message: str) -> bool:
+    """True when a backend error says the model does not take a temperature."""
+    return "temperature" in (message or "").lower()
+
+
+def _note_temperature_dropped() -> None:
+    click.echo(
+        click.style(
+            "  The model does not accept a temperature; retrying without it. "
+            f"Set {_ENV_AI_TEMPERATURE}= (empty) to skip this retry.",
+            fg="yellow",
+        )
+    )
+
+
 def _bedrock_region() -> str:
     return os.environ.get(_ENV_BEDROCK_REGION) or _DEFAULT_BEDROCK_REGION
 
@@ -538,6 +609,14 @@ def _extract_context_block(
 # ---------------------------------------------------------------------------
 
 
+def _ollama_options() -> Dict[str, Any]:
+    options: Dict[str, Any] = {"seed": 42, "top_p": 1.0, "top_k": 1}
+    temperature = _ai_temperature()
+    if temperature is not None:
+        options["temperature"] = temperature
+    return options
+
+
 def _stream_ollama_text(
     client: ollama.Client,
     prompt: str,
@@ -554,7 +633,7 @@ def _stream_ollama_text(
         model=model,
         keep_alive=-1,
         messages=[{"role": "user", "content": prompt}],
-        options={"temperature": 0, "seed": 42, "top_p": 1.0, "top_k": 1},
+        options=_ollama_options(),
         stream=True,
     )
     full_response = ""
@@ -585,11 +664,26 @@ def _stream_bedrock_text(prompt: str) -> str:
     import boto3  # local import: avoid forcing boto3 onto ollama-only users
 
     client = boto3.client("bedrock-runtime", region_name=_bedrock_region())
-    response = client.converse_stream(
-        modelId=_bedrock_model_id(),
-        messages=[{"role": "user", "content": [{"text": prompt}]}],
-        inferenceConfig={"temperature": 0, "maxTokens": 10000},
-    )
+    config: Dict[str, Any] = {"maxTokens": _ai_max_tokens()}
+    temperature = _ai_temperature()
+    if temperature is not None:
+        config["temperature"] = temperature
+
+    def _converse():
+        return client.converse_stream(
+            modelId=_bedrock_model_id(),
+            messages=[{"role": "user", "content": [{"text": prompt}]}],
+            inferenceConfig=config,
+        )
+
+    try:
+        response = _converse()
+    except Exception as e:  # botocore ClientError (ValidationException)
+        if "temperature" not in config or not _rejects_temperature(str(e)):
+            raise
+        _note_temperature_dropped()
+        config.pop("temperature")
+        response = _converse()
 
     full_response = ""
     for event in response["stream"]:
@@ -614,24 +708,38 @@ def _stream_restapi_text(prompt: str) -> str:
     ``TV_RESTAPI_URL`` / ``TV_RESTAPI_KEY`` / ``TV_RESTAPI_MODEL``.
     """
     url, api_key, model = _restapi_settings()
-    payload = {
+    payload: Dict[str, Any] = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": True,
-        "temperature": 0,
-        "max_tokens": 10000,
+        "max_tokens": _ai_max_tokens(),
     }
-    response = requests.post(
-        url,
-        json=payload,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-            "Accept": "text/event-stream",
-        },
-        stream=True,
-        timeout=300,
-    )
+    temperature = _ai_temperature()
+    if temperature is not None:
+        payload["temperature"] = temperature
+
+    def _post():
+        return requests.post(
+            url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+                "Accept": "text/event-stream",
+            },
+            stream=True,
+            timeout=300,
+        )
+
+    response = _post()
+    if (
+        response.status_code == 400
+        and "temperature" in payload
+        and _rejects_temperature(response.text)
+    ):
+        _note_temperature_dropped()
+        payload.pop("temperature")
+        response = _post()
     response.raise_for_status()
 
     full_response = ""

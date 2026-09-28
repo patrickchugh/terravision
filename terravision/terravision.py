@@ -319,15 +319,23 @@ def compile_tfdata(
         tfdata["graphdict"] = helpers.sort_graphdict(tfdata["graphdict"])
         _print_graph_debug(tfdata["graphdict"], "Enriched graphviz dictionary")
 
-        if aibackend and "all_resource" in tfdata:
+        ai_dict = None
+        if aibackend:
             ai_dict = llm.generate_ai_annotations(
                 tfdata,
                 aibackend,
                 source_dir=source if isinstance(source, str) else None,
                 output_dir=None,
             )
-            if ai_dict:
-                tfdata = annotations.apply_ai_annotations(tfdata, ai_dict)
+        # Without fresh AI output (no --ai-annotate, or the model call failed),
+        # a saved terravision.ai.yml from an earlier run applies instead, at
+        # the lowest precedence. It was loaded but never applied (issue #214).
+        # Replays (tfdata.json) are left as they were captured, to reproduce
+        # the original run.
+        if not already_processed:
+            ai_dict = ai_dict or tfdata.get("ai_annotations")
+        if ai_dict:
+            tfdata = annotations.apply_ai_annotations(tfdata, ai_dict)
     return tfdata
 
 

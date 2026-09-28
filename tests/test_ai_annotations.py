@@ -852,3 +852,189 @@ def test_us2_live_bedrock_title_and_actors(tmp_path):
     assert (
         title != "Cloud Architecture Diagram"
     ), "Title must not be the default placeholder"
+
+
+# ---------------------------------------------------------------------------
+# A saved terravision.ai.yml applies without --ai-annotate (issue #214)
+# ---------------------------------------------------------------------------
+
+
+GLUE_FIXTURE = (
+    Path(__file__).parent / "fixtures" / "aws_terraform" / "glue_catalog_planfile"
+)
+
+
+def _draw_planfile(tmp_path, monkeypatch, ai_yml=None, extra_args=()):
+    """Draw the Glue fixture from its plan file, as CI pipelines do."""
+    import shutil
+
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    source = tmp_path / "infra"
+    shutil.copytree(GLUE_FIXTURE, source)
+    if ai_yml:
+        (source / "terravision.ai.yml").write_text(ai_yml)
+    monkeypatch.chdir(tmp_path)
+    result = CliRunner().invoke(
+        cli,
+        ["draw", "--source", str(source), "--planfile", str(source / "plan.json"),
+         "--graphfile", str(source / "graph.dot"), "--format", "dot", *extra_args],
+        catch_exceptions=False,
+    )  # fmt: skip
+    return result, tmp_path / "architecture-aws.dot.dot"
+
+
+SAVED_AI = "format: 0.2\ntitle: Saved AI Title\n"
+
+
+def test_saved_ai_annotations_apply_without_ai_annotate(tmp_path, monkeypatch):
+    result, dot = _draw_planfile(tmp_path, monkeypatch, SAVED_AI)
+    assert result.exit_code == 0, result.output
+    assert "Saved AI Title" in dot.read_text()
+
+
+def test_saved_ai_annotations_apply_when_the_model_call_fails(tmp_path, monkeypatch):
+    """A failed --ai-annotate falls back to the saved file, not to none."""
+    import terravision.terravision as tv
+
+    monkeypatch.setattr(llm, "generate_ai_annotations", lambda *a, **k: None)
+    monkeypatch.setattr(tv, "preflight_check", lambda *a, **k: None)
+    result, dot = _draw_planfile(
+        tmp_path, monkeypatch, SAVED_AI, ["--ai-annotate", "ollama"]
+    )
+    assert result.exit_code == 0, result.output
+    assert "Saved AI Title" in dot.read_text()
+
+
+def test_replays_are_drawn_as_captured(tmp_path, monkeypatch):
+    """A tfdata.json replay reproduces its run; captured AI annotations are
+    not applied on top."""
+    import json
+
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    replay = json.loads(
+        (Path(__file__).parent / "json" / "bastion-tfdata.json").read_text()
+    )
+    replay["ai_annotations"] = {"format": "0.2", "title": "Captured AI Title"}
+    (tmp_path / "tfdata.json").write_text(json.dumps(replay))
+    monkeypatch.chdir(tmp_path)
+    result = CliRunner().invoke(
+        cli, ["draw", "--source", "tfdata.json", "--format", "dot"]
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        "Captured AI Title" not in (tmp_path / "architecture-aws.dot.dot").read_text()
+    )
+
+
+# ---------------------------------------------------------------------------
+# Temperature and token budget (issue #215)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [(None, 0.0), ("", None), ("none", None), ("0.3", 0.3), ("hot", 0.0)],
+)
+def test_ai_temperature_setting(monkeypatch, value, expected):
+    if value is None:
+        monkeypatch.delenv("TV_AI_TEMPERATURE", raising=False)
+    else:
+        monkeypatch.setenv("TV_AI_TEMPERATURE", value)
+    assert llm._ai_temperature() == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected", [(None, 10000), ("4000", 4000), ("0", 10000), ("lots", 10000)]
+)
+def test_ai_max_tokens_setting(monkeypatch, value, expected):
+    if value is None:
+        monkeypatch.delenv("TV_AI_MAX_TOKENS", raising=False)
+    else:
+        monkeypatch.setenv("TV_AI_MAX_TOKENS", value)
+    assert llm._ai_max_tokens() == expected
+
+
+class _FakeBedrock:
+    """converse_stream that rejects a temperature, like GPT-6 Luna."""
+
+    def __init__(self):
+        self.configs = []
+
+    def converse_stream(self, **kwargs):
+        from botocore.exceptions import ClientError
+
+        config = dict(kwargs["inferenceConfig"])
+        self.configs.append(config)
+        if "temperature" in config:
+            raise ClientError(
+                {
+                    "Error": {
+                        "Code": "ValidationException",
+                        "Message": "This model doesn't support the temperature "
+                        "field. Remove temperature and try again.",
+                    }
+                },
+                "ConverseStream",
+            )
+        return {"stream": [{"contentBlockDelta": {"delta": {"text": "ok"}}}]}
+
+
+def test_bedrock_retries_without_a_rejected_temperature(monkeypatch):
+    import boto3
+
+    fake = _FakeBedrock()
+    monkeypatch.setattr(boto3, "client", lambda *a, **k: fake)
+    monkeypatch.delenv("TV_AI_TEMPERATURE", raising=False)
+    monkeypatch.setenv("TV_AI_MAX_TOKENS", "4000")
+    assert llm._stream_bedrock_text("prompt") == "ok"
+    assert fake.configs == [
+        {"maxTokens": 4000, "temperature": 0.0},
+        {"maxTokens": 4000},
+    ]
+
+
+def test_bedrock_omits_temperature_when_set_empty(monkeypatch):
+    import boto3
+
+    fake = _FakeBedrock()
+    monkeypatch.setattr(boto3, "client", lambda *a, **k: fake)
+    monkeypatch.setenv("TV_AI_TEMPERATURE", "")
+    assert llm._stream_bedrock_text("prompt") == "ok"
+    assert fake.configs == [{"maxTokens": 10000}]
+
+
+def test_restapi_retries_without_a_rejected_temperature(monkeypatch):
+    sent = []
+
+    class _Response:
+        def __init__(self, status, text, lines=()):
+            self.status_code, self.text, self._lines = status, text, lines
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise llm.requests.HTTPError(self.text)
+
+        def iter_lines(self, decode_unicode=True):
+            return iter(self._lines)
+
+    def fake_post(url, json=None, **kwargs):
+        sent.append(dict(json))
+        if "temperature" in json:
+            return _Response(400, '{"error": "Unsupported parameter: temperature"}')
+        return _Response(
+            200,
+            "",
+            ['data: {"choices": [{"delta": {"content": "ok"}}]}', "data: [DONE]"],
+        )
+
+    monkeypatch.setattr(llm.requests, "post", fake_post)
+    monkeypatch.setattr(llm, "_restapi_settings", lambda: ("http://x", "k", "m"))
+    monkeypatch.delenv("TV_AI_TEMPERATURE", raising=False)
+    assert llm._stream_restapi_text("prompt") == "ok"
+    assert ["temperature" in p for p in sent] == [True, False]

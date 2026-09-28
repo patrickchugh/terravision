@@ -128,7 +128,7 @@ terravision draw --source ./path-to-your-terraform --annotate /path/to/annotatio
 ```
 
 **Option 3: AI-generated** (automatic)
-- Run with `--ai-annotate <backend>` and TerraVision writes `terravision.ai.yml` in the source directory
+- Run with `--ai-annotate <backend>` and TerraVision writes `terravision.ai.yml` in the current directory (where you run it)
 - This file is automatically discovered and merged with any existing `terravision.yml`
 
 **Graph files (`.tvg.json`)**: pass the file with `--annotate`; it is not auto-loaded. A graph is

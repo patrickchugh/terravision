@@ -375,7 +375,7 @@ RESOURCE_HANDLER_CONFIGS = {
         ],
     },
     "aws_glue_catalog_table": {
-        "description": "Hybrid: Link Glue Catalog tables to databases and S3 buckets",
+        "description": "Config-Only: Link Glue Catalog tables to the S3 buckets they read (tables reach their databases through the Terraform graph)",
         "transformations": [
             {
                 "operation": "link_by_metadata_pattern",
@@ -387,7 +387,6 @@ RESOURCE_HANDLER_CONFIGS = {
                 },
             },
         ],
-        "additional_handler_function": "aws_handle_glue_catalog",
     },
     "aws_appsync_graphql_api": {
         "description": "Config-Only: Consolidate AppSync resources + delete resolver nodes (consolidation via AWS_CONSOLIDATED_NODES)",

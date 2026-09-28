@@ -404,6 +404,8 @@ Three AI backends generate annotation files:
 
 **REST API**: Any OpenAI-compatible `/v1/chat/completions` endpoint with SSE streaming. Configured via `TV_RESTAPI_URL`, `TV_RESTAPI_KEY`, and `TV_RESTAPI_MODEL` (all required). Works with OpenAI, Anthropic via LiteLLM, vLLM, LM Studio, OpenRouter, or any custom proxy speaking the OpenAI schema.
 
+**All backends**: `TV_AI_TEMPERATURE` (default 0; empty or `none` omits it) and `TV_AI_MAX_TOKENS` (default 10000). Bedrock and REST retry once without the temperature when the model rejects it (issue #215). A saved `terravision.ai.yml` applies whenever a run produces no fresh AI output, with or without `--ai-annotate` (issue #214).
+
 The old `refine_with_llm()` function and provider-specific `*_REFINEMENT_PROMPT` constants have been removed. They are replaced by:
 
 - **`generate_ai_annotations(tfdata, backend, source_dir)`** in `modules/llm.py`: Assembles a prompt from the graphdict and HCL context, streams the LLM response, validates resource references, and writes `terravision.ai.yml` with `generated_by` metadata. Uses a single `ANNOTATION_PROMPT` constant (not per-provider prompts). The deterministic graph is never modified by AI.
