@@ -1612,6 +1612,7 @@
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>terravision-cloud-diagrams@terravision
 </span></code></pre></div>
 <p>This installs the TerraVision skill and its MCP server together. Start a new Claude Code session afterwards. Diagrams are saved in a <code>diagrams</code> folder in your project.</p>
+<p>The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If <code>/mcp</code> shows TerraVision failed to connect, choose <strong>Reconnect</strong>. To avoid it, install it ahead of time: <code>uvx --from "terravision[mcp]" terravision --version</code>.</p>
 </div>
 <div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>https://github.com/patrickchugh/terravision
