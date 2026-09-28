@@ -7,13 +7,13 @@
       
       
       
-        <link rel="canonical" href="https://patrickchugh.github.io/terravision/graph-format/">
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/ai-assistants/">
       
       
-        <link rel="prev" href="../ai-assistants/">
+        <link rel="prev" href="..">
       
       
-        <link rel="next" href="../node-types/">
+        <link rel="next" href="../graph-format/">
       
       
         
@@ -24,7 +24,7 @@
     
     
       
-        <title>Graph Format (JSON input) - TerraVision</title>
+        <title>Use with AI assistants - TerraVision</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#terravision-graph-format-tvg" class="md-skip">
+        <a href="#use-terravision-with-ai-assistants" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Graph Format (JSON input)
+              Use with AI assistants
             
           </span>
         </div>
@@ -249,9 +249,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../ai-assistants/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -268,11 +270,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../graph-format/" class="md-tabs__link">
         
   
   
@@ -485,33 +485,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../ai-assistants/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Use with AI assistants
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -531,7 +504,7 @@
   <span class="md-ellipsis">
     
   
-    Graph Format (JSON input)
+    Use with AI assistants
   
 
     
@@ -549,7 +522,7 @@
   <span class="md-ellipsis">
     
   
-    Graph Format (JSON input)
+    Use with AI assistants
   
 
     
@@ -575,10 +548,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#the-format-in-one-paragraph" class="md-nav__link">
+  <a href="#set-up-once" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The format in one paragraph
+        Set up (once)
       
     </span>
   </a>
@@ -586,10 +559,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#file-extension" class="md-nav__link">
+  <a href="#1-from-a-description-to-a-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File extension
+        1. From a description to a diagram
       
     </span>
   </a>
@@ -597,10 +570,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rules" class="md-nav__link">
+  <a href="#2-from-terraform-code-to-a-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rules
+        2. From Terraform code to a diagram
       
     </span>
   </a>
@@ -608,10 +581,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#drawn-as-written" class="md-nav__link">
+  <a href="#3-from-a-diagram-to-terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Drawn as written
+        3. From a diagram to Terraform
       
     </span>
   </a>
@@ -619,10 +592,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#full-examples" class="md-nav__link">
+  <a href="#4-keep-the-diagram-up-to-date-in-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Full examples
+        4. Keep the diagram up to date in CI
       
     </span>
   </a>
@@ -630,10 +603,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-not-mermaid" class="md-nav__link">
+  <a href="#what-you-see" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why not Mermaid?
+        What you see
       
     </span>
   </a>
@@ -641,10 +614,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+  <a href="#tips" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting the graph from real infrastructure instead
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
       
     </span>
   </a>
@@ -655,6 +639,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph-format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Format (JSON input)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1438,10 +1449,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#the-format-in-one-paragraph" class="md-nav__link">
+  <a href="#set-up-once" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The format in one paragraph
+        Set up (once)
       
     </span>
   </a>
@@ -1449,10 +1460,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#file-extension" class="md-nav__link">
+  <a href="#1-from-a-description-to-a-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File extension
+        1. From a description to a diagram
       
     </span>
   </a>
@@ -1460,10 +1471,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rules" class="md-nav__link">
+  <a href="#2-from-terraform-code-to-a-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rules
+        2. From Terraform code to a diagram
       
     </span>
   </a>
@@ -1471,10 +1482,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#drawn-as-written" class="md-nav__link">
+  <a href="#3-from-a-diagram-to-terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Drawn as written
+        3. From a diagram to Terraform
       
     </span>
   </a>
@@ -1482,10 +1493,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#full-examples" class="md-nav__link">
+  <a href="#4-keep-the-diagram-up-to-date-in-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Full examples
+        4. Keep the diagram up to date in CI
       
     </span>
   </a>
@@ -1493,10 +1504,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-not-mermaid" class="md-nav__link">
+  <a href="#what-you-see" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why not Mermaid?
+        What you see
       
     </span>
   </a>
@@ -1504,10 +1515,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-the-graph-from-real-infrastructure-instead" class="md-nav__link">
+  <a href="#tips" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting the graph from real infrastructure instead
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference
       
     </span>
   </a>
@@ -1531,7 +1553,7 @@
 
 
   
-    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/graph-format.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/ai-assistants.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
     </a>
@@ -1539,148 +1561,148 @@
   
 
 
-<h1 id="terravision-graph-format-tvg">TerraVision Graph Format (TVG)<a class="headerlink" href="#terravision-graph-format-tvg" title="Permanent link">¶</a></h1>
-<p>TerraVision can draw a professional cloud architecture diagram from a plain JSON file, with no Terraform code and no cloud credentials. This is the fastest way for a person or an AI agent to get a diagram that uses the official AWS, Azure and GCP icon sets and industry-standard grouping (VPCs, subnets, resource groups, regions, zones).</p>
-<p>Schema: <code>https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json</code></p>
-<h2 id="the-format-in-one-paragraph">The format in one paragraph<a class="headerlink" href="#the-format-in-one-paragraph" title="Permanent link">¶</a></h2>
-<p>A TVG file is a JSON object. Each key is a <strong>node address</strong>, <code>&lt;type&gt;.&lt;name&gt;</code>, where <code>&lt;type&gt;</code> is a Terraform resource type such as <code>aws_lambda_function</code>, <code>azurerm_key_vault</code> or <code>google_cloud_run_service</code>, and <code>&lt;name&gt;</code> is any label you like. Each value is the <strong>list of node addresses that node connects to or contains</strong>. That is the whole format.</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"tv_aws_users.users"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_cloudfront_distribution.cdn"</span><span class="p">],</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"aws_cloudfront_distribution.cdn"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_s3_bucket.static_site"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"aws_vpc.main"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_subnet.public~1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_subnet.private~1"</span><span class="p">],</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"aws_subnet.public~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_alb.api"</span><span class="p">],</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"aws_subnet.private~1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"aws_alb.api"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_lambda_function.orders"</span><span class="p">],</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"aws_lambda_function.orders"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws_dynamodb_table.orders"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aws_sqs_queue.events"</span><span class="p">]</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>Render it:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg<span class="w">     </span><span class="c1"># also png, pdf, dot, drawio</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--title<span class="w"> </span><span class="s2">"Order Platform - Production"</span>
-</span></code></pre></div>
-<p>Only Graphviz and Git are required for this mode, the same minimum as every TerraVision command. Terraform is not invoked and does not need to be installed.</p>
-<h2 id="file-extension">File extension<a class="headerlink" href="#file-extension" title="Permanent link">¶</a></h2>
-<p>Save TVG files with the <code>.tvg.json</code> extension, for example <code>architecture.tvg.json</code>. It is still a JSON file, so every editor and JSON tool handles it, and the <code>.tvg</code> part marks it as a TerraVision Graph. TerraVision also accepts any other file ending in <code>.json</code>. <code>terravision graphdata</code> and the MCP <code>render_graph</code> tool both write <code>.tvg.json</code> files.</p>
-<h2 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">¶</a></h2>
+<h1 id="use-terravision-with-ai-assistants">Use TerraVision with AI assistants<a class="headerlink" href="#use-terravision-with-ai-assistants" title="Permanent link">¶</a></h1>
+<p>Ask your AI assistant for a cloud architecture diagram in plain English, and TerraVision draws it with the official AWS, Azure and GCP icons, grouped into VPCs, subnets, zones and resource groups the way a cloud architect would. It fits every stage of an architecture's life:</p>
 <ol>
-<li>
-<p><strong>Node address</strong> = <code>&lt;type&gt;.&lt;name&gt;</code>. The type picks the icon. See <a href="../node-types/">node-types.md</a> for the full list; unknown types, including misspelt ones, get a generic icon for their provider without any error. Pick the specific type where Terraform has a generic one, because a graph file carries no attributes to refine it:</p>
-<table>
-<thead>
-<tr>
-<th>For</th>
-<th>Use</th>
-<th>Not</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Application / Network Load Balancer</td>
-<td><code>aws_alb</code>, <code>aws_nlb</code></td>
-<td><code>aws_lb</code> (generic Elastic Load Balancing icon)</td>
-</tr>
-<tr>
-<td>ECS on Fargate</td>
-<td><code>aws_ecs_fargate</code></td>
-<td><code>aws_ecs_service</code> (generic ECS icon)</td>
-</tr>
-<tr>
-<td>RDS by engine</td>
-<td><code>aws_rds_postgres</code>, <code>aws_rds_mysql</code>, <code>aws_rds_sqlserver</code>, <code>aws_rds_oracle</code>, <code>aws_rds_mariadb</code>, <code>aws_rds_aurora</code></td>
-<td><code>aws_db_instance</code> (generic RDS icon)</td>
-</tr>
-<tr>
-<td>EKS cluster</td>
-<td><code>aws_eks_service</code></td>
-<td><code>aws_eks_cluster</code> (draws EC2 instances)</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>
-<p><strong>Connections vs containment.</strong> If the source node is a container, its targets are drawn <em>inside</em> it. Otherwise an arrow is drawn from source to target. Container types:</p>
-<ul>
-<li>AWS: <code>aws_vpc</code>, <code>aws_subnet</code>, <code>tv_aws_az</code> (the older name <code>aws_az</code> also works), <code>aws_security_group</code>, <code>aws_autoscaling_group</code>, <code>aws_appautoscaling_target</code>, <code>aws_group</code>, <code>aws_account</code>, <code>tv_aws_region</code>, <code>tv_aws_onprem</code></li>
-<li>Azure: <code>azurerm_resource_group</code>, <code>azurerm_virtual_network</code>, <code>azurerm_subnet</code>, <code>azurerm_group</code>, <code>tv_azurerm_zone</code>, <code>tv_azure_onprem</code></li>
-<li>GCP: <code>google_project</code>, <code>google_compute_network</code>, <code>google_compute_subnetwork</code>, <code>google_container_cluster</code>, <code>google_container_node_pool</code>, <code>google_compute_instance_group</code>, <code>google_compute_firewall</code>, <code>tv_gcp_region</code>, <code>tv_gcp_zone</code>, and the <code>tv_gcp_*</code> group boxes in rule 5</li>
-</ul>
-<p>Some of these read like single services but are boxes: "<code>google_container_cluster.gke</code> → <code>google_sql_database_instance.db</code>" draws Cloud SQL <em>inside</em> a GKE box, and an autoscaling group or security group contains its instances. To show a connection to one of them, point the arrow at a node inside it.
-3. <strong>Leaf nodes</strong> that only appear as targets may be left out as keys; they are drawn as nodes with no outgoing connections. Listing them with <code>[]</code> is equivalent, and is the complete form that <code>terravision graphdata</code> writes. When a node has numbered copies, target the copies (<code>aws_subnet.private~1</code>): an unnumbered name next to its numbered copies can be drawn as an extra, separate node.
-4. <strong>Numbered copies.</strong> Append <code>~1</code>, <code>~2</code>, ... to make distinct instances that share a name, typically one per availability zone.
-5. <strong>External actors.</strong> Use pseudo-types: <code>tv_aws_users</code>, <code>tv_aws_internet</code>, <code>tv_aws_mobile_client</code>, <code>tv_aws_onprem</code>, <code>tv_azurerm_users</code>, <code>tv_azurerm_internet</code>, <code>tv_azure_onprem</code>, <code>tv_gcp_users_icon</code>. For GCP, <code>tv_gcp_users</code>, <code>tv_gcp_onprem</code> and <code>tv_gcp_external_saas</code> are group boxes that contain other nodes (like a VPC), not single icons, and there is no GCP internet icon yet.
-6. <strong>Regions and zones.</strong> <code>tv_aws_region.&lt;name&gt;</code>, <code>tv_aws_az.&lt;name&gt;</code>, <code>tv_azurerm_zone.&lt;name&gt;</code>, <code>tv_gcp_region.&lt;name&gt;</code>, <code>tv_gcp_zone.&lt;name&gt;</code> are containers.
-7. <strong>Modules.</strong> A <code>module.&lt;modname&gt;.</code> prefix, as <code>terravision graphdata</code> writes it, is accepted but draws no module boundary; leave it out when writing a graph by hand.
-8. <strong>One provider per graph.</strong> The diagram's cloud frame (AWS Cloud, Azure, Google Cloud) and its drawing conventions come from the resource type prefixes. A graph that mixes <code>aws_*</code>, <code>azurerm_*</code> and <code>google_*</code> resources (including their <code>tv_*</code> actors) is rejected with an error; draw one diagram per provider.
-9. <strong>Labels and title.</strong> Names are prettified automatically (<code>aws_db_instance.postgres~1</code> becomes "DB Instance Postgres"). Use lowercase snake_case names: hyphens and capitals are mangled (<code>Orders-Table</code> becomes "Orders"). Pass <code>--use-tf-names</code> to label with the raw address instead. The graph cannot carry a title; pass <code>--title</code> (or <code>title</code> to the MCP tools), otherwise the heading is "Cloud Architecture Diagram".
-10. <strong>Flows.</strong> Numbered steps drawn as badges, with a legend, show how a request or data moves. Pass <code>flows</code> to the MCP tools, or put a <code>flows:</code> section in a YAML file and pass <code>--annotate &lt;file&gt;</code>: <code>{"order": {"description": "A customer places an order", "steps": [{"resource": "tv_aws_users.users", "detail": "Customer opens the app"}, {"resource": "aws_alb.api~1 -&gt; aws_ecs_fargate.app~1", "detail": "Request routed to a task"}]}}</code>. A step names a node, or an arrow as <code>&lt;node&gt; -&gt; &lt;node&gt;</code> in either direction; name the numbered copy (<code>aws_alb.api~1</code>), never the bare name. Steps on containers, missing nodes or missing arrows draw no badge and come back as warnings. For a graph, an annotation file may hold only <code>title</code>, <code>flows</code>, <code>connect</code> (labels on existing arrows, rule 11), <code>fontsize</code> and <code>iconsize</code>; anything that would change the drawing belongs in the graph. Add flows when the user asks how requests, data or events move; otherwise deliver the plain diagram, explain the flow in your reply, and end by offering to add it as numbered steps.
-11. <strong>Edge labels.</strong> A few words on an arrow say what the connection does ("Reads secrets", "Publishes events"). Pass <code>edge_labels</code> to the MCP tools as <code>{"aws_ecs_fargate.app~1 -&gt; aws_rds_sqlserver.db": "Reads orders"}</code>, or on the command line put them in the annotation file's <code>connect:</code> section (<code>connect: {aws_ecs_fargate.app~1: [{aws_rds_sqlserver.db: Reads orders}]}</code>). Either direction names the arrow. A label never adds an arrow: one on a missing arrow, or an arrow to a container, is not drawn and comes back as a warning. Add labels when the user asks what the connections do; otherwise offer them together with flows after delivering the diagram.</p>
-</li>
+<li><strong>A description → a diagram.</strong> Describe the system, or let the assistant design one, and get a diagram in seconds. No Terraform needed.</li>
+<li><strong>Terraform → a diagram.</strong> Point the assistant at Terraform code and get a diagram of what that code actually deploys.</li>
+<li><strong>A diagram → Terraform.</strong> Once a design looks right, ask the assistant to write the Terraform for it.</li>
+<li><strong>Terraform → an up-to-date diagram, automatically.</strong> A CI workflow redraws the diagram whenever the Terraform changes.</li>
 </ol>
-<h2 id="drawn-as-written">Drawn as written<a class="headerlink" href="#drawn-as-written" title="Permanent link">¶</a></h2>
-<p>TerraVision draws a graph file as written. Unlike a diagram from Terraform code, nothing is added, moved, grouped or merged for you. A few drawing rules still apply and explain most surprises:</p>
+<p>TerraVision itself runs on your own computer: nothing is uploaded anywhere beyond the conversation you are already having with your assistant.</p>
+<h2 id="set-up-once">Set up (once)<a class="headerlink" href="#set-up-once" title="Permanent link">¶</a></h2>
+<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw), <strong>Git</strong> and <strong>uv</strong> (which runs TerraVision for your assistant). <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">Windows</label><label for="__tabbed_1_3">Linux</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>With <a href="https://brew.sh">Homebrew</a>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git<span class="w"> </span>uv
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/tap/terraform<span class="w">   </span><span class="c1"># optional: to draw from Terraform code</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>In PowerShell:</p>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Graphviz</span><span class="p">.</span><span class="n">Graphviz</span> <span class="n">-e</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Git</span><span class="p">.</span><span class="n">Git</span> <span class="n">-e</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">astral-sh</span><span class="p">.</span><span class="n">uv</span> <span class="n">-e</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Hashicorp</span><span class="p">.</span><span class="n">Terraform</span> <span class="n">-e</span>   <span class="c"># optional: to draw from Terraform code</span>
+</span></code></pre></div>
+<p>Then open a <strong>new</strong> terminal, and restart your AI app, so they see the new programs.</p>
+</div>
+<div class="tabbed-block">
+<p>On Debian and Ubuntu:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</span></code></pre></div>
+<p>On Ubuntu 26.04+ and Debian testing, also <code>sudo apt install libgvplugin-neato-layout8</code>. For Terraform, see <a href="https://developer.hashicorp.com/terraform/install">HashiCorp's install guide</a>.</p>
+</div>
+</div>
+</div>
+<p>If anything is still missing later, the assistant says what to install. To check at any time, ask it: <em>"Is TerraVision set up correctly?"</em></p>
+<p><strong>Then connect your assistant:</strong></p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">Codex CLI</label><label for="__tabbed_2_4">Gemini CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Download <code>terravision-&lt;version&gt;.mcpb</code> from the <a href="https://github.com/patrickchugh/terravision/releases/latest">latest release</a> and double-click it (or drag it into <strong>Settings → Extensions</strong>). Diagrams appear right in the chat. Details: <a href="../mcp-server/#configure-your-client">MCP server</a>.</p>
+</div>
+<div class="tabbed-block">
+<p>Works in the terminal and in the Claude Code extension for VS Code and JetBrains:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>patrickchugh/terravision
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>terravision-cloud-diagrams@terravision
+</span></code></pre></div>
+<p>This installs the TerraVision skill and its MCP server together. Start a new Claude Code session afterwards. Diagrams are saved in a <code>diagrams</code> folder in your project.</p>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>https://github.com/patrickchugh/terravision
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>codex<span class="w"> </span>plugin<span class="w"> </span>add<span class="w"> </span>terravision-cloud-diagrams@terravision
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gemini<span class="w"> </span>extensions<span class="w"> </span>install<span class="w"> </span>https://github.com/patrickchugh/terravision
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Add TerraVision as an MCP server. In VS Code run <strong>MCP: Open User Configuration</strong>; in Cursor edit its MCP config file:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">"servers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uvx"</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"--from"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span><span class="w"> </span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/for/diagrams"</span><span class="p">]</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Cursor and most other clients call the top-level key <code>mcpServers</code> instead of <code>servers</code>. See <a href="../mcp-server/">MCP server</a> for more clients and options.</p>
+</div>
+</div>
+</div>
+<h2 id="1-from-a-description-to-a-diagram">1. From a description to a diagram<a class="headerlink" href="#1-from-a-description-to-a-diagram" title="Permanent link">¶</a></h2>
+<p>Ask the way you would ask a colleague:</p>
+<blockquote>
+<p>Draw an AWS three-tier architecture: a React front end on CloudFront and S3, an ECS Fargate API behind an Application Load Balancer across two availability zones, SQL Server on RDS Multi-AZ, and images in ECR.</p>
+</blockquote>
+<p>The assistant turns the description into a <a href="../graph-format/">TerraVision graph</a>, a short JSON file listing each resource and what it connects to or sits inside, and TerraVision draws it. The assistant checks the picture before showing it to you, and you get:</p>
 <ul>
-<li>
-<p><strong>Shared services have no arrows.</strong> Arrows to or from these types are not drawn, because almost everything talks to them and the lines would cover the diagram:</p>
+<li>the diagram as <strong>PNG</strong> and <strong>SVG</strong>;</li>
+<li>an editable <strong>draw.io</strong> file, to rearrange by hand;</li>
+<li>the <strong>graph</strong> (<code>.tvg.json</code>), which you or the assistant can change and draw again.</li>
+</ul>
+<p>Then keep talking to it:</p>
 <ul>
-<li>AWS: <code>aws_cloudwatch_log_group</code>, <code>aws_ecr_repository</code>, <code>aws_acm_certificate</code>, <code>aws_kms_key</code>, <code>aws_ssm_parameter</code>, <code>aws_efs_file_system</code>, <code>aws_eip</code></li>
-<li>Azure: <code>azurerm_key_vault</code>, <code>azurerm_monitor</code>, <code>azurerm_log_analytics_workspace</code>, <code>azurerm_container_registry</code>, <code>azurerm_storage_account</code></li>
-<li>GCP: <code>google_kms_key_ring</code>, <code>google_logging_project_sink</code>, <code>google_monitoring_dashboard</code>, <code>google_container_registry</code>, <code>google_secret_manager_secret</code></li>
+<li><em>"Put the database in its own subnet."</em> / <em>"Add ElastiCache for sessions."</em> / <em>"Draw the same thing on Azure."</em></li>
+<li><em>"Show how a request moves through it."</em> The steps appear on the diagram as numbered circles, with a legend.</li>
+<li><em>"Label the connections."</em> Short labels such as "Reads orders" go on the arrows.</li>
 </ul>
-<p>On AWS and Azure, list them in <code>aws_group.shared_services</code> or <code>azurerm_group.shared_services</code> to draw them together in a Shared Services box; otherwise they float on their own. A few source types, such as <code>aws_ecs_service</code> and <code>aws_alb</code>, keep their arrows to a shared service.
-- <strong>Arrows to a container are not drawn.</strong> <code>aws_lambda_function.fn → aws_vpc.main</code> shows nothing; point at a node inside the container.
-- <strong>A node sits in one container.</strong> Listing it under two subnets draws it in only one of them; use numbered copies (<code>aws_alb.web~1</code>, <code>aws_alb.web~2</code>) for one per subnet.
-- <strong>Zones follow the cloud.</strong> On AWS a subnet belongs to one availability zone (<code>tv_aws_az</code> holds <code>aws_subnet</code>), so a resource that spans zones gets one numbered copy in each zone's subnet: load balancers, NAT gateways, ECS or EC2 tiers and Multi-AZ databases (<code>aws_alb.web~1</code> in <code>aws_subnet.public~1</code>, <code>aws_alb.web~2</code> in <code>aws_subnet.public~2</code>), with arrows pointing at the copies. On Azure and GCP a subnet spans the region's zones: draw zone-redundant or regional services (Application Gateway, NAT gateway, load balancers, managed instance groups) once in their subnet, and put per-zone instances in <code>tv_azurerm_zone</code> or <code>tv_gcp_zone</code> boxes inside the subnet.
-- <strong>Two-way connections draw one arrow.</strong> If A lists B and B lists A, only one direction is shown; list the main direction of flow.
-- <strong>Nesting is literal.</strong> Edge services (CloudFront, Route 53, API Gateway, WAF) and external actors stay wherever you nest them, so keep them at the top level rather than inside a VPC or subnet. Containers with nothing in them are not drawn.</p>
-</li>
+<p>After each diagram, the assistant offers the natural next step: adding the request flow, or writing the Terraform (see 3 below). It won't do either until you say yes.</p>
+<h2 id="2-from-terraform-code-to-a-diagram">2. From Terraform code to a diagram<a class="headerlink" href="#2-from-terraform-code-to-a-diagram" title="Permanent link">¶</a></h2>
+<blockquote>
+<p>Draw the architecture of the Terraform in <code>./infra</code>.</p>
+<p>Diagram https://github.com/your-org/platform.git//environments/prod</p>
+</blockquote>
+<p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> on the code and draws what the plan says will be deployed, so conditionals, <code>count</code>, <code>for_each</code> and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.</p>
+<p><code>terraform plan</code> needs the same cloud credentials you would use to run Terraform. Without them, generate the plan once where credentials exist and hand TerraVision the files; no credentials are needed after that:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
+</span></code></pre></div>
+<blockquote>
+<p>Draw the diagram from <code>plan.json</code> and <code>graph.dot</code>.</p>
+</blockquote>
+<p>You can add flows and labels to these diagrams too (<em>"Add the checkout flow as numbered steps"</em>). To change the architecture itself, change the Terraform and draw it again.</p>
+<h2 id="3-from-a-diagram-to-terraform">3. From a diagram to Terraform<a class="headerlink" href="#3-from-a-diagram-to-terraform" title="Permanent link">¶</a></h2>
+<p>When a design drawn from a description looks right, ask for the code:</p>
+<blockquote>
+<p>Write the Terraform for this architecture.</p>
+</blockquote>
+<p>The assistant writes Terraform that creates the resources, zones and connections in the diagram. To see how close it is, draw the new code (workflow 2) and compare the two diagrams. That runs <code>terraform plan</code>, so it needs cloud credentials.</p>
+<p>If the design has flows or labels, the assistant also writes a <code>terravision.yml</code> next to the Terraform. It carries the title, flows and labels over to the Terraform's own resource names, and adds the users and other external actors, which Terraform has no resources for. TerraVision reads that file whenever it draws the Terraform, so later diagrams keep the design's numbered steps and labels.</p>
+<p>Treat generated Terraform as a first draft: review it, and run <code>terraform plan</code> yourself, before you apply anything.</p>
+<h2 id="4-keep-the-diagram-up-to-date-in-ci">4. Keep the diagram up to date in CI<a class="headerlink" href="#4-keep-the-diagram-up-to-date-in-ci" title="Permanent link">¶</a></h2>
+<p>Once the Terraform is in a repository, the diagram can redraw itself whenever the code changes, so it never goes stale. After writing Terraform, the assistant offers to set this up. You can also ask:</p>
+<blockquote>
+<p>Add a GitHub Actions workflow that redraws the architecture diagram when the Terraform changes.</p>
+</blockquote>
+<p>On GitHub it uses the <a href="../cicd-integration/#github-actions">TerraVision GitHub Action</a>. GitLab, Jenkins, Azure DevOps and others are covered in <a href="../cicd-integration/">CI/CD Integration</a>, including a mode that keeps cloud credentials out of the diagram step. The <code>terravision.yml</code> from step 3 is picked up there too, so the flows and labels carry on into every new version of the diagram.</p>
+<h2 id="what-you-see">What you see<a class="headerlink" href="#what-you-see" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>Claude Desktop</strong>, and other apps that support <a href="../mcp-server/#the-diagram-view-mcp-apps">MCP Apps</a>: the diagram appears in the chat with zoom, and buttons to <strong>Open image</strong> in your image viewer, <strong>Edit in draw.io</strong>, <strong>Show in folder</strong>, and <strong>Source</strong> (the graph JSON, and the flows once added).</li>
+<li><strong>Terminal assistants</strong> (Claude Code, Codex CLI, Gemini CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.</li>
 </ul>
-<h2 id="full-examples">Full examples<a class="headerlink" href="#full-examples" title="Permanent link">¶</a></h2>
-<table>
-<thead>
-<tr>
-<th>Example</th>
-<th>Provider</th>
-<th>File</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Three-tier web app: CloudFront, ALB, EC2 across two AZs, RDS, ElastiCache</td>
-<td>AWS</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/three-tier-web.tvg.json">three-tier-web.tvg.json</a></td>
-</tr>
-<tr>
-<td>Event-driven order pipeline: API Gateway, Lambda, SQS, SNS, DynamoDB, Firehose, Glue, Athena</td>
-<td>AWS</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-event-driven.tvg.json">aws-event-driven.tvg.json</a></td>
-</tr>
-<tr>
-<td>Three-tier web app: Front Door with WAF, Application Gateway, Container Apps across two zones, Azure SQL via private endpoint, NAT gateway</td>
-<td>Azure</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-three-tier.tvg.json">azure-three-tier.tvg.json</a></td>
-</tr>
-<tr>
-<td>Web app with Front Door, App Service, Functions, SQL, Service Bus, Key Vault</td>
-<td>Azure</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-web-app.tvg.json">azure-web-app.tvg.json</a></td>
-</tr>
-<tr>
-<td>Three-tier web app: HTTPS LB with Cloud Armor, managed instance group across two zones, Cloud SQL, Memorystore, Cloud NAT</td>
-<td>GCP</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-three-tier.tvg.json">gcp-three-tier.tvg.json</a></td>
-</tr>
-<tr>
-<td>Serverless API: HTTPS LB, Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions, BigQuery</td>
-<td>GCP</td>
-<td><a href="https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-serverless-api.tvg.json">gcp-serverless-api.tvg.json</a></td>
-</tr>
-</tbody>
-</table>
-<h2 id="why-not-mermaid">Why not Mermaid?<a class="headerlink" href="#why-not-mermaid" title="Permanent link">¶</a></h2>
-<p>Mermaid draws boxes and arrows. It has no notion of the AWS, Azure or GCP icon sets, of VPC and subnet nesting, or of the layout conventions cloud architects expect. TerraVision produces the diagram a cloud architect would draw by hand, from a JSON file an LLM can emit in one shot.</p>
-<p>That advantage only applies to cloud infrastructure. For sequence diagrams, flowcharts, class or ER diagrams, code structure or anything that is not AWS, Azure or GCP resources, Mermaid or a similar tool remains the right choice.</p>
-<h2 id="getting-the-graph-from-real-infrastructure-instead">Getting the graph from real infrastructure instead<a class="headerlink" href="#getting-the-graph-from-real-infrastructure-instead" title="Permanent link">¶</a></h2>
-<p>If you have Terraform, <code>terravision graphdata --source ./tf --outfile architecture.tvg.json</code> exports the real graph in exactly this format, so the same tooling works for diagrams of what is actually deployed.</p>
+<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
+<ul>
+<li><strong>One cloud per diagram.</strong> A diagram uses one provider's icons and layout rules. For a multi-cloud system, ask for one diagram per cloud.</li>
+<li><strong>Busy is normal.</strong> Real systems have many connections, and TerraVision draws them all rather than hiding some to look tidy. For a high-level picture, ask for a simpler version with fewer boxes, or rearrange the draw.io file by hand.</li>
+<li><strong>If something looks wrong, say what.</strong> For example, "the NAT gateway should be in the public subnet". The assistant fixes the graph and draws it again.</li>
+<li><strong>Keep the graph.</strong> The <code>.tvg.json</code> file is the source of the diagram. Commit it next to your docs, and anyone (or any assistant) can change it and redraw.</li>
+</ul>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../graph-format/">Graph Format</a>: the JSON the assistant writes, including flows and edge labels</li>
+<li><a href="../node-types/">Node types</a>: every supported resource type and icon</li>
+<li><a href="../mcp-server/">MCP server</a>: the tools, client setup and trust boundary</li>
+<li><a href="https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams">Agent skill</a>: the instructions the assistant follows</li>
+<li><a href="../llms.txt">llms.txt</a>: a plain-text index of these docs, for assistants reading the web</li>
+</ul>
 
 
 

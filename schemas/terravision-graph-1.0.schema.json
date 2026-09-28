@@ -10,7 +10,7 @@
   },
   "additionalProperties": {
     "type": "array",
-    "description": "Node addresses this node connects to (an arrow is drawn) or contains (the node is drawn inside this one). Containment applies when the source is a container type such as aws_vpc, aws_subnet, aws_security_group, azurerm_resource_group, azurerm_virtual_network, azurerm_subnet, google_compute_network, google_compute_subnetwork, tv_gcp_region, tv_gcp_zone, aws_az or aws_group. Leaf nodes that only appear as targets may be omitted as keys.",
+    "description": "Node addresses this node connects to (an arrow is drawn) or contains (the node is drawn inside this one). Containment applies when the source is a container type such as aws_vpc, aws_subnet, aws_security_group, azurerm_resource_group, azurerm_virtual_network, azurerm_subnet, google_compute_network, google_compute_subnetwork, tv_gcp_region, tv_gcp_zone, tv_aws_az (or the older aws_az) or aws_group. Leaf nodes that only appear as targets may be omitted as keys.",
     "items": {
       "$ref": "#/$defs/nodeAddress"
     },
