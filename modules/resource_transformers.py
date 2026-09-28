@@ -90,6 +90,20 @@ def expand_to_numbered_instances(
                 # Remove unnumbered from subnet
                 helpers.safe_remove_connection(tfdata, subnet, resource)
 
+            # Anything else pointing at a real instance (an EKS cluster, an IAM
+            # role) would be left pointing at a deleted node, which draws no
+            # arrow at all, so point it at every numbered instance instead.
+            # Visual-only copies are matched to their callers later, per subnet
+            numbered_all = [
+                f"{resource}~{i}" for i in range(1, len(matching_subnets) + 1)
+            ]
+            for node, targets in tfdata["graphdict"].items():
+                if inherit_connections and resource in targets and node not in subnets:
+                    idx = targets.index(resource)
+                    targets[idx : idx + 1] = [
+                        n for n in numbered_all if n not in targets
+                    ]
+
             # Delete original
             helpers.delete_node(
                 tfdata, resource, remove_from_connections=False, delete_meta_data=True

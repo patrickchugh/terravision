@@ -17,7 +17,6 @@
   ],
   "aws_eks_cluster.main": [
     "aws_ecr_repository.ecr",
-    "aws_eks_node_group.main",
     "aws_eks_node_group.main~1",
     "aws_eks_node_group.main~2",
     "aws_eks_node_group.main~3",
@@ -48,7 +47,10 @@
     "aws_eks_cluster.main"
   ],
   "aws_iam_role.eks_nodes": [
-    "aws_eks_node_group.main"
+    "aws_eks_node_group.main~1",
+    "aws_eks_node_group.main~2",
+    "aws_eks_node_group.main~3",
+    "aws_eks_node_group.main~4"
   ],
   "aws_internet_gateway.igw": [
     "aws_route_table.public",

@@ -1039,6 +1039,29 @@ def aws_handle_eks(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+def _self_managed_node_groups(tfdata: Dict[str, Any], cluster: str) -> List[str]:
+    """Return the autoscaling groups that run a cluster's self-managed nodes.
+
+    An ASG joins the cluster through the kubernetes.io/cluster/<name> tag, or
+    through a launch template whose bootstrap script names the cluster.
+    """
+    graphdict = tfdata["graphdict"]
+    original = tfdata.get("original_graphdict", {})
+    cluster_name = str(tfdata["meta_data"].get(cluster, {}).get("name", ""))
+    templates = [t for t in original.get(cluster, []) if "aws_launch_template" in t]
+    asgs = []
+    for asg in helpers.list_of_dictkeys_containing(graphdict, "aws_autoscaling_group"):
+        base = asg.split("~")[0]
+        tagged = cluster_name and (
+            f"kubernetes.io/cluster/{cluster_name}"
+            in str(tfdata["meta_data"].get(asg, {}))
+        )
+        launched = any(base in original.get(t, []) for t in templates)
+        if tagged or launched:
+            asgs.append(asg)
+    return sorted(asgs)
+
+
 def expand_eks_auto_mode_clusters(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Create numbered instances of EKS clusters with auto mode enabled.
 
@@ -1166,12 +1189,23 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if is_eks_auto_mode(tfdata, cluster):
             continue
 
-        # Only remove cluster from subnets if node groups or Fargate profiles exist
-        if has_node_groups or has_fargate:
+        # Only remove cluster from subnets if it has workers of its own to show
+        self_managed = _self_managed_node_groups(tfdata, cluster)
+        if has_node_groups or has_fargate or self_managed:
             for node in sorted(tfdata["graphdict"].keys()):
                 node_type = helpers.get_no_module_name(node).split(".")[0]
                 if node_type in ["aws_vpc", "aws_subnet", "aws_az"]:
                     helpers.safe_remove_connection(tfdata, node, cluster)
+            if self_managed:
+                # The ASGs are the workers; their launch templates are just
+                # configuration and already draw an arrow into each ASG
+                tfdata["graphdict"][cluster] = [
+                    n
+                    for n in tfdata["graphdict"][cluster]
+                    if "aws_launch_template" not in n
+                ] + [a for a in self_managed if a not in tfdata["graphdict"][cluster]]
+                # One way only: an ASG is drawn as a group, so an edge out of
+                # it would pull the control plane inside the ASG box
         else:
             # For Karpenter (no node groups/Fargate), expand cluster into numbered instances per subnet
             subnets_with_cluster = sorted(
@@ -1241,9 +1275,15 @@ def handle_eks_cluster_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                                 tfdata["graphdict"][role].append(f"{cluster}~{i}")
 
                     # Link SQS queues to numbered Karpenter nodes (only if they connect to CloudWatch event targets)
+                    # The event target references the queue, so the edge runs
+                    # target -> queue; the queue's own list is usually empty
                     for queue in sorted(karpenter_queues):
+                        original = tfdata["original_graphdict"]
                         if "aws_cloudwatch_event_target" in str(
-                            tfdata["original_graphdict"].get(queue, [])
+                            original.get(queue, [])
+                        ) or any(
+                            "aws_cloudwatch_event_target" in node and queue in targets
+                            for node, targets in original.items()
                         ):
                             for i in range(1, len(subnets_with_cluster) + 1):
                                 tfdata["graphdict"][queue].append(

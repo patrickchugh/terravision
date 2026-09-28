@@ -91,6 +91,11 @@ def test_help() -> None:
         ("wordpress-tfdata.json", "expected-wordpress.json"),
         ("bastion-tfdata.json", "bastion-expected.json"),
         ("eks-basic-tfdata.json", "expected-eks-basic.json"),
+        ("eks-karpenter-tfdata.json", "expected-eks-karpenter.json"),
+        ("eks-automode-tfdata.json", "expected-eks-automode.json"),
+        ("eks-fargate-tfdata.json", "expected-eks-fargate.json"),
+        ("eks-managed-nodes-tfdata.json", "expected-eks-managed-nodes.json"),
+        ("eks-self-managed-tfdata.json", "expected-eks-self-managed.json"),
         ("static-website-tfdata.json", "expected-static-website.json"),
         (
             "api-gateway-rest-lambda-tfdata.json",
@@ -298,6 +303,14 @@ TFC_ENV = {
             "https://github.com/patrickchugh/terraform-examples.git//aws//wordpress_fargate",
             "expected-wordpress-live.json",
         ),
+        # Also replayed above. Planning the most common EKS pattern live with
+        # the newest provider catches releases that change the plan's shape;
+        # the other EKS patterns share its cluster and are replay-only
+        pytest.param(
+            str(FIXTURES_DIR / "eks_karpenter"),
+            "expected-eks-karpenter.json",
+            id="fixture-eks_karpenter",
+        ),
     ],
 )
 @pytest.mark.slow
@@ -306,6 +319,9 @@ def test_live_source(source: str, expected_file: str, tmp_path: Path, request) -
 
     The bastion source is listed twice to verify module cache correctness
     (first run downloads, second run uses cache).
+
+    --upgrade keeps these on the newest provider, as users are. Otherwise a
+    stale .terraform.lock.hcl left in a local fixture holds an old one.
     """
     expected_path = JSON_DIR / expected_file
     output_file = tmp_path / "output.json"
@@ -320,6 +336,7 @@ def test_live_source(source: str, expected_file: str, tmp_path: Path, request) -
             source,
             "--outfile",
             output_file.name,
+            "--upgrade",
         ],
         cwd=str(tmp_path),
         extra_env=TFC_ENV,

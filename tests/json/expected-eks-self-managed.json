@@ -1,0 +1,69 @@
+{
+  "aws_account.eks_control_plane_main": [
+    "aws_eks_cluster.main"
+  ],
+  "aws_autoscaling_group.node~1": [
+    "aws_security_group.node~1"
+  ],
+  "aws_autoscaling_group.node~2": [
+    "aws_security_group.node~2",
+    "aws_security_group.node~2"
+  ],
+  "aws_az.availability_zone_us_east_1a~1": [
+    "aws_subnet.private_1"
+  ],
+  "aws_az.availability_zone_us_east_1b~2": [
+    "aws_subnet.private_2"
+  ],
+  "aws_ecr_repository.ecr": [],
+  "aws_eks_cluster.main": [
+    "aws_autoscaling_group.node~1",
+    "aws_autoscaling_group.node~2",
+    "aws_ecr_repository.ecr"
+  ],
+  "aws_eks_service.eks": [
+    "aws_eks_cluster.main"
+  ],
+  "aws_group.shared_services": [
+    "aws_ecr_repository.ecr",
+    "aws_iam_group.of_services"
+  ],
+  "aws_iam_instance_profile.node": [
+    "aws_launch_template.node~1",
+    "aws_launch_template.node~2"
+  ],
+  "aws_iam_role.cluster": [
+    "aws_eks_cluster.main"
+  ],
+  "aws_iam_role.node": [
+    "aws_iam_instance_profile.node",
+    "aws_launch_template.node~1",
+    "aws_launch_template.node~2"
+  ],
+  "aws_launch_template.node~1": [
+    "aws_autoscaling_group.node~1",
+    "aws_eks_cluster.main",
+    "aws_iam_instance_profile.node"
+  ],
+  "aws_launch_template.node~2": [
+    "aws_autoscaling_group.node~2",
+    "aws_eks_cluster.main",
+    "aws_iam_instance_profile.node"
+  ],
+  "aws_security_group.node~1": [
+    "aws_launch_template.node~1"
+  ],
+  "aws_security_group.node~2": [
+    "aws_launch_template.node~2"
+  ],
+  "aws_subnet.private_1": [
+    "aws_autoscaling_group.node~1"
+  ],
+  "aws_subnet.private_2": [
+    "aws_autoscaling_group.node~2"
+  ],
+  "aws_vpc.main": [
+    "aws_az.availability_zone_us_east_1a~1",
+    "aws_az.availability_zone_us_east_1b~2"
+  ]
+}

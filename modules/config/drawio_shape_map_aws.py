@@ -128,6 +128,7 @@ DRAWIO_SHAPE_MAP_AWS = {
     "aws_guardduty_detector": "mxgraph.aws4..guardduty",
     "aws_guardduty_member": "mxgraph.aws4..guardduty",
     "aws_iam_group": "mxgraph.aws4.identity_and_access_management",
+    "aws_iam_openid_connect_provider": "mxgraph.aws4.sts",
     "aws_iam_policy": "mxgraph.aws4.identity_and_access_management",
     "aws_iam_policy_attachment": "mxgraph.aws4.identity_and_access_management",
     "aws_iam_role": "mxgraph.aws4.role",

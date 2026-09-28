@@ -1450,12 +1450,18 @@ def check_variant(
         means EKS auto mode is switched off, yet the bare name was enough to
         rename the cluster to its auto variant. An attribute with no value
         carries no signal, so it should not be in the haystack at all.
+
+        The same goes for True, the plan's "known after apply" marker. AWS
+        provider 6.x computes compute_config, so a cluster without auto mode
+        plans it as True and the name alone matched again. No keyword matches
+        the text "True", so dropping a real boolean loses nothing either.
+        (`is True`, because 1 == True would drop a count of 1 too.)
         """
         if isinstance(value, dict):
             return {
                 k: drop_empty(v)
                 for k, v in value.items()
-                if v not in (None, "", [], {}, ())
+                if v is not True and v not in (None, "", [], {}, ())
             }
         if isinstance(value, list):
             return [drop_empty(v) for v in value]

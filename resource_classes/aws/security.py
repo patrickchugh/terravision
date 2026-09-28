@@ -143,6 +143,7 @@ aws_guardduty_detector = Guardduty
 aws_guardduty_member = Guardduty
 aws_iam_access_analyzer = IAMAccessAnalyzer
 aws_iam_role = IdentityAndAccessManagementIamRole
+aws_iam_openid_connect_provider = IAMAWSSts
 aws_iam_user = IdentityAndAccessManagementIam
 aws_iam_group = IdentityAndAccessManagementIam
 aws_iam_policy = IAMPermissions
