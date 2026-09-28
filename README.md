@@ -97,7 +97,7 @@ gemini extensions install https://github.com/patrickchugh/terravision
 | You have | Ask something like | You get |
 |---|---|---|
 | An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph. Refine it by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
-| Terraform code, local or on GitHub | *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
+| Terraform code, local or on GitHub | *"Draw the architecture of the Terraform in ./infra"* or *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
 | A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
 | Terraform in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
 

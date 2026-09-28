@@ -22,13 +22,14 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ## Get started with your AI assistant
 
-Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
+Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons:
 
 | You have | Ask something like | You get |
 |---|---|---|
 | An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
-| Terraform code, local or on GitHub | *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
-| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
+| Terraform code, local or on GitHub | *"Draw the architecture of the Terraform in ./infra"* or *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
+| Terraform in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
 
 Install Graphviz, Git and uv once, then connect your assistant: one command in Claude Code, Codex CLI and Gemini CLI, or one download for Claude Desktop, where the diagram appears right in the chat. Step-by-step for macOS, Windows and Linux: **[Use TerraVision with AI assistants](ai-assistants.md)**.
 
