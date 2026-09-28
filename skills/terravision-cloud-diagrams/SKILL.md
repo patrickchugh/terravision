@@ -5,7 +5,7 @@ license: AGPL-3.0-only
 metadata:
   author: patrickchugh
   homepage: https://github.com/patrickchugh/terravision
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # TerraVision cloud architecture diagrams
