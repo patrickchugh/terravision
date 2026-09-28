@@ -1,5 +1,9 @@
 # Installation Guide
 
+
+!!! tip "Using an AI assistant?"
+    You don't need this page. Follow **[Use TerraVision with AI assistants](ai-assistants.md)**: install Graphviz, Git and uv, then connect Claude, Codex, Gemini or Copilot, which install TerraVision themselves.
+
 ## System Requirements
 
 - **Python 3.11+** (not needed separately if you install with [uv](#using-uv), which fetches one)

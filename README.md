@@ -16,6 +16,114 @@
 
 **📖 [Full documentation site →](https://patrickchugh.github.io/terravision/)**
 
+Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.
+
+---
+
+## Get started with your AI assistant
+
+### 1. Install the prerequisites (once)
+
+TerraVision needs **Graphviz** (to draw), **Git** and **uv** (which runs TerraVision for your assistant). **Terraform** is only needed to draw from Terraform code.
+
+<details open>
+<summary><b>macOS</b></summary>
+
+With [Homebrew](https://brew.sh):
+
+```bash
+brew install graphviz git uv
+brew install hashicorp/tap/terraform   # optional: to draw from Terraform code
+```
+
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+In PowerShell:
+
+```powershell
+winget install --id Graphviz.Graphviz -e
+winget install --id Git.Git -e
+winget install --id astral-sh.uv -e
+winget install --id Hashicorp.Terraform -e   # optional: to draw from Terraform code
+```
+
+Then open a **new** terminal, and restart your AI app, so they see the new programs.
+
+</details>
+
+<details>
+<summary><b>Linux (Debian, Ubuntu)</b></summary>
+
+```bash
+sudo apt install graphviz git
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. For Terraform, see [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
+
+</details>
+
+### 2. Connect your assistant
+
+**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and open it (or drag it into **Settings → Extensions**). Diagrams appear right in the chat, with buttons to open the image, edit it in draw.io, show it in its folder and see its source.
+
+**Claude Code** (terminal, VS Code or JetBrains):
+
+```bash
+claude plugin marketplace add patrickchugh/terravision
+claude plugin install terravision-cloud-diagrams@terravision
+```
+
+Then start a new Claude Code session. Diagrams are saved in a `diagrams` folder in your project.
+
+**OpenAI Codex CLI:**
+
+```bash
+codex plugin marketplace add https://github.com/patrickchugh/terravision
+codex plugin add terravision-cloud-diagrams@terravision
+```
+
+**Gemini CLI:**
+
+```bash
+gemini extensions install https://github.com/patrickchugh/terravision
+```
+
+**VS Code with GitHub Copilot, Cursor and other MCP clients:** add TerraVision as an MCP server that runs `uvx --from "terravision[mcp]" terravision mcp --output-dir <folder for diagrams>`. The [setup guide](https://patrickchugh.github.io/terravision/ai-assistants/) has the configuration for each.
+
+### 3. Ask for a diagram
+
+| You have | Ask something like | You get |
+|---|---|---|
+| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph. Refine it by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
+| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
+| Terraform in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
+
+The first diagram takes a little longer while TerraVision installs itself. If anything is missing, the assistant says what to install. To check at any time, ask: *"Is TerraVision set up correctly?"*
+
+The full guide, with more example prompts: **[Use TerraVision with AI assistants](https://patrickchugh.github.io/terravision/ai-assistants/)**.
+
+---
+
+## Keep diagrams current in CI/CD
+
+Point the [TerraVision GitHub Action](https://github.com/patrickchugh/terravision-action) at your Terraform, and the diagram redraws itself on every change:
+
+```yaml
+- uses: hashicorp/setup-terraform@v3
+- uses: patrickchugh/terravision-action@v2
+  with:
+    source: ./infrastructure
+    outfile: docs/architecture
+    format: both
+```
+
+A `terravision.yml` next to the Terraform adds the title, numbered flows and connection labels to every version. GitLab, Jenkins, Azure DevOps and others: [CI/CD Integration](https://patrickchugh.github.io/terravision/cicd-integration/).
+
 ---
 
 ## Watch a 4-Minute Intro
@@ -23,14 +131,10 @@
 [![TerraVision intro video](./images/youtube-thumbnail.png)](https://youtu.be/bTrWHBI2mF4)
 
 ---
-## What is TerraVision?
-
-TerraVision automatically converts your Terraform code, or a plain JSON graph of Terraform resource names, into professional-grade cloud architecture diagrams using the official AWS, GCP, and Azure icon sets. Your diagrams stay in sync with your infrastructure — no more outdated Visio, draw.io or Lucidchart files.
-
-Most diagram tools that AI assistants reach for (Mermaid, PlantUML, hand-drawn SVG) produce boxes and arrows. TerraVision produces the diagram a cloud architect would draw: real provider icons, VPCs and subnets nested correctly, resource groups, regions and zones. It runs entirely on your machine, needs no cloud credentials, and outputs PNG, SVG, PDF or an editable draw.io file.
 
 ## Why TerraVision?
 
+- ✅ **Built for AI assistants** — an MCP server and agent skill for Claude, Codex, Gemini, Copilot and Cursor; diagrams appear right in the chat in Claude Desktop ([guide](https://patrickchugh.github.io/terravision/ai-assistants/))
 - ✅ **JSON graph input** — describe an architecture in a few lines of JSON and render it, resources match Terraform names so no need to learn a custom DSL ([Graph Format](docs/graph-format.md))
 - ✅ **Always up-to-date** — diagrams generated directly from your Terraform code
 - ✅ **100% client-side** — no cloud access required, runs locally, your code never leaves your machine
@@ -57,38 +161,9 @@ Full list: [Node types](docs/node-types.md).
 
 ---
 
-## Use it with an AI assistant
+## Use it from the command line
 
-Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
-
-| You have | Ask something like | You get |
-|---|---|---|
-| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
-| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
-| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
-
-Set it up once:
-
-```bash
-# Claude Code (terminal, VS Code or JetBrains): the skill and MCP server together
-claude plugin marketplace add patrickchugh/terravision
-claude plugin install terravision-cloud-diagrams@terravision
-
-# OpenAI Codex CLI
-codex plugin marketplace add https://github.com/patrickchugh/terravision
-codex plugin add terravision-cloud-diagrams@terravision
-
-# Gemini CLI
-gemini extensions install https://github.com/patrickchugh/terravision
-```
-
-**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and double-click it. Diagrams appear right in the chat, with buttons to open them, edit them in draw.io and see their source.
-
-**VS Code with Copilot, Cursor and other MCP clients:** add the [MCP server](docs/mcp-server.md) (`uvx --from "terravision[mcp]" terravision mcp`).
-
-The full guide, with example prompts for each way of working, is **[Use TerraVision with AI assistants](https://patrickchugh.github.io/terravision/ai-assistants/)**. For agents reading docs, [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) is a plain-text index.
-
-## Quick Start
+TerraVision is also a command-line tool, for scripts and for people who prefer to write the graph themselves.
 
 ### Install
 
@@ -99,7 +174,7 @@ pipx install terravision   # or: uv tool install terravision
 
 You also need **Python 3.11+** (uv installs one for you), **Graphviz** and **Git**, plus **Terraform 1.x** (or OpenTofu) when drawing from Terraform code; JSON graphs don't need it. See the [Installation Guide](https://patrickchugh.github.io/terravision/installation/) for platform-specific instructions, Docker, and Nix.
 
-### Option 1 - Diagram from JSON (no Terraform needed)
+### Diagram from JSON (no Terraform needed)
 
 Describe the architecture as nodes and connections. AWS is shown here; expand the Azure and GCP examples below.
 
@@ -153,9 +228,7 @@ terravision draw --source architecture.tvg.json --format svg
 
 Each key is `<terraform_resource_type>.<name>`; each value is what it connects to or contains. That is the whole format. Full spec, schema and more examples: [Graph Format](docs/graph-format.md). Works for AWS (`aws_*`), Azure (`azurerm_*`) and GCP (`google_*`).
 
-**Using an AI assistant?** It can write this JSON for you: see [Use it with an AI assistant](#use-it-with-an-ai-assistant).
-
-### Option 2 - Generate your  diagram from Terraform
+### Diagram from Terraform
 
 ```bash
 git clone https://github.com/patrickchugh/terravision.git

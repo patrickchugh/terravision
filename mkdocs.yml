@@ -94,10 +94,10 @@ plugins:
 
 nav:
   - Home: index.md
+  - Use with AI assistants: ai-assistants.md
   - Graph Format (JSON input): graph-format.md
   - Node types: node-types.md
   - Getting Started:
-      - AI assistants: ai-assistants.md
       - Installation: installation.md
       - Usage Guide: usage-guide.md
   - Features:

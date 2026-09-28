@@ -11,7 +11,44 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
 ## Set up (once)
 
-Your computer needs **Graphviz** and **Git** (and **Terraform** or OpenTofu to draw from Terraform code). If anything is missing, the assistant tells you what to install and how.
+**First, the prerequisites.** TerraVision needs **Graphviz** (to draw), **Git** and **uv** (which runs TerraVision for your assistant). **Terraform** (or OpenTofu) is only needed to draw from Terraform code.
+
+=== "macOS"
+
+    With [Homebrew](https://brew.sh):
+
+    ```bash
+    brew install graphviz git uv
+    brew install hashicorp/tap/terraform   # optional: to draw from Terraform code
+    ```
+
+=== "Windows"
+
+    In PowerShell:
+
+    ```powershell
+    winget install --id Graphviz.Graphviz -e
+    winget install --id Git.Git -e
+    winget install --id astral-sh.uv -e
+    winget install --id Hashicorp.Terraform -e   # optional: to draw from Terraform code
+    ```
+
+    Then open a **new** terminal, and restart your AI app, so they see the new programs.
+
+=== "Linux"
+
+    On Debian and Ubuntu:
+
+    ```bash
+    sudo apt install graphviz git
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+
+    On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. For Terraform, see [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
+
+If anything is still missing later, the assistant says what to install. To check at any time, ask it: *"Is TerraVision set up correctly?"*
+
+**Then connect your assistant:**
 
 === "Claude Desktop"
 
@@ -26,7 +63,7 @@ Your computer needs **Graphviz** and **Git** (and **Terraform** or OpenTofu to d
     claude plugin install terravision-cloud-diagrams@terravision
     ```
 
-    This installs the TerraVision skill and its MCP server together. Diagrams are saved in a `diagrams` folder in your project.
+    This installs the TerraVision skill and its MCP server together. Start a new Claude Code session afterwards. Diagrams are saved in a `diagrams` folder in your project.
 
 === "Codex CLI"
 

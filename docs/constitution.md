@@ -1,26 +1,49 @@
 <!--
 Sync Impact Report:
-- Version change: 1.6.0 → 1.7.0 (added Principle VIII covering agent-accessible
-  interfaces, prompted by the MCP server contribution for issue #191)
-- Modified principles:
-  - VIII. Agent-Accessible Interfaces — NEW. Machine interfaces that expose
-    TerraVision to AI agents must mirror existing commands rather than invent
-    capability, must stay optional, and must remain local and credential-free
-    on the same terms as Principle II.
+- Version change: 1.7.0 → 1.8.0 (TerraVision becomes AI-first: its primary
+  users are AI assistants and the people working through them, with CI/CD
+  DevOps engineers second)
 - Added sections:
-  - Principle VIII (Core Principles)
-  - Agent Interface Standards, AG-001 through AG-008 (Technical Standards)
-  - CR-006 (Code Review Requirements)
+  - Mission and Audience, with AI-first standards AI-001 through AI-006
+- Modified principles:
+  - I. Code as Source of Truth — a design may start as a graph drawn exactly
+    as written; once Terraform exists it is the truth (the design →
+    Terraform → CI lifecycle). JSON graph input had shipped in 0.48 without
+    this reconciliation.
+  - VIII. Agent-Accessible Interfaces — agent interfaces are the primary
+    product surface (still an optional dependency); helper operations that
+    add no drawing capability are allowed.
+- Modified standards:
+  - AG-001 — applies to operations that produce diagrams; guidance and
+    access to files the interface wrote are allowed helpers.
+  - AG-005 — an agent-supplied filename is reduced to its last component
+    instead of rejected; writes stay confined to the output directory.
 - Removed sections: None
 - Templates status:
-  ✅ plan-template.md - Constitution Check section aligns with principles
-  ✅ spec-template.md - Requirements sections align with testability principles
-  ✅ tasks-template.md - Task organization reflects independent testing principles
-  ✅ CLAUDE.md - Updated with the mcp_service/mcp_server module description
+  ✅ README.md and docs/index.md lead with the AI assistant path
+  ✅ docs/ai-assistants.md covers the four workflows
+  ✅ CLAUDE.md project overview updated
 - Follow-up TODOs: None
 -->
 
 # TerraVision Constitution
+
+## Mission and Audience
+
+TerraVision is **AI-first**. Its primary users are AI assistants (Claude, Codex, Gemini, Copilot and others) and the people working through them: someone asks for a cloud architecture diagram in plain words, and the assistant uses TerraVision to draw an accurate one with the official provider icons. Its second audience is DevOps engineers who keep diagrams current from Terraform in CI/CD. People using the CLI directly remain supported, but are no longer the audience the project is shaped around.
+
+Everything in the repository therefore serves an assistant's ability to **discover** TerraVision, **set it up**, and **use it correctly without a human filling the gaps**: the README, the docs site, `llms.txt`, the agent skill, the MCP server's tools and instructions, examples, error messages and warnings.
+
+### AI-First Standards
+
+- **AI-001**: The README and the docs home MUST lead with using TerraVision from an AI assistant. Their setup instructions MUST take a first-time user on Windows, macOS or Linux from nothing to a working diagram: every prerequisite, with the exact command for each OS.
+- **AI-002**: Every user-facing capability MUST be reachable by an assistant: through the MCP tools, and described in the agent skill and the graph format spec. Every docs page MUST be listed in `llms.txt`.
+- **AI-003**: Errors and warnings MUST say what to do next, in terms an assistant can act on: the exact install command, the corrected type name, the node or arrow at fault. A message that only says what failed is incomplete.
+- **AI-004**: Guidance the model needs at the moment it acts belongs in the tool result (warnings, `next_step`), not only in instructions or docs, which a model may not re-read at that moment.
+- **AI-005**: Content that exists in more than one place for different readers (the skill's references and the docs, the validator's rules and the renderer's config, logo copies, plugin pins) MUST be kept identical by a test.
+- **AI-006**: The next useful step MUST be offered, never taken unasked: after a diagram, the flow or the Terraform; after the Terraform, keeping the diagram current in CI. One line each, acted on only after the user says yes.
+
+**Rationale**: Most people will meet TerraVision through an assistant that found it for them, not through its README. An assistant cannot ask a maintainer what an ambiguous doc meant, so anything left implicit becomes a wrong diagram or a dead end. Treating the assistant as the reader makes the project better for people too: complete setup steps, precise errors and offers of the natural next step help everyone.
 
 ## Core Principles
 
@@ -37,6 +60,8 @@ The infrastructure code (Terraform) is the authoritative source of truth for arc
 - **Plan outputs are CI-friendly.** `terraform plan -out=tfplan.bin && terraform show -json tfplan.bin > plan.json` already runs in most pipelines. TerraVision can consume that artifact via `--planfile` with zero new infrastructure or permissions.
 
 State files MAY be used as an *optional enrichment overlay* to populate `(known after apply)` values in detailed metadata views (e.g., the interactive HTML sidebar), but MUST NOT be used as the primary or sole input source for diagram structure. When state-file enrichment is used, sensitive attributes MUST be redacted by default.
+
+**Designs before code**: A system that does not exist yet has no Terraform to plan. Its diagram MAY start as a TerraVision graph (`.tvg.json`), written by a person or an assistant from a description and drawn exactly as written, with no inference or transformation. This is a design, not documentation of deployed infrastructure. Once Terraform exists for it, the Terraform is the source of truth, and diagrams of it MUST be generated from `terraform plan` as above, carrying the design's annotations over in `terravision.yml`. The intended lifecycle is design → Terraform → diagrams kept current from the code in CI/CD.
 
 **Rationale**: Manual diagrams become outdated immediately after deployment. State-based diagrams document yesterday's deployment, not today's code. By treating code as truth and using `terraform plan` as the authoritative input, TerraVision shows what the code defines, supports multi-environment variants, works on undeployed branches, and accurately reflects conditional logic — all things state files cannot do.
 
@@ -89,9 +114,9 @@ AI refinement MUST NOT modify the deterministic graph data (graphdict, tfdata) �
 
 ### VIII. Agent-Accessible Interfaces
 
-TerraVision MAY expose machine-facing interfaces (such as an MCP server) so AI agents can generate diagrams directly. Such an interface MUST be a **projection of the existing CLI, not a second product**: every capability it offers MUST correspond to a command that already exists, and MUST produce output identical to that command for the same inputs.
+Machine-facing interfaces (the MCP server and the agent skill) are TerraVision's primary product surface, per the Mission. Every drawing capability such an interface offers MUST be a **projection of the existing CLI, not a second product**: it MUST correspond to a command that already exists, and MUST produce output identical to that command for the same inputs. Helper operations that add no drawing capability (serving the guidance an assistant needs, reading or opening files the interface itself wrote) are permitted.
 
-An agent interface MUST be an optional dependency. Installing TerraVision without it MUST leave every other command byte-for-byte unaffected, and invoking the interface without it MUST fail with an actionable installation message rather than a traceback.
+An agent interface MUST still be an optional dependency, so that a default install stays light. Installing TerraVision without it MUST leave every other command byte-for-byte unaffected, and invoking the interface without it MUST fail with an actionable installation message rather than a traceback.
 
 An agent interface MUST NOT weaken Principle II. It MUST run locally as a subprocess of the calling client, MUST NOT open a network listener, and MUST NOT require cloud credentials of its own. The pre-generated plan path (`--planfile` / `--graphfile`) MUST be reachable through the interface so agents have a fully credential-free option.
 
@@ -105,11 +130,11 @@ Interfaces that consume LLM backends on TerraVision's behalf (`--ai-annotate`) M
 
 Requirements for any interface that exposes TerraVision to automated agents.
 
-- **AG-001**: Every agent-exposed operation MUST map to an existing CLI command. New capability MUST be added as a command first, then projected.
+- **AG-001**: Every agent-exposed operation that produces a diagram MUST map to an existing CLI command. New drawing capability MUST be added as a command first, then projected. Helper operations (guidance, reading or opening files the interface wrote) are exempt, but MUST NOT draw.
 - **AG-002**: Agent-exposed operations MUST produce output identical to the equivalent command for the same inputs, and this MUST be enforced by a parity test. Non-deterministic content (e.g. generation timestamps) MAY be normalised before comparison.
 - **AG-003**: Agent interface dependencies MUST be declared as optional extras, never as core dependencies. They MUST be imported lazily so a default install never pays for them.
 - **AG-004**: Agent interfaces MUST NOT expose AI-annotation backends, as required by Principle VIII.
-- **AG-005**: Operations that generate files MUST return paths rather than file contents, matching CLI behaviour, and MUST confine writes to a configured output directory. Filenames supplied by an agent MUST be rejected if they contain path separators or parent references.
+- **AG-005**: Operations that generate files MUST return paths rather than file contents, matching CLI behaviour, and MUST confine writes to a configured output directory. A filename supplied by an agent MUST be reduced to its last path component before use, so that no path or parent reference can place a file outside that directory. Agents naturally supply paths, and rejecting them costs a retry without adding safety.
 - **AG-006**: Long-lived interfaces MUST NOT let pipeline behaviour leak between requests. Module-level rendering state and the process working directory MUST be restored after every operation, and `sys.exit()` raised inside the pipeline MUST be contained and reported rather than terminating the process.
 - **AG-007**: Where the transport reserves a stream for protocol traffic (e.g. stdout under MCP stdio), pipeline output MUST be diverted away from it, and this MUST be covered by a test asserting the stream stays clean.
 - **AG-008**: Where an agent interface depends on behaviour that `tfdata.json` replay fixtures do not reach — notably `tfwrapper`'s init/plan path and the working directory it leaves behind — that dependency MUST be covered by a test that reproduces the behaviour explicitly. Replay sources bypass `tfwrapper` entirely, so a replay-only suite cannot exercise it. Tests that invoke Terraform directly to obtain this coverage MUST be marked `@pytest.mark.slow` per TS-007, and SHOULD be preferred only where the behaviour cannot be reproduced without it.
@@ -254,4 +279,4 @@ This constitution supersedes all other development practices and documentation. 
 - **MINOR**: New cloud provider support, new output formats, new AI backends, new agent-facing interfaces, new principles, new technical standards
 - **PATCH**: Bug fixes, documentation updates, icon additions, clarifications
 
-**Version**: 1.7.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2026-07-29
+**Version**: 1.8.0 | **Ratified**: 2025-12-07 | **Last Amended**: 2026-09-28

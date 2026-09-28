@@ -8,13 +8,31 @@ hide:
 
 # TerraVision
 
-**Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons**
+**Turn Terraform or JSON into professional cloud architecture diagrams in official AWS, Azure and GCP style**
 
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![Python version](https://img.shields.io/pypi/pyversions/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![License](https://img.shields.io/github/license/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
+
+Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.
+
+---
+
+## Get started with your AI assistant
+
+Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
+
+| You have | Ask something like | You get |
+|---|---|---|
+| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
+| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
+
+Install Graphviz, Git and uv once, then connect your assistant: one command in Claude Code, Codex CLI and Gemini CLI, or one download for Claude Desktop, where the diagram appears right in the chat. Step-by-step for macOS, Windows and Linux: **[Use TerraVision with AI assistants](ai-assistants.md)**.
+
+For DevOps teams: the [GitHub Action and CI/CD setups](cicd-integration.md) redraw the diagram whenever the Terraform changes.
 
 ---
 
@@ -215,19 +233,7 @@ Every supported resource type is listed on the [Node types](node-types.md) page.
 
 ---
 
-## Use it with an AI assistant
-
-Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram in plain English, and TerraVision draws it with the official icons. It works three ways:
-
-| You have | Ask something like | You get |
-|---|---|---|
-| An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
-| Terraform code | *"Draw the architecture of the Terraform in ./infra"* | A diagram of what `terraform plan` says the code deploys |
-| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections in the diagram |
-
-Setup takes one command in Claude Code, Codex CLI and Gemini CLI, and one download for Claude Desktop, where the diagram appears right in the chat: **[Use TerraVision with AI assistants](ai-assistants.md)**.
-
-## Quick Start
+## Quick start: the command line
 
 Install with pipx, uv or pip:
 
