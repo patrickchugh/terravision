@@ -173,11 +173,18 @@ BEGIN{
             if (match(lowerG.name, "cluster") != 0) continue;
             if (lowerG.name == upperG.name) continue;
             sscanf (lowerG.bb, "%lf,%lf,%lf,%lf", &loMinX, &loMinY, &loMaxX, &loMaxY);
-            // one above the other (y grows upwards), sharing some width
-            if (upMaxY <= loMaxY) continue;
+            // one above the other (y grows upwards), sharing some width. Both
+            // edges must be higher: a box that spans the other top to bottom
+            // (an empty box laid out over its whole parent) is not above it.
+            if (upMaxY <= loMaxY || upMinY <= loMinY) continue;
             if (upMinX >= loMaxX || loMinX >= upMaxX) continue;
             overlapY = (loMaxY + childGap) - upMinY;
             if (peered(upperG, lowerG)) overlapY = (loMaxY + linkGap) - upMinY;
+            // A bottom label hanging into the next row is a shallow overlap.
+            // One as deep as half a box is two boxes laid over each other
+            // (an empty box given its whole parent's area), which moving
+            // one below the other would only stretch the diagram for.
+            if (overlapY > (upMaxY - upMinY) / 2.0 || overlapY > (loMaxY - loMinY) / 2.0) continue;
             if (overlapY > 0.5) {
               moveBoxDown(lowerG, overlapY);
               moveNodesDown(lowerG, overlapY);

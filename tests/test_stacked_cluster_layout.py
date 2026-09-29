@@ -162,3 +162,32 @@ def test_a_moved_box_takes_all_its_inner_boxes(tmp_path):
     for name, (parent, bb) in boxes.items():
         if parent != "-":
             assert _inside(bb, boxes[parent][1]), f"{name} outside {parent}"
+
+
+def test_a_box_laid_over_another_does_not_push_it_down(tmp_path):
+    """An empty box can be laid out over its whole parent (the AKS example's
+    empty shared services group). That is not one box above another, and
+    moving the other below it only stretched the diagram."""
+    from pathlib import Path
+
+    layout = tmp_path / "layout.dot"
+    layout.write_text(
+        """digraph G {
+  graph [bb="0,0,2000,2000"];
+  subgraph cluster_cloud { graph [bb="0,0,2000,2000"];
+    subgraph cluster_rg { graph [bb="100,100,1900,1900"]; a [pos="1000,1000"]; }
+    subgraph cluster_empty { graph [bb="0,0,2000,2000"]; }
+  }
+}"""
+    )
+    script = Path(__file__).parents[1] / "shiftLabel.gvpr"
+    shifted = subprocess.run(
+        ["gvpr", "-c", "-q", "-f", str(script), str(layout)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    import re
+
+    [pos] = re.findall(r'\ba\s*\[[^\]]*pos="([^"]+)"', shifted)
+    assert pos.rstrip("!") == "1000,1000"
