@@ -43,7 +43,7 @@ CONTAINER_TYPES = {
     "aws_autoscaling_group", "aws_subnet", "aws_security_group", "tv_aws_onprem",
     "tv_aws_region",
     "azurerm_resource_group", "azurerm_group", "azurerm_virtual_network",
-    "azurerm_subnet", "tv_azurerm_zone", "tv_azure_onprem",
+    "azurerm_subnet", "tv_azurerm_zone", "tv_azure_onprem", "tv_azurerm_region",
     "tv_gcp_account", "google_project", "tv_gcp_users", "tv_gcp_system",
     "tv_gcp_infra_system2", "tv_gcp_onprem", "tv_gcp_external_saas",
     "tv_gcp_external_data", "tv_gcp_external_3p", "tv_gcp_external_1p",
