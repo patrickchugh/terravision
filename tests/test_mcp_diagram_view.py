@@ -126,12 +126,21 @@ def test_read_text_and_binary_files(rendered):
     assert base64.b64decode(png["blob"]).startswith(b"\x89PNG")
 
 
-@pytest.mark.parametrize("attempt", ["outsider", "/etc/hostname", "../demo.dot.png"])
-def test_only_rendered_files_can_be_read_or_opened(rendered, outdir, attempt):
-    if attempt == "outsider":
-        stray = outdir / "stray.png"
-        stray.write_bytes(b"\x89PNG not ours")
-        attempt = str(stray)
+@pytest.mark.parametrize(
+    "attempt", ["not-a-diagram", "subfolder", "/etc/hostname", "../demo.dot.png"]
+)
+def test_only_diagram_files_in_the_output_folder_can_be_read_or_opened(
+    rendered, outdir, attempt
+):
+    if attempt == "not-a-diagram":
+        secret = outdir / "notes.txt"
+        secret.write_text("not a diagram")
+        attempt = str(secret)
+    elif attempt == "subfolder":
+        (outdir / "sub").mkdir()
+        nested = outdir / "sub" / "other.png"
+        nested.write_bytes(b"\x89PNG")
+        attempt = str(nested)
     with pytest.raises(McpServiceError, match="not a diagram file"):
         mcp_service.read_output_file(attempt)
     with pytest.raises(McpServiceError, match="not a diagram file"):
@@ -1008,3 +1017,26 @@ def test_diagram_tool_parameters_are_documented(client_call):
         "numbered copy"
         in tools["render_graph"].input_schema["properties"]["flows"]["description"]
     )
+
+
+def test_buttons_keep_working_after_the_server_restarts(
+    rendered, outdir, launched, monkeypatch
+):
+    """The list of files a server wrote lives in memory; after a restart (an
+    update, an app restart) every earlier diagram's buttons were refused.
+    Diagram files in the output folder stay openable."""
+    _on(monkeypatch, "Darwin")  # opening needs no desktop session there
+    mcp_service._RENDERED.clear()  # what a new server process starts with
+    png = rendered["files"]["png"]
+    assert mcp_service.read_output_file(rendered["files"]["graph"])["text"]
+    mcp_service.open_output_file(png)
+    assert launched  # the open command ran
+
+
+def test_a_link_out_of_the_output_folder_is_refused(outdir, tmp_path_factory):
+    outside = tmp_path_factory.mktemp("outside") / "secret.png"
+    outside.write_bytes(b"\x89PNG")
+    link = outdir / "innocent.png"
+    link.symlink_to(outside)
+    with pytest.raises(McpServiceError, match="not a diagram file"):
+        mcp_service.read_output_file(str(link))

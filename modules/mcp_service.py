@@ -1006,21 +1006,45 @@ def run_render_graph(
     return result
 
 
+# File types a diagram call writes. Files of these types directly inside the
+# output folder can be opened and read.
+_OUTPUT_SUFFIXES = {".png", ".svg", ".pdf", ".drawio", ".json", ".yml", ".dot", ".html"}
+
+
 def _rendered_file(path: str) -> Path:
-    """Resolve ``path`` and check this server rendered it.
+    """Resolve ``path`` and check it is a diagram file this server may open.
+
+    Allowed: a file this process wrote, or a file of a type TerraVision
+    writes that sits directly in the configured output folder. The second
+    rule keeps a diagram's buttons working after the server restarts (an
+    update, an app restart), when this process never saw the file; before,
+    every earlier diagram's buttons failed. Anything else, including a path
+    that leads outside the folder through a link, is refused.
 
     Raises:
-        McpServiceError: For any path outside the files this process wrote.
+        McpServiceError: For any other path.
     """
     try:
         resolved = Path(path).expanduser().resolve()
     except (OSError, RuntimeError, ValueError):
         resolved = None
-    if resolved is None or resolved not in _RENDERED or not resolved.is_file():
-        raise McpServiceError(
-            f"{path!r} is not a diagram file rendered by this TerraVision server."
-        )
-    return resolved
+    if resolved is not None and resolved.is_file():
+        if resolved in _RENDERED:
+            return resolved
+        try:
+            outdir = get_output_dir().resolve()
+        except OSError:
+            outdir = None
+        if (
+            outdir is not None
+            and resolved.parent == outdir
+            and resolved.suffix.lower() in _OUTPUT_SUFFIXES
+        ):
+            return resolved
+    raise McpServiceError(
+        f"{path!r} is not a diagram file in TerraVision's output folder "
+        f"({get_output_dir()})."
+    )
 
 
 # Media types for the files a diagram call writes. Text formats are returned
