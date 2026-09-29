@@ -15,8 +15,65 @@ BEGIN{
   node_t n;
   // $G is not addressable inside BEGIN, so BEG_G hands the root graph over
   graph_t rootG;
+  graph_t upperG, lowerG;
+  double upMinX, upMinY, upMaxX, upMaxY, loMinX, loMinY, loMaxX, loMaxY;
+  double overlapY;
+  int moved, passes;
+  // Set when any row was moved down; the cloud box's final bottom edge
+  int rowsMoved;
+  double cloudFinalMinY;
 
   hasLegend = 0;
+  rowsMoved = 0;
+
+  // "x,y!" (a pinned position) reads as y = 1 through yOf(), so pinned
+  // positions such as the cluster label nodes' are read with sscanf instead.
+  string lowered (string p, double dy) {
+    double px, py;
+    sscanf (p, "%lf,%lf", &px, &py);
+    return sprintf("%.1f,%.1f", px, py - dy);
+  }
+
+  // Move a cluster and everything drawn in it down by dy points: its nodes,
+  // the boxes nested in it, and the label nodes pinned to any of those boxes
+  // (label nodes live on the root graph, not inside the box they label).
+  // Arrows touching a moved node lose their route so neato -n2 draws them
+  // again from the new positions.
+  void moveBoxDown (graph_t box, double dy) {
+    graph_t inner;
+    node_t mv;
+    double bx0, by0, bx1, by1;
+
+    sscanf (box.bb, "%lf,%lf,%lf,%lf", &bx0, &by0, &bx1, &by1);
+    box.bb = sprintf("%.1f,%.1f,%.1f,%.1f", bx0, by0 - dy, bx1, by1 - dy);
+    if (hasAttr(box, "lp") && box.lp != "") {
+      box.lp = lowered(box.lp, dy);
+    }
+    for (mv = fstnode(rootG); mv; mv = nxtnode(mv)) {
+      if (hasAttr(mv, "_clusterid") && mv._clusterid == box.name) {
+        mv.pos = lowered(mv.pos, dy) + "!";
+      }
+    }
+    for (inner = fstsubg(box); inner; inner = nxtsubg(inner)) {
+      if (match(inner.name, "cluster") == 0) moveBoxDown(inner, dy);
+    }
+  }
+
+  void moveNodesDown (graph_t box, double dy) {
+    node_t mv;
+    edge_t me;
+    for (mv = fstnode(box); mv; mv = nxtnode_sg(box, mv)) {
+      mv.pos = lowered(mv.pos, dy) + "!";
+      if (hasAttr(mv, "xlp") && mv.xlp != "") {
+        mv.xlp = lowered(mv.xlp, dy);
+      }
+      for (me = fstedge(mv); me; me = nxtedge(me, mv)) {
+        me.pos = "";
+        if (hasAttr(me, "lp")) me.lp = "";
+        if (hasAttr(me, "xlp")) me.xlp = "";
+      }
+    }
+  }
 
   // recursive routine, processing from the top (root) down
   graph_t labelShift (graph_t Gr) {
@@ -32,6 +89,37 @@ BEGIN{
       if (hasAttr(Gr, "_cloudgroup") && Gr._cloudgroup=="1"){
         sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &cloudMinX, &cloudMinY, &cloudMaxX, &cloudMaxY);
         cloudCenterX = (cloudMinX + cloudMaxX) / 2.0;
+      }
+
+      // Children have just grown downwards to make room for their bottom
+      // labels, and neato left only a thin gap between rows of boxes, so a
+      // box can now hang over the box below it (issue #218: spoke resource
+      // groups over the hub's). Move the lower box, with everything in it,
+      // down until the gap is back. Repeat, since that can reach the next row.
+      passes = 0;
+      moved = 1;
+      while (moved && passes < 50) {
+        moved = 0;
+        passes = passes + 1;
+        for (upperG = fstsubg(Gr); upperG; upperG = nxtsubg(upperG)) {
+          if (match(upperG.name, "cluster") != 0) continue;
+          sscanf (upperG.bb, "%lf,%lf,%lf,%lf", &upMinX, &upMinY, &upMaxX, &upMaxY);
+          for (lowerG = fstsubg(Gr); lowerG; lowerG = nxtsubg(lowerG)) {
+            if (match(lowerG.name, "cluster") != 0) continue;
+            if (lowerG.name == upperG.name) continue;
+            sscanf (lowerG.bb, "%lf,%lf,%lf,%lf", &loMinX, &loMinY, &loMaxX, &loMaxY);
+            // one above the other (y grows upwards), sharing some width
+            if (upMaxY <= loMaxY) continue;
+            if (upMinX >= loMaxX || loMinX >= upMaxX) continue;
+            overlapY = (loMaxY + childGap) - upMinY;
+            if (overlapY > 0.5) {
+              moveBoxDown(lowerG, overlapY);
+              moveNodesDown(lowerG, overlapY);
+              moved = 1;
+              rowsMoved = 1;
+            }
+          }
+        }
       }
 
       // Position cluster label nodes within this cluster
@@ -164,6 +252,12 @@ BEGIN{
       newY=lpY+(bbMaxY-lpMaxY)+fudgeY;
       Gr.lp=sprintf("%.1f,%.1f", newX, newY);
       }
+
+      // The cloud box is final now, including its own bottom label (the
+      // Azure logo), which hangs from this edge
+      if (hasAttr(Gr, "_cloudgroup") && Gr._cloudgroup=="1"){
+        sscanf (Gr.bb, "%lf,%lf,%lf,%lf", &bbMinX, &cloudFinalMinY, &bbMaxX, &bbMaxY);
+      }
     }
     return Gr;
   } // end of labelShift
@@ -279,6 +373,11 @@ BEG_G{
   if (cloudMaxY > topEdgeY) topEdgeY = cloudMaxY;
   // Use lower of cloudMinY or bottomMostY
   if (cloudMinY < bottomMostY) bottomMostY = cloudMinY;
+  // cloudMinY was read before the rows moved apart, and the cloud box has
+  // grown since; the provider logo hanging from its bottom edge moved down
+  // with it and would run into the footer. Only then is the final edge used,
+  // so diagrams without moved rows keep their footer where it was.
+  if (rowsMoved && cloudFinalMinY < bottomMostY) bottomMostY = cloudFinalMinY;
 }
 END_G{
   double gbbMinX, gbbMinY, gbbMaxX, gbbMaxY, gcenterX, glpY;
