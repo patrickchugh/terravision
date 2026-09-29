@@ -756,12 +756,41 @@ def link_peers_via_intermediary(
     return tfdata
 
 
+def _copy_for_parents(
+    tfdata: Dict[str, Any], name: str, child_parents: List[str], parents: List[str]
+) -> str:
+    """Return the copy of intermediate node ``name`` that belongs to ``child_parents``.
+
+    The generated name says only what the box is (availability zone
+    us-east-1a), not whose it is, so two VPCs with subnets in the same zone
+    shared one zone box, drawn inside both VPCs at once. Each parent gets its
+    own numbered copy instead (``~2``, ``~3``), like load balancers and NAT
+    gateways get one per subnet; the label comes from the name before the
+    ``~``, so every copy reads the same.
+    """
+    graphdict = tfdata["graphdict"]
+    if not child_parents or name not in graphdict:
+        return name
+    base = name.split("~")[0]
+    copies = [n for n in graphdict if n.split("~")[0] == base]
+    wanted = set(child_parents)
+    for candidate in [name] + sorted(c for c in copies if c != name):
+        owners = {p for p in parents if candidate in graphdict.get(p, [])}
+        if not owners or owners == wanted:
+            return candidate
+    numbers = [
+        int(c.split("~")[1]) for c in copies if "~" in c and c.split("~")[1].isdigit()
+    ]
+    return f"{base}~{max(numbers, default=1) + 1}"
+
+
 def insert_intermediate_node(
     tfdata: Dict[str, Any],
     parent_pattern: str,
     child_pattern: str,
     intermediate_node_generator: Callable[[str, Dict[str, Any]], str],
     create_if_missing: bool = True,
+    one_per_parent: bool = False,
 ) -> Dict[str, Any]:
     """Insert intermediate nodes between parents and children.
 
@@ -774,6 +803,9 @@ def insert_intermediate_node(
         intermediate_node_generator: Function that generates intermediate node name
                                      from child resource and its metadata
         create_if_missing: Create intermediate node if it doesn't exist
+        one_per_parent: Give each parent its own numbered copy of an
+            intermediate node another parent already has (see
+            _copy_for_parents), instead of sharing one
 
     Returns:
         Updated tfdata with intermediate nodes inserted
@@ -787,6 +819,10 @@ def insert_intermediate_node(
         # Generate intermediate node name
         child_metadata = tfdata["meta_data"].get(child, {})
         intermediate = intermediate_node_generator(child, child_metadata)
+        if one_per_parent:
+            intermediate = _copy_for_parents(
+                tfdata, intermediate, child_parents, parents
+            )
 
         # Create intermediate node if needed
         if create_if_missing and intermediate not in tfdata["graphdict"]:

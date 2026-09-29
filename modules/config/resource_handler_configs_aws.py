@@ -180,6 +180,8 @@ RESOURCE_HANDLER_CONFIGS = {
                     "child_pattern": "aws_subnet",
                     "intermediate_node_generator": "generate_az_node_name",
                     "create_if_missing": True,
+                    # Two VPCs in the same zone each get their own zone box
+                    "one_per_parent": True,
                 },
             },
         ],
