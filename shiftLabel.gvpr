@@ -26,6 +26,67 @@ BEGIN{
   hasLegend = 0;
   rowsMoved = 0;
 
+  // Peering lines between two network boxes (_grouplink edges): the gap
+  // they need between stacked boxes to fit their badge (icon and caption),
+  // and the badge's size, which gvpr cannot measure.
+  double linkGap = 180.0;
+  double badgeHalfW = 60.0;
+  graph_t foundG;
+  edge_t ge;
+  node_t gn;
+
+  // Sets foundG to the box named wanted, if it is g or inside g. Locals are
+  // shared between recursive calls in gvpr, hence the return-and-reassign.
+  graph_t findIn (graph_t g, string wanted) {
+    graph_t k2;
+    if (g.name == wanted) foundG = g;
+    for (k2 = fstsubg(g); k2; k2 = nxtsubg(k2)) {
+      k2 = findIn(k2, wanted);
+    }
+    return g;
+  }
+
+  int holds (graph_t g, string wanted) {
+    foundG = NULL;
+    findIn(g, wanted);
+    return foundG != NULL;
+  }
+
+  // Whether a peering line joins a box inside upper to a box inside lower
+  int peered (graph_t upper, graph_t lower) {
+    for (gn = fstnode(rootG); gn; gn = nxtnode(gn)) {
+      for (ge = fstout(gn); ge; ge = nxtout(ge)) {
+        if (!hasAttr(ge, "_grouplink") || ge._grouplink != "1") continue;
+        if ((holds(upper, ge.ltail) && holds(lower, ge.lhead)) ||
+            (holds(upper, ge.lhead) && holds(lower, ge.ltail))) return 1;
+      }
+    }
+    return 0;
+  }
+
+  // Whether the straight segment (x1,y1)-(x2,y2), vertical or horizontal,
+  // runs through a box label (the name and icon at a box's bottom)
+  node_t ln;
+  double lx, ly, lw, lh, segLo, segHi;
+  int crossesLabel (double x1, double y1, double x2, double y2) {
+    for (ln = fstnode(rootG); ln; ln = nxtnode(ln)) {
+      if (!hasAttr(ln, "_clusterlabel") || ln._clusterlabel != "1") continue;
+      sscanf (ln.pos, "%lf,%lf", &lx, &ly);
+      lw = 0.0; lh = 0.0;
+      if (hasAttr(ln, "width")) sscanf (ln.width, "%lf", &lw);
+      if (hasAttr(ln, "height")) sscanf (ln.height, "%lf", &lh);
+      lw = lw * 72.0 / 2.0 + 8.0; lh = lh * 72.0 / 2.0 + 8.0;
+      if (x1 == x2) {
+        segLo = y1; segHi = y2; if (segLo > segHi) { segLo = y2; segHi = y1; }
+        if (x1 > lx - lw && x1 < lx + lw && segHi > ly - lh && segLo < ly + lh) return 1;
+      } else {
+        segLo = x1; segHi = x2; if (segLo > segHi) { segLo = x2; segHi = x1; }
+        if (y1 > ly - lh && y1 < ly + lh && segHi > lx - lw && segLo < lx + lw) return 1;
+      }
+    }
+    return 0;
+  }
+
   // "x,y!" (a pinned position) reads as y = 1 through yOf(), so pinned
   // positions such as the cluster label nodes' are read with sscanf instead.
   string lowered (string p, double dy) {
@@ -116,6 +177,7 @@ BEGIN{
             if (upMaxY <= loMaxY) continue;
             if (upMinX >= loMaxX || loMinX >= upMaxX) continue;
             overlapY = (loMaxY + childGap) - upMinY;
+            if (peered(upperG, lowerG)) overlapY = (loMaxY + linkGap) - upMinY;
             if (overlapY > 0.5) {
               moveBoxDown(lowerG, overlapY);
               moveNodesDown(lowerG, overlapY);
@@ -274,6 +336,94 @@ BEG_G{
 
   rootG = $G;
   labelShift($G);
+
+  // Peering lines join two network boxes. Graphviz clips an edge to its
+  // boxes (lhead/ltail) only in dot layouts, and neato -n2 routes it from
+  // icon to icon straight through both boxes, so the line is drawn here
+  // instead: straight across the gap between the boxes' facing borders,
+  // with the badge (the provider's peering icon) beside it in that gap.
+  graph_t tailG, headG;
+  double t0, t1, t2, t3, h0, h1, h2, h3;
+  double sx, sy, ex, ey, ux, uy, len, arrowLen, lo, hi, cx, cy;
+  double p0x, p0y, p3x, p3y;
+  int step;
+  arrowLen = 18.0;
+  for (gn = fstnode($G); gn; gn = nxtnode(gn)) {
+    for (ge = fstout(gn); ge; ge = nxtout(ge)) {
+      if (!hasAttr(ge, "_grouplink") || ge._grouplink != "1") continue;
+      foundG = NULL; findIn($G, ge.ltail); tailG = foundG;
+      foundG = NULL; findIn($G, ge.lhead); headG = foundG;
+      if (tailG == NULL || headG == NULL) continue;
+      sscanf (tailG.bb, "%lf,%lf,%lf,%lf", &t0, &t1, &t2, &t3);
+      sscanf (headG.bb, "%lf,%lf,%lf,%lf", &h0, &h1, &h2, &h3);
+      lo = t0; if (h0 > lo) lo = h0;
+      hi = t2; if (h2 < hi) hi = h2;
+      if (hi - lo > 1.0 && (t1 >= h3 || h1 >= t3)) {
+        // one above the other: a vertical line through their shared width,
+        // slid sideways off any box label it would cross
+        if (t1 >= h3) { sy = t1; ey = h3; } else { sy = t3; ey = h1; }
+        sx = (lo + hi) / 2.0;
+        for (step = 0; step < 40; step = step + 1) {
+          cx = (lo + hi) / 2.0 + ((step % 2) ? 1.0 : -1.0) * 20.0 * ((step + 1) / 2);
+          if (cx < lo + 15.0 || cx > hi - 15.0) continue;
+          if (!crossesLabel(cx, sy, cx, ey)) { sx = cx; break; }
+        }
+        ex = sx;
+      } else {
+        lo = t1; if (h1 > lo) lo = h1;
+        hi = t3; if (h3 < hi) hi = h3;
+        if (hi - lo > 1.0 && (t0 >= h2 || h0 >= t2)) {
+          // side by side: a horizontal line through their shared height,
+          // slid off any box label it would cross
+          if (t2 <= h0) { sx = t2; ex = h0; } else { sx = t0; ex = h2; }
+          sy = (lo + hi) / 2.0;
+          for (step = 0; step < 40; step = step + 1) {
+            cy = (lo + hi) / 2.0 + ((step % 2) ? 1.0 : -1.0) * 20.0 * ((step + 1) / 2);
+            if (cy < lo + 15.0 || cy > hi - 15.0) continue;
+            if (!crossesLabel(sx, cy, ex, cy)) { sy = cy; break; }
+          }
+          ey = sy;
+        } else {
+          // diagonal: centre to centre, cut at each box's border
+          sx = (t0 + t2) / 2.0; sy = (t1 + t3) / 2.0;
+          ex = (h0 + h2) / 2.0; ey = (h1 + h3) / 2.0;
+          ux = ex - sx; uy = ey - sy;
+          if (ux == 0.0 && uy == 0.0) continue;
+          // fraction of the centre line inside each box
+          lo = 1.0; hi = 1.0;
+          if (ux != 0.0) { lo = ((t2 - t0) / 2.0) / (ux < 0 ? -ux : ux); hi = ((h2 - h0) / 2.0) / (ux < 0 ? -ux : ux); }
+          if (uy != 0.0) {
+            len = ((t3 - t1) / 2.0) / (uy < 0 ? -uy : uy); if (len < lo) lo = len;
+            len = ((h3 - h1) / 2.0) / (uy < 0 ? -uy : uy); if (len < hi) hi = len;
+          }
+          if (lo + hi >= 1.0) continue;  // the boxes overlap
+          cx = sx; cy = sy;
+          sx = cx + ux * lo; sy = cy + uy * lo;
+          ex = cx + ux * (1.0 - hi); ey = cy + uy * (1.0 - hi);
+        }
+      }
+      ux = ex - sx; uy = ey - sy;
+      len = sqrt(ux * ux + uy * uy);
+      if (len < 2.0 * arrowLen + 1.0) continue;  // no room for the arrows
+      ux = ux / len; uy = uy / len;
+      p0x = sx + ux * arrowLen; p0y = sy + uy * arrowLen;
+      p3x = ex - ux * arrowLen; p3y = ey - uy * arrowLen;
+      // Graphviz's parser wants the start arrow before the end arrow,
+      // whatever its grammar says; the other order is silently dropped and
+      // the edge routed icon to icon again
+      ge.pos = sprintf("s,%.1f,%.1f e,%.1f,%.1f %.1f,%.1f %.1f,%.1f %.1f,%.1f %.1f,%.1f",
+                       sx, sy, ex, ey, p0x, p0y,
+                       p0x + (p3x - p0x) / 3.0, p0y + (p3y - p0y) / 3.0,
+                       p0x + 2.0 * (p3x - p0x) / 3.0, p0y + 2.0 * (p3y - p0y) / 3.0,
+                       p3x, p3y);
+      // The badge beside the middle of the line: to the right of a vertical
+      // or diagonal line, above a horizontal one
+      cx = (sx + ex) / 2.0; cy = (sy + ey) / 2.0;
+      if (sy == ey) cy = cy + badgeHalfW + 20.0;
+      else cx = cx + badgeHalfW + 12.0;
+      ge.xlp = sprintf("%.1f,%.1f", cx, cy);
+    }
+  }
 
   // Center edge nodes (CDN, API GW, etc.) among their targets so ortho edges
   // fan out in multiple directions instead of all routing in parallel.
