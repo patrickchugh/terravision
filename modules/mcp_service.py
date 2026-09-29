@@ -1176,24 +1176,20 @@ def _linux_desktop_env() -> Optional[Dict[str, str]]:
     return env if env.get("DISPLAY") or env.get("WAYLAND_DISPLAY") else None
 
 
-def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
-    """Open a rendered file in the user's default app, or show it in its folder.
+def _launch(target: str, reveal: bool = False) -> None:
+    """Open ``target``, a file or a URL, in its default app.
 
-    The server runs on the user's own machine, so this works in every chat
-    app, including those whose sandbox blocks downloads. Only files in the
-    rendered set can be opened.
+    With ``reveal``, shows the file in its folder instead.
 
     Raises:
-        McpServiceError: For an unknown path, or when there is no desktop to
-            open it on, for example a Linux server without a display.
+        McpServiceError: When there is no desktop to open it on, or the
+            opener is missing.
     """
     import platform
     import subprocess
 
     import modules.helpers as helpers
 
-    resolved = _rendered_file(path)
-    target = str(resolved)
     system = platform.system()
     popen_kwargs: Dict[str, Any] = {
         "stdin": subprocess.DEVNULL,
@@ -1203,27 +1199,190 @@ def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
     if system == "Windows":
         if not reveal:
             os.startfile(target)  # type: ignore[attr-defined]  # Windows only
-            return {"opened": target, "reveal": False}
+            return
         command = ["explorer", f"/select,{target}"]
     else:
         popen_kwargs["start_new_session"] = True
         if system == "Darwin":
             command = ["open", "-R", target] if reveal else ["open", target]
         elif helpers.is_wsl():
-            command = ["wslview", str(resolved.parent) if reveal else target]
+            command = ["wslview", str(Path(target).parent) if reveal else target]
         else:
-            desktop = _linux_desktop_env()
-            if desktop is None:
-                raise McpServiceError(
-                    f"There is no desktop session here to open files in. "
-                    f"The file is at {target}"
-                )
-            popen_kwargs["env"] = desktop
-            command = ["xdg-open", str(resolved.parent) if reveal else target]
+            popen_kwargs["env"] = _desktop_env_for(target)
+            command = ["xdg-open", str(Path(target).parent) if reveal else target]
     try:
         subprocess.Popen(command, **popen_kwargs)
     except OSError as e:
         raise McpServiceError(f"Could not open {target}: {e}") from e
+
+
+def _desktop_env_for(target: str) -> Dict[str, str]:
+    """Return the Linux desktop environment, or explain that there is none."""
+    desktop = _linux_desktop_env()
+    if desktop is None:
+        raise McpServiceError(
+            f"There is no desktop session here to open files in. "
+            f"The file is at {target}"
+        )
+    return desktop
+
+
+# The media type the draw.io desktop app registers for .drawio files.
+_DRAWIO_MIME = "application/vnd.jgraph.mxfile"
+_DRAWIO_WEB = "https://app.diagrams.net/"
+
+
+def _windows_has_app_for(extension: str) -> bool:
+    """Whether Windows has an app set to open files with ``extension``.
+
+    Without one, opening such a file shows the "How do you want to open this
+    file?" dialog.
+    """
+    import ctypes
+
+    try:
+        query = ctypes.windll.shlwapi.AssocQueryStringW  # type: ignore[attr-defined]
+    except (AttributeError, OSError):
+        return True
+    # ASSOCF_INIT_IGNOREUNKNOWN (0x400) fails instead of naming the "Open
+    # with" dialog. Ask for the executable, then the app's name: apps from
+    # the Microsoft Store may only have the second.
+    for what in (2, 4):  # ASSOCSTR_EXECUTABLE, ASSOCSTR_FRIENDLYAPPNAME
+        size = ctypes.c_ulong(0)
+        if query(0x400, what, extension, None, None, ctypes.byref(size)) >= 0:
+            return True
+    return False
+
+
+def _linux_has_drawio_app(path: Path) -> bool:
+    """Whether the Linux desktop has an app set for draw.io files.
+
+    Without the draw.io app installed, a .drawio file is plain XML to the
+    desktop, and xdg-open shows it in a text editor.
+    """
+    import subprocess
+
+    env = _desktop_env_for(str(path))
+
+    def query(*args: str) -> str:
+        return subprocess.run(
+            ["xdg-mime", "query", *args],
+            env=env,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout.strip()
+
+    try:
+        return query("filetype", str(path)) == _DRAWIO_MIME and bool(
+            query("default", _DRAWIO_MIME)
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _open_in_drawio_app(path: Path) -> bool:
+    """Open a .drawio file in the app set for it; False when there is none."""
+    import platform
+    import subprocess
+
+    import modules.helpers as helpers
+
+    system = platform.system()
+    if system == "Darwin":
+        # open exits non-zero ("No application knows how to open") when no
+        # app claims the file, so trying it is the check.
+        try:
+            done = subprocess.run(
+                ["open", str(path)],
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                timeout=15,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return done.returncode == 0
+    if system == "Windows":
+        known = _windows_has_app_for(".drawio")
+    elif helpers.is_wsl():
+        known = True
+    else:
+        known = _linux_has_drawio_app(path)
+    if known:
+        _launch(str(path))
+    return known
+
+
+def drawio_web_url(path: Path) -> str:
+    """Return a URL that opens the .drawio file at ``path`` in draw.io's web app.
+
+    The diagram travels in the URL's fragment (after ``#``), which the
+    browser never sends to a server: draw.io reads it in the page, so the
+    diagram stays on the user's computer. The encoding is draw.io's own for
+    ``#R`` links: the XML URI-encoded, raw-deflated and base64-encoded.
+    """
+    import base64
+    import urllib.parse
+    import zlib
+
+    xml = path.read_text(encoding="utf-8")
+    deflate = zlib.compressobj(9, zlib.DEFLATED, -15)
+    packed = deflate.compress(urllib.parse.quote(xml, safe="-_.!~*'()").encode("ascii"))
+    packed += deflate.flush()
+    data = urllib.parse.quote(base64.b64encode(packed).decode("ascii"), safe="")
+    title = urllib.parse.quote(path.name, safe="")
+    return f"{_DRAWIO_WEB}?title={title}#R{data}"
+
+
+def _drawio_web_target(path: Path) -> str:
+    """Return what to open to show ``path`` in draw.io's web app.
+
+    That is the URL itself, except on Windows: it hands URLs to the browser
+    through the shell, which cuts off URLs this long, so the browser gets a
+    small local page that forwards to it instead.
+    """
+    import html
+    import json
+    import platform
+    import tempfile
+
+    url = drawio_web_url(path)
+    if platform.system() != "Windows":
+        return url
+    page = Path(tempfile.gettempdir()) / "terravision-drawio" / f"{path.stem}.html"
+    page.parent.mkdir(exist_ok=True)
+    page.write_text(
+        '<!doctype html><meta charset="utf-8">'
+        f"<title>{html.escape(path.name)} - draw.io</title>"
+        f"<script>location.replace({json.dumps(url)});</script>"
+        f'<p>Opening <a href="{html.escape(url)}">{html.escape(path.name)}'
+        "</a> in draw.io...</p>",
+        encoding="utf-8",
+    )
+    return str(page)
+
+
+def open_output_file(path: str, reveal: bool = False) -> Dict[str, Any]:
+    """Open a rendered file in the user's default app, or show it in its folder.
+
+    The server runs on the user's own machine, so this works in every chat
+    app, including those whose sandbox blocks downloads. Only files in the
+    rendered set can be opened. A .drawio file opens in draw.io's web app
+    when no app is set to open it, and the result then has ``browser``.
+
+    Raises:
+        McpServiceError: For an unknown path, or when there is no desktop to
+            open it on, for example a Linux server without a display.
+    """
+    resolved = _rendered_file(path)
+    target = str(resolved)
+    if not reveal and resolved.suffix.lower() == ".drawio":
+        if _open_in_drawio_app(resolved):
+            return {"opened": target, "reveal": False}
+        _launch(_drawio_web_target(resolved))
+        return {"opened": target, "reveal": False, "browser": True}
+    _launch(target, reveal)
     return {"opened": target, "reveal": reveal}
 
 

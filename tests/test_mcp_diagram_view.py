@@ -305,10 +305,10 @@ def test_systemd_session_env_unavailable(monkeypatch, outcome):
 
 def test_open_on_macos(rendered, launched, monkeypatch):
     _on(monkeypatch, "Darwin")
-    drawio = rendered["files"]["drawio"]
-    mcp_service.open_output_file(drawio)
-    mcp_service.open_output_file(drawio, reveal=True)
-    assert launched == [["open", drawio], ["open", "-R", drawio]]
+    png = rendered["files"]["png"]
+    mcp_service.open_output_file(png)
+    mcp_service.open_output_file(png, reveal=True)
+    assert launched == [["open", png], ["open", "-R", png]]
 
 
 def test_open_on_windows(rendered, launched, monkeypatch):
@@ -343,6 +343,130 @@ def test_open_reports_a_missing_opener(rendered, monkeypatch):
     monkeypatch.setattr(subprocess, "Popen", missing)
     with pytest.raises(McpServiceError, match="Could not open"):
         mcp_service.open_output_file(rendered["files"]["png"])
+
+
+# ── draw.io files without the draw.io app ───────────────────────────
+
+
+def _decode_drawio_url(url):
+    """Read a #R link back the way draw.io does (Graph.decompress)."""
+    import base64
+    import urllib.parse
+    import zlib
+
+    assert url.startswith("https://app.diagrams.net/?title=")
+    data = urllib.parse.unquote(url.split("#R", 1)[1])
+    xml = zlib.decompress(base64.b64decode(data), -15).decode("ascii")
+    return urllib.parse.unquote(xml)
+
+
+def test_drawio_web_url_carries_the_diagram(rendered):
+    drawio = Path(rendered["files"]["drawio"])
+    url = mcp_service.drawio_web_url(drawio)
+    assert _decode_drawio_url(url) == drawio.read_text(encoding="utf-8")
+    assert f"?title={drawio.name}#R" in url
+
+
+def test_drawio_without_an_app_on_windows_opens_the_web_app(
+    rendered, launched, monkeypatch
+):
+    """Windows asked the user to pick an app for the .drawio file."""
+    _on(monkeypatch, "Windows")
+    started = []
+    monkeypatch.setattr(os, "startfile", started.append, raising=False)
+    monkeypatch.setattr(mcp_service, "_windows_has_app_for", lambda ext: False)
+    drawio = rendered["files"]["drawio"]
+    result = mcp_service.open_output_file(drawio)
+    assert result["browser"] is True
+    [page] = started
+    assert page.endswith(".html")
+    text = Path(page).read_text(encoding="utf-8")
+    assert "location.replace(" in text
+    assert mcp_service.drawio_web_url(Path(drawio)) in text
+
+
+def test_drawio_with_an_app_on_windows_opens_the_app(rendered, launched, monkeypatch):
+    _on(monkeypatch, "Windows")
+    started = []
+    monkeypatch.setattr(os, "startfile", started.append, raising=False)
+    monkeypatch.setattr(mcp_service, "_windows_has_app_for", lambda ext: True)
+    drawio = rendered["files"]["drawio"]
+    assert "browser" not in mcp_service.open_output_file(drawio)
+    assert started == [drawio]
+
+
+@pytest.mark.parametrize("has_app", [True, False], ids=["app", "no app"])
+def test_drawio_on_linux(rendered, launched, monkeypatch, has_app):
+    _on(monkeypatch, "Linux")
+    monkeypatch.setenv("DISPLAY", ":0")
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "GNOME")
+    monkeypatch.setattr(mcp_service, "_linux_has_drawio_app", lambda path: has_app)
+    drawio = rendered["files"]["drawio"]
+    result = mcp_service.open_output_file(drawio)
+    [(opener, target)] = launched
+    assert opener == "xdg-open"
+    if has_app:
+        assert target == drawio and "browser" not in result
+    else:
+        assert target == mcp_service.drawio_web_url(Path(drawio))
+        assert result["browser"] is True
+
+
+@pytest.mark.parametrize(
+    "answers, expected",
+    [
+        (["application/vnd.jgraph.mxfile", "drawio.desktop"], True),
+        (["application/vnd.jgraph.mxfile", ""], False),
+        (["application/xml", "org.gnome.TextEditor.desktop"], False),
+    ],
+    ids=["draw.io app", "type without an app", "plain XML"],
+)
+def test_linux_has_drawio_app(rendered, monkeypatch, answers, expected):
+    import subprocess
+
+    monkeypatch.setenv("DISPLAY", ":0")
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "GNOME")
+    replies = iter(answers)
+
+    def fake_run(cmd, **kwargs):
+        assert cmd[:2] == ["xdg-mime", "query"]
+        return subprocess.CompletedProcess(cmd, 0, stdout=next(replies) + "\n")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    drawio = Path(rendered["files"]["drawio"])
+    assert mcp_service._linux_has_drawio_app(drawio) is expected
+
+
+@pytest.mark.parametrize("returncode", [0, 1], ids=["app", "no app"])
+def test_drawio_on_macos(rendered, launched, monkeypatch, returncode):
+    """open fails when no app knows the file; then the web app opens."""
+    import subprocess
+
+    _on(monkeypatch, "Darwin")
+    tried = []
+
+    def fake_run(cmd, **kwargs):
+        tried.append(cmd)
+        return subprocess.CompletedProcess(cmd, returncode, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    drawio = rendered["files"]["drawio"]
+    result = mcp_service.open_output_file(drawio)
+    assert tried == [["open", drawio]]
+    if returncode == 0:
+        assert launched == [] and "browser" not in result
+    else:
+        assert launched == [["open", mcp_service.drawio_web_url(Path(drawio))]]
+        assert result["browser"] is True
+
+
+def test_revealing_a_drawio_file_never_checks_for_the_app(
+    rendered, launched, monkeypatch
+):
+    _on(monkeypatch, "Darwin")
+    drawio = rendered["files"]["drawio"]
+    mcp_service.open_output_file(drawio, reveal=True)
+    assert launched == [["open", "-R", drawio]]
 
 
 # ── The view document ───────────────────────────────────────────────
@@ -999,6 +1123,33 @@ def test_everything_the_model_reads_fits_client_limits(client_call):
         assert len(tool.description or "") <= 1024, tool.name
         for name, spec in tool.input_schema.get("properties", {}).items():
             assert len(spec.get("description") or "") <= 1024, f"{tool.name}.{name}"
+
+
+def test_a_system_on_a_cloud_triggers_terravision(client_call):
+    """ "Draw the architecture for a serverless order-processing system on AWS
+    that uses Lambda and DynamoDB" got Mermaid until the user added "cloud
+    architecture". What the model reads when choosing a tool names the clouds
+    and their services, and says the words "cloud" and "diagram" are not
+    needed."""
+    import re
+
+    from modules.mcp_server import _INSTRUCTIONS
+
+    tools = {t.name: t for t in client_call(lambda c: c.list_tools()).tools}
+    skill = (
+        Path(__file__).parents[1] / "skills/terravision-cloud-diagrams/SKILL.md"
+    ).read_text(encoding="utf-8")
+    skill_description = re.search(r'^description: "(.*)"$', skill, re.M).group(1)
+    assert len(skill_description) <= 1024  # the agent skill limit
+    for where, text in (
+        ("instructions", _INSTRUCTIONS),
+        ("render_graph", tools["render_graph"].description),
+        ("SKILL.md", skill_description),
+    ):
+        text = " ".join(text.split())
+        for phrase in ("AWS", "Azure", "Google Cloud", "Lambda", "Mermaid"):
+            assert phrase in text, (where, phrase)
+        assert re.search(r"never say|without the words", text), where
 
 
 def test_diagram_tool_parameters_are_documented(client_call):

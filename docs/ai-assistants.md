@@ -162,7 +162,7 @@ On GitHub it uses the [TerraVision GitHub Action](cicd-integration.md#github-act
 
 ## What you see
 
-- **Claude Desktop**, and other apps that support [MCP Apps](mcp-server.md#the-diagram-view-mcp-apps): the diagram appears in the chat with zoom, and buttons to **Open image** in your image viewer, **Edit in draw.io**, **Show in folder**, and **Source** (the graph JSON, and the flows once added).
+- **Claude Desktop**, and other apps that support [MCP Apps](mcp-server.md#the-diagram-view-mcp-apps): the diagram appears in the chat with zoom, and buttons to **Open image** in your image viewer, **Edit in draw.io** (in the draw.io app, or on the web if it isn't installed), **Show in folder**, and **Source** (the graph JSON, and the flows once added).
 - **Terminal assistants** (Claude Code, Codex CLI, Gemini CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.
 
 ## Tips

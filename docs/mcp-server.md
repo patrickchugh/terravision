@@ -293,8 +293,8 @@ render.
 view, `ui://terravision/diagram-<hash>.html` (the hash changes whenever the view does, because
 hosts cache views by address). In apps that support MCP Apps, such as Claude Desktop, VS
 Code with GitHub Copilot and Cursor, the diagram appears in the chat as soon as it is drawn, with
-zoom and pan, and four buttons: **Open image** (in your image viewer), **Edit in draw.io**, **Show in
-folder**, and **Source**, which shows and copies the graph JSON and, once flows or edge labels are
+zoom and pan, and four buttons: **Open image** (in your image viewer), **Edit in draw.io** (the draw.io
+app, or draw.io in your browser when the app is not installed), **Show in folder**, and **Source**, which shows and copies the graph JSON and, once flows or edge labels are
 added, the annotations YAML. Apps without MCP Apps still get the preview image and the file paths;
 apps whose views cannot call tools show the diagram without buttons, with the file paths listed.
 

@@ -446,13 +446,14 @@ VIEW_HTML = r"""<!DOCTYPE html>
   }
 
   // ---- Buttons -----------------------------------------------------------------
-  function openFile(path, reveal, done) {
+  function openFile(path, reveal, done, inBrowser) {
     callTool("open_diagram_file", { path: path, reveal: !!reveal })
-      .then(function () { setStatus(done); })
+      .then(function (res) { setStatus(res && res.browser && inBrowser ? inBrowser : done); })
       .catch(function (e) { setStatus(e.message, true); });
   }
   $("open").onclick = function () { openFile(files().png, false, "Opened the image in your default viewer."); };
-  $("edit").onclick = function () { openFile(files().drawio, false, "Opened the draw.io file. Save it there after editing."); };
+  $("edit").onclick = function () { openFile(files().drawio, false, "Opened the draw.io file. Save it there after editing.",
+    "No draw.io app is installed, so it opened in draw.io in your browser. The diagram stays on this computer; File > Save downloads your changes."); };
   $("reveal").onclick = function () { openFile(files().png, true, "Opened the folder with the diagram files."); };
 
   // The Source panel: the graph JSON, and the annotations YAML once flows or

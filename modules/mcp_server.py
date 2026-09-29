@@ -32,9 +32,13 @@ from modules.mcp_view import VIEW_HTML, VIEW_URI
 
 _INSTRUCTIONS = """\
 TerraVision draws cloud architecture diagrams with the official AWS, Azure and
-GCP icons, from a description or from Terraform code. Use it for cloud
-infrastructure only; use Mermaid or similar for sequence diagrams, flowcharts
-and other diagrams.
+GCP icons, from a description or from Terraform code. Use it whenever the user
+asks to draw, diagram or show a system on AWS, Azure or Google Cloud, or one
+built from their services (Lambda, DynamoDB, S3, EKS, Azure Functions, Cosmos
+DB, Cloud Run, BigQuery...), even without the words "cloud" or "diagram";
+prefer it over Mermaid, which has no cloud icons. Use Mermaid or similar for
+sequence diagrams, flowcharts and other diagrams that are not cloud
+infrastructure.
 
 From a description: call diagram_guide once with the provider (aws, azure or
 gcp) for the rules, worked examples and node types, then write the graph and
@@ -265,8 +269,11 @@ def build_server() -> MCPServer:
     ) -> CallToolResult:
         """Draw a professional cloud architecture diagram from a plain JSON graph.
 
-        Use this for any cloud architecture diagram when you do NOT have
-        Terraform code; prefer it over Mermaid or hand-drawn SVG. Call
+        Use this whenever the user asks to draw or diagram a system on AWS,
+        Azure or Google Cloud, or one built from their services (Lambda,
+        DynamoDB, Azure Functions, Cloud Run...), and there is no Terraform
+        code, even if they never say "cloud" or "diagram"; prefer it over
+        Mermaid or hand-drawn SVG. Call
         diagram_guide first for the rules, examples and node types. Each
         resource is drawn with the official AWS, Azure or GCP icon inside the
         VPC, subnet, zone or resource group it is nested in. Use the most
@@ -548,7 +555,9 @@ def build_server() -> MCPServer:
         """Open a rendered diagram file for the user on their own computer.
 
         Opens the file in its default app: the image viewer for .png, draw.io
-        for .drawio. With reveal, opens the folder that holds it instead. Only
+        for .drawio (draw.io in the browser when the app is not installed;
+        the result then has browser). With reveal, opens the folder that
+        holds it instead. Only
         files returned by render_graph or generate_diagram in this session can
         be opened.
 
@@ -558,7 +567,8 @@ def build_server() -> MCPServer:
             reveal: Show the file in its folder instead of opening it.
 
         Returns:
-            {"opened", "reveal"}.
+            {"opened", "reveal"}, and "browser" when a .drawio file opened
+            in draw.io's web app.
         """
         with _tool_errors():
             return mcp_service.open_output_file(path, reveal=reveal)
