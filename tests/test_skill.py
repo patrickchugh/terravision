@@ -63,6 +63,23 @@ def test_validator_rules_match_provider_configs(attr, config_suffix):
     assert getattr(_validator(), attr) == expected
 
 
+def test_validator_group_links_match_provider_configs():
+    from modules.config import cloud_config_aws, cloud_config_azure, cloud_config_gcp
+
+    expected = {
+        link["resource_type"]
+        for config, prefix in (
+            (cloud_config_aws, "AWS"),
+            (cloud_config_azure, "AZURE"),
+            (cloud_config_gcp, "GCP"),
+        )
+        for link in getattr(config, f"{prefix}_GROUP_LINKS")
+    }
+    links = _validator().GROUP_LINKS
+    assert set(links) == expected
+    assert set(links.values()) <= _validator().CONTAINER_TYPES
+
+
 @pytest.mark.parametrize("example", sorted((SKILL / "examples").glob("*.json")))
 def test_shipped_examples_are_valid(example):
     assert _validator().validate(json.loads(example.read_text())) == []

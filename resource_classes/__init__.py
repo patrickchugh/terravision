@@ -1,7 +1,6 @@
 import contextvars
 import os
 import sys
-import uuid
 from pathlib import Path
 from itertools import count as _count
 from typing import Dict, List, Union
@@ -151,6 +150,11 @@ class Canvas:
         :param edge_attr: Provide edge_attr dot config attributes.
         :param engine: Graphviz engine to use. Default is 'neato'.
         """
+        # Each diagram numbers its clusters and nodes from 1, so drawing the
+        # same source twice gives identical files (issue #216).
+        global _CLUSTER_SEQUENCE, _NODE_SEQUENCE
+        _CLUSTER_SEQUENCE = _count(1)
+        _NODE_SEQUENCE = _count(1)
         self.name = name
         self.engine = engine
         if not name and not filename:
@@ -296,6 +300,7 @@ class Canvas:
 
 
 _CLUSTER_SEQUENCE = _count(1)
+_NODE_SEQUENCE = _count(1)
 
 
 class Cluster:
@@ -540,7 +545,8 @@ class Node:
 
     @staticmethod
     def _rand_id(self, attr):
-        return f"{self._provider}.{self._type}.{self.__class__.__name__}.{uuid.uuid4().hex}"
+        # A sequence, not a random id, so the same diagram gives the same file
+        return f"{self._provider}.{self._type}.{self.__class__.__name__}.{next(_NODE_SEQUENCE)}"
 
     def _load_icon(self):
         basedir = Path(os.path.abspath(os.path.dirname(__file__)))

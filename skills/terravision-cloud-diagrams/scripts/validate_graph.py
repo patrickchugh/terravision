@@ -75,6 +75,14 @@ ALWAYS_DRAW_LINE = {
     "google_compute_forwarding_rule", "google_compute_backend_service",
     "google_container_node_pool", "google_compute_instance_group",
 }  # fmt: skip
+# Drawn as a line between two network boxes rather than an icon
+# (<PROVIDER>_GROUP_LINKS), with the kind of box each one links. List one in
+# its own network, pointing at the network it connects to.
+GROUP_LINKS = {
+    "aws_vpc_peering_connection": "aws_vpc",
+    "azurerm_virtual_network_peering": "azurerm_virtual_network",
+    "google_compute_network_peering": "google_compute_network",
+}
 SHARED_GROUP = {
     "aws": "aws_group.shared_services",
     "azure": "azurerm_group.shared_services",
@@ -171,7 +179,8 @@ def warnings(graph):
 
     known = known_types()
     if known is not None:
-        for resource_type in sorted({type_of(n) for n in nodes} - known):
+        drawn_as_icons = {type_of(n) for n in nodes} - set(GROUP_LINKS)
+        for resource_type in sorted(drawn_as_icons - known):
             provider = provider_of(resource_type + ".x")
             if provider:
                 close = suggestions(
@@ -185,6 +194,8 @@ def warnings(graph):
                 )
 
     for src, dst in edges:
+        if GROUP_LINKS.get(type_of(src)) == type_of(dst):
+            continue  # a peering pointing at the network it connects to
         if type_of(dst) in CONTAINER_TYPES:
             found.append(
                 f"Arrow {src} -> {dst} is not drawn: {type_of(dst)} is a "
@@ -220,6 +231,18 @@ def warnings(graph):
         if type_of(src) in CONTAINER_TYPES:
             for t in targets:
                 parents.setdefault(t, []).append(src)
+
+    for node in sorted(n for n in nodes if type_of(n) in GROUP_LINKS):
+        network = GROUP_LINKS[type_of(node)]
+        own = [b for b in parents.get(node, []) if type_of(b) == network]
+        remote = [t for t in graph.get(node, []) if type_of(t) == network]
+        if not own or not remote or set(own) & set(remote):
+            found.append(
+                f"{node} is drawn as a line between two {network} boxes, so "
+                f"list it in its own {network} and have it list the other: "
+                f'"{network}.a": [..., "{node}"], "{node}": ["{network}.b"]. '
+                "Otherwise it is not drawn."
+            )
     for node, boxes in sorted(parents.items()):
         if len(boxes) > 1:
             found.append(

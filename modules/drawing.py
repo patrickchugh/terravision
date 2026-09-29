@@ -483,6 +483,10 @@ def _drawn_node_inside(resource: str, tfdata: Dict[str, Any]):
         node = tfdata.get("meta_data", {}).get(current, {}).get("node")
         if node is not None and current != resource:
             return node
+        # A link lists the group it points at, which is not inside this one
+        link_types = {link["resource_type"] for link in GROUP_LINKS}
+        if helpers.get_no_module_name(current).split(".")[0] in link_types:
+            continue
         queue.extend(tfdata["graphdict"].get(current, []))
     return None
 
@@ -560,6 +564,13 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
             remote = group_referenced_by(
                 str(resolved(child).get(link["remote_attribute"], ""))
             )
+            # A graph file has no attributes: the link lists the group it
+            # connects to, and is listed in its own.
+            if not remote and "all_resource" not in tfdata:
+                remote = next(
+                    (g for g in tfdata["graphdict"].get(child, []) if g in clusters),
+                    None,
+                )
 
             # Prefer the link's own idea of which group it belongs to. Graph
             # parentage is unreliable here: a peering frequently ends up nested
@@ -1505,6 +1516,13 @@ def _build_diagram(
         _get_provider_config(tfdata), f"{provider.upper()}_HIDE_NODES", []
     )
     tfdata["hidden"] = sorted(set(tfdata.get("hidden") or []) | set(hide_nodes))
+    # A graph file lists a peering inside its own network, pointing at the
+    # network it connects to; it is drawn as the line between the two boxes
+    # (_draw_group_links), not as an icon inside one of them.
+    if "all_resource" not in tfdata:
+        tfdata["hidden"] = sorted(
+            set(tfdata["hidden"]) | {link["resource_type"] for link in GROUP_LINKS}
+        )
 
     # Only one provider's icon set is loaded, and clusters/grouping rules are
     # all that provider's, so resources from another cloud cannot be placed
@@ -1707,14 +1725,18 @@ def _build_diagram(
     # it. _footertext holds the same text in record syntax for the draw.io
     # subtitle.
     generated = f"Machine generated using TerraVision v{_TERRAVISION_VERSION}"
-    timestamp = str(datetime.datetime.now())
+    timestamp = _footer_timestamp()
+    # Graphviz expands \G, \N and the like even in HTML labels, and no escape
+    # stops it, so C:\dev\GitLab printed as C:\dev%1itLab (issue #219).
+    # Windows reads forward slashes as well.
+    source = str(source).replace("\\", "/")
     footer_style = {
         "_footernode": "1",
-        "_footertext": f"{generated} | {{ Timestamp: | Source: }} | {{ {timestamp} | {_record_escape(str(source))} }}",
+        "_footertext": f"{generated} | {{ Timestamp: | Source: }} | {{ {timestamp} | {_record_escape(source)} }}",
         "shape": "plaintext",
         "fontsize": "20",
         "margin": "0",
-        "label": _footer_html(generated, timestamp, str(source)),
+        "label": _footer_html(generated, timestamp, source),
         **_SIZE_TO_LABEL,
     }
     getattr(sys.modules[__name__], "Node")(**footer_style)
@@ -1890,6 +1912,32 @@ _FOOTER_LOGO = (
     / "terravision"
     / "terravision-icon-256.png"
 )
+
+
+def _footer_timestamp() -> str:
+    """Return the footer's timestamp: now, or SOURCE_DATE_EPOCH when it is set.
+
+    SOURCE_DATE_EPOCH (https://reproducible-builds.org/specs/source-date-epoch/)
+    is seconds since 1970 in UTC, usually the last commit's time. With it,
+    drawing the same source twice gives identical files, so a CI job that
+    commits the diagram only when it changed does not commit on every run
+    (issue #216).
+
+    Raises:
+        TerravisionError: When SOURCE_DATE_EPOCH is set but not a whole
+            number of seconds, as the specification asks.
+    """
+    epoch = os.environ.get("SOURCE_DATE_EPOCH", "").strip()
+    if not epoch:
+        return str(datetime.datetime.now())
+    try:
+        moment = datetime.datetime.fromtimestamp(int(epoch), datetime.timezone.utc)
+    except (ValueError, OverflowError, OSError) as e:
+        raise helpers.TerravisionError(
+            f"SOURCE_DATE_EPOCH must be a whole number of seconds since "
+            f"1970-01-01 UTC, not {epoch!r}"
+        ) from e
+    return moment.strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
 def _footer_html(generated: str, timestamp: str, source: str) -> str:

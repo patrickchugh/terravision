@@ -834,11 +834,14 @@ stages:
 Diagrams are version-controlled alongside code. Use `[skip ci]` to prevent infinite loops.
 
 ```bash
+export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct -- ./infrastructure)
 terravision draw --source ./infrastructure --outfile docs/architecture --format png
 git add docs/architecture.png
 git commit -m "Update architecture diagram [skip ci]" || exit 0
 git push
 ```
+
+The diagram's footer shows when it was drawn, so without `SOURCE_DATE_EPOCH` every run changes the file and makes a commit. With it set, the footer shows that time instead (here, the last commit to the Terraform), and drawing the same Terraform again gives an identical file, so `git commit` finds nothing to commit. TerraVision follows the [SOURCE_DATE_EPOCH specification](https://reproducible-builds.org/specs/source-date-epoch/): seconds since 1970 in UTC.
 
 ### Pattern 2: Upload as Build Artifacts
 
