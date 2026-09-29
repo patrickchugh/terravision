@@ -39,7 +39,10 @@ BEGIN{
   // (label nodes live on the root graph, not inside the box they label).
   // Arrows touching a moved node lose their route so neato -n2 draws them
   // again from the new positions.
-  void moveBoxDown (graph_t box, double dy) {
+  // gvpr shares a function's local variables between recursive calls, so
+  // the loop variable is restored from the return value after each call,
+  // as labelShift does; parameters survive.
+  graph_t moveBoxDown (graph_t box, double dy) {
     graph_t inner;
     node_t mv;
     double bx0, by0, bx1, by1;
@@ -55,8 +58,9 @@ BEGIN{
       }
     }
     for (inner = fstsubg(box); inner; inner = nxtsubg(inner)) {
-      if (match(inner.name, "cluster") == 0) moveBoxDown(inner, dy);
+      if (match(inner.name, "cluster") == 0) inner = moveBoxDown(inner, dy);
     }
+    return box;
   }
 
   void moveNodesDown (graph_t box, double dy) {

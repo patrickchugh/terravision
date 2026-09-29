@@ -47,9 +47,9 @@ BEG_G {
 """
 
 
-def _boxes(tmp_path):
+def _boxes(tmp_path, graph=HUB_AND_SPOKES):
     source = tmp_path / "hub.tvg.json"
-    source.write_text(json.dumps(HUB_AND_SPOKES))
+    source.write_text(json.dumps(graph))
     result = CliRunner().invoke(
         cli,
         [
@@ -90,6 +90,18 @@ def _inside(inner, outer):
 
 def _overlap(a, b):
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+
+TWO_SUBNET_HUB = dict(
+    HUB_AND_SPOKES,
+    **{
+        "azurerm_virtual_network.hub": [
+            "azurerm_subnet.firewall",
+            "azurerm_subnet.management",
+        ],
+        "azurerm_subnet.management": ["azurerm_linux_virtual_machine.jumpbox"],
+    },
+)
 
 
 def test_each_box_contains_the_boxes_inside_it(tmp_path):
@@ -139,3 +151,14 @@ def test_the_provider_logo_stays_clear_of_the_footer(tmp_path):
     logo_bottom, _ = found["logo"]
     _, footer_top = found["footer"]
     assert footer_top < logo_bottom
+
+
+def test_a_moved_box_takes_all_its_inner_boxes(tmp_path):
+    """gvpr shares a function's local variables between recursive calls, so
+    moving a box with two inner boxes moved only the first of them."""
+    boxes = _boxes(tmp_path, TWO_SUBNET_HUB)
+    subnets = [n for n in boxes if "SubnetGroup" in n]
+    assert len(subnets) == 4
+    for name, (parent, bb) in boxes.items():
+        if parent != "-":
+            assert _inside(bb, boxes[parent][1]), f"{name} outside {parent}"
