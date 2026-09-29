@@ -491,29 +491,20 @@ def _drawn_node_inside(resource: str, tfdata: Dict[str, Any]):
     return None
 
 
-def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
-    """Draw links between two group boxes as a clipped edge between the boxes.
+def _group_link_ends(
+    tfdata: Dict[str, Any], groups
+) -> List[Tuple[str, str, str, Dict[str, Any]]]:
+    """Find the two groups each linking resource connects.
 
-    Some resources describe a relationship between two whole networks rather
-    than anything inside them - VNet/VPC peerings, network peerings, transit
-    gateway attachments. Drawn as an icon inside one of the groups they read as
-    a device that lives there, which is not what they are.
-
-    Graphviz has no true cluster-to-cluster edge, but with compound=true an edge
-    between two member nodes is clipped at both cluster borders, so it reads as
-    a link between the boxes themselves.
-
-    Driven by <PROVIDER>_GROUP_LINKS so every provider gets this from config:
-    each entry names the linking resource type and the attribute holding the
-    remote group's identity.
+    Returns ``(link, local group, remote group, link config)`` for every
+    <PROVIDER>_GROUP_LINKS resource listed in one of ``groups`` whose other
+    end is also one of ``groups``. A link declared from both sides appears
+    once per side.
     """
     link_types = GROUP_LINKS
-    if not link_types:
-        return
-
-    clusters = {res: name for name, res in (tfdata.get("cluster_id_map") or {}).items()}
-    if len(clusters) < 2:
-        return
+    groups = list(groups)
+    if not link_types or len(groups) < 2:
+        return []
 
     # Shared with the reference matching in graphmaker rather than
     # reimplemented, because a link needs BOTH metadata views and which one
@@ -527,13 +518,13 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
     def resolved(node: str) -> Dict[str, Any]:
         return resolved_metadata(node, tfdata)
 
-    # Index every drawn group by the values a link resource might reference it
-    # by. The Terraform address is included because it is what survives when
-    # the id does not: the HCL expression left in place of an unknown id names
+    # Index every group by the values a link resource might reference it by.
+    # The Terraform address is included because it is what survives when the
+    # id does not: the HCL expression left in place of an unknown id names
     # its target as azurerm_virtual_network.generic_vnet["security"], which is
     # the graph key rather than any provider identifier.
     by_identity = {}
-    for group in clusters:
+    for group in groups:
         by_identity[group.split("~")[0]] = group
         metadata = resolved(group)
         for key in ("id", "self_link", "name"):
@@ -551,8 +542,8 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
             None,
         )
 
-    drawn_pairs = set()
-    for owner in clusters:
+    ends = []
+    for owner in groups:
         for child in tfdata["graphdict"].get(owner, []):
             child_type = helpers.get_no_module_name(child).split(".")[0]
             link = next(
@@ -568,7 +559,7 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
             # connects to, and is listed in its own.
             if not remote and "all_resource" not in tfdata:
                 remote = next(
-                    (g for g in tfdata["graphdict"].get(child, []) if g in clusters),
+                    (g for g in tfdata["graphdict"].get(child, []) if g in groups),
                     None,
                 )
 
@@ -583,59 +574,121 @@ def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
                 if local_attribute
                 else None
             )
-            owner = local or owner
+            local = local or owner
+            if remote and remote != local:
+                ends.append((child, local, remote, link))
+    return ends
 
-            # These are declared from both sides; one line between them is enough
-            if not remote or remote == owner:
-                continue
-            pair = frozenset((owner, remote))
-            if pair in drawn_pairs:
-                continue
 
-            tail_node = _drawn_node_inside(owner, tfdata)
-            head_node = _drawn_node_inside(remote, tfdata)
-            if tail_node is None or head_node is None:
-                continue
+def _plan_group_links(tfdata: Dict[str, Any]) -> None:
+    """Record which linking resources will be drawn as a line between groups.
 
-            drawn_pairs.add(pair)
-            colour = link.get("color", "#7B2CBF")
-            # An icon on the line, where the provider ships one, so the link
-            # reads as the service it is rather than a coloured line with a
-            # word next to it. Optional: providers without a peering icon fall
-            # back to the plain text label.
-            icon = link.get("icon")
-            caption = link.get("label", "")
-            if icon:
-                repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
-                icon_path = f"{repo_root}/{icon}"
-                # Stacked rather than side by side: these lines are clipped to
-                # the gap between two cluster borders, and clumped VNETs leave
-                # barely 100pt of it, so a wide label is squashed against the
-                # boxes. Stacking halves the width it needs.
-                label_html = (
-                    '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
-                    '<TR><TD FIXEDSIZE="TRUE" WIDTH="96" HEIGHT="96">'
-                    f'<IMG SCALE="TRUE" SRC="{icon_path}"/></TD></TR>'
-                    f'<TR><TD><FONT POINT-SIZE="24" COLOR="{colour}">{caption}'
-                    "</FONT></TD></TR></TABLE>>"
-                )
-            else:
-                label_html = caption
-            diagram.dot.edge(
-                tail_node._id,
-                head_node._id,
-                ltail=clusters[owner],
-                lhead=clusters[remote],
-                dir="both",
-                color=colour,
-                penwidth="4",
-                xlabel=label_html,
-                fontsize="24",
-                fontcolor=colour,
-                _grouplink="1",
+    Those are drawn as the line alone, with the provider's icon on it, not
+    also as an icon inside one of the groups. A link whose other end is not
+    in the diagram, such as a peering to another account's VPC, keeps its
+    icon: it is all that shows the link exists.
+    """
+    groups = [
+        node
+        for node in tfdata["graphdict"]
+        if helpers.get_no_module_name(node).split(".")[0] in GROUP_NODES
+    ]
+    tfdata["group_link_nodes"] = sorted(
+        {link for link, _, _, _ in _group_link_ends(tfdata, groups)}
+    )
+
+
+def _is_group_link(resource: str, tfdata: Dict[str, Any]) -> bool:
+    """Whether ``resource`` is drawn as a line between groups, not an icon."""
+    return resource in tfdata.get("group_link_nodes", ())
+
+
+def _draw_group_links(tfdata: Dict[str, Any], diagram) -> None:
+    """Draw links between two group boxes as a clipped edge between the boxes.
+
+    Some resources describe a relationship between two whole networks rather
+    than anything inside them - VNet/VPC peerings, network peerings, transit
+    gateway attachments. Drawn as an icon inside one of the groups they read as
+    a device that lives there, which is not what they are.
+
+    Graphviz has no true cluster-to-cluster edge, but with compound=true an edge
+    between two member nodes is clipped at both cluster borders, so it reads as
+    a link between the boxes themselves.
+
+    Driven by <PROVIDER>_GROUP_LINKS so every provider gets this from config:
+    each entry names the linking resource type and the attribute holding the
+    remote group's identity.
+    """
+    clusters = {res: name for name, res in (tfdata.get("cluster_id_map") or {}).items()}
+    linked = set()
+    drawn_pairs = set()
+    for child, owner, remote, link in _group_link_ends(tfdata, clusters):
+        # These are declared from both sides; one line between them is enough
+        pair = frozenset((owner, remote))
+        if pair in drawn_pairs:
+            linked.add(child)
+            continue
+
+        tail_node = _drawn_node_inside(owner, tfdata)
+        head_node = _drawn_node_inside(remote, tfdata)
+        if tail_node is None or head_node is None:
+            continue
+        linked.add(child)
+
+        drawn_pairs.add(pair)
+        colour = link.get("color", "#7B2CBF")
+        # An icon on the line, where the provider ships one, so the link
+        # reads as the service it is rather than a coloured line with a
+        # word next to it. Optional: providers without a peering icon fall
+        # back to the plain text label.
+        icon = link.get("icon")
+        caption = link.get("label", "")
+        if icon:
+            repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
+            icon_path = f"{repo_root}/{icon}"
+            # Stacked rather than side by side: these lines are clipped to
+            # the gap between two cluster borders, and clumped VNETs leave
+            # barely 100pt of it, so a wide label is squashed against the
+            # boxes. Stacking halves the width it needs.
+            label_html = (
+                '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">'
+                '<TR><TD FIXEDSIZE="TRUE" WIDTH="96" HEIGHT="96">'
+                f'<IMG SCALE="TRUE" SRC="{icon_path}"/></TD></TR>'
+                f'<TR><TD><FONT POINT-SIZE="24" COLOR="{colour}">{caption}'
+                "</FONT></TD></TR></TABLE>>"
             )
-            tfdata.setdefault("group_links_drawn", []).append(
-                f"{helpers.pretty_name(owner)} <-> {helpers.pretty_name(remote)}"
+        else:
+            label_html = caption
+        diagram.dot.edge(
+            tail_node._id,
+            head_node._id,
+            ltail=clusters[owner],
+            lhead=clusters[remote],
+            dir="both",
+            color=colour,
+            penwidth="4",
+            xlabel=label_html,
+            fontsize="24",
+            fontcolor=colour,
+            _grouplink="1",
+        )
+        tfdata.setdefault("group_links_drawn", []).append(
+            f"{helpers.pretty_name(owner)} <-> {helpers.pretty_name(remote)}"
+        )
+
+    # A link that is not drawn as an icon must not vanish without a word
+    link_types = {link["resource_type"] for link in GROUP_LINKS}
+    for node in sorted(set(tfdata["graphdict"]).union(*tfdata["graphdict"].values())):
+        node_type = helpers.get_no_module_name(node).split(".")[0]
+        if node in linked or node_type not in link_types:
+            continue
+        if _is_group_link(node, tfdata) or node_type in tfdata["hidden"]:
+            click.echo(
+                click.style(
+                    f"   WARNING: {node} is not drawn: could not tell which two "
+                    "networks it connects",
+                    fg="yellow",
+                )
             )
 
 
@@ -857,7 +910,7 @@ def handle_nodes(
         Tuple of (created Node object, updated drawn_resources list)
     """
     resource_type = helpers.get_no_module_name(resource).split(".")[0]
-    if resource_type in tfdata["hidden"]:
+    if resource_type in tfdata["hidden"] or _is_group_link(resource, tfdata):
         return None, drawn_resources
 
     # A resource drawn as a badge must not also appear as a standalone icon
@@ -960,7 +1013,9 @@ def handle_nodes(
                             # through handle_nodes(), so it has to repeat the
                             # hidden check - otherwise anything reachable via a
                             # circular reference ignores the hide list entirely.
-                            if node_type in tfdata["hidden"]:
+                            if node_type in tfdata["hidden"] or _is_group_link(
+                                node_connection, tfdata
+                            ):
                                 continue
                             nodeClass = _node_class_for(node_type, tfdata)
                             connectedNode = nodeClass(
@@ -1310,6 +1365,7 @@ def handle_group(
                 node_type not in GROUP_NODES
                 and node_type in avl_classes
                 and node_type not in tfdata["hidden"]
+                and not _is_group_link(node_connection, tfdata)
                 and node_connection != resource
             ):
                 targetGroup = diagramCanvas if node_type in OUTER_NODES else cloudGroup
@@ -1516,13 +1572,7 @@ def _build_diagram(
         _get_provider_config(tfdata), f"{provider.upper()}_HIDE_NODES", []
     )
     tfdata["hidden"] = sorted(set(tfdata.get("hidden") or []) | set(hide_nodes))
-    # A graph file lists a peering inside its own network, pointing at the
-    # network it connects to; it is drawn as the line between the two boxes
-    # (_draw_group_links), not as an icon inside one of them.
-    if "all_resource" not in tfdata:
-        tfdata["hidden"] = sorted(
-            set(tfdata["hidden"]) | {link["resource_type"] for link in GROUP_LINKS}
-        )
+    _plan_group_links(tfdata)
 
     # Only one provider's icon set is loaded, and clusters/grouping rules are
     # all that provider's, so resources from another cloud cannot be placed

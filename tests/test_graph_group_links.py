@@ -94,3 +94,41 @@ def test_validator_warns_about_a_peering_that_cannot_be_drawn():
     graph["azurerm_virtual_network_peering.a_to_b"] = []
     [warning] = [w for w in _validator().warnings(graph) if "peering" in w]
     assert "is drawn as a line between two azurerm_virtual_network boxes" in warning
+
+
+def _draw_dot(tmp_path, graph):
+    source = tmp_path / "graph.tvg.json"
+    source.write_text(json.dumps(graph))
+    result = CliRunner().invoke(
+        cli,
+        [
+            "draw",
+            "--source",
+            str(source),
+            "--format",
+            "dot",
+            "--outfile",
+            str(tmp_path / "graph"),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    [dot] = tmp_path.glob("graph*.dot")
+    return dot.read_text(), result.output
+
+
+def test_peering_to_a_network_outside_the_diagram_keeps_its_icon(tmp_path):
+    """A peering to another account's VPC has no second box to draw a line
+    to; its icon is all that shows the peering exists."""
+    graph = _peered("aws")
+    graph["aws_vpc_peering_connection.a_to_b"] = []
+    text, _ = _draw_dot(tmp_path, graph)
+    assert "_grouplink=1" not in text
+    assert 'tf_resource_name="aws_vpc_peering_connection.a_to_b"' in text
+
+
+def test_a_hidden_peering_that_cannot_be_drawn_is_reported(tmp_path):
+    """Azure never draws peerings as icons, so an undrawable one is named."""
+    graph = _peered("azure")
+    graph["azurerm_virtual_network_peering.a_to_b"] = []
+    _, output = _draw_dot(tmp_path, graph)
+    assert "azurerm_virtual_network_peering.a_to_b is not drawn" in output
