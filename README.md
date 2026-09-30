@@ -59,9 +59,13 @@ Then open a **new** terminal, and restart your AI app, so they see the new progr
 ```bash
 sudo apt install graphviz git
 curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs it too
+# optional, to draw from Terraform code: HashiCorp's apt repository
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
 ```
 
-On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. For Terraform, see [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
+On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
 
 </details>
 
