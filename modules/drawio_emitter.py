@@ -878,8 +878,10 @@ def _build_node_style(
     )
     from modules.config.drawio_resicon_colors import AWS_RESICON_FILL_COLORS
 
-    drawio_shape = _AWS_SHAPE_OVERRIDES.get(resource_type) or shape_map.get(
-        resource_type
+    drawio_shape = (
+        _AWS_SHAPE_OVERRIDES.get(resource_type)
+        or shape_map.get(resource_type)
+        or _icon_shape(node, provider)
     )
 
     if drawio_shape:
@@ -991,7 +993,48 @@ def _build_node_style(
         ]
         return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
 
-    # No shape map entry — generic rectangle
+    # No draw.io shape for this icon: embed TerraVision's own, so the node
+    # never exports as an empty box
+    icon = _node_icon(node)
+    if icon:
+        image = f"image=data:image/png,{_encode_icon_base64(icon)}"
+        if provider == "azure":
+            parts = [
+                "shape=label",
+                "rounded=1",
+                "arcSize=10",
+                "fillColor=#F2F2F2",
+                "strokeColor=#E0E0E0",
+                "html=1",
+                "align=center",
+                "verticalLabelPosition=bottom",
+                "verticalAlign=top",
+                "fontSize=12",
+                "fontColor=#2C2C2C",
+                image,
+                f"imageWidth={AZURE_CARD_ICON_SIZE}",
+                f"imageHeight={AZURE_CARD_ICON_SIZE}",
+                "imageAlign=center",
+                "imageVerticalAlign=middle",
+                "spacingTop=4",
+                "spacing=6",
+            ]
+            return ";".join(parts) + ";", AZURE_CARD_SIZE, AZURE_CARD_SIZE
+        parts = [
+            "shape=image",
+            "html=1",
+            "verticalLabelPosition=bottom",
+            "verticalAlign=top",
+            "align=center",
+            "imageAspect=0",
+            "aspect=fixed",
+            "fontSize=12",
+            "fontColor=#232F3E",
+            image,
+        ]
+        return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
+
+    # No icon at all — generic rectangle
     parts = [
         "rounded=1",
         "whiteSpace=wrap",
@@ -1004,6 +1047,38 @@ def _build_node_style(
     ]
 
     return ";".join(parts) + ";", DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE
+
+
+def _node_icon(node: XdotNode) -> Optional[str]:
+    """Path of the icon a node is drawn with, when the file exists."""
+    candidates = [node.image or ""]
+    match = re.search(r'<img\s+src="([^"]+)"', node.label or "", re.IGNORECASE)
+    if match:
+        candidates.append(match.group(1))
+    return next((c for c in candidates if c and os.path.isfile(c)), None)
+
+
+def _icon_key(path: str) -> str:
+    """``<icon folder>/<icon file>``, the key of drawio_icon_shapes."""
+    return f"{os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}"
+
+
+def _icon_shape(node: XdotNode, provider: str) -> Optional[str]:
+    """draw.io shape for the icon a node is drawn with, if draw.io has one.
+
+    Covers every resource type that uses a known icon, including types with
+    no entry of their own in drawio_shape_map_<cloud>.py.
+    """
+    from modules.config.drawio_icon_shapes import (
+        DRAWIO_ICON_SHAPES_AWS,
+        DRAWIO_ICON_SHAPES_AZURE,
+    )
+
+    table = {"aws": DRAWIO_ICON_SHAPES_AWS, "azure": DRAWIO_ICON_SHAPES_AZURE}.get(
+        provider
+    )
+    icon = _node_icon(node)
+    return table.get(_icon_key(icon)) if table and icon else None
 
 
 # AWS types whose generated mapping names no draw.io shape, or a less exact
@@ -1244,7 +1319,22 @@ def _emit_gcp_card(
         img_match = re.search(r'<img\s+src="([^"]+)"', raw_label, re.IGNORECASE)
 
     spacing_left = icon_size + icon_margin * 2
+    from modules.config.drawio_icon_shapes import DRAWIO_ICON_SHAPES_GCP
+    from modules.config.drawio_library import GCP3_SHAPES
+
+    stencil = None
     if img_match and os.path.isfile(img_match.group(1)):
+        stencil = DRAWIO_ICON_SHAPES_GCP.get(_icon_key(img_match.group(1)))
+    if stencil:
+        # draw.io's own gcp3 stencil, drawn inside the card as its child so
+        # the two move together; arrows still attach to the card
+        card_style = (
+            "rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            "html=1;whiteSpace=wrap;"
+            "align=left;verticalAlign=middle;"
+            f"spacingLeft={spacing_left};fontSize=12;fontColor=#2D3436;"
+        )
+    elif img_match and os.path.isfile(img_match.group(1)):
         icon_b64 = _encode_icon_base64(img_match.group(1))
         card_style = (
             f"shape=label;rounded=0;strokeColor=#DDDDDD;fillColor=none;"
@@ -1282,6 +1372,30 @@ def _emit_gcp_card(
         height=f"{card_h:.1f}",
     )
     card_geo.set("as", "geometry")
+
+    if stencil:
+        icon_cell = ET.SubElement(
+            root,
+            "mxCell",
+            id=f"{card_id}-icon",
+            value="",
+            style=(
+                "sketch=0;html=1;aspect=fixed;pointerEvents=1;connectable=0;"
+                f"shape=mxgraph.gcp3.{stencil};"
+                f"fillColor={GCP3_SHAPES.get(stencil, '#4285f4')};strokeColor=none;"
+            ),
+            vertex="1",
+            parent=card_id,
+        )
+        icon_geo = ET.SubElement(
+            icon_cell,
+            "mxGeometry",
+            x=f"{icon_margin:.1f}",
+            y=f"{(card_h - icon_size) / 2:.1f}",
+            width=f"{icon_size:.1f}",
+            height=f"{icon_size:.1f}",
+        )
+        icon_geo.set("as", "geometry")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
