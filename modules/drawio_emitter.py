@@ -1319,6 +1319,8 @@ def _emit_gcp_card(
         img_match = re.search(r'<img\s+src="([^"]+)"', raw_label, re.IGNORECASE)
 
     spacing_left = icon_size + icon_margin * 2
+    # Cards are white, as in the PNG: with no fill, a card outside a subnet
+    # showed the Google Cloud blue behind its dark text
     from modules.config.drawio_icon_shapes import DRAWIO_ICON_SHAPES_GCP
     from modules.config.drawio_library import GCP3_SHAPES
 
@@ -1329,7 +1331,7 @@ def _emit_gcp_card(
         # draw.io's own gcp3 stencil, drawn inside the card as its child so
         # the two move together; arrows still attach to the card
         card_style = (
-            "rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            "rounded=0;strokeColor=#DDDDDD;fillColor=#FFFFFF;"
             "html=1;whiteSpace=wrap;"
             "align=left;verticalAlign=middle;"
             f"spacingLeft={spacing_left};fontSize=12;fontColor=#2D3436;"
@@ -1337,7 +1339,7 @@ def _emit_gcp_card(
     elif img_match and os.path.isfile(img_match.group(1)):
         icon_b64 = _encode_icon_base64(img_match.group(1))
         card_style = (
-            f"shape=label;rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            f"shape=label;rounded=0;strokeColor=#DDDDDD;fillColor=#FFFFFF;"
             f"html=1;whiteSpace=wrap;"
             f"image=data:image/png,{icon_b64};"
             f"imageWidth={icon_size};imageHeight={icon_size};"
@@ -1348,7 +1350,7 @@ def _emit_gcp_card(
     else:
         # No icon available — plain card
         card_style = (
-            "rounded=0;strokeColor=#DDDDDD;fillColor=none;"
+            "rounded=0;strokeColor=#DDDDDD;fillColor=#FFFFFF;"
             "html=1;whiteSpace=wrap;"
             "align=left;verticalAlign=middle;"
             "fontSize=12;fontColor=#2D3436;"

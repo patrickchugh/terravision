@@ -249,3 +249,20 @@ def test_azure_export_has_no_empty_boxes(tmp_path):
     styles = [c.get("style") or "" for c in cells.values() if c.get("vertex") == "1"]
     assert not [s for s in styles if "fillColor=#dae8fc" in s]
     assert any("networking/Private_Endpoint.svg" in s for s in styles)
+
+
+def test_gcp_cards_are_white_like_the_png(tmp_path):
+    """Cards had no fill, so one outside a subnet showed the Google Cloud
+    blue behind its dark text. The PNG draws them white."""
+    graph = dict(GCP)
+    graph["google_compute_instance.vm"] = graph["google_compute_instance.vm"] + [
+        "google_storage_bucket.outside"
+    ]
+    cells = export(tmp_path, graph)
+    cards = [
+        c
+        for c in cells.values()
+        if "strokeColor=#DDDDDD" in (c.get("style") or "") and c.get("vertex") == "1"
+    ]
+    assert len(cards) >= 4
+    assert all("fillColor=#FFFFFF" in c.get("style") for c in cards)
