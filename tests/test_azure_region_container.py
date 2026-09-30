@@ -47,9 +47,15 @@ def test_region_label_icon_exists_and_matches_the_other_group_icons(tmp_path):
         setdiagram(None)
     assert region.dot.graph_attr["style"] == "solid"
     assert Path(region.label_icon).is_file()
-    # Drawn at the size of the resource group and VNet label icons (120x120),
-    # not at the source's 256x256, which overflowed the box border.
-    assert (region.label_icon_width, region.label_icon_height) == (120, 120)
+    # Drawn at the size the resource group's label icon renders at: a 120px
+    # PNG without a DPI, which graphviz draws at 96 DPI, so 90x90pt. The
+    # source's 256x256, or 120pt, poked through the box's bottom border.
+    from PIL import Image
+
+    group_icon = Path(region.label_icon).parent / "resource-groups.png"
+    with Image.open(group_icon) as image:
+        rendered = tuple(round(side * 72 / 96) for side in image.size)
+    assert (region.label_icon_width, region.label_icon_height) == rendered
     assert region.label_text == "West Europe"
 
 

@@ -204,10 +204,12 @@ class RegionGroup(Cluster):
         self.label_icon = (
             f"{base_path}/resource_images/azure/general/region-management.png"
         )
-        # The source icon is 256x256; the resource group and VNet label icons
-        # are 120x120. Drawn natively it overflows the box's bottom border.
-        self.label_icon_width = 120
-        self.label_icon_height = 120
+        # The source icon is 256x256. The resource group's label icon is a
+        # 120px PNG without a DPI, which graphviz draws at 96 DPI: 90x90pt.
+        # Matching that keeps the label inside the strip shiftLabel.gvpr
+        # leaves at the bottom of the box; at 120pt it poked through.
+        self.label_icon_width = 90
+        self.label_icon_height = 90
         self.label_position = "bottom-left"
 
         # Optional top badge label (graphviz cluster label at top)
