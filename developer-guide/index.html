@@ -2028,7 +2028,7 @@
 </span></code></pre></div>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">¶</a></h2>
 <h3 id="multi-cloud-provider-support">Multi-Cloud Provider Support<a class="headerlink" href="#multi-cloud-provider-support" title="Permanent link">¶</a></h3>
-<p>TerraVision supports AWS (full), GCP (partial), and Azure (partial). The architecture uses <strong>dynamic provider detection</strong> and <strong>configuration loading</strong>:</p>
+<p>TerraVision supports AWS, Google Cloud (GCP) and Azure. The architecture uses <strong>dynamic provider detection</strong> and <strong>configuration loading</strong>:</p>
 <ol>
 <li><strong>Provider Detection</strong> (<code>modules/provider_detector.py</code>): Analyzes Terraform resource prefixes (<code>aws_</code>, <code>azurerm_</code>, <code>google_</code>) to identify cloud providers</li>
 <li><strong>Configuration Loader</strong> (<code>modules/config_loader.py</code>): Dynamically loads provider-specific configs at runtime</li>
