@@ -1,4 +1,5 @@
-"""The Claude Code plugin and Gemini CLI extension run a pinned TerraVision.
+"""The Claude Code and Codex plugins and the Gemini CLI extension run a pinned
+TerraVision.
 
 uvx reuses a cached TerraVision when the requirement does not name a
 version, so an unpinned plugin kept running the old server after a plugin
@@ -18,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFESTS = [
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
+    ".codex-plugin/plugin.json",
     "gemini-extension.json",
 ]
 
@@ -56,6 +58,7 @@ def test_plugin_versions_agree():
     plugin = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())["version"]
     market = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
     gemini = json.loads((ROOT / "gemini-extension.json").read_text())["version"]
+    codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())["version"]
     skill = re.search(
         r'^  version: "([^"]+)"',
         (ROOT / "skills/terravision-cloud-diagrams/SKILL.md").read_text(),
@@ -66,6 +69,19 @@ def test_plugin_versions_agree():
         "marketplace metadata": market["metadata"]["version"],
         "marketplace plugin": market["plugins"][0]["version"],
         "gemini-extension.json": gemini,
+        "codex plugin.json": codex,
         "SKILL.md": skill,
     }
     assert len(set(versions.values())) == 1, versions
+
+
+def test_codex_manifest_is_the_claude_one_plus_its_own_fields():
+    """Codex reads .codex-plugin/plugin.json in preference to the Claude
+    manifest, and shows interface.websiteURL as the plugin's website. Claude
+    Code rejects that key, so Codex gets its own copy; everything else in it
+    must stay the same as the Claude manifest."""
+    claude = json.loads((ROOT / ".claude-plugin/plugin.json").read_text())
+    codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
+    interface = codex.pop("interface")
+    assert codex == claude
+    assert interface["websiteURL"] == claude["homepage"]

@@ -120,6 +120,14 @@ If anything is still missing later, the assistant says what to install. To check
 
     Cursor and most other clients call the top-level key `mcpServers` instead of `servers`. See [MCP server](mcp-server.md) for more clients and options.
 
+### Updating
+
+Each [release](https://github.com/patrickchugh/terravision/releases/latest) lists what changed. To move your assistant to it:
+
+- **Claude Desktop:** download the new `.mcpb` from the latest release and double-click it.
+- **Claude Code:** `claude plugin marketplace update terravision`, then `claude plugin update terravision-cloud-diagrams@terravision`, and start a new session.
+- **Codex CLI:** `codex plugin marketplace upgrade terravision`, then restart Codex. `codex plugin list` shows the version you have.
+
 ## 1. From a description to a diagram
 
 Ask the way you would ask a colleague:
