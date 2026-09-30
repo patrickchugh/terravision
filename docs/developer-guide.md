@@ -72,7 +72,7 @@ rm -rf ~/.terravision
 
 ### Multi-Cloud Provider Support
 
-TerraVision supports AWS (full), GCP (partial), and Azure (partial). The architecture uses **dynamic provider detection** and **configuration loading**:
+TerraVision supports AWS, Google Cloud (GCP) and Azure. The architecture uses **dynamic provider detection** and **configuration loading**:
 
 1. **Provider Detection** (`modules/provider_detector.py`): Analyzes Terraform resource prefixes (`aws_`, `azurerm_`, `google_`) to identify cloud providers
 2. **Configuration Loader** (`modules/config_loader.py`): Dynamically loads provider-specific configs at runtime
