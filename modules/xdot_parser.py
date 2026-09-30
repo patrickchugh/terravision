@@ -92,6 +92,11 @@ def parse_xdot(json_text: str) -> XdotGraph:
         _parse_object(obj, graph, gvid_to_name, parent=None)
 
     for edge_data in data.get("edges", []):
+        # Invisible edges only arrange the layout (rows of icons in a grid).
+        # They are not connections: exported, they became real arrows in
+        # draw.io between resources that have nothing to do with each other.
+        if "invis" in edge_data.get("style", ""):
+            continue
         source_id = gvid_to_name.get(
             edge_data.get("tail"), str(edge_data.get("tail", ""))
         )
@@ -159,6 +164,7 @@ def _parse_object(obj, graph, gvid_to_name, parent):
                 "pencolor",
                 "penwidth",
                 "bgcolor",
+                "fontcolor",
             ):
                 if k in obj:
                     style_attrs[k] = obj[k]

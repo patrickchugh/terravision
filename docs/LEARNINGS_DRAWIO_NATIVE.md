@@ -73,9 +73,9 @@ shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc2;strokeColor=#8C4FFF;fill
 - Container shapes with corner icons
 - Each has specific `strokeColor` and `fontColor` from AWS style guide
 
-### 2. All draw.io Stencils Are Monochrome
+### 2. draw.io's AWS Stencils Are Monochrome
 
-Every draw.io stencil SVG is monochrome — the colour comes entirely from `fillColor` in the style string. Without `fillColor`, icons render as invisible outlines. The fill color is category-specific (orange `#ED7100` for compute, purple `#8C4FFF` for networking, red `#DD344C` for security, etc.).
+Every draw.io AWS4 stencil is monochrome — the colour comes entirely from `fillColor` in the style string. Without `fillColor`, icons render as invisible outlines. The fill color is category-specific (orange `#ED7100` for compute, purple `#8C4FFF` for networking, red `#DD344C` for security, etc.).
 
 ### 3. Authoritative Source for Shape Names
 
@@ -165,9 +165,9 @@ Current coverage (terraform-style aliases only):
 
 AWS updated their architecture diagram style guidance — newer diagrams use border-only containers (no fill) for VPCs, subnets, and security groups. draw.io's AWS4 stencils follow this newer style. TerraVision's PNG output still uses the older filled style (defined in `resource_classes/aws/groups.py`). The drawio output correctly uses the newer border-only style.
 
-### 10. GCP Stencil Limitations
+### 10. GCP Stencils: gcp3, Not gcp2
 
-draw.io's `gcp2` stencil library has not been updated to match Google's latest icon set. Many GCP resources will fall back to PNG embedding or generic shapes. This is a draw.io limitation.
+draw.io's `gcp2` library (297 shapes) is the old style from before Google consolidated its icons, and is not used. draw.io's `gcp3` library (`Sidebar-GCP3.js`, `stencils/gcp3.xml`) is the current set: 26 category icons and 19 core products, multi-coloured like Google's originals, one for one with TerraVision's `resource_images/gcp/category` and `unique` icons. Only `generic/users.png` has no gcp3 equivalent.
 
 ---
 
@@ -179,7 +179,7 @@ Each provider renders nodes differently in the PNG output. The draw.io emitter r
 
 **Azure**: Grey rounded card (`shape=label`) with SVG icon inside. Style: `shape=label;rounded=1;fillColor=#F2F2F2;strokeColor=#E0E0E0;image=img/lib/azure2/<path>.svg;imageWidth=40;imageHeight=40`. Card size: 76x76px. Label appears below the card via `verticalLabelPosition=bottom`.
 
-**GCP**: Table card (`shape=label`) with base64-embedded PNG icon on left, HTML label on right. The icon is extracted from the Graphviz HTML label and re-encoded as a data URI. Style: `shape=label;strokeColor=#DDDDDD;image=data:image/png,<base64>;imageAlign=left;spacingLeft=72`. Card size: 280x70px. The legacy `drawio_shape_map_gcp.py` (mxgraph.gcp2.* stencils) was removed — draw.io's GCP stencils are outdated.
+**GCP**: Table card, 280x70px, icon on the left and the HTML label on the right. When the icon has a gcp3 stencil, the card is a plain box and the stencil is a child cell inside it (`connectable=0`, so arrows attach to the card and the two move together). Otherwise the card is `shape=label` with the PNG embedded (`image=data:image/png,<base64>;imageAlign=left;spacingLeft=72`).
 
 ### 12. Auto-Generated Class-to-Alias Map
 
@@ -241,3 +241,22 @@ poetry run black modules/config/drawio_shape_map_*.py
 poetry run pytest tests/test_xdot_parser.py tests/test_drawio_emitter.py -v
 poetry run pytest -m "not slow" -v  # full suite
 ```
+
+### 18. Icon Tables: Match Icon Files, Not Type Names
+
+The type-name maps covered too little: 176 Azure and 146 AWS types exported as empty boxes, and three Azure entries named files draw.io does not have. `scripts/generate_drawio_icon_shapes.py` now maps TerraVision's **icon files** to draw.io's library, read from draw.io's source on GitHub (the repository tree for `img/lib/azure2`, `Sidebar-GCP3.js`, and the AWS4 names in `drawio_aws4_shapes.py`): the file name matched exactly, then with a plural or prefix variant, then a hand-checked alias for renamed products. Every result is checked against draw.io before it is written to `modules/config/drawio_icon_shapes.py`, and a snapshot of the library goes to `modules/config/drawio_library.py` so tests can check the tables offline.
+
+Lookup order in `_build_node_style`: the type's own entry (`drawio_shape_map_<cloud>.py`), then its icon's entry, then **TerraVision's icon embedded as an image**, so a node is never an empty box. Coverage: AWS 203/205 icons (388/390 types), Azure 219/223 (298/303), GCP 34/35 (274/275). The rest are embedded; most are `general/blank.png`, the transparent placeholder for types with no icon.
+
+### 19. Invisible Edges Are Layout, Not Connections
+
+TerraVision arranges icons in a grid with `style=invis` edges. The xdot parser used to pass them on, and the export drew them as real arrows between unrelated resources. `xdot_parser` now drops invisible edges.
+
+### 20. Container Labels: Text and Position
+
+Container label nodes hold an HTML table whose text cell wraps the name in `<FONT POINT-SIZE=...>`; extracting only cells of bare text lost the name. Their position must be computed from the box **as drawn** in draw.io (Graphviz box shrunk by `CLUSTER_INSET` on each side, plus 30px at the bottom), not the Graphviz box, or labels land outside their box. The name goes beside the icon (`labelPosition=right`, or `left` for right-aligned labels such as the VNet's).
+
+### 21. Checking an Export Visually
+
+The draw.io desktop CLI (`drawio -x`) may silently produce nothing in a sandboxed session. draw.io's own embeddable viewer renders a file exactly as draw.io does: a local HTML page with `<div class="mxgraph" data-mxgraph='{"xml": ...}'>` and `https://viewer.diagrams.net/js/viewer-static.min.js`, screenshotted with headless Chrome. It resolves `img/lib/...` paths and stencils from draw.io's servers and has no URL length limit.
+
