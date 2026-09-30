@@ -682,21 +682,32 @@ def emit_drawio(
                     break
 
         if parent_cluster:
+            # The box as it is drawn: the Graphviz box shrunk by CLUSTER_INSET
+            # on every side, plus the 30px added at the bottom of boxes that
+            # have a label. Measuring from the unshrunk box put the label
+            # 50px left of its box and below its bottom edge.
             x1, y1, x2, y2 = parent_cluster.bb
-            cluster_w = x2 - x1
-            cluster_h = y2 - y1 + 30  # padded height
-            # Absolute position: cluster origin + offset within cluster
-            abs_x = x1
-            abs_y = _flip_y(y2)
+            box_left = x1 + CLUSTER_INSET
+            box_right = x2 - CLUSTER_INSET
+            box_bottom = _flip_y(y1) - CLUSTER_INSET + 30
             margin = 10
             if "left" in label_pos:
-                dx_x = abs_x + margin
+                dx_x = box_left + margin
             elif "right" in label_pos:
-                dx_x = abs_x + cluster_w - w_px - margin
+                dx_x = box_right - w_px - margin
             else:  # center
-                dx_x = abs_x + (cluster_w - w_px) / 2
-            # Always at bottom of padded area
-            dx_y = abs_y + cluster_h - h_px - margin
+                dx_x = (box_left + box_right - w_px) / 2
+            if h_px > 40:
+                # A provider logo is taller than the label strip: hang it
+                # below the box, as in the PNG
+                dx_y = box_bottom + margin
+            else:
+                dx_y = box_bottom - h_px - margin
+            # The name goes beside the icon, away from the box's edge
+            if "right" in label_pos:
+                style_str = style_str.replace(
+                    _LABEL_BESIDE_ICON, _LABEL_BESIDE_ICON_LEFT
+                )
         else:
             cx, cy = node.pos
             dx_x = cx - w_px / 2
@@ -1056,6 +1067,17 @@ _ICON_TO_DRAWIO_SVG = {
     "aws.png": None,
 }
 
+# Where a container label's name goes: right of its icon, or left of it for
+# labels at the right-hand end of their box (the VNet's).
+_LABEL_BESIDE_ICON = (
+    "labelPosition=right;verticalLabelPosition=middle;align=left;"
+    "verticalAlign=middle;spacingLeft=4;"
+)
+_LABEL_BESIDE_ICON_LEFT = (
+    "labelPosition=left;verticalLabelPosition=middle;align=right;"
+    "verticalAlign=middle;spacingRight=4;"
+)
+
 # Cluster label icons that are logos (contain text, need larger sizing).
 # Values are (width, height) in pixels.
 _LOGO_ICON_SIZES = {
@@ -1078,8 +1100,12 @@ def _build_cluster_label_style(
     label = node.label
     # Try to extract image path and text from HTML label
     img_match = re.search(r'<img\s+src="([^"]+)"', label, re.IGNORECASE)
-    # Get ALL text content from TD elements
-    text_parts = re.findall(r"<td[^>]*>([^<]+)</td>", label, re.IGNORECASE)
+    # Get ALL text content from TD elements. The text is wrapped in a FONT
+    # tag for its size, so strip the tags inside each cell: matching only
+    # cells of bare text found nothing and the label came out as an icon
+    # with no name.
+    cells = re.findall(r"<td[^>]*>(.*?)</td>", label, re.IGNORECASE | re.DOTALL)
+    text_parts = [re.sub(r"<[^>]+>", "", cell) for cell in cells]
     clean_label = " ".join(t.strip() for t in text_parts if t.strip())
 
     w_px = 40
@@ -1096,10 +1122,10 @@ def _build_cluster_label_style(
         logo_size = _LOGO_ICON_SIZES.get(icon_basename)
 
         if svg_path:
-            # Use draw.io's built-in SVG
+            # Use draw.io's built-in SVG, with the name to its right
             style = (
-                f"image;aspect=fixed;html=1;points=[];align=center;"
-                f"fontSize=14;image={svg_path};"
+                f"image;aspect=fixed;html=1;points=[];{_LABEL_BESIDE_ICON}"
+                f"fontSize=14;fontColor=#2C2C2C;image={svg_path};"
             )
         elif os.path.isfile(icon_path):
             b64 = _encode_icon_base64(icon_path)
