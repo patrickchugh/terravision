@@ -42,7 +42,8 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
     ```bash
     sudo apt install graphviz git
-    # Ubuntu 26.04+ and Debian testing only (older releases include it in graphviz):
+    # Graphviz 14+ (Ubuntu 26.04+, Debian 14 "forky"/testing) ships neato as a separate package;
+    # skip this on older releases, where graphviz includes it:
     sudo apt install libgvplugin-neato-layout8
 
     curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs uv pre-installed
