@@ -1571,7 +1571,7 @@
 </ol>
 <p>TerraVision itself runs on your own computer: nothing is uploaded anywhere beyond the conversation you are already having with your assistant.</p>
 <h2 id="set-up-once">Set up (once)<a class="headerlink" href="#set-up-once" title="Permanent link">¶</a></h2>
-<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw) and <strong>Git</strong>. <strong>uv</strong> runs TerraVision for Claude Code, Codex, Gemini CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
+<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw) and <strong>Git</strong>. <strong>uv</strong> runs TerraVision for Claude Code, Codex, Antigravity CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">Windows</label><label for="__tabbed_1_3">Linux</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -1610,7 +1610,7 @@
 </div>
 <p>If anything is still missing later, the assistant says what to install. To check at any time, ask it: <em>"Is TerraVision set up correctly?"</em></p>
 <p><strong>Then connect your assistant:</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">Codex CLI</label><label for="__tabbed_2_4">Gemini CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">Codex CLI</label><label for="__tabbed_2_4">Antigravity CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Download <code>terravision-&lt;version&gt;.mcpb</code> from the <a href="https://github.com/patrickchugh/terravision/releases/latest">latest release</a> and double-click it (or drag it into <strong>Settings → Extensions</strong>). Diagrams appear right in the chat. Details: <a href="../mcp-server/#configure-your-client">MCP server</a>.</p>
@@ -1629,20 +1629,26 @@
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gemini<span class="w"> </span>extensions<span class="w"> </span>install<span class="w"> </span>https://github.com/patrickchugh/terravision
+<p>Google's Antigravity CLI (<code>agy</code>) replaced Gemini CLI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>agy<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>terravision<span class="w"> </span>--<span class="w"> </span>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="w"> </span>terravision<span class="w"> </span>mcp<span class="w"> </span>--output-dir<span class="w"> </span>/path/for/diagrams
+</span></code></pre></div>
+<p><code>agy mcp list</code> shows it once it is added.</p>
+<p>If you had the TerraVision extension in Gemini CLI, <code>agy plugin import gemini</code> brings it across as a plugin instead.</p>
+<p><strong>Still on Gemini CLI?</strong> It stopped working for personal Google accounts (free, AI Pro and Ultra) on 18 June 2026. With a Gemini Code Assist Standard or Enterprise licence, or a paid API key, it still runs:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>gemini<span class="w"> </span>extensions<span class="w"> </span>install<span class="w"> </span>https://github.com/patrickchugh/terravision
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Add TerraVision as an MCP server. In VS Code run <strong>MCP: Open User Configuration</strong>; in Cursor edit its MCP config file:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">"servers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uvx"</span><span class="p">,</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"--from"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span><span class="w"> </span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/for/diagrams"</span><span class="p">]</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">"servers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uvx"</span><span class="p">,</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"--from"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span><span class="w"> </span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/for/diagrams"</span><span class="p">]</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Cursor and most other clients call the top-level key <code>mcpServers</code> instead of <code>servers</code>. See <a href="../mcp-server/">MCP server</a> for more clients and options.</p>
 </div>
@@ -1674,8 +1680,8 @@
 <p>Local folders and Git repositories both work, including private ones you have access to. The <code>//examples</code> part points at a folder inside the repository. Many repositories keep a reusable module at their root, which describes nothing on its own; the diagram comes from a folder that uses it, like <code>examples/</code> or an environment folder. If you only give the repository, the assistant looks for that folder itself.</p>
 <p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> on the code and draws what the plan says will be deployed, so conditionals, <code>count</code>, <code>for_each</code> and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.</p>
 <p><code>terraform plan</code> needs the same cloud credentials you would use to run Terraform. Without them, generate the plan once where credentials exist and hand TerraVision the files; no credentials are needed after that:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
 </span></code></pre></div>
 <blockquote>
 <p>Draw the diagram from <code>plan.json</code> and <code>graph.dot</code>.</p>
@@ -1698,7 +1704,7 @@
 <h2 id="what-you-see">What you see<a class="headerlink" href="#what-you-see" title="Permanent link">¶</a></h2>
 <ul>
 <li><strong>Claude Desktop</strong>, and other apps that support <a href="../mcp-server/#the-diagram-view-mcp-apps">MCP Apps</a>: the diagram appears in the chat with zoom, and buttons to <strong>Open image</strong> in your image viewer, <strong>Edit in draw.io</strong> (in the draw.io app, or on the web if it isn't installed), <strong>Show in folder</strong>, and <strong>Source</strong> (the graph JSON, and the flows once added).</li>
-<li><strong>Terminal assistants</strong> (Claude Code, Codex CLI, Gemini CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.</li>
+<li><strong>Terminal assistants</strong> (Claude Code, Codex CLI, Antigravity CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.</li>
 </ul>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
 <ul>

@@ -2020,6 +2020,10 @@ and <code>edge_count</code>.</p>
 (with the closest supported types suggested), an arrow to a container or a shared service, a node
 listed in two boxes. They come from the skill's validator, so the command-line check gives the same
 advice. The diagram is still drawn, and the view lists the warnings under it.</p>
+<p>Every diagram result has <code>display</code>, which tells the assistant whether the app is already showing
+the diagram. In an app with the <a href="#the-diagram-view-mcp-apps">diagram view</a> it says not to open the
+image in a separate viewer as well; in an app without the view it says to show the preview inline
+or open the PNG with <code>open_diagram_file</code>.</p>
 <p>Takes <code>format</code>, <code>outfile</code>, <code>fontsize</code>, <code>iconsize</code>, <code>title</code>, <code>preview</code> and <code>flows</code>: numbered steps drawn
 as badges with a legend (rule 10 of the <a href="../graph-format/">graph format</a>). With <code>flows</code>, <code>files</code> also
 has <code>annotations</code>, a YAML file holding the title and flows, so
