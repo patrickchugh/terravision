@@ -1031,6 +1031,8 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     provider = get_provider_for_resource(name)
     if provider == "unknown":
         simple_name = name.split(".")[-1] if "." in name else name
+        # A numbered copy (~2) reads like the original
+        simple_name = simple_name.split("~", 1)[0]
         return simple_name.replace("_", " ").title()
 
     # Load provider-specific config

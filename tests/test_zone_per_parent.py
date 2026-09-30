@@ -78,3 +78,30 @@ def test_aws_subnets_opt_in():
         if t["operation"] == "insert_intermediate_node"
     ]
     assert insert["params"]["one_per_parent"] is True
+
+
+def test_gcp_region_and_zone_boxes_opt_in():
+    """GCP's zone box sat in two subnetworks at once, so one subnetwork's VM
+    was drawn inside the other's (expected-gcp-us8-vpc.json)."""
+    from modules.config.resource_handler_configs_gcp import RESOURCE_HANDLER_CONFIGS
+
+    inserts = [
+        t
+        for config in RESOURCE_HANDLER_CONFIGS.values()
+        for t in config.get("transformations", [])
+        if t["operation"] == "insert_intermediate_node"
+    ]
+    assert inserts
+    assert all(t["params"].get("one_per_parent") is True for t in inserts)
+
+
+def test_a_numbered_copy_is_labelled_like_the_original():
+    from modules.helpers import pretty_name
+
+    for original in (
+        "tv_gcp_zone.us_central1_a",
+        "tv_gcp_region.us_central1",
+        "aws_az.availability_zone_us_east_1a~1",
+    ):
+        copy = original.split("~")[0] + "~2"
+        assert pretty_name(copy, is_group=True) == pretty_name(original, is_group=True)

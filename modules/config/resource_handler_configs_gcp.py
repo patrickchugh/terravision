@@ -37,6 +37,8 @@ RESOURCE_HANDLER_CONFIGS = {
             {
                 "operation": "insert_intermediate_node",
                 "params": {
+                    # Each network or subnet gets its own region or zone box
+                    "one_per_parent": True,
                     "parent_pattern": "google_compute_network",
                     "child_pattern": "google_compute_subnetwork",
                     "intermediate_node_generator": "generate_region_node_name",
@@ -55,6 +57,8 @@ RESOURCE_HANDLER_CONFIGS = {
             {
                 "operation": "insert_intermediate_node",
                 "params": {
+                    # Each network or subnet gets its own region or zone box
+                    "one_per_parent": True,
                     "parent_pattern": "google_compute_subnetwork",
                     "child_pattern": "google_compute_instance",
                     "intermediate_node_generator": "generate_zone_node_name",
@@ -73,6 +77,8 @@ RESOURCE_HANDLER_CONFIGS = {
             {
                 "operation": "insert_intermediate_node",
                 "params": {
+                    # Each network or subnet gets its own region or zone box
+                    "one_per_parent": True,
                     "parent_pattern": "google_compute_network",
                     "child_pattern": "google_container_cluster",
                     "intermediate_node_generator": "generate_region_node_name",
@@ -96,6 +102,8 @@ RESOURCE_HANDLER_CONFIGS = {
             {
                 "operation": "insert_intermediate_node",
                 "params": {
+                    # Each network or subnet gets its own region or zone box
+                    "one_per_parent": True,
                     "parent_pattern": "google_compute_network",
                     "child_pattern": "google_compute_region_instance_group_manager",
                     "intermediate_node_generator": "generate_region_node_name",
