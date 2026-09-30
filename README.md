@@ -58,7 +58,7 @@ Then open a **new** terminal, and restart your AI app, so they see the new progr
 
 ```bash
 sudo apt install graphviz git
-# On Debian and Ubuntu, install additional package 
+# Ubuntu 26.04+ and Debian testing only (older releases include it in graphviz):
 sudo apt install libgvplugin-neato-layout8
 
 curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs uv pre-installed

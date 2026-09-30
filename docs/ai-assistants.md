@@ -42,14 +42,18 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
     ```bash
     sudo apt install graphviz git
-    curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs it too
-    # optional, to draw from Terraform code: HashiCorp's apt repository
+    # Ubuntu 26.04+ and Debian testing only (older releases include it in graphviz):
+    sudo apt install libgvplugin-neato-layout8
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs uv pre-installed
+
+    # optionally install terraform, to draw from Terraform code: HashiCorp's apt repository
     wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
     sudo apt update && sudo apt install terraform
     ```
 
-    On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
+    Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
 
 If anything is still missing later, the assistant says what to install. To check at any time, ask it: *"Is TerraVision set up correctly?"*
 
