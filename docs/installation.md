@@ -30,8 +30,8 @@ brew install graphviz
 ```bash
 sudo apt update
 sudo apt install graphviz
-# Graphviz 14+ (Ubuntu 26.04+, Debian 14 "forky"/testing) ships neato as a separate package;
-# skip this on older releases, where graphviz includes it:
+# Ubuntu 26.04 and later only (also Debian 14 "forky"/testing).
+# Skip on older releases such as Ubuntu 24.04: graphviz already includes it.
 sudo apt install libgvplugin-neato-layout8
 ```
 
