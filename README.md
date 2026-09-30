@@ -104,7 +104,7 @@ codex plugin add terravision-cloud-diagrams@terravision
 agy mcp add terravision -- uvx --from "terravision[mcp]" terravision mcp --output-dir /path/for/diagrams
 ```
 
-If you had the TerraVision extension in Gemini CLI, `agy plugin import gemini` brings it across instead. Gemini CLI stopped working for personal Google accounts on 18 June 2026; with a Gemini Code Assist Standard or Enterprise licence or a paid API key it still runs, and installs TerraVision with `gemini extensions install https://github.com/patrickchugh/terravision`.
+Gemini CLI stopped working for personal Google accounts on 18 June 2026; with a Gemini Code Assist Standard or Enterprise licence or a paid API key it still runs, and installs TerraVision with `gemini extensions install https://github.com/patrickchugh/terravision`.
 
 **VS Code with GitHub Copilot, Cursor and other MCP clients:** 
 
