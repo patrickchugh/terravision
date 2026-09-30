@@ -22,8 +22,8 @@ from typing import Annotated, Any, Dict, Iterator, List, Optional
 
 from mcp.server import MCPServer
 from pydantic import Field
-from mcp.server.apps import Apps, ResourcePermissions
-from mcp.server.mcpserver import Image
+from mcp.server.apps import Apps, ResourcePermissions, client_supports_apps
+from mcp.server.mcpserver import Context, Image
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp_types import CallToolResult, Icon, TextContent
 
@@ -54,7 +54,8 @@ render_graph and generate_diagram save a PNG, SVG, draw.io file and the graph
 (.tvg.json), and return their paths and a preview image. Check the preview
 before presenting it; if it looks wrong, fix the graph, not TerraVision. Fix
 any warnings and render again. Show the user the graph JSON too.
-open_diagram_file opens a file on the user's computer.
+open_diagram_file opens a file on the user's computer: use it when the user
+asks, or when a result's display says to.
 
 Include flows (numbered steps with a legend) when the user asks how requests,
 data or events move. Otherwise deliver the plain diagram, explain the flow,
@@ -210,15 +211,40 @@ def _tool_errors() -> Iterator[None]:
         raise ToolError(str(e)) from e
 
 
-def _diagram_result(result: Dict[str, Any]) -> CallToolResult:
+# What the model is told about showing the diagram. An app with the diagram
+# view already has it on screen, so opening the image as well puts a second
+# copy in a separate window; without the view, opening it is the only way
+# the user sees it.
+_DISPLAY_IN_APP = (
+    "The app is showing this diagram to the user in its interactive view. Do "
+    "not open the image in a separate viewer, with open_diagram_file or a "
+    "shell command, unless the user asks."
+)
+_DISPLAY_NO_VIEW = (
+    "This app has no interactive diagram view. Show the preview image inline "
+    "if you can; otherwise open files.png for the user with open_diagram_file."
+)
+
+
+def _shown_in_app(ctx: Context) -> bool:
+    """Whether the connected app draws the diagram view for tool results."""
+    try:
+        return client_supports_apps(ctx)
+    except Exception:  # noqa: BLE001 - an unreadable client counts as no view
+        return False
+
+
+def _diagram_result(result: Dict[str, Any], in_app: bool = False) -> CallToolResult:
     """Package a diagram call as text, an inline preview and structured data.
 
     The first content block stays the JSON summary that earlier versions
     returned, so existing clients read it unchanged. The preview PNG follows
     for the model and for apps that display tool images, and the structured
-    copy is what the diagram view reads.
+    copy is what the diagram view reads. ``display`` tells the model whether
+    the app already shows the diagram (``in_app``) or it should open it.
     """
     preview = result.pop("_preview_png", None)
+    result["display"] = _DISPLAY_IN_APP if in_app else _DISPLAY_NO_VIEW
     content: List[Any] = [TextContent(type="text", text=json.dumps(result, indent=2))]
     if preview:
         content.append(Image(data=preview, format="png").to_image_content())
@@ -255,6 +281,7 @@ def build_server() -> MCPServer:
     @apps.tool(resource_uri=VIEW_URI)
     def render_graph(
         graph: Annotated[Dict[str, List[str]], Field(description=_GRAPH_DOC)],
+        ctx: Context,
         format: Annotated[str, Field(description=_FORMAT_DOC)] = "png",
         outfile: Annotated[str, Field(description=_OUTFILE_DOC)] = "architecture",
         fontsize: Annotated[Optional[int], Field(description=_FONTSIZE_DOC)] = None,
@@ -297,12 +324,14 @@ def build_server() -> MCPServer:
                     preview=preview,
                     flows=flows,
                     edge_labels=edge_labels,
-                )
+                ),
+                in_app=_shown_in_app(ctx),
             )
 
     @apps.tool(resource_uri=VIEW_URI)
     def generate_diagram(
         source: Annotated[str, Field(description=_SOURCE_DOC)],
+        ctx: Context,
         format: Annotated[str, Field(description=_FORMAT_DOC)] = "png",
         outfile: Annotated[
             str,
@@ -406,7 +435,8 @@ def build_server() -> MCPServer:
                     preview=preview,
                     flows=flows,
                     edge_labels=edge_labels,
-                )
+                ),
+                in_app=_shown_in_app(ctx),
             )
 
     # Extensions are read when the server is constructed, so the tools bound
@@ -559,7 +589,9 @@ def build_server() -> MCPServer:
         the result then has browser). With reveal, opens the folder that
         holds it instead. Only
         files returned by render_graph or generate_diagram in this session can
-        be opened.
+        be opened. Call it when the user asks, or when a diagram result's
+        "display" says the app has no diagram view; never when "display" says
+        the app is already showing the diagram.
 
         Args:
             path: A path from the "files" of a render_graph or

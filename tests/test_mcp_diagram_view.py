@@ -511,6 +511,37 @@ def client_call():
     return call
 
 
+def test_an_app_with_the_view_is_told_not_to_open_the_image(outdir):
+    """Codex drew the diagram view and also opened the PNG in an image
+    viewer, so the user got the diagram twice. The result now says whether
+    the app already shows it; only an app without the view is told to open
+    the file."""
+    pytest.importorskip("mcp", reason="requires the optional [mcp] extra")
+    import anyio
+    from mcp import Client
+    from mcp.client.extension import advertise
+    from mcp.server.apps import APP_MIME_TYPE, EXTENSION_ID
+
+    from modules.mcp_server import build_server
+
+    def display(extensions):
+        async def go():
+            async with Client(build_server(), extensions=extensions) as client:
+                result = await client.call_tool(
+                    "render_graph",
+                    {"graph": GRAPH, "outfile": "shown", "preview": False},
+                )
+                return json.loads(result.content[0].text)["display"]
+
+        return anyio.run(go)
+
+    with_view = display([advertise(EXTENSION_ID, {"mimeTypes": [APP_MIME_TYPE]})])
+    assert "Do not open the image" in with_view
+    without_view = display(None)
+    assert "no interactive diagram view" in without_view
+    assert "open_diagram_file" in without_view
+
+
 def test_diagram_result_carries_text_image_and_structured_data(outdir, client_call):
     result = client_call(
         lambda c: c.call_tool("render_graph", {"graph": GRAPH, "outfile": "proto"})
