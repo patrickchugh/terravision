@@ -58,14 +58,18 @@ Then open a **new** terminal, and restart your AI app, so they see the new progr
 
 ```bash
 sudo apt install graphviz git
-curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs it too
-# optional, to draw from Terraform code: HashiCorp's apt repository
+# On Debian and Ubuntu, install additional package 
+sudo apt install libgvplugin-neato-layout8
+
+curl -LsSf https://astral.sh/uv/install.sh | sh   # Claude Desktop on Linux needs uv pre-installed
+
+# optionally install terraform, to draw from Terraform code: HashiCorp's apt repository
 wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 sudo apt update && sudo apt install terraform
 ```
 
-On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-layout8`. Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
+Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
 
 </details>
 
@@ -108,9 +112,9 @@ Add TerraVision as an MCP server that runs `uvx --from "terravision[mcp]" terrav
 | You have | Ask something like | You get |
 |---|---|---|
 | An idea | *"Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ"* | The diagram (PNG, SVG, editable draw.io) and its graph. Refine it by asking: *"add ElastiCache"*, *"show how a request flows through it"* |
-| Terraform code, local or on GitHub | *"Draw the architecture of the Terraform in ./infra"* or *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
-| A diagram you like | *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
-| Terraform in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
+| Terraform code, local or on GitHub but no diagram | *"Draw the architecture of the Terraform in ./infra"* or *"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"* | A diagram of what `terraform plan` says the code deploys |
+| A diagram you like generated from TerraVision| *"Write the Terraform for this architecture"* | Terraform for the resources, zones and connections, with the diagram's flows and labels kept |
+| Terraform with an existing TerraVision diagram in a repository | *"Keep this diagram up to date in CI"* | A workflow that redraws the diagram whenever the Terraform changes |
 
 The first diagram takes a little longer while TerraVision installs itself. If anything is missing, the assistant says what to install. To check at any time, ask: *"Is TerraVision set up correctly?"*
 
