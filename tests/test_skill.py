@@ -115,6 +115,20 @@ def test_minimal_example_is_clean():
             "is drawn in only one of them",
         ),
         (
+            # Listed in a subnet and in the resource group around it: the
+            # subnet is the one to keep.
+            {
+                "azurerm_resource_group.app": [
+                    "azurerm_virtual_network.main",
+                    "azurerm_function_app.api",
+                ],
+                "azurerm_virtual_network.main": ["azurerm_subnet.app"],
+                "azurerm_subnet.app": ["azurerm_function_app.api"],
+            },
+            "Remove azurerm_function_app.api from azurerm_resource_group.app "
+            "and keep it in azurerm_subnet.app.",
+        ),
+        (
             {
                 "aws_subnet.a": ["aws_instance.web~1"],
                 "aws_alb.lb": ["aws_instance.web"],
@@ -163,6 +177,37 @@ def test_warnings(graph, expected):
 )
 def test_no_false_warnings(graph):
     assert _validator().warnings(graph) == []
+
+
+def test_nested_boxes_do_not_suggest_numbered_copies():
+    """Azure Functions went missing from its subnet: listed in the subnet and
+    the resource group, the warning said to use numbered copies, and the
+    assistant dropped the subnet listing instead."""
+    found = _validator().warnings(
+        {
+            "aws_vpc.main": ["aws_subnet.app", "aws_lambda_function.fn"],
+            "aws_subnet.app": ["aws_lambda_function.fn"],
+        }
+    )
+    assert len(found) == 1
+    assert "keep it in aws_subnet.app" in found[0]
+    assert "numbered copies" not in found[0]
+
+
+def test_two_subnets_inside_a_listed_network_get_both_warnings():
+    found = _validator().warnings(
+        {
+            "google_compute_network.vpc": [
+                "google_compute_subnetwork.a",
+                "google_compute_subnetwork.b",
+                "google_compute_instance.vm",
+            ],
+            "google_compute_subnetwork.a": ["google_compute_instance.vm"],
+            "google_compute_subnetwork.b": ["google_compute_instance.vm"],
+        }
+    )
+    assert any("Remove google_compute_instance.vm from" in w for w in found)
+    assert any("numbered copies" in w for w in found)
 
 
 def test_cli_prints_warnings_and_succeeds(tmp_path):

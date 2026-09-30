@@ -243,11 +243,35 @@ def warnings(graph):
                 f'"{network}.a": [..., "{node}"], "{node}": ["{network}.b"]. '
                 "Otherwise it is not drawn."
             )
+
+    def boxes_around(box):
+        seen, queue = set(), list(parents.get(box, []))
+        while queue:
+            outer = queue.pop()
+            if outer not in seen:
+                seen.add(outer)
+                queue.extend(parents.get(outer, []))
+        return seen
+
     for node, boxes in sorted(parents.items()):
-        if len(boxes) > 1:
+        if len(boxes) < 2:
+            continue
+        # A box that already holds another of the node's boxes (a resource
+        # group around its subnet) is the listing to drop, not the inner one.
+        outer = [b for b in boxes if any(b in boxes_around(o) for o in boxes)]
+        inner = [b for b in boxes if b not in outer]
+        if outer and inner:
             found.append(
-                f"{node} is listed in {', '.join(boxes)} but is drawn in only "
-                "one of them; use numbered copies (~1, ~2) for one per container."
+                f"{node} is listed in {', '.join(inner)} and also in "
+                f"{', '.join(outer)}, which already contains "
+                f"{'it' if len(inner) == 1 else 'them'}. Remove {node} from "
+                f"{', '.join(outer)} and keep it in {', '.join(inner)}."
+            )
+        if len(inner) != 1:
+            found.append(
+                f"{node} is listed in {', '.join(inner or boxes)} but is drawn "
+                "in only one of them; use numbered copies (~1, ~2) for one per "
+                "container."
             )
 
     numbered = {base_of(n) for n in nodes if re.search(r"~[0-9]+$", n)}
