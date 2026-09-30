@@ -18,6 +18,12 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # GitHub gives a pull request from a fork no OIDC token, so it cannot
+      # assume the AWS role. Such runs skip the AWS step and the slow tests
+      # (terraform plan against AWS); those run on main after the merge.
+      # pull_request_target would hand the role to untrusted code instead.
+      FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -54,6 +60,7 @@ jobs:
       #       Retrieve temporary AWS credentials
       #----------------------------------------------
       - name: Configure AWS credentials
+        if: env.FORK_PR != 'true'
         uses: aws-actions/configure-aws-credentials@v4
         timeout-minutes: 2
         with:
@@ -96,4 +103,9 @@ jobs:
           export PATH=$PATH:$(pwd)
           rm -rf ~/.terravision
           poetry run terravision --version
-          poetry run pytest tests -v
+          if [ "$FORK_PR" = "true" ]; then
+            echo "::notice::Pull request from a fork: slow tests need AWS credentials and run on main after the merge."
+            poetry run pytest tests -v -m "not slow"
+          else
+            poetry run pytest tests -v
+          fi
