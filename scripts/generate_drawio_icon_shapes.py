@@ -212,6 +212,35 @@ def main() -> None:
     )
     gcp3_js = fetch(f"{RAW}/js/diagramly/sidebar/Sidebar-GCP3.js")
     gcp3 = dict(re.findall(r"'([a-z0-9_]+);fillColor=(#[0-9a-fA-F]{6})'", gcp3_js))
+
+    # The size each shape gets when dragged from draw.io's palette, so
+    # exported icons match icons a user adds afterwards
+    aws_js = fetch(f"{RAW}/js/diagramly/sidebar/Sidebar-AWS4.js")
+    aws_sizes = {
+        name: (float(w), float(h))
+        for name, w, h in re.findall(
+            r"createVertexTemplateEntry\(n \+ '([a-z0-9_]+);',\s*s \* ([\d.]+),"
+            r"\s*s \* ([\d.]+)",
+            aws_js,
+        )
+    }
+    azure_js = fetch(f"{RAW}/js/diagramly/sidebar/Sidebar-Azure2.js")
+    azure_sizes = {
+        name: (round(400 * float(w)), round(400 * float(h)))
+        for name, w, h in re.findall(
+            r"createVertexTemplateEntry\(s \+ '([^']+\.svg);',\s*r \* ([\d.]+),"
+            r"\s*r \* ([\d.]+)",
+            azure_js,
+        )
+    }
+    gcp3_sizes = {
+        name: (round(0.5 * float(w), 1), round(0.5 * float(h), 1))
+        for name, w, h in re.findall(
+            r"n \+ '([a-z0-9_]+);fillColor=#[0-9a-fA-F]{6}',\s*s \* ([\d.]+),"
+            r"\s*s \* ([\d.]+)",
+            gcp3_js,
+        )
+    }
     print(f"  {len(azure_svgs)} Azure images, {len(gcp3)} GCP (gcp3) stencils")
 
     aws_library = {
@@ -259,6 +288,18 @@ def main() -> None:
         "# gcp3 stencil name -> the fill draw.io's sidebar gives it\n"
         "GCP3_SHAPES = {\n"
         + "".join(f'    "{n}": "{f}",\n' for n, f in sorted(gcp3.items()))
+        + "}\n\n"
+        "# The size (width, height) a shape gets when dragged from draw.io's\n"
+        "# palette. AWS service icons (resourceIcon) are all 78x78.\n"
+        "AWS4_PALETTE_SIZES = {\n"
+        + "".join(f'    "{n}": {v},\n' for n, v in sorted(aws_sizes.items()))
+        + "}\n\n"
+        "# Keyed by file name; the palette lists each image once per folder\n"
+        "AZURE2_PALETTE_SIZES = {\n"
+        + "".join(f'    "{n}": {v},\n' for n, v in sorted(azure_sizes.items()))
+        + "}\n\n"
+        "GCP3_PALETTE_SIZES = {\n"
+        + "".join(f'    "{n}": {v},\n' for n, v in sorted(gcp3_sizes.items()))
         + "}\n"
     )
     lines = [

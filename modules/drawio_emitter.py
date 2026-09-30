@@ -26,8 +26,11 @@ RESICON_SIZE = 78
 DEFAULT_ICON_SIZE = 78
 
 # Azure card: grey rounded rectangle behind SVG icon (matches PNG output).
-AZURE_CARD_SIZE = 76
-AZURE_CARD_ICON_SIZE = 40
+# Azure icons are drawn at the size draw.io's palette gives each one (most
+# are 64-68px); this is for icons embedded because draw.io has none.
+AZURE_CARD_ICON_SIZE = 64
+# The grey card is this much wider and taller than its icon
+AZURE_CARD_PADDING = 16
 
 # GCP card: bordered table with icon left, text right (matches PNG output).
 GCP_CARD_WIDTH = 280
@@ -201,6 +204,56 @@ def load_shape_map(provider: str) -> dict:
     return getattr(mod, attr_name, {})
 
 
+# Width in draw.io px that a resource needs: its icon or card, and room for
+# the label under an icon. The layout is scaled so each resource's slot is
+# about this wide, rather than the width TerraVision's PNG icons need.
+_DRAWIO_NODE_FOOTPRINT = {"aws": 110, "azure": 120, "gcp": GCP_CARD_WIDTH + 30}
+
+
+def _layout_scale(
+    xdot_graph: XdotGraph, node_id_map: Dict[str, str], provider: str
+) -> float:
+    """How much to shrink the layout for draw.io's smaller icons.
+
+    The ratio of the draw.io footprint to the diagram's median resource
+    width, so it follows --iconsize and each cloud's node sizes.
+    """
+    import statistics
+
+    widths = [
+        node.width * DPI
+        for name, node in xdot_graph.nodes.items()
+        if name in node_id_map and node.width
+    ]
+    if not widths:
+        return 1.0
+    footprint = _DRAWIO_NODE_FOOTPRINT.get(provider, 110)
+    return max(0.25, min(1.0, footprint / statistics.median(widths)))
+
+
+def _scaled_layout(xdot_graph: XdotGraph, scale: float) -> XdotGraph:
+    """A copy of the layout with every position scaled; sizes are kept."""
+    import copy
+
+    if scale == 1.0:
+        return xdot_graph
+    graph = copy.deepcopy(xdot_graph)
+
+    def point(p):
+        return (p[0] * scale, p[1] * scale) if p else p
+
+    graph.bounding_box = tuple(v * scale for v in graph.bounding_box)
+    for node in graph.nodes.values():
+        node.pos = point(node.pos)
+        node.label_pos = point(node.label_pos)
+    for cluster in graph.clusters.values():
+        cluster.bb = tuple(v * scale for v in cluster.bb)
+    for edge in graph.edges:
+        edge.label_pos = point(edge.label_pos)
+        edge.spline_points = [point(p) for p in edge.spline_points]
+    return graph
+
+
 def emit_drawio(
     xdot_graph: XdotGraph,
     shape_map: dict,
@@ -224,6 +277,13 @@ def emit_drawio(
     cluster_id_map:
         Mapping of Graphviz cluster-name → TerraVision resource name.
     """
+    # The layout is sized for TerraVision's PNG icons, two or three times
+    # the size of draw.io's; scaled as is, every icon sat alone in a large
+    # empty slot. Pull the layout together to suit draw.io's sizes.
+    scale = _layout_scale(xdot_graph, node_id_map, provider)
+    xdot_graph = _scaled_layout(xdot_graph, scale)
+    inset = CLUSTER_INSET * scale
+
     bb = xdot_graph.bounding_box
     graph_height = bb[3] - bb[1]
 
@@ -288,10 +348,10 @@ def emit_drawio(
 
         # Bounding box → absolute draw.io coords, shrunk by CLUSTER_INSET
         x1, y1, x2, y2 = cluster.bb
-        x1 += CLUSTER_INSET
-        y1 += CLUSTER_INSET
-        x2 -= CLUSTER_INSET
-        y2 -= CLUSTER_INSET
+        x1 += inset
+        y1 += inset
+        x2 -= inset
+        y2 -= inset
         abs_x = x1
         abs_y = _flip_y(y2)  # top-left in draw.io coords
         dx_w = x2 - x1
@@ -306,6 +366,10 @@ def emit_drawio(
         )
         if has_label_node:
             dx_h += 30
+            # A box around a single icon can be narrower than its own label
+            # once the layout is pulled together; widen it to the right, so
+            # the icons inside keep their place
+            dx_w = max(dx_w, _label_width(xdot_graph, cluster_name) + 20)
 
         cluster_abs_pos[cluster_name] = (abs_x, abs_y)
 
@@ -399,6 +463,10 @@ def emit_drawio(
                 "container=1",
                 "collapsible=0",
             ]
+            # The title's own colour: a GCP VPC is transparent on the blue
+            # cloud box, so its title is white, as in the PNG
+            if cluster.style.get("fontcolor"):
+                style_parts.append(f"fontColor={cluster.style['fontcolor']}")
 
         if not center_style:
             style_str = ";".join(style_parts) + ";"
@@ -455,14 +523,14 @@ def emit_drawio(
                 f"verticalLabelPosition=bottom;verticalAlign=top;"
                 f"image=data:image/png,{b64};"
             )
-            # Position at bottom-left of parent cluster
-            x1, y1, x2, y2 = cluster.bb
-            cluster_w = x2 - x1
-            cluster_h = y2 - y1
+            # Top-left of the cloud box, as in the PNG. It was placed at the
+            # bottom, measured from the box before it is shrunk for draw.io,
+            # which put the white "Google Cloud" wordmark below the blue box,
+            # invisible on the white page.
             w_px, h_px = logo_size
             margin = 15
             logo_x = margin
-            logo_y = cluster_h - h_px - margin
+            logo_y = margin
 
             parent_cid = cluster_cell_ids.get(cluster_name, "1")
             logo_cell = ET.SubElement(
@@ -682,14 +750,14 @@ def emit_drawio(
                     break
 
         if parent_cluster:
-            # The box as it is drawn: the Graphviz box shrunk by CLUSTER_INSET
+            # The box as it is drawn: the Graphviz box shrunk by the inset
             # on every side, plus the 30px added at the bottom of boxes that
             # have a label. Measuring from the unshrunk box put the label
             # 50px left of its box and below its bottom edge.
             x1, y1, x2, y2 = parent_cluster.bb
-            box_left = x1 + CLUSTER_INSET
-            box_right = x2 - CLUSTER_INSET
-            box_bottom = _flip_y(y1) - CLUSTER_INSET + 30
+            box_left = x1 + inset
+            box_right = x2 - inset
+            box_bottom = _flip_y(y1) - inset + 30
             margin = 10
             if "left" in label_pos:
                 dx_x = box_left + margin
@@ -895,8 +963,11 @@ def _build_node_style(
             .replace("mxgraph.gcp2.", "")
         )
 
-        # Azure shapes: grey rounded card with SVG icon inside
+        # Azure shapes: grey rounded card with SVG icon inside, the icon at
+        # the size draw.io's palette gives it
         if "img/lib/azure2/" in drawio_shape:
+            icon_w, icon_h = _palette_size("azure", drawio_shape)
+            card = max(icon_w, icon_h) + AZURE_CARD_PADDING
             parts = [
                 "shape=label",
                 "rounded=1",
@@ -910,14 +981,14 @@ def _build_node_style(
                 "fontSize=12",
                 "fontColor=#2C2C2C",
                 f"image={drawio_shape}",
-                f"imageWidth={AZURE_CARD_ICON_SIZE}",
-                f"imageHeight={AZURE_CARD_ICON_SIZE}",
+                f"imageWidth={icon_w}",
+                f"imageHeight={icon_h}",
                 "imageAlign=center",
                 "imageVerticalAlign=middle",
                 "spacingTop=4",
                 "spacing=6",
             ]
-            return ";".join(parts) + ";", AZURE_CARD_SIZE, AZURE_CARD_SIZE
+            return ";".join(parts) + ";", card, card
 
         # Connection points used by draw.io for resourceIcon shapes
         _PTS = (
@@ -948,7 +1019,7 @@ def _build_node_style(
                 "pointerEvents=1",
                 f"shape={shape_ref}",
             ]
-            return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
+            return ";".join(parts) + ";", *_palette_size("aws", bare_name)
 
         if bare_name in AWS4_RESICON_NAMES:
             # resourceIcon — exact style from draw.io Sidebar-AWS4.js
@@ -991,7 +1062,7 @@ def _build_node_style(
             "aspect=fixed",
             f"shape={shape_ref}",
         ]
-        return ";".join(parts) + ";", DIRECT_ICON_SIZE, DIRECT_ICON_SIZE
+        return ";".join(parts) + ";", *_palette_size("aws", bare_name)
 
     # No draw.io shape for this icon: embed TerraVision's own, so the node
     # never exports as an empty box
@@ -1019,7 +1090,8 @@ def _build_node_style(
                 "spacingTop=4",
                 "spacing=6",
             ]
-            return ";".join(parts) + ";", AZURE_CARD_SIZE, AZURE_CARD_SIZE
+            card = AZURE_CARD_ICON_SIZE + AZURE_CARD_PADDING
+            return ";".join(parts) + ";", card, card
         parts = [
             "shape=image",
             "html=1",
@@ -1047,6 +1119,39 @@ def _build_node_style(
     ]
 
     return ";".join(parts) + ";", DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE
+
+
+def _label_width(xdot_graph: XdotGraph, cluster_name: str) -> float:
+    """Rough width in px of a box's label: its icon, a gap and its name."""
+    for node in xdot_graph.nodes.values():
+        if (
+            node.attrs.get("_clusterlabel") == "1"
+            and node.attrs.get("_clusterid") == cluster_name
+        ):
+            _, text, icon_w, _ = _build_cluster_label_style(node)
+            # about 7.5px a character at the label's 14px font
+            return icon_w + 4 + 7.5 * len(re.sub(r"<[^>]+>", "", text))
+    return 0.0
+
+
+def _palette_size(provider: str, shape: str) -> Tuple[float, float]:
+    """The size a shape gets when dragged from draw.io's palette.
+
+    Exported icons use it, so an icon a user adds afterwards matches them.
+    """
+    from modules.config.drawio_library import (
+        AWS4_PALETTE_SIZES,
+        AZURE2_PALETTE_SIZES,
+        GCP3_PALETTE_SIZES,
+    )
+
+    if provider == "azure":
+        return AZURE2_PALETTE_SIZES.get(
+            os.path.basename(shape), (AZURE_CARD_ICON_SIZE, AZURE_CARD_ICON_SIZE)
+        )
+    if provider == "gcp":
+        return GCP3_PALETTE_SIZES.get(shape, (GCP_CARD_ICON_SIZE, GCP_CARD_ICON_SIZE))
+    return AWS4_PALETTE_SIZES.get(shape, (DIRECT_ICON_SIZE, DIRECT_ICON_SIZE))
 
 
 def _node_icon(node: XdotNode) -> Optional[str]:
@@ -1389,13 +1494,14 @@ def _emit_gcp_card(
             vertex="1",
             parent=card_id,
         )
+        stencil_w, stencil_h = _palette_size("gcp", stencil)
         icon_geo = ET.SubElement(
             icon_cell,
             "mxGeometry",
             x=f"{icon_margin:.1f}",
-            y=f"{(card_h - icon_size) / 2:.1f}",
-            width=f"{icon_size:.1f}",
-            height=f"{icon_size:.1f}",
+            y=f"{(card_h - stencil_h) / 2:.1f}",
+            width=f"{stencil_w:.1f}",
+            height=f"{stencil_h:.1f}",
         )
         icon_geo.set("as", "geometry")
 
@@ -1518,8 +1624,12 @@ def _sanitize_label(label: Optional[str]) -> str:
             text = inner
         else:
             break
-    # For complex HTML labels, extract just the visible text content
-    if "<TABLE" in text.upper() or "<table" in text:
+    # For complex HTML labels, extract just the visible text content. That
+    # includes text only wrapped in font markup: box titles are sized with
+    # <FONT POINT-SIZE=...>, which was escaped and shown as raw markup.
+    if "<TABLE" in text.upper() or re.search(
+        r"</?(font|b|i|u|s|sub|sup|br)\b", text, re.IGNORECASE
+    ):
         return _extract_text_from_html(text)
     # Convert Graphviz record syntax to HTML line breaks
     # e.g., "Title|{ Key:|Value }|{ Key2:|Value2 }" → "Title<br>Key: Value<br>..."

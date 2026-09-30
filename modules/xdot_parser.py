@@ -164,6 +164,7 @@ def _parse_object(obj, graph, gvid_to_name, parent):
                 "pencolor",
                 "penwidth",
                 "bgcolor",
+                "fontcolor",
             ):
                 if k in obj:
                     style_attrs[k] = obj[k]
