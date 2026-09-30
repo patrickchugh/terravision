@@ -104,6 +104,7 @@ AZURE_CONSOLIDATED_NODES = [
 # List of Group type nodes and order to draw them in
 # Azure hierarchy: Resource Group > VNet > Subnet > NSG
 AZURE_GROUP_NODES = [
+    "tv_azurerm_region",  # Synthetic region box, outermost in multi-region designs
     "azurerm_resource_group",
     # Shared services box - a Cluster class, so it must be declared as a group
     # or the renderer instantiates it as a plain node and blows up on ._id
@@ -117,6 +118,7 @@ AZURE_GROUP_NODES = [
 # Nodes to remove in simplified mode for a high-level services-only view
 AZURE_SIMPLIFIED_REMOVE_NODES = [
     # Group/container nodes
+    "tv_azurerm_region",
     "azurerm_resource_group",
     "azurerm_virtual_network",
     "azurerm_subnet",

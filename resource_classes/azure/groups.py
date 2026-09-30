@@ -182,6 +182,42 @@ class AvailabilityZone(Cluster):
         super().__init__(cluster_label, defaultdir, graph_attrs)
 
 
+class RegionGroup(Cluster):
+    """Box for an Azure region, the counterpart of tv_aws_region and tv_gcp_region.
+
+    Connectivity diagrams (hub-and-spoke across regions, ExpressRoute and VPN
+    into several regions) need a region boundary that is neither a resource
+    group, which is not regional, nor a VNet, which is drawn only when it
+    contains something. A solid neutral border keeps it distinct from both.
+    """
+
+    def __init__(self, label="Region", badge_label=None, **kwargs):
+        graph_attrs = {
+            "style": "solid",
+            "margin": "80",
+            "pencolor": "#605E5C",  # Neutral grey: not a resource group or VNet
+            "penwidth": "1.5",
+            "rank": "same",
+        }
+        # Store label info for creating separate label node at bottom
+        self.label_text = label
+        self.label_icon = (
+            f"{base_path}/resource_images/azure/general/region-management.png"
+        )
+        # The source icon is 256x256. The resource group's label icon is a
+        # 120px PNG without a DPI, which graphviz draws at 96 DPI: 90x90pt.
+        # Matching that keeps the label inside the strip shiftLabel.gvpr
+        # leaves at the bottom of the box; at 120pt it poked through.
+        self.label_icon_width = 90
+        self.label_icon_height = 90
+        self.label_position = "bottom-left"
+
+        # Optional top badge label (graphviz cluster label at top)
+        cluster_label = badge_label if badge_label else ""
+
+        super().__init__(cluster_label, defaultdir, graph_attrs)
+
+
 class VMSSGroup(Cluster):
     def __init__(self, label="VM Scale Set", **kwargs):
         graph_attrs = {
@@ -243,6 +279,7 @@ azurerm_resource_group = ResourceGroupCluster
 azurerm_virtual_network = VNetGroup
 azurerm_subnet = SubnetGroup
 tv_azurerm_zone = AvailabilityZone  # Virtual zones for VMSS instances
+tv_azurerm_region = RegionGroup  # Synthetic region boxes for multi-region designs
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup
 tv_azure_onprem = OnPrem
