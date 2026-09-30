@@ -67,7 +67,9 @@ On Ubuntu 26.04+ and Debian testing, also `sudo apt install libgvplugin-neato-la
 
 ### 2. Connect your assistant
 
-**Claude Desktop:** download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and open it (or drag it into **Settings → Extensions**). Diagrams appear right in the chat, with buttons to open the image, edit it in draw.io, show it in its folder and see its source.
+**Claude Desktop:** 
+
+Download `terravision-<version>.mcpb` from the [latest release](https://github.com/patrickchugh/terravision/releases/latest) and open it (or drag it into **Settings → Extensions**). Diagrams appear right in the chat, with buttons to open the image, edit it in draw.io, show it in its folder and see its source.
 
 **Claude Code** (terminal, VS Code or JetBrains):
 
@@ -93,7 +95,9 @@ codex plugin add terravision-cloud-diagrams@terravision
 gemini extensions install https://github.com/patrickchugh/terravision
 ```
 
-**VS Code with GitHub Copilot, Cursor and other MCP clients:** add TerraVision as an MCP server that runs `uvx --from "terravision[mcp]" terravision mcp --output-dir <folder for diagrams>`. The [setup guide](https://patrickchugh.github.io/terravision/ai-assistants/) has the configuration for each.
+**VS Code with GitHub Copilot, Cursor and other MCP clients:** 
+
+Add TerraVision as an MCP server that runs `uvx --from "terravision[mcp]" terravision mcp --output-dir <folder for diagrams>`. The [setup guide](https://patrickchugh.github.io/terravision/ai-assistants/) has the configuration for each.
 
 ### 3. Ask for a diagram
 
