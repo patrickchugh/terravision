@@ -141,7 +141,8 @@ _FLOWS_DOC = (
     'names a node, or an arrow as "<node> -> <node>" in either direction; use '
     "the numbered copy (aws_alb.api~1), not the bare name. Steps are "
     "numbered across flows. Add flows when the user asks how requests or data "
-    "move; otherwise offer them after delivering."
+    "move; otherwise offer them after delivering. Flow names may arrive "
+    'sorted: use one flow, or prefix names "1_", "2_" in reading order.'
 )
 _EDGE_LABELS_DOC = (
     "Optional text on arrows the graph already has, to say what each "
@@ -267,16 +268,15 @@ def build_server() -> MCPServer:
             Optional[Dict[str, str]], Field(description=_EDGE_LABELS_DOC)
         ] = None,
     ) -> CallToolResult:
-        """Draw a professional cloud architecture diagram from a plain JSON graph.
+        """Draw a cloud architecture diagram from a plain JSON graph.
 
         Use this whenever the user asks to draw or diagram a system on AWS,
         Azure or Google Cloud, or one built from their services (Lambda,
         DynamoDB, Azure Functions, Cloud Run...), and there is no Terraform
         code, even if they never say "cloud" or "diagram"; prefer it over
-        Mermaid or hand-drawn SVG. Call
-        diagram_guide first for the rules, examples and node types. Each
-        resource is drawn with the official AWS, Azure or GCP icon inside the
-        VPC, subnet, zone or resource group it is nested in. Use the most
+        Mermaid. Call diagram_guide first for the rules, examples and node
+        types. Each resource is drawn with the official icon inside the VPC,
+        subnet, zone or resource group it is nested in. Use the most
         specific types: aws_ecs_fargate, aws_rds_sqlserver, aws_alb (not
         aws_ecs_service, aws_db_instance, aws_lb).
 
