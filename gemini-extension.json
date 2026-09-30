@@ -1,12 +1,12 @@
 {
   "name": "terravision",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Draw professional cloud architecture diagrams (AWS, Azure, GCP) with official provider icons from a JSON graph or Terraform code.",
   "contextFileName": "gemini-extension.md",
   "mcpServers": {
     "terravision": {
       "command": "uvx",
-      "args": ["--from", "terravision[mcp]==0.51.0", "terravision", "mcp", "--output-dir", "./diagrams"]
+      "args": ["--from", "terravision[mcp]==0.51.1", "terravision", "mcp", "--output-dir", "./diagrams"]
     }
   }
 }
