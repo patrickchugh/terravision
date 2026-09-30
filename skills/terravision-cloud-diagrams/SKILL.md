@@ -137,7 +137,9 @@ TerraVision draws the graph exactly as written; it does not add, move or group n
 
 - **Shared services have no arrows.** Arrows to or from CloudWatch log groups, ECR, ACM, KMS, SSM parameters, EFS and EIPs (Azure: Key Vault, Monitor, Log Analytics, ACR, storage accounts; GCP: KMS, logging sinks, monitoring, GCR, Secret Manager) are not drawn. On AWS and Azure, list them in `aws_group.shared_services` or `azurerm_group.shared_services` so they appear together in a Shared Services box instead of floating.
 - **Arrows to a container are not drawn.** Point at a node inside it instead.
-- **A node sits in one container.** Listing it under two subnets draws it once; use numbered copies for one per subnet.
+- **A node sits in one container.** A name is drawn once, so it cannot be listed in two boxes. A resource spanning several subnets or zones needs a numbered copy in each (`aws_alb.web~1`, `aws_alb.web~2`). Inside nested boxes, list it only in the innermost (its subnet), not also in the network or resource group around it.
+- **Network-attached services go in their subnet.** A Lambda in a VPC, an Azure Function with VNet integration, a private endpoint: draw each inside the subnet it attaches to.
+- **Arrows follow the real path.** Through a private endpoint, VPC endpoint, NAT gateway, proxy or firewall, draw source → intermediary → destination and no direct arrow.
 - **Two-way connections draw one arrow.** List the main direction of flow only.
 - **Nesting is literal.** Keep CloudFront, Route 53, API Gateway, WAF and external actors at the top level, not inside a VPC or subnet. Empty containers are not drawn.
 - **Unknown or misspelt types** draw a blank icon without an error. Check them against `references/node-types.md`.
@@ -198,4 +200,4 @@ As soon as a render passes your check, do all of this in the same reply. Never w
 - If the diagram has flows or edge labels, also write `terravision.yml` in the Terraform folder from the diagram's `.annotations.yml`: keep the title, rename every node in `flows` and `connect` to the Terraform address that creates it (`aws_ecs_fargate.api` becomes `aws_ecs_service.api`; numbered copies such as `aws_alb.web~1` become the one resource), and add the external actors (users, internet) under `add:`, since Terraform has none. TerraVision loads that file whenever it draws the Terraform, including in CI.
 - End that reply with one line offering a CI workflow that redraws the diagram whenever the Terraform changes: `patrickchugh/terravision-action` for GitHub Actions, and setups for GitLab, Jenkins, Azure DevOps and others at https://patrickchugh.github.io/terravision/cicd-integration/.
 
-With the MCP server, report the paths from `files` the same way. If the app showed the interactive view, the diagram is already in front of the user, so skip opening it and still show the JSON.
+With the MCP server, report the paths from `files` the same way, and let the result's `display` line decide step 1. When it says the app is showing the diagram in its interactive view, the diagram is already in front of the user: do not open it in an image viewer as well, by `open_diagram_file` or a shell command, and still show the JSON. When it says the app has no diagram view, show or open the PNG as in step 1.

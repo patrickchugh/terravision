@@ -23,7 +23,7 @@ Install: `uv tool install terravision`, `pipx install terravision`, or `pip inst
 
 ## Optional
 
-- [Agent Skill](https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams): SKILL.md for Claude Code, Codex, Gemini CLI, Cursor, Copilot
+- [Agent Skill](https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams): SKILL.md for Claude Code, Codex, Antigravity CLI, Cursor, Copilot
 - [JSON Schema](https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json)
 - [GitHub Action](https://github.com/marketplace/actions/terravision-terraform-architecture-diagrams)
 - [Repository](https://github.com/patrickchugh/terravision)

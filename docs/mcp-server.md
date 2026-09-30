@@ -234,6 +234,11 @@ When parts of the graph will not draw as they read, the result also has `warning
 listed in two boxes. They come from the skill's validator, so the command-line check gives the same
 advice. The diagram is still drawn, and the view lists the warnings under it.
 
+Every diagram result has `display`, which tells the assistant whether the app is already showing
+the diagram. In an app with the [diagram view](#the-diagram-view-mcp-apps) it says not to open the
+image in a separate viewer as well; in an app without the view it says to show the preview inline
+or open the PNG with `open_diagram_file`.
+
 Takes `format`, `outfile`, `fontsize`, `iconsize`, `title`, `preview` and `flows`: numbered steps drawn
 as badges with a legend (rule 10 of the [graph format](graph-format.md)). With `flows`, `files` also
 has `annotations`, a YAML file holding the title and flows, so

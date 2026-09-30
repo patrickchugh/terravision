@@ -22,7 +22,7 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ### 1. Install the prerequisites (once)
 
-TerraVision needs **Graphviz** (to draw) and **Git**. **uv** runs TerraVision for Claude Code, Codex, Gemini CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. **Terraform** is only needed to draw from Terraform code.
+TerraVision needs **Graphviz** (to draw) and **Git**. **uv** runs TerraVision for Claude Code, Codex, Antigravity CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. **Terraform** is only needed to draw from Terraform code.
 
 <details open>
 <summary><b>macOS</b></summary>
@@ -98,11 +98,13 @@ codex plugin marketplace add https://github.com/patrickchugh/terravision
 codex plugin add terravision-cloud-diagrams@terravision
 ```
 
-**Gemini CLI:**
+**Google Antigravity CLI** (`agy`, which replaced Gemini CLI):
 
 ```bash
-gemini extensions install https://github.com/patrickchugh/terravision
+agy mcp add terravision -- uvx --from "terravision[mcp]" terravision mcp --output-dir /path/for/diagrams
 ```
+
+If you had the TerraVision extension in Gemini CLI, `agy plugin import gemini` brings it across instead. Gemini CLI stopped working for personal Google accounts on 18 June 2026; with a Gemini Code Assist Standard or Enterprise licence or a paid API key it still runs, and installs TerraVision with `gemini extensions install https://github.com/patrickchugh/terravision`.
 
 **VS Code with GitHub Copilot, Cursor and other MCP clients:** 
 
