@@ -142,9 +142,9 @@ A `terravision.yml` next to the Terraform adds the title, numbered flows and con
 
 ---
 
-## Watch a 4-Minute Intro
+## Watch the 90-Second Intro
 
-[![TerraVision intro video](./images/youtube-thumbnail.png)](https://youtu.be/bTrWHBI2mF4)
+[![TerraVision extension for Claude and ChatGPT](./images/youtube-thumbnail.png)](https://youtu.be/BbXWR-v_Dl0)
 
 ---
 

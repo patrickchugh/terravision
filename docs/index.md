@@ -37,7 +37,17 @@ For DevOps teams: the [GitHub Action and CI/CD setups](cicd-integration.md) redr
 
 ---
 
-## Watch a 4-Minute Intro
+## Watch the 90-Second Intro
+
+<iframe
+  src="https://www.youtube-nocookie.com/embed/BbXWR-v_Dl0"
+  style="width: 100%; max-width: 800px; aspect-ratio: 16 / 9; display: block; margin: 0 auto; border: 0;"
+  title="TerraVision extension for Claude and ChatGPT"
+  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen>
+</iframe>
+
+### The 4-Minute Walkthrough
 
 <iframe
   src="https://www.youtube-nocookie.com/embed/bTrWHBI2mF4"
