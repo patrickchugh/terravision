@@ -249,8 +249,8 @@ diagram, and a step that draws no badge (a missing node or arrow, a container) i
 arrow, and one that is not drawn is listed in `warnings`. Labels are saved in the same
 `.annotations.yml`, under `connect`. `attributes` sets attributes on nodes the graph already has,
 as an annotation file's `update` section does; use it to give networks and subnets realistic CIDR
-ranges, shown in their box labels: `{"aws_subnet.public~1": {"cidr_block": "10.0.1.0/24"}}`. An
-attribute never adds a node; one for a node the graph does not have is listed in `warnings`.
+ranges, shown in their box labels: `{"aws_subnet.public~1": {"cidr_block": "10.0.1.0/24"}}`. A
+`label` attribute replaces a node's label or a box's caption. An attribute never adds a node; one for a node the graph does not have is listed in `warnings`.
 Attributes are saved in the same `.annotations.yml`, under `update`. Needs only Graphviz and Git: no
 Terraform, no credentials, no `source`. A graph that mixes providers (`aws_*` with `azurerm_*` or
 `google_*`) is rejected; draw one diagram per provider.

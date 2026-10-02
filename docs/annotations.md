@@ -140,7 +140,7 @@ the graph itself instead. Everything else is accepted:
 |---------|------------------|
 | `title`, `fontsize`, `iconsize`, `flows` | As for Terraform |
 | `connect` | Only labels arrows the graph already has (in either direction); it never adds one |
-| `update` | Sets attributes on nodes the graph already has; wildcards work as for Terraform |
+| `update` | Sets attributes, such as `label` or a CIDR range, on nodes the graph already has; wildcards work as for Terraform |
 | `add`, `remove`, `disconnect` | Refused: edit the graph |
 
 An `update` is how a graph gets realistic CIDR ranges on its networks and subnets, shown in their
@@ -279,7 +279,13 @@ update:
 update:
   aws_lambda_function.api:
     label: "API Gateway Handler"
+  aws_vpc.main:
+    label: "Core Network"
 ```
+`label` replaces the text under a node's icon, or the caption of a box such as a VPC or subnet,
+and wins over `--use-tf-names` and `--use-resource-names`. A network or subnet box still gets its
+CIDR range after a custom caption: "Core Network (10.0.0.0/16)". A name without `~N` labels every
+numbered copy.
 
 **CIDR range in a network or subnet label:**
 ```yaml

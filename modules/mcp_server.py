@@ -160,8 +160,9 @@ _ATTRIBUTES_DOC = (
     '{"cidr_block": "10.0.1.0/24"}}. The attribute is cidr_block for aws_vpc '
     "and aws_subnet, address_space for azurerm_virtual_network, "
     "address_prefixes for azurerm_subnet (lists allowed) and ip_cidr_range for "
-    "google_compute_subnetwork. Name numbered copies (aws_subnet.public~1); "
-    "an attribute never adds a node."
+    "google_compute_subnetwork. A label attribute replaces a node's label or "
+    'a box\'s caption: {"aws_vpc.main": {"label": "Core Network"}}. Name '
+    "numbered copies (aws_subnet.public~1); an attribute never adds a node."
 )
 
 

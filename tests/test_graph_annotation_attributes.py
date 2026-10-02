@@ -406,6 +406,131 @@ def test_a_base_name_update_reaches_numbered_copies():
     assert get_cidr_label("aws_subnet.a~2", tfdata) == "10.7.0.0/24"
 
 
+# ── label: a custom label or box caption ─────────────────────────────
+
+LABELS = {
+    "update": {
+        "aws_alb.api~1": {"label": "Public Entry"},
+        "aws_vpc.main": {"label": "Core Network", "cidr_block": "10.0.0.0/16"},
+        "aws_subnet.public~1": {"label": "Web Tier"},
+    }
+}
+
+
+def test_update_label_replaces_node_labels_and_box_captions(tmp_path, monkeypatch):
+    result, dot = _draw(tmp_path, monkeypatch, AWS_GRAPH, LABELS)
+    assert result.exit_code == 0, result.output
+    assert "Public Entry" in dot
+    # The CIDR suffix still follows a custom caption.
+    assert "Core Network (10.0.0.0/16)" in dot
+    assert "VPC Main" not in dot
+    assert "Web Tier" in dot
+    # Nodes without a label keep the generated one.
+    assert "Subnet Public" in dot  # aws_subnet.public~2
+
+
+def test_drawio_uses_the_custom_labels(tmp_path, monkeypatch):
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "g.tvg.json").write_text(json.dumps(AWS_GRAPH))
+    _write(tmp_path, LABELS)
+    result = CliRunner().invoke(
+        cli,
+        ["draw", "--source", "g.tvg.json", "--annotate", "a.yml", "--format", "drawio"],
+    )
+    assert result.exit_code == 0, result.output
+    drawio = (tmp_path / "architecture.drawio").read_text()
+    assert "Public Entry" in drawio
+    assert "Core Network (10.0.0.0/16)" in drawio
+
+
+@pytest.mark.parametrize("mode", ["USE_TF_NAMES", "USE_RESOURCE_NAMES", None])
+def test_a_custom_label_wins_over_every_label_mode(monkeypatch, mode):
+    import modules.helpers as helpers
+
+    if mode:
+        monkeypatch.setattr(helpers, mode, True)
+    monkeypatch.setattr(
+        helpers,
+        "_RESOURCE_ORIGINAL_META",
+        {"aws_vpc.main": {"name": "prod-vpc"}, "aws_alb.api": {"name": "prod-alb"}},
+    )
+    tfdata = {"annotations": LABELS, "graphdict": AWS_GRAPH}
+    assert helpers.node_label("aws_alb.api~1", tfdata) == "Public Entry"
+    assert helpers.node_label("aws_vpc.main", tfdata, is_group=True) == "Core Network"
+    # No label: the label mode applies as before.
+    assert helpers.node_label("aws_alb.api~2", tfdata) == helpers.pretty_name(
+        "aws_alb.api~2"
+    )
+
+
+def test_a_long_custom_label_is_wrapped_to_the_card_but_a_caption_is_not():
+    import modules.helpers as helpers
+
+    text = "A very long custom label that will not fit on one card row"
+    tfdata = {"annotations": {"update": {"aws_alb.api~1": {"label": text}}}}
+    assert "\n" in helpers.node_label("aws_alb.api~1", tfdata)
+    tfdata = {"annotations": {"update": {"aws_vpc.main": {"label": text}}}}
+    assert helpers.node_label("aws_vpc.main", tfdata, is_group=True) == text
+
+
+def test_terraform_label_follows_numbered_copies_and_variant_renames(tmp_path):
+    """aws_lb.elb is drawn as aws_alb.elb~1 and ~2 after handle_variants."""
+    from modules.helpers import node_label
+    from terravision.terravision import compile_tfdata
+
+    data = json.loads((REPLAY.parent / "waf-alb-tfdata.json").read_text())
+    data["annotations"] = {"update": {"aws_lb.elb": {"label": "Public ALB"}}}
+    path = tmp_path / "tfdata.json"
+    path.write_text(json.dumps(data))
+    tfdata = compile_tfdata(str(path), [], "default", False)
+    copies = [n for n in tfdata["graphdict"] if n.startswith("aws_alb.elb~")]
+    assert copies
+    for node in copies:
+        assert node_label(node, tfdata) == "Public ALB"
+
+
+def test_terraform_label_on_a_vpc_keeps_the_plan_cidr(tmp_path, monkeypatch):
+    from click.testing import CliRunner
+
+    from terravision.terravision import cli
+
+    data = json.loads(REPLAY.read_text())
+    data["annotations"] = {"update": {VPC: {"label": "Bastion Network"}}}
+    (tmp_path / "tfdata.json").write_text(json.dumps(data))
+    monkeypatch.chdir(tmp_path)
+    result = CliRunner().invoke(
+        cli, ["draw", "--source", "tfdata.json", "--format", "dot"]
+    )
+    assert result.exit_code == 0, result.output
+    dot = (tmp_path / "architecture-aws.dot.dot").read_text()
+    assert "Bastion Network (172.68.0.0/16)" in dot
+
+
+def test_interactive_html_uses_the_custom_label(tmp_path, outdir):
+    data = json.loads(REPLAY.read_text())
+    data["annotations"] = {"update": {VPC: {"label": "Bastion Network"}}}
+    source = tmp_path / "tfdata.json"
+    source.write_text(json.dumps(data))
+    result = mcp_service.run_interactive_html(source=str(source), outfile="html")
+    assert "Bastion Network (172.68.0.0/16)" in Path(result["path"]).read_text()
+
+
+def test_render_graph_attributes_set_labels(outdir):
+    result = mcp_service.run_render_graph(
+        AWS_GRAPH,
+        outfile="labels",
+        attributes=LABELS["update"],
+        preview=False,
+    )
+    svg = Path(result["files"]["svg"]).read_text()
+    assert "Public Entry" in svg
+    assert "Core Network (10.0.0.0/16)" in svg
+
+
 # ── MCP render_graph attributes ──────────────────────────────────────
 
 

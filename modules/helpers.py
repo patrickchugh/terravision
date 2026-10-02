@@ -409,26 +409,54 @@ def _annotated_attribute(resource: str, attr: str, tfdata: Dict[str, Any]) -> An
     Matches as ``modify_metadata`` does: a key with ``*`` matches every node
     containing the text before it, and a name without ``~N`` also names its
     numbered copies. An exact name beats its base name, which beats a
-    wildcard.
+    wildcard. A node renamed to a variant (aws_lb.web drawn as aws_alb.web)
+    also answers to the name the annotation file used, but its drawn name
+    wins.
     """
     updates = (tfdata.get("annotations") or {}).get("update")
     if not isinstance(updates, dict):
         return None
+    names = [resource, *_variant_sources(resource, tfdata)]
     found = None
     for key, attrs in updates.items():
         if (
             isinstance(key, str)
             and "*" in key
-            and key.split("*")[0] in resource
+            and any(key.split("*")[0] in n for n in names)
             and isinstance(attrs, dict)
             and attr in attrs
         ):
             found = attrs[attr]
-    for key in (resource.split("~")[0], resource):
-        attrs = updates.get(key)
-        if isinstance(attrs, dict) and attr in attrs:
-            found = attrs[attr]
+    for name in reversed(names):
+        for key in (name.split("~")[0], name):
+            attrs = updates.get(key)
+            if isinstance(attrs, dict) and attr in attrs:
+                found = attrs[attr]
     return found
+
+
+def _variant_sources(resource: str, tfdata: Dict[str, Any]) -> List[str]:
+    """Names a node may have had before handle_variants renamed it.
+
+    handle_variants() swaps the type for its variant and keeps the rest of
+    the address, so ``module.x.aws_alb.web~1`` may have been
+    ``module.x.aws_lb.web~1``. Only types listed in the provider's
+    NODE_VARIANTS are considered.
+    """
+    if not tfdata.get("provider_detection"):
+        return []
+    parts = resource.split(".")
+    if len(parts) < 2:
+        return []
+    try:
+        variants = _get_provider_config_constants(tfdata)["NODE_VARIANTS"]
+    except Exception:  # noqa: BLE001 - no config means no variants
+        return []
+    return [
+        ".".join(parts[:-2] + [original, parts[-1]])
+        for original, choices in variants.items()
+        if isinstance(choices, dict) and parts[-2] in choices.values()
+    ]
 
 
 def _cidr_of(resource: str, attr: str, tfdata: Dict[str, Any]) -> str:
@@ -1211,6 +1239,25 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     # idea how wide the card is, so "Route Table Rt Apps" was split after "Rt"
     # and the pieces could not be packed back together.
     return _fit_to_card(final, provider=provider)
+
+
+def node_label(name: str, tfdata: Dict[str, Any], is_group: bool = False) -> str:
+    """The label drawn for a node or the caption of a box.
+
+    A ``label`` set by an annotation ``update`` (or render_graph
+    ``attributes``) wins over every other label mode, --use-tf-names and
+    --use-resource-names included. A node card's label is wrapped to fit the
+    card like any other; a box caption is used as written. Otherwise this is
+    :func:`pretty_name`.
+    """
+    custom = _annotated_attribute(name, "label", tfdata)
+    if isinstance(custom, (str, int, float)) and not isinstance(custom, bool):
+        text = str(custom).strip()
+        if text:
+            if is_group:
+                return text
+            return _fit_to_card(text, provider=get_provider_for_resource(name))
+    return pretty_name(name, is_group=is_group)
 
 
 def replace_variables(

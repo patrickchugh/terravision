@@ -445,7 +445,7 @@ def _badge_html(target: str, tfdata: Dict[str, Any]) -> Tuple[Optional[str], flo
 
     repo_root = Path(os.path.abspath(os.path.dirname(__file__))).parent
     icon = f"{repo_root}/{icon_dir}/{icon_file}"
-    name = helpers.pretty_name(badge_resource)
+    name = helpers.node_label(badge_resource, tfdata)
     icon_pts = 64.0
     text_pts = len(name) * 22.0 * 0.55
     html = (
@@ -925,7 +925,7 @@ def handle_nodes(
         is_outer = resource_type in OUTER_NODES
         is_edge = any(resource_type.startswith(e) for e in EDGE_NODES)
         targetGroup = diagramCanvas if is_outer else inGroup
-        node_label = helpers.pretty_name(resource)
+        node_label = helpers.node_label(resource, tfdata)
         setcluster(targetGroup)
         nodeClass = _node_class_for(resource_type, tfdata)
         # Build extra node attrs
@@ -1019,7 +1019,7 @@ def handle_nodes(
                                 continue
                             nodeClass = _node_class_for(node_type, tfdata)
                             connectedNode = nodeClass(
-                                label=helpers.pretty_name(node_connection),
+                                label=helpers.node_label(node_connection, tfdata),
                                 tf_resource_name=node_connection,
                             )
                             drawn_resources.append(node_connection)
@@ -1283,7 +1283,7 @@ def handle_group(
         return None, drawn_resources
 
     # Create new group/cluster
-    node_label = helpers.pretty_name(resource, is_group=True)
+    node_label = helpers.node_label(resource, tfdata, is_group=True)
     cidr = helpers.get_cidr_label(resource, tfdata)
     if cidr:
         node_label = f"{node_label} ({cidr})"
@@ -1380,7 +1380,7 @@ def handle_group(
                 if newNode is not None:
                     # Don't overwrite HTML labels (GCP nodes have custom HTML tables)
                     node_label = newNode._attrs.get(
-                        "label", helpers.pretty_name(node_connection)
+                        "label", helpers.node_label(node_connection, tfdata)
                     )
                     newGroup.add_node(newNode._id, label=node_label)
                     if node_connection not in nested_members:
