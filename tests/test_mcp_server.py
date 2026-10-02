@@ -273,8 +273,9 @@ def test_schemas_are_plain_json_types(server):
                 # An intentional object parameter: the graph itself.
                 assert declared == "object"
                 continue
-            if name in ("flows", "edge_labels"):
-                # Also intentional: named flows, and labels keyed by arrow.
+            if name in ("flows", "edge_labels", "attributes"):
+                # Also intentional: named flows, labels keyed by arrow, and
+                # attributes keyed by node.
                 assert {v.get("type") for v in spec["anyOf"]} == {"object", "null"}
                 continue
             if declared is None:  # optional params use anyOf

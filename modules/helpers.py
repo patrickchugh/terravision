@@ -5,6 +5,7 @@ processing, variable replacement, graph operations, and Terraform-specific
 data extraction and transformation.
 """
 
+import ipaddress
 import json
 import os
 import platform
@@ -382,35 +383,91 @@ _CIDR_ATTRIBUTES = {
 }
 
 
+def _cidr_text(value: Any) -> str:
+    """Return a CIDR value as label text, or "" when it is not one.
+
+    Takes a CIDR string or a list of them (Azure ``address_space``). Anything
+    else, such as ``True`` for a value known only after apply or a raw HCL
+    expression, gives "".
+    """
+    values = value if isinstance(value, list) else [value]
+    found = []
+    for v in values:
+        if not isinstance(v, str) or "/" not in v:
+            continue
+        try:
+            ipaddress.ip_network(v.strip(), strict=False)
+        except ValueError:
+            continue
+        found.append(v.strip())
+    return ", ".join(found)
+
+
+def _annotated_attribute(resource: str, attr: str, tfdata: Dict[str, Any]) -> Any:
+    """Return the value an annotation ``update`` sets for ``attr``, or None.
+
+    Matches as ``modify_metadata`` does: a key with ``*`` matches every node
+    containing the text before it, and a name without ``~N`` also names its
+    numbered copies. An exact name beats its base name, which beats a
+    wildcard.
+    """
+    updates = (tfdata.get("annotations") or {}).get("update")
+    if not isinstance(updates, dict):
+        return None
+    found = None
+    for key, attrs in updates.items():
+        if (
+            isinstance(key, str)
+            and "*" in key
+            and key.split("*")[0] in resource
+            and isinstance(attrs, dict)
+            and attr in attrs
+        ):
+            found = attrs[attr]
+    for key in (resource.split("~")[0], resource):
+        attrs = updates.get(key)
+        if isinstance(attrs, dict) and attr in attrs:
+            found = attrs[attr]
+    return found
+
+
+def _cidr_of(resource: str, attr: str, tfdata: Dict[str, Any]) -> str:
+    """CIDR text of ``attr`` on ``resource``, from the best source.
+
+    An annotation ``update`` wins. Otherwise the plan (``original_metadata``)
+    is used, as ``meta_data`` may hold raw HCL expressions after
+    read_tfsource; and where the plan has no CIDR (a node an annotation
+    added, a graph file) ``meta_data``, which annotations write to.
+    """
+    text = _cidr_text(_annotated_attribute(resource, attr, tfdata))
+    if text:
+        return text
+    for view in ("original_metadata", "meta_data"):
+        meta = (tfdata.get(view) or {}).get(resource)
+        if isinstance(meta, dict):
+            text = _cidr_text(meta.get(attr))
+            if text:
+                return text
+    return ""
+
+
 def get_cidr_label(resource: str, tfdata: Dict[str, Any]) -> str:
     """Get CIDR range string for a resource if available."""
     resource_type = get_no_module_name(resource).split(".")[0]
     attr_name = _CIDR_ATTRIBUTES.get(resource_type)
     if not attr_name:
         return ""
-    # Use original_metadata (from plan) to get resolved values,
-    # as meta_data may contain raw HCL expressions after read_tfsource
-    meta = tfdata.get("original_metadata", tfdata.get("meta_data", {})).get(
-        resource, {}
-    )
-    if not isinstance(meta, dict):
-        return ""
-    value = meta.get(attr_name, "")
-    if isinstance(value, list):
-        value = ", ".join(str(v) for v in value if isinstance(v, str) and "/" in v)
-    if not isinstance(value, str) or "/" not in value:
+    value = _cidr_of(resource, attr_name, tfdata)
+    if not value:
         return ""
     # Append secondary CIDRs from vpc_ipv4_cidr_block_association children
     if resource_type == "aws_vpc":
-        meta_source = tfdata.get("original_metadata", tfdata.get("meta_data", {}))
         for child in tfdata.get("graphdict", {}).get(resource, []):
             child_type = get_no_module_name(child).split(".")[0]
             if child_type == "aws_vpc_ipv4_cidr_block_association":
-                child_meta = meta_source.get(child, {})
-                if isinstance(child_meta, dict):
-                    extra = child_meta.get("cidr_block", "")
-                    if isinstance(extra, str) and "/" in extra:
-                        value = f"{value}, {extra}"
+                extra = _cidr_of(child, "cidr_block", tfdata)
+                if extra:
+                    value = f"{value}, {extra}"
     return value
 
 
