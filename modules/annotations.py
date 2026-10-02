@@ -653,22 +653,42 @@ def modify_metadata(
                     metadata[node] = {}
                 metadata[node]["edge_labels"] = annotations["connect"][node]
 
-    # Update metadata for existing nodes
+    # Update metadata for existing nodes. A name that matches no node is
+    # skipped with a warning rather than failing the whole run.
     if annotations.get("update"):
-        for node in annotations["update"]:
-            for param in annotations["update"][node]:
-                prefix = node.split("*")[0]
+        for node, attrs in annotations["update"].items():
+            if "*" in node:
                 # Handle wildcard patterns for bulk updates
-                if "*" in node:
-                    found_matching = helpers.list_of_dictkeys_containing(
-                        metadata, prefix
-                    )
-                    for key in found_matching:
-                        metadata[key][param] = annotations["update"][node][param]
-                else:
-                    metadata[node][param] = annotations["update"][node][param]
+                targets = helpers.list_of_dictkeys_containing(
+                    metadata, node.split("*")[0]
+                )
+            elif node in metadata or node in graphdict:
+                targets = [node]
+            else:
+                targets = []
+            if not targets:
+                click.echo(
+                    click.style(f"  WARNING: {_update_not_applied(node)}", fg="yellow")
+                )
+                continue
+            for key in targets:
+                for param, value in (attrs if isinstance(attrs, dict) else {}).items():
+                    metadata.setdefault(key, {})[param] = value
 
     return metadata
+
+
+def _update_not_applied(name: str) -> str:
+    """Warning for an ``update`` entry that names no node in the graph."""
+    if "*" in name:
+        return (
+            f"The update for {name} is not applied: it matches no node in the "
+            "graph. Check the pattern against the node names."
+        )
+    return (
+        f"The update for {name} is not applied: {name} is not in the graph. "
+        "Name a node the graph has, such as aws_subnet.public~1."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -999,10 +1019,7 @@ def apply_attribute_updates(
     for name, attrs in update.items():
         targets = _nodes_named(name, nodes)
         if not targets:
-            found.append(
-                f"The update for {name} is not applied: {name} is not in the "
-                "graph. Name a node the graph has, such as aws_subnet.public~1."
-            )
+            found.append(_update_not_applied(name))
             continue
         for node in targets:
             for attr, value in attrs.items():

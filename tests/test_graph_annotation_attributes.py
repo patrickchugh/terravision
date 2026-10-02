@@ -309,6 +309,62 @@ def test_terraform_added_subnet_shows_its_cidr(tmp_path):
     assert get_cidr_label("aws_subnet.external", tfdata) == "10.9.0.0/24"
 
 
+def test_terraform_update_for_a_missing_node_warns_instead_of_crashing(
+    tmp_path, capsys
+):
+    tfdata = _replay(
+        tmp_path,
+        {
+            "update": {
+                "aws_vpc.nope": {"cidr_block": "10.0.0.0/16"},
+                "aws_nothing*": {"label": "x"},
+                VPC: {"cidr_block": "10.0.0.0/16"},
+            }
+        },
+    )
+    out = capsys.readouterr().out
+    assert "WARNING: The update for aws_vpc.nope is not applied" in out
+    assert "WARNING: The update for aws_nothing* is not applied: it matches no" in out
+    assert "aws_vpc.nope" not in tfdata["meta_data"]
+    # The rest of the file still applies.
+    assert get_cidr_label(VPC, tfdata) == "10.0.0.0/16"
+
+
+def test_modify_metadata_skips_names_that_match_nothing(capsys):
+    from modules.annotations import modify_metadata
+
+    graph = {"aws_vpc.main": ["aws_subnet.a"], "aws_subnet.a": []}
+    meta = {"aws_vpc.main": {}}
+    result = modify_metadata(
+        {
+            "update": {
+                "aws_subnet.a": {"cidr_block": "10.0.1.0/24"},  # graph only
+                "aws_subnet.b": {"cidr_block": "10.0.2.0/24"},
+                "aws_rds*": {"label": "DB"},
+                "aws_vpc*": {"label": "Core"},
+            }
+        },
+        graph,
+        meta,
+    )
+    out = capsys.readouterr().out
+    assert result["aws_subnet.a"] == {"cidr_block": "10.0.1.0/24"}
+    assert result["aws_vpc.main"] == {"label": "Core"}
+    assert "aws_subnet.b" not in result
+    assert out.count("WARNING") == 2
+    assert "aws_subnet.b is not in the graph" in out
+    assert "aws_rds* is not applied: it matches no node" in out
+
+
+def test_graph_wildcard_that_matches_nothing_warns():
+    tfdata = {"graphdict": copy.deepcopy(AWS_GRAPH)}
+    warnings = apply_attribute_updates(tfdata, {"aws_rds*": {"label": "DB"}})
+    assert warnings == [
+        "The update for aws_rds* is not applied: it matches no node in the "
+        "graph. Check the pattern against the node names."
+    ]
+
+
 def _tfdata(plan, meta, update=None):
     return {
         "graphdict": {},
