@@ -17,7 +17,7 @@ Install: `uv tool install terravision`, `pipx install terravision`, or `pip inst
 - [Gallery](https://patrickchugh.github.io/terravision/gallery/): example AWS, Azure and GCP architecture diagrams, each with its prompt and source graph
 - [AI cloud architecture diagram generator](https://patrickchugh.github.io/terravision/ai-cloud-architecture-diagram-generator/): description to diagram through an AI assistant
 - [Diagram to Terraform](https://patrickchugh.github.io/terravision/diagram-to-terraform/): generate Terraform from a design, verify it by redrawing, keep it in sync in CI
-- [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, Diagrams (mingrammer) and live cloud scanners
+- [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, D2, Diagrams (mingrammer) and live cloud scanners
 - [Cloud architecture diagram generator](https://patrickchugh.github.io/terravision/cloud-architecture-diagram-generator/): overview of generating AWS, Azure and GCP diagrams from a prompt, JSON or Terraform
 - [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs Eraser, Mermaid, Diagrams (mingrammer), terraform graph and live cloud scanners
 

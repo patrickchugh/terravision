@@ -147,7 +147,7 @@ The full list is on the [Node types](node-types.md) page.
 
 ### Can I use it for multi-cloud architectures?
 
-Yes — a single Terraform project can declare resources from AWS, GCP, and Azure simultaneously, and TerraVision will render all three on the same diagram with each provider's own icon set.
+TerraVision draws one cloud provider per diagram. For a multi-cloud system, make one diagram per cloud.
 
 ### Can I add support for a new service or resource type?
 
