@@ -3,7 +3,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="How TerraVision compares with draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, mingrammer Diagrams and live cloud scanners for creating cloud architecture diagrams.">
+        <meta name="description" content="How TerraVision compares with draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, D2, mingrammer Diagrams and live cloud scanners for creating cloud architecture diagrams.">
       
       
       
@@ -1271,10 +1271,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#terravision-vs-mermaid" class="md-nav__link">
+  <a href="#terravision-vs-mermaid-and-d2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TerraVision vs Mermaid
+        TerraVision vs Mermaid and D2
       
     </span>
   </a>
@@ -1836,10 +1836,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#terravision-vs-mermaid" class="md-nav__link">
+  <a href="#terravision-vs-mermaid-and-d2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TerraVision vs Mermaid
+        TerraVision vs Mermaid and D2
       
     </span>
   </a>
@@ -1916,7 +1916,7 @@
 
 
 <h1 id="terravision-compared-with-other-cloud-architecture-diagram-tools">TerraVision compared with other cloud architecture diagram tools<a class="headerlink" href="#terravision-compared-with-other-cloud-architecture-diagram-tools" title="Permanent link">¶</a></h1>
-<p>Tools for cloud architecture diagrams fall into five groups: manual drawing tools (draw.io, Lucidchart, Visio), AI design workspaces (Eraser), diagram-as-code libraries (Mermaid, Diagrams), live cloud scanners (Hava, Cloudviz, Holori, Cloudcraft) and generators that draw from a description or from infrastructure code (TerraVision). This page says plainly where each one fits. Details about other products reflect our understanding in October 2026 and may have changed.</p>
+<p>Tools for cloud architecture diagrams fall into five groups: manual drawing tools (draw.io, Lucidchart, Visio), AI design workspaces (Eraser), diagram-as-code tools (Mermaid, D2, Diagrams), live cloud scanners (Hava, Cloudviz, Holori, Cloudcraft) and generators that draw from a description or from infrastructure code (TerraVision). This page says plainly where each one fits. Details about other products reflect our understanding in October 2026 and may have changed.</p>
 <table>
 <thead>
 <tr>
@@ -1924,7 +1924,7 @@
 <th>TerraVision</th>
 <th>draw.io, Lucidchart, Visio</th>
 <th>Eraser</th>
-<th>Mermaid</th>
+<th>Mermaid, D2</th>
 <th>Diagrams (mingrammer)</th>
 <th>Live scanners (Hava, Cloudviz, Holori, Cloudcraft)</th>
 </tr>
@@ -1935,16 +1935,16 @@
 <td>Describe it to Claude or ChatGPT, or point at Terraform</td>
 <td>Drag, drop and connect by hand</td>
 <td>Prompt, pasted code or image</td>
-<td>Write text syntax</td>
+<td>Write a text DSL</td>
 <td>Write Python code</td>
 <td>Connect a cloud account</td>
 </tr>
 <tr>
 <td>Diagram from a text prompt</td>
 <td>Yes, through your AI assistant</td>
-<td>No</td>
+<td>Only if your organisation approves third-party models</td>
 <td>Yes, built-in AI</td>
-<td>Assistant writes Mermaid</td>
+<td>Assistant writes Mermaid or D2</td>
 <td>No</td>
 <td>No</td>
 </tr>
@@ -1960,7 +1960,7 @@
 <tr>
 <td>Terraform from the design</td>
 <td>Yes, written by your AI assistant and checked by redrawing the code</td>
-<td>No</td>
+<td>Lucidchart beta, AWS only, paid add-on</td>
 <td>No</td>
 <td>No</td>
 <td>No</td>
@@ -2032,13 +2032,13 @@
 </tbody>
 </table>
 <h2 id="terravision-vs-drawio-lucidchart-and-visio">TerraVision vs draw.io, Lucidchart and Visio<a class="headerlink" href="#terravision-vs-drawio-lucidchart-and-visio" title="Permanent link">¶</a></h2>
-<p>draw.io, Lucidchart and Visio are manual drawing tools: you drag icons from the AWS, Azure or GCP shape libraries, draw the boxes and connect them by hand. They give you complete control and take the most time, and the diagram goes out of date when the system changes. TerraVision generates the diagram from a description or from Terraform, with the grouping and layout done for you. The two work well together: generate with TerraVision, export as a draw.io file, and do the final polish by hand in draw.io or Lucidchart. SVG output can be placed in PowerPoint or Visio.</p>
+<p>draw.io, Lucidchart and Visio are manual drawing tools: you drag icons from the AWS, Azure or GCP shape libraries, draw the boxes and connect them by hand. They give you complete control and take the most time, and the diagram goes out of date when the system changes. draw.io and Lucidchart have added AI diagram generators, but they send your prompt to third-party models, so they are an option only if your organisation approves them. TerraVision works inside the assistant you already use through MCP, so it needs no new vendor or AI approval. TerraVision generates the diagram from a description or from Terraform, with the grouping and layout done for you. The two work well together: generate with TerraVision, export as a draw.io file, and do the final polish by hand in draw.io or Lucidchart. SVG output can be placed in PowerPoint or Visio.</p>
 <h2 id="terravision-vs-cloudcraft">TerraVision vs Cloudcraft<a class="headerlink" href="#terravision-vs-cloudcraft" title="Permanent link">¶</a></h2>
-<p>Cloudcraft is a hosted designer best known for isometric AWS diagrams, and it can import a live AWS environment. It is a commercial product. TerraVision produces the flat, official-style diagrams used in vendor reference architectures, covers AWS, Azure and Google Cloud, needs no access to your cloud account, and is free. Choose Cloudcraft for 3D-style visuals of a running AWS estate; choose TerraVision for official-style diagrams from a description or from code.</p>
+<p>Cloudcraft is a hosted designer best known for isometric AWS diagrams, and it can import a live AWS environment. It no longer exports Terraform. It is a commercial product. TerraVision produces the flat, official-style diagrams used in vendor reference architectures, covers AWS, Azure and Google Cloud, needs no access to your cloud account, and is free. Choose Cloudcraft for 3D-style visuals of a running AWS estate; choose TerraVision for official-style diagrams from a description or from code.</p>
 <h2 id="terravision-vs-eraser">TerraVision vs Eraser<a class="headerlink" href="#terravision-vs-eraser" title="Permanent link">¶</a></h2>
 <p>Eraser is a hosted design workspace: its AI turns a prompt or pasted code into a diagram you edit on a canvas, and it also covers flowcharts, ERDs, sequence and BPMN diagrams. For Terraform, Eraser's instructions are to paste the contents of your <code>.tf</code> or state files into the prompt, and its AI decides what to draw. Terraform state files can hold secrets such as database passwords and access keys in plain text, so pasting one into any hosted tool may breach your organisation's security policy. TerraVision only draws cloud architecture, but it builds the diagram from <code>terraform plan</code>, so modules, <code>count</code>, <code>for_each</code> and conditionals are resolved rather than interpreted, applies each provider's grouping conventions, runs locally and is free. Choose Eraser for collaborative whiteboard-style design across diagram types; choose TerraVision when the diagram must match the code or must not leave your machine.</p>
-<h2 id="terravision-vs-mermaid">TerraVision vs Mermaid<a class="headerlink" href="#terravision-vs-mermaid" title="Permanent link">¶</a></h2>
-<p>Mermaid is a general-purpose text diagram language and the better choice for sequence diagrams, flowcharts and class diagrams. For cloud architecture it has no built-in official AWS, Azure or GCP icon sets and no notion of VPCs, subnets or zones. TerraVision's JSON graph is as short as Mermaid, uses Terraform resource names, and renders with official icons and provider grouping. AI assistants can use TerraVision for cloud diagrams and Mermaid for everything else.</p>
+<h2 id="terravision-vs-mermaid-and-d2">TerraVision vs Mermaid and D2<a class="headerlink" href="#terravision-vs-mermaid-and-d2" title="Permanent link">¶</a></h2>
+<p>Mermaid and D2 are general-purpose text diagram languages, each with its own syntax to learn, and the better choice for sequence diagrams, flowcharts and class diagrams. For cloud architecture neither has the official AWS, Azure or GCP icon sets built in (in D2 you link each node's icon by image URL), and neither has a notion of VPCs, subnets or zones. TerraVision's JSON graph is as short as either, uses Terraform resource names, and renders with official icons and provider grouping. AI assistants can use TerraVision for cloud diagrams and Mermaid or D2 for everything else.</p>
 <h2 id="terravision-vs-diagrams-mingrammer">TerraVision vs Diagrams (mingrammer)<a class="headerlink" href="#terravision-vs-diagrams-mingrammer" title="Permanent link">¶</a></h2>
 <p>Diagrams is a Python library: you write a script that declares each node, cluster and edge, and it renders with Graphviz and official icons. It does not read Terraform. TerraVision needs no script: it derives the diagram from Terraform, or takes a plain JSON graph, and handles grouping and layout rules for you. Choose Diagrams if you want full manual control in Python; choose TerraVision to generate the diagram from existing infrastructure code or from an AI assistant.</p>
 <h2 id="terravision-vs-live-cloud-scanners-hava-cloudviz-holori">TerraVision vs live cloud scanners (Hava, Cloudviz, Holori)<a class="headerlink" href="#terravision-vs-live-cloud-scanners-hava-cloudviz-holori" title="Permanent link">¶</a></h2>

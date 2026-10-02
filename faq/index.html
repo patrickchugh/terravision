@@ -2751,7 +2751,7 @@
 </table>
 <p>The full list is on the <a href="../node-types/">Node types</a> page.</p>
 <h3 id="can-i-use-it-for-multi-cloud-architectures">Can I use it for multi-cloud architectures?<a class="headerlink" href="#can-i-use-it-for-multi-cloud-architectures" title="Permanent link">¶</a></h3>
-<p>Yes — a single Terraform project can declare resources from AWS, GCP, and Azure simultaneously, and TerraVision will render all three on the same diagram with each provider's own icon set.</p>
+<p>TerraVision draws one cloud provider per diagram. For a multi-cloud system, make one diagram per cloud.</p>
 <h3 id="can-i-add-support-for-a-new-service-or-resource-type">Can I add support for a new service or resource type?<a class="headerlink" href="#can-i-add-support-for-a-new-service-or-resource-type" title="Permanent link">¶</a></h3>
 <p>Most services need no special handling — the baseline Terraform graph plus icon mapping produces an accurate diagram. If you find a resource rendering incorrectly, check the <a href="../resource-handler-guide/">Resource Handler Guide</a> and either open an issue or submit a PR.</p>
 <hr>
