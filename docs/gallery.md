@@ -264,7 +264,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 Each one is a short JSON file that lists the resources and what they connect to or sit inside, rendered by TerraVision. An AI assistant writes that file for you from a plain-English description, or TerraVision derives the diagram from Terraform code. A diagram drawn from a prompt will differ in detail from the example; the source file reproduces it exactly.
 
-The CIDR ranges on networks and subnets come from a small annotation file next to each graph, using `update:`; your assistant sets them through the `attributes` option when it draws. Annotation files with graphs need a TerraVision release newer than 0.51.1.
+The CIDR ranges on networks and subnets come from a small annotation file next to each graph, using `update:`; your assistant sets them through the `attributes` option when it draws. Annotation files with graphs need TerraVision 0.52.0 or later.
 
 ## Can I get logical groups like these from Terraform?
 
