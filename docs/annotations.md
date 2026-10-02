@@ -133,11 +133,36 @@ terravision draw --source ./path-to-your-terraform --annotate /path/to/annotatio
 - This file is automatically discovered and merged with any existing `terravision.yml`
 
 **Graph files (`.tvg.json`)**: pass the file with `--annotate`; it is not auto-loaded. A graph is
-drawn exactly as written, so the file may hold only `title`, `flows`, `connect`, `fontsize` and
-`iconsize`. Here `connect` only labels arrows the graph already has (in either direction); it never
-adds one. `add`, `disconnect`, `remove` and `update` would change the drawing and are refused:
-change the graph itself instead. A flow step that will draw no badge, or a label that will not be
-drawn, is reported as a warning.
+drawn exactly as written, so the file may use every section except those that change the graph's
+structure. `add`, `remove` and `disconnect` add, remove or disconnect nodes, and are refused: change
+the graph itself instead. Everything else is accepted:
+
+| Section | For a graph file |
+|---------|------------------|
+| `title`, `fontsize`, `iconsize`, `flows` | As for Terraform |
+| `connect` | Only labels arrows the graph already has (in either direction); it never adds one |
+| `update` | Sets attributes, such as `label` or a CIDR range, on nodes the graph already has; wildcards work as for Terraform |
+| `add`, `remove`, `disconnect` | Refused: edit the graph |
+
+An `update` is how a graph gets realistic CIDR ranges on its networks and subnets, shown in their
+box labels as "VPC Main (10.0.0.0/16)":
+
+```yaml
+update:
+  aws_vpc.main:
+    cidr_block: "10.0.0.0/16"
+  aws_subnet.public~1:
+    cidr_block: "10.0.1.0/24"
+  aws_subnet.public~2:
+    cidr_block: "10.0.2.0/24"
+```
+
+The attribute is `cidr_block` for `aws_vpc` and `aws_subnet`, `address_space` for
+`azurerm_virtual_network`, `address_prefixes` for `azurerm_subnet` (a list such as
+`["10.1.1.0/24"]`) and `ip_cidr_range` for `google_compute_subnetwork`. Name each numbered copy
+(`aws_subnet.public~1`); a name without `~N` sets every copy. A flow step that will draw no badge,
+a label that will not be drawn, or an update for a node the graph does not have is reported as a
+warning.
 
 ---
 
@@ -255,7 +280,22 @@ update:
 update:
   aws_lambda_function.api:
     label: "API Gateway Handler"
+  aws_vpc.main:
+    label: "Core Network"
 ```
+`label` replaces the text under a node's icon, or the caption of a box such as a VPC or subnet,
+and wins over `--use-tf-names` and `--use-resource-names`. A network or subnet box still gets its
+CIDR range after a custom caption: "Core Network (10.0.0.0/16)". A name without `~N` labels every
+numbered copy.
+
+**CIDR range in a network or subnet label:**
+```yaml
+update:
+  aws_vpc.main:
+    cidr_block: "10.0.0.0/16"
+```
+The box is labelled "VPC Main (10.0.0.0/16)". An `update` wins over the value in the Terraform
+plan; a network or subnet added under `add:` with a `cidr_block` shows it too.
 
 **Update with wildcards:**
 ```yaml

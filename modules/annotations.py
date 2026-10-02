@@ -4,6 +4,7 @@ This module handles automatic and user-defined annotations for Terraform archite
 It processes annotation rules to add, remove, connect, and modify nodes in the graph.
 """
 
+import copy
 import sys
 from typing import Dict, List, Any, Optional
 import click
@@ -652,22 +653,42 @@ def modify_metadata(
                     metadata[node] = {}
                 metadata[node]["edge_labels"] = annotations["connect"][node]
 
-    # Update metadata for existing nodes
+    # Update metadata for existing nodes. A name that matches no node is
+    # skipped with a warning rather than failing the whole run.
     if annotations.get("update"):
-        for node in annotations["update"]:
-            for param in annotations["update"][node]:
-                prefix = node.split("*")[0]
+        for node, attrs in annotations["update"].items():
+            if "*" in node:
                 # Handle wildcard patterns for bulk updates
-                if "*" in node:
-                    found_matching = helpers.list_of_dictkeys_containing(
-                        metadata, prefix
-                    )
-                    for key in found_matching:
-                        metadata[key][param] = annotations["update"][node][param]
-                else:
-                    metadata[node][param] = annotations["update"][node][param]
+                targets = helpers.list_of_dictkeys_containing(
+                    metadata, node.split("*")[0]
+                )
+            elif node in metadata or node in graphdict:
+                targets = [node]
+            else:
+                targets = []
+            if not targets:
+                click.echo(
+                    click.style(f"  WARNING: {_update_not_applied(node)}", fg="yellow")
+                )
+                continue
+            for key in targets:
+                for param, value in (attrs if isinstance(attrs, dict) else {}).items():
+                    metadata.setdefault(key, {})[param] = value
 
     return metadata
+
+
+def _update_not_applied(name: str) -> str:
+    """Warning for an ``update`` entry that names no node in the graph."""
+    if "*" in name:
+        return (
+            f"The update for {name} is not applied: it matches no node in the "
+            "graph. Check the pattern against the node names."
+        )
+    return (
+        f"The update for {name} is not applied: {name} is not in the graph. "
+        "Name a node the graph has, such as aws_subnet.public~1."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -930,29 +951,116 @@ def apply_edge_labels(
     return found
 
 
+def check_attribute_updates(update: Any, what: str = "update") -> Dict[str, Any]:
+    """Check the shape of an ``update`` section (or MCP ``attributes``).
+
+    Raises:
+        helpers.TerravisionError: When it is not an object mapping each node
+            to an object of attributes.
+    """
+    example = '{"aws_subnet.public~1": {"cidr_block": "10.0.1.0/24"}}'
+    if not isinstance(update, dict) or not update:
+        raise helpers.TerravisionError(
+            f"Invalid {what}: expected a non-empty object mapping each node to "
+            f"its attributes, such as {example}."
+        )
+    for node, attrs in update.items():
+        if not isinstance(node, str) or not node:
+            raise helpers.TerravisionError(
+                f"Invalid {what} key {node!r}: name a node, such as "
+                "aws_subnet.public~1."
+            )
+        if not isinstance(attrs, dict) or not attrs:
+            raise helpers.TerravisionError(
+                f"The {what} for {node!r} must be a non-empty object of "
+                f'attributes, such as {{"cidr_block": "10.0.1.0/24"}}.'
+            )
+    return update
+
+
+def _nodes_named(name: str, nodes: set) -> List[str]:
+    """Nodes an ``update`` key names, as ``modify_metadata`` matches them.
+
+    A key with ``*`` matches every node containing the text before the
+    ``*``. Otherwise the key names a node, or every numbered copy of it
+    (``aws_subnet.public`` names ``aws_subnet.public~1`` and ``~2``), as a
+    Terraform resource with count does.
+    """
+    if "*" in name:
+        prefix = name.split("*")[0]
+        return sorted(n for n in nodes if prefix in n)
+    if name in nodes:
+        return [name]
+    return sorted(n for n in nodes if n.split("~")[0] == name)
+
+
+def apply_attribute_updates(
+    tfdata: Dict[str, Any], update: Optional[Dict[str, Any]]
+) -> List[str]:
+    """Set attributes on nodes the graph already has, from an ``update`` section.
+
+    Used for graph (.tvg.json) sources, which are drawn as written: an update
+    never adds a node. Values go to ``tfdata["meta_data"]``, where the drawing
+    reads them (``cidr_block`` on aws_subnet, for instance, puts the range in
+    the box's label). ``edge_labels`` label existing arrows, as ``connect``
+    does. Returns a warning for each name that matches no node, and for each
+    label that is not drawn.
+
+    Raises:
+        helpers.TerravisionError: When the section has the wrong shape.
+    """
+    if not update:
+        return []
+    check_attribute_updates(update)
+    graph = tfdata.get("graphdict", {})
+    nodes = set(graph) | {t for targets in graph.values() for t in targets}
+    metadata = tfdata.setdefault("meta_data", {})
+    found = []
+    for name, attrs in update.items():
+        targets = _nodes_named(name, nodes)
+        if not targets:
+            found.append(_update_not_applied(name))
+            continue
+        for node in targets:
+            for attr, value in attrs.items():
+                if attr == "edge_labels":
+                    found += apply_edge_labels(tfdata, {node: value})
+                else:
+                    metadata.setdefault(node, {})[attr] = copy.deepcopy(value)
+    return found
+
+
 # Annotation sections a graph file can take. A graph is drawn exactly as
-# written, so only sections that label the drawing apply (connect only
-# labels arrows the graph already has); the others would change it, and
-# belong in the graph itself.
+# written, so a graph file may use every section except those that change
+# its structure (GRAPH_STRUCTURAL_KEYS), which belong in the graph itself.
+# connect only labels arrows the graph already has; update only sets
+# attributes on nodes it already has.
 GRAPH_ANNOTATION_KEYS = (
     "format",
     "title",
     "flows",
     "connect",
+    "update",
     "fontsize",
     "iconsize",
+    "generated_by",
 )
+
+# Sections that add, remove or disconnect nodes, refused for a graph.
+GRAPH_STRUCTURAL_KEYS = ("add", "remove", "disconnect")
 
 
 def load_graph_annotations(path: str, graph: Dict[str, List[str]]) -> Dict[str, Any]:
     """Load an ``--annotate`` file for a graph (.tvg.json) source.
 
     Prints a warning for each flow step that will draw no badge. Edge labels
-    in ``connect`` are applied by :func:`apply_edge_labels`.
+    in ``connect`` are applied by :func:`apply_edge_labels`, and attributes
+    in ``update`` by :func:`apply_attribute_updates`.
 
     Raises:
-        helpers.TerravisionError: For an unreadable file, a section other
-            than those in GRAPH_ANNOTATION_KEYS, or malformed flows.
+        helpers.TerravisionError: For an unreadable file, a section that
+            changes the graph (GRAPH_STRUCTURAL_KEYS) or is unknown, or
+            malformed flows or updates.
     """
     import yaml
 
@@ -965,14 +1073,23 @@ def load_graph_annotations(path: str, graph: Dict[str, List[str]]) -> Dict[str, 
         raise helpers.TerravisionError(
             f"Annotation file {path} must be a YAML mapping."
         )
-    other = sorted(set(loaded) - set(GRAPH_ANNOTATION_KEYS))
+    structural = sorted(k for k in GRAPH_STRUCTURAL_KEYS if k in loaded)
+    if structural:
+        raise helpers.TerravisionError(
+            f"{path} has {', '.join(structural)}, which a graph file does not "
+            "take: adding, removing or disconnecting nodes changes the graph, "
+            "so change the graph itself instead (connect is allowed, to label "
+            "arrows the graph already has, and update, to set attributes on "
+            f"its nodes). Allowed here: {', '.join(GRAPH_ANNOTATION_KEYS)}."
+        )
+    other = sorted(str(k) for k in set(loaded) - set(GRAPH_ANNOTATION_KEYS))
     if other:
         raise helpers.TerravisionError(
-            f"{path} has {', '.join(other)}, which a graph file does not take: a "
-            "graph is drawn as written, so change the graph itself instead "
-            "(connect is allowed, to label arrows the graph already has). "
-            f"Allowed here: {', '.join(GRAPH_ANNOTATION_KEYS)}."
+            f"{path} has {', '.join(other)}, which is not an annotation "
+            f"section. Allowed here: {', '.join(GRAPH_ANNOTATION_KEYS)}."
         )
+    if "update" in loaded:
+        check_attribute_updates(loaded["update"])
     fmt = loaded.get("format")
     if fmt is not None and str(fmt) not in SUPPORTED_ANNOTATION_FORMATS:
         raise helpers.TerravisionError(

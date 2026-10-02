@@ -152,6 +152,18 @@ _EDGE_LABELS_DOC = (
     "one. Keep labels to a few words; offer them with the flows rather than "
     "adding them unasked."
 )
+_ATTRIBUTES_DOC = (
+    "Optional attributes set on nodes the graph already has, as an annotation "
+    "file's update section sets them. Use it to give networks and subnets "
+    "realistic CIDR ranges, shown in their box labels: "
+    '{"aws_vpc.main": {"cidr_block": "10.0.0.0/16"}, "aws_subnet.public~1": '
+    '{"cidr_block": "10.0.1.0/24"}}. The attribute is cidr_block for aws_vpc '
+    "and aws_subnet, address_space for azurerm_virtual_network, "
+    "address_prefixes for azurerm_subnet (lists allowed) and ip_cidr_range for "
+    "google_compute_subnetwork. A label attribute replaces a node's label or "
+    'a box\'s caption: {"aws_vpc.main": {"label": "Core Network"}}. Name '
+    "numbered copies (aws_subnet.public~1); an attribute never adds a node."
+)
 
 
 # Terraform options shared by the tools that read Terraform code.
@@ -294,6 +306,9 @@ def build_server() -> MCPServer:
         edge_labels: Annotated[
             Optional[Dict[str, str]], Field(description=_EDGE_LABELS_DOC)
         ] = None,
+        attributes: Annotated[
+            Optional[Dict[str, Dict[str, Any]]], Field(description=_ATTRIBUTES_DOC)
+        ] = None,
     ) -> CallToolResult:
         """Draw a cloud architecture diagram from a plain JSON graph.
 
@@ -308,9 +323,10 @@ def build_server() -> MCPServer:
         aws_ecs_service, aws_db_instance, aws_lb).
 
         Returns the saved files (PNG, SVG, draw.io, .tvg.json graph, and
-        annotations YAML when flows or labels were given) and a preview image:
-        check it before presenting the diagram. Fix any "warnings" and call
-        again. "next_step" says what to offer the user afterwards.
+        annotations YAML when flows, labels or attributes were given) and a
+        preview image: check it before presenting the diagram. Fix any
+        "warnings" and call again. "next_step" says what to offer the user
+        afterwards.
         """
         with _tool_errors():
             return _diagram_result(
@@ -324,6 +340,7 @@ def build_server() -> MCPServer:
                     preview=preview,
                     flows=flows,
                     edge_labels=edge_labels,
+                    attributes=attributes,
                 ),
                 in_app=_shown_in_app(ctx),
             )

@@ -231,6 +231,8 @@ def compile_tfdata(
             )
             for warning in annotations.apply_edge_labels(
                 tfdata, tfdata["annotations"].get("connect")
+            ) + annotations.apply_attribute_updates(
+                tfdata, tfdata["annotations"].get("update")
             ):
                 click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
         if "all_resource" not in tfdata:

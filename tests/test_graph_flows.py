@@ -1,8 +1,8 @@
 """Flows on graph (.tvg.json) sources: numbered step badges and a legend.
 
-A graph is drawn as written, so an annotation file for one may only label the
-drawing (title, flows, sizes). Flow steps that would draw no badge are
-reported instead of silently dropped.
+A graph is drawn as written, so an annotation file for one may not change its
+structure (see test_graph_annotation_attributes.py). Flow steps that would
+draw no badge are reported instead of silently dropped.
 """
 
 import json
