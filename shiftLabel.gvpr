@@ -532,6 +532,15 @@ BEG_G{
   // Use higher of cloudMaxY or topMostY
   if (cloudMaxY > topMostY) topMostY = cloudMaxY;
   if (cloudMaxY > topEdgeY) topEdgeY = cloudMaxY;
+  // Boxes drawn outside the cloud (an on-premises data centre, GCP's users
+  // or external-systems boxes) can sit above it, and their caption is at
+  // their top edge. The title must clear those too, or it is drawn across
+  // the box. Read after the rows have moved, so the edges are final.
+  for (kidG = fstsubg($G); kidG; kidG = nxtsubg(kidG)) {
+    if (match(kidG.name, "cluster") != 0 || kidG.bb == "") continue;
+    sscanf (kidG.bb, "%lf,%lf,%lf,%lf", &kidMinX, &kidMinY, &kidMaxX, &kidMaxY);
+    if (kidMaxY > topEdgeY) topEdgeY = kidMaxY;
+  }
   // Use lower of cloudMinY or bottomMostY
   if (cloudMinY < bottomMostY) bottomMostY = cloudMinY;
   // cloudMinY was read before the rows moved apart, and the cloud box has
