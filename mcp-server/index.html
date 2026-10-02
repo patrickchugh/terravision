@@ -2383,7 +2383,11 @@ diagram, and a step that draws no badge (a missing node or arrow, a container) i
 <code>warnings</code>. <code>edge_labels</code> puts a few words on arrows the graph already has, keyed by arrow:
 <code>{"aws_ecs_fargate.app -&gt; aws_rds_sqlserver.db": "Reads orders"}</code> (rule 11); a label never adds an
 arrow, and one that is not drawn is listed in <code>warnings</code>. Labels are saved in the same
-<code>.annotations.yml</code>, under <code>connect</code>. Needs only Graphviz and Git: no
+<code>.annotations.yml</code>, under <code>connect</code>. <code>attributes</code> sets attributes on nodes the graph already has,
+as an annotation file's <code>update</code> section does; use it to give networks and subnets realistic CIDR
+ranges, shown in their box labels: <code>{"aws_subnet.public~1": {"cidr_block": "10.0.1.0/24"}}</code>. A
+<code>label</code> attribute replaces a node's label or a box's caption. An attribute never adds a node; one for a node the graph does not have is listed in <code>warnings</code>.
+Attributes are saved in the same <code>.annotations.yml</code>, under <code>update</code>. Needs only Graphviz and Git: no
 Terraform, no credentials, no <code>source</code>. A graph that mixes providers (<code>aws_*</code> with <code>azurerm_*</code> or
 <code>google_*</code>) is rejected; draw one diagram per provider.</p>
 <h3 id="generate_architecture_graph"><code>generate_architecture_graph</code><a class="headerlink" href="#generate_architecture_graph" title="Permanent link">¶</a></h3>
