@@ -172,6 +172,7 @@ def _enrich_graph_data(
     tfdata = graphmaker.reverse_relations(tfdata)
     tfdata = helpers.find_bidirectional_links(tfdata)
     tfdata = resource_handlers.match_resources(tfdata)
+    tfdata = graphmaker.place_annotation_groups(tfdata)
 
     return tfdata
 

@@ -154,6 +154,12 @@ AWS_GROUP_NODES = [
     "tv_aws_region",
 ]
 
+# Generic box a terravision.yml annotation declares a logical group with
+# (add: aws_group.<name>, connect: aws_group.<name>: [members]). Its members
+# leave any automatic group, and the box is placed inside the innermost
+# container that holds all of them (graphmaker.place_annotation_groups)
+AWS_LOGICAL_GROUP_NODES = ["aws_group"]
+
 # Nodes to remove in simplified mode for a high-level services-only view
 AWS_SIMPLIFIED_REMOVE_NODES = [
     # Group/container nodes

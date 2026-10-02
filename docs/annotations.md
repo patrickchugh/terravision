@@ -8,6 +8,7 @@ Annotations allow you to customize automatically generated diagrams by:
 - Creating new connections
 - Removing unwanted connections
 - Adding external resources not in Terraform
+- Grouping related resources in a box of your own
 - Modifying existing resources
 
 ---
@@ -264,7 +265,30 @@ update:
       - aws_acm_certificate.this: "SSL Certificate"
 ```
 
-### 7. Define Flows (Format 0.2)
+### 7. Group Resources
+
+Draw related resources together in a dashed box of your own, such as one workflow or one team's services. Declare the group under `add` and list its members under `connect`:
+
+```yaml
+format: 0.2
+add:
+  aws_group.order_workflow: {}
+
+connect:
+  aws_group.order_workflow:
+    - aws_sfn_state_machine.order_workflow
+    - aws_lambda_function.validate
+    - aws_lambda_function.process
+    - aws_lambda_function.notify
+```
+
+The box is labelled from its name ("Order Workflow Group" here). Use `aws_group.<name>` on AWS, `azurerm_group.<name>` on Azure and `tv_gcp_logical_group.<name>` on Google Cloud.
+
+- Your groups take precedence over TerraVision's automatic ones. The Lambda functions above leave the automatic Lambda Function group, and an automatic group left empty is not drawn.
+- The group is placed inside the innermost box that already holds all its members: an Azure resource group, a VPC, or the top level when its members are in no box.
+- A resource is drawn in one box only. If a member also sits in a box the group is not inside, such as an AKS cluster in its subnet while the group sits in the resource group, it stays in that box and a warning names it. Group resources that sit at the same level.
+
+### 8. Define Flows (Format 0.2)
 
 Flows define numbered step sequences that render as badges on diagram nodes/edges and a legend table. Each flow has a name, description, and ordered list of steps.
 

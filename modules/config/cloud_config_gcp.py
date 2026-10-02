@@ -101,6 +101,10 @@ GCP_GROUP_NODES = [
     "tv_gcp_optional",
 ]
 
+# Generic box a terravision.yml annotation declares a logical group with
+# (see AWS_LOGICAL_GROUP_NODES)
+GCP_LOGICAL_GROUP_NODES = ["tv_gcp_logical_group"]
+
 # Nodes to remove in simplified mode for a high-level services-only view
 GCP_SIMPLIFIED_REMOVE_NODES = [
     # Group/container nodes

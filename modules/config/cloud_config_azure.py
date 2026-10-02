@@ -115,6 +115,10 @@ AZURE_GROUP_NODES = [
     "tv_azure_onprem",
 ]
 
+# Generic box a terravision.yml annotation declares a logical group with
+# (see AWS_LOGICAL_GROUP_NODES)
+AZURE_LOGICAL_GROUP_NODES = ["azurerm_group"]
+
 # Nodes to remove in simplified mode for a high-level services-only view
 AZURE_SIMPLIFIED_REMOVE_NODES = [
     # Group/container nodes
