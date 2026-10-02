@@ -4,7 +4,7 @@
 
 ### What is TerraVision?
 
-TerraVision is a command-line tool that converts Terraform code into professional cloud architecture diagrams using the official AWS, GCP, and Azure icon sets. It runs entirely on your local machine and keeps your infrastructure documentation in sync with your code.
+TerraVision is a free, open-source cloud architecture diagram tool for AWS, Azure and Google Cloud that works in both directions. Design to code: describe an architecture to your AI assistant, get a diagram with the official icons, then have the assistant write the Terraform for it. Code to diagram: point it at Terraform and get a diagram of what the code deploys. It runs entirely on your local machine and can keep your diagrams in sync with your code in CI. See the [cloud architecture diagram generator](cloud-architecture-diagram-generator.md) overview and [how it compares with other tools](alternatives.md).
 
 ### How is it different from `terraform graph`?
 

@@ -1,5 +1,5 @@
 site_name: TerraVision
-site_description: Turn Terraform or JSON files into professional cloud architecture diagrams with the official AWS, Azure and GCP icons.
+site_description: Free, open-source cloud architecture diagrams in both directions. Describe a design to your AI assistant and get an AWS, Azure or GCP diagram and its Terraform, or draw what your Terraform deploys.
 site_url: https://patrickchugh.github.io/terravision/
 repo_url: https://github.com/patrickchugh/terravision
 repo_name: patrickchugh/terravision
@@ -94,6 +94,7 @@ plugins:
 
 nav:
   - Home: index.md
+  - Gallery: gallery.md
   - Use with AI assistants: ai-assistants.md
   - Graph Format (JSON input): graph-format.md
   - Node types: node-types.md
@@ -105,6 +106,15 @@ nav:
       - CI/CD Integration: cicd-integration.md
       - MCP Server: mcp-server.md
       - llms.txt for AI agents: https://patrickchugh.github.io/terravision/llms.txt
+  - Diagram generators:
+      - Cloud architecture diagram generator: cloud-architecture-diagram-generator.md
+      - AI diagram generator (description to diagram): ai-cloud-architecture-diagram-generator.md
+      - Diagram to Terraform: diagram-to-terraform.md
+      - AWS diagram generator: aws-architecture-diagram-generator.md
+      - Azure diagram generator: azure-architecture-diagram-generator.md
+      - Google Cloud diagram generator: gcp-architecture-diagram-generator.md
+      - Terraform diagram generator: terraform-diagram-generator.md
+      - Compared with other tools: alternatives.md
   - Help:
       - FAQ: faq.md
       - Troubleshooting: troubleshooting.md

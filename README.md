@@ -2,7 +2,7 @@
 
 <!-- mcp-name: io.github.patrickchugh/terravision -->
 
-**Turn Terraform or JSON into professional cloud architecture diagrams with official AWS, Azure and GCP styles**
+**Professional cloud architecture diagrams in official AWS, Azure and GCP style, from a description in Claude or ChatGPT or from your Terraform**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -14,11 +14,37 @@
 
 **📖 [Full documentation site →](https://patrickchugh.github.io/terravision/)**
 
+TerraVision is a free, open-source **cloud architecture diagram generator** for AWS, Azure and Google Cloud that works in both directions: **design to code** (describe it to your AI assistant, get the diagram, then the Terraform) and **code to diagram** (draw what your Terraform deploys).
+
 Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.
 
 ---
 
-## Get started with your AI assistant
+## Watch the 90-Second Intro
+
+[![TerraVision extension for Claude and ChatGPT](./images/youtube-thumbnail.png)](https://youtu.be/BbXWR-v_Dl0)
+
+---
+
+## Gallery
+
+Real output, one per cloud. Each example comes with the prompt and the source file: **[see the full gallery →](https://patrickchugh.github.io/terravision/gallery/)**
+
+<table>
+<tr>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#aws-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/three-tier-web.png" alt="AWS three-tier web application architecture diagram"></a><br><b>AWS</b> three-tier web app</td>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#azure-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-three-tier.png" alt="Azure three-tier web application architecture diagram"></a><br><b>Azure</b> three-tier web app</td>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#google-cloud-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/gcp-three-tier.png" alt="Google Cloud three-tier web application architecture diagram"></a><br><b>Google Cloud</b> three-tier web app</td>
+</tr>
+</table>
+
+More: [AWS event-driven serverless](https://patrickchugh.github.io/terravision/gallery/#aws-event-driven-serverless-architecture-diagram) · [Azure App Service web app](https://patrickchugh.github.io/terravision/gallery/#azure-app-service-web-app-architecture-diagram) · [Google Cloud serverless API](https://patrickchugh.github.io/terravision/gallery/#google-cloud-serverless-api-architecture-diagram)
+
+---
+
+## Get started in Claude or ChatGPT
+
+TerraVision installs as an extension in **Claude Desktop** and a plugin in the **ChatGPT desktop app**, where the diagram appears right in the chat. It also works in Claude Code, Codex CLI, GitHub Copilot, Cursor and any other MCP client.
 
 ### 1. Install the prerequisites (once)
 
@@ -91,7 +117,9 @@ Then start a new Claude Code session. Diagrams are saved in a `diagrams` folder 
 
 The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If `/mcp` shows TerraVision failed to connect, choose **Reconnect**. To avoid it, install it ahead of time: `uvx --from "terravision[mcp]" terravision --version`.
 
-**OpenAI Codex CLI:**
+**ChatGPT desktop app and OpenAI Codex CLI** (the desktop app includes Codex and uses the same plugins):
+
+In the desktop app, go to Settings, add the marketplace `https://github.com/patrickchugh/terravision`, then select `terravision-cloud-diagrams`. For the CLI:
 
 ```bash
 codex plugin marketplace add https://github.com/patrickchugh/terravision
@@ -142,15 +170,9 @@ A `terravision.yml` next to the Terraform adds the title, numbered flows and con
 
 ---
 
-## Watch the 90-Second Intro
-
-[![TerraVision extension for Claude and ChatGPT](./images/youtube-thumbnail.png)](https://youtu.be/BbXWR-v_Dl0)
-
----
-
 ## Why TerraVision?
 
-- ✅ **Built for AI assistants** — marketplace extensions and plugins for Claude, Codex, Gemini, Copilot and Cursor; diagrams appear right in the chat in Claude Desktop ([guide](https://patrickchugh.github.io/terravision/ai-assistants/))
+- ✅ **Built for AI assistants** — marketplace extensions and plugins for Claude, Codex, Gemini, Copilot and Cursor; diagrams appear right in the chat in Claude Desktop and the ChatGPT desktop app ([guide](https://patrickchugh.github.io/terravision/ai-assistants/))
 - ✅ **Provably Accurate diagrams** — accurate diagrams generated directly from your Terraform code so your code is the source of truth - what you see is what you get
 - ✅ **MCP server and agent skill** — let any AI agent, or an assistant in an IDE such as Visual Studio Code, generate diagrams from a JSON graph or your Terraform ([guide](docs/mcp-server.md))
 - ✅ **In Diagram flow annotations** — labels, titles, and flow sequences supported via YAML or generated by AI models including Ollama (running local) and AWS Bedrock
@@ -162,6 +184,22 @@ A `terravision.yml` next to the Terraform adds the title, numbered flows and con
 - ✅ **Interactive HTML output** — clickable nodes, pan/zoom, search, animated data flow
 - ✅ **Editable draw.io export** — open in draw.io, Lucidchart, or any mxGraph editor
 - ✅ **Terragrunt compatible** — auto-detects single- and multi-module Terragrunt projects
+
+---
+
+## How it compares
+
+| | TerraVision | Manual tools<br>(draw.io, Lucidchart, Visio) | AI workspaces<br>(Eraser) | Diagram as code<br>(Mermaid, D2, Python Diagrams) | Live cloud scanners<br>(e.g. Cloudcraft) |
+|---|---|---|---|---|---|
+| Draw from a plain-English description | ✅ in Claude and ChatGPT via extension | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | ✅ | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No">| <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> |
+| Draw from Terraform | ✅ built from `terraform plan`, client side | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/maybe.svg" width="16" height="16" alt="Partly"> AI interprets the files you paste (potentially exposes code & secrets) | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No">  |
+| Write the Terraform for a design | ✅ by your assistant, checked by redrawing the code AI writes | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/maybe.svg" width="16" height="16" alt="Partly"> varies |
+| Official icons and VPC, subnet, zone grouping conventions | ✅ built in | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/maybe.svg" width="16" height="16" alt="Partly"> icon libraries; correct grouping is up to you | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/maybe.svg" width="16" height="16" alt="Partly"> icons, generic groups | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> |
+| Stays current automatically | ✅ redrawn from the code in CI | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/maybe.svg" width="16" height="16" alt="Partly"> repository sync |  <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | ✅ follows the live account |
+|High Security - No access to your cloud account or upload of your code | ✅ | ✅ | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> | ✅ | <img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/cross.svg" width="16" height="16" alt="No"> |
+| Price | Free, open source | Free to paid | Free tier, paid plans | Free, open source | Paid |
+
+Already draw by hand? Generate the first version with TerraVision, then polish the exported file in draw.io or Lucidchart. Full comparison: [TerraVision vs draw.io, Lucidchart, Eraser, Mermaid and others](https://patrickchugh.github.io/terravision/alternatives/).
 
 ---
 
@@ -366,6 +404,14 @@ The complete documentation lives at **[patrickchugh.github.io/terravision](https
 - [llms.txt](https://patrickchugh.github.io/terravision/llms.txt) (docs index for AI agents)
 - [FAQ](docs/faq.md)
 - [Troubleshooting](docs/troubleshooting.md)
+
+**Diagram generators and comparisons:**
+- [Gallery of example architecture diagrams](https://patrickchugh.github.io/terravision/gallery/)
+- [Cloud architecture diagram generator](https://patrickchugh.github.io/terravision/cloud-architecture-diagram-generator/)
+- [AI cloud architecture diagram generator](https://patrickchugh.github.io/terravision/ai-cloud-architecture-diagram-generator/) (description to diagram) and [diagram to Terraform](https://patrickchugh.github.io/terravision/diagram-to-terraform/)
+- [AWS](https://patrickchugh.github.io/terravision/aws-architecture-diagram-generator/), [Azure](https://patrickchugh.github.io/terravision/azure-architecture-diagram-generator/) and [Google Cloud](https://patrickchugh.github.io/terravision/gcp-architecture-diagram-generator/) architecture diagram generators
+- [Terraform diagram generator](https://patrickchugh.github.io/terravision/terraform-diagram-generator/)
+- [TerraVision vs draw.io, Lucidchart, Eraser, Mermaid and live cloud scanners](https://patrickchugh.github.io/terravision/alternatives/)
 
 **For contributors:**
 - [Contributing Guide](docs/CONTRIBUTING.md)

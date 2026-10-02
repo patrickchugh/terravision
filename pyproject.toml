@@ -5,13 +5,17 @@ build-backend = "poetry.core.masonry.api"
 [project]
 name = "terravision"
 version = "0.51.1"
-description = "Terraform Architecture Visualizer"
+description = "Cloud architecture diagrams in both directions: AI prompt or JSON to diagram to Terraform via MCP server, and Terraform to diagram via CLI or CI/CD. Using Official AWS, Azure and GCP icons."
 readme = "README.md"
 authors = [{ name = "Patrick Chugh", email = "terravisionapp@gmail.com" }]
 license = "AGPL-3.0-only"
 requires-python = ">=3.11"
 keywords = [
     "terraform",
+    "cloud-architecture-diagram",
+    "architecture-diagram-generator",
+    "diagram-as-code",
+    "drawio",
     "architecture",
     "diagram",
     "visualization",
@@ -51,7 +55,7 @@ terravision = "terravision.terravision:main"
 [tool.poetry]
 name = "terravision"
 version = "0.51.1"
-description = "Terraform Architecture Visualizer"
+description = "Cloud architecture diagrams in both directions: AI prompt or JSON to diagram to Terraform via MCP server, and Terraform to diagram via CLI or CI/CD. Using Official AWS, Azure and GCP icons."
 authors = ["Patrick Chugh <terravisionapp@gmail.com>"]
 license = "AGPL-3.0-only"
 readme = "README.md"

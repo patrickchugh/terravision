@@ -20,6 +20,16 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ---
 
+## Gallery
+
+[![AWS three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/three-tier-web.png){ width="32%" .no-lightbox }](gallery.md#aws-three-tier-web-application-architecture-diagram)
+[![Azure three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-three-tier.png){ width="32%" .no-lightbox }](gallery.md#azure-three-tier-web-application-architecture-diagram)
+[![Google Cloud three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/gcp-three-tier.png){ width="32%" .no-lightbox }](gallery.md#google-cloud-three-tier-web-application-architecture-diagram)
+
+Real output for AWS, Azure and Google Cloud, each with its prompt and source file: **[see the full gallery](gallery.md)**.
+
+---
+
 ## Get started with your AI assistant
 
 Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram (or the code for one) in plain English, and TerraVision draws it with the official icons:
@@ -34,6 +44,8 @@ Ask Claude, Codex, Gemini or Copilot for a cloud architecture diagram (or the co
 Install Graphviz and Git once (plus uv, except for Claude Desktop on Windows and macOS), then connect your assistant: one command in Claude Code, Codex CLI and Antigravity CLI, or one download for Claude Desktop, where the diagram appears right in the chat. Step-by-step for macOS, Windows and Linux: **[Use TerraVision with AI assistants](ai-assistants.md)**.
 
 For DevOps teams: the [GitHub Action and CI/CD setups](cicd-integration.md) redraw the diagram whenever the Terraform changes.
+
+New here? Designing something new: [AI cloud architecture diagram generator](ai-cloud-architecture-diagram-generator.md) and [diagram to Terraform](diagram-to-terraform.md). Documenting existing code: [Terraform diagram generator](terraform-diagram-generator.md). See also the [cloud architecture diagram generator](cloud-architecture-diagram-generator.md) overview, the [AWS](aws-architecture-diagram-generator.md), [Azure](azure-architecture-diagram-generator.md) and [Google Cloud](gcp-architecture-diagram-generator.md) generators, or see [how TerraVision compares with Eraser, Mermaid and other tools](alternatives.md).
 
 ---
 

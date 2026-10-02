@@ -77,12 +77,16 @@ If anything is still missing later, the assistant says what to install. To check
 
     The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If `/mcp` shows TerraVision failed to connect, choose **Reconnect**. To avoid it, install it ahead of time: `uvx --from "terravision[mcp]" terravision --version`.
 
-=== "Codex CLI"
+=== "ChatGPT desktop and Codex CLI"
+
+    The ChatGPT desktop app includes Codex and uses the same plugin mechanism as Codex CLI, so one setup covers both:
 
     ```bash
     codex plugin marketplace add https://github.com/patrickchugh/terravision
     codex plugin add terravision-cloud-diagrams@terravision
     ```
+
+    Restart the ChatGPT desktop app afterwards. TerraVision then appears under **Plugins**, and diagrams are shown right in the chat.
 
 === "Antigravity CLI"
 
@@ -191,7 +195,7 @@ On GitHub it uses the [TerraVision GitHub Action](cicd-integration.md#github-act
 
 ## What you see
 
-- **Claude Desktop**, and other apps that support [MCP Apps](mcp-server.md#the-diagram-view-mcp-apps): the diagram appears in the chat with zoom, and buttons to **Open image** in your image viewer, **Edit in draw.io** (in the draw.io app, or on the web if it isn't installed), **Show in folder**, and **Source** (the graph JSON, and the flows once added).
+- **Claude Desktop and the ChatGPT desktop app**, and other apps that support [MCP Apps](mcp-server.md#the-diagram-view-mcp-apps): the diagram appears in the chat with zoom, and buttons to **Open image** in your image viewer, **Edit in draw.io** (in the draw.io app, or on the web if it isn't installed), **Show in folder**, and **Source** (the graph JSON, and the flows once added).
 - **Terminal assistants** (Claude Code, Codex CLI, Antigravity CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.
 
 ## Tips
