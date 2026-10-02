@@ -3,17 +3,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Free, open-source cloud architecture diagrams in both directions. Describe a design to your AI assistant and get an AWS, Azure or GCP diagram and its Terraform, or draw what your Terraform deploys.">
+        <meta name="description" content="Generate cloud architecture diagrams for AWS, Azure and Google Cloud with the official icons, from a plain-English prompt, a JSON graph or Terraform code. Free, open source, runs locally.">
       
       
       
-        <link rel="canonical" href="https://patrickchugh.github.io/terravision/ai-assistants/">
+        <link rel="canonical" href="https://patrickchugh.github.io/terravision/cloud-architecture-diagram-generator/">
       
       
-        <link rel="prev" href="../gallery/">
+        <link rel="prev" href="../mcp-server/">
       
       
-        <link rel="next" href="../graph-format/">
+        <link rel="next" href="../ai-cloud-architecture-diagram-generator/">
       
       
         
@@ -24,7 +24,7 @@
     
     
       
-        <title>Use with AI assistants - TerraVision</title>
+        <title>Cloud Architecture Diagram Generator (free, open source) - TerraVision</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#use-terravision-with-ai-assistants" class="md-skip">
+        <a href="#cloud-architecture-diagram-generator" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Use with AI assistants
+              Cloud Architecture Diagram Generator (free, open source)
             
           </span>
         </div>
@@ -268,11 +268,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../ai-assistants/" class="md-tabs__link">
         
   
   
@@ -367,11 +365,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../cloud-architecture-diagram-generator/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -551,37 +551,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Use with AI assistants
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../ai-assistants/" class="md-nav__link">
         
   
   
@@ -597,131 +570,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-      
-        <li class="md-nav__item">
-  <a href="#set-up-once" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Set up (once)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Set up (once)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#updating" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Updating
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#1-from-a-description-to-a-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. From a description to a diagram
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-from-terraform-code-to-a-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. From Terraform code to a diagram
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-from-a-diagram-to-terraform" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. From a diagram to Terraform
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-keep-the-diagram-up-to-date-in-ci" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Keep the diagram up to date in CI
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-you-see" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What you see
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tips
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1074,28 +922,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked="">
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8">
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
             
   
   
@@ -1113,7 +964,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1128,10 +979,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../cloud-architecture-diagram-generator/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud architecture diagram generator
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1147,6 +1025,164 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#how-do-i-generate-a-cloud-architecture-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I generate a cloud architecture diagram?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How do I generate a cloud architecture diagram?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-a-description-with-an-ai-assistant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From a description, with an AI assistant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-a-json-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From a JSON graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-terraform-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Terraform code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#is-there-a-free-open-source-cloud-architecture-diagram-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Is there a free, open-source cloud architecture diagram generator?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#can-ai-generate-a-cloud-architecture-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can AI generate a cloud architecture diagram?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-i-generate-an-architecture-diagram-from-terraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I generate an architecture diagram from Terraform?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-it-use-the-official-aws-azure-and-gcp-icons-and-styles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it use the official AWS, Azure and GCP icons and styles?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-it-need-access-to-my-cloud-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Does it need access to my cloud account?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-do-i-keep-the-diagram-up-to-date" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How do I keep the diagram up to date?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#can-it-generate-terraform-from-the-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can it generate Terraform from the diagram?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generators-by-cloud-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generators by cloud provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1817,22 +1853,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#set-up-once" class="md-nav__link">
+  <a href="#how-do-i-generate-a-cloud-architecture-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Set up (once)
+        How do I generate a cloud architecture diagram?
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Set up (once)">
+    <nav class="md-nav" aria-label="How do I generate a cloud architecture diagram?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#updating" class="md-nav__link">
+  <a href="#from-a-description-with-an-ai-assistant" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Updating
+        From a description, with an AI assistant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-a-json-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From a JSON graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-terraform-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Terraform code
       
     </span>
   </a>
@@ -1845,10 +1903,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#1-from-a-description-to-a-diagram" class="md-nav__link">
+  <a href="#is-there-a-free-open-source-cloud-architecture-diagram-generator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. From a description to a diagram
+        Is there a free, open-source cloud architecture diagram generator?
       
     </span>
   </a>
@@ -1856,10 +1914,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-from-terraform-code-to-a-diagram" class="md-nav__link">
+  <a href="#can-ai-generate-a-cloud-architecture-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. From Terraform code to a diagram
+        Can AI generate a cloud architecture diagram?
       
     </span>
   </a>
@@ -1867,10 +1925,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-from-a-diagram-to-terraform" class="md-nav__link">
+  <a href="#how-do-i-generate-an-architecture-diagram-from-terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. From a diagram to Terraform
+        How do I generate an architecture diagram from Terraform?
       
     </span>
   </a>
@@ -1878,10 +1936,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-keep-the-diagram-up-to-date-in-ci" class="md-nav__link">
+  <a href="#does-it-use-the-official-aws-azure-and-gcp-icons-and-styles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Keep the diagram up to date in CI
+        Does it use the official AWS, Azure and GCP icons and styles?
       
     </span>
   </a>
@@ -1889,10 +1947,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-you-see" class="md-nav__link">
+  <a href="#does-it-need-access-to-my-cloud-account" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What you see
+        Does it need access to my cloud account?
       
     </span>
   </a>
@@ -1900,10 +1958,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#how-do-i-keep-the-diagram-up-to-date" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        How do I keep the diagram up to date?
       
     </span>
   </a>
@@ -1911,10 +1969,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reference" class="md-nav__link">
+  <a href="#can-it-generate-terraform-from-the-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reference
+        Can it generate Terraform from the diagram?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generators-by-cloud-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generators by cloud provider
       
     </span>
   </a>
@@ -1938,7 +2007,7 @@
 
 
   
-    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/ai-assistants.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/patrickchugh/terravision/edit/main/docs/cloud-architecture-diagram-generator.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
     </a>
@@ -1946,181 +2015,108 @@
   
 
 
-<h1 id="use-terravision-with-ai-assistants">Use TerraVision with AI assistants<a class="headerlink" href="#use-terravision-with-ai-assistants" title="Permanent link">¶</a></h1>
-<p>Ask your AI assistant for a cloud architecture diagram in plain English, and TerraVision draws it with the official AWS, Azure and GCP icons, grouped into VPCs, subnets, zones and resource groups the way a cloud architect would. It fits every stage of an architecture's life:</p>
-<ol>
-<li><strong>A description → a diagram.</strong> Describe the system, or let the assistant design one, and get a diagram in seconds. No Terraform needed.</li>
-<li><strong>Terraform → a diagram.</strong> Point the assistant at Terraform code and get a diagram of what that code actually deploys.</li>
-<li><strong>A diagram → Terraform.</strong> Once a design looks right, ask the assistant to write the Terraform for it.</li>
-<li><strong>Terraform → an up-to-date diagram, automatically.</strong> A CI workflow redraws the diagram whenever the Terraform changes.</li>
-</ol>
-<p>TerraVision itself runs on your own computer: nothing is uploaded anywhere beyond the conversation you are already having with your assistant.</p>
-<h2 id="set-up-once">Set up (once)<a class="headerlink" href="#set-up-once" title="Permanent link">¶</a></h2>
-<p><strong>First, the prerequisites.</strong> TerraVision needs <strong>Graphviz</strong> (to draw) and <strong>Git</strong>. <strong>uv</strong> runs TerraVision for Claude Code, Codex, Antigravity CLI and other MCP clients; Claude Desktop brings its own on Windows and macOS, so skip it there. <strong>Terraform</strong> (or OpenTofu) is only needed to draw from Terraform code.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">Windows</label><label for="__tabbed_1_3">Linux</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>With <a href="https://brew.sh">Homebrew</a>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>brew<span class="w"> </span>install<span class="w"> </span>uv<span class="w">                        </span><span class="c1"># not needed for Claude Desktop</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>brew<span class="w"> </span>install<span class="w"> </span>hashicorp/tap/terraform<span class="w">   </span><span class="c1"># optional: to draw from Terraform code</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>In PowerShell:</p>
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Graphviz</span><span class="p">.</span><span class="n">Graphviz</span> <span class="n">-e</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Git</span><span class="p">.</span><span class="n">Git</span> <span class="n">-e</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">astral-sh</span><span class="p">.</span><span class="n">uv</span> <span class="n">-e</span>    <span class="c"># not needed for Claude Desktop</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">winget</span> <span class="n">install</span> <span class="p">-</span><span class="n">-id</span> <span class="n">Hashicorp</span><span class="p">.</span><span class="n">Terraform</span> <span class="n">-e</span>   <span class="c"># optional: to draw from Terraform code</span>
-</span></code></pre></div>
-<p>Then open a <strong>new</strong> terminal, and restart your AI app, so they see the new programs.</p>
-</div>
-<div class="tabbed-block">
-<p>On Debian and Ubuntu:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>graphviz<span class="w"> </span>git
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Ubuntu 26.04 and later only (also Debian 14 "forky"/testing).</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Skip on older releases such as Ubuntu 24.04: graphviz already includes it.</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libgvplugin-neato-layout8
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh<span class="w">   </span><span class="c1"># Claude Desktop on Linux needs uv pre-installed</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># optionally install terraform, to draw from Terraform code: HashiCorp's apt repository</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>wget<span class="w"> </span>-O-<span class="w"> </span>https://apt.releases.hashicorp.com/gpg<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>gpg<span class="w"> </span>--dearmor<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/hashicorp-archive-keyring.gpg
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com </span><span class="k">$(</span>lsb_release<span class="w"> </span>-cs<span class="k">)</span><span class="s2"> main"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/apt/sources.list.d/hashicorp.list
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>terraform
-</span></code></pre></div>
-<p>Other distributions: <a href="https://developer.hashicorp.com/terraform/install">HashiCorp's install guide</a>.</p>
-</div>
-</div>
-</div>
-<p>If anything is still missing later, the assistant says what to install. To check at any time, ask it: <em>"Is TerraVision set up correctly?"</em></p>
-<p><strong>Then connect your assistant:</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">ChatGPT desktop and Codex CLI</label><label for="__tabbed_2_4">Antigravity CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Download <code>terravision-&lt;version&gt;.mcpb</code> from the <a href="https://github.com/patrickchugh/terravision/releases/latest">latest release</a> and double-click it (or drag it into <strong>Settings → Extensions</strong>). Diagrams appear right in the chat. Details: <a href="../mcp-server/#configure-your-client">MCP server</a>.</p>
-</div>
-<div class="tabbed-block">
-<p>Works in the terminal and in the Claude Code extension for VS Code and JetBrains:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>claude<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>patrickchugh/terravision
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>claude<span class="w"> </span>plugin<span class="w"> </span>install<span class="w"> </span>terravision-cloud-diagrams@terravision
-</span></code></pre></div>
-<p>This installs the TerraVision skill and its MCP server together. Start a new Claude Code session afterwards. Diagrams are saved in a <code>diagrams</code> folder in your project.</p>
-<p>The very first start downloads and installs TerraVision, which can take longer than Claude Code waits. If <code>/mcp</code> shows TerraVision failed to connect, choose <strong>Reconnect</strong>. To avoid it, install it ahead of time: <code>uvx --from "terravision[mcp]" terravision --version</code>.</p>
-</div>
-<div class="tabbed-block">
-<p>The ChatGPT desktop app includes Codex and uses the same plugin mechanism as Codex CLI, so one setup covers both:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>codex<span class="w"> </span>plugin<span class="w"> </span>marketplace<span class="w"> </span>add<span class="w"> </span>https://github.com/patrickchugh/terravision
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>codex<span class="w"> </span>plugin<span class="w"> </span>add<span class="w"> </span>terravision-cloud-diagrams@terravision
-</span></code></pre></div>
-<p>Restart the ChatGPT desktop app afterwards. TerraVision then appears under <strong>Plugins</strong>, and diagrams are shown right in the chat.</p>
-</div>
-<div class="tabbed-block">
-<p>Google's Antigravity CLI (<code>agy</code>) replaced Gemini CLI:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>agy<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>terravision<span class="w"> </span>--<span class="w"> </span>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="w"> </span>terravision<span class="w"> </span>mcp<span class="w"> </span>--output-dir<span class="w"> </span>/path/for/diagrams
-</span></code></pre></div>
-<p><code>agy mcp list</code> shows it once it is added.</p>
-<p>If you had the TerraVision extension in Gemini CLI, <code>agy plugin import gemini</code> brings it across as a plugin instead.</p>
-<p><strong>Still on Gemini CLI?</strong> It stopped working for personal Google accounts (free, AI Pro and Ultra) on 18 June 2026. With a Gemini Code Assist Standard or Enterprise licence, or a paid API key, it still runs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>gemini<span class="w"> </span>extensions<span class="w"> </span>install<span class="w"> </span>https://github.com/patrickchugh/terravision
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Add TerraVision as an MCP server. In VS Code run <strong>MCP: Open User Configuration</strong>; in Cursor edit its MCP config file:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">"servers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">"terravision"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stdio"</span><span class="p">,</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uvx"</span><span class="p">,</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"--from"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision[mcp]"</span><span class="p">,</span><span class="w"> </span><span class="s2">"terravision"</span><span class="p">,</span><span class="w"> </span><span class="s2">"mcp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--output-dir"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/path/for/diagrams"</span><span class="p">]</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="p">}</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>Cursor and most other clients call the top-level key <code>mcpServers</code> instead of <code>servers</code>. See <a href="../mcp-server/">MCP server</a> for more clients and options.</p>
-</div>
-</div>
-</div>
-<h3 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">¶</a></h3>
-<p>Each <a href="https://github.com/patrickchugh/terravision/releases/latest">release</a> lists what changed. To move your assistant to it:</p>
-<ul>
-<li><strong>Claude Desktop:</strong> download the new <code>.mcpb</code> from the latest release and double-click it.</li>
-<li><strong>Claude Code:</strong> <code>claude plugin marketplace update terravision</code>, then <code>claude plugin update terravision-cloud-diagrams@terravision</code>, and start a new session.</li>
-<li><strong>Codex CLI:</strong> <code>codex plugin marketplace upgrade terravision</code>, then restart Codex. <code>codex plugin list</code> shows the version you have.</li>
-</ul>
-<h2 id="1-from-a-description-to-a-diagram">1. From a description to a diagram<a class="headerlink" href="#1-from-a-description-to-a-diagram" title="Permanent link">¶</a></h2>
-<p>Ask the way you would ask a colleague:</p>
+<h1 id="cloud-architecture-diagram-generator">Cloud Architecture Diagram Generator<a class="headerlink" href="#cloud-architecture-diagram-generator" title="Permanent link">¶</a></h1>
+<p>Get a cloud architecture diagram that looks like a cloud architect drew it, in minutes: the official AWS, Azure or Google Cloud icons, with every resource inside its VPC, subnet, zone or resource group. Describe the system to Claude or ChatGPT, or point TerraVision at your Terraform. The result is ready for a design review, a proposal or your documentation, and stays editable in draw.io or Lucidchart.</p>
+<p>TerraVision is free and open source, runs on your own computer and never connects to your cloud account. It works in both directions: from a design to a diagram and its Terraform, and from Terraform to a diagram of what the code deploys.</p>
+<table>
+<thead>
+<tr>
+<th>You want to</th>
+<th>Start here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>See what the output looks like</td>
+<td><a href="../gallery/">Gallery of example diagrams</a></td>
+</tr>
+<tr>
+<td>Draw a new architecture by describing it</td>
+<td><a href="../ai-cloud-architecture-diagram-generator/">AI cloud architecture diagram generator</a> for Claude and ChatGPT</td>
+</tr>
+<tr>
+<td>Turn a finished design into code</td>
+<td><a href="../diagram-to-terraform/">Diagram to Terraform</a></td>
+</tr>
+<tr>
+<td>Document Terraform that already exists</td>
+<td><a href="../terraform-diagram-generator/">Terraform diagram generator</a></td>
+</tr>
+<tr>
+<td>Compare it with draw.io, Lucidchart or Eraser</td>
+<td><a href="../alternatives/">Compared with other tools</a></td>
+</tr>
+</tbody>
+</table>
+<p><a class="glightbox" data-type="image" data-width="100%" data-height="auto" href="https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png" data-desc-position="bottom"><img alt="AWS three-tier architecture diagram generated by TerraVision" src="https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png"></a></p>
+<h2 id="how-do-i-generate-a-cloud-architecture-diagram">How do I generate a cloud architecture diagram?<a class="headerlink" href="#how-do-i-generate-a-cloud-architecture-diagram" title="Permanent link">¶</a></h2>
+<p>Pick the input you already have. All three produce the same style of diagram, as PNG, SVG, PDF or an editable draw.io file.</p>
+<h3 id="from-a-description-with-an-ai-assistant">From a description, with an AI assistant<a class="headerlink" href="#from-a-description-with-an-ai-assistant" title="Permanent link">¶</a></h3>
+<p>Install TerraVision in Claude Desktop or the ChatGPT desktop app (it also works in GitHub Copilot, Cursor and any MCP client), then ask in plain words:</p>
 <blockquote>
-<p>Draw an AWS three-tier architecture: a React front end on CloudFront and S3, an ECS Fargate API behind an Application Load Balancer across two availability zones, SQL Server on RDS Multi-AZ, and images in ECR.</p>
+<p>Draw an AWS three-tier app: React on CloudFront, ECS Fargate behind an ALB in two AZs, SQL Server on RDS Multi-AZ</p>
 </blockquote>
-<p>The assistant turns the description into a <a href="../graph-format/">TerraVision graph</a>, a short JSON file listing each resource and what it connects to or sits inside, and TerraVision draws it. The assistant checks the picture before showing it to you, and you get:</p>
-<ul>
-<li>the diagram as <strong>PNG</strong> and <strong>SVG</strong>;</li>
-<li>an editable <strong>draw.io</strong> file, to rearrange by hand;</li>
-<li>the <strong>graph</strong> (<code>.tvg.json</code>), which you or the assistant can change and draw again.</li>
-</ul>
-<p>Then keep talking to it:</p>
-<ul>
-<li><em>"Put the database in its own subnet."</em> / <em>"Add ElastiCache for sessions."</em> / <em>"Draw the same thing on Azure."</em></li>
-<li><em>"Show how a request moves through it."</em> The steps appear on the diagram as numbered circles, with a legend.</li>
-<li><em>"Label the connections."</em> Short labels such as "Reads orders" go on the arrows.</li>
-</ul>
-<p>After each diagram, the assistant offers the natural next step: adding the request flow, or writing the Terraform (see 3 below). It won't do either until you say yes.</p>
-<h2 id="2-from-terraform-code-to-a-diagram">2. From Terraform code to a diagram<a class="headerlink" href="#2-from-terraform-code-to-a-diagram" title="Permanent link">¶</a></h2>
-<blockquote>
-<p>Draw the architecture of the Terraform in <code>./infra</code>.</p>
-<p>Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples</p>
-</blockquote>
-<p>Local folders and Git repositories both work, including private ones you have access to. The <code>//examples</code> part points at a folder inside the repository. Many repositories keep a reusable module at their root, which describes nothing on its own; the diagram comes from a folder that uses it, like <code>examples/</code> or an environment folder. If you only give the repository, the assistant looks for that folder itself.</p>
-<p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> on the code and draws what the plan says will be deployed, so conditionals, <code>count</code>, <code>for_each</code> and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.</p>
-<p><code>terraform plan</code> needs the same cloud credentials you would use to run Terraform. Without them, generate the plan once where credentials exist and hand TerraVision the files; no credentials are needed after that:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
+<p>The diagram appears in the chat, and you refine it by talking. Setup takes one download or one command: <a href="../ai-assistants/">Use TerraVision with AI assistants</a>.</p>
+<h3 id="from-a-json-graph">From a JSON graph<a class="headerlink" href="#from-a-json-graph" title="Permanent link">¶</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>terravision
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>architecture.tvg.json<span class="w"> </span>--format<span class="w"> </span>svg
 </span></code></pre></div>
-<blockquote>
-<p>Draw the diagram from <code>plan.json</code> and <code>graph.dot</code>.</p>
-</blockquote>
-<p>You can add flows and labels to these diagrams too (<em>"Add the checkout flow as numbered steps"</em>). To change the architecture itself, change the Terraform and draw it again.</p>
-<h2 id="3-from-a-diagram-to-terraform">3. From a diagram to Terraform<a class="headerlink" href="#3-from-a-diagram-to-terraform" title="Permanent link">¶</a></h2>
-<p>When a design drawn from a description looks right, ask for the code:</p>
-<blockquote>
-<p>Write the Terraform for this architecture.</p>
-</blockquote>
-<p>The assistant writes Terraform that creates the resources, zones and connections in the diagram. To see how close it is, draw the new code (workflow 2) and compare the two diagrams. That runs <code>terraform plan</code>, so it needs cloud credentials.</p>
-<p>If the design has flows or labels, the assistant also writes a <code>terravision.yml</code> next to the Terraform. It carries the title, flows and labels over to the Terraform's own resource names, and adds the users and other external actors, which Terraform has no resources for. TerraVision reads that file whenever it draws the Terraform, so later diagrams keep the design's numbered steps and labels.</p>
-<p>Treat generated Terraform as a first draft: review it, and run <code>terraform plan</code> yourself, before you apply anything.</p>
-<h2 id="4-keep-the-diagram-up-to-date-in-ci">4. Keep the diagram up to date in CI<a class="headerlink" href="#4-keep-the-diagram-up-to-date-in-ci" title="Permanent link">¶</a></h2>
-<p>Once the Terraform is in a repository, the diagram can redraw itself whenever the code changes, so it never goes stale. After writing Terraform, the assistant offers to set this up. You can also ask:</p>
-<blockquote>
-<p>Add a GitHub Actions workflow that redraws the architecture diagram when the Terraform changes.</p>
-</blockquote>
-<p>On GitHub it uses the <a href="../cicd-integration/#github-actions">TerraVision GitHub Action</a>. GitLab, Jenkins, Azure DevOps and others are covered in <a href="../cicd-integration/">CI/CD Integration</a>, including a mode that keeps cloud credentials out of the diagram step. The <code>terravision.yml</code> from step 3 is picked up there too, so the flows and labels carry on into every new version of the diagram.</p>
-<h2 id="what-you-see">What you see<a class="headerlink" href="#what-you-see" title="Permanent link">¶</a></h2>
+<p>Each key is a Terraform resource type and a name, each value is what it connects to or contains. No Terraform and no cloud credentials are needed. See the <a href="../graph-format/">Graph Format</a>.</p>
+<h3 id="from-terraform-code">From Terraform code<a class="headerlink" href="#from-terraform-code" title="Permanent link">¶</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./infrastructure
+</span></code></pre></div>
+<p>The diagram is built from what <code>terraform plan</code> says the code deploys, so it matches the code. See the <a href="../usage-guide/">Usage Guide</a>.</p>
+<h2 id="is-there-a-free-open-source-cloud-architecture-diagram-generator">Is there a free, open-source cloud architecture diagram generator?<a class="headerlink" href="#is-there-a-free-open-source-cloud-architecture-diagram-generator" title="Permanent link">¶</a></h2>
+<p>Yes. TerraVision is open source under the AGPL-3.0 licence and free to use. It installs from PyPI, runs locally on macOS, Windows and Linux, and has no account, watermark or usage limit. It supports 385 AWS, 264 Google Cloud and 245 Azure resource types.</p>
+<h2 id="can-ai-generate-a-cloud-architecture-diagram">Can AI generate a cloud architecture diagram?<a class="headerlink" href="#can-ai-generate-a-cloud-architecture-diagram" title="Permanent link">¶</a></h2>
+<p>Yes. An AI assistant such as Claude, ChatGPT or GitHub Copilot can generate one through the TerraVision MCP server. The assistant decides which services and connections to draw; TerraVision does the rendering with the official cloud icons and standard grouping, so the result looks like a diagram a cloud architect would draw.</p>
+<h2 id="how-do-i-generate-an-architecture-diagram-from-terraform">How do I generate an architecture diagram from Terraform?<a class="headerlink" href="#how-do-i-generate-an-architecture-diagram-from-terraform" title="Permanent link">¶</a></h2>
+<p>Run <code>terravision draw --source &lt;folder or Git URL&gt;</code>. TerraVision runs <code>terraform plan</code>, reads the resources and their dependencies, groups them into VPCs, subnets and zones, and renders the diagram. Modules, Terragrunt and OpenTofu are supported.</p>
+<h2 id="does-it-use-the-official-aws-azure-and-gcp-icons-and-styles">Does it use the official AWS, Azure and GCP icons and styles?<a class="headerlink" href="#does-it-use-the-official-aws-azure-and-gcp-icons-and-styles" title="Permanent link">¶</a></h2>
+<p>Yes. TerraVision uses each provider's official architecture icon set and follows its grouping conventions: regions, availability zones, VPCs and subnets on AWS; resource groups, virtual networks and subnets on Azure; projects, VPC networks, regions and zones on Google Cloud.</p>
+<h2 id="does-it-need-access-to-my-cloud-account">Does it need access to my cloud account?<a class="headerlink" href="#does-it-need-access-to-my-cloud-account" title="Permanent link">¶</a></h2>
+<p>No. TerraVision never calls a cloud API, and your code is not sent to any service. Diagrams from a description or a JSON graph need no credentials at all. Diagrams from Terraform use <code>terraform plan</code>, which you can run separately and pass in as a file.</p>
+<h2 id="how-do-i-keep-the-diagram-up-to-date">How do I keep the diagram up to date?<a class="headerlink" href="#how-do-i-keep-the-diagram-up-to-date" title="Permanent link">¶</a></h2>
+<p>Add the <a href="../cicd-integration/">TerraVision GitHub Action</a> to your pipeline. It redraws the diagram whenever the Terraform changes, so the documentation cannot drift from the code. GitLab, Jenkins and Azure DevOps setups are in the same guide.</p>
+<h2 id="can-it-generate-terraform-from-the-diagram">Can it generate Terraform from the diagram?<a class="headerlink" href="#can-it-generate-terraform-from-the-diagram" title="Permanent link">¶</a></h2>
+<p>Yes. After drawing a design with an AI assistant, ask it to write the Terraform. You can then draw the generated code with TerraVision to check that it matches the design. See <a href="../diagram-to-terraform/">diagram to Terraform</a>.</p>
+<h2 id="generators-by-cloud-provider">Generators by cloud provider<a class="headerlink" href="#generators-by-cloud-provider" title="Permanent link">¶</a></h2>
 <ul>
-<li><strong>Claude Desktop and the ChatGPT desktop app</strong>, and other apps that support <a href="../mcp-server/#the-diagram-view-mcp-apps">MCP Apps</a>: the diagram appears in the chat with zoom, and buttons to <strong>Open image</strong> in your image viewer, <strong>Edit in draw.io</strong> (in the draw.io app, or on the web if it isn't installed), <strong>Show in folder</strong>, and <strong>Source</strong> (the graph JSON, and the flows once added).</li>
-<li><strong>Terminal assistants</strong> (Claude Code, Codex CLI, Antigravity CLI): the assistant looks at the diagram itself and lists the files. Ctrl-click (Cmd-click on macOS) a path to open it.</li>
+<li><a href="../ai-cloud-architecture-diagram-generator/">AI cloud architecture diagram generator</a> (description to diagram)</li>
+<li><a href="../diagram-to-terraform/">Diagram to Terraform</a> (design to code)</li>
+<li><a href="../aws-architecture-diagram-generator/">AWS architecture diagram generator</a></li>
+<li><a href="../azure-architecture-diagram-generator/">Azure architecture diagram generator</a></li>
+<li><a href="../gcp-architecture-diagram-generator/">Google Cloud architecture diagram generator</a></li>
+<li><a href="../terraform-diagram-generator/">Terraform diagram generator</a></li>
+<li><a href="../alternatives/">TerraVision compared with Eraser, Mermaid, Diagrams and live cloud scanners</a></li>
 </ul>
-<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
-<ul>
-<li><strong>One cloud per diagram.</strong> A diagram uses one provider's icons and layout rules. For a multi-cloud system, ask for one diagram per cloud.</li>
-<li><strong>Busy is normal.</strong> Real systems have many connections, and TerraVision draws them all rather than hiding some to look tidy. For a high-level picture, ask for a simpler version with fewer boxes, or rearrange the draw.io file by hand.</li>
-<li><strong>If something looks wrong, say what.</strong> For example, "the NAT gateway should be in the public subnet". The assistant fixes the graph and draws it again.</li>
-<li><strong>Keep the graph.</strong> The <code>.tvg.json</code> file is the source of the diagram. Commit it next to your docs, and anyone (or any assistant) can change it and redraw.</li>
-</ul>
-<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">¶</a></h2>
-<ul>
-<li><a href="../graph-format/">Graph Format</a>: the JSON the assistant writes, including flows and edge labels</li>
-<li><a href="../node-types/">Node types</a>: every supported resource type and icon</li>
-<li><a href="../mcp-server/">MCP server</a>: the tools, client setup and trust boundary</li>
-<li><a href="https://github.com/patrickchugh/terravision/tree/main/skills/terravision-cloud-diagrams">Agent skill</a>: the instructions the assistant follows</li>
-<li><a href="../llms.txt">llms.txt</a>: a plain-text index of these docs, for assistants reading the web</li>
-</ul>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "TerraVision",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "Cloud architecture diagram generator",
+  "operatingSystem": "macOS, Windows, Linux",
+  "description": "Free, open-source cloud architecture diagram tool that works in both directions: an AI assistant draws AWS, Azure and Google Cloud diagrams with the official icons from a plain-English description and writes the Terraform for them, and existing Terraform code is drawn from terraform plan. Runs locally, with an MCP server.",
+  "featureList": ["Text to cloud architecture diagram through AI assistants (MCP)", "Diagram to Terraform", "Terraform to architecture diagram", "JSON graph to diagram", "Official AWS, Azure and GCP icons", "draw.io, SVG, PNG and interactive HTML output", "CI/CD diagram updates"],
+  "url": "https://patrickchugh.github.io/terravision/",
+  "downloadUrl": "https://pypi.org/project/terravision/",
+  "codeRepository": "https://github.com/patrickchugh/terravision",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Patrick Chugh" }
+}
+</script>
 
 
 
 
 
 
+
+  
+  
 
 
 
