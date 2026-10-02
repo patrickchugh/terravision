@@ -452,6 +452,7 @@ AWS_ACRONYMS_LIST = [
     "sns",
     "sqs",
     "vpc",
+    "vpn",
     "waf",
 ]
 
