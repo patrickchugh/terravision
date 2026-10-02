@@ -17,9 +17,8 @@ Install: `uv tool install terravision`, `pipx install terravision`, or `pip inst
 - [Gallery](https://patrickchugh.github.io/terravision/gallery/): example AWS, Azure and GCP architecture diagrams, each with its prompt and source graph
 - [AI cloud architecture diagram generator](https://patrickchugh.github.io/terravision/ai-cloud-architecture-diagram-generator/): description to diagram through an AI assistant
 - [Diagram to Terraform](https://patrickchugh.github.io/terravision/diagram-to-terraform/): generate Terraform from a design, verify it by redrawing, keep it in sync in CI
-- [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, D2, Diagrams (mingrammer) and live cloud scanners
+- [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs draw.io, Lucidchart, Visio, Cloudcraft, Eraser, Mermaid, D2, Diagrams (mingrammer), terraform graph and live cloud scanners
 - [Cloud architecture diagram generator](https://patrickchugh.github.io/terravision/cloud-architecture-diagram-generator/): overview of generating AWS, Azure and GCP diagrams from a prompt, JSON or Terraform
-- [Compared with other tools](https://patrickchugh.github.io/terravision/alternatives/): TerraVision vs Eraser, Mermaid, Diagrams (mingrammer), terraform graph and live cloud scanners
 
 ## Examples
 
@@ -27,6 +26,18 @@ Install: `uv tool install terravision`, `pipx install terravision`, or `pip inst
 - [aws-event-driven.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-event-driven.tvg.json): API Gateway, Lambda, SQS, SNS, DynamoDB, Firehose, Glue, Athena
 - [azure-web-app.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-web-app.tvg.json): Front Door, App Service, Functions, SQL, Service Bus, Key Vault
 - [gcp-serverless-api.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-serverless-api.tvg.json): HTTPS LB, Cloud Run, Cloud SQL, Pub/Sub, Functions, BigQuery
+- [aws-eks-karpenter.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.tvg.json): AWS, EKS with Karpenter across three AZs, On-Demand and Spot NodePools, Spot interruption queue, Aurora
+- [aws-serverless-event-driven.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.tvg.json): AWS, API Gateway, Cognito, Lambda, DynamoDB, EventBridge bus fanning out to Step Functions, SQS with DLQ, SES, SNS, Firehose, Glue, Athena
+- [aws-data-lake.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.tvg.json): AWS, DMS, Kinesis, Firehose, Transfer Family, S3 raw and curated zones, Glue, EMR Serverless, MWAA, Lake Formation, Athena, Redshift Serverless, SageMaker, QuickSight
+- [aws-multi-region.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.tvg.json): AWS, Route 53 failover, two regions with ALB, ECS Fargate and Aurora Global Database, DynamoDB global tables, S3 replication
+- [aws-multi-account-network.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.tvg.json): AWS, Transit Gateway hub, site-to-site VPN, Network Firewall inspection VPC, central egress VPC, production, development and shared services VPCs
+- [azure-three-tier.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-three-tier.tvg.json): Azure, Front Door with WAF, Application Gateway, Container Apps across zones, Azure SQL via private endpoint, NAT gateway
+- [azure-hub-spoke.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hub-spoke.tvg.json): Azure, hub VNet with VPN gateway, Azure Firewall, Bastion and DNS resolver, peered spokes with Application Gateway, VM scale set and private endpoints
+- [azure-aks.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-aks.tvg.json): Azure, Front Door, Application Gateway, AKS node pools across three zones, Cosmos DB, Service Bus and Redis via private endpoints
+- [gcp-three-tier.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-three-tier.tvg.json): GCP, HTTPS load balancer with Cloud Armor, managed instance group across zones, Cloud SQL, Memorystore, Cloud NAT
+- [gcp-gke.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-gke.tvg.json): GCP, HTTPS load balancer, regional GKE node pool across three zones, Cloud SQL, Pub/Sub, Cloud Run, Firestore, BigQuery
+- [gcp-data-pipeline.tvg.json](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-data-pipeline.tvg.json): GCP, Pub/Sub, Datastream, Dataflow, Dataproc, Composer, BigQuery, Bigtable, Dataplex, Looker, Vertex AI
+- [Gallery](https://patrickchugh.github.io/terravision/gallery/): all 12 example diagrams with prompts
 
 ## Optional
 
