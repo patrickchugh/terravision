@@ -1,0 +1,81 @@
+{
+  "tv_aws_users.partner_systems": [
+    "aws_transfer_server.partner_sftp"
+  ],
+  "tv_aws_mobile_client.apps": [
+    "aws_kinesis_stream.clickstream"
+  ],
+  "aws_rds_aurora_mysql.orders_db": [
+    "aws_dms_replication_task.orders_cdc"
+  ],
+  "aws_group.ingestion": [
+    "aws_dms_replication_task.orders_cdc",
+    "aws_kinesis_stream.clickstream",
+    "aws_kinesis_firehose_delivery_stream.clickstream",
+    "aws_transfer_server.partner_sftp"
+  ],
+  "aws_dms_replication_task.orders_cdc": [
+    "aws_s3_bucket.raw_zone"
+  ],
+  "aws_kinesis_stream.clickstream": [
+    "aws_kinesis_firehose_delivery_stream.clickstream"
+  ],
+  "aws_kinesis_firehose_delivery_stream.clickstream": [
+    "aws_s3_bucket.raw_zone"
+  ],
+  "aws_transfer_server.partner_sftp": [
+    "aws_s3_bucket.raw_zone"
+  ],
+  "aws_group.data_lake": [
+    "aws_s3_bucket.raw_zone",
+    "aws_s3_bucket.curated_zone",
+    "aws_glue_catalog_database.lake_catalog",
+    "aws_lakeformation_resource.lake_permissions"
+  ],
+  "aws_group.processing": [
+    "aws_mwaa_environment.orchestration",
+    "aws_glue_job.clean_and_conform",
+    "aws_emrserverless_application.spark_aggregates",
+    "aws_glue_crawler.curated"
+  ],
+  "aws_mwaa_environment.orchestration": [
+    "aws_glue_job.clean_and_conform",
+    "aws_emrserverless_application.spark_aggregates"
+  ],
+  "aws_s3_bucket.raw_zone": [
+    "aws_glue_job.clean_and_conform"
+  ],
+  "aws_glue_job.clean_and_conform": [
+    "aws_s3_bucket.curated_zone"
+  ],
+  "aws_s3_bucket.curated_zone": [
+    "aws_emrserverless_application.spark_aggregates",
+    "aws_glue_crawler.curated",
+    "aws_athena_workgroup.ad_hoc",
+    "aws_redshiftserverless_workgroup.warehouse",
+    "aws_sagemaker_domain.data_science"
+  ],
+  "aws_emrserverless_application.spark_aggregates": [
+    "aws_redshiftserverless_workgroup.warehouse"
+  ],
+  "aws_glue_crawler.curated": [
+    "aws_glue_catalog_database.lake_catalog"
+  ],
+  "aws_group.consumption": [
+    "aws_athena_workgroup.ad_hoc",
+    "aws_redshiftserverless_workgroup.warehouse",
+    "aws_sagemaker_domain.data_science",
+    "aws_quicksight_data_source.dashboards"
+  ],
+  "aws_athena_workgroup.ad_hoc": [
+    "aws_quicksight_data_source.dashboards"
+  ],
+  "aws_redshiftserverless_workgroup.warehouse": [
+    "aws_quicksight_data_source.dashboards"
+  ],
+  "aws_group.shared_services": [
+    "aws_kms_key.lake",
+    "aws_cloudwatch_log_group.pipelines",
+    "aws_secretsmanager_secret.source_credentials"
+  ]
+}

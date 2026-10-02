@@ -1,0 +1,22 @@
+{
+  "tv_aws_users.customers": ["aws_apigatewayv2_api.orders_api"],
+  "aws_apigatewayv2_api.orders_api": ["aws_cognito_user_pool.customers", "aws_lambda_function.create_order"],
+  "aws_lambda_function.create_order": ["aws_dynamodb_table.orders", "aws_cloudwatch_event_bus.orders"],
+  "aws_scheduler_schedule.nightly": ["aws_lambda_function.reconcile_orders"],
+  "aws_lambda_function.reconcile_orders": ["aws_dynamodb_table.orders", "aws_cloudwatch_event_bus.orders"],
+  "aws_cloudwatch_event_bus.orders": ["aws_sfn_state_machine.fulfilment", "aws_sqs_queue.notifications", "aws_lambda_function.loyalty_points", "aws_kinesis_firehose_delivery_stream.order_events"],
+  "aws_group.fulfilment_workflow": ["aws_sfn_state_machine.fulfilment", "aws_lambda_function.reserve_stock", "aws_lambda_function.take_payment", "aws_lambda_function.book_courier", "aws_dynamodb_table.inventory"],
+  "aws_sfn_state_machine.fulfilment": ["aws_lambda_function.reserve_stock", "aws_lambda_function.take_payment", "aws_lambda_function.book_courier"],
+  "aws_lambda_function.reserve_stock": ["aws_dynamodb_table.inventory"],
+  "aws_lambda_function.take_payment": ["tv_aws_internet.payment_provider"],
+  "aws_group.notifications": ["aws_sqs_queue.notifications", "aws_lambda_function.send_notification", "aws_sqs_queue.notifications_dlq", "aws_sesv2_email_identity.email", "aws_sns_topic.sms"],
+  "aws_sqs_queue.notifications": ["aws_lambda_function.send_notification", "aws_sqs_queue.notifications_dlq"],
+  "aws_lambda_function.send_notification": ["aws_sesv2_email_identity.email", "aws_sns_topic.sms"],
+  "aws_group.loyalty": ["aws_lambda_function.loyalty_points", "aws_dynamodb_table.loyalty"],
+  "aws_lambda_function.loyalty_points": ["aws_dynamodb_table.loyalty"],
+  "aws_group.analytics": ["aws_kinesis_firehose_delivery_stream.order_events", "aws_s3_bucket.event_lake", "aws_glue_crawler.events", "aws_athena_workgroup.analytics"],
+  "aws_kinesis_firehose_delivery_stream.order_events": ["aws_s3_bucket.event_lake"],
+  "aws_glue_crawler.events": ["aws_s3_bucket.event_lake"],
+  "aws_athena_workgroup.analytics": ["aws_s3_bucket.event_lake"],
+  "aws_group.shared_services": ["aws_cloudwatch_log_group.functions", "aws_kms_key.data", "aws_secretsmanager_secret.payment_api_key", "aws_xray_group.tracing"]
+}

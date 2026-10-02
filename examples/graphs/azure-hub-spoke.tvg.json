@@ -1,0 +1,41 @@
+{
+  "tv_azurerm_users.office_users": ["azurerm_local_network_gateway.head_office"],
+  "azurerm_local_network_gateway.head_office": ["azurerm_virtual_network_gateway.vpn"],
+  "tv_azurerm_users.customers": ["azurerm_public_ip.web_ingress"],
+  "azurerm_public_ip.web_ingress": ["azurerm_application_gateway.web"],
+
+  "azurerm_resource_group.connectivity_hub": ["azurerm_virtual_network.hub", "azurerm_public_ip.firewall_egress", "azurerm_firewall_policy.central"],
+  "azurerm_virtual_network.hub": ["azurerm_subnet.gateway", "azurerm_subnet.firewall", "azurerm_subnet.bastion", "azurerm_subnet.dns_resolver", "azurerm_virtual_network_peering.hub_to_web", "azurerm_virtual_network_peering.hub_to_internal"],
+  "azurerm_subnet.gateway": ["azurerm_virtual_network_gateway.vpn"],
+  "azurerm_subnet.firewall": ["azurerm_firewall.hub"],
+  "azurerm_subnet.bastion": ["azurerm_bastion_host.admin"],
+  "azurerm_subnet.dns_resolver": ["azurerm_private_dns_resolver.hub"],
+  "azurerm_virtual_network_gateway.vpn": ["azurerm_firewall.hub"],
+  "azurerm_firewall_policy.central": ["azurerm_firewall.hub"],
+  "azurerm_firewall.hub": ["azurerm_public_ip.firewall_egress"],
+  "azurerm_public_ip.firewall_egress": ["tv_azurerm_internet.internet"],
+  "azurerm_virtual_network_peering.hub_to_web": ["azurerm_virtual_network.spoke_web"],
+  "azurerm_virtual_network_peering.hub_to_internal": ["azurerm_virtual_network.spoke_internal"],
+
+  "azurerm_resource_group.web_workload": ["azurerm_virtual_network.spoke_web", "azurerm_public_ip.web_ingress", "azurerm_mssql_database.orders", "azurerm_storage_account.media"],
+  "azurerm_virtual_network.spoke_web": ["azurerm_subnet.app_gateway", "azurerm_subnet.web_app", "azurerm_subnet.web_endpoints"],
+  "azurerm_subnet.app_gateway": ["azurerm_application_gateway.web"],
+  "azurerm_subnet.web_app": ["tv_azurerm_zone.zone_1", "tv_azurerm_zone.zone_2"],
+  "tv_azurerm_zone.zone_1": ["azurerm_linux_virtual_machine_scale_set.web~1"],
+  "tv_azurerm_zone.zone_2": ["azurerm_linux_virtual_machine_scale_set.web~2"],
+  "azurerm_subnet.web_endpoints": ["azurerm_private_endpoint.orders_sql"],
+  "azurerm_application_gateway.web": ["azurerm_linux_virtual_machine_scale_set.web~1", "azurerm_linux_virtual_machine_scale_set.web~2"],
+  "azurerm_linux_virtual_machine_scale_set.web~1": ["azurerm_private_endpoint.orders_sql"],
+  "azurerm_linux_virtual_machine_scale_set.web~2": ["azurerm_private_endpoint.orders_sql"],
+  "azurerm_private_endpoint.orders_sql": ["azurerm_mssql_database.orders"],
+
+  "azurerm_resource_group.internal_apps": ["azurerm_virtual_network.spoke_internal", "azurerm_postgresql_flexible_server.hr"],
+  "azurerm_virtual_network.spoke_internal": ["azurerm_subnet.internal_vms", "azurerm_subnet.internal_endpoints"],
+  "azurerm_subnet.internal_vms": ["azurerm_windows_virtual_machine.hr_app"],
+  "azurerm_subnet.internal_endpoints": ["azurerm_private_endpoint.hr_postgres"],
+  "azurerm_windows_virtual_machine.hr_app": ["azurerm_private_endpoint.hr_postgres"],
+  "azurerm_private_endpoint.hr_postgres": ["azurerm_postgresql_flexible_server.hr"],
+  "azurerm_bastion_host.admin": ["azurerm_windows_virtual_machine.hr_app"],
+
+  "azurerm_group.shared_services": ["azurerm_log_analytics_workspace.platform", "azurerm_key_vault.platform", "azurerm_monitor.platform"]
+}

@@ -23,10 +23,13 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 ## Gallery
 
 [![AWS three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/three-tier-web.png){ width="32%" .no-lightbox }](gallery.md#aws-three-tier-web-application-architecture-diagram)
+[![Amazon EKS with Karpenter architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/aws-eks-karpenter.png){ width="32%" .no-lightbox }](gallery.md#amazon-eks-karpenter-architecture-diagram)
+[![AWS serverless event-driven architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/aws-serverless-event-driven.png){ width="32%" .no-lightbox }](gallery.md#aws-serverless-event-driven-architecture-diagram)
 [![Azure three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-three-tier.png){ width="32%" .no-lightbox }](gallery.md#azure-three-tier-web-application-architecture-diagram)
+[![Azure hub-and-spoke network architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-hub-spoke.png){ width="32%" .no-lightbox }](gallery.md#azure-hub-and-spoke-architecture-diagram)
 [![Google Cloud three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/gcp-three-tier.png){ width="32%" .no-lightbox }](gallery.md#google-cloud-three-tier-web-application-architecture-diagram)
 
-Real output for AWS, Azure and Google Cloud, each with its prompt and source file: **[see the full gallery](gallery.md)**.
+Real output for AWS, Azure and Google Cloud, each with its prompt and source file: **[see all 12 in the gallery](gallery.md)**.
 
 ---
 

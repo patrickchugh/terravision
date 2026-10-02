@@ -1,0 +1,78 @@
+{
+  "tv_gcp_users_icon.customers": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.shop",
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.shop"
+  ],
+  "google_compute_url_map.shop": [
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_security_policy.cloud_armor": [
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_backend_service.storefront": [
+    "google_compute_instance.gke_node~1",
+    "google_compute_instance.gke_node~2",
+    "google_compute_instance.gke_node~3"
+  ],
+  "google_compute_network.shop": [
+    "tv_gcp_region.europe_west2",
+    "google_sql_database_instance.orders"
+  ],
+  "tv_gcp_region.europe_west2": [
+    "google_compute_subnetwork.gke_nodes",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.gke_nodes": [
+    "google_container_cluster.shop"
+  ],
+  "google_container_cluster.shop": [
+    "google_container_node_pool.apps"
+  ],
+  "google_container_node_pool.apps": [
+    "tv_gcp_zone.europe_west2_a",
+    "tv_gcp_zone.europe_west2_b",
+    "tv_gcp_zone.europe_west2_c"
+  ],
+  "google_pubsub_topic.order_placed": [
+    "google_cloud_run_v2_service.fulfilment",
+    "google_bigquery_dataset.sales"
+  ],
+  "google_cloud_run_v2_service.fulfilment": [
+    "google_firestore_database.shipments"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_artifact_registry_repository.images": [],
+  "google_secret_manager_secret.db_password": [],
+  "google_logging_project_sink.cluster_logs": [],
+  "tv_gcp_zone.europe_west2_a": [
+    "google_compute_instance.gke_node~1"
+  ],
+  "google_compute_instance.gke_node~1": [
+    "google_sql_database_instance.orders",
+    "google_pubsub_topic.order_placed"
+  ],
+  "tv_gcp_zone.europe_west2_b": [
+    "google_compute_instance.gke_node~2"
+  ],
+  "google_compute_instance.gke_node~2": [
+    "google_sql_database_instance.orders",
+    "google_pubsub_topic.order_placed"
+  ],
+  "tv_gcp_zone.europe_west2_c": [
+    "google_compute_instance.gke_node~3"
+  ],
+  "google_compute_instance.gke_node~3": [
+    "google_sql_database_instance.orders",
+    "google_pubsub_topic.order_placed"
+  ]
+}

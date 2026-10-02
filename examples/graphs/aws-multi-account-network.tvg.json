@@ -1,0 +1,100 @@
+{
+  "aws_customer_gateway.datacentre_router": [
+    "aws_vpn_connection.ipsec_vpn"
+  ],
+  "aws_vpn_connection.ipsec_vpn": [
+    "aws_ec2_transit_gateway.hub"
+  ],
+  "aws_ec2_transit_gateway.hub": [
+    "aws_networkfirewall_firewall.inspection~1",
+    "aws_networkfirewall_firewall.inspection~2"
+  ],
+  "aws_vpc.network_account_inspection": [
+    "aws_subnet.firewall~1",
+    "aws_subnet.firewall~2"
+  ],
+  "aws_subnet.firewall~1": [
+    "aws_networkfirewall_firewall.inspection~1"
+  ],
+  "aws_subnet.firewall~2": [
+    "aws_networkfirewall_firewall.inspection~2"
+  ],
+  "aws_networkfirewall_firewall.inspection~1": [
+    "aws_nat_gateway.egress~1",
+    "aws_ec2_transit_gateway_vpc_attachment.production",
+    "aws_ec2_transit_gateway_vpc_attachment.development",
+    "aws_ec2_transit_gateway_vpc_attachment.shared_services"
+  ],
+  "aws_networkfirewall_firewall.inspection~2": [
+    "aws_nat_gateway.egress~2"
+  ],
+  "aws_vpc.network_account_egress": [
+    "aws_subnet.egress_public~1",
+    "aws_subnet.egress_public~2",
+    "aws_internet_gateway.egress"
+  ],
+  "aws_subnet.egress_public~1": [
+    "aws_nat_gateway.egress~1"
+  ],
+  "aws_subnet.egress_public~2": [
+    "aws_nat_gateway.egress~2"
+  ],
+  "aws_nat_gateway.egress~1": [
+    "aws_internet_gateway.egress"
+  ],
+  "aws_nat_gateway.egress~2": [
+    "aws_internet_gateway.egress"
+  ],
+  "aws_internet_gateway.egress": [
+    "tv_aws_internet.internet"
+  ],
+  "aws_vpc.production_account": [
+    "aws_subnet.production_tgw",
+    "aws_subnet.production_app"
+  ],
+  "aws_subnet.production_tgw": [
+    "aws_ec2_transit_gateway_vpc_attachment.production"
+  ],
+  "aws_subnet.production_app": [
+    "aws_ecs_fargate.orders",
+    "aws_rds_postgres.orders"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.production": [
+    "aws_ecs_fargate.orders"
+  ],
+  "aws_ecs_fargate.orders": [
+    "aws_rds_postgres.orders"
+  ],
+  "aws_vpc.development_account": [
+    "aws_subnet.development_tgw",
+    "aws_subnet.development_app"
+  ],
+  "aws_subnet.development_tgw": [
+    "aws_ec2_transit_gateway_vpc_attachment.development"
+  ],
+  "aws_subnet.development_app": [
+    "aws_instance.dev_workloads"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.development": [
+    "aws_instance.dev_workloads"
+  ],
+  "aws_vpc.shared_services_account": [
+    "aws_subnet.shared_tgw",
+    "aws_subnet.shared_endpoints"
+  ],
+  "aws_subnet.shared_tgw": [
+    "aws_ec2_transit_gateway_vpc_attachment.shared_services"
+  ],
+  "aws_subnet.shared_endpoints": [
+    "aws_vpc_endpoint.interface_endpoints",
+    "aws_directory_service_directory.corporate_ad"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.shared_services": [
+    "aws_vpc_endpoint.interface_endpoints",
+    "aws_directory_service_directory.corporate_ad"
+  ],
+  "aws_group.shared_services": [
+    "aws_cloudwatch_log_group.flow_logs",
+    "aws_kms_key.network"
+  ]
+}

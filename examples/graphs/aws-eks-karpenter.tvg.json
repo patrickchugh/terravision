@@ -1,0 +1,147 @@
+{
+  "tv_aws_users.users": [
+    "aws_route53_zone.dns"
+  ],
+  "aws_route53_zone.dns": [
+    "aws_alb.ingress~1",
+    "aws_alb.ingress~2",
+    "aws_alb.ingress~3"
+  ],
+  "aws_account.eks_control_plane": [
+    "aws_eks_service.cluster"
+  ],
+  "aws_eks_service.cluster": [
+    "tv_karpenter.karpenter~1",
+    "tv_karpenter.karpenter~2",
+    "tv_karpenter.karpenter~3"
+  ],
+  "aws_vpc.main": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b",
+    "tv_aws_az.us_east_1c",
+    "aws_internet_gateway.igw"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.public~1",
+    "aws_subnet.private~1",
+    "aws_subnet.data~1"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.public~2",
+    "aws_subnet.private~2",
+    "aws_subnet.data~2"
+  ],
+  "tv_aws_az.us_east_1c": [
+    "aws_subnet.public~3",
+    "aws_subnet.private~3",
+    "aws_subnet.data~3"
+  ],
+  "aws_subnet.public~1": [
+    "aws_alb.ingress~1",
+    "aws_nat_gateway.nat~1"
+  ],
+  "aws_subnet.public~2": [
+    "aws_alb.ingress~2",
+    "aws_nat_gateway.nat~2"
+  ],
+  "aws_subnet.public~3": [
+    "aws_alb.ingress~3",
+    "aws_nat_gateway.nat~3"
+  ],
+  "aws_subnet.private~1": [
+    "tv_karpenter.karpenter~1",
+    "aws_group.karpenter_nodepool~1"
+  ],
+  "aws_subnet.private~2": [
+    "tv_karpenter.karpenter~2",
+    "aws_group.karpenter_nodepool~2"
+  ],
+  "aws_subnet.private~3": [
+    "tv_karpenter.karpenter~3",
+    "aws_group.karpenter_nodepool~3"
+  ],
+  "aws_subnet.data~1": [
+    "aws_rds_aurora_postgres.orders~1"
+  ],
+  "aws_subnet.data~2": [
+    "aws_rds_aurora_postgres.orders~2"
+  ],
+  "aws_subnet.data~3": [
+    "aws_rds_aurora_postgres.orders~3"
+  ],
+  "aws_alb.ingress~1": [
+    "aws_instance.on_demand_node~1",
+    "aws_spot_instance_request.spot_node~1"
+  ],
+  "aws_alb.ingress~2": [
+    "aws_instance.on_demand_node~2",
+    "aws_spot_instance_request.spot_node~2"
+  ],
+  "aws_alb.ingress~3": [
+    "aws_instance.on_demand_node~3",
+    "aws_spot_instance_request.spot_node~3"
+  ],
+  "aws_rds_aurora_postgres.orders~1": [],
+  "aws_cloudwatch_event_rule.spot_interruption": [
+    "aws_sqs_queue.karpenter_interruption"
+  ],
+  "aws_sqs_queue.karpenter_interruption": [
+    "tv_karpenter.karpenter~1",
+    "tv_karpenter.karpenter~2",
+    "tv_karpenter.karpenter~3"
+  ],
+  "aws_nat_gateway.nat~1": [
+    "aws_internet_gateway.igw"
+  ],
+  "aws_nat_gateway.nat~2": [
+    "aws_internet_gateway.igw"
+  ],
+  "aws_nat_gateway.nat~3": [
+    "aws_internet_gateway.igw"
+  ],
+  "aws_internet_gateway.igw": [
+    "tv_aws_internet.internet"
+  ],
+  "aws_group.shared_services": [
+    "aws_ecr_repository.images",
+    "aws_cloudwatch_log_group.cluster_logs",
+    "aws_kms_key.secrets",
+    "aws_iam_role.karpenter_controller"
+  ],
+  "aws_group.karpenter_nodepool~1": [
+    "aws_instance.on_demand_node~1",
+    "aws_spot_instance_request.spot_node~1"
+  ],
+  "aws_instance.on_demand_node~1": [
+    "aws_rds_aurora_postgres.orders~1"
+  ],
+  "aws_spot_instance_request.spot_node~1": [],
+  "aws_group.karpenter_nodepool~2": [
+    "aws_instance.on_demand_node~2",
+    "aws_spot_instance_request.spot_node~2"
+  ],
+  "aws_instance.on_demand_node~2": [
+    "aws_rds_aurora_postgres.orders~2"
+  ],
+  "aws_spot_instance_request.spot_node~2": [],
+  "aws_group.karpenter_nodepool~3": [
+    "aws_instance.on_demand_node~3",
+    "aws_spot_instance_request.spot_node~3"
+  ],
+  "aws_instance.on_demand_node~3": [
+    "aws_rds_aurora_postgres.orders~3"
+  ],
+  "aws_spot_instance_request.spot_node~3": [],
+  "tv_karpenter.karpenter~1": [
+    "aws_instance.on_demand_node~1",
+    "aws_spot_instance_request.spot_node~1"
+  ],
+  "tv_karpenter.karpenter~2": [
+    "aws_instance.on_demand_node~2",
+    "aws_spot_instance_request.spot_node~2"
+  ],
+  "tv_karpenter.karpenter~3": [
+    "aws_instance.on_demand_node~3",
+    "aws_spot_instance_request.spot_node~3"
+  ]
+}

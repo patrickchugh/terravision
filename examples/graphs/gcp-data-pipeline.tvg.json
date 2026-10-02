@@ -1,0 +1,22 @@
+{
+  "tv_gcp_users_icon.mobile_and_web_apps": ["google_pubsub_topic.clickstream"],
+  "tv_gcp_users_icon.partners": ["google_storage_bucket.partner_landing"],
+  "tv_gcp_logical_group.ingestion": ["google_pubsub_topic.clickstream", "google_datastream_stream.orders_cdc", "google_storage_bucket.partner_landing"],
+  "google_sql_database_instance.orders": ["google_datastream_stream.orders_cdc"],
+  "google_pubsub_topic.clickstream": ["google_dataflow_job.streaming_enrichment"],
+  "google_storage_bucket.partner_landing": ["google_dataflow_job.batch_load"],
+  "google_datastream_stream.orders_cdc": ["google_bigquery_dataset.raw"],
+  "tv_gcp_logical_group.processing": ["google_dataflow_job.streaming_enrichment", "google_dataflow_job.batch_load", "google_dataproc_batch.spark_transform", "google_composer_environment.orchestration"],
+  "google_composer_environment.orchestration": ["google_dataflow_job.batch_load", "google_dataproc_batch.spark_transform"],
+  "google_dataflow_job.streaming_enrichment": ["google_bigquery_dataset.raw", "google_bigtable_instance.realtime_features"],
+  "google_dataflow_job.batch_load": ["google_bigquery_dataset.raw"],
+  "google_bigquery_dataset.raw": ["google_dataproc_batch.spark_transform"],
+  "google_dataproc_batch.spark_transform": ["google_bigquery_dataset.curated"],
+  "tv_gcp_logical_group.storage_and_governance": ["google_bigquery_dataset.raw", "google_bigquery_dataset.curated", "google_bigtable_instance.realtime_features", "google_dataplex_lake.governance"],
+  "tv_gcp_logical_group.serving": ["google_looker_instance.dashboards", "google_vertex_ai_endpoint.churn_model", "google_cloud_run_v2_service.recommendations_api"],
+  "google_bigquery_dataset.curated": ["google_looker_instance.dashboards", "google_vertex_ai_endpoint.churn_model"],
+  "google_bigtable_instance.realtime_features": ["google_cloud_run_v2_service.recommendations_api"],
+  "google_kms_key_ring.data": [],
+  "google_logging_project_sink.pipeline_logs": [],
+  "google_secret_manager_secret.source_credentials": []
+}

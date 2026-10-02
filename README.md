@@ -28,17 +28,22 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ## Gallery
 
-Real output, one per cloud. Each example comes with the prompt and the source file: **[see the full gallery →](https://patrickchugh.github.io/terravision/gallery/)**
+Real output across all three clouds. Each example comes with the prompt and the source file: **[see the full gallery of 12 →](https://patrickchugh.github.io/terravision/gallery/)**
 
 <table>
 <tr>
 <td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#aws-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/three-tier-web.png" alt="AWS three-tier web application architecture diagram"></a><br><b>AWS</b> three-tier web app</td>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#amazon-eks-karpenter-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/aws-eks-karpenter.png" alt="Amazon EKS with Karpenter architecture diagram"></a><br><b>AWS</b> EKS with Karpenter</td>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#aws-serverless-event-driven-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/aws-serverless-event-driven.png" alt="AWS serverless event-driven architecture diagram"></a><br><b>AWS</b> serverless event-driven</td>
+</tr>
+<tr>
 <td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#azure-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-three-tier.png" alt="Azure three-tier web application architecture diagram"></a><br><b>Azure</b> three-tier web app</td>
+<td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#azure-hub-and-spoke-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-hub-spoke.png" alt="Azure hub-and-spoke network architecture diagram"></a><br><b>Azure</b> hub-and-spoke landing zone</td>
 <td width="33%" align="center"><a href="https://patrickchugh.github.io/terravision/gallery/#google-cloud-three-tier-web-application-architecture-diagram"><img src="https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/gcp-three-tier.png" alt="Google Cloud three-tier web application architecture diagram"></a><br><b>Google Cloud</b> three-tier web app</td>
 </tr>
 </table>
 
-More: [AWS event-driven serverless](https://patrickchugh.github.io/terravision/gallery/#aws-event-driven-serverless-architecture-diagram) · [Azure App Service web app](https://patrickchugh.github.io/terravision/gallery/#azure-app-service-web-app-architecture-diagram) · [Google Cloud serverless API](https://patrickchugh.github.io/terravision/gallery/#google-cloud-serverless-api-architecture-diagram)
+More in the gallery: [AWS data lake](https://patrickchugh.github.io/terravision/gallery/#aws-data-lake-architecture-diagram) · [AWS multi-region failover](https://patrickchugh.github.io/terravision/gallery/#aws-multi-region-failover-architecture-diagram) · [AWS multi-account network](https://patrickchugh.github.io/terravision/gallery/#aws-multi-account-network-architecture-diagram) · [Azure AKS](https://patrickchugh.github.io/terravision/gallery/#azure-aks-architecture-diagram) · [Google Cloud GKE](https://patrickchugh.github.io/terravision/gallery/#google-cloud-gke-architecture-diagram) · [Google Cloud data pipeline](https://patrickchugh.github.io/terravision/gallery/#google-cloud-data-pipeline-architecture-diagram)
 
 ---
 

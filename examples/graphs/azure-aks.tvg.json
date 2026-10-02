@@ -1,0 +1,97 @@
+{
+  "tv_azurerm_users.customers": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_public_ip.ingress"
+  ],
+  "azurerm_public_ip.ingress": [
+    "azurerm_application_gateway.ingress"
+  ],
+  "azurerm_resource_group.shop": [
+    "azurerm_virtual_network.aks",
+    "azurerm_public_ip.ingress",
+    "azurerm_public_ip.egress",
+    "azurerm_cosmosdb_account.catalogue",
+    "azurerm_servicebus_namespace.orders",
+    "azurerm_redis_cache.sessions"
+  ],
+  "azurerm_virtual_network.aks": [
+    "azurerm_subnet.app_gateway",
+    "azurerm_subnet.aks_nodes",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.app_gateway": [
+    "azurerm_application_gateway.ingress"
+  ],
+  "azurerm_subnet.aks_nodes": [
+    "azurerm_kubernetes_cluster.shop",
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2",
+    "tv_azurerm_zone.zone_3",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.redis"
+  ],
+  "azurerm_kubernetes_cluster.shop": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1",
+    "azurerm_kubernetes_cluster_node_pool.apps~2",
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.internet"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.catalogue"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_namespace.orders"
+  ],
+  "azurerm_private_endpoint.redis": [
+    "azurerm_redis_cache.sessions"
+  ],
+  "azurerm_application_gateway.ingress": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1",
+    "azurerm_kubernetes_cluster_node_pool.apps~2",
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.images",
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.cluster",
+    "azurerm_monitor.prometheus"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~1": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.redis"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_kubernetes_cluster_node_pool.apps~2"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~2": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.redis"
+  ],
+  "tv_azurerm_zone.zone_3": [
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~3": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.redis"
+  ]
+}

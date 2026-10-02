@@ -1,0 +1,117 @@
+{
+  "tv_aws_users.users": [
+    "aws_route53_zone.failover"
+  ],
+  "aws_route53_zone.failover": [
+    "aws_alb.primary_web~1",
+    "aws_alb.primary_web~2",
+    "aws_alb.standby_web~1",
+    "aws_alb.standby_web~2"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.primary_public~1",
+    "aws_subnet.primary_app~1",
+    "aws_subnet.primary_data~1"
+  ],
+  "aws_subnet.primary_public~1": [
+    "aws_alb.primary_web~1"
+  ],
+  "aws_subnet.primary_app~1": [
+    "aws_ecs_fargate.primary_api~1"
+  ],
+  "aws_subnet.primary_data~1": [
+    "aws_rds_aurora_postgres.primary_db~1"
+  ],
+  "aws_alb.primary_web~1": [
+    "aws_ecs_fargate.primary_api~1"
+  ],
+  "aws_ecs_fargate.primary_api~1": [
+    "aws_rds_aurora_postgres.primary_db~1",
+    "aws_dynamodb_global_table.sessions_primary"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.primary_public~2",
+    "aws_subnet.primary_app~2",
+    "aws_subnet.primary_data~2"
+  ],
+  "aws_subnet.primary_public~2": [
+    "aws_alb.primary_web~2"
+  ],
+  "aws_subnet.primary_app~2": [
+    "aws_ecs_fargate.primary_api~2"
+  ],
+  "aws_subnet.primary_data~2": [
+    "aws_rds_aurora_postgres.primary_db~2"
+  ],
+  "aws_alb.primary_web~2": [
+    "aws_ecs_fargate.primary_api~2"
+  ],
+  "aws_ecs_fargate.primary_api~2": [
+    "aws_rds_aurora_postgres.primary_db~2",
+    "aws_dynamodb_global_table.sessions_primary"
+  ],
+  "tv_aws_az.eu_west_1a": [
+    "aws_subnet.standby_public~1",
+    "aws_subnet.standby_app~1",
+    "aws_subnet.standby_data~1"
+  ],
+  "aws_subnet.standby_public~1": [
+    "aws_alb.standby_web~1"
+  ],
+  "aws_subnet.standby_app~1": [
+    "aws_ecs_fargate.standby_api~1"
+  ],
+  "aws_subnet.standby_data~1": [
+    "aws_rds_aurora_postgres.standby_db~1"
+  ],
+  "aws_alb.standby_web~1": [
+    "aws_ecs_fargate.standby_api~1"
+  ],
+  "aws_ecs_fargate.standby_api~1": [
+    "aws_rds_aurora_postgres.standby_db~1",
+    "aws_dynamodb_global_table.sessions_standby"
+  ],
+  "tv_aws_az.eu_west_1b": [
+    "aws_subnet.standby_public~2",
+    "aws_subnet.standby_app~2",
+    "aws_subnet.standby_data~2"
+  ],
+  "aws_subnet.standby_public~2": [
+    "aws_alb.standby_web~2"
+  ],
+  "aws_subnet.standby_app~2": [
+    "aws_ecs_fargate.standby_api~2"
+  ],
+  "aws_subnet.standby_data~2": [
+    "aws_rds_aurora_postgres.standby_db~2"
+  ],
+  "aws_alb.standby_web~2": [
+    "aws_ecs_fargate.standby_api~2"
+  ],
+  "aws_ecs_fargate.standby_api~2": [
+    "aws_rds_aurora_postgres.standby_db~2",
+    "aws_dynamodb_global_table.sessions_standby"
+  ],
+  "aws_rds_aurora_postgres.primary_db~1": [
+    "aws_rds_aurora_postgres.standby_db~1"
+  ],
+  "aws_dynamodb_global_table.sessions_primary": [
+    "aws_dynamodb_global_table.sessions_standby"
+  ],
+  "aws_s3_bucket.assets_primary": [
+    "aws_s3_bucket.assets_standby"
+  ],
+  "aws_group.shared_services": [
+    "aws_ecr_repository.api_images",
+    "aws_kms_key.multi_region",
+    "aws_cloudwatch_log_group.api"
+  ],
+  "aws_vpc.primary_us_east_1": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b"
+  ],
+  "aws_vpc.standby_eu_west_1": [
+    "tv_aws_az.eu_west_1a",
+    "tv_aws_az.eu_west_1b"
+  ]
+}
