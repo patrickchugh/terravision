@@ -1,0 +1,6 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source gcp-gke.tvg.json --annotate gcp-gke.annotations.yml
+format: '0.3'
+update:
+  google_compute_subnetwork.gke_nodes:
+    ip_cidr_range: 10.90.0.0/20

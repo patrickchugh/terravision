@@ -1,0 +1,24 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source aws-eks-karpenter.tvg.json --annotate aws-eks-karpenter.annotations.yml
+format: '0.3'
+update:
+  aws_vpc.main:
+    cidr_block: 10.10.0.0/16
+  aws_subnet.public~1:
+    cidr_block: 10.10.0.0/24
+  aws_subnet.public~2:
+    cidr_block: 10.10.1.0/24
+  aws_subnet.public~3:
+    cidr_block: 10.10.2.0/24
+  aws_subnet.private~1:
+    cidr_block: 10.10.32.0/19
+  aws_subnet.private~2:
+    cidr_block: 10.10.64.0/19
+  aws_subnet.private~3:
+    cidr_block: 10.10.96.0/19
+  aws_subnet.data~1:
+    cidr_block: 10.10.200.0/24
+  aws_subnet.data~2:
+    cidr_block: 10.10.201.0/24
+  aws_subnet.data~3:
+    cidr_block: 10.10.202.0/24

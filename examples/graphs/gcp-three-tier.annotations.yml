@@ -1,0 +1,6 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source gcp-three-tier.tvg.json --annotate gcp-three-tier.annotations.yml
+format: '0.3'
+update:
+  google_compute_subnetwork.app:
+    ip_cidr_range: 10.80.0.0/20

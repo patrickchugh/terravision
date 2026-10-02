@@ -1,0 +1,40 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source azure-hub-spoke.tvg.json --annotate azure-hub-spoke.annotations.yml
+format: '0.3'
+update:
+  azurerm_virtual_network.hub:
+    address_space:
+    - 10.60.0.0/22
+  azurerm_virtual_network.spoke_web:
+    address_space:
+    - 10.61.0.0/16
+  azurerm_virtual_network.spoke_internal:
+    address_space:
+    - 10.62.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.60.0.0/27
+  azurerm_subnet.firewall:
+    address_prefixes:
+    - 10.60.0.64/26
+  azurerm_subnet.bastion:
+    address_prefixes:
+    - 10.60.1.0/26
+  azurerm_subnet.dns_resolver:
+    address_prefixes:
+    - 10.60.1.64/28
+  azurerm_subnet.app_gateway:
+    address_prefixes:
+    - 10.61.0.0/24
+  azurerm_subnet.web_app:
+    address_prefixes:
+    - 10.61.1.0/24
+  azurerm_subnet.web_endpoints:
+    address_prefixes:
+    - 10.61.2.0/24
+  azurerm_subnet.internal_vms:
+    address_prefixes:
+    - 10.62.1.0/24
+  azurerm_subnet.internal_endpoints:
+    address_prefixes:
+    - 10.62.2.0/24

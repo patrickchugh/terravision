@@ -1,0 +1,16 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source azure-aks.tvg.json --annotate azure-aks.annotations.yml
+format: '0.3'
+update:
+  azurerm_virtual_network.aks:
+    address_space:
+    - 10.70.0.0/16
+  azurerm_subnet.app_gateway:
+    address_prefixes:
+    - 10.70.0.0/24
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.70.2.0/24
+  azurerm_subnet.aks_nodes:
+    address_prefixes:
+    - 10.70.16.0/20

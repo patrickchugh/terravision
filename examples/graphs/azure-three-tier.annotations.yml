@@ -1,0 +1,16 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source azure-three-tier.tvg.json --annotate azure-three-tier.annotations.yml
+format: '0.3'
+update:
+  azurerm_virtual_network.main:
+    address_space:
+    - 10.50.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.50.0.0/24
+  azurerm_subnet.app:
+    address_prefixes:
+    - 10.50.2.0/23
+  azurerm_subnet.data:
+    address_prefixes:
+    - 10.50.10.0/24

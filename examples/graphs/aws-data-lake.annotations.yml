@@ -1,0 +1,18 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source aws-data-lake.tvg.json --annotate aws-data-lake.annotations.yml
+format: '0.3'
+update:
+  aws_vpc.analytics:
+    cidr_block: 10.30.0.0/16
+  aws_subnet.processing~1:
+    cidr_block: 10.30.16.0/20
+  aws_subnet.processing~2:
+    cidr_block: 10.30.32.0/20
+  aws_subnet.data~1:
+    cidr_block: 10.30.100.0/24
+  aws_subnet.data~2:
+    cidr_block: 10.30.101.0/24
+  aws_subnet.endpoints~1:
+    cidr_block: 10.30.240.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.30.241.0/24

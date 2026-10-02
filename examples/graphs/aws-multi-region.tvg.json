@@ -121,5 +121,15 @@
   ],
   "aws_vpc_endpoint.standby_dynamodb_gateway": [
     "aws_dynamodb_global_table.sessions_standby"
+  ],
+  "tv_aws_region.us_east_1": [
+    "aws_vpc.primary_us_east_1",
+    "aws_dynamodb_global_table.sessions_primary",
+    "aws_s3_bucket.assets_primary"
+  ],
+  "tv_aws_region.eu_west_1": [
+    "aws_vpc.standby_eu_west_1",
+    "aws_dynamodb_global_table.sessions_standby",
+    "aws_s3_bucket.assets_standby"
   ]
 }

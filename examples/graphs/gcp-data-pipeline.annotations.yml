@@ -1,0 +1,8 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source gcp-data-pipeline.tvg.json --annotate gcp-data-pipeline.annotations.yml
+format: '0.3'
+update:
+  google_compute_subnetwork.processing:
+    ip_cidr_range: 10.95.0.0/20
+  google_compute_subnetwork.orchestration:
+    ip_cidr_range: 10.95.16.0/24

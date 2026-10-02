@@ -96,5 +96,19 @@
   "aws_group.shared_services": [
     "aws_cloudwatch_log_group.flow_logs",
     "aws_kms_key.network"
+  ],
+  "aws_account.network": [
+    "aws_ec2_transit_gateway.hub",
+    "aws_vpc.network_account_inspection",
+    "aws_vpc.network_account_egress"
+  ],
+  "aws_account.production": [
+    "aws_vpc.production_account"
+  ],
+  "aws_account.development": [
+    "aws_vpc.development_account"
+  ],
+  "aws_account.shared_services": [
+    "aws_vpc.shared_services_account"
   ]
 }

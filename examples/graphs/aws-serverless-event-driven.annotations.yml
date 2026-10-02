@@ -1,0 +1,18 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source aws-serverless-event-driven.tvg.json --annotate aws-serverless-event-driven.annotations.yml
+format: '0.3'
+update:
+  aws_vpc.orders:
+    cidr_block: 10.20.0.0/16
+  aws_subnet.public~1:
+    cidr_block: 10.20.0.0/24
+  aws_subnet.public~2:
+    cidr_block: 10.20.1.0/24
+  aws_subnet.functions~1:
+    cidr_block: 10.20.16.0/20
+  aws_subnet.functions~2:
+    cidr_block: 10.20.32.0/20
+  aws_subnet.endpoints~1:
+    cidr_block: 10.20.240.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.20.241.0/24

@@ -1,0 +1,32 @@
+# CIDR ranges for the gallery diagram. Use with:
+#   terravision draw --source aws-multi-region.tvg.json --annotate aws-multi-region.annotations.yml
+format: '0.3'
+update:
+  aws_vpc.primary_us_east_1:
+    cidr_block: 10.40.0.0/16
+  aws_vpc.standby_eu_west_1:
+    cidr_block: 10.41.0.0/16
+  aws_subnet.primary_public~1:
+    cidr_block: 10.40.1.0/24
+  aws_subnet.primary_public~2:
+    cidr_block: 10.40.2.0/24
+  aws_subnet.primary_app~1:
+    cidr_block: 10.40.11.0/24
+  aws_subnet.primary_app~2:
+    cidr_block: 10.40.12.0/24
+  aws_subnet.primary_data~1:
+    cidr_block: 10.40.21.0/24
+  aws_subnet.primary_data~2:
+    cidr_block: 10.40.22.0/24
+  aws_subnet.standby_public~1:
+    cidr_block: 10.41.1.0/24
+  aws_subnet.standby_public~2:
+    cidr_block: 10.41.2.0/24
+  aws_subnet.standby_app~1:
+    cidr_block: 10.41.11.0/24
+  aws_subnet.standby_app~2:
+    cidr_block: 10.41.12.0/24
+  aws_subnet.standby_data~1:
+    cidr_block: 10.41.21.0/24
+  aws_subnet.standby_data~2:
+    cidr_block: 10.41.22.0/24

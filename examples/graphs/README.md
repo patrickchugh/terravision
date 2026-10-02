@@ -20,4 +20,6 @@ Each `.tvg.json` file is a [TerraVision Graph Format](../../docs/graph-format.md
 | `gcp-gke.tvg.json` | GCP | HTTPS load balancer with Cloud Armor, regional GKE node pool across three zones, Private Service Connect endpoints for Cloud SQL and Google APIs, Pub/Sub to Cloud Run and Firestore, BigQuery, Cloud NAT |
 | `gcp-data-pipeline.tvg.json` | GCP | Dataflow, Dataproc and Composer in VPC subnets with a Private Service Connect endpoint for Google APIs, Cloud SQL on a private IP with Datastream; Pub/Sub and Cloud Storage ingestion; BigQuery, Bigtable, Dataplex; Looker, Vertex AI and Cloud Run serving |
 
+Each gallery graph has a `<name>.annotations.yml` beside it that sets the CIDR ranges of its networks and subnets; render with `terravision draw --source <name>.tvg.json --annotate <name>.annotations.yml`.
+
 Check a file before rendering with `python skills/terravision-cloud-diagrams/scripts/validate_graph.py <file>`.
