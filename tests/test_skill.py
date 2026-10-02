@@ -33,6 +33,49 @@ def _minimal_example():
     )
 
 
+DOCS = SKILL.parents[1] / "docs"
+_EXAMPLE_LINK = re.compile(r"\]\((?:[^)\s]*/)?([\w.-]+\.tvg\.json)\)")
+
+
+def _graph_format(text: str) -> str:
+    """A graph-format copy with its example links reduced to the file name.
+
+    The docs site links examples on GitHub and the skill links its own
+    examples folder; that is the only difference the copies may have.
+    """
+    return _EXAMPLE_LINK.sub(r"](\1)", text).strip()
+
+
+def _llms_full_graph_format() -> str:
+    """The Graph Format section of docs/llms-full.txt, up to its separator."""
+    text = (DOCS / "llms-full.txt").read_text()
+    start = text.index("# TerraVision Graph Format (TVG)")
+    end = text.index("\n---\n", start)
+    return text[start:end]
+
+
+def test_graph_format_copies_match():
+    """AI-005: the docs page, the skill's reference and llms-full.txt carry
+    the same Graph Format, so an assistant reads the same rules everywhere."""
+    docs = _graph_format((DOCS / "graph-format.md").read_text())
+    skill = _graph_format((SKILL / "references" / "graph-format.md").read_text())
+    llms = _graph_format(_llms_full_graph_format())
+    assert skill == docs, "skill references/graph-format.md differs from docs"
+    assert llms == docs, "docs/llms-full.txt Graph Format differs from docs"
+
+
+def test_graph_format_example_links_point_at_real_files():
+    """Normalising the links must not hide a link to a missing example."""
+    for page, folder in (
+        (DOCS / "graph-format.md", SKILL.parents[1] / "examples" / "graphs"),
+        (SKILL / "references" / "graph-format.md", SKILL / "examples"),
+    ):
+        names = _EXAMPLE_LINK.findall(page.read_text())
+        assert names, page
+        for name in names:
+            assert (folder / name).is_file(), f"{page.name} links missing {name}"
+
+
 def test_frontmatter_is_valid_yaml():
     """A strict YAML parser must accept it; an unquoted ': ' in the
     description once made the whole skill unloadable for strict agents."""
