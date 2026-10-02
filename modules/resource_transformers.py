@@ -386,6 +386,24 @@ def redirect_to_security_group(
     return tfdata
 
 
+def _in_other_groups_of_type(tfdata: Dict[str, Any], group_name: str) -> set:
+    """Resources inside groups of the same type as group_name, but not in it.
+
+    group_name's type (``aws_group``, ``azurerm_group``) is the generic box
+    users declare logical groups with. When an automatic grouping runs, any
+    other group of that type already in the graph came from an annotation,
+    so its members are the user's choice and must not be regrouped.
+    """
+    group_type = helpers.get_no_module_name(group_name).split(".")[0]
+    members = set()
+    for node, children in tfdata["graphdict"].items():
+        if node == group_name:
+            continue
+        if helpers.get_no_module_name(node).split(".")[0] == group_type:
+            members.update(children)
+    return members
+
+
 def group_shared_services(
     tfdata: Dict[str, Any],
     service_patterns: List[str],
@@ -405,10 +423,13 @@ def group_shared_services(
     Returns:
         Updated tfdata with shared services grouped
     """
+    # A resource the user already put in a group of this kind (a logical
+    # group from terravision.yml) stays there: user groups take precedence
+    grouped = _in_other_groups_of_type(tfdata, group_name)
     matches = [
         node
         for node in sorted(tfdata["graphdict"].keys())
-        if any(pattern in node for pattern in service_patterns)
+        if any(pattern in node for pattern in service_patterns) and node not in grouped
     ]
     # An empty box is worse than no box, and creating one unconditionally puts
     # a stray node in every diagram whether or not it has shared services
@@ -465,15 +486,19 @@ def auto_group_by_type(
         resources = helpers.list_of_dictkeys_containing(
             tfdata["graphdict"], resource_type
         )
+        group_name = f"aws_group.{resource_type}"
+        # Resources already in a group of this kind (a logical group from
+        # terravision.yml) stay there and do not count towards the threshold
+        grouped = _in_other_groups_of_type(tfdata, group_name)
         resources = [
             r
             for r in resources
             if helpers.get_no_module_name(r).split(".")[0] == resource_type
+            and r not in grouped
         ]
         if len(resources) < threshold:
             continue
 
-        group_name = f"aws_group.{resource_type}"
         tfdata = create_group_node(tfdata, group_name, resources)
         tfdata.setdefault("auto_grouped_resources", set()).update(resources)
 

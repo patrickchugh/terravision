@@ -914,8 +914,14 @@ def _resolve_resource_label(
     return left_raw, instance_raw
 
 
-def _title_case_dedup(text: str, acronyms_list: list) -> str:
-    """Title-case *text* while preserving acronyms and removing duplicate words."""
+def _title_case_dedup(text: str, acronyms_list: list, dedup: bool = True) -> str:
+    """Title-case *text* while preserving acronyms.
+
+    With dedup, a word already seen is dropped. That suits the type half of a
+    label, whose type suffix often repeats its service name
+    (aws_directory_service_directory), but not the name the author chose,
+    where a repeat is deliberate ("site to site").
+    """
     acronyms = {a.lower(): a for a in acronyms_list if a}
     processed_words = []
     seen: set = set()
@@ -924,10 +930,44 @@ def _title_case_dedup(text: str, acronyms_list: list) -> str:
         if not key:
             continue
         out = acronyms[key].upper() if key in acronyms else w.title()
-        if out.lower() not in seen:
+        if not dedup or out.lower() not in seen:
             seen.add(out.lower())
             processed_words.append(out)
     return " ".join(processed_words).strip()
+
+
+def _join_type_and_instance(type_label: str, instance_label: str) -> str:
+    """The type label, followed by the instance name when it adds anything.
+
+    Words of the instance name that only echo the type are left out
+    (aws_iam_role.lambda_role is "Role Lambda", aws_nat_gateway.nat_gw is
+    "NAT Gateway Gw", aws_s3_bucket.bucket is "S3 Bucket"). Two kinds of
+    repeat are the author's meaning, not an echo, and are kept:
+
+    - a word repeated within the name itself: aws_vpn_connection.site_to_site
+      lost its second "Site" and read "VPN Connection Site To";
+    - the type's first word, its service name, when it ends the name and so
+      completes a phrase: aws_directory_service_directory.active_directory
+      read "Directory Service Active", aws_lambda_event_source_mapping
+      .sqs_to_lambda "Lambda Event Source Mapping SQS To". The type's last
+      word, its head noun, is still dropped there (lambda_role under "Role").
+    """
+    type_words = type_label.split()
+    instance_words = instance_label.split()
+    if not type_words:
+        return instance_label
+    lowered_type = [w.lower() for w in type_words]
+    if not instance_words or {w.lower() for w in instance_words} <= set(lowered_type):
+        return type_label
+    service, head = lowered_type[0], lowered_type[-1]
+    last = len(instance_words) - 1
+    kept = [
+        w
+        for i, w in enumerate(instance_words)
+        if w.lower() not in lowered_type
+        or (w.lower() == service and w.lower() != head and i == last)
+    ]
+    return " ".join(type_words + kept)
 
 
 def _service_type_label(name: str, is_group: bool = False) -> str:
@@ -1138,13 +1178,11 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
     if foreach_key:
         right_part = foreach_key
 
-    if show_title and right_part:
-        combined = f"{left_part} - {right_part}"
-    else:
-        combined = left_part
-    combined = re.sub(r"\s+", " ", combined).strip()
-
-    final = _title_case_dedup(combined, acronyms_list)
+    type_label = _title_case_dedup(left_part, acronyms_list)
+    instance_label = (
+        _title_case_dedup(right_part, acronyms_list, dedup=False) if show_title else ""
+    )
+    final = _join_type_and_instance(type_label, instance_label)
     if is_group and final.lower().startswith("group "):
         final = final[6:].strip() + " Group"
     if is_group:

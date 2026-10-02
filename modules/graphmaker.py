@@ -318,9 +318,15 @@ def reverse_relations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     FORCED_DEST = constants["FORCED_DEST"]
     FORCED_ORIGIN = constants["FORCED_ORIGIN"]
     AUTO_ANNOTATIONS = constants["AUTO_ANNOTATIONS"]
+    GROUP_NODES = constants.get("GROUP_NODES", [])
 
     for n, connections in dict(tfdata["graphdict"]).items():
         node = helpers.get_no_module_name(n)
+        # A container's list holds what is drawn inside it, not arrows, so
+        # there is no direction to correct. Reversing it would pull a forced
+        # origin (a state machine, say) out of a group the user put it in.
+        if node.split(".")[0] in GROUP_NODES:
+            continue
         reverse_dest = len([s for s in FORCED_DEST if node.startswith(s)]) > 0
 
         for c in list(connections):
@@ -1925,6 +1931,127 @@ def handle_special_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     )
                     tfdata = handler_func(tfdata)
 
+    return tfdata
+
+
+def _annotation_groups(tfdata: Dict[str, Any], logical_types: Set[str]) -> List[str]:
+    """Logical groups declared in the annotations that are in the graph."""
+    annotations = tfdata.get("annotations") or {}
+    groups: List[str] = []
+    for section in ("add", "connect"):
+        entries = annotations.get(section) or {}
+        if not isinstance(entries, (dict, list)):
+            continue
+        for name in entries:
+            if (
+                isinstance(name, str)
+                and "*" not in name
+                and helpers.get_no_module_name(name).split(".")[0] in logical_types
+                and name in tfdata["graphdict"]
+                and name not in groups
+            ):
+                groups.append(name)
+    return groups
+
+
+def place_annotation_groups(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Make logical groups declared in terravision.yml hold their members.
+
+    A logical group (``aws_group``, ``azurerm_group``, ``tv_gcp_logical_group``,
+    listed per provider in LOGICAL_GROUP_NODES) is declared with ``add`` and
+    given members with ``connect``. A node is drawn in one box only, so:
+
+    - a member leaves any automatic group of the same kind (shared services,
+      a group of same-type resources): user groups take precedence, and an
+      automatic group left empty is removed;
+    - a group the annotations did not place is put inside the innermost
+      container that holds all its members (an Azure resource group, a VPC),
+      and its members leave the containers around it, which still hold them
+      through the group;
+    - a member that also sits in a container outside the group (a subnet,
+      when the group is at resource group level) stays there and leaves the
+      group, with a warning, since it cannot be drawn in both.
+
+    Runs after every other enrichment step, so it sees final containment.
+    """
+    constants = _load_config_constants(tfdata)
+    logical_types = set(constants.get("LOGICAL_GROUP_NODES", []))
+    groups = _annotation_groups(tfdata, logical_types)
+    if not groups:
+        return tfdata
+    group_types = set(constants.get("GROUP_NODES", []))
+    graph = tfdata["graphdict"]
+
+    def node_type(node: str) -> str:
+        return helpers.get_no_module_name(node).split(".")[0]
+
+    def containers(node: str, group: str) -> List[str]:
+        return sorted(
+            parent
+            for parent, children in graph.items()
+            if node in children and parent != group and node_type(parent) in group_types
+        )
+
+    def ancestors(container: str, group: str) -> Set[str]:
+        found: Set[str] = set()
+        pending = [container]
+        while pending:
+            for parent in containers(pending.pop(), group):
+                if parent not in found:
+                    found.add(parent)
+                    pending.append(parent)
+        return found
+
+    emptied: Set[str] = set()
+    for group in groups:
+        members = list(graph.get(group, []))
+        if not members:
+            continue
+        direct = {m: containers(m, group) for m in members}
+
+        # Automatic groups of the same kind give their members up
+        for member in members:
+            for container in list(direct[member]):
+                if node_type(container) in logical_types and container not in groups:
+                    helpers.safe_remove_connection(tfdata, container, member)
+                    direct[member].remove(container)
+                    emptied.add(container)
+
+        # Nest the group in the innermost container common to all members
+        if not containers(group, group):
+            common: Optional[Set[str]] = None
+            for member in members:
+                reach = set(direct[member])
+                for container in direct[member]:
+                    reach |= ancestors(container, group)
+                common = reach if common is None else common & reach
+            if common:
+                inner = max(sorted(common), key=lambda c: len(ancestors(c, group)))
+                graph[inner].append(group)
+
+        enclosing: Set[str] = set()
+        for container in containers(group, group):
+            enclosing |= {container} | ancestors(container, group)
+        for member in members:
+            outside = [c for c in direct[member] if c not in enclosing]
+            if outside:
+                helpers.safe_remove_connection(tfdata, group, member)
+                click.echo(
+                    click.style(
+                        f"  WARNING: {member} is not drawn in {group}: it sits in "
+                        f"{outside[0]}, which {group} is not inside. Put only "
+                        f"resources that share a container in one group.",
+                        fg="yellow",
+                    )
+                )
+                continue
+            for container in direct[member]:
+                helpers.safe_remove_connection(tfdata, container, member)
+
+    # An automatic group with nothing left in it is not drawn
+    for container in sorted(emptied):
+        if container in graph and not graph[container]:
+            helpers.delete_node(tfdata, container)
     return tfdata
 
 

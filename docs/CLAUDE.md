@@ -152,10 +152,11 @@ Phase 3: Graph Enrichment (_enrich_graph_data)
 17. reverse_relations() → Fix arrow directions
 18. find_bidirectional_links() → Detect two-way connections
 19. match_resources() → Match resources across providers/sources
+20. place_annotation_groups() → Fill logical groups declared in terravision.yml (user groups beat automatic ones)
 
 Phase 4: Output (draw command only)
-20. (Optional) generate_ai_annotations() → Write terravision.ai.yml with AI-suggested labels, titles, flows (--ai-annotate flag)
-21. render_diagram()  → Generate Graphviz output
+21. (Optional) generate_ai_annotations() → Write terravision.ai.yml with AI-suggested labels, titles, flows (--ai-annotate flag)
+22. render_diagram()  → Generate Graphviz output
 ```
 
 ### Key Modules
@@ -498,6 +499,7 @@ GitHub Actions workflow (`.github/workflows/lint-and-test.yml`) runs on push/PR 
 - `ICON_LIBRARY`: Path to icon directory
 - `EDGE_NODES`: Resources at diagram boundaries (API Gateway, CloudFront, etc.)
 - `GROUP_NODES`: Resources that create subgraphs (VPCs, resource groups)
+- `LOGICAL_GROUP_NODES`: The generic box an annotation declares a logical group with (`aws_group`, `azurerm_group`, `tv_gcp_logical_group`)
 - `NODE_VARIANTS`: Resources with variants (Lambda runtime, EC2 type)
 - `IMPLIED_CONNECTIONS`: Keywords that imply connections
 - `REVERSE_ARROW_LIST`: Resources requiring reversed arrow direction

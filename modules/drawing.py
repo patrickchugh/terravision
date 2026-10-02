@@ -1447,6 +1447,57 @@ MAX_NODES_PER_ROW = 3
 MAX_GROUPS_PER_ROW = 2
 
 
+def _is_drawable_group(resource: str, tfdata: Dict[str, Any]) -> bool:
+    """True when handle_group() would draw resource as a box."""
+    resource_type = helpers.get_no_module_name(resource).split(".")[0]
+    return (
+        resource_type in GROUP_NODES
+        and resource_type in avl_classes
+        and resource_type not in tfdata.get("hidden", [])
+        and bool(tfdata["graphdict"].get(resource))
+    )
+
+
+def _group_descendants(resource: str, tfdata: Dict[str, Any]) -> Set[str]:
+    """Every group nested anywhere below resource, following containment."""
+    found: Set[str] = set()
+    pending = [resource]
+    while pending:
+        for member in tfdata["graphdict"].get(pending.pop(), []):
+            if member not in found and _is_drawable_group(member, tfdata):
+                found.add(member)
+                pending.append(member)
+    return found
+
+
+def _waits_for_parent_group(
+    resource: str, tfdata: Dict[str, Any], drawn_resources: List[str]
+) -> bool:
+    """True when another, still undrawn, group will draw resource inside it.
+
+    draw_objects() walks the provider's group types in a fixed order and puts
+    each group it meets straight into the cloud box. A group whose parent type
+    comes later in that order (a VPC inside a region or account, listed first
+    in AWS_GROUP_NODES) was therefore drawn at the top level, and its parent
+    found it already drawn and left it out. Deferring it lets the parent draw
+    it through handle_group()'s recursion, so nesting follows the graph rather
+    than the order of the type list. A parent that the group itself contains
+    (a containment cycle) is ignored, so a cycle still draws.
+    """
+    parents = [
+        parent
+        for parent, children in tfdata["graphdict"].items()
+        if parent != resource
+        and resource in children
+        and parent not in drawn_resources
+        and _is_drawable_group(parent, tfdata)
+    ]
+    if not parents:
+        return False
+    descendants = _group_descendants(resource, tfdata)
+    return any(parent not in descendants for parent in parents)
+
+
 def draw_objects(
     node_type_list: List[Any],
     all_drawn_resources_list: List[str],
@@ -1492,6 +1543,9 @@ def draw_objects(
                     resource_type.startswith(node_check)
                     and is_group_type
                     and resource not in all_drawn_resources_list
+                    and not _waits_for_parent_group(
+                        resource, tfdata, all_drawn_resources_list
+                    )
                 ):
                     node_groups, all_drawn_resources_list = handle_group(
                         targetGroup,
