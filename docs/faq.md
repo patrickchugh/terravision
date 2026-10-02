@@ -14,6 +14,10 @@ TerraVision is a free, open-source cloud architecture diagram tool for AWS, Azur
 
 Yes. TerraVision is open source — see [LICENSE on GitHub](https://github.com/patrickchugh/terravision/blob/main/LICENSE).
 
+### Can I use the diagrams in client documents and presentations?
+
+Yes. TerraVision's AGPL-3.0 licence covers the software, not the diagrams you make with it, so you can use them in proposals, client documents, slides and books, commercially or not. The cloud icons belong to AWS, Microsoft and Google, which allow their use in architecture diagrams; follow their guidelines, such as not distorting or recolouring the icons.
+
 ---
 
 ## Security and Privacy

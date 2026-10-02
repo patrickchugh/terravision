@@ -270,6 +270,10 @@ Yes. Groups such as "Fulfilment workflow" or "Ingestion" are part of the graph. 
 
 Yes. Ask your assistant to change the design in plain words, or render the source file with `--format drawio` and open it in draw.io or Lucidchart to move, restyle or annotate anything by hand. SVG output opens in any vector editor.
 
+## Can I use these diagrams in client documents and presentations?
+
+Yes. TerraVision's AGPL-3.0 licence covers the software, not the diagrams you make with it, so you can use them in proposals, client documents, slides and books, commercially or not. The cloud icons belong to AWS, Microsoft and Google, which allow their use in architecture diagrams; follow their guidelines, such as not distorting or recolouring the icons.
+
 ## Can I get the Terraform for one of these architectures?
 
 Yes. After drawing a design with your AI assistant, ask it to write the Terraform. See [diagram to Terraform](diagram-to-terraform.md).
