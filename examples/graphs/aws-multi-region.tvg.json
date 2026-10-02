@@ -27,7 +27,7 @@
   ],
   "aws_ecs_fargate.primary_api~1": [
     "aws_rds_aurora_postgres.primary_db~1",
-    "aws_dynamodb_global_table.sessions_primary"
+    "aws_vpc_endpoint.primary_dynamodb_gateway"
   ],
   "tv_aws_az.us_east_1b": [
     "aws_subnet.primary_public~2",
@@ -48,7 +48,7 @@
   ],
   "aws_ecs_fargate.primary_api~2": [
     "aws_rds_aurora_postgres.primary_db~2",
-    "aws_dynamodb_global_table.sessions_primary"
+    "aws_vpc_endpoint.primary_dynamodb_gateway"
   ],
   "tv_aws_az.eu_west_1a": [
     "aws_subnet.standby_public~1",
@@ -69,7 +69,7 @@
   ],
   "aws_ecs_fargate.standby_api~1": [
     "aws_rds_aurora_postgres.standby_db~1",
-    "aws_dynamodb_global_table.sessions_standby"
+    "aws_vpc_endpoint.standby_dynamodb_gateway"
   ],
   "tv_aws_az.eu_west_1b": [
     "aws_subnet.standby_public~2",
@@ -90,7 +90,7 @@
   ],
   "aws_ecs_fargate.standby_api~2": [
     "aws_rds_aurora_postgres.standby_db~2",
-    "aws_dynamodb_global_table.sessions_standby"
+    "aws_vpc_endpoint.standby_dynamodb_gateway"
   ],
   "aws_rds_aurora_postgres.primary_db~1": [
     "aws_rds_aurora_postgres.standby_db~1"
@@ -108,10 +108,18 @@
   ],
   "aws_vpc.primary_us_east_1": [
     "tv_aws_az.us_east_1a",
-    "tv_aws_az.us_east_1b"
+    "tv_aws_az.us_east_1b",
+    "aws_vpc_endpoint.primary_dynamodb_gateway"
   ],
   "aws_vpc.standby_eu_west_1": [
     "tv_aws_az.eu_west_1a",
-    "tv_aws_az.eu_west_1b"
+    "tv_aws_az.eu_west_1b",
+    "aws_vpc_endpoint.standby_dynamodb_gateway"
+  ],
+  "aws_vpc_endpoint.primary_dynamodb_gateway": [
+    "aws_dynamodb_global_table.sessions_primary"
+  ],
+  "aws_vpc_endpoint.standby_dynamodb_gateway": [
+    "aws_dynamodb_global_table.sessions_standby"
   ]
 }

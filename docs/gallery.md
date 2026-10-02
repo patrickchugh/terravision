@@ -9,6 +9,8 @@ hide:
 
 Example architecture diagrams for AWS, Azure and Google Cloud, drawn by TerraVision with each provider's official icons. Every example comes with a prompt you can give to Claude or ChatGPT to draw something similar, and the source file that reproduces it exactly. Use them as starting points: ask your assistant to change one, or download it and edit it in draw.io.
 
+They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and availability zones, and reach managed services through private endpoints (VPC endpoints, Azure private endpoints, Private Service Connect) rather than the internet. Each provider's official grouping conventions are built in, not generic boxes.
+
 !!! note "Your results will vary"
     A diagram drawn from a prompt depends on the AI model behind your assistant. Larger, more capable models follow the prompt more closely and add more of the detail shown here; smaller models may leave services out or group them differently. Ask for what is missing in a follow-up message, or use the source file under each example to reproduce it exactly.
 
@@ -32,13 +34,13 @@ Example architecture diagrams for AWS, Azure and Google Cloud, drawn by TerraVis
 
 ## AWS three-tier web application architecture diagram { #aws-three-tier-web-application-architecture-diagram }
 
-A classic three-tier web application on AWS. CloudFront serves a static site from S3 and routes requests to Application Load Balancers in two availability zones. Each zone has a public subnet (load balancer and NAT gateway), a private subnet (EC2 application servers) and a data subnet (RDS primary and standby), with ElastiCache for sessions and an internet gateway.
+A classic three-tier web application on AWS. CloudFront serves a static site from S3 and routes requests to Application Load Balancers in two availability zones. Each zone has a public subnet (load balancer and NAT gateway), a private subnet (EC2 application servers) and a data subnet (Aurora PostgreSQL and ElastiCache). The app servers reach S3 through a gateway VPC endpoint and Secrets Manager through an interface endpoint in each private subnet, so that traffic never crosses the internet.
 
 ![AWS three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw an AWS three-tier web app: CloudFront in front of an S3 static site and an Application Load Balancer, EC2 app servers in private subnets across two availability zones, RDS with a standby in data subnets, ElastiCache, and NAT gateways in the public subnets.
+> Draw an AWS three-tier web app: CloudFront in front of an S3 static site and an Application Load Balancer, EC2 app servers in private subnets across two availability zones, Aurora PostgreSQL and ElastiCache in data subnets, NAT gateways in the public subnets, an S3 gateway endpoint for an uploads bucket and a Secrets Manager interface endpoint in each private subnet.
 
 **Or reproduce it exactly** from the source file [three-tier-web.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/three-tier-web.tvg.json):
 
@@ -51,13 +53,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## Amazon EKS with Karpenter architecture diagram { #amazon-eks-karpenter-architecture-diagram }
 
-A Kubernetes platform on Amazon EKS that scales its nodes with Karpenter. The VPC spans three availability zones. In each zone, a public subnet holds an Application Load Balancer and a NAT gateway, and a private subnet holds the Karpenter controller and a Karpenter NodePool of On-Demand and Spot nodes. A data subnet holds an Aurora PostgreSQL instance. The EKS control plane sits in its own AWS-managed account. An EventBridge rule sends Spot interruption warnings to an SQS queue that Karpenter reads, so it can replace nodes before they are reclaimed. Route 53 sits in front, with ECR, logs, KMS and the Karpenter IAM role as shared services.
+A Kubernetes platform on Amazon EKS that scales its nodes with Karpenter. The VPC spans three availability zones. In each zone, a public subnet holds an Application Load Balancer and a NAT gateway, and a private subnet holds the Karpenter controller, a Karpenter NodePool of On-Demand and Spot nodes, and interface VPC endpoints for ECR, EC2 and SQS. A data subnet holds an Aurora PostgreSQL instance. Nodes pull image layers through an S3 gateway endpoint. The EKS control plane sits in its own AWS-managed account, and an EventBridge rule sends Spot interruption warnings to the SQS queue Karpenter reads.
 
 ![Amazon EKS with Karpenter architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw an EKS cluster that uses Karpenter for node autoscaling, across three availability zones: an ALB and NAT gateway in each public subnet, the Karpenter controller and a NodePool of On-Demand and Spot nodes in each private subnet, Aurora PostgreSQL in data subnets, Route 53 in front, and the EventBridge rule and SQS queue Karpenter uses for Spot interruptions.
+> Draw an EKS cluster that uses Karpenter for node autoscaling, across three availability zones: an ALB and NAT gateway in each public subnet; the Karpenter controller, a NodePool of On-Demand and Spot nodes and interface VPC endpoints for ECR, EC2 and SQS in each private subnet; Aurora PostgreSQL in data subnets; an S3 gateway endpoint; Route 53 in front; and the EventBridge rule and SQS queue Karpenter uses for Spot interruptions.
 
 **Or reproduce it exactly** from the source file [aws-eks-karpenter.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-eks-karpenter.tvg.json):
 
@@ -70,13 +72,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## AWS serverless event-driven architecture diagram { #aws-serverless-event-driven-architecture-diagram }
 
-A serverless order platform built around an Amazon EventBridge event bus. Customers call an HTTP API on API Gateway, authenticated with Cognito. The order Lambda writes to DynamoDB and publishes an event, and a nightly EventBridge Scheduler job reconciles orders the same way. The bus fans out to four independent consumers. A Step Functions workflow reserves stock, takes payment through an external provider and books a courier. An SQS queue with a dead-letter queue drives email and SMS notifications through SES and SNS. A Lambda function updates loyalty points. Firehose streams every event to an S3 data lake, catalogued by Glue and queried with Athena.
+A serverless order platform whose Lambda functions run inside a VPC, as most enterprises require. Customers call an HTTP API on API Gateway, authenticated with Cognito, which invokes order Lambdas in private subnets across two availability zones. The functions reach DynamoDB through a gateway VPC endpoint, and EventBridge, SNS and Secrets Manager through interface endpoints in a dedicated endpoints subnet in each zone. Only the payment step leaves the VPC, through NAT gateways, to reach an external payment provider. The EventBridge bus fans out to a Step Functions fulfilment workflow, an SQS notifications queue with a dead-letter queue, and Firehose to an S3 event lake catalogued by Glue and queried with Athena.
 
 ![AWS serverless event-driven architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw an AWS serverless event-driven order system: API Gateway with Cognito invoking an order Lambda that writes to DynamoDB and publishes to an EventBridge bus. The bus fans out to a Step Functions fulfilment workflow (stock, payment, courier Lambdas), an SQS notifications queue with a DLQ feeding SES and SNS, a loyalty Lambda with its own table, and Firehose to an S3 data lake with Glue and Athena. Add a nightly EventBridge Scheduler reconciliation job.
+> Draw an AWS serverless event-driven order system with every Lambda in a VPC across two availability zones: API Gateway with Cognito invoking order Lambdas in private subnets, a DynamoDB gateway endpoint, interface endpoints for EventBridge, SNS and Secrets Manager in an endpoints subnet per zone, and NAT gateways only for the payment provider. The EventBridge bus fans out to a Step Functions fulfilment workflow, an SQS notifications queue with a DLQ, and Firehose to an S3 data lake with Glue and Athena.
 
 **Or reproduce it exactly** from the source file [aws-serverless-event-driven.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-serverless-event-driven.tvg.json):
 
@@ -89,13 +91,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## AWS data lake architecture diagram { #aws-data-lake-architecture-diagram }
 
-A data lake and analytics platform on AWS, drawn in layers. Ingestion brings in three kinds of data: database change data capture with DMS from Aurora MySQL, clickstream events through Kinesis Data Streams and Firehose, and partner files over SFTP with Transfer Family. The lake has raw and curated S3 zones, a Glue Data Catalog and Lake Formation permissions. Processing runs Glue and EMR Serverless Spark jobs orchestrated by Amazon MWAA (Airflow). Consumption is Athena for ad hoc queries, Redshift Serverless as the warehouse, SageMaker for data science and QuickSight for dashboards.
+A data lake and analytics platform on AWS whose processing runs inside a VPC. Across two availability zones, private subnets hold DMS replication from an Aurora MySQL source, Glue jobs, EMR Serverless Spark, Amazon MWAA (Airflow) orchestration and Redshift Serverless. All of them read and write S3 through a gateway VPC endpoint, and reach the Glue Data Catalog and Secrets Manager through interface endpoints in each zone. Outside the VPC, Kinesis, Firehose and Transfer Family ingest clickstream and partner files into the raw S3 zone, Lake Formation governs access, and analysts use QuickSight over Athena.
 
 ![AWS data lake architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw an AWS data lake: DMS change data capture from Aurora MySQL, Kinesis Data Streams and Firehose for clickstream, and Transfer Family SFTP for partner files, all landing in a raw S3 zone. Glue jobs write a curated zone, EMR Serverless builds aggregates, MWAA orchestrates them, a Glue crawler fills the catalogue and Lake Formation governs access. Athena, Redshift Serverless, SageMaker and QuickSight consume the curated data.
+> Draw an AWS data lake with processing in a VPC across two availability zones: DMS from Aurora MySQL, Glue jobs, EMR Serverless, MWAA and Redshift Serverless in private subnets, an S3 gateway endpoint, and Glue and Secrets Manager interface endpoints in each zone. Kinesis, Firehose and Transfer Family land data in a raw S3 zone, Glue writes a curated zone, Lake Formation governs it, and QuickSight and Athena serve analysts.
 
 **Or reproduce it exactly** from the source file [aws-data-lake.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-data-lake.tvg.json):
 
@@ -108,13 +110,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## AWS multi-region failover architecture diagram { #aws-multi-region-failover-architecture-diagram }
 
-An active-passive multi-region design on AWS. Route 53 failover routing sends users to the primary region (us-east-1) and switches to the standby region (eu-west-1) when health checks fail. Each region has a VPC across two availability zones, with Application Load Balancers in public subnets, ECS on Fargate services in application subnets and Aurora PostgreSQL in data subnets. Aurora Global Database replicates from the primary to the standby, DynamoDB global tables replicate session data, and S3 cross-region replication copies assets.
+An active-passive multi-region design on AWS. Route 53 failover routing sends users to the primary region (us-east-1) and switches to the standby region (eu-west-1) when health checks fail. Each region has a VPC across two availability zones, with Application Load Balancers in public subnets, ECS on Fargate services in application subnets and Aurora PostgreSQL in data subnets. The services reach DynamoDB through a gateway VPC endpoint in their own region. Aurora Global Database replicates from the primary to the standby, DynamoDB global tables replicate session data, and S3 cross-region replication copies assets.
 
 ![AWS multi-region failover architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw an AWS active-passive multi-region architecture: Route 53 failover between a primary region and a standby region, each with a VPC across two availability zones, ALBs in public subnets, ECS Fargate services in app subnets and Aurora PostgreSQL in data subnets. Show Aurora Global Database replication, DynamoDB global tables and S3 cross-region replication between the regions.
+> Draw an AWS active-passive multi-region architecture: Route 53 failover between a primary region and a standby region, each with a VPC across two availability zones, ALBs in public subnets, ECS Fargate services in app subnets, Aurora PostgreSQL in data subnets and a DynamoDB gateway endpoint. Show Aurora Global Database replication, DynamoDB global tables and S3 cross-region replication between the regions.
 
 **Or reproduce it exactly** from the source file [aws-multi-region.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-multi-region.tvg.json):
 
@@ -222,13 +224,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## Google Cloud GKE microservices architecture diagram { #google-cloud-gke-architecture-diagram }
 
-Microservices on Google Kubernetes Engine. A global HTTPS load balancer with Cloud Armor routes customers to a regional GKE cluster in europe-west2, whose application node pool spans three zones. The services use Cloud SQL for orders and publish order events to Pub/Sub, which triggers a Cloud Run fulfilment service backed by Firestore and streams to BigQuery. Cloud Router and Cloud NAT provide egress, alongside Artifact Registry, Secret Manager and logging.
+Microservices on Google Kubernetes Engine with private service access. A global HTTPS load balancer with Cloud Armor routes customers to a regional GKE cluster in europe-west2, whose application node pool spans three zones. The nodes reach Cloud SQL through a Private Service Connect endpoint in their subnet, and Pub/Sub through a Private Service Connect endpoint for Google APIs, so no service traffic crosses the internet. Order events trigger a Cloud Run fulfilment service backed by Firestore and stream to BigQuery. Cloud Router and Cloud NAT provide egress, alongside Artifact Registry, Secret Manager and logging.
 
 ![Google Cloud GKE microservices architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-gke.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw a GKE microservices platform on Google Cloud: a global HTTPS load balancer with Cloud Armor, a regional GKE cluster with a node pool across three zones, Cloud SQL, Pub/Sub triggering a Cloud Run service that writes to Firestore, a BigQuery dataset for sales events, Cloud NAT, Artifact Registry and Secret Manager.
+> Draw a GKE microservices platform on Google Cloud: a global HTTPS load balancer with Cloud Armor, a regional GKE cluster with a node pool across three zones, a Private Service Connect endpoint for Cloud SQL in the node subnet, a Private Service Connect endpoint for Google APIs used to reach Pub/Sub, Pub/Sub triggering a Cloud Run service that writes to Firestore, a BigQuery dataset, Cloud NAT, Artifact Registry and Secret Manager.
 
 **Or reproduce it exactly** from the source file [gcp-gke.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-gke.tvg.json):
 
@@ -241,13 +243,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## Google Cloud data pipeline architecture diagram { #google-cloud-data-pipeline-architecture-diagram }
 
-A streaming and batch data platform on Google Cloud, drawn in layers. Ingestion takes clickstream events through Pub/Sub, change data capture from Cloud SQL with Datastream, and partner files into a Cloud Storage landing bucket. Processing runs a streaming Dataflow job, a batch Dataflow load and a Dataproc Serverless Spark transform, orchestrated by Cloud Composer. BigQuery holds raw and curated datasets, Bigtable holds real-time features and Dataplex governs the lake. Serving is Looker dashboards, a Vertex AI model endpoint and a recommendations API on Cloud Run.
+A streaming and batch data platform on Google Cloud whose processing runs inside a VPC network. In europe-west2, a processing subnet holds a streaming Dataflow job, a batch Dataflow load and a Dataproc Serverless Spark transform, and an orchestration subnet holds Cloud Composer. The jobs reach Pub/Sub, Cloud Storage, BigQuery and Bigtable through a Private Service Connect endpoint for Google APIs, and Datastream captures changes from Cloud SQL on a private IP. BigQuery holds raw and curated datasets, Bigtable holds real-time features and Dataplex governs the lake. Looker, a Vertex AI endpoint and a Cloud Run recommendations API serve the results.
 
 ![Google Cloud data pipeline architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-data-pipeline.png){ loading=lazy }
 
 **Ask your AI assistant:**
 
-> Draw a Google Cloud data platform: Pub/Sub for clickstream, Datastream CDC from Cloud SQL and a Cloud Storage landing bucket for partner files; streaming and batch Dataflow jobs and a Dataproc Serverless Spark transform orchestrated by Cloud Composer; raw and curated BigQuery datasets, Bigtable for real-time features and Dataplex governance; Looker, a Vertex AI endpoint and a Cloud Run recommendations API serving the results.
+> Draw a Google Cloud data platform with processing in a VPC network: streaming and batch Dataflow jobs and a Dataproc Serverless transform in a processing subnet, Cloud Composer in an orchestration subnet, a Private Service Connect endpoint for Google APIs, and Cloud SQL on a private IP feeding Datastream. Pub/Sub and a Cloud Storage landing bucket for ingestion; raw and curated BigQuery datasets, Bigtable and Dataplex; Looker, Vertex AI and a Cloud Run API for serving.
 
 **Or reproduce it exactly** from the source file [gcp-data-pipeline.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-data-pipeline.tvg.json):
 

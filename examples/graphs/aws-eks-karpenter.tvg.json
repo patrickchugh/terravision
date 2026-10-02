@@ -19,7 +19,8 @@
     "tv_aws_az.us_east_1a",
     "tv_aws_az.us_east_1b",
     "tv_aws_az.us_east_1c",
-    "aws_internet_gateway.igw"
+    "aws_internet_gateway.igw",
+    "aws_vpc_endpoint.s3_gateway"
   ],
   "tv_aws_az.us_east_1a": [
     "aws_subnet.public~1",
@@ -50,15 +51,18 @@
   ],
   "aws_subnet.private~1": [
     "tv_karpenter.karpenter~1",
-    "aws_group.karpenter_nodepool~1"
+    "aws_group.karpenter_nodepool~1",
+    "aws_vpc_endpoint.ecr_ec2_sqs~1"
   ],
   "aws_subnet.private~2": [
     "tv_karpenter.karpenter~2",
-    "aws_group.karpenter_nodepool~2"
+    "aws_group.karpenter_nodepool~2",
+    "aws_vpc_endpoint.ecr_ec2_sqs~2"
   ],
   "aws_subnet.private~3": [
     "tv_karpenter.karpenter~3",
-    "aws_group.karpenter_nodepool~3"
+    "aws_group.karpenter_nodepool~3",
+    "aws_vpc_endpoint.ecr_ec2_sqs~3"
   ],
   "aws_subnet.data~1": [
     "aws_rds_aurora_postgres.orders~1"
@@ -113,7 +117,8 @@
     "aws_spot_instance_request.spot_node~1"
   ],
   "aws_instance.on_demand_node~1": [
-    "aws_rds_aurora_postgres.orders~1"
+    "aws_rds_aurora_postgres.orders~1",
+    "aws_vpc_endpoint.s3_gateway"
   ],
   "aws_spot_instance_request.spot_node~1": [],
   "aws_group.karpenter_nodepool~2": [
@@ -121,7 +126,8 @@
     "aws_spot_instance_request.spot_node~2"
   ],
   "aws_instance.on_demand_node~2": [
-    "aws_rds_aurora_postgres.orders~2"
+    "aws_rds_aurora_postgres.orders~2",
+    "aws_vpc_endpoint.s3_gateway"
   ],
   "aws_spot_instance_request.spot_node~2": [],
   "aws_group.karpenter_nodepool~3": [
@@ -129,19 +135,26 @@
     "aws_spot_instance_request.spot_node~3"
   ],
   "aws_instance.on_demand_node~3": [
-    "aws_rds_aurora_postgres.orders~3"
+    "aws_rds_aurora_postgres.orders~3",
+    "aws_vpc_endpoint.s3_gateway"
   ],
   "aws_spot_instance_request.spot_node~3": [],
   "tv_karpenter.karpenter~1": [
     "aws_instance.on_demand_node~1",
-    "aws_spot_instance_request.spot_node~1"
+    "aws_spot_instance_request.spot_node~1",
+    "aws_vpc_endpoint.ecr_ec2_sqs~1"
   ],
   "tv_karpenter.karpenter~2": [
     "aws_instance.on_demand_node~2",
-    "aws_spot_instance_request.spot_node~2"
+    "aws_spot_instance_request.spot_node~2",
+    "aws_vpc_endpoint.ecr_ec2_sqs~2"
   ],
   "tv_karpenter.karpenter~3": [
     "aws_instance.on_demand_node~3",
-    "aws_spot_instance_request.spot_node~3"
+    "aws_spot_instance_request.spot_node~3",
+    "aws_vpc_endpoint.ecr_ec2_sqs~3"
+  ],
+  "aws_vpc_endpoint.s3_gateway": [
+    "aws_s3_bucket.container_layers"
   ]
 }

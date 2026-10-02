@@ -23,7 +23,7 @@
   ],
   "google_compute_network.shop": [
     "tv_gcp_region.europe_west2",
-    "google_sql_database_instance.orders"
+    "google_compute_global_forwarding_rule.psc_google_apis"
   ],
   "tv_gcp_region.europe_west2": [
     "google_compute_subnetwork.gke_nodes",
@@ -31,7 +31,8 @@
     "google_compute_router_nat.egress"
   ],
   "google_compute_subnetwork.gke_nodes": [
-    "google_container_cluster.shop"
+    "google_container_cluster.shop",
+    "google_compute_forwarding_rule.psc_cloud_sql"
   ],
   "google_container_cluster.shop": [
     "google_container_node_pool.apps"
@@ -58,21 +59,27 @@
     "google_compute_instance.gke_node~1"
   ],
   "google_compute_instance.gke_node~1": [
-    "google_sql_database_instance.orders",
-    "google_pubsub_topic.order_placed"
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
   ],
   "tv_gcp_zone.europe_west2_b": [
     "google_compute_instance.gke_node~2"
   ],
   "google_compute_instance.gke_node~2": [
-    "google_sql_database_instance.orders",
-    "google_pubsub_topic.order_placed"
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
   ],
   "tv_gcp_zone.europe_west2_c": [
     "google_compute_instance.gke_node~3"
   ],
   "google_compute_instance.gke_node~3": [
-    "google_sql_database_instance.orders",
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_forwarding_rule.psc_cloud_sql": [
+    "google_sql_database_instance.orders"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
     "google_pubsub_topic.order_placed"
   ]
 }

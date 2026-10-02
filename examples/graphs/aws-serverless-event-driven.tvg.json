@@ -1,22 +1,145 @@
 {
-  "tv_aws_users.customers": ["aws_apigatewayv2_api.orders_api"],
-  "aws_apigatewayv2_api.orders_api": ["aws_cognito_user_pool.customers", "aws_lambda_function.create_order"],
-  "aws_lambda_function.create_order": ["aws_dynamodb_table.orders", "aws_cloudwatch_event_bus.orders"],
-  "aws_scheduler_schedule.nightly": ["aws_lambda_function.reconcile_orders"],
-  "aws_lambda_function.reconcile_orders": ["aws_dynamodb_table.orders", "aws_cloudwatch_event_bus.orders"],
-  "aws_cloudwatch_event_bus.orders": ["aws_sfn_state_machine.fulfilment", "aws_sqs_queue.notifications", "aws_lambda_function.loyalty_points", "aws_kinesis_firehose_delivery_stream.order_events"],
-  "aws_group.fulfilment_workflow": ["aws_sfn_state_machine.fulfilment", "aws_lambda_function.reserve_stock", "aws_lambda_function.take_payment", "aws_lambda_function.book_courier", "aws_dynamodb_table.inventory"],
-  "aws_sfn_state_machine.fulfilment": ["aws_lambda_function.reserve_stock", "aws_lambda_function.take_payment", "aws_lambda_function.book_courier"],
-  "aws_lambda_function.reserve_stock": ["aws_dynamodb_table.inventory"],
-  "aws_lambda_function.take_payment": ["tv_aws_internet.payment_provider"],
-  "aws_group.notifications": ["aws_sqs_queue.notifications", "aws_lambda_function.send_notification", "aws_sqs_queue.notifications_dlq", "aws_sesv2_email_identity.email", "aws_sns_topic.sms"],
-  "aws_sqs_queue.notifications": ["aws_lambda_function.send_notification", "aws_sqs_queue.notifications_dlq"],
-  "aws_lambda_function.send_notification": ["aws_sesv2_email_identity.email", "aws_sns_topic.sms"],
-  "aws_group.loyalty": ["aws_lambda_function.loyalty_points", "aws_dynamodb_table.loyalty"],
-  "aws_lambda_function.loyalty_points": ["aws_dynamodb_table.loyalty"],
-  "aws_group.analytics": ["aws_kinesis_firehose_delivery_stream.order_events", "aws_s3_bucket.event_lake", "aws_glue_crawler.events", "aws_athena_workgroup.analytics"],
-  "aws_kinesis_firehose_delivery_stream.order_events": ["aws_s3_bucket.event_lake"],
-  "aws_glue_crawler.events": ["aws_s3_bucket.event_lake"],
-  "aws_athena_workgroup.analytics": ["aws_s3_bucket.event_lake"],
-  "aws_group.shared_services": ["aws_cloudwatch_log_group.functions", "aws_kms_key.data", "aws_secretsmanager_secret.payment_api_key", "aws_xray_group.tracing"]
+  "tv_aws_users.customers": [
+    "aws_apigatewayv2_api.orders_api"
+  ],
+  "aws_apigatewayv2_api.orders_api": [
+    "aws_cognito_user_pool.customers",
+    "aws_lambda_function.orders_api~1",
+    "aws_lambda_function.orders_api~2"
+  ],
+  "aws_vpc.orders": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b",
+    "aws_vpc_endpoint.dynamodb_gateway",
+    "aws_internet_gateway.igw"
+  ],
+  "aws_vpc_endpoint.dynamodb_gateway": [
+    "aws_dynamodb_table.orders",
+    "aws_dynamodb_table.inventory"
+  ],
+  "aws_cloudwatch_event_bus.orders": [
+    "aws_sfn_state_machine.fulfilment",
+    "aws_sqs_queue.notifications",
+    "aws_kinesis_firehose_delivery_stream.order_events"
+  ],
+  "aws_sfn_state_machine.fulfilment": [
+    "aws_lambda_function.fulfilment~1",
+    "aws_lambda_function.fulfilment~2"
+  ],
+  "aws_sqs_queue.notifications": [
+    "aws_sqs_queue.notifications_dlq",
+    "aws_lambda_function.notifications~1",
+    "aws_lambda_function.notifications~2"
+  ],
+  "aws_group.analytics": [
+    "aws_kinesis_firehose_delivery_stream.order_events",
+    "aws_s3_bucket.event_lake",
+    "aws_glue_crawler.events",
+    "aws_athena_workgroup.analytics"
+  ],
+  "aws_kinesis_firehose_delivery_stream.order_events": [
+    "aws_s3_bucket.event_lake"
+  ],
+  "aws_glue_crawler.events": [
+    "aws_s3_bucket.event_lake"
+  ],
+  "aws_athena_workgroup.analytics": [
+    "aws_s3_bucket.event_lake"
+  ],
+  "aws_scheduler_schedule.nightly_reconcile": [
+    "aws_lambda_function.orders_api~1",
+    "aws_lambda_function.orders_api~2"
+  ],
+  "aws_internet_gateway.igw": [
+    "tv_aws_internet.payment_provider"
+  ],
+  "aws_group.shared_services": [
+    "aws_cloudwatch_log_group.functions",
+    "aws_kms_key.data",
+    "aws_xray_group.tracing"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.public~1",
+    "aws_subnet.functions~1",
+    "aws_subnet.endpoints~1"
+  ],
+  "aws_subnet.public~1": [
+    "aws_nat_gateway.egress~1"
+  ],
+  "aws_subnet.functions~1": [
+    "aws_lambda_function.orders_api~1",
+    "aws_lambda_function.fulfilment~1",
+    "aws_lambda_function.notifications~1"
+  ],
+  "aws_subnet.endpoints~1": [
+    "aws_vpc_endpoint.eventbridge~1",
+    "aws_vpc_endpoint.sns~1",
+    "aws_vpc_endpoint.secrets_manager~1"
+  ],
+  "aws_lambda_function.orders_api~1": [
+    "aws_vpc_endpoint.dynamodb_gateway",
+    "aws_vpc_endpoint.eventbridge~1"
+  ],
+  "aws_vpc_endpoint.eventbridge~1": [
+    "aws_cloudwatch_event_bus.orders"
+  ],
+  "aws_lambda_function.fulfilment~1": [
+    "aws_vpc_endpoint.dynamodb_gateway",
+    "aws_vpc_endpoint.secrets_manager~1",
+    "aws_nat_gateway.egress~1"
+  ],
+  "aws_vpc_endpoint.secrets_manager~1": [
+    "aws_secretsmanager_secret.payment_api_key"
+  ],
+  "aws_lambda_function.notifications~1": [
+    "aws_vpc_endpoint.sns~1"
+  ],
+  "aws_vpc_endpoint.sns~1": [
+    "aws_sns_topic.customer_alerts"
+  ],
+  "aws_nat_gateway.egress~1": [
+    "aws_internet_gateway.igw"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.public~2",
+    "aws_subnet.functions~2",
+    "aws_subnet.endpoints~2"
+  ],
+  "aws_subnet.public~2": [
+    "aws_nat_gateway.egress~2"
+  ],
+  "aws_subnet.functions~2": [
+    "aws_lambda_function.orders_api~2",
+    "aws_lambda_function.fulfilment~2",
+    "aws_lambda_function.notifications~2"
+  ],
+  "aws_subnet.endpoints~2": [
+    "aws_vpc_endpoint.eventbridge~2",
+    "aws_vpc_endpoint.sns~2",
+    "aws_vpc_endpoint.secrets_manager~2"
+  ],
+  "aws_lambda_function.orders_api~2": [
+    "aws_vpc_endpoint.dynamodb_gateway",
+    "aws_vpc_endpoint.eventbridge~2"
+  ],
+  "aws_vpc_endpoint.eventbridge~2": [
+    "aws_cloudwatch_event_bus.orders"
+  ],
+  "aws_lambda_function.fulfilment~2": [
+    "aws_vpc_endpoint.dynamodb_gateway",
+    "aws_vpc_endpoint.secrets_manager~2",
+    "aws_nat_gateway.egress~2"
+  ],
+  "aws_vpc_endpoint.secrets_manager~2": [
+    "aws_secretsmanager_secret.payment_api_key"
+  ],
+  "aws_lambda_function.notifications~2": [
+    "aws_vpc_endpoint.sns~2"
+  ],
+  "aws_vpc_endpoint.sns~2": [
+    "aws_sns_topic.customer_alerts"
+  ],
+  "aws_nat_gateway.egress~2": [
+    "aws_internet_gateway.igw"
+  ]
 }
