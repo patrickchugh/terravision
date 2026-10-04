@@ -38,6 +38,35 @@ def _subnet_id_matches(tfdata: Dict[str, Any], subnet: str, id_refs: List[Any]) 
     return any(subnet_id in str(sid) for sid in id_refs)
 
 
+def _subnets_named_by(subnets: List[str], id_refs: List[Any]) -> List[str]:
+    """Subnets whose resource address appears in the id references.
+
+    On a plan against empty state no subnet has an id yet, so matching by id
+    (see _subnet_id_matches) treats every subnet as a match and an autoscaling
+    group set to ``aws_subnet.private[*].id`` was expanded into the public and
+    data subnets too. The HCL expression still names the resource, so match on
+    that: ``aws_subnet.private[*].id``, ``[for s in aws_subnet.private : s.id]``
+    and ``[aws_subnet.private_a.id, aws_subnet.private_b.id]`` all name their
+    subnets. Returns an empty list when no subnet resource is named, for
+    example a data source or a resolved list of ids.
+    """
+    named = set()
+    for ref in id_refs:
+        for address in helpers.extract_terraform_resource(str(ref)):
+            if address.split(".")[-2].startswith("aws_subnet"):
+                named.add(helpers.get_no_module_name(address))
+    if not named:
+        return []
+    return sorted(
+        s
+        for s in subnets
+        if helpers.get_no_module_name(
+            helpers.remove_brackets_and_numbers(s.split("~")[0])
+        )
+        in named
+    )
+
+
 def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle special resource cases and disconnections.
 
@@ -896,7 +925,9 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
             # "known after apply" markers arrive as bool True
             continue
 
-        matching_subnets = sorted(
+        # Prefer the subnets the code names; fall back to id matching only
+        # when the expression names no subnet resource at all.
+        matching_subnets = _subnets_named_by(subnets, vpc_zone_identifier) or sorted(
             [s for s in subnets if _subnet_id_matches(tfdata, s, vpc_zone_identifier)]
         )
 

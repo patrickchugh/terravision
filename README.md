@@ -143,6 +143,14 @@ Gemini CLI stopped working for personal Google accounts on 18 June 2026; with a 
 
 Add TerraVision as an MCP server that runs `uvx --from "terravision[mcp]" terravision mcp --output-dir <folder for diagrams>`. The [setup guide](https://patrickchugh.github.io/terravision/ai-assistants/) has the configuration for each.
 
+**Any other agent (Cursor, GitHub Copilot, Codex, Claude Code and more)** with the [skills CLI](https://skills.sh):
+
+```bash
+npx skills add patrickchugh/terravision
+```
+
+This installs the skill only: the instructions that teach the assistant the TerraVision graph format. It does not install TerraVision itself. The assistant then runs the `terravision` command, so [install TerraVision](#install) and the [prerequisites](#1-install-the-prerequisites-once) first. It does not include the MCP server, so there is no diagram view in the chat; for that, use the Claude Desktop extension or the Claude Code / ChatGPT plugin above. The installer needs Node.js, which provides `npx`.
+
 ### 3. Ask for a diagram (or code)
 
 | You have | Ask something like | You get |

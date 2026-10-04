@@ -334,20 +334,32 @@ def move_to_vpc_parent(
         for subnet in subnets:
             if resource in tfdata["graphdict"].get(subnet, []):
                 helpers.safe_remove_connection(tfdata, subnet, resource)
-
-                # Navigate to VPC through AZ
-                az_parents = helpers.list_of_parents(tfdata["graphdict"], subnet)
-                for az in az_parents:
-                    if "aws_az" in az:
-                        vpc_parents = helpers.list_of_parents(tfdata["graphdict"], az)
-                        for vpc in vpc_parents:
-                            if (
-                                "aws_vpc" in vpc
-                                and resource not in tfdata["graphdict"][vpc]
-                            ):
-                                tfdata["graphdict"][vpc].append(resource)
+                for vpc in _vpcs_above_subnet(tfdata, subnet):
+                    if resource not in tfdata["graphdict"][vpc]:
+                        tfdata["graphdict"][vpc].append(resource)
 
     return tfdata
+
+
+def _vpcs_above_subnet(tfdata: Dict[str, Any], subnet: str) -> List[str]:
+    """VPCs that contain a subnet, whether or not an AZ box sits between them.
+
+    Availability zone nodes are inserted by the aws_subnet handler, which runs
+    after handlers such as aws_db_subnet_group and aws_lambda_function. At that
+    point a subnet's parent is still the VPC itself. Looking only through an AZ
+    found nothing, so the resource had been unlinked from its subnet and was
+    never attached to the VPC: RDS instances were drawn outside the VPC.
+    """
+    vpcs: List[str] = []
+    for parent in helpers.list_of_parents(tfdata["graphdict"], subnet):
+        if "aws_vpc" in parent:
+            candidates = [parent]
+        elif "aws_az" in parent:
+            candidates = helpers.list_of_parents(tfdata["graphdict"], parent)
+        else:
+            continue
+        vpcs.extend(c for c in candidates if "aws_vpc" in c and c not in vpcs)
+    return vpcs
 
 
 def redirect_to_security_group(

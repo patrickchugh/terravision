@@ -692,6 +692,19 @@ def _identify_instance(
     return None
 
 
+def _iterates_every_instance(expression: str, base: str) -> bool:
+    """True when a for expression loops over every instance of a resource.
+
+    ``[for s in aws_subnet.this : s.id]`` is how for_each resources are listed,
+    since they have no splat. It references the whole resource, exactly as
+    ``aws_subnet.this[*].id`` does, and is one-to-many for the same reason.
+    An indexed loop source such as ``aws_subnet.this[each.key]`` is not.
+    """
+    name = re.escape(helpers.get_no_module_name(base))
+    pattern = rf"\bfor\b[^\]]*?\bin\s+(?:module\.\w+\.)*{name}\s*[:\]]"
+    return re.search(pattern, expression) is not None
+
+
 def _record_ambiguous_instance(
     source_node: str, candidates: List[str], tfdata: Dict[str, Any]
 ) -> None:
@@ -758,7 +771,9 @@ def _disambiguate_instances(
             continue
 
         # Case 3: nothing singles one out, but a splat (aws_subnet.this[*].id)
-        # is one-to-many by definition, so keep every instance.
+        # or a for expression over the whole resource
+        # ([for s in aws_subnet.this : s.id]) is one-to-many by definition, so
+        # keep every instance.
         # NB depends_on is NOT treated this way even though Terraform waits on
         # every instance: it expresses creation ORDER, not architecture. A VNET
         # peering that depends_on a VPN gateway is saying "build that first",
@@ -766,7 +781,10 @@ def _disambiguate_instances(
         # 20+ nodes on real infrastructure. A bare `aws_subnet.this` is not
         # one-to-many either, since `terraform show -json` normalises
         # `this[each.key].id` down to the base address.
-        if path and "[*]" in str(path[-1]):
+        expression = str(path[-1]) if path else ""
+        if "[*]" in expression or _iterates_every_instance(
+            expression, _instance_base(candidates[0])
+        ):
             narrowed.extend(candidates)
             continue
 
