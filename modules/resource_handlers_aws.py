@@ -4,7 +4,7 @@ Handles special cases for AWS resources including security groups, load balancer
 EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Tuple
 import modules.config.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 import modules.resource_transformers as transformers
@@ -2750,6 +2750,74 @@ def aws_handle_waf_associations(tfdata: dict) -> dict:
     return tfdata
 
 
+def _aws_provider_regions(tfdata: Dict[str, Any]) -> Tuple[Dict[str, str], str]:
+    """Map each aws provider alias to its region, and find the default region.
+
+    The default is the region of the aws provider block without an alias,
+    which resources with no ``provider`` argument use. Regions written as
+    variables or expressions are skipped.
+    """
+    aliases: Dict[str, str] = {}
+    default = ""
+    for provider_list in (tfdata.get("all_provider") or {}).values():
+        for provider_block in provider_list:
+            for provider_type, config in provider_block.items():
+                if provider_type != "aws" or not isinstance(config, dict):
+                    continue
+                region = config.get("region")
+                if not isinstance(region, str) or "${" in region or not region:
+                    continue
+                alias = config.get("alias")
+                if alias:
+                    aliases[alias] = region
+                elif not default:
+                    default = region
+    return aliases, default
+
+
+def _resource_region(config: Any, aliases: Dict[str, str], default: str) -> str:
+    """The region a resource is created in, from its provider argument."""
+    provider_ref = config.get("provider", "") if isinstance(config, dict) else ""
+    if provider_ref:
+        clean = str(provider_ref).replace("${", "").replace("}", "")
+        alias = clean.split(".", 1)[1] if "." in clean else ""
+        return aliases.get(alias, "")
+    return default
+
+
+def aws_handle_vpc_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each VPC inside a box for its region, when VPCs span regions.
+
+    A single-region diagram keeps no region box, as before. When the root
+    module's VPCs are created through providers in more than one region, each
+    VPC, with everything inside it, is listed in a tv_aws_region.<region>
+    node (the same nodes S3 replication uses). A VPC without a provider
+    argument is in the default provider's region; one whose region cannot
+    be told (a variable, or a module's VPC) is left where it is.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    aliases, default = _aws_provider_regions(tfdata)
+    vpc_regions: Dict[str, str] = {}
+    for resource_list in (tfdata.get("all_resource") or {}).values():
+        for resource_dict in resource_list:
+            for name, config in (resource_dict.get("aws_vpc") or {}).items():
+                region = _resource_region(config, aliases, default)
+                node = f"aws_vpc.{name}"
+                if region and node in graphdict:
+                    vpc_regions[node] = region
+    if len(set(vpc_regions.values())) < 2:
+        return tfdata
+    for vpc, region in vpc_regions.items():
+        region_node = f"tv_aws_region.{region}"
+        if region_node not in graphdict:
+            graphdict[region_node] = []
+            tfdata["meta_data"].setdefault(region_node, {"region": region})
+        if vpc not in graphdict[region_node]:
+            graphdict[region_node].append(vpc)
+    tfdata["graphdict"] = graphdict
+    return tfdata
+
+
 def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Group S3 buckets by region for cross-region replication scenarios.
 
@@ -2764,19 +2832,10 @@ def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any
     """
     graphdict = tfdata.get("graphdict", {})
     meta_data = tfdata.get("meta_data", {})
-    all_provider = tfdata.get("all_provider", {})
     all_resource = tfdata.get("all_resource", {})
 
     # Build provider alias -> region mapping
-    provider_region_map = {}
-    for filepath, provider_list in all_provider.items():
-        for provider_block in provider_list:
-            for provider_type, provider_config in provider_block.items():
-                if provider_type == "aws" and isinstance(provider_config, dict):
-                    region = provider_config.get("region")
-                    alias = provider_config.get("alias")
-                    if region and alias:
-                        provider_region_map[alias] = region
+    provider_region_map, _default_region = _aws_provider_regions(tfdata)
 
     # If no provider mappings found, skip regional grouping
     if not provider_region_map:
