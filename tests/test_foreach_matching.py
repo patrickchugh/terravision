@@ -218,6 +218,28 @@ def test_ambiguous_match_connects_to_nothing():
         # A splat expands to every instance - it is a value, and one-to-many
         # by definition
         pytest.param("subnet_ids", "${aws_subnet.this[*].id}", 2, id="splat"),
+        # A for expression over the whole resource is how for_each instances
+        # are listed (they have no splat) and is one-to-many for the same reason
+        pytest.param(
+            "subnet_ids",
+            "${[for s in aws_subnet.this : s.id]}",
+            2,
+            id="for-expression",
+        ),
+        pytest.param(
+            "subnet_ids",
+            '${[for k, s in aws_subnet.this : s.id if k != "c"]}',
+            2,
+            id="for-expression-with-key",
+        ),
+        # A loop whose source is one instance names that instance, not all;
+        # with nothing to identify it the reference stays ambiguous
+        pytest.param(
+            "subnet_ids",
+            "${[for cidr in aws_subnet.this[each.key].cidr_blocks : cidr]}",
+            0,
+            id="for-expression-over-one-instance",
+        ),
         # depends_on expresses creation ORDER, not architecture. Terraform does
         # wait on all instances, but "build that first" is not "I am attached
         # to it" - honouring it produced fan-outs of 20+ nodes on real infra.
