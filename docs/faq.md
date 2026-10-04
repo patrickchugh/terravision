@@ -103,6 +103,24 @@ The graph is built from `terraform plan` output, which represents the *desired* 
 
 ---
 
+### Can I draw an environment I don't have access to?
+
+Yes. TerraVision draws from the Terraform code and a variables file, not from a live account or its state. It plans the code against empty local state, so the diagram shows what the code would deploy. You need Terraform, Graphviz and credentials the provider accepts, but no access to the target account or its state.
+
+```bash
+terravision draw --source ./infra --varfile prod.tfvars --outfile architecture-prod
+```
+
+Any valid credentials for the provider will do, because Terraform only validates them before planning. The exception is a data source that reads from the target account, such as a lookup of an existing VPC by id; that needs access to whatever it reads. Pass `--varfile` more than once to layer files, or `--workspace` to select a Terraform workspace.
+
+---
+
+### Can I draw dev and prod from the same code?
+
+Yes, in the same way: one variables file per environment, one diagram each. Pass `dev.tfvars` for one run and `prod.tfvars` for the other, with different `--outfile` names, and compare the two diagrams.
+
+---
+
 ## Output and Customization
 
 ### What output formats are supported?
