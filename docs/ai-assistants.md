@@ -124,6 +124,16 @@ If anything is still missing later, the assistant says what to install. To check
 
     Cursor and most other clients call the top-level key `mcpServers` instead of `servers`. See [MCP server](mcp-server.md) for more clients and options.
 
+=== "Any agent (skills CLI)"
+
+    Cursor, GitHub Copilot, Codex, Claude Code and any other agent that reads skills can install TerraVision's skill with the [skills CLI](https://skills.sh):
+
+    ```bash
+    npx skills add patrickchugh/terravision
+    ```
+
+    This installs the skill only: the instructions that teach the assistant the TerraVision graph format. It does not install TerraVision itself. The assistant then runs the `terravision` command, so [install TerraVision](installation.md) and Graphviz first. It does not include the MCP server, so there is no diagram view in the chat; for that, use the Claude Desktop extension or the Claude Code / ChatGPT plugin in the other tabs. The installer needs Node.js, which provides `npx`.
+
 ### Updating
 
 Each [release](https://github.com/patrickchugh/terravision/releases/latest) lists what changed. To move your assistant to it:
