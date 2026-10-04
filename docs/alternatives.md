@@ -12,6 +12,7 @@ Tools for cloud architecture diagrams fall into five groups: manual drawing tool
 | How you make a diagram | Describe it to Claude or ChatGPT, or point at Terraform | Drag, drop and connect by hand | Prompt, pasted code or image | Write a text DSL | Write Python code | Connect a cloud account |
 | Diagram from a text prompt | Yes, through your AI assistant | Only if your organisation approves third-party models | Yes, built-in AI | Assistant writes Mermaid or D2 | No | No |
 | Diagram from Terraform | Built from `terraform plan`, so modules, `count`, `for_each` and conditionals are resolved | No | AI interprets the files you paste | No | No | Deployed state, not code |
+| Draw an environment you cannot log in to, or one not built yet | Yes, from the code and a variables file: `--varfile prod.tfvars` draws prod, `--varfile dev.tfvars` draws dev | Drawn by hand | From pasted code | Drawn by hand | Written by hand | No, draws the account it is connected to |
 | Terraform from the design | Yes, written by your AI assistant and checked by redrawing the code | Lucidchart beta, AWS only, paid add-on | No | No | No | Varies |
 | Official AWS, Azure, GCP icons | Yes | Yes, shape libraries | Yes | Not built in | Yes | Yes |
 | VPC, subnet, zone grouping | Built in, per provider | Drawn by hand | Generic groups | Generic groups | Manual clusters | Built in |
