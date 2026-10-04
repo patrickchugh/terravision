@@ -1995,7 +1995,7 @@
 </div>
 <p>If anything is still missing later, the assistant says what to install. To check at any time, ask it: <em>"Is TerraVision set up correctly?"</em></p>
 <p><strong>Then connect your assistant:</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">ChatGPT desktop and Codex CLI</label><label for="__tabbed_2_4">Antigravity CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:6"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><input id="__tabbed_2_3" name="__tabbed_2" type="radio"><input id="__tabbed_2_4" name="__tabbed_2" type="radio"><input id="__tabbed_2_5" name="__tabbed_2" type="radio"><input id="__tabbed_2_6" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Claude Desktop</label><label for="__tabbed_2_2">Claude Code</label><label for="__tabbed_2_3">ChatGPT desktop and Codex CLI</label><label for="__tabbed_2_4">Antigravity CLI</label><label for="__tabbed_2_5">VS Code (Copilot), Cursor, others</label><label for="__tabbed_2_6">Any agent (skills CLI)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Download <code>terravision-&lt;version&gt;.mcpb</code> from the <a href="https://github.com/patrickchugh/terravision/releases/latest">latest release</a> and double-click it (or drag it into <strong>Settings → Extensions</strong>). Diagrams appear right in the chat. Details: <a href="../mcp-server/#configure-your-client">MCP server</a>.</p>
@@ -2039,6 +2039,12 @@
 </span></code></pre></div>
 <p>Cursor and most other clients call the top-level key <code>mcpServers</code> instead of <code>servers</code>. See <a href="../mcp-server/">MCP server</a> for more clients and options.</p>
 </div>
+<div class="tabbed-block">
+<p>Cursor, GitHub Copilot, Codex, Claude Code and any other agent that reads skills can install TerraVision's skill with the <a href="https://skills.sh">skills CLI</a>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>npx<span class="w"> </span>skills<span class="w"> </span>add<span class="w"> </span>patrickchugh/terravision
+</span></code></pre></div>
+<p>This installs the skill only: the instructions that teach the assistant the TerraVision graph format. It does not install TerraVision itself. The assistant then runs the <code>terravision</code> command, so <a href="../installation/">install TerraVision</a> and Graphviz first. It does not include the MCP server, so there is no diagram view in the chat; for that, use the Claude Desktop extension or the Claude Code / ChatGPT plugin in the other tabs. The installer needs Node.js, which provides <code>npx</code>.</p>
+</div>
 </div>
 </div>
 <h3 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">¶</a></h3>
@@ -2074,8 +2080,8 @@
 <p>Local folders and Git repositories both work, including private ones you have access to. The <code>//examples</code> part points at a folder inside the repository. Many repositories keep a reusable module at their root, which describes nothing on its own; the diagram comes from a folder that uses it, like <code>examples/</code> or an environment folder. If you only give the repository, the assistant looks for that folder itself.</p>
 <p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> on the code and draws what the plan says will be deployed, so conditionals, <code>count</code>, <code>for_each</code> and modules are all resolved. A diagram is only as good as its source, and this one comes from the code itself, not from the assistant's reading of it.</p>
 <p><code>terraform plan</code> needs the same cloud credentials you would use to run Terraform. Without them, generate the plan once where credentials exist and hand TerraVision the files; no credentials are needed after that:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>terraform<span class="w"> </span>plan<span class="w"> </span>-out<span class="o">=</span>tfplan.bin<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>terraform<span class="w"> </span>show<span class="w"> </span>-json<span class="w"> </span>tfplan.bin<span class="w"> </span>&gt;<span class="w"> </span>plan.json
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>terraform<span class="w"> </span>graph<span class="w"> </span>&gt;<span class="w"> </span>graph.dot
 </span></code></pre></div>
 <blockquote>
 <p>Draw the diagram from <code>plan.json</code> and <code>graph.dot</code>.</p>
