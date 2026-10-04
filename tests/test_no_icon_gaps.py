@@ -29,9 +29,6 @@ HIDDEN = (
     | set(getattr(cloud_config_azure, "AZURE_HIDE_NODES", []))
     | set(getattr(cloud_config_gcp, "GCP_HIDE_NODES", []))
 )
-# A for_each key with dots in it ("0-0.0.0.0/0") is split as if the dots
-# separated the address, giving the bogus type "0". Tracked separately.
-KNOWN_PARSE_BUGS = {"0"}
 
 EXPECTED = sorted(
     glob.glob(str(ROOT / "tests" / "json" / "expected-*.json"))
@@ -52,7 +49,6 @@ def test_every_node_type_has_an_icon_or_is_hidden(path):
         for t in _types(graph)
         if t not in DRAWABLE
         and t not in HIDDEN
-        and t not in KNOWN_PARSE_BUGS
         and not t.startswith(("null_", "random_", "time_"))
     )
     assert not missing, (

@@ -368,10 +368,35 @@ def get_no_module_name(node: str) -> Optional[str]:
     if not node:
         return
     if "module." in node:
-        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
+        parts = _address_parts(node)
+        no_module_name = parts[-2] + "." + parts[-1]
     else:
         no_module_name = node
     return no_module_name
+
+
+def _address_parts(address: str) -> List[str]:
+    """Split a resource address on the dots between its parts.
+
+    Dots inside an index or a for_each key are part of the name, not
+    separators: ``module.sg.aws_vpc_security_group_egress_rule.this["0-0.0.0.0/0"]``
+    has four parts, not seven. Splitting on every dot made "0" the type.
+    """
+    parts, current, depth, quoted = [], [], 0, False
+    for char in address:
+        if char == '"':
+            quoted = not quoted
+        elif not quoted and char == "[":
+            depth += 1
+        elif not quoted and char == "]":
+            depth = max(0, depth - 1)
+        if char == "." and depth == 0 and not quoted:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    parts.append("".join(current))
+    return parts
 
 
 _CIDR_ATTRIBUTES = {

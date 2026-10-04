@@ -113,3 +113,19 @@ class TestTfBinaryResolver(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_get_no_module_name_keeps_dots_inside_a_for_each_key():
+    """A key such as "0-0.0.0.0/0" is part of the name, not separate parts."""
+    from modules.helpers import get_no_module_name
+
+    name = (
+        'module.sg.aws_vpc_security_group_egress_rule.this["0-0.0.0.0/0"]'
+        "[0-0.0.0.0/0]"
+    )
+    assert get_no_module_name(name).split(".")[0] == (
+        "aws_vpc_security_group_egress_rule"
+    )
+    assert get_no_module_name("module.a.module.b.aws_s3_bucket.logs") == (
+        "aws_s3_bucket.logs"
+    )
