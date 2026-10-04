@@ -778,8 +778,6 @@ def _wrap_tf_name(name: str, max_lines: int = 2, provider: str = "") -> str:
     )
 
 
-# Bundled resource icons are 256px squares
-_DEFAULT_ICON_POINTS = 256
 # Kept in step with the card in resource_classes/azure/__init__.py::_Azure
 _AZURE_CARD_INCHES = 3.8
 
@@ -794,23 +792,27 @@ def _card_chars(provider: str = "") -> int:
     """
     try:
         from resource_classes import Canvas
-        import modules.drawing as drawing
 
         node_pts = float(Canvas._default_node_attrs.get("width", 2.8)) * 72
         fontsize = float(Canvas._default_node_attrs.get("fontsize", 28))
-        icon_pts = float(drawing.DIAGRAM_ICONSIZE or _DEFAULT_ICON_POINTS)
     except Exception:
-        node_pts, fontsize, icon_pts = 201.6, 28.0, float(_DEFAULT_ICON_POINTS)
+        node_pts, fontsize = 201.6, 28.0
 
     # Only Azure draws a card: _Azure gives every node a filled, bordered
     # 3.8in rounded rectangle, so its labels have a visible edge to spill over
     # and that width is a hard budget. AWS and GCP nodes are bare icons
     # (penwidth 0, no fill), so nothing can be overflowed and the only limit is
-    # crowding the neighbour - they get half as much again.
+    # crowding the neighbour or the edge of the box around them. A box sized
+    # to one node is only the node's width plus the box margin (50pt for a
+    # subnet), so the label may overhang the node by less than that on each
+    # side: 1.4 x node width leaves 40pt. The node width already reflects
+    # --iconsize, and the margin scales with --fontsize as the node does. The
+    # icon's pixel size is not a width on the page, and using it let labels
+    # run 24 characters wide and spill over subnet borders.
     if provider.lower() == "azure":
         card_pts = _AZURE_CARD_INCHES * 72
     else:
-        card_pts = max(node_pts, icon_pts) * 1.5
+        card_pts = node_pts * 1.4
     return max(8, int(card_pts / (fontsize * 0.55)))
 
 

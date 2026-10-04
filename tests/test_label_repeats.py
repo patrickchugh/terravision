@@ -72,3 +72,17 @@ def test_vpn_is_an_acronym_on_azure_and_gcp():
     assert helpers.pretty_name("google_compute_vpn_gateway.onprem") == (
         "VPN Gateway Onprem"
     )
+
+
+def test_aws_label_width_stays_inside_a_subnet_margin():
+    """A label may overhang its icon by less than a subnet box's 50pt margin.
+
+    The budget used the icon's 256px size as if it were a width on the page,
+    so labels ran 24 characters wide and spilled over subnet borders.
+    """
+    from modules import helpers
+
+    chars = helpers._card_chars("aws")
+    label_pts = chars * 28 * 0.55
+    node_pts = 2.8 * 72
+    assert (label_pts - node_pts) / 2 < 50

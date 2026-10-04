@@ -227,5 +227,5 @@ def test_a_node_with_no_icon_class_stays_in_its_box(tmp_path, monkeypatch):
         "aws_subnet.app": ["aws_instance.web", "aws_made_up_service.widget"],
     }
     placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
-    widget = next(label for label in placed if "Widget" in label)
+    widget = next(label for label in placed if label.startswith("Made Up Service"))
     assert placed[widget] == placed["EC2 Web"]
