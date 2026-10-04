@@ -351,6 +351,7 @@ AZURE_HIDE_NODES = [
 AZURE_ACRONYMS_LIST = [
     "vm",
     "vnet",
+    "vpn",
     "nsg",
     "nic",
     "ip",

@@ -283,6 +283,7 @@ GCP_ACRONYMS_LIST = [
     "gcp",
     "gce",
     "gcs",
+    "vpn",
     "gke",
     "gcr",
     "vpc",

@@ -62,3 +62,13 @@ def test_echoes_of_the_type_are_still_dropped(name, label):
 def test_resource_card_label_wraps_but_keeps_every_word():
     card = helpers.pretty_name("aws_vpn_connection.site_to_site")
     assert card.split() == "VPN Connection Site To Site".split()
+
+
+def test_vpn_is_an_acronym_on_azure_and_gcp():
+    """VPN reads as an acronym on every provider, not "Vpn"."""
+    from modules import helpers
+
+    assert helpers.pretty_name("azurerm_vpn_gateway.hub") == "VPN Gateway Hub"
+    assert helpers.pretty_name("google_compute_vpn_gateway.onprem") == (
+        "VPN Gateway Onprem"
+    )
