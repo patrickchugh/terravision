@@ -259,16 +259,14 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
     This is a helper function for the insert_intermediate_node transformer.
 
     Args:
-        subnet_name: Name of the subnet resource (unused - required for transformer signature)
+        subnet_name: Name of the subnet resource, used for its copy number
         subnet_metadata: Metadata dictionary for the subnet
 
     Returns:
         Generated AZ node name
     """
-    _ = subnet_name  # Unused but required by transformer signature
-
     # Prefer availability_zone_id when available (more specific than availability_zone)
-    az_value = subnet_metadata.get("availability_zone", "unknown")
+    az_value = subnet_metadata.get("availability_zone", "")
     az_id = subnet_metadata.get("availability_zone_id", "")
     region = subnet_metadata.get("region")
 
@@ -286,13 +284,36 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
         az = az.replace("-", "_")
         az = _add_suffix(az)
     else:
-        # No real AZ info - use region if available, else "unknown"
-        fallback = region if region else "unknown"
-        az = "aws_az.availability_zone_" + str(fallback)
+        # No real AZ info (both values are known only after apply). Numbered
+        # copies from count or for_each are normally spread across zones by
+        # their index, so each copy number gets its own zone box ("Zone 2")
+        # rather than every subnet sharing one box named after the region.
+        # A subnet with no index keeps the region (or "unknown") fallback.
+        copy = _subnet_copy_number(subnet_name)
+        if copy:
+            return f"aws_az.availability_zone_{copy}~{copy}"
+        if not region:
+            return "aws_az.availability_zone_unknown"
+        az = "aws_az.availability_zone_" + str(region)
         az = az.replace("-", "_")
         az = _add_suffix(az)
 
     return az
+
+
+def _subnet_copy_number(subnet_name: str) -> int:
+    """The 1-based copy number of a numbered subnet, or 0 when it has none.
+
+    ``aws_subnet.private~2`` is copy 2; ``module.vpc.aws_subnet.private[1]``
+    (a count index, 0-based) is also copy 2.
+    """
+    match = re.search(r"~(\d+)$", subnet_name or "")
+    if match:
+        return int(match.group(1))
+    match = re.search(r"\[(\d+)\]$", subnet_name or "")
+    if match:
+        return int(match.group(1)) + 1
+    return 0
 
 
 def aws_prepare_subnet_az_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
