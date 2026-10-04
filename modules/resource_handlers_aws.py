@@ -632,49 +632,6 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Group shared AWS services into a shared services group.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with shared services grouped
-    """
-    # Find all shared services and group them
-    for node in sorted(tfdata["graphdict"].keys()):
-        substring_match = [s for s in SHARED_SERVICES if s in node]
-        if substring_match:
-            # Create shared services group if needed
-            if not tfdata["graphdict"].get("aws_group.shared_services"):
-                tfdata["graphdict"]["aws_group.shared_services"] = []
-                tfdata["meta_data"]["aws_group.shared_services"] = {}
-            # Add node to shared services group
-            if node not in tfdata["graphdict"]["aws_group.shared_services"]:
-                tfdata["graphdict"]["aws_group.shared_services"].append(node)
-    # Replace consolidated nodes with their consolidated names
-    if tfdata["graphdict"].get("aws_group.shared_services"):
-        for service in sorted(list(tfdata["graphdict"]["aws_group.shared_services"])):
-            if (
-                helpers.consolidated_node_check(service, tfdata)
-                and "cluster" not in service
-            ):
-                tfdata["graphdict"]["aws_group.shared_services"] = list(
-                    map(
-                        lambda x: x.replace(
-                            service, helpers.consolidated_node_check(service, tfdata)
-                        ),
-                        tfdata["graphdict"]["aws_group.shared_services"],
-                    )
-                )
-    # Add default IAM service node
-    if not tfdata["graphdict"].get("aws_group.shared_services"):
-        tfdata["graphdict"]["aws_group.shared_services"] = []
-        tfdata["meta_data"]["aws_group.shared_services"] = {}
-
-    return tfdata
-
-
 def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle load balancer type variants and connections.
 
