@@ -1102,6 +1102,17 @@ def _service_type_label(name: str, is_group: bool = False) -> str:
 # Actors such as tv_gcp_users_icon stay as just their name ("Customers").
 _PSEUDO_NODE_TITLES = {"tv_gcp_k8s_workload": "GKE Workload"}
 
+# Region boxes read like the provider writes regions: "US East 1", "UK South".
+_REGION_TYPES = {"tv_aws_region", "tv_azurerm_region", "tv_gcp_region"}
+
+
+def _format_region(name: str) -> str:
+    """us-east-1 or us_east_1 becomes "US East 1"; two-letter codes are capitals."""
+    words = [w for w in re.split(r"[-_\s]+", name) if w]
+    return " ".join(
+        w.upper() if len(w) == 2 and w.isalpha() else w.title() for w in words
+    )
+
 
 def pretty_name(name: str, show_title=True, is_group=False) -> str:
     """
@@ -1191,8 +1202,11 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
         simple_name = name.split(".")[-1] if "." in name else name
         # A numbered copy (~2) reads like the original
         simple_name = simple_name.split("~", 1)[0]
+        node_type = get_no_module_name(name).split(".")[0]
+        if node_type in _REGION_TYPES:
+            return _format_region(simple_name)
         simple_name = simple_name.replace("_", " ").title()
-        title = _PSEUDO_NODE_TITLES.get(get_no_module_name(name).split(".")[0])
+        title = _PSEUDO_NODE_TITLES.get(node_type)
         return f"{title} {simple_name}" if title and show_title else simple_name
 
     # Load provider-specific config
@@ -1260,8 +1274,12 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
                 use_module_as_label = True
         instance_raw = ""
 
-    # Special-case: availability zone formatting
-    if resource_type == "az" and instance_raw.startswith("availability_zone_"):
+    # Special-case: availability zone formatting. A graph names a zone by its
+    # region and letter (tv_aws_az.eu_west_1a), Terraform mode as
+    # availability_zone_eu_west_1a; both read "Availability Zone EU West 1a".
+    if resource_type == "az" and instance_raw:
+        if not instance_raw.startswith("availability_zone_"):
+            instance_raw = "availability_zone_" + instance_raw
         az_label = _format_az_label(instance_raw, acronyms_list)
         return az_label if is_group else _soft_break(az_label)
 

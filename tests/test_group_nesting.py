@@ -78,12 +78,12 @@ def test_vpc_nests_inside_region(tmp_path, monkeypatch):
     placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
     assert placed["EC2 App"] == [
         "AWS Cloud",
-        "Us East 1",
+        "US East 1",
         "VPC Primary",
         "Availability Zone A",
         "Subnet App",
     ]
-    assert placed["S3 Bucket Assets"] == ["AWS Cloud", "Us East 1"]
+    assert placed["S3 Bucket Assets"] == ["AWS Cloud", "US East 1"]
 
 
 def test_vpc_nests_inside_account(tmp_path, monkeypatch):
@@ -112,8 +112,8 @@ def test_two_regions_each_hold_their_own_vpc(tmp_path, monkeypatch):
         "aws_rds_aurora.primary~1": ["aws_rds_aurora.dr~1"],
     }
     placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
-    assert placed["RDS Aurora Primary"][1:3] == ["Us East 1", "VPC Primary"]
-    assert placed["RDS Aurora Dr"][1:3] == ["Eu West 1", "VPC Dr"]
+    assert placed["RDS Aurora Primary"][1:3] == ["US East 1", "VPC Primary"]
+    assert placed["RDS Aurora Dr"][1:3] == ["EU West 1", "VPC Dr"]
 
 
 @pytest.fixture

@@ -99,3 +99,20 @@ def test_gke_workload_is_a_titled_icon_node():
     )
     # Actors keep just their name
     assert helpers.pretty_name("tv_gcp_users_icon.customers") == "Customers"
+
+
+def test_region_and_zone_captions_read_like_the_provider_writes_them():
+    from modules import helpers
+
+    def caption(name):
+        return helpers.pretty_name(name, is_group=True)
+
+    assert caption("tv_aws_region.us-east-1") == "US East 1"
+    assert caption("tv_aws_region.us_east_1") == "US East 1"
+    assert caption("tv_azurerm_region.uk_south") == "UK South"
+    assert caption("tv_gcp_region.europe_west2") == "Europe West2"
+    # A graph's zone name and Terraform's read the same
+    assert caption("tv_aws_az.eu_west_1a") == "Availability Zone EU West 1a"
+    assert caption("aws_az.availability_zone_eu_west_1a~1") == (
+        "Availability Zone EU West 1a"
+    )
