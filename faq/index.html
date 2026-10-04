@@ -1537,6 +1537,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#can-i-draw-an-environment-i-dont-have-access-to" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I draw an environment I don't have access to?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-draw-dev-and-prod-from-the-same-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I draw dev and prod from the same code?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2385,6 +2407,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#can-i-draw-an-environment-i-dont-have-access-to" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I draw an environment I don't have access to?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#can-i-draw-dev-and-prod-from-the-same-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Can I draw dev and prod from the same code?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2725,6 +2769,15 @@
 <h3 id="why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure">Why does my diagram look different from my actual deployed infrastructure?<a class="headerlink" href="#why-does-my-diagram-look-different-from-my-actual-deployed-infrastructure" title="Permanent link">¶</a></h3>
 <p>The graph is built from <code>terraform plan</code> output, which represents the <em>desired</em> state declared in your code. If your deployed infrastructure has drifted (manual changes in the console, another tool, etc.), the diagram reflects the code, not the drift. Run <code>terraform plan</code> yourself to see the same divergence.</p>
 <hr>
+<h3 id="can-i-draw-an-environment-i-dont-have-access-to">Can I draw an environment I don't have access to?<a class="headerlink" href="#can-i-draw-an-environment-i-dont-have-access-to" title="Permanent link">¶</a></h3>
+<p>Yes. TerraVision draws from the Terraform code and a variables file, not from a live account or its state. It plans the code against empty local state, so the diagram shows what the code would deploy. You need Terraform, Graphviz and credentials the provider accepts, but no access to the target account or its state.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./infra<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars<span class="w"> </span>--outfile<span class="w"> </span>architecture-prod
+</span></code></pre></div>
+<p>Any valid credentials for the provider will do, because Terraform only validates them before planning. The exception is a data source that reads from the target account, such as a lookup of an existing VPC by id; that needs access to whatever it reads. Pass <code>--varfile</code> more than once to layer files, or <code>--workspace</code> to select a Terraform workspace.</p>
+<hr>
+<h3 id="can-i-draw-dev-and-prod-from-the-same-code">Can I draw dev and prod from the same code?<a class="headerlink" href="#can-i-draw-dev-and-prod-from-the-same-code" title="Permanent link">¶</a></h3>
+<p>Yes, in the same way: one variables file per environment, one diagram each. Pass <code>dev.tfvars</code> for one run and <code>prod.tfvars</code> for the other, with different <code>--outfile</code> names, and compare the two diagrams.</p>
+<hr>
 <h2 id="output-and-customization">Output and Customization<a class="headerlink" href="#output-and-customization" title="Permanent link">¶</a></h2>
 <h3 id="what-output-formats-are-supported">What output formats are supported?<a class="headerlink" href="#what-output-formats-are-supported" title="Permanent link">¶</a></h3>
 <p>All Graphviz formats (png, svg, pdf, jpg, gif, bmp, eps, webp, dot, xdot, json, tif…) plus native draw.io XML export (<code>--format drawio</code>). See <a href="../usage-guide/#output-formats">Output Formats</a> for the full list.</p>
@@ -2735,8 +2788,8 @@
 <p>Create a <code>terravision.yml</code> in your Terraform directory. See the <a href="../annotations/">Annotations Guide</a> for the full schema.</p>
 <h3 id="can-i-generate-different-diagrams-for-dev-vs-prod">Can I generate different diagrams for dev vs prod?<a class="headerlink" href="#can-i-generate-different-diagrams-for-dev-vs-prod" title="Permanent link">¶</a></h3>
 <p>Yes — use <code>--varfile</code> with different <code>.tfvars</code> files:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>dev.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-dev
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-prod
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>dev.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-dev
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform<span class="w"> </span>--varfile<span class="w"> </span>prod.tfvars<span class="w"> </span>--outfile<span class="w"> </span>arch-prod
 </span></code></pre></div>
 <p>Or use <code>--workspace</code> to target a specific Terraform workspace.</p>
 <h3 id="how-do-i-embed-diagrams-in-my-docs-site">How do I embed diagrams in my docs site?<a class="headerlink" href="#how-do-i-embed-diagrams-in-my-docs-site" title="Permanent link">¶</a></h3>
@@ -2794,8 +2847,8 @@
 <p>TerraVision runs <code>terraform init</code> and <code>terraform plan</code> using your normal Terraform setup, so a plan failure inside TerraVision means the plan would fail outside it too. Run <code>terraform plan</code> yourself to debug, then retry. If plan succeeds but TerraVision still fails, that's a TerraVision bug — please open an issue.</p>
 <h3 id="my-diagram-is-too-large-unreadable">My diagram is too large / unreadable<a class="headerlink" href="#my-diagram-is-too-large-unreadable" title="Permanent link">¶</a></h3>
 <p>Try <code>--simplified</code> to collapse networking infrastructure and focus on core services. For very large projects, generate per-module diagrams:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/vpc<span class="w"> </span>--outfile<span class="w"> </span>arch-vpc
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/app<span class="w"> </span>--outfile<span class="w"> </span>arch-app
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/vpc<span class="w"> </span>--outfile<span class="w"> </span>arch-vpc
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform/modules/app<span class="w"> </span>--outfile<span class="w"> </span>arch-app
 </span></code></pre></div>
 <h3 id="more-issues">More issues<a class="headerlink" href="#more-issues" title="Permanent link">¶</a></h3>
 <p>See the <a href="../troubleshooting/">Troubleshooting Guide</a> for a longer list of common problems and solutions.</p>
