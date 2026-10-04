@@ -1072,6 +1072,12 @@ def _service_type_label(name: str, is_group: bool = False) -> str:
         USE_RESOURCE_NAMES = previous
 
 
+# Pseudo-nodes that stand for a kind of service get its name as a title, the
+# way real resources do ("GKE Workload Frontend", like "Cloud SQL Orders").
+# Actors such as tv_gcp_users_icon stay as just their name ("Customers").
+_PSEUDO_NODE_TITLES = {"tv_gcp_k8s_workload": "GKE Workload"}
+
+
 def pretty_name(name: str, show_title=True, is_group=False) -> str:
     """
     Generate clean, human-readable labels for Terraform resource names.
@@ -1160,7 +1166,9 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
         simple_name = name.split(".")[-1] if "." in name else name
         # A numbered copy (~2) reads like the original
         simple_name = simple_name.split("~", 1)[0]
-        return simple_name.replace("_", " ").title()
+        simple_name = simple_name.replace("_", " ").title()
+        title = _PSEUDO_NODE_TITLES.get(get_no_module_name(name).split(".")[0])
+        return f"{title} {simple_name}" if title and show_title else simple_name
 
     # Load provider-specific config
     provider = provider.upper()

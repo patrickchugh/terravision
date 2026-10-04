@@ -86,3 +86,16 @@ def test_aws_label_width_stays_inside_a_subnet_margin():
     label_pts = chars * 28 * 0.55
     node_pts = 2.8 * 72
     assert (label_pts - node_pts) / 2 < 50
+
+
+def test_gke_workload_is_a_titled_icon_node():
+    """tv_gcp_k8s_workload draws as an icon titled like a real service."""
+    from modules import helpers
+    from resource_classes.gcp.containers import tv_gcp_k8s_workload
+
+    assert tv_gcp_k8s_workload._icon == "containers.png"
+    assert helpers.pretty_name("tv_gcp_k8s_workload.frontend") == (
+        "GKE Workload Frontend"
+    )
+    # Actors keep just their name
+    assert helpers.pretty_name("tv_gcp_users_icon.customers") == "Customers"
