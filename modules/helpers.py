@@ -1026,6 +1026,30 @@ def _resolve_resource_label(
     return left_raw, instance_raw
 
 
+# Product names title-casing would flatten ("Mysql", "Dynamodb"). Matched
+# as whole words, before acronyms.
+_BRAND_CASING = {
+    w.lower(): w
+    for w in (
+        "MySQL",
+        "MariaDB",
+        "PostgreSQL",
+        "DynamoDB",
+        "OpenSearch",
+        "BigQuery",
+        "ElastiCache",
+        "CloudFront",
+        "CloudWatch",
+        "CloudTrail",
+        "CloudFormation",
+        "EventBridge",
+        "CosmosDB",
+        "DocumentDB",
+        "MemoryDB",
+    )
+}
+
+
 def _title_case_dedup(text: str, acronyms_list: list, dedup: bool = True) -> str:
     """Title-case *text* while preserving acronyms.
 
@@ -1041,7 +1065,10 @@ def _title_case_dedup(text: str, acronyms_list: list, dedup: bool = True) -> str
         key = re.sub(r"[^\w]", "", w).lower()
         if not key:
             continue
-        out = acronyms[key].upper() if key in acronyms else w.title()
+        if key in _BRAND_CASING:
+            out = _BRAND_CASING[key]
+        else:
+            out = acronyms[key].upper() if key in acronyms else w.title()
         if not dedup or out.lower() not in seen:
             seen.add(out.lower())
             processed_words.append(out)

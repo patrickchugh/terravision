@@ -116,3 +116,11 @@ def test_region_and_zone_captions_read_like_the_provider_writes_them():
     assert caption("aws_az.availability_zone_eu_west_1a~1") == (
         "Availability Zone EU West 1a"
     )
+
+
+def test_product_names_keep_their_casing():
+    from modules import helpers
+
+    assert helpers.pretty_name("aws_rds_mysql.app") == "RDS MySQL App"
+    assert "DynamoDB" in helpers.pretty_name("aws_dynamodb_table.orders")
+    assert helpers.pretty_name("google_bigquery_dataset.sales") == "BigQuery Sales"
