@@ -23,3 +23,5 @@ Each `.tvg.json` file is a [TerraVision Graph Format](../../docs/graph-format.md
 Each gallery graph has a `<name>.annotations.yml` beside it that sets the CIDR ranges of its networks and subnets; render with `terravision draw --source <name>.tvg.json --annotate <name>.annotations.yml`.
 
 Check a file before rendering with `python skills/terravision-cloud-diagrams/scripts/validate_graph.py <file>`.
+
+After adding or re-rendering an example, run `python scripts/make_gallery_images.py` to refresh the web-sized copies in `docs/assets/gallery/` that the docs gallery page shows, and commit them with the PNG.

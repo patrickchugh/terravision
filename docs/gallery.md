@@ -36,7 +36,7 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 
 A classic three-tier web application on AWS. CloudFront serves a static site from S3 and routes requests to Application Load Balancers in two availability zones. Each zone has a public subnet (load balancer and NAT gateway), a private subnet (EC2 application servers) and a data subnet (Aurora PostgreSQL and ElastiCache). The app servers reach S3 through a gateway VPC endpoint and Secrets Manager through an interface endpoint in each private subnet, so that traffic never crosses the internet.
 
-![AWS three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png){ loading=lazy }
+[![AWS three-tier web application architecture diagram](assets/gallery/three-tier-web.webp){ width=1400 height=1439 .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/three-tier-web.png)
 
 **Ask your AI assistant:**
 
@@ -55,7 +55,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A Kubernetes platform on Amazon EKS that scales its nodes with Karpenter. The VPC spans three availability zones. In each zone, a public subnet holds an Application Load Balancer and a NAT gateway, and a private subnet holds the Karpenter controller, a Karpenter NodePool of On-Demand and Spot nodes, and interface VPC endpoints for ECR, EC2 and SQS. A data subnet holds an Aurora PostgreSQL instance. Nodes pull image layers through an S3 gateway endpoint. The EKS control plane sits in its own AWS-managed account, and an EventBridge rule sends Spot interruption warnings to the SQS queue Karpenter reads.
 
-![Amazon EKS with Karpenter architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.png){ loading=lazy }
+[![Amazon EKS with Karpenter architecture diagram](assets/gallery/aws-eks-karpenter.webp){ width=1400 height=985 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.png)
 
 **Ask your AI assistant:**
 
@@ -74,7 +74,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A serverless order platform whose Lambda functions run inside a VPC, as most enterprises require. Customers call an HTTP API on API Gateway, authenticated with Cognito, which invokes order Lambdas in private subnets across two availability zones. The functions reach DynamoDB through a gateway VPC endpoint, and EventBridge, SNS and Secrets Manager through interface endpoints in a dedicated endpoints subnet in each zone. Only the payment step leaves the VPC, through NAT gateways, to reach an external payment provider. The EventBridge bus fans out to a Step Functions fulfilment workflow, an SQS notifications queue with a dead-letter queue, and Firehose to an S3 event lake catalogued by Glue and queried with Athena.
 
-![AWS serverless event-driven architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.png){ loading=lazy }
+[![AWS serverless event-driven architecture diagram](assets/gallery/aws-serverless-event-driven.webp){ width=1400 height=1011 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.png)
 
 **Ask your AI assistant:**
 
@@ -93,7 +93,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A data lake and analytics platform on AWS whose processing runs inside a VPC. Across two availability zones, private subnets hold DMS replication from an Aurora MySQL source, Glue jobs, EMR Serverless Spark, Amazon MWAA (Airflow) orchestration and Redshift Serverless. All of them read and write S3 through a gateway VPC endpoint, and reach the Glue Data Catalog and Secrets Manager through interface endpoints in each zone. Outside the VPC, Kinesis, Firehose and Transfer Family ingest clickstream and partner files into the raw S3 zone, Lake Formation governs access, and analysts use QuickSight over Athena.
 
-![AWS data lake architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.png){ loading=lazy }
+[![AWS data lake architecture diagram](assets/gallery/aws-data-lake.webp){ width=1400 height=1002 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.png)
 
 **Ask your AI assistant:**
 
@@ -112,7 +112,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 An active-passive multi-region design on AWS. Route 53 failover routing sends users to the primary region (us-east-1) and switches to the standby region (eu-west-1) when health checks fail. Each region has a VPC across two availability zones, with Application Load Balancers in public subnets, ECS on Fargate services in application subnets and Aurora PostgreSQL in data subnets. The services reach DynamoDB through a gateway VPC endpoint in their own region. Aurora Global Database replicates from the primary to the standby, DynamoDB global tables replicate session data, and S3 cross-region replication copies assets.
 
-![AWS multi-region failover architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.png){ loading=lazy }
+[![AWS multi-region failover architecture diagram](assets/gallery/aws-multi-region.webp){ width=1400 height=1607 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.png)
 
 **Ask your AI assistant:**
 
@@ -131,7 +131,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A hub-and-spoke network for an AWS organisation. A Transit Gateway in the network account connects a site-to-site VPN from the corporate data centre to production, development and shared services VPCs, each in its own account. All traffic between VPCs, and out to the internet, passes through AWS Network Firewall in a central inspection VPC across two availability zones. A central egress VPC holds the NAT gateways and the internet gateway. The shared services VPC holds interface VPC endpoints and the corporate Active Directory.
 
-![AWS multi-account network architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png){ loading=lazy }
+[![AWS multi-account network architecture diagram](assets/gallery/aws-multi-account-network.webp){ width=1400 height=1655 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png)
 
 **Ask your AI assistant:**
 
@@ -150,7 +150,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A three-tier web application on Azure. DNS and Front Door with WAF sit in front of a Static Web App and an Application Gateway in its own subnet. Container Apps run across two zones inside a virtual network, Azure SQL sits behind a private endpoint in the data subnet, and a NAT gateway provides outbound access. Key Vault, Log Analytics and the container registry are drawn as shared services.
 
-![Azure three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-three-tier.png){ loading=lazy }
+[![Azure three-tier web application architecture diagram](assets/gallery/azure-three-tier.webp){ width=1400 height=1987 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-three-tier.png)
 
 **Ask your AI assistant:**
 
@@ -169,7 +169,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 An Azure hub-and-spoke landing zone. The hub virtual network, in a connectivity resource group, holds a VPN gateway to the head office, Azure Firewall with a central firewall policy, Azure Bastion for administration and a Private DNS Resolver. Two spoke virtual networks are peered to the hub. The web workload spoke has an Application Gateway in front of a virtual machine scale set across two zones, with Azure SQL behind a private endpoint. The internal apps spoke has a Windows virtual machine and PostgreSQL Flexible Server behind a private endpoint. Outbound traffic leaves through the firewall's public IP.
 
-![Azure hub-and-spoke network architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hub-spoke.png){ loading=lazy }
+[![Azure hub-and-spoke network architecture diagram](assets/gallery/azure-hub-spoke.webp){ width=1400 height=1865 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hub-spoke.png)
 
 **Ask your AI assistant:**
 
@@ -188,7 +188,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 Microservices on Azure Kubernetes Service. Front Door with a WAF policy routes customers to an Application Gateway in its own subnet, which sends traffic to AKS node pools across three availability zones. The services reach Cosmos DB, Service Bus and Azure Cache for Redis only through private endpoints in a dedicated subnet. A NAT gateway handles outbound traffic. Container Registry, Key Vault, Log Analytics and Azure Monitor are shared services.
 
-![Azure AKS microservices architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-aks.png){ loading=lazy }
+[![Azure AKS microservices architecture diagram](assets/gallery/azure-aks.webp){ width=1400 height=1001 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-aks.png)
 
 **Ask your AI assistant:**
 
@@ -207,7 +207,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A three-tier web application on Google Cloud. A global HTTPS load balancer with Cloud Armor serves a React site from Cloud Storage and routes API traffic to a managed instance group across two zones in us-central1, with Cloud Router and Cloud NAT. Cloud SQL and Memorystore sit on the VPC network, alongside Secret Manager, logging and Artifact Registry.
 
-![Google Cloud three-tier web application architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-three-tier.png){ loading=lazy }
+[![Google Cloud three-tier web application architecture diagram](assets/gallery/gcp-three-tier.webp){ width=1400 height=1057 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-three-tier.png)
 
 **Ask your AI assistant:**
 
@@ -226,7 +226,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 Microservices on Google Kubernetes Engine with private service access. A global HTTPS load balancer with Cloud Armor routes customers to a regional GKE cluster in europe-west2, whose application node pool spans three zones. The nodes reach Cloud SQL through a Private Service Connect endpoint in their subnet, and Pub/Sub through a Private Service Connect endpoint for Google APIs, so no service traffic crosses the internet. Order events trigger a Cloud Run fulfilment service backed by Firestore and stream to BigQuery. Cloud Router and Cloud NAT provide egress, alongside Artifact Registry, Secret Manager and logging.
 
-![Google Cloud GKE microservices architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-gke.png){ loading=lazy }
+[![Google Cloud GKE microservices architecture diagram](assets/gallery/gcp-gke.webp){ width=1400 height=2592 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-gke.png)
 
 **Ask your AI assistant:**
 
@@ -245,7 +245,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A streaming and batch data platform on Google Cloud whose processing runs inside a VPC network. In europe-west2, a processing subnet holds a streaming Dataflow job, a batch Dataflow load and a Dataproc Serverless Spark transform, and an orchestration subnet holds Cloud Composer. The jobs reach Pub/Sub, Cloud Storage, BigQuery and Bigtable through a Private Service Connect endpoint for Google APIs, and Datastream captures changes from Cloud SQL on a private IP. BigQuery holds raw and curated datasets, Bigtable holds real-time features and Dataplex governs the lake. Looker, a Vertex AI endpoint and a Cloud Run recommendations API serve the results.
 
-![Google Cloud data pipeline architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-data-pipeline.png){ loading=lazy }
+[![Google Cloud data pipeline architecture diagram](assets/gallery/gcp-data-pipeline.webp){ width=1400 height=972 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-data-pipeline.png)
 
 **Ask your AI assistant:**
 
