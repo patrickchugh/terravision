@@ -218,3 +218,14 @@ def test_logical_group_with_members_in_no_box_stays_top_level(aws_groups):
         "hidden": [],
     }
     assert drawing._adopting_container("aws_group.shared_services", tfdata) is None
+
+
+def test_a_node_with_no_icon_class_stays_in_its_box(tmp_path, monkeypatch):
+    """A type with no icon of its own draws generic, but inside its subnet."""
+    graph = {
+        "aws_vpc.main": ["aws_subnet.app"],
+        "aws_subnet.app": ["aws_instance.web", "aws_made_up_service.widget"],
+    }
+    placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
+    widget = next(label for label in placed if "Widget" in label)
+    assert placed[widget] == placed["EC2 Web"]

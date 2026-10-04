@@ -1382,10 +1382,11 @@ def handle_group(
                     if anchor is not None:
                         child_group_ids.append(anchor._id)
 
-            # Handle regular nodes within the group
+            # Handle regular nodes within the group. A type with no icon class
+            # still belongs here: handle_nodes() draws it with the generic
+            # icon, and requiring a class sent it outside its box.
             elif (
                 node_type not in GROUP_NODES
-                and node_type in avl_classes
                 and node_type not in tfdata["hidden"]
                 and not _is_group_link(node_connection, tfdata)
                 and node_connection != resource
