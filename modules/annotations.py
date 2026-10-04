@@ -667,9 +667,8 @@ def modify_metadata(
             else:
                 targets = []
             if not targets:
-                click.echo(
-                    click.style(f"  WARNING: {_update_not_applied(node)}", fg="yellow")
-                )
+                warning = _update_not_applied(node, set(metadata) | set(graphdict))
+                click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
                 continue
             for key in targets:
                 for param, value in (attrs if isinstance(attrs, dict) else {}).items():
@@ -678,17 +677,37 @@ def modify_metadata(
     return metadata
 
 
-def _update_not_applied(name: str) -> str:
-    """Warning for an ``update`` entry that names no node in the graph."""
+def _update_not_applied(name: str, known_nodes=()) -> str:
+    """Warning for an ``update`` entry that names no node in the graph.
+
+    Suggests the closest real node name, preferring one of the same resource
+    type, so the hint always names something the graph actually has.
+    """
     if "*" in name:
         return (
             f"The update for {name} is not applied: it matches no node in the "
             "graph. Check the pattern against the node names."
         )
-    return (
-        f"The update for {name} is not applied: {name} is not in the graph. "
-        "Name a node the graph has, such as aws_subnet.public~1."
-    )
+    message = f"The update for {name} is not applied: {name} is not in the graph."
+    suggestion = _closest_node(name, known_nodes)
+    if suggestion:
+        message += f" Did you mean {suggestion}?"
+    return message
+
+
+def _closest_node(name: str, known_nodes) -> str:
+    """The real node name nearest to *name*, or "" when the graph is empty."""
+    import difflib
+
+    nodes = sorted(n for n in known_nodes if isinstance(n, str))
+    if not nodes:
+        return ""
+    same_type = [n for n in nodes if n.split(".")[0] == name.split(".")[0]]
+    for pool in (same_type, nodes):
+        match = difflib.get_close_matches(name, pool, n=1, cutoff=0.5)
+        if match:
+            return match[0]
+    return same_type[0] if same_type else ""
 
 
 # ---------------------------------------------------------------------------
@@ -1019,7 +1038,7 @@ def apply_attribute_updates(
     for name, attrs in update.items():
         targets = _nodes_named(name, nodes)
         if not targets:
-            found.append(_update_not_applied(name))
+            found.append(_update_not_applied(name, nodes))
             continue
         for node in targets:
             for attr, value in attrs.items():

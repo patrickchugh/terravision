@@ -561,8 +561,7 @@ def test_render_graph_attributes_label_networks_and_are_saved(outdir):
     assert "Subnet Public (10.0.1.0/24)" in svg
     assert result["warnings"] == [
         "The update for aws_subnet.missing~1 is not applied: aws_subnet.missing~1 "
-        "is not in the graph. Name a node the graph has, such as "
-        "aws_subnet.public~1."
+        "is not in the graph. Did you mean aws_subnet.public~1?"
     ]
     saved = yaml.safe_load(Path(result["files"]["annotations"]).read_text())
     assert saved["update"] == ATTRIBUTES
@@ -611,3 +610,22 @@ def test_render_graph_tool_takes_attributes():
     attributes = spec["properties"]["attributes"]
     assert "CIDR" in attributes["description"]
     assert "attributes" not in spec.get("required", [])
+
+
+def test_missing_node_hint_names_a_real_node():
+    """The hint suggests the nearest node the graph has, never a fixed example."""
+    from modules.annotations import _update_not_applied
+
+    nodes = {"aws_lambda_function.notify", "aws_sfn_state_machine.order_workflow"}
+    warning = _update_not_applied("aws_lambda_function.notfy", nodes)
+    assert warning.endswith("Did you mean aws_lambda_function.notify?")
+    # No subnet in this graph, so no subnet is suggested.
+    assert "aws_subnet" not in _update_not_applied("aws_vpc.nope", nodes)
+
+
+def test_missing_node_hint_without_nodes_has_no_suggestion():
+    from modules.annotations import _update_not_applied
+
+    assert _update_not_applied("aws_vpc.nope", set()) == (
+        "The update for aws_vpc.nope is not applied: aws_vpc.nope is not in the graph."
+    )
