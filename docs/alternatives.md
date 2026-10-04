@@ -18,7 +18,7 @@ Tools for cloud architecture diagrams fall into five groups: manual drawing tool
 | VPC, subnet, zone grouping | Built in, per provider | Drawn by hand | Generic groups | Generic groups | Manual clusters | Built in |
 | Stays current with the code | Redrawn in CI on every change | Manual updates | Repository sync | Manual updates | Manual updates | Follows the live account |
 | Runs locally | Yes | draw.io and Visio: yes | No (SaaS) | Yes | Yes | No (SaaS) |
-| Needs access to your cloud account | Not to the account it draws; Terraform needs credentials the provider accepts | No | No | No | No | Yes, read-only |
+| Needs access to your cloud account | No | No | No | No | No | Yes, read-only |
 | Price | Free, open source | Free (draw.io) to paid | Free tier, paid plans | Free, open source | Free, open source | Paid plans |
 | Other diagram types (sequence, ERD, flowchart) | No | Yes | Yes | Yes | No | No |
 
