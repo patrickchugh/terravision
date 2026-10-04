@@ -1719,8 +1719,13 @@ def _build_diagram(
     tfdata["deferred_connections"] = list()
 
     # Pre-compute flow badges (US5) before drawing starts
-    from modules.annotations import compute_flow_step_numbers
+    from modules.annotations import compute_flow_step_numbers, resolve_annotation_names
 
+    # Variant renames and count numbering happen after annotations are
+    # applied, so flow steps written against Terraform addresses are
+    # translated to the names actually drawn before badges are placed.
+    if tfdata.get("annotations"):
+        tfdata["annotations"] = resolve_annotation_names(tfdata["annotations"], tfdata)
     _flows = (tfdata.get("annotations") or {}).get("flows") or {}
     _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
     tfdata["flow_badges"] = {

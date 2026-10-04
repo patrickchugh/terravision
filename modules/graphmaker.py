@@ -1605,6 +1605,11 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 tfdata["resource_name_map"] = {}
             if resource != consolidated_name:
                 tfdata["resource_name_map"][consolidated_name] = resource
+                # Every name merged into the node, so annotations written
+                # against the Terraform address still find it
+                merged_into = tfdata.setdefault("consolidated_into", {})
+                merged_into[resource] = consolidated_name
+                merged_into.setdefault(resource.split("~")[0], consolidated_name)
             # Use deepcopy to avoid shared references between consolidated nodes
             merged_data = copy.deepcopy(tfdata["meta_data"][consolidated_name])
             merged_data.update(copy.deepcopy(resdata))
