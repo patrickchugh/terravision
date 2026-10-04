@@ -203,6 +203,7 @@ def _load_provider_resources(provider: str) -> None:
 # Initialize with empty defaults
 CONSOLIDATED_NODES = []
 GROUP_NODES = []
+LOGICAL_GROUP_NODES = []
 DRAW_ORDER = []
 NODE_VARIANTS = {}
 OUTER_NODES = []
@@ -812,6 +813,9 @@ def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             config, f"{provider_upper}_CONSOLIDATED_NODES", []
         ),
         "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "LOGICAL_GROUP_NODES": getattr(
+            config, f"{provider_upper}_LOGICAL_GROUP_NODES", []
+        ),
         "DRAW_ORDER": getattr(config, f"{provider_upper}_DRAW_ORDER", []),
         "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", {}),
         "OUTER_NODES": getattr(config, f"{provider_upper}_OUTER_NODES", []),
@@ -1331,6 +1335,24 @@ def handle_group(
                 nested_members.add(member)
                 if str(helpers.get_no_module_name(member).split(".")[0]) in GROUP_NODES:
                     pending.append(member)
+    # Logical groups that belong inside this box (see _adopting_container)
+    # are drawn first, so their members land in them rather than loose here.
+    adopted = [
+        group
+        for group in tfdata["graphdict"]
+        if group not in drawn_resources
+        and _adopting_container(group, tfdata) == resource
+    ]
+    for group in adopted:
+        nested_members.update(tfdata["graphdict"].get(group, []))
+        subGroup, drawn_resources = handle_group(
+            newGroup, cloudGroup, diagramCanvas, group, tfdata, drawn_resources
+        )
+        if subGroup is not None:
+            newGroup.subgraph(subGroup.dot)
+            anchor = _drawn_node_inside(group, tfdata)
+            if anchor is not None:
+                child_group_ids.append(anchor._id)
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
@@ -1470,6 +1492,35 @@ def _group_descendants(resource: str, tfdata: Dict[str, Any]) -> Set[str]:
     return found
 
 
+def _adopting_container(group: str, tfdata: Dict[str, Any]) -> Optional[str]:
+    """The box a parentless logical group is drawn inside, or None.
+
+    A logical group (aws_group, azurerm_group, tv_gcp_logical_group) that no
+    box lists can still have every member listed by one box - Azure's
+    automatic Shared Services group holds a registry, Key Vault and storage
+    that the resource group lists too. The resource group drew first and
+    claimed them, leaving the Shared Services box empty off to one side. The
+    group belongs inside that box instead: the innermost one whose children
+    include all of the group's members. Only drawing changes; the graph is
+    left as it is.
+    """
+    group_type = helpers.get_no_module_name(group).split(".")[0]
+    if group_type not in LOGICAL_GROUP_NODES or not _is_drawable_group(group, tfdata):
+        return None
+    graph = tfdata["graphdict"]
+    if any(group in children for parent, children in graph.items() if parent != group):
+        return None
+    members = set(graph[group])
+    candidates = [
+        box
+        for box, children in graph.items()
+        if box != group and _is_drawable_group(box, tfdata) and members <= set(children)
+    ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda box: (len(graph[box]), box))
+
+
 def _waits_for_parent_group(
     resource: str, tfdata: Dict[str, Any], drawn_resources: List[str]
 ) -> bool:
@@ -1492,6 +1543,9 @@ def _waits_for_parent_group(
         and parent not in drawn_resources
         and _is_drawable_group(parent, tfdata)
     ]
+    adopter = _adopting_container(resource, tfdata)
+    if adopter and adopter not in drawn_resources:
+        return True
     if not parents:
         return False
     descendants = _group_descendants(resource, tfdata)
@@ -1598,6 +1652,7 @@ def _build_diagram(
     """
     # Load provider-specific configuration constants and set module globals
     global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global LOGICAL_GROUP_NODES
     global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
     global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE, GROUP_LINKS
 
@@ -1609,6 +1664,7 @@ def _build_diagram(
     constants = _load_provider_constants(tfdata)
     CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
     GROUP_NODES = constants["GROUP_NODES"]
+    LOGICAL_GROUP_NODES = constants["LOGICAL_GROUP_NODES"]
     DRAW_ORDER = constants["DRAW_ORDER"]
     NODE_VARIANTS = constants["NODE_VARIANTS"]
     OUTER_NODES = constants["OUTER_NODES"]
