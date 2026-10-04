@@ -1,0 +1,107 @@
+{
+  "aws-data-lake": {
+    "height": 1002,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-data-lake.png",
+    "source_sha256": "71d6a2f7307232922677fe827547aa99adaca4e738cedb48d8d7c78e78a68388",
+    "width": 1400
+  },
+  "aws-eks-karpenter": {
+    "height": 985,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-eks-karpenter.png",
+    "source_sha256": "a17d2100439f846076c77c3a00d80f509422a17f156b2246b41846bcf2b24ef2",
+    "width": 1400
+  },
+  "aws-event-driven": {
+    "height": 7677,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-event-driven.png",
+    "source_sha256": "e8afe868cffd87de82e820cb81817460eae77125e9a945a7686f9bcee97d714b",
+    "width": 1400
+  },
+  "aws-multi-account-network": {
+    "height": 1655,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-multi-account-network.png",
+    "source_sha256": "5c4af59fd30b936209c3b8759ac6d4e480b5871ca71a8081a55cf8202024df12",
+    "width": 1400
+  },
+  "aws-multi-region": {
+    "height": 1607,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-multi-region.png",
+    "source_sha256": "a1f77e246e9adcac59d2f7d5b80e1f27a55585ed5c651ef29210d1fd7c0f1f8a",
+    "width": 1400
+  },
+  "aws-serverless-event-driven": {
+    "height": 1011,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/aws-serverless-event-driven.png",
+    "source_sha256": "d8f1ba7d2b16ae49326628a6f33fc9562079b39e2d3bf70231fea6637120b092",
+    "width": 1400
+  },
+  "azure-aks": {
+    "height": 1001,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-aks.png",
+    "source_sha256": "51a62acb413f003583a5aeb7c2c3f9dff6260290898db7bbee51c1347df676f8",
+    "width": 1400
+  },
+  "azure-hub-spoke": {
+    "height": 1865,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-hub-spoke.png",
+    "source_sha256": "b7abbd804d3d3737542eabf120445d170f796e83842c572999d7948aeeb50670",
+    "width": 1400
+  },
+  "azure-three-tier": {
+    "height": 1987,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-three-tier.png",
+    "source_sha256": "7db26f884cd3a3090ec69d530ca435c0ccf1b03de866326720b80acbb95b4e5a",
+    "width": 1400
+  },
+  "azure-web-app": {
+    "height": 3283,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-web-app.png",
+    "source_sha256": "2f9738497043c4e722ec058eb49f2e76519a9c8bad0f40070c9b48fdf663c538",
+    "width": 1400
+  },
+  "gcp-data-pipeline": {
+    "height": 972,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-data-pipeline.png",
+    "source_sha256": "65b7de4a0f188d1ef47c68a6ca32a794f2de0c4a39d28d0303c98c5c94cbdb44",
+    "width": 1400
+  },
+  "gcp-gke": {
+    "height": 2592,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-gke.png",
+    "source_sha256": "ffcba37aaef786afb2bd77688f2dccfee6319eccedd27018d659cda485817ffb",
+    "width": 1400
+  },
+  "gcp-serverless-api": {
+    "height": 3464,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-serverless-api.png",
+    "source_sha256": "245cd37912cb78dfc9e306527277e3727dce8b7053e13025e2bbf2e02d94721e",
+    "width": 1400
+  },
+  "gcp-three-tier": {
+    "height": 1057,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-three-tier.png",
+    "source_sha256": "a8190f71a053a9163a21bad015c27d50ca1571876b2e1a7c8c27154382a0ba52",
+    "width": 1400
+  },
+  "three-tier-web": {
+    "height": 1439,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/three-tier-web.png",
+    "source_sha256": "42992e41751b2349a8ec26d18596c1cebed49b2b0a010de886c9be96fefbf4ef",
+    "width": 1400
+  }
+}
