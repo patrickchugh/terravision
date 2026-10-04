@@ -414,6 +414,30 @@ AWS_HIDE_NODES = [
     "aws_ecr_lifecycle_policy",
     # A generated value, not infrastructure
     "random_password",
+    # More settings applied to a bucket (see above). The notification and
+    # replication handlers draw the bucket-to-target and source-to-destination
+    # arrows directly, so hiding these nodes loses no connection.
+    "aws_s3_bucket_public_access_block",
+    "aws_s3_bucket_website_configuration",
+    "aws_s3_bucket_acl",
+    "aws_s3_bucket_notification",
+    "aws_s3_bucket_replication_configuration",
+    # Permission for a service to invoke a function: a grant, not a resource.
+    # API Gateway handling links the API to the function through it before
+    # drawing, so the link survives the node being hidden.
+    "aws_lambda_permission",
+    # Policies attached to a queue or a user group, not architecture
+    "aws_sqs_queue_policy",
+    "aws_iam_group_policy_attachment",
+    # Which subnets a database or cache may use: the database and cache are
+    # drawn in those subnets already.
+    "aws_db_subnet_group",
+    "aws_elasticache_subnet_group",
+    # Account-wide IAM settings and a user's credentials, not architecture
+    "aws_iam_account_password_policy",
+    "aws_iam_account_alias",
+    "aws_iam_access_key",
+    "aws_iam_user_login_profile",
 ]
 
 # Resources that should skip automatic expansion in handle_singular_references
