@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source aws-eks-karpenter.tvg.json --annotate aws-eks-karpenter.annotations.yml
 format: '0.3'
+title: Amazon EKS with Karpenter autoscaling and private endpoints
 update:
   aws_vpc.main:
     cidr_block: 10.10.0.0/16
@@ -22,3 +23,54 @@ update:
     cidr_block: 10.10.201.0/24
   aws_subnet.data~3:
     cidr_block: 10.10.202.0/24
+connect:
+  aws_instance.on_demand_node~1:
+  - aws_rds_aurora_postgres.orders~1: PostgreSQL 5432
+  aws_instance.on_demand_node~2:
+  - aws_rds_aurora_postgres.orders~2: PostgreSQL 5432
+  aws_instance.on_demand_node~3:
+  - aws_rds_aurora_postgres.orders~3: PostgreSQL 5432
+  tv_karpenter.karpenter~1:
+  - aws_vpc_endpoint.ecr_ec2_sqs~1: EC2 and SQS APIs
+  tv_karpenter.karpenter~2:
+  - aws_vpc_endpoint.ecr_ec2_sqs~2: EC2 and SQS APIs
+  tv_karpenter.karpenter~3:
+  - aws_vpc_endpoint.ecr_ec2_sqs~3: EC2 and SQS APIs
+  aws_cloudwatch_event_rule.spot_interruption:
+  - aws_sqs_queue.karpenter_interruption: Interruption notices
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.container_layers: Pulls image layers
+flows:
+  Customer request:
+    description: A customer request reaches a pod
+    steps:
+    - resource: tv_aws_users.users -> aws_route53_zone.dns
+      xlabel: Resolve
+      detail: Customers resolve the application's domain in Route 53
+    - resource: aws_route53_zone.dns -> aws_alb.ingress~1
+      xlabel: Route
+      detail: Route 53 sends them to an Application Load Balancer in one of three availability zones
+    - resource: aws_alb.ingress~1 -> aws_instance.on_demand_node~1
+      xlabel: Ingress
+      detail: The load balancer forwards to pods on the NodePool's On-Demand or Spot nodes
+    - resource: aws_instance.on_demand_node~1 -> aws_rds_aurora_postgres.orders~1
+      xlabel: Query
+      detail: Pods read and write orders in Aurora PostgreSQL
+  Spot interruption:
+    description: Karpenter replaces a Spot node before it is reclaimed
+    steps:
+    - resource: aws_cloudwatch_event_rule.spot_interruption -> aws_sqs_queue.karpenter_interruption
+      xlabel: Warning
+      detail: EC2 issues a two-minute Spot interruption warning and the EventBridge rule queues it
+    - resource: aws_sqs_queue.karpenter_interruption -> tv_karpenter.karpenter~1
+      xlabel: Consume
+      detail: The Karpenter controller reads the warning from SQS
+    - resource: tv_karpenter.karpenter~1 -> aws_vpc_endpoint.ecr_ec2_sqs~1
+      xlabel: Launch
+      detail: Karpenter calls EC2 through the interface endpoint to launch a replacement node
+    - resource: aws_instance.on_demand_node~1 -> aws_vpc_endpoint.s3_gateway
+      xlabel: Pull image
+      detail: The new node pulls image layers from S3 through the gateway endpoint
+    - resource: tv_karpenter.karpenter~1 -> aws_spot_instance_request.spot_node~1
+      xlabel: Drain
+      detail: Karpenter drains the interrupted Spot node and its pods move to the new node

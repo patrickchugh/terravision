@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source three-tier-web.tvg.json --annotate three-tier-web.annotations.yml
 format: '0.3'
+title: AWS three-tier web application
 update:
   aws_vpc.main:
     cidr_block: 10.0.0.0/16
@@ -16,3 +17,58 @@ update:
     cidr_block: 10.0.21.0/24
   aws_subnet.data~2:
     cidr_block: 10.0.22.0/24
+connect:
+  aws_cloudfront_distribution.cdn:
+  - aws_alb.web_alb~1: HTTPS 443
+  - aws_alb.web_alb~2: HTTPS 443
+  - aws_s3_bucket.static_assets: Origin access control
+  aws_alb.web_alb~1:
+  - aws_instance.app~1: HTTP 8080
+  aws_alb.web_alb~2:
+  - aws_instance.app~2: HTTP 8080
+  aws_instance.app~1:
+  - aws_rds_aurora_postgres.app_db~1: PostgreSQL 5432
+  - aws_elasticache_replication_group.sessions~1: Redis TLS 6379
+  aws_instance.app~2:
+  - aws_rds_aurora_postgres.app_db~2: PostgreSQL 5432
+  - aws_elasticache_replication_group.sessions~2: Redis TLS 6379
+  aws_vpc_endpoint.secrets_manager~1:
+  - aws_secretsmanager_secret.db_credentials: Retrieves credentials
+  aws_vpc_endpoint.secrets_manager~2:
+  - aws_secretsmanager_secret.db_credentials: Retrieves credentials
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.user_uploads: Stores uploads
+  aws_cloudwatch_metric_alarm.app_cpu:
+  - aws_instance.app~1: Target tracking, 60% CPU
+  - aws_instance.app~2: Target tracking, 60% CPU
+flows:
+  Customer request:
+    description: A customer loads a page
+    steps:
+    - resource: tv_aws_users.users -> aws_cloudfront_distribution.cdn
+      xlabel: Request
+      detail: The browser requests the site from CloudFront
+    - resource: aws_cloudfront_distribution.cdn -> aws_s3_bucket.static_assets
+      xlabel: Static files
+      detail: CloudFront serves HTML, JavaScript and images from the S3 static site
+    - resource: aws_cloudfront_distribution.cdn -> aws_alb.web_alb~1
+      xlabel: API call
+      detail: API calls go to the Application Load Balancer in either availability zone
+    - resource: aws_alb.web_alb~1 -> aws_instance.app~1
+      xlabel: Forward
+      detail: The load balancer forwards the call to an EC2 app server in a private subnet
+    - resource: aws_instance.app~1 -> aws_elasticache_replication_group.sessions~1
+      xlabel: Session
+      detail: The app server reads the customer's session from ElastiCache
+    - resource: aws_instance.app~1 -> aws_rds_aurora_postgres.app_db~1
+      xlabel: Query
+      detail: It reads and writes application data in Aurora PostgreSQL
+  Private service access:
+    description: App servers reach AWS services without the internet
+    steps:
+    - resource: aws_instance.app~1 -> aws_vpc_endpoint.secrets_manager~1
+      xlabel: Get secret
+      detail: The app server fetches database credentials through the Secrets Manager interface endpoint
+    - resource: aws_vpc_endpoint.s3_gateway -> aws_s3_bucket.user_uploads
+      xlabel: Uploads
+      detail: User uploads are stored in S3 through the gateway endpoint

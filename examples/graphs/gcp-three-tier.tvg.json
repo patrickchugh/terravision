@@ -44,10 +44,19 @@
     "tv_gcp_zone.us_central1_b"
   ],
   "tv_gcp_zone.us_central1_a": [
+    "google_compute_instance_group.api~1"
+  ],
+  "google_compute_instance_group.api~1": [
     "google_compute_instance.api~1"
   ],
   "tv_gcp_zone.us_central1_b": [
+    "google_compute_instance_group.api~2"
+  ],
+  "google_compute_instance_group.api~2": [
     "google_compute_instance.api~2"
+  ],
+  "google_monitoring_metric_descriptor.cpu_utilization": [
+    "google_compute_instance_group_manager.api"
   ],
   "google_compute_instance_group_manager.api": [
     "google_compute_instance.api~1",

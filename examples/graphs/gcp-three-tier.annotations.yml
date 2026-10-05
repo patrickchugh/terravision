@@ -1,6 +1,49 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source gcp-three-tier.tvg.json --annotate gcp-three-tier.annotations.yml
 format: '0.3'
+title: Google Cloud three-tier web application
 update:
   google_compute_subnetwork.app:
     ip_cidr_range: 10.80.0.0/20
+  google_monitoring_metric_descriptor.cpu_utilization:
+    label: Cloud Monitoring
+connect:
+  google_compute_url_map.web:
+  - google_compute_backend_bucket.frontend: Path /*
+  - google_compute_backend_service.api: Path /api/*
+  google_compute_security_policy.cloud_armor:
+  - google_compute_backend_service.api: WAF and rate limits
+  google_compute_instance.api~1:
+  - google_sql_database_instance.main: PostgreSQL 5432
+  - google_redis_instance.cache: Redis 6379
+  google_compute_instance.api~2:
+  - google_sql_database_instance.main: PostgreSQL 5432
+  - google_redis_instance.cache: Redis 6379
+  google_compute_instance_group_manager.api:
+  - google_compute_instance.api~1: Autoscale 2-10 VMs at 60% CPU
+  - google_compute_instance.api~2: Autoscale 2-10 VMs at 60% CPU
+flows:
+  Customer request:
+    description: A customer uses the web app
+    steps:
+    - resource: tv_gcp_users_icon.users -> google_compute_global_forwarding_rule.https
+      xlabel: HTTPS
+      detail: Users connect to the global HTTPS load balancer
+    - resource: google_compute_global_forwarding_rule.https -> google_compute_target_https_proxy.web
+      xlabel: TLS
+      detail: The HTTPS proxy terminates TLS
+    - resource: google_compute_url_map.web -> google_compute_backend_bucket.frontend
+      xlabel: Static site
+      detail: The URL map sends page requests to the backend bucket, which serves the React site from Cloud Storage
+    - resource: google_compute_url_map.web -> google_compute_backend_service.api
+      xlabel: API
+      detail: and API requests to the backend service, where Cloud Armor filters attacks
+    - resource: google_compute_backend_service.api -> google_compute_instance_group_manager.api
+      xlabel: Instances
+      detail: The managed instance group spreads requests across two zones
+    - resource: google_compute_instance.api~1 -> google_redis_instance.cache
+      xlabel: Cache
+      detail: The API checks Memorystore for cached results
+    - resource: google_compute_instance.api~1 -> google_sql_database_instance.main
+      xlabel: Query
+      detail: and queries Cloud SQL

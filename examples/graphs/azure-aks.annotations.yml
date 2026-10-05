@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source azure-aks.tvg.json --annotate azure-aks.annotations.yml
 format: '0.3'
+title: Azure AKS microservices with Front Door and private endpoints
 update:
   azurerm_virtual_network.aks:
     address_space:
@@ -14,3 +15,47 @@ update:
   azurerm_subnet.aks_nodes:
     address_prefixes:
     - 10.70.16.0/20
+connect:
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+  - azurerm_cdn_frontdoor_profile.edge: WAF rules
+  azurerm_application_gateway.ingress:
+  - azurerm_kubernetes_cluster_node_pool.apps~1: AGIC ingress
+  - azurerm_kubernetes_cluster_node_pool.apps~2: AGIC ingress
+  - azurerm_kubernetes_cluster_node_pool.apps~3: AGIC ingress
+  azurerm_private_endpoint.cosmos:
+  - azurerm_cosmosdb_account.catalogue: NoSQL API, HTTPS 443
+  azurerm_private_endpoint.service_bus:
+  - azurerm_servicebus_namespace.orders: AMQP 5671
+  azurerm_private_endpoint.redis:
+  - azurerm_redis_cache.sessions: Redis TLS 6380
+flows:
+  Customer request:
+    description: A customer places an order
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_cdn_frontdoor_profile.edge
+      xlabel: HTTPS
+      detail: Customers reach Front Door, where the WAF policy filters the request
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_public_ip.ingress
+      xlabel: Origin
+      detail: Front Door forwards it to the Application Gateway's public IP
+    - resource: azurerm_application_gateway.ingress -> azurerm_kubernetes_cluster_node_pool.apps~1
+      xlabel: Ingress
+      detail: Application Gateway routes it to service pods on node pools in three zones
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.redis
+      xlabel: Session
+      detail: The pods read the session from Redis
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.cosmos
+      xlabel: Catalogue
+      detail: read the catalogue from Cosmos DB
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.service_bus
+      xlabel: Order
+      detail: and put the order on Service Bus, each through its private endpoint
+  Outbound:
+    description: The cluster calls out to the internet
+    steps:
+    - resource: azurerm_nat_gateway.egress -> azurerm_public_ip.egress
+      xlabel: NAT
+      detail: Outbound calls from the node subnet go through the NAT gateway
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.internet
+      xlabel: Internet
+      detail: and leave from its fixed public IP

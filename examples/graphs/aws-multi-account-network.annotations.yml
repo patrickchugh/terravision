@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source aws-multi-account-network.tvg.json --annotate aws-multi-account-network.annotations.yml
 format: '0.3'
+title: AWS multi-account network with Transit Gateway and central inspection
 update:
   aws_vpc.network_account_inspection:
     cidr_block: 10.100.0.0/24
@@ -32,3 +33,51 @@ update:
     cidr_block: 10.130.0.0/28
   aws_subnet.shared_endpoints:
     cidr_block: 10.130.1.0/24
+connect:
+  aws_customer_gateway.datacentre_router:
+  - aws_vpn_connection.ipsec_vpn: IPsec with BGP
+  aws_vpn_connection.ipsec_vpn:
+  - aws_ec2_transit_gateway.hub: VPN attachment
+  aws_ec2_transit_gateway.hub:
+  - aws_networkfirewall_firewall.inspection~1: Inspection route
+  - aws_networkfirewall_firewall.inspection~2: Inspection route
+  aws_ecs_fargate.orders:
+  - aws_rds_postgres.orders: PostgreSQL 5432
+  aws_ec2_transit_gateway_vpc_attachment.shared_services:
+  - aws_directory_service_directory.corporate_ad: LDAP and Kerberos
+  aws_internet_gateway.egress:
+  - tv_aws_internet.internet: Filtered egress
+flows:
+  Data centre to production:
+    description: The data centre reaches a production service
+    steps:
+    - resource: aws_customer_gateway.datacentre_router -> aws_vpn_connection.ipsec_vpn
+      xlabel: VPN
+      detail: The data centre router connects over a site-to-site IPsec VPN
+    - resource: aws_vpn_connection.ipsec_vpn -> aws_ec2_transit_gateway.hub
+      xlabel: Attach
+      detail: The VPN terminates on the Transit Gateway in the network account
+    - resource: aws_ec2_transit_gateway.hub -> aws_networkfirewall_firewall.inspection~1
+      xlabel: Inspect
+      detail: Transit Gateway routes send the traffic through Network Firewall in the inspection VPC
+    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_ec2_transit_gateway_vpc_attachment.production
+      xlabel: Allow
+      detail: Allowed traffic returns through the Transit Gateway to the production VPC attachment
+    - resource: aws_ec2_transit_gateway_vpc_attachment.production -> aws_ecs_fargate.orders
+      xlabel: Deliver
+      detail: and reaches the ECS Fargate orders service
+  Internet egress:
+    description: A spoke reaches the internet through central egress
+    steps:
+    - resource: aws_instance.dev_workloads -> aws_ec2_transit_gateway_vpc_attachment.development
+      xlabel: Outbound
+      detail: A development instance sends outbound traffic to its Transit Gateway attachment
+    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_ec2_transit_gateway_vpc_attachment.development
+      xlabel: Filter
+      detail: The Transit Gateway routes it to Network Firewall, which filters it
+    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_nat_gateway.egress~1
+      xlabel: NAT
+      detail: Allowed traffic goes to a NAT gateway in the central egress VPC
+    - resource: aws_internet_gateway.egress -> tv_aws_internet.internet
+      xlabel: Internet
+      detail: and leaves through the egress VPC's internet gateway

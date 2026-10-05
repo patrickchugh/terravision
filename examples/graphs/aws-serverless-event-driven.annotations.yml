@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source aws-serverless-event-driven.tvg.json --annotate aws-serverless-event-driven.annotations.yml
 format: '0.3'
+title: AWS serverless event-driven order platform in a VPC
 update:
   aws_vpc.orders:
     cidr_block: 10.20.0.0/16
@@ -16,3 +17,55 @@ update:
     cidr_block: 10.20.240.0/24
   aws_subnet.endpoints~2:
     cidr_block: 10.20.241.0/24
+connect:
+  aws_apigatewayv2_api.orders_api:
+  - aws_cognito_user_pool.customers: JWT authorizer
+  aws_vpc_endpoint.dynamodb_gateway:
+  - aws_dynamodb_table.orders: Writes orders
+  aws_vpc_endpoint.secrets_manager~1:
+  - aws_secretsmanager_secret.payment_api_key: Retrieves API key
+  aws_vpc_endpoint.secrets_manager~2:
+  - aws_secretsmanager_secret.payment_api_key: Retrieves API key
+  aws_internet_gateway.igw:
+  - tv_aws_internet.payment_provider: HTTPS 443
+  aws_sqs_queue.notifications:
+  - aws_sqs_queue.notifications_dlq: Failed messages
+  aws_kinesis_firehose_delivery_stream.order_events:
+  - aws_s3_bucket.event_lake: Parquet batches
+  aws_scheduler_schedule.nightly_reconcile:
+  - aws_lambda_function.orders_api~1: Nightly run
+  - aws_lambda_function.orders_api~2: Nightly run
+flows:
+  Place an order:
+    description: A customer places an order
+    steps:
+    - resource: tv_aws_users.customers -> aws_apigatewayv2_api.orders_api
+      xlabel: Order
+      detail: The customer posts an order to the HTTP API
+    - resource: aws_apigatewayv2_api.orders_api -> aws_cognito_user_pool.customers
+      xlabel: Authorise
+      detail: API Gateway checks the customer's token against Cognito
+    - resource: aws_apigatewayv2_api.orders_api -> aws_lambda_function.orders_api~1
+      xlabel: Invoke
+      detail: API Gateway invokes the orders Lambda in a private subnet
+    - resource: aws_lambda_function.orders_api~1 -> aws_vpc_endpoint.dynamodb_gateway
+      xlabel: Save
+      detail: The Lambda saves the order to DynamoDB through the gateway endpoint
+    - resource: aws_lambda_function.orders_api~1 -> aws_vpc_endpoint.eventbridge~1
+      xlabel: Publish
+      detail: It publishes an OrderPlaced event to EventBridge through the interface endpoint
+  Event fan-out:
+    description: The order event fans out
+    steps:
+    - resource: aws_cloudwatch_event_bus.orders -> aws_sfn_state_machine.fulfilment
+      xlabel: Fulfil
+      detail: The bus starts the Step Functions fulfilment workflow
+    - resource: aws_lambda_function.fulfilment~1 -> aws_nat_gateway.egress~1
+      xlabel: Charge
+      detail: The fulfilment Lambda charges the payment provider, the only traffic that leaves through NAT
+    - resource: aws_sqs_queue.notifications -> aws_lambda_function.notifications~1
+      xlabel: Notify
+      detail: A queued notification triggers the notifications Lambda, which alerts the customer through SNS
+    - resource: aws_cloudwatch_event_bus.orders -> aws_kinesis_firehose_delivery_stream.order_events
+      xlabel: Archive
+      detail: Firehose writes every event to the S3 event lake, catalogued by Glue and queried with Athena

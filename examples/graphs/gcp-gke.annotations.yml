@@ -1,6 +1,41 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source gcp-gke.tvg.json --annotate gcp-gke.annotations.yml
 format: '0.3'
+title: Google Cloud GKE microservices with Private Service Connect
 update:
   google_compute_subnetwork.gke_nodes:
     ip_cidr_range: 10.90.0.0/20
+connect:
+  google_compute_security_policy.cloud_armor:
+  - google_compute_backend_service.storefront: WAF and rate limits
+flows:
+  Customer order:
+    description: A customer places an order
+    steps:
+    - resource: tv_gcp_users_icon.customers -> google_compute_global_forwarding_rule.https
+      xlabel: HTTPS
+      detail: Customers connect to the global HTTPS load balancer
+    - resource: google_compute_url_map.shop -> google_compute_backend_service.storefront
+      xlabel: Route
+      detail: The URL map routes to the storefront backend, where Cloud Armor filters attacks
+    - resource: google_compute_backend_service.storefront -> google_compute_instance.gke_node~1
+      xlabel: Pods
+      detail: The load balancer sends the request to storefront pods on GKE nodes in three zones
+    - resource: google_compute_instance.gke_node~1 -> google_compute_forwarding_rule.psc_cloud_sql
+      xlabel: Save
+      detail: The pods save the order to Cloud SQL through its Private Service Connect endpoint
+    - resource: google_compute_instance.gke_node~1 -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Publish
+      detail: and publish an order event to Pub/Sub through the endpoint for Google APIs
+  Fulfilment:
+    description: The order event is fulfilled and analysed
+    steps:
+    - resource: google_pubsub_topic.order_placed -> google_cloud_run_v2_service.fulfilment
+      xlabel: Trigger
+      detail: The event triggers the Cloud Run fulfilment service
+    - resource: google_cloud_run_v2_service.fulfilment -> google_firestore_database.shipments
+      xlabel: Ship
+      detail: which records the shipment in Firestore
+    - resource: google_pubsub_topic.order_placed -> google_bigquery_dataset.sales
+      xlabel: Analytics
+      detail: A BigQuery subscription streams every order into the sales dataset

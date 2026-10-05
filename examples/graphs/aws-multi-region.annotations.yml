@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source aws-multi-region.tvg.json --annotate aws-multi-region.annotations.yml
 format: '0.3'
+title: AWS multi-region active-passive failover
 update:
   aws_vpc.primary_us_east_1:
     cidr_block: 10.40.0.0/16
@@ -30,3 +31,57 @@ update:
     cidr_block: 10.41.21.0/24
   aws_subnet.standby_data~2:
     cidr_block: 10.41.22.0/24
+connect:
+  aws_route53_zone.failover:
+  - aws_alb.primary_web~1: Primary record
+  - aws_alb.primary_web~2: Primary record
+  - aws_alb.standby_web~1: Secondary record
+  - aws_alb.standby_web~2: Secondary record
+  aws_ecs_fargate.primary_api~1:
+  - aws_rds_aurora_postgres.primary_db~1: PostgreSQL 5432
+  aws_ecs_fargate.primary_api~2:
+  - aws_rds_aurora_postgres.primary_db~2: PostgreSQL 5432
+  aws_ecs_fargate.standby_api~1:
+  - aws_rds_aurora_postgres.standby_db~1: PostgreSQL 5432
+  aws_ecs_fargate.standby_api~2:
+  - aws_rds_aurora_postgres.standby_db~2: PostgreSQL 5432
+  aws_rds_aurora_postgres.primary_db~1:
+  - aws_rds_aurora_postgres.standby_db~1: Global Database replication
+  aws_dynamodb_global_table.sessions_primary:
+  - aws_dynamodb_global_table.sessions_standby: Global table replication
+  aws_s3_bucket.assets_primary:
+  - aws_s3_bucket.assets_standby: Cross-region replication
+flows:
+  Normal operation:
+    description: Requests are served from the primary region
+    steps:
+    - resource: tv_aws_users.users -> aws_route53_zone.failover
+      xlabel: Resolve
+      detail: Users resolve the application in Route 53, which health-checks both regions
+    - resource: aws_route53_zone.failover -> aws_alb.primary_web~1
+      xlabel: Primary
+      detail: While us-east-1 is healthy, Route 53 answers with its load balancers
+    - resource: aws_alb.primary_web~1 -> aws_ecs_fargate.primary_api~1
+      xlabel: Serve
+      detail: ECS Fargate tasks handle the request
+    - resource: aws_ecs_fargate.primary_api~1 -> aws_rds_aurora_postgres.primary_db~1
+      xlabel: Write
+      detail: The tasks write to the Aurora primary cluster
+    - resource: aws_ecs_fargate.primary_api~1 -> aws_vpc_endpoint.primary_dynamodb_gateway
+      xlabel: Session
+      detail: and store sessions in DynamoDB through the gateway endpoint
+  Replication and failover:
+    description: The standby region stays ready to take over
+    steps:
+    - resource: aws_rds_aurora_postgres.primary_db~1 -> aws_rds_aurora_postgres.standby_db~1
+      xlabel: Replicate
+      detail: Aurora Global Database replicates the data to eu-west-1
+    - resource: aws_dynamodb_global_table.sessions_primary -> aws_dynamodb_global_table.sessions_standby
+      xlabel: Sessions
+      detail: DynamoDB global tables copy the sessions
+    - resource: aws_s3_bucket.assets_primary -> aws_s3_bucket.assets_standby
+      xlabel: Assets
+      detail: S3 cross-region replication copies the assets
+    - resource: aws_route53_zone.failover -> aws_alb.standby_web~1
+      xlabel: Failover
+      detail: When the health checks fail, Route 53 sends users to eu-west-1 and Aurora is promoted there

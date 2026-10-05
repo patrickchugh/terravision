@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source azure-three-tier.tvg.json --annotate azure-three-tier.annotations.yml
 format: '0.3'
+title: Azure three-tier web application
 update:
   azurerm_virtual_network.main:
     address_space:
@@ -14,3 +15,48 @@ update:
   azurerm_subnet.data:
     address_prefixes:
     - 10.50.10.0/24
+connect:
+  azurerm_dns_zone.public:
+  - azurerm_cdn_frontdoor_profile.edge: CNAME
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+  - azurerm_cdn_frontdoor_profile.edge: WAF rules
+  azurerm_cdn_frontdoor_profile.edge:
+  - azurerm_public_ip.appgw: HTTPS 443
+  azurerm_application_gateway.api:
+  - azurerm_container_app.api~1: HTTPS 443
+  - azurerm_container_app.api~2: HTTPS 443
+  azurerm_private_endpoint.sql:
+  - azurerm_mssql_database.app: TDS 8.0, port 1433
+  azurerm_public_ip.egress:
+  - tv_azurerm_internet.internet: Outbound SNAT
+flows:
+  Customer request:
+    description: A customer uses the web app
+    steps:
+    - resource: tv_azurerm_users.users -> azurerm_dns_zone.public
+      xlabel: Resolve
+      detail: Users resolve the application's domain in Azure DNS
+    - resource: azurerm_dns_zone.public -> azurerm_cdn_frontdoor_profile.edge
+      xlabel: Edge
+      detail: Front Door receives the request and its WAF policy filters it
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_static_web_app.frontend
+      xlabel: Static site
+      detail: Front Door serves the frontend from the Static Web App
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_public_ip.appgw
+      xlabel: API
+      detail: API calls go to the Application Gateway's public IP
+    - resource: azurerm_application_gateway.api -> azurerm_container_app.api~1
+      xlabel: Route
+      detail: Application Gateway routes them to Container Apps in either zone
+    - resource: azurerm_container_app.api~1 -> azurerm_private_endpoint.sql
+      xlabel: Query
+      detail: The API queries Azure SQL through its private endpoint in the data subnet
+  Outbound:
+    description: The apps call out to the internet
+    steps:
+    - resource: azurerm_nat_gateway.egress -> azurerm_public_ip.egress
+      xlabel: NAT
+      detail: Outbound calls from the app subnet go through the NAT gateway
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.internet
+      xlabel: Internet
+      detail: and leave from its fixed public IP

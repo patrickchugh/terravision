@@ -17,7 +17,8 @@
   "azurerm_virtual_network_peering.hub_to_web": ["azurerm_virtual_network.spoke_web"],
   "azurerm_virtual_network_peering.hub_to_internal": ["azurerm_virtual_network.spoke_internal"],
 
-  "azurerm_resource_group.web_workload": ["azurerm_virtual_network.spoke_web", "azurerm_public_ip.web_ingress", "azurerm_mssql_database.orders", "azurerm_storage_account.media"],
+  "azurerm_resource_group.web_workload": ["azurerm_virtual_network.spoke_web", "azurerm_public_ip.web_ingress", "azurerm_mssql_database.orders", "azurerm_storage_account.media", "azurerm_monitor_autoscale_setting.web"],
+  "azurerm_monitor_autoscale_setting.web": ["azurerm_linux_virtual_machine_scale_set.web~1", "azurerm_linux_virtual_machine_scale_set.web~2"],
   "azurerm_virtual_network.spoke_web": ["azurerm_subnet.app_gateway", "azurerm_subnet.web_app", "azurerm_subnet.web_endpoints"],
   "azurerm_subnet.app_gateway": ["azurerm_application_gateway.web"],
   "azurerm_subnet.web_app": ["tv_azurerm_zone.zone_1", "tv_azurerm_zone.zone_2"],

@@ -1,8 +1,52 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source gcp-data-pipeline.tvg.json --annotate gcp-data-pipeline.annotations.yml
 format: '0.3'
+title: Google Cloud streaming and batch data platform in a VPC
 update:
   google_compute_subnetwork.processing:
     ip_cidr_range: 10.95.0.0/20
   google_compute_subnetwork.orchestration:
     ip_cidr_range: 10.95.16.0/24
+connect:
+  google_composer_environment.orchestration:
+  - google_dataflow_job.batch_load: Nightly DAG
+  - google_dataproc_batch.spark_transform: Nightly DAG
+  google_bigquery_dataset.curated:
+  - google_looker_instance.dashboards: SQL queries
+  - google_vertex_ai_endpoint.churn_model: Training data
+  google_bigtable_instance.realtime_features:
+  - google_cloud_run_v2_service.recommendations_api: Low-latency reads
+flows:
+  Streaming:
+    description: Click events become real-time features
+    steps:
+    - resource: tv_gcp_users_icon.mobile_and_web_apps -> google_pubsub_topic.clickstream
+      xlabel: Events
+      detail: Apps publish click events to Pub/Sub
+    - resource: google_dataflow_job.streaming_enrichment -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Enrich
+      detail: The streaming Dataflow job reads the subscription and enriches the events, reaching Google APIs through Private Service Connect
+    - resource: google_compute_global_forwarding_rule.psc_google_apis -> google_bigtable_instance.realtime_features
+      xlabel: Features
+      detail: It writes them to Bigtable as real-time features
+    - resource: google_bigtable_instance.realtime_features -> google_cloud_run_v2_service.recommendations_api
+      xlabel: Recommend
+      detail: The Cloud Run recommendations API serves them
+  Batch:
+    description: Nightly loads build the curated warehouse
+    steps:
+    - resource: tv_gcp_users_icon.partners -> google_storage_bucket.partner_landing
+      xlabel: Upload
+      detail: Partners drop files into the Cloud Storage landing bucket
+    - resource: google_sql_database_instance.orders -> google_datastream_stream.orders_cdc
+      xlabel: CDC
+      detail: Datastream replicates order changes from Cloud SQL into the raw BigQuery dataset
+    - resource: google_composer_environment.orchestration -> google_dataproc_batch.spark_transform
+      xlabel: Schedule
+      detail: Cloud Composer runs the batch Dataflow load and the Dataproc Spark transform
+    - resource: google_compute_global_forwarding_rule.psc_google_apis -> google_bigquery_dataset.curated
+      xlabel: Curate
+      detail: The jobs write the curated BigQuery dataset through Private Service Connect
+    - resource: google_bigquery_dataset.curated -> google_looker_instance.dashboards
+      xlabel: Dashboards
+      detail: Looker dashboards and the Vertex AI churn model read the curated data

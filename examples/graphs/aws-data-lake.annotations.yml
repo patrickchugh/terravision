@@ -1,6 +1,7 @@
-# CIDR ranges for the gallery diagram. Use with:
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
 #   terravision draw --source aws-data-lake.tvg.json --annotate aws-data-lake.annotations.yml
 format: '0.3'
+title: AWS data lake and analytics platform in a VPC
 update:
   aws_vpc.analytics:
     cidr_block: 10.30.0.0/16
@@ -16,3 +17,58 @@ update:
     cidr_block: 10.30.240.0/24
   aws_subnet.endpoints~2:
     cidr_block: 10.30.241.0/24
+connect:
+  tv_aws_users.partner_systems:
+  - aws_transfer_server.partner_sftp: SFTP 22
+  aws_rds_aurora_mysql.orders_db~1:
+  - aws_dms_replication_instance.orders_cdc~1: MySQL binlog 3306
+  aws_rds_aurora_mysql.orders_db~2:
+  - aws_dms_replication_instance.orders_cdc~2: MySQL binlog 3306
+  aws_vpc_endpoint.secrets_manager~1:
+  - aws_secretsmanager_secret.source_credentials: Retrieves credentials
+  aws_vpc_endpoint.secrets_manager~2:
+  - aws_secretsmanager_secret.source_credentials: Retrieves credentials
+  aws_vpc_endpoint.glue~1:
+  - aws_glue_catalog_database.lake_catalog: Table metadata
+  aws_vpc_endpoint.glue~2:
+  - aws_glue_catalog_database.lake_catalog: Table metadata
+  aws_emrserverless_application.spark~1:
+  - aws_redshiftserverless_workgroup.warehouse~1: COPY aggregates
+  aws_emrserverless_application.spark~2:
+  - aws_redshiftserverless_workgroup.warehouse~2: COPY aggregates
+  aws_athena_workgroup.ad_hoc:
+  - aws_s3_bucket.curated_zone: Reads Parquet
+flows:
+  Ingest:
+    description: Data lands in the raw zone
+    steps:
+    - resource: tv_aws_mobile_client.apps -> aws_kinesis_stream.clickstream
+      xlabel: Clickstream
+      detail: Apps stream click events into Kinesis Data Streams
+    - resource: aws_kinesis_firehose_delivery_stream.clickstream -> aws_s3_bucket.raw_zone
+      xlabel: Land
+      detail: Firehose batches the events into the raw S3 zone
+    - resource: tv_aws_users.partner_systems -> aws_transfer_server.partner_sftp
+      xlabel: SFTP
+      detail: Partners upload files over SFTP to Transfer Family, which lands them in the raw zone
+    - resource: aws_rds_aurora_mysql.orders_db~1 -> aws_dms_replication_instance.orders_cdc~1
+      xlabel: CDC
+      detail: DMS captures order changes from Aurora MySQL and writes them to the raw zone through the S3 gateway endpoint
+  Process and serve:
+    description: Pipelines curate the data for analysts
+    steps:
+    - resource: aws_mwaa_environment.orchestration~1 -> aws_glue_job.clean_and_conform~1
+      xlabel: Schedule
+      detail: Airflow on MWAA runs the pipeline on schedule
+    - resource: aws_glue_job.clean_and_conform~1 -> aws_vpc_endpoint.s3_gateway
+      xlabel: Curate
+      detail: Glue cleans the raw data and writes the curated zone through the S3 gateway endpoint
+    - resource: aws_emrserverless_application.spark~1 -> aws_redshiftserverless_workgroup.warehouse~1
+      xlabel: Load
+      detail: EMR Serverless Spark builds aggregates and loads them into Redshift Serverless
+    - resource: tv_aws_users.analysts -> aws_quicksight_data_source.dashboards
+      xlabel: Dashboards
+      detail: Analysts open QuickSight dashboards
+    - resource: aws_quicksight_data_source.dashboards -> aws_athena_workgroup.ad_hoc
+      xlabel: Query
+      detail: QuickSight queries the curated zone with Athena, with access governed by Lake Formation

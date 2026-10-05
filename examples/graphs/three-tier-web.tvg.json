@@ -33,11 +33,11 @@
     "aws_nat_gateway.nat~2"
   ],
   "aws_subnet.private~1": [
-    "aws_instance.app~1",
+    "aws_autoscaling_group.app~1",
     "aws_vpc_endpoint.secrets_manager~1"
   ],
   "aws_subnet.private~2": [
-    "aws_instance.app~2",
+    "aws_autoscaling_group.app~2",
     "aws_vpc_endpoint.secrets_manager~2"
   ],
   "aws_subnet.data~1": [
@@ -48,8 +48,14 @@
     "aws_rds_aurora_postgres.app_db~2",
     "aws_elasticache_replication_group.sessions~2"
   ],
+  "aws_autoscaling_group.app~1": [
+    "aws_instance.app~1"
+  ],
   "aws_alb.web_alb~1": [
     "aws_instance.app~1"
+  ],
+  "aws_autoscaling_group.app~2": [
+    "aws_instance.app~2"
   ],
   "aws_alb.web_alb~2": [
     "aws_instance.app~2"
@@ -77,6 +83,10 @@
   ],
   "aws_vpc_endpoint.s3_gateway": [
     "aws_s3_bucket.user_uploads"
+  ],
+  "aws_cloudwatch_metric_alarm.app_cpu": [
+    "aws_instance.app~1",
+    "aws_instance.app~2"
   ],
   "aws_vpc_endpoint.secrets_manager~1": [
     "aws_secretsmanager_secret.db_credentials"
