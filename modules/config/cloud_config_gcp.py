@@ -283,6 +283,7 @@ GCP_ACRONYMS_LIST = [
     "gcp",
     "gce",
     "gcs",
+    "vpn",
     "gke",
     "gcr",
     "vpc",
@@ -305,6 +306,13 @@ GCP_ACRONYMS_LIST = [
     "http",
 ]
 
+# Drawn as nothing: plumbing with no architectural meaning. Like the AWS list,
+# these stay in the graph and are only left out of the drawing.
+GCP_HIDE_NODES = [
+    # Who may invoke a Cloud Run service: a grant, not a resource
+    "google_cloud_run_service_iam_member",
+]
+
 GCP_NAME_REPLACEMENTS = {
     "compute_instance": "VM Instance",
     "compute_network": "VPC",
@@ -314,6 +322,8 @@ GCP_NAME_REPLACEMENTS = {
     "container_cluster": "GKE Cluster",
     "storage_bucket": "Cloud Storage",
     "sql_database_instance": "Cloud SQL",
+    "sql_postgres": "Cloud SQL Postgres",
+    "sql_mysql": "Cloud SQL MySQL",
     "kms_key_ring": "KMS",
     "pubsub_topic": "Pub/Sub",
     "bigquery_dataset": "BigQuery",

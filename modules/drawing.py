@@ -203,6 +203,7 @@ def _load_provider_resources(provider: str) -> None:
 # Initialize with empty defaults
 CONSOLIDATED_NODES = []
 GROUP_NODES = []
+LOGICAL_GROUP_NODES = []
 DRAW_ORDER = []
 NODE_VARIANTS = {}
 OUTER_NODES = []
@@ -242,9 +243,16 @@ def _badge_diameter(text: str) -> int:
 
 
 def _badge_image(text: str, color: str) -> Path:
-    """Path of a PNG of ``text`` in white on a filled circle of ``color``."""
+    """Path of a PNG of ``text`` on a filled circle of ``color``.
+
+    The number is white, or dark on a light circle (yellow) where white
+    would barely show.
+    """
     color = _badge_color(color)
-    key = hashlib.sha256(f"{text}|{color}|{_BADGE_FONTSIZE}|1".encode()).hexdigest()
+    ink = "#2D3436" if _label_ground(color) != "white" else "white"
+    key = hashlib.sha256(
+        f"{text}|{color}|{ink}|{_BADGE_FONTSIZE}|1".encode()
+    ).hexdigest()
     path = _BADGE_DIR / f"badge-{key[:16]}.png"
     if path.is_file():
         return path
@@ -253,7 +261,7 @@ def _badge_image(text: str, color: str) -> Path:
     source = (
         "graph { bgcolor=transparent pad=0.01 "
         f"node [shape=circle style=filled fixedsize=true width={diameter:.3f} "
-        f'fillcolor="{color}" color="{color}" penwidth=0 fontcolor=white '
+        f'fillcolor="{color}" color="{color}" penwidth=0 fontcolor="{ink}" '
         f'fontname="Sans-Serif" fontsize={_BADGE_FONTSIZE}] '
         f"b [label=<<B>{html.escape(text)}</B>>] }}"
     )
@@ -279,14 +287,42 @@ def _badge_cell(text: str, color: str, diameter: Optional[int] = None) -> str:
     )
 
 
+# Arrow labels: blue text on a white ground, so they read on any canvas
+# (Google Cloud's is blue) and never vanish into the line beneath them.
+_EDGE_LABEL_COLOR = "#5b9bd5"
+
+
+def _label_ground(color: str) -> str:
+    """The background that keeps text in *color* readable: dark for light
+    text (yellow, white), white for everything else."""
+    match = re.fullmatch(r"#?([0-9A-Fa-f]{6})", str(color or ""))
+    if not match:
+        return "white"
+    r, g, b = (int(match.group(1)[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "#2D3436" if luminance > 0.6 else "white"
+
+
+def edge_label_cell(text: str, color: str = _EDGE_LABEL_COLOR) -> str:
+    """An HTML-label table cell holding arrow-label text on a solid ground."""
+    color = _badge_color(color)
+    return (
+        f'<TD BGCOLOR="{_label_ground(color)}"><FONT POINT-SIZE="28" COLOR="{color}">'
+        f"{html.escape(str(text))}</FONT></TD>"
+    )
+
+
 def generate_badge_xlabel(
-    step_numbers: List[int], color: str = _DEFAULT_BADGE_COLOR
+    step_numbers: List[int],
+    color: str = _DEFAULT_BADGE_COLOR,
+    colors: Optional[Dict[int, str]] = None,
 ) -> str:
     """Return an HTML-table xlabel badge for one or more step numbers.
 
     Args:
         step_numbers: Ordered list of step numbers to display in the badge.
         color: Colour of the badge circle.
+        colors: Colour per step number (its flow's colour), overriding color.
 
     Returns:
         A Graphviz HTML-label string (angle-bracket delimited) suitable
@@ -294,7 +330,8 @@ def generate_badge_xlabel(
     """
     # One circle per step, side by side, so a shared node's badge stays the
     # same size as any other instead of one ever larger circle.
-    cells = "".join(_badge_cell(str(n), color) for n in step_numbers)
+    colors = colors or {}
+    cells = "".join(_badge_cell(str(n), colors.get(n, color)) for n in step_numbers)
     return f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
 
 
@@ -399,10 +436,14 @@ def _apply_flow_badges(
         # merge with the first.
         cluster = node_obj._cluster or diagram
         steps = (tfdata.get("flow_badge_steps") or {}).get(resource, [])
+        colors = tfdata.get("flow_step_colors") or {}
         cluster.dot.node(
             node_obj._id,
             xlabel=badge_html,
             _flowsteps=",".join(str(n) for n in steps),
+            _flowcolors=",".join(
+                _badge_color(colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+            ),
         )
 
 
@@ -738,12 +779,25 @@ def _make_edge_with_badge(
     # parts apart for the draw.io export.
     text = edge_kwargs.pop("label", "") or ""
     edge_kwargs["_flowsteps"] = ",".join(str(n) for n in steps)
-    cells = "".join(_badge_cell(str(n), _DEFAULT_BADGE_COLOR) for n in steps)
+    colors = tfdata.get("flow_step_colors") or {}
+    cells = "".join(
+        _badge_cell(str(n), colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+    )
+    edge_kwargs["_flowcolors"] = ",".join(
+        _badge_color(colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+    )
     if text:
         edge_kwargs["_edgetext"] = text
-        cells += (
-            f'<TD><FONT POINT-SIZE="28" COLOR="#5b9bd5">{html.escape(text)}</FONT></TD>'
+        # The text takes its flow's colour when the flow sets one
+        text_color = next(
+            (
+                colors[n]
+                for n in steps
+                if colors.get(n, _DEFAULT_BADGE_COLOR) != _DEFAULT_BADGE_COLOR
+            ),
+            _EDGE_LABEL_COLOR,
         )
+        cells += edge_label_cell(text, text_color)
     edge_kwargs["xlabel"] = (
         f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
     )
@@ -812,6 +866,9 @@ def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             config, f"{provider_upper}_CONSOLIDATED_NODES", []
         ),
         "GROUP_NODES": getattr(config, f"{provider_upper}_GROUP_NODES", []),
+        "LOGICAL_GROUP_NODES": getattr(
+            config, f"{provider_upper}_LOGICAL_GROUP_NODES", []
+        ),
         "DRAW_ORDER": getattr(config, f"{provider_upper}_DRAW_ORDER", []),
         "NODE_VARIANTS": getattr(config, f"{provider_upper}_NODE_VARIANTS", {}),
         "OUTER_NODES": getattr(config, f"{provider_upper}_OUTER_NODES", []),
@@ -1331,6 +1388,24 @@ def handle_group(
                 nested_members.add(member)
                 if str(helpers.get_no_module_name(member).split(".")[0]) in GROUP_NODES:
                     pending.append(member)
+    # Logical groups that belong inside this box (see _adopting_container)
+    # are drawn first, so their members land in them rather than loose here.
+    adopted = [
+        group
+        for group in tfdata["graphdict"]
+        if group not in drawn_resources
+        and _adopting_container(group, tfdata) == resource
+    ]
+    for group in adopted:
+        nested_members.update(tfdata["graphdict"].get(group, []))
+        subGroup, drawn_resources = handle_group(
+            newGroup, cloudGroup, diagramCanvas, group, tfdata, drawn_resources
+        )
+        if subGroup is not None:
+            newGroup.subgraph(subGroup.dot)
+            anchor = _drawn_node_inside(group, tfdata)
+            if anchor is not None:
+                child_group_ids.append(anchor._id)
     if tfdata["graphdict"].get(resource):
         for node_connection in tfdata["graphdict"][resource]:
             node_type = str(helpers.get_no_module_name(node_connection).split(".")[0])
@@ -1360,10 +1435,11 @@ def handle_group(
                     if anchor is not None:
                         child_group_ids.append(anchor._id)
 
-            # Handle regular nodes within the group
+            # Handle regular nodes within the group. A type with no icon class
+            # still belongs here: handle_nodes() draws it with the generic
+            # icon, and requiring a class sent it outside its box.
             elif (
                 node_type not in GROUP_NODES
-                and node_type in avl_classes
                 and node_type not in tfdata["hidden"]
                 and not _is_group_link(node_connection, tfdata)
                 and node_connection != resource
@@ -1470,6 +1546,35 @@ def _group_descendants(resource: str, tfdata: Dict[str, Any]) -> Set[str]:
     return found
 
 
+def _adopting_container(group: str, tfdata: Dict[str, Any]) -> Optional[str]:
+    """The box a parentless logical group is drawn inside, or None.
+
+    A logical group (aws_group, azurerm_group, tv_gcp_logical_group) that no
+    box lists can still have every member listed by one box - Azure's
+    automatic Shared Services group holds a registry, Key Vault and storage
+    that the resource group lists too. The resource group drew first and
+    claimed them, leaving the Shared Services box empty off to one side. The
+    group belongs inside that box instead: the innermost one whose children
+    include all of the group's members. Only drawing changes; the graph is
+    left as it is.
+    """
+    group_type = helpers.get_no_module_name(group).split(".")[0]
+    if group_type not in LOGICAL_GROUP_NODES or not _is_drawable_group(group, tfdata):
+        return None
+    graph = tfdata["graphdict"]
+    if any(group in children for parent, children in graph.items() if parent != group):
+        return None
+    members = set(graph[group])
+    candidates = [
+        box
+        for box, children in graph.items()
+        if box != group and _is_drawable_group(box, tfdata) and members <= set(children)
+    ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda box: (len(graph[box]), box))
+
+
 def _waits_for_parent_group(
     resource: str, tfdata: Dict[str, Any], drawn_resources: List[str]
 ) -> bool:
@@ -1492,6 +1597,9 @@ def _waits_for_parent_group(
         and parent not in drawn_resources
         and _is_drawable_group(parent, tfdata)
     ]
+    adopter = _adopting_container(resource, tfdata)
+    if adopter and adopter not in drawn_resources:
+        return True
     if not parents:
         return False
     descendants = _group_descendants(resource, tfdata)
@@ -1598,6 +1706,7 @@ def _build_diagram(
     """
     # Load provider-specific configuration constants and set module globals
     global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
+    global LOGICAL_GROUP_NODES
     global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
     global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE, GROUP_LINKS
 
@@ -1609,6 +1718,7 @@ def _build_diagram(
     constants = _load_provider_constants(tfdata)
     CONSOLIDATED_NODES = constants["CONSOLIDATED_NODES"]
     GROUP_NODES = constants["GROUP_NODES"]
+    LOGICAL_GROUP_NODES = constants["LOGICAL_GROUP_NODES"]
     DRAW_ORDER = constants["DRAW_ORDER"]
     NODE_VARIANTS = constants["NODE_VARIANTS"]
     OUTER_NODES = constants["OUTER_NODES"]
@@ -1662,12 +1772,23 @@ def _build_diagram(
     tfdata["deferred_connections"] = list()
 
     # Pre-compute flow badges (US5) before drawing starts
-    from modules.annotations import compute_flow_step_numbers
+    from modules.annotations import compute_flow_step_numbers, resolve_annotation_names
 
+    # Variant renames and count numbering happen after annotations are
+    # applied, so flow steps written against Terraform addresses are
+    # translated to the names actually drawn before badges are placed.
+    if tfdata.get("annotations"):
+        tfdata["annotations"] = resolve_annotation_names(tfdata["annotations"], tfdata)
     _flows = (tfdata.get("annotations") or {}).get("flows") or {}
     _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
+    # A flow's colour paints its steps on the diagram as well as the legend
+    _step_colors = {
+        e["step_number"]: e.get("color", _DEFAULT_BADGE_COLOR) for e in _legend_entries
+    }
+    tfdata["flow_step_colors"] = _step_colors
     tfdata["flow_badges"] = {
-        res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
+        res: generate_badge_xlabel(sorted(nums), colors=_step_colors)
+        for res, nums in _node_badges.items()
     }
     # The step numbers too: the draw.io export draws its own badges from them.
     tfdata["flow_badge_steps"] = {
@@ -1681,7 +1802,8 @@ def _build_diagram(
         for key in ((_src, _tgt), (_tgt, _src)):
             _edge_steps.setdefault(key, set()).update(nums)
     tfdata["flow_edge_badges"] = {
-        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_steps.items()
+        key: generate_badge_xlabel(sorted(nums), colors=_step_colors)
+        for key, nums in _edge_steps.items()
     }
     tfdata["flow_edge_steps"] = {key: sorted(nums) for key, nums in _edge_steps.items()}
     tfdata["flow_legend_entries"] = _legend_entries

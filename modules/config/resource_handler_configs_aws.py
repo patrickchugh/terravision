@@ -296,6 +296,10 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_vpc": {
+        "description": "Pure Function: Draw each VPC in a box for its region when the VPCs span more than one region (single-region diagrams get no region box)",
+        "additional_handler_function": "aws_handle_vpc_region_grouping",
+    },
     "aws_s3_bucket": {
         "description": "Pure Function: Group S3 buckets by region for cross-region replication scenarios",
         "additional_handler_function": "aws_handle_s3_cross_region_grouping",

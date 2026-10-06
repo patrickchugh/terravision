@@ -846,7 +846,9 @@ def emit_drawio(
         # Flow step badges ride on the edge, a little before its middle so
         # they clear any label there.
         if edge.flow_steps:
-            _emit_step_badges(root, eid, edge.flow_steps, -0.4, 0.0, _next_id)
+            _emit_step_badges(
+                root, eid, edge.flow_steps, -0.4, 0.0, _next_id, edge.flow_colors
+            )
 
     # ── Flow step badges on nodes ────────────────────────────────────
     # Children of the node's cell, on its top-left corner, so they move with
@@ -854,7 +856,15 @@ def emit_drawio(
     for node_name, node in xdot_graph.nodes.items():
         steps = node.attrs.get("_flowsteps")
         if steps and node_name in cell_ids:
-            _emit_step_badges(root, cell_ids[node_name], steps, 0.0, 0.0, _next_id)
+            _emit_step_badges(
+                root,
+                cell_ids[node_name],
+                steps,
+                0.0,
+                0.0,
+                _next_id,
+                node.attrs.get("_flowcolors", ""),
+            )
 
     # Wrap in draw.io's <mxfile><diagram> structure for full compatibility
     ET.indent(mx_model, space="      ")
@@ -881,7 +891,16 @@ _BADGE_STYLE = (
 )
 
 
-def _emit_step_badges(root, parent_id, steps, x, y, next_id) -> None:
+def _is_light(color: str) -> bool:
+    """True for a light colour (yellow), where white text would barely show."""
+    match = re.fullmatch(r"#([0-9A-Fa-f]{6})", color or "")
+    if not match:
+        return False
+    r, g, b = (int(match.group(1)[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6
+
+
+def _emit_step_badges(root, parent_id, steps, x, y, next_id, colors="") -> None:
     """Draw one circle per step number as children of a node or edge cell.
 
     ``x`` and ``y`` place the row relative to the parent: for a node, 0,0 is
@@ -889,14 +908,23 @@ def _emit_step_badges(root, parent_id, steps, x, y, next_id) -> None:
     at the target. The row is centred on that point.
     """
     numbers = [n for n in str(steps).split(",") if n]
+    fills = [c for c in str(colors or "").split(",") if c]
     width = len(numbers) * _BADGE_PX + (len(numbers) - 1) * _BADGE_GAP
     for i, number in enumerate(numbers):
+        # Each circle in its flow's colour, as on the drawn diagram
+        style = _BADGE_STYLE
+        if i < len(fills) and re.fullmatch(
+            r"#[0-9A-Fa-f]{3,8}|[A-Za-z]{1,20}", fills[i]
+        ):
+            style = style.replace("fillColor=#E74C3C", f"fillColor={fills[i]}")
+            if _is_light(fills[i]):
+                style = style.replace("fontColor=#FFFFFF", "fontColor=#2D3436")
         cell = ET.SubElement(
             root,
             "mxCell",
             id=next_id(),
             value=number,
-            style=_BADGE_STYLE,
+            style=style,
             vertex="1",
             parent=parent_id,
         )

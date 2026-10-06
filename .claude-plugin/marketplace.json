@@ -12,7 +12,7 @@
     {
       "name": "terravision-cloud-diagrams",
       "source": "./",
-      "description": "Draw professional cloud architecture diagrams (AWS, Azure, GCP) from a JSON graph or Terraform code using TerraVision. Replaces Mermaid for any cloud architecture picture.",
+      "description": "Draw professional cloud architecture diagrams (AWS, Azure, GCP) from a one-sentence description of your idea, a JSON graph or Terraform code using TerraVision. Replaces Mermaid for any cloud architecture picture.",
       "version": "1.6.0",
       "author": { "name": "Patrick Chugh" },
       "homepage": "https://github.com/patrickchugh/terravision",

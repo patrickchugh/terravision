@@ -82,6 +82,9 @@ class OracleDatabase(_Databases):
 
 
 google_sql_database_instance = CloudSQL
+# Engine variants from GCP_NODE_VARIANTS draw as Cloud SQL too
+google_sql_mysql = CloudSQL
+google_sql_postgres = CloudSQL
 google_sql_database = CloudSQL
 google_sql_user = CloudSQL
 google_spanner_instance = Spanner

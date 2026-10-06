@@ -25,7 +25,10 @@ def _fill(image):
     """
     from collections import Counter
 
-    opaque = [p[:3] for p in image.getdata() if p[3] == 255]
+    # get_flattened_data replaces getdata (removed in Pillow 14); older
+    # Pillow, still allowed by pillow>=10, only has getdata.
+    pixels = getattr(image, "get_flattened_data", image.getdata)()
+    opaque = [p[:3] for p in pixels if p[3] == 255]
     return Counter(opaque).most_common(1)[0][0]
 
 

@@ -62,3 +62,65 @@ def test_echoes_of_the_type_are_still_dropped(name, label):
 def test_resource_card_label_wraps_but_keeps_every_word():
     card = helpers.pretty_name("aws_vpn_connection.site_to_site")
     assert card.split() == "VPN Connection Site To Site".split()
+
+
+def test_vpn_is_an_acronym_on_azure_and_gcp():
+    """VPN reads as an acronym on every provider, not "Vpn"."""
+    from modules import helpers
+
+    assert helpers.pretty_name("azurerm_vpn_gateway.hub") == "VPN Gateway Hub"
+    assert helpers.pretty_name("google_compute_vpn_gateway.onprem") == (
+        "VPN Gateway Onprem"
+    )
+
+
+def test_aws_label_width_stays_inside_a_subnet_margin():
+    """A label may overhang its icon by less than a subnet box's 50pt margin.
+
+    The budget used the icon's 256px size as if it were a width on the page,
+    so labels ran 24 characters wide and spilled over subnet borders.
+    """
+    from modules import helpers
+
+    chars = helpers._card_chars("aws")
+    label_pts = chars * 28 * 0.55
+    node_pts = 2.8 * 72
+    assert (label_pts - node_pts) / 2 < 50
+
+
+def test_gke_workload_is_a_titled_icon_node():
+    """tv_gcp_k8s_workload draws as an icon titled like a real service."""
+    from modules import helpers
+    from resource_classes.gcp.containers import tv_gcp_k8s_workload
+
+    assert tv_gcp_k8s_workload._icon == "containers.png"
+    assert helpers.pretty_name("tv_gcp_k8s_workload.frontend") == (
+        "GKE Workload Frontend"
+    )
+    # Actors keep just their name
+    assert helpers.pretty_name("tv_gcp_users_icon.customers") == "Customers"
+
+
+def test_region_and_zone_captions_read_like_the_provider_writes_them():
+    from modules import helpers
+
+    def caption(name):
+        return helpers.pretty_name(name, is_group=True)
+
+    assert caption("tv_aws_region.us-east-1") == "US East 1"
+    assert caption("tv_aws_region.us_east_1") == "US East 1"
+    assert caption("tv_azurerm_region.uk_south") == "UK South"
+    assert caption("tv_gcp_region.europe_west2") == "Europe West2"
+    # A graph's zone name and Terraform's read the same
+    assert caption("tv_aws_az.eu_west_1a") == "Availability Zone EU West 1a"
+    assert caption("aws_az.availability_zone_eu_west_1a~1") == (
+        "Availability Zone EU West 1a"
+    )
+
+
+def test_product_names_keep_their_casing():
+    from modules import helpers
+
+    assert helpers.pretty_name("aws_rds_mysql.app") == "RDS MySQL App"
+    assert "DynamoDB" in helpers.pretty_name("aws_dynamodb_table.orders")
+    assert helpers.pretty_name("google_bigquery_dataset.sales") == "BigQuery Sales"

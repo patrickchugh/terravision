@@ -351,6 +351,7 @@ def add_annotations(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # create_multiple_resources, match_resources, etc.) to label
     # nodes by their final renderer-visible names.
     if tfdata.get("annotations"):
+        tfdata["annotations"] = resolve_annotation_names(tfdata["annotations"], tfdata)
         tfdata["graphdict"] = modify_nodes(tfdata["graphdict"], tfdata["annotations"])
         tfdata["meta_data"] = modify_metadata(
             tfdata["annotations"], tfdata["graphdict"], tfdata["meta_data"]
@@ -667,9 +668,8 @@ def modify_metadata(
             else:
                 targets = []
             if not targets:
-                click.echo(
-                    click.style(f"  WARNING: {_update_not_applied(node)}", fg="yellow")
-                )
+                warning = _update_not_applied(node, set(metadata) | set(graphdict))
+                click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
                 continue
             for key in targets:
                 for param, value in (attrs if isinstance(attrs, dict) else {}).items():
@@ -678,17 +678,113 @@ def modify_metadata(
     return metadata
 
 
-def _update_not_applied(name: str) -> str:
-    """Warning for an ``update`` entry that names no node in the graph."""
+def resolve_annotation_names(
+    annotations: Dict[str, Any], tfdata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Annotations with each node name translated to the name now drawn.
+
+    An annotation file names resources by their Terraform address, but the
+    pipeline renames some: CONSOLIDATED_NODES merges several resources into
+    one node (aws_lb.main becomes aws_lb.elb), handle_variants swaps the type
+    for a variant (aws_lb.elb becomes aws_alb.elb), and count or for_each
+    numbering leaves only copies (aws_alb.elb~1). A name the graph has is
+    kept as it is; a renamed one is translated. Flow steps, which badge one
+    exact node, take the first numbered copy of a resource drawn only as
+    copies. Wildcards and new nodes under ``add`` are left alone.
+    """
+    out = copy.deepcopy(annotations)
+    graph = tfdata.get("graphdict") or {}
+    nodes = set(graph) | {t for targets in graph.values() for t in targets}
+
+    def fix(name, exact=False):
+        return (
+            _drawn_name(name, nodes, tfdata, exact) if isinstance(name, str) else name
+        )
+
+    def fix_links(section):
+        fixed = {}
+        for src, targets in (section or {}).items():
+            items = []
+            for target in targets if isinstance(targets, list) else []:
+                if isinstance(target, dict):
+                    items.append({fix(k): v for k, v in target.items()})
+                else:
+                    items.append(fix(target))
+            fixed[fix(src)] = items
+        return fixed
+
+    for key in ("connect", "disconnect"):
+        if isinstance(out.get(key), dict):
+            out[key] = fix_links(out[key])
+    if isinstance(out.get("remove"), list):
+        out["remove"] = [fix(name) for name in out["remove"]]
+    if isinstance(out.get("update"), dict):
+        out["update"] = {fix(name): attrs for name, attrs in out["update"].items()}
+    for flow in (out.get("flows") or {}).values():
+        for step in (flow or {}).get("steps") or []:
+            resource = step.get("resource") if isinstance(step, dict) else None
+            if not isinstance(resource, str):
+                continue
+            if "->" in resource:
+                src, _, tgt = resource.partition("->")
+                step["resource"] = (
+                    f"{fix(src.strip(), True)} -> {fix(tgt.strip(), True)}"
+                )
+            else:
+                step["resource"] = fix(resource, True)
+    return out
+
+
+def _drawn_name(name: str, nodes: set, tfdata: Dict[str, Any], exact: bool) -> str:
+    """The node *name* is drawn as now, or *name* itself when it is not renamed."""
+    if "*" in name or name in nodes:
+        return name
+    base = name.split("~")[0]
+    copies = sorted(n for n in nodes if n.split("~")[0] == base)
+    if copies:
+        return copies[0] if exact else name
+    merged = tfdata.get("consolidated_into") or {}
+    target = merged.get(name) or merged.get(base)
+    if target and target != name:
+        return _drawn_name(target, nodes, tfdata, exact)
+    for node in sorted(nodes):
+        sources = helpers._variant_sources(node, tfdata)
+        if name in sources or base in {s.split("~")[0] for s in sources}:
+            return node if exact else node.split("~")[0]
+    return name
+
+
+def _update_not_applied(name: str, known_nodes=()) -> str:
+    """Warning for an ``update`` entry that names no node in the graph.
+
+    Suggests the closest real node name, preferring one of the same resource
+    type, so the hint always names something the graph actually has.
+    """
     if "*" in name:
         return (
             f"The update for {name} is not applied: it matches no node in the "
             "graph. Check the pattern against the node names."
         )
-    return (
-        f"The update for {name} is not applied: {name} is not in the graph. "
-        "Name a node the graph has, such as aws_subnet.public~1."
-    )
+    message = f"The update for {name} is not applied: {name} is not in the graph."
+    suggestion = _closest_node(name, known_nodes)
+    if suggestion:
+        message += f" Did you mean {suggestion}?"
+    return message
+
+
+def _closest_node(name: str, known_nodes) -> str:
+    """The real node name nearest to *name*, or "" when the graph is empty."""
+    import difflib
+
+    nodes = sorted(n for n in known_nodes if isinstance(n, str))
+    if not nodes:
+        return ""
+    same_type = [n for n in nodes if n.split(".")[0] == name.split(".")[0]]
+    for pool in (same_type, nodes):
+        match = difflib.get_close_matches(name, pool, n=1, cutoff=0.5)
+        if match:
+            return match[0]
+    return same_type[0] if same_type else ""
 
 
 # ---------------------------------------------------------------------------
@@ -1019,7 +1115,7 @@ def apply_attribute_updates(
     for name, attrs in update.items():
         targets = _nodes_named(name, nodes)
         if not targets:
-            found.append(_update_not_applied(name))
+            found.append(_update_not_applied(name, nodes))
             continue
         for node in targets:
             for attr, value in attrs.items():

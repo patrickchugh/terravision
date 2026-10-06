@@ -368,10 +368,35 @@ def get_no_module_name(node: str) -> Optional[str]:
     if not node:
         return
     if "module." in node:
-        no_module_name = node.split(".")[-2] + "." + node.split(".")[-1]
+        parts = _address_parts(node)
+        no_module_name = parts[-2] + "." + parts[-1]
     else:
         no_module_name = node
     return no_module_name
+
+
+def _address_parts(address: str) -> List[str]:
+    """Split a resource address on the dots between its parts.
+
+    Dots inside an index or a for_each key are part of the name, not
+    separators: ``module.sg.aws_vpc_security_group_egress_rule.this["0-0.0.0.0/0"]``
+    has four parts, not seven. Splitting on every dot made "0" the type.
+    """
+    parts, current, depth, quoted = [], [], 0, False
+    for char in address:
+        if char == '"':
+            quoted = not quoted
+        elif not quoted and char == "[":
+            depth += 1
+        elif not quoted and char == "]":
+            depth = max(0, depth - 1)
+        if char == "." and depth == 0 and not quoted:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    parts.append("".join(current))
+    return parts
 
 
 _CIDR_ATTRIBUTES = {
@@ -778,8 +803,6 @@ def _wrap_tf_name(name: str, max_lines: int = 2, provider: str = "") -> str:
     )
 
 
-# Bundled resource icons are 256px squares
-_DEFAULT_ICON_POINTS = 256
 # Kept in step with the card in resource_classes/azure/__init__.py::_Azure
 _AZURE_CARD_INCHES = 3.8
 
@@ -794,23 +817,27 @@ def _card_chars(provider: str = "") -> int:
     """
     try:
         from resource_classes import Canvas
-        import modules.drawing as drawing
 
         node_pts = float(Canvas._default_node_attrs.get("width", 2.8)) * 72
         fontsize = float(Canvas._default_node_attrs.get("fontsize", 28))
-        icon_pts = float(drawing.DIAGRAM_ICONSIZE or _DEFAULT_ICON_POINTS)
     except Exception:
-        node_pts, fontsize, icon_pts = 201.6, 28.0, float(_DEFAULT_ICON_POINTS)
+        node_pts, fontsize = 201.6, 28.0
 
     # Only Azure draws a card: _Azure gives every node a filled, bordered
     # 3.8in rounded rectangle, so its labels have a visible edge to spill over
     # and that width is a hard budget. AWS and GCP nodes are bare icons
     # (penwidth 0, no fill), so nothing can be overflowed and the only limit is
-    # crowding the neighbour - they get half as much again.
+    # crowding the neighbour or the edge of the box around them. A box sized
+    # to one node is only the node's width plus the box margin (50pt for a
+    # subnet), so the label may overhang the node by less than that on each
+    # side: 1.4 x node width leaves 40pt. The node width already reflects
+    # --iconsize, and the margin scales with --fontsize as the node does. The
+    # icon's pixel size is not a width on the page, and using it let labels
+    # run 24 characters wide and spill over subnet borders.
     if provider.lower() == "azure":
         card_pts = _AZURE_CARD_INCHES * 72
     else:
-        card_pts = max(node_pts, icon_pts) * 1.5
+        card_pts = node_pts * 1.4
     return max(8, int(card_pts / (fontsize * 0.55)))
 
 
@@ -999,6 +1026,30 @@ def _resolve_resource_label(
     return left_raw, instance_raw
 
 
+# Product names title-casing would flatten ("Mysql", "Dynamodb"). Matched
+# as whole words, before acronyms.
+_BRAND_CASING = {
+    w.lower(): w
+    for w in (
+        "MySQL",
+        "MariaDB",
+        "PostgreSQL",
+        "DynamoDB",
+        "OpenSearch",
+        "BigQuery",
+        "ElastiCache",
+        "CloudFront",
+        "CloudWatch",
+        "CloudTrail",
+        "CloudFormation",
+        "EventBridge",
+        "CosmosDB",
+        "DocumentDB",
+        "MemoryDB",
+    )
+}
+
+
 def _title_case_dedup(text: str, acronyms_list: list, dedup: bool = True) -> str:
     """Title-case *text* while preserving acronyms.
 
@@ -1014,7 +1065,10 @@ def _title_case_dedup(text: str, acronyms_list: list, dedup: bool = True) -> str
         key = re.sub(r"[^\w]", "", w).lower()
         if not key:
             continue
-        out = acronyms[key].upper() if key in acronyms else w.title()
+        if key in _BRAND_CASING:
+            out = _BRAND_CASING[key]
+        else:
+            out = acronyms[key].upper() if key in acronyms else w.title()
         if not dedup or out.lower() not in seen:
             seen.add(out.lower())
             processed_words.append(out)
@@ -1068,6 +1122,23 @@ def _service_type_label(name: str, is_group: bool = False) -> str:
         return pretty_name(name, show_title=False, is_group=is_group)
     finally:
         USE_RESOURCE_NAMES = previous
+
+
+# Pseudo-nodes that stand for a kind of service get its name as a title, the
+# way real resources do ("GKE Workload Frontend", like "Cloud SQL Orders").
+# Actors such as tv_gcp_users_icon stay as just their name ("Customers").
+_PSEUDO_NODE_TITLES = {"tv_gcp_k8s_workload": "GKE Workload"}
+
+# Region boxes read like the provider writes regions: "US East 1", "UK South".
+_REGION_TYPES = {"tv_aws_region", "tv_azurerm_region", "tv_gcp_region"}
+
+
+def _format_region(name: str) -> str:
+    """us-east-1 or us_east_1 becomes "US East 1"; two-letter codes are capitals."""
+    words = [w for w in re.split(r"[-_\s]+", name) if w]
+    return " ".join(
+        w.upper() if len(w) == 2 and w.isalpha() else w.title() for w in words
+    )
 
 
 def pretty_name(name: str, show_title=True, is_group=False) -> str:
@@ -1158,7 +1229,12 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
         simple_name = name.split(".")[-1] if "." in name else name
         # A numbered copy (~2) reads like the original
         simple_name = simple_name.split("~", 1)[0]
-        return simple_name.replace("_", " ").title()
+        node_type = get_no_module_name(name).split(".")[0]
+        if node_type in _REGION_TYPES:
+            return _format_region(simple_name)
+        simple_name = simple_name.replace("_", " ").title()
+        title = _PSEUDO_NODE_TITLES.get(node_type)
+        return f"{title} {simple_name}" if title and show_title else simple_name
 
     # Load provider-specific config
     provider = provider.upper()
@@ -1225,8 +1301,12 @@ def pretty_name(name: str, show_title=True, is_group=False) -> str:
                 use_module_as_label = True
         instance_raw = ""
 
-    # Special-case: availability zone formatting
-    if resource_type == "az" and instance_raw.startswith("availability_zone_"):
+    # Special-case: availability zone formatting. A graph names a zone by its
+    # region and letter (tv_aws_az.eu_west_1a), Terraform mode as
+    # availability_zone_eu_west_1a; both read "Availability Zone EU West 1a".
+    if resource_type == "az" and instance_raw:
+        if not instance_raw.startswith("availability_zone_"):
+            instance_raw = "availability_zone_" + instance_raw
         az_label = _format_az_label(instance_raw, acronyms_list)
         return az_label if is_group else _soft_break(az_label)
 

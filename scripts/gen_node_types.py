@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the published node-type list from resource_classes/.
+"""Regenerate the published node-type list, and llms-full.txt from its sources.
 
 Every top-level ``<type> = <Class>`` assignment in resource_classes/ whose name
 starts with aws_, azurerm_, google_ or tv_ is a node type TerraVision can draw.
@@ -7,8 +7,9 @@ Run this after adding resource classes so the published list cannot drift:
 
     poetry run python scripts/gen_node_types.py
 
-Writes docs/node-types.md, the skill's copy of it, and the node-types section
-of docs/llms-full.txt.
+Writes docs/node-types.md, the skill's copy of it, and docs/llms-full.txt:
+its node-types section from the same list, and its Graph Format section copied
+from docs/graph-format.md (tests/test_skill.py checks the copies match).
 """
 import re
 from pathlib import Path
@@ -32,6 +33,7 @@ TARGETS = [
     ROOT / "skills" / "terravision-cloud-diagrams" / "references" / "node-types.md",
 ]
 LLMS_FULL = ROOT / "docs" / "llms-full.txt"
+GRAPH_FORMAT = ROOT / "docs" / "graph-format.md"
 
 
 def collect() -> set:
@@ -60,8 +62,23 @@ def main() -> None:
     head, sep, _ = llms.partition(marker)
     if not sep:
         raise SystemExit(f"{LLMS_FULL}: node-types section marker not found")
+    head = sync_graph_format(head)
     LLMS_FULL.write_text(head + doc)
     print(f"wrote {LLMS_FULL.relative_to(ROOT)}")
+
+
+def sync_graph_format(text: str) -> str:
+    """Replace the Graph Format section of *text* with docs/graph-format.md.
+
+    The section runs from its heading to the next ``---`` separator.
+    """
+    heading = "# TerraVision Graph Format (TVG)"
+    start = text.find(heading)
+    end = text.find("\n---\n", start)
+    if start < 0 or end < 0:
+        raise SystemExit(f"{LLMS_FULL}: Graph Format section not found")
+    source = (GRAPH_FORMAT.read_text()).strip()
+    return text[:start] + source + "\n" + text[end:]
 
 
 if __name__ == "__main__":

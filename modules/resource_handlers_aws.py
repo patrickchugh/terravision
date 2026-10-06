@@ -4,7 +4,7 @@ Handles special cases for AWS resources including security groups, load balancer
 EFS, CloudFront, autoscaling, subnets, and other AWS-specific relationships.
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Tuple
 import modules.config.cloud_config_aws as cloud_config
 import modules.helpers as helpers
 import modules.resource_transformers as transformers
@@ -36,6 +36,35 @@ def _subnet_id_matches(tfdata: Dict[str, Any], subnet: str, id_refs: List[Any]) 
     if not isinstance(subnet_id, str):
         subnet_id = ""
     return any(subnet_id in str(sid) for sid in id_refs)
+
+
+def _subnets_named_by(subnets: List[str], id_refs: List[Any]) -> List[str]:
+    """Subnets whose resource address appears in the id references.
+
+    On a plan against empty state no subnet has an id yet, so matching by id
+    (see _subnet_id_matches) treats every subnet as a match and an autoscaling
+    group set to ``aws_subnet.private[*].id`` was expanded into the public and
+    data subnets too. The HCL expression still names the resource, so match on
+    that: ``aws_subnet.private[*].id``, ``[for s in aws_subnet.private : s.id]``
+    and ``[aws_subnet.private_a.id, aws_subnet.private_b.id]`` all name their
+    subnets. Returns an empty list when no subnet resource is named, for
+    example a data source or a resolved list of ids.
+    """
+    named = set()
+    for ref in id_refs:
+        for address in helpers.extract_terraform_resource(str(ref)):
+            if address.split(".")[-2].startswith("aws_subnet"):
+                named.add(helpers.get_no_module_name(address))
+    if not named:
+        return []
+    return sorted(
+        s
+        for s in subnets
+        if helpers.get_no_module_name(
+            helpers.remove_brackets_and_numbers(s.split("~")[0])
+        )
+        in named
+    )
 
 
 def handle_special_cases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -259,16 +288,14 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
     This is a helper function for the insert_intermediate_node transformer.
 
     Args:
-        subnet_name: Name of the subnet resource (unused - required for transformer signature)
+        subnet_name: Name of the subnet resource, used for its copy number
         subnet_metadata: Metadata dictionary for the subnet
 
     Returns:
         Generated AZ node name
     """
-    _ = subnet_name  # Unused but required by transformer signature
-
     # Prefer availability_zone_id when available (more specific than availability_zone)
-    az_value = subnet_metadata.get("availability_zone", "unknown")
+    az_value = subnet_metadata.get("availability_zone", "")
     az_id = subnet_metadata.get("availability_zone_id", "")
     region = subnet_metadata.get("region")
 
@@ -286,13 +313,36 @@ def generate_az_node_name(subnet_name: str, subnet_metadata: Dict[str, Any]) -> 
         az = az.replace("-", "_")
         az = _add_suffix(az)
     else:
-        # No real AZ info - use region if available, else "unknown"
-        fallback = region if region else "unknown"
-        az = "aws_az.availability_zone_" + str(fallback)
+        # No real AZ info (both values are known only after apply). Numbered
+        # copies from count or for_each are normally spread across zones by
+        # their index, so each copy number gets its own zone box ("Zone 2")
+        # rather than every subnet sharing one box named after the region.
+        # A subnet with no index keeps the region (or "unknown") fallback.
+        copy = _subnet_copy_number(subnet_name)
+        if copy:
+            return f"aws_az.availability_zone_{copy}~{copy}"
+        if not region:
+            return "aws_az.availability_zone_unknown"
+        az = "aws_az.availability_zone_" + str(region)
         az = az.replace("-", "_")
         az = _add_suffix(az)
 
     return az
+
+
+def _subnet_copy_number(subnet_name: str) -> int:
+    """The 1-based copy number of a numbered subnet, or 0 when it has none.
+
+    ``aws_subnet.private~2`` is copy 2; ``module.vpc.aws_subnet.private[1]``
+    (a count index, 0-based) is also copy 2.
+    """
+    match = re.search(r"~(\d+)$", subnet_name or "")
+    if match:
+        return int(match.group(1))
+    match = re.search(r"\[(\d+)\]$", subnet_name or "")
+    if match:
+        return int(match.group(1)) + 1
+    return 0
 
 
 def aws_prepare_subnet_az_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
@@ -611,49 +661,6 @@ def aws_handle_sg(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
-def aws_handle_sharedgroup(tfdata: Dict[str, Any]) -> Dict[str, Any]:
-    """Group shared AWS services into a shared services group.
-
-    Args:
-        tfdata: Terraform data dictionary
-
-    Returns:
-        Updated tfdata with shared services grouped
-    """
-    # Find all shared services and group them
-    for node in sorted(tfdata["graphdict"].keys()):
-        substring_match = [s for s in SHARED_SERVICES if s in node]
-        if substring_match:
-            # Create shared services group if needed
-            if not tfdata["graphdict"].get("aws_group.shared_services"):
-                tfdata["graphdict"]["aws_group.shared_services"] = []
-                tfdata["meta_data"]["aws_group.shared_services"] = {}
-            # Add node to shared services group
-            if node not in tfdata["graphdict"]["aws_group.shared_services"]:
-                tfdata["graphdict"]["aws_group.shared_services"].append(node)
-    # Replace consolidated nodes with their consolidated names
-    if tfdata["graphdict"].get("aws_group.shared_services"):
-        for service in sorted(list(tfdata["graphdict"]["aws_group.shared_services"])):
-            if (
-                helpers.consolidated_node_check(service, tfdata)
-                and "cluster" not in service
-            ):
-                tfdata["graphdict"]["aws_group.shared_services"] = list(
-                    map(
-                        lambda x: x.replace(
-                            service, helpers.consolidated_node_check(service, tfdata)
-                        ),
-                        tfdata["graphdict"]["aws_group.shared_services"],
-                    )
-                )
-    # Add default IAM service node
-    if not tfdata["graphdict"].get("aws_group.shared_services"):
-        tfdata["graphdict"]["aws_group.shared_services"] = []
-        tfdata["meta_data"]["aws_group.shared_services"] = {}
-
-    return tfdata
-
-
 def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Handle load balancer type variants and connections.
 
@@ -918,7 +925,9 @@ def expand_autoscaling_groups_to_subnets(tfdata: Dict[str, Any]) -> Dict[str, An
             # "known after apply" markers arrive as bool True
             continue
 
-        matching_subnets = sorted(
+        # Prefer the subnets the code names; fall back to id matching only
+        # when the expression names no subnet resource at all.
+        matching_subnets = _subnets_named_by(subnets, vpc_zone_identifier) or sorted(
             [s for s in subnets if _subnet_id_matches(tfdata, s, vpc_zone_identifier)]
         )
 
@@ -2772,6 +2781,74 @@ def aws_handle_waf_associations(tfdata: dict) -> dict:
     return tfdata
 
 
+def _aws_provider_regions(tfdata: Dict[str, Any]) -> Tuple[Dict[str, str], str]:
+    """Map each aws provider alias to its region, and find the default region.
+
+    The default is the region of the aws provider block without an alias,
+    which resources with no ``provider`` argument use. Regions written as
+    variables or expressions are skipped.
+    """
+    aliases: Dict[str, str] = {}
+    default = ""
+    for provider_list in (tfdata.get("all_provider") or {}).values():
+        for provider_block in provider_list:
+            for provider_type, config in provider_block.items():
+                if provider_type != "aws" or not isinstance(config, dict):
+                    continue
+                region = config.get("region")
+                if not isinstance(region, str) or "${" in region or not region:
+                    continue
+                alias = config.get("alias")
+                if alias:
+                    aliases[alias] = region
+                elif not default:
+                    default = region
+    return aliases, default
+
+
+def _resource_region(config: Any, aliases: Dict[str, str], default: str) -> str:
+    """The region a resource is created in, from its provider argument."""
+    provider_ref = config.get("provider", "") if isinstance(config, dict) else ""
+    if provider_ref:
+        clean = str(provider_ref).replace("${", "").replace("}", "")
+        alias = clean.split(".", 1)[1] if "." in clean else ""
+        return aliases.get(alias, "")
+    return default
+
+
+def aws_handle_vpc_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each VPC inside a box for its region, when VPCs span regions.
+
+    A single-region diagram keeps no region box, as before. When the root
+    module's VPCs are created through providers in more than one region, each
+    VPC, with everything inside it, is listed in a tv_aws_region.<region>
+    node (the same nodes S3 replication uses). A VPC without a provider
+    argument is in the default provider's region; one whose region cannot
+    be told (a variable, or a module's VPC) is left where it is.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    aliases, default = _aws_provider_regions(tfdata)
+    vpc_regions: Dict[str, str] = {}
+    for resource_list in (tfdata.get("all_resource") or {}).values():
+        for resource_dict in resource_list:
+            for name, config in (resource_dict.get("aws_vpc") or {}).items():
+                region = _resource_region(config, aliases, default)
+                node = f"aws_vpc.{name}"
+                if region and node in graphdict:
+                    vpc_regions[node] = region
+    if len(set(vpc_regions.values())) < 2:
+        return tfdata
+    for vpc, region in vpc_regions.items():
+        region_node = f"tv_aws_region.{region}"
+        if region_node not in graphdict:
+            graphdict[region_node] = []
+            tfdata["meta_data"].setdefault(region_node, {"region": region})
+        if vpc not in graphdict[region_node]:
+            graphdict[region_node].append(vpc)
+    tfdata["graphdict"] = graphdict
+    return tfdata
+
+
 def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Group S3 buckets by region for cross-region replication scenarios.
 
@@ -2786,19 +2863,10 @@ def aws_handle_s3_cross_region_grouping(tfdata: Dict[str, Any]) -> Dict[str, Any
     """
     graphdict = tfdata.get("graphdict", {})
     meta_data = tfdata.get("meta_data", {})
-    all_provider = tfdata.get("all_provider", {})
     all_resource = tfdata.get("all_resource", {})
 
     # Build provider alias -> region mapping
-    provider_region_map = {}
-    for filepath, provider_list in all_provider.items():
-        for provider_block in provider_list:
-            for provider_type, provider_config in provider_block.items():
-                if provider_type == "aws" and isinstance(provider_config, dict):
-                    region = provider_config.get("region")
-                    alias = provider_config.get("alias")
-                    if region and alias:
-                        provider_region_map[alias] = region
+    provider_region_map, _default_region = _aws_provider_regions(tfdata)
 
     # If no provider mappings found, skip regional grouping
     if not provider_region_map:

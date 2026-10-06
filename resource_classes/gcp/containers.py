@@ -60,6 +60,17 @@ class GKEOnPrem(_Containers):
     _icon = "containers.png"
 
 
+class KubernetesWorkload(_Containers):
+    """A workload (Deployment, StatefulSet or pod) running on GKE.
+
+    Google's icon set has no pod or workload icon, so it uses the official
+    Containers category icon. tv_gcp_k8s_pod is a box that holds other
+    nodes; this is the node to draw a workload as an icon.
+    """
+
+    _icon = "containers.png"
+
+
 # Aliases
 GKE = KubernetesEngine
 
@@ -75,3 +86,6 @@ google_binary_authorization_policy = BinaryAuthorization
 # Current google resource types linked to existing icons
 google_gkeonprem_vmware_cluster = GKEOnPrem
 google_gkeonprem_bare_metal_cluster = GKEOnPrem
+
+# TerraVision pseudo-node: a GKE workload drawn as an icon
+tv_gcp_k8s_workload = KubernetesWorkload

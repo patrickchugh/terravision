@@ -78,12 +78,12 @@ def test_vpc_nests_inside_region(tmp_path, monkeypatch):
     placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
     assert placed["EC2 App"] == [
         "AWS Cloud",
-        "Us East 1",
+        "US East 1",
         "VPC Primary",
         "Availability Zone A",
         "Subnet App",
     ]
-    assert placed["S3 Bucket Assets"] == ["AWS Cloud", "Us East 1"]
+    assert placed["S3 Bucket Assets"] == ["AWS Cloud", "US East 1"]
 
 
 def test_vpc_nests_inside_account(tmp_path, monkeypatch):
@@ -112,8 +112,8 @@ def test_two_regions_each_hold_their_own_vpc(tmp_path, monkeypatch):
         "aws_rds_aurora.primary~1": ["aws_rds_aurora.dr~1"],
     }
     placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
-    assert placed["RDS Aurora Primary"][1:3] == ["Us East 1", "VPC Primary"]
-    assert placed["RDS Aurora Dr"][1:3] == ["Eu West 1", "VPC Dr"]
+    assert placed["RDS Aurora Primary"][1:3] == ["US East 1", "VPC Primary"]
+    assert placed["RDS Aurora Dr"][1:3] == ["EU West 1", "VPC Dr"]
 
 
 @pytest.fixture
@@ -160,3 +160,72 @@ def test_a_hidden_or_empty_parent_does_not_hold_a_group_back(aws_groups):
         "hidden": ["tv_aws_region"],
     }
     assert not drawing._waits_for_parent_group("aws_vpc.main", tfdata, [])
+
+
+def test_logical_group_draws_inside_the_box_holding_its_members(tmp_path, monkeypatch):
+    """Azure's Shared Services group lands inside the resource group.
+
+    The resource group lists the registry and Key Vault too, so it drew first
+    and claimed them, leaving the Shared Services box empty off to one side.
+    """
+    graph = {
+        "azurerm_resource_group.app": [
+            "azurerm_virtual_network.main",
+            "azurerm_container_registry.images",
+            "azurerm_key_vault.secrets",
+        ],
+        "azurerm_virtual_network.main": ["azurerm_subnet.app"],
+        "azurerm_subnet.app": ["azurerm_linux_virtual_machine.web"],
+        "azurerm_group.shared_services": [
+            "azurerm_container_registry.images",
+            "azurerm_key_vault.secrets",
+        ],
+    }
+    clusters = _cluster_path(_draw_dot(graph, tmp_path, monkeypatch))
+    for label in ("ACR Images", "Key Vault Secrets"):
+        assert [c.split(".")[0] for c in clusters[label][-2:]] == [
+            "cluster_ResourceGroupCluster",
+            "cluster_SharedServicesGroup",
+        ]
+
+
+def _cluster_path(dot: str):
+    """Map each node label to the cluster subgraphs around it, outermost first.
+
+    Uses cluster names, not captions, which works for providers such as
+    Azure that draw a box caption as a separate label node.
+    """
+    stack, placed = [], {}
+    for line in dot.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("subgraph") and stripped.endswith("{"):
+            stack.append(stripped.split('"')[1] if '"' in stripped else "")
+        elif stripped == "}" and stack:
+            stack.pop()
+        elif stripped.startswith('label="'):
+            placed.setdefault(stripped[7:].split('"')[0], [c for c in stack if c])
+    return placed
+
+
+def test_logical_group_with_members_in_no_box_stays_top_level(aws_groups):
+    """A shared-services group whose members no box lists is left alone."""
+    tfdata = {
+        "graphdict": {
+            "aws_group.shared_services": ["aws_ecr_repository.images"],
+            "aws_vpc.main": ["aws_subnet.app"],
+            "aws_subnet.app": ["aws_instance.web"],
+        },
+        "hidden": [],
+    }
+    assert drawing._adopting_container("aws_group.shared_services", tfdata) is None
+
+
+def test_a_node_with_no_icon_class_stays_in_its_box(tmp_path, monkeypatch):
+    """A type with no icon of its own draws generic, but inside its subnet."""
+    graph = {
+        "aws_vpc.main": ["aws_subnet.app"],
+        "aws_subnet.app": ["aws_instance.web", "aws_made_up_service.widget"],
+    }
+    placed = _containers(_draw_dot(graph, tmp_path, monkeypatch))
+    widget = next(label for label in placed if label.startswith("Made Up Service"))
+    assert placed[widget] == placed["EC2 Web"]
