@@ -2086,6 +2086,11 @@
 <td>The diagram (PNG, SVG, editable draw.io) and its graph, which you can refine by asking: <em>"add ElastiCache"</em>, <em>"show how a request flows through it"</em></td>
 </tr>
 <tr>
+<td>A diagram you like generated from TerraVision</td>
+<td><em>"Write the Terraform for this architecture"</em></td>
+<td>Terraform for the resources, zones and connections, with the diagram's flows and labels kept (quality depends on model used)</td>
+</tr>
+<tr>
 <td>Terraform code, local or on GitHub but no VERIFIED diagram</td>
 <td><em>"Draw the architecture of the Terraform in ./infra"</em> or <em>"Show me a cloud architecture diagram of https://github.com/patrickchugh/testcase-bastion//examples"</em></td>
 <td>A diagram of what <code>terraform plan</code> says the code deploys</td>
@@ -2094,11 +2099,6 @@
 <td>A TerraVision diagram of your Terraform that you want to publish in HTML documentation, or review resource by resource, for example in a security audit</td>
 <td><em>"Make this diagram interactive"</em> or <em>"Give me an interactive version I can click through"</em></td>
 <td>A single HTML page that works in any browser or docs site, no server needed: click any resource to see its settings (encryption, public access, ports, IAM), search and zoom. Built from <code>terraform plan</code>, so it needs the Terraform, not just a picture</td>
-</tr>
-<tr>
-<td>A diagram you like generated from TerraVision</td>
-<td><em>"Write the Terraform for this architecture"</em></td>
-<td>Terraform for the resources, zones and connections, with the diagram's flows and labels kept (quality depends on model used)</td>
 </tr>
 <tr>
 <td>Terraform with an existing TerraVision diagram in a repository</td>
