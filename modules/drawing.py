@@ -243,9 +243,16 @@ def _badge_diameter(text: str) -> int:
 
 
 def _badge_image(text: str, color: str) -> Path:
-    """Path of a PNG of ``text`` in white on a filled circle of ``color``."""
+    """Path of a PNG of ``text`` on a filled circle of ``color``.
+
+    The number is white, or dark on a light circle (yellow) where white
+    would barely show.
+    """
     color = _badge_color(color)
-    key = hashlib.sha256(f"{text}|{color}|{_BADGE_FONTSIZE}|1".encode()).hexdigest()
+    ink = "#2D3436" if _label_ground(color) != "white" else "white"
+    key = hashlib.sha256(
+        f"{text}|{color}|{ink}|{_BADGE_FONTSIZE}|1".encode()
+    ).hexdigest()
     path = _BADGE_DIR / f"badge-{key[:16]}.png"
     if path.is_file():
         return path
@@ -254,7 +261,7 @@ def _badge_image(text: str, color: str) -> Path:
     source = (
         "graph { bgcolor=transparent pad=0.01 "
         f"node [shape=circle style=filled fixedsize=true width={diameter:.3f} "
-        f'fillcolor="{color}" color="{color}" penwidth=0 fontcolor=white '
+        f'fillcolor="{color}" color="{color}" penwidth=0 fontcolor="{ink}" '
         f'fontname="Sans-Serif" fontsize={_BADGE_FONTSIZE}] '
         f"b [label=<<B>{html.escape(text)}</B>>] }}"
     )
@@ -280,14 +287,42 @@ def _badge_cell(text: str, color: str, diameter: Optional[int] = None) -> str:
     )
 
 
+# Arrow labels: blue text on a white ground, so they read on any canvas
+# (Google Cloud's is blue) and never vanish into the line beneath them.
+_EDGE_LABEL_COLOR = "#5b9bd5"
+
+
+def _label_ground(color: str) -> str:
+    """The background that keeps text in *color* readable: dark for light
+    text (yellow, white), white for everything else."""
+    match = re.fullmatch(r"#?([0-9A-Fa-f]{6})", str(color or ""))
+    if not match:
+        return "white"
+    r, g, b = (int(match.group(1)[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "#2D3436" if luminance > 0.6 else "white"
+
+
+def edge_label_cell(text: str, color: str = _EDGE_LABEL_COLOR) -> str:
+    """An HTML-label table cell holding arrow-label text on a solid ground."""
+    color = _badge_color(color)
+    return (
+        f'<TD BGCOLOR="{_label_ground(color)}"><FONT POINT-SIZE="28" COLOR="{color}">'
+        f"{html.escape(str(text))}</FONT></TD>"
+    )
+
+
 def generate_badge_xlabel(
-    step_numbers: List[int], color: str = _DEFAULT_BADGE_COLOR
+    step_numbers: List[int],
+    color: str = _DEFAULT_BADGE_COLOR,
+    colors: Optional[Dict[int, str]] = None,
 ) -> str:
     """Return an HTML-table xlabel badge for one or more step numbers.
 
     Args:
         step_numbers: Ordered list of step numbers to display in the badge.
         color: Colour of the badge circle.
+        colors: Colour per step number (its flow's colour), overriding color.
 
     Returns:
         A Graphviz HTML-label string (angle-bracket delimited) suitable
@@ -295,7 +330,8 @@ def generate_badge_xlabel(
     """
     # One circle per step, side by side, so a shared node's badge stays the
     # same size as any other instead of one ever larger circle.
-    cells = "".join(_badge_cell(str(n), color) for n in step_numbers)
+    colors = colors or {}
+    cells = "".join(_badge_cell(str(n), colors.get(n, color)) for n in step_numbers)
     return f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
 
 
@@ -400,10 +436,14 @@ def _apply_flow_badges(
         # merge with the first.
         cluster = node_obj._cluster or diagram
         steps = (tfdata.get("flow_badge_steps") or {}).get(resource, [])
+        colors = tfdata.get("flow_step_colors") or {}
         cluster.dot.node(
             node_obj._id,
             xlabel=badge_html,
             _flowsteps=",".join(str(n) for n in steps),
+            _flowcolors=",".join(
+                _badge_color(colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+            ),
         )
 
 
@@ -739,12 +779,25 @@ def _make_edge_with_badge(
     # parts apart for the draw.io export.
     text = edge_kwargs.pop("label", "") or ""
     edge_kwargs["_flowsteps"] = ",".join(str(n) for n in steps)
-    cells = "".join(_badge_cell(str(n), _DEFAULT_BADGE_COLOR) for n in steps)
+    colors = tfdata.get("flow_step_colors") or {}
+    cells = "".join(
+        _badge_cell(str(n), colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+    )
+    edge_kwargs["_flowcolors"] = ",".join(
+        _badge_color(colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
+    )
     if text:
         edge_kwargs["_edgetext"] = text
-        cells += (
-            f'<TD><FONT POINT-SIZE="28" COLOR="#5b9bd5">{html.escape(text)}</FONT></TD>'
+        # The text takes its flow's colour when the flow sets one
+        text_color = next(
+            (
+                colors[n]
+                for n in steps
+                if colors.get(n, _DEFAULT_BADGE_COLOR) != _DEFAULT_BADGE_COLOR
+            ),
+            _EDGE_LABEL_COLOR,
         )
+        cells += edge_label_cell(text, text_color)
     edge_kwargs["xlabel"] = (
         f'<<TABLE BORDER="0" CELLSPACING="4"><TR>{cells}</TR></TABLE>>'
     )
@@ -1728,8 +1781,14 @@ def _build_diagram(
         tfdata["annotations"] = resolve_annotation_names(tfdata["annotations"], tfdata)
     _flows = (tfdata.get("annotations") or {}).get("flows") or {}
     _node_badges, _edge_badges, _legend_entries = compute_flow_step_numbers(_flows)
+    # A flow's colour paints its steps on the diagram as well as the legend
+    _step_colors = {
+        e["step_number"]: e.get("color", _DEFAULT_BADGE_COLOR) for e in _legend_entries
+    }
+    tfdata["flow_step_colors"] = _step_colors
     tfdata["flow_badges"] = {
-        res: generate_badge_xlabel(sorted(nums)) for res, nums in _node_badges.items()
+        res: generate_badge_xlabel(sorted(nums), colors=_step_colors)
+        for res, nums in _node_badges.items()
     }
     # The step numbers too: the draw.io export draws its own badges from them.
     tfdata["flow_badge_steps"] = {
@@ -1743,7 +1802,8 @@ def _build_diagram(
         for key in ((_src, _tgt), (_tgt, _src)):
             _edge_steps.setdefault(key, set()).update(nums)
     tfdata["flow_edge_badges"] = {
-        key: generate_badge_xlabel(sorted(nums)) for key, nums in _edge_steps.items()
+        key: generate_badge_xlabel(sorted(nums), colors=_step_colors)
+        for key, nums in _edge_steps.items()
     }
     tfdata["flow_edge_steps"] = {key: sorted(nums) for key, nums in _edge_steps.items()}
     tfdata["flow_legend_entries"] = _legend_entries

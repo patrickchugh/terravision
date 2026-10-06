@@ -622,7 +622,16 @@ class Edge:
             self._attrs[k] = v
 
         if label:
-            self._attrs["xlabel"] = "  " + label + "  "
+            # Blue text on a white ground, so it reads on any canvas (Google
+            # Cloud's is blue). _edgetext keeps the plain text for exports.
+            import html as _html
+
+            self._attrs["xlabel"] = (
+                '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>'
+                '<TD BGCOLOR="white"><FONT POINT-SIZE="28" COLOR="#5b9bd5">'
+                f"{_html.escape(str(label))}</FONT></TD></TR></TABLE>>"
+            )
+            self._attrs["_edgetext"] = str(label)
             self._attrs["fontsize"] = "28"
             self._attrs["fontcolor"] = "#5b9bd5"
         if color:
