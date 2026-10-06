@@ -1103,13 +1103,14 @@ def test_plain_result_asks_the_model_to_offer_flows(outdir):
         (False, True, True, {"flow", "terraform", "ci", "carry"}),
         (True, False, True, {"terraform", "ci", "carry"}),
         (True, True, True, {"terraform", "ci", "carry"}),
-        (False, False, False, {"flow"}),
-        (True, False, False, set()),
+        (False, False, False, {"flow", "interactive"}),
+        (True, False, False, {"interactive"}),
     ],
 )
 def test_next_step_offers_what_fits(has_flows, has_labels, from_graph, expect):
     """Flows are offered until added; Terraform for designs, with the CI
-    workflow after it; the annotations carried over only when there are any."""
+    workflow after it; the interactive page for diagrams drawn from Terraform;
+    the annotations carried over only when there are any."""
     step = mcp_service._next_step(has_flows, has_labels, from_graph) or ""
     found = {
         name
@@ -1118,6 +1119,7 @@ def test_next_step_offers_what_fits(has_flows, has_labels, from_graph, expect):
             "terraform": "writing Terraform" if not has_flows else "write Terraform",
             "ci": "terravision-action",
             "carry": "terravision.yml",
+            "interactive": "generate_interactive_html",
         }.items()
         if marker in step
     }

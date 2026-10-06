@@ -609,15 +609,34 @@ _CARRY_ANNOTATIONS = (
 )
 
 
+# Offered after a diagram drawn from Terraform: the plan has just worked, so
+# the interactive page, which needs one, can be made from the same source.
+_INTERACTIVE_OFFER = (
+    "an interactive version to open in a browser, where every resource can be "
+    "clicked to see its settings and searched (on a yes, call "
+    "generate_interactive_html with the same source, which runs terraform plan "
+    "again and takes about as long as this diagram did, then open the page "
+    "with open_diagram_file)"
+)
+
+
 def _next_step(
     has_flows: bool, has_labels: bool, offer_terraform: bool
 ) -> Optional[str]:
-    """What the model should offer after presenting a diagram, if anything."""
+    """What the model should offer after presenting a diagram, if anything.
+
+    ``offer_terraform`` is true for a diagram drawn from a graph (a design,
+    which can become Terraform); false for one drawn from Terraform, which
+    can become the interactive page instead.
+    """
     present = "Present the diagram, explaining how requests or data move through it. "
     carry = f" {_CARRY_ANNOTATIONS}" if has_flows or has_labels else ""
     if has_flows:
         if not offer_terraform:
-            return None
+            return (
+                f"{present}Then end your reply with one line offering "
+                f"{_INTERACTIVE_OFFER}. Do not make it before the user says yes."
+            )
         return (
             f"{present}Then end your reply with one line offering to write "
             f"Terraform for this architecture. {_TERRAFORM_OFFER}{carry} Do not "
@@ -635,9 +654,9 @@ def _next_step(
             f"{carry} Do neither before the user says yes."
         )
     return (
-        f"{present}Then end your reply with one line offering {flow}. On a yes, "
-        f"render the same graph again with {again}. Do not add them before the "
-        "user says yes."
+        f"{present}Then end your reply with one line offering two next steps: "
+        f"{flow}, or {_INTERACTIVE_OFFER}. On a yes to the flow, draw it again "
+        f"with {again}. Do neither before the user says yes."
     )
 
 
