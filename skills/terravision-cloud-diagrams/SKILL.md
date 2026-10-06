@@ -88,6 +88,8 @@ terravision draw --source ./path/to/terraform --format svg --outfile architectur
 
 Useful flags: `--title "Payments - Production"`, `--varfile prod.tfvars`, `--workspace staging`, `--simplified` (services only, no networking boxes), `--format drawio` (editable), `--planfile plan.json --graphfile graph.dot` (use an existing plan, no cloud credentials needed).
 
+For an interactive page to explore in a browser (click any resource to see its settings, search, zoom): `terravision visualise --source ./tf --show`.
+
 If the user only wants the structure as data: `terravision graphdata --source ./tf --outfile architecture.tvg.json`.
 
 **Git repositories** work as the source too, public or private (with the user's Git access): `--source https://github.com/org/repo`, or `https://github.com/org/repo//examples` for a folder inside it. Many repositories hold a reusable module at their root, which plans no resources on its own. If the root fails with "found no resources" or asks for required variables, look in the repository for a folder that uses the module (`examples/`, `environments/prod`, anything with a `provider` block) and draw that with `//folder`.
@@ -193,10 +195,10 @@ As soon as a render passes your check, do all of this in the same reply. Never w
    - `<name>.tvg.json`: the graph; edit it and render again
    - `<name>.annotations.yml` (with flows): the title and flows, for `--annotate`
 4. **Summarise in one or two lines**: which path you used, the main components, and one useful next step (add a service, change the title, draw it for another cloud).
-5. **Offer the next step** in one line: adding the flow you explained as numbered steps if the diagram has none ("Flows" above), and, for a diagram drawn from a description (Path B), writing Terraform for the architecture. Do neither before the user says yes.
+5. **Offer the next step** in one line: adding the flow you explained as numbered steps if the diagram has none ("Flows" above); for a diagram drawn from a description (Path B), writing Terraform for the architecture; and for a diagram drawn from Terraform (Path A), an interactive version to open in a browser, where every resource can be clicked to see its settings (`generate_interactive_html` with the same source, or `terravision visualise --source <folder> --show`; it runs the plan again). Do none of them before the user says yes.
 
 **If the user asks for Terraform:**
-- Write code that creates the resources, zones and connections in the diagram. Do not promise to check it by drawing it with TerraVision: that runs `terraform plan`, which needs cloud credentials.
+- Write code that creates the resources, zones and connections in the diagram. Do not promise to check it by drawing it with TerraVision: that runs `terraform plan`, which needs cloud credentials. Instead, tell the user that once they can plan it, `terravision visualise --source <folder> --show` opens it as an interactive page in their browser, where every resource can be clicked to see its settings.
 - If the diagram has flows, edge labels, logical groups or CIDR ranges, also write `terravision.yml` in the Terraform folder from the diagram and its `.annotations.yml`: keep the title, rename every node in `flows`, `connect` and `update` to the Terraform address that creates it (`aws_ecs_fargate.api` becomes `aws_ecs_service.api`; numbered copies such as `aws_alb.web~1` become the one resource), and add the external actors (users, internet) under `add:`, since Terraform has none. Keep each logical group (`aws_group`, `azurerm_group`, `tv_gcp_logical_group`) by declaring it under `add:` and listing its members, by Terraform address, under `connect:` (`aws_group.fulfilment: [aws_sfn_state_machine.fulfilment, aws_lambda_function.charge]`); a group drawn from Terraform is otherwise lost, because Terraform has no groups. Put the CIDR ranges in the Terraform code itself, where the diagram reads them. TerraVision loads that file whenever it draws the Terraform, including in CI.
 - End that reply with one line offering a CI workflow that redraws the diagram whenever the Terraform changes: `patrickchugh/terravision-action` for GitHub Actions, and setups for GitLab, Jenkins, Azure DevOps and others at https://patrickchugh.github.io/terravision/cicd-integration/.
 
