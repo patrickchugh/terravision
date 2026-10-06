@@ -105,6 +105,8 @@ Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com
 
 </details>
 
+**Can't use a package manager?** Without admin rights, or when your organisation's Artifactory or Nexus doesn't carry these packages, download each one from its own site instead: [Graphviz](https://graphviz.org/download/) (on Windows, the ZIP archive unpacks into any folder without admin rights; on macOS and Linux, build it from source into your home folder: [steps](https://patrickchugh.github.io/terravision/installation/#graphviz)), [Git](https://git-scm.com/downloads) (Windows has a portable edition), [uv](https://docs.astral.sh/uv/getting-started/installation/) (its installer needs no admin rights) and [Terraform](https://developer.hashicorp.com/terraform/install) (a single program to unzip). Then add each one's folder to your PATH ([how, on Windows](https://patrickchugh.github.io/terravision/installation/#graphviz)) and restart your AI app, or ask your IT team to install them.
+
 ### 2. Connect your assistant
 
 **Claude Desktop:** 

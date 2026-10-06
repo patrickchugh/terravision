@@ -56,6 +56,8 @@ TerraVision itself runs on your own computer: nothing is uploaded anywhere beyon
 
     Other distributions: [HashiCorp's install guide](https://developer.hashicorp.com/terraform/install).
 
+**Can't use a package manager?** Without admin rights, or when your organisation's Artifactory or Nexus doesn't carry these packages, download each one from its own site instead: [Graphviz](https://graphviz.org/download/) (on Windows, the ZIP archive unpacks into any folder without admin rights; on macOS and Linux, build it from source into your home folder: [steps](installation.md#graphviz)), [Git](https://git-scm.com/downloads) (Windows has a portable edition), [uv](https://docs.astral.sh/uv/getting-started/installation/) (its installer needs no admin rights) and [Terraform](https://developer.hashicorp.com/terraform/install) (a single program to unzip). Then add each one's folder to your PATH ([how, on Windows](installation.md#graphviz)) and restart your AI app, or ask your IT team to install them.
+
 If anything is still missing later, the assistant says what to install. To check at any time, ask it: *"Is TerraVision set up correctly?"*
 
 **Then connect your assistant:**

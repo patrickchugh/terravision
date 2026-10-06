@@ -6,10 +6,10 @@
 
 ## System Requirements
 
-- **Python 3.11+** (not needed separately if you install with [uv](#using-uv), which fetches one)
-- **Terraform 1.x** (v1.0.0 or higher) — not required for [JSON graph](graph-format.md) sources or `--planfile` mode
-- **Git**
-- **Graphviz**
+- **Python 3.11+** — [download](https://www.python.org/downloads/); not needed separately if you install with [uv](#using-uv), which fetches one
+- **Terraform 1.x** (v1.0.0 or higher) — [download](https://developer.hashicorp.com/terraform/install); not required for [JSON graph](graph-format.md) sources or `--planfile` mode
+- **Git** — [download](https://git-scm.com/downloads)
+- **Graphviz** — [download](https://graphviz.org/download/)
 - **Ollama** (Optional — only for local AI refinement)
 - **wslu** (Optional — required only on WSL if you use `--show` to auto-open diagrams)
 
@@ -40,7 +40,7 @@ sudo apt install libgvplugin-neato-layout8
 sudo dnf install graphviz
 ```
 
-**Windows:** any one of these, or the installer from https://graphviz.org/download/
+**Windows:** any one of these, or the installer or ZIP archive from https://graphviz.org/download/
 ```powershell
 scoop install graphviz
 choco install graphviz
@@ -53,6 +53,17 @@ $gv = "D:\Tools\Graphviz\bin"   # wherever dot.exe is
 [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$gv", "User")
 ```
 Then open a new terminal, and restart any app that launches TerraVision's MCP server (Claude Code, Claude Desktop, Cursor).
+
+**No admin rights, or Graphviz isn't in your organisation's Artifactory or Nexus?** Download the ZIP archive from https://graphviz.org/download/, unpack it into a folder you own (such as `%USERPROFILE%\Tools\Graphviz`), and add its `bin` folder to your PATH as above: a user-level PATH needs no admin rights.
+
+**macOS and Linux without admin rights: build Graphviz from source** into your home folder. Download a release from https://graphviz.org/download/source/, then:
+```bash
+tar xf graphviz-*.tar.gz && cd graphviz-*/
+./configure --prefix="$HOME/.local"
+make && make install
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc   # or ~/.bashrc
+```
+You need a C compiler (on macOS, the Xcode Command Line Tools). TerraVision also needs two optional parts of Graphviz: **expat**, for the HTML labels its diagrams use, and **cairo with pango**, for PNG output. `./configure` prints a summary of what it found; if they are missing, install their development packages or build them into the same prefix first. To check, run `dot -Tpng:`: it answers "not recognized" and then lists the PNG renderers it has, which must include `png:cairo:cairo`. On Linux, the precompiled binaries attached to Graphviz's GitLab releases are another option. If none of this is open to you, ask your IT team.
 
 **Verify installation:**
 ```bash
