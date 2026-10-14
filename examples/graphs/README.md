@@ -24,4 +24,4 @@ Each gallery graph has a `<name>.annotations.yml` beside it that sets its title,
 
 Check a file before rendering with `python skills/terravision-cloud-diagrams/scripts/validate_graph.py <file>`.
 
-After adding or re-rendering an example, run `python scripts/make_gallery_images.py` to refresh the web-sized copies in `docs/assets/gallery/` that the docs gallery page shows, and commit them with the PNG.
+After adding or editing an example, run `python scripts/render_examples.py`: it validates and renders every out-of-date example to PNG and SVG, prints any warnings, refreshes the web-sized copies in `docs/assets/gallery/` that the docs gallery page shows, and regenerates the example list in `docs/llms.txt`. Commit them with the example, then run `pytest tests/test_examples_gallery.py`. See [Adding a gallery example](../../docs/CONTRIBUTING.md#adding-a-gallery-example).

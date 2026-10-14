@@ -1,6 +1,6 @@
 ---
 title: Cloud Architecture Diagram Examples (AWS, Azure, Google Cloud)
-description: Twelve example cloud architecture diagrams for AWS, Azure and Google Cloud with official icons, from three-tier web apps to EKS with Karpenter, event-driven serverless, data lakes, multi-region failover and hub-and-spoke networks. Each comes with the prompt, the source file and an editable version.
+description: Example cloud architecture diagrams for AWS, Azure and Google Cloud with official icons, from three-tier web apps to EKS with Karpenter, event-driven serverless, data lakes, multi-region failover and hub-and-spoke networks. Each comes with the prompt, the source file and an editable version.
 hide:
   - navigation
 ---
@@ -28,6 +28,8 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [Google Cloud three-tier web application architecture diagram](#google-cloud-three-tier-web-application-architecture-diagram) | Google Cloud |
 | [Google Cloud GKE microservices architecture diagram](#google-cloud-gke-architecture-diagram) | Google Cloud |
 | [Google Cloud data pipeline architecture diagram](#google-cloud-data-pipeline-architecture-diagram) | Google Cloud |
+
+All examples are also published as a dataset on Hugging Face: https://huggingface.co/datasets/patrickchugh/terravision-cloud-diagrams
 
 !!! tip "The quickest way to make one of these your own"
     Install TerraVision in [Claude Desktop or the ChatGPT desktop app](ai-assistants.md), paste the prompt under any example, then keep talking: *"add a WAF"*, *"make it multi-region"*, *"show how a request flows through it"*, *"write the Terraform for this"*.

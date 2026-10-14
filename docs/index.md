@@ -29,7 +29,7 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 [![Azure hub-and-spoke network architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/azure-hub-spoke.png){ width="32%" .no-lightbox }](gallery.md#azure-hub-and-spoke-architecture-diagram)
 [![Google Cloud GKE microservices architecture diagram](https://raw.githubusercontent.com/patrickchugh/terravision/main/images/gallery/gcp-gke.png){ width="32%" .no-lightbox }](gallery.md#google-cloud-gke-architecture-diagram)
 
-Real output for AWS, Azure and Google Cloud, each with its prompt and source file: **[see all 12 in the gallery](gallery.md)**.
+Real output for AWS, Azure and Google Cloud, each with its prompt and source file: **[see them all in the gallery](gallery.md)**.
 
 ---
 
