@@ -42,28 +42,6 @@ def _load(name, path):
 render_examples = _load("render_examples", ROOT / "scripts" / "render_examples.py")
 STEMS = render_examples.stems()
 
-# Brought to the full bar in the next commit; until then the tests they do
-# not meet yet are expected failures.
-UPGRADING = set(FORMERLY_LIGHT)
-NEEDS_UPGRADE = {
-    "test_annotations_file_exists",
-    "test_draws_without_warnings",
-    "test_has_enough_nodes",
-    "test_gallery_section",
-    "test_gallery_image_size_matches_webp",
-    "test_formerly_light_example_is_complete",
-}
-
-
-@pytest.fixture(autouse=True)
-def _upgrading(request):
-    callspec = getattr(request.node, "callspec", None)
-    stem = callspec.params.get("stem") if callspec else None
-    if stem in UPGRADING and request.node.originalname in NEEDS_UPGRADE:
-        request.node.add_marker(
-            pytest.mark.xfail(reason="upgraded in the next commit", strict=True)
-        )
-
 
 def gallery_sections():
     """Map each example name to the gallery section whose image shows it."""

@@ -14,10 +14,10 @@
     "width": 1400
   },
   "aws-event-driven": {
-    "height": 7677,
+    "height": 2685,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-event-driven.png",
-    "source_sha256": "e8afe868cffd87de82e820cb81817460eae77125e9a945a7686f9bcee97d714b",
+    "source_sha256": "18332035bc8ca7197507386eb6a81b94b874f85e92e08ab772dda2308fbda2dd",
     "width": 1400
   },
   "aws-multi-account-network": {
@@ -63,10 +63,10 @@
     "width": 1400
   },
   "azure-web-app": {
-    "height": 3283,
+    "height": 1912,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-web-app.png",
-    "source_sha256": "2f9738497043c4e722ec058eb49f2e76519a9c8bad0f40070c9b48fdf663c538",
+    "source_sha256": "3d2bdb2c05c30bff4bfeb87d2a2df8a9f3a029e245773a6f2aa218c0e35f27e4",
     "width": 1400
   },
   "gcp-data-pipeline": {
@@ -84,10 +84,10 @@
     "width": 1400
   },
   "gcp-serverless-api": {
-    "height": 3464,
+    "height": 1613,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-serverless-api.png",
-    "source_sha256": "245cd37912cb78dfc9e306527277e3727dce8b7053e13025e2bbf2e02d94721e",
+    "source_sha256": "91e41643b44943d476f2a791ab41423986de455087f3f1e99414d50b0699cc45",
     "width": 1400
   },
   "gcp-three-tier": {

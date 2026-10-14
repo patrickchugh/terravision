@@ -165,6 +165,11 @@ def render(stem, outdir=EXAMPLES, formats=FORMATS):
     its output when a render fails.
     """
     graph, annotations = sources(stem)
+    if Path(outdir).resolve() == EXAMPLES:
+        # Relative names, so the diagram footer shows "<stem>.tvg.json"
+        # rather than the path of this checkout.
+        graph = Path(graph.name)
+        annotations = Path(annotations.name) if annotations else None
     printed = []
     for fmt in formats:
         command = [

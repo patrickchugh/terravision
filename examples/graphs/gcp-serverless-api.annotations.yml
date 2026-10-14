@@ -1,0 +1,71 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-serverless-api.tvg.json --annotate gcp-serverless-api.annotations.yml
+format: '0.3'
+title: Google Cloud serverless API with Direct VPC egress and Private Service Connect
+update:
+  google_compute_subnetwork.serverless_egress:
+    ip_cidr_range: 10.110.0.0/24
+  google_compute_subnetwork.psc_endpoints:
+    ip_cidr_range: 10.110.8.0/28
+connect:
+  google_compute_security_policy.cloud_armor:
+  - google_compute_backend_service.api: WAF and rate limits
+  google_compute_backend_service.api:
+  - google_cloud_run_v2_service.api: Serverless NEG
+  google_cloud_run_v2_service.api:
+  - google_redis_instance.cache: Redis 6379
+  google_compute_forwarding_rule.psc_cloud_sql:
+  - google_sql_database_instance.postgres: PostgreSQL 5432
+  google_pubsub_topic.events:
+  - google_pubsub_topic.events_dead_letter: After 5 attempts
+  google_artifact_registry_repository.images:
+  - google_cloud_run_v2_service.api: New revision
+flows:
+  API request:
+    description: A client calls the API
+    steps:
+    - resource: tv_gcp_users_icon.api_clients -> google_compute_global_forwarding_rule.https
+      xlabel: HTTPS
+      detail: Clients call the global external Application Load Balancer
+    - resource: google_compute_url_map.api -> google_compute_backend_service.api
+      xlabel: Route
+      detail: The URL map routes to the backend service, where Cloud Armor filters attacks
+    - resource: google_compute_backend_service.api -> google_cloud_run_v2_service.api
+      xlabel: Serve
+      detail: A serverless NEG sends the request to the Cloud Run service, which has ingress limited to the load balancer
+    - resource: google_cloud_run_v2_service.api -> google_redis_instance.cache
+      xlabel: Cache
+      detail: Cloud Run checks Memorystore over Direct VPC egress
+    - resource: google_cloud_run_v2_service.api -> google_compute_forwarding_rule.psc_cloud_sql
+      xlabel: Query
+      detail: reads and writes Cloud SQL through its Private Service Connect endpoint
+    - resource: google_cloud_run_v2_service.api -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Publish
+      detail: and publishes an event to Pub/Sub through the Private Service Connect endpoint for Google APIs
+  Event processing:
+    description: Events land in the analytics store
+    steps:
+    - resource: google_pubsub_topic.events -> google_eventarc_trigger.events
+      xlabel: Trigger
+      detail: An Eventarc trigger delivers each event; events that fail five times go to a dead-letter topic
+    - resource: google_eventarc_trigger.events -> google_cloudfunctions2_function.processor
+      xlabel: Invoke
+      detail: to the Cloud Functions processor, which also egresses into the VPC
+    - resource: google_cloudfunctions2_function.processor -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Write
+      detail: The function writes through Private Service Connect
+    - resource: google_compute_global_forwarding_rule.psc_google_apis -> google_bigquery_dataset.analytics
+      xlabel: Analyse
+      detail: rows to BigQuery and the raw event to Cloud Storage
+  Deployment:
+    description: A commit is deployed
+    steps:
+    - resource: google_cloudbuildv2_repository.api -> google_cloudbuild_trigger.deploy
+      xlabel: Push
+      detail: A push to the main branch starts the Cloud Build trigger
+    - resource: google_cloudbuild_trigger.deploy -> google_artifact_registry_repository.images
+      xlabel: Build
+      detail: Cloud Build tests the code and pushes the image to Artifact Registry
+    - resource: google_artifact_registry_repository.images -> google_cloud_run_v2_service.api
+      xlabel: Deploy
+      detail: and deploys it as a new Cloud Run revision
