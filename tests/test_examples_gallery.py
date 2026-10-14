@@ -27,9 +27,7 @@ MIN_NODES = 25
 # expansion; held to the same bar as the rest.
 FORMERLY_LIGHT = ("aws-event-driven", "azure-web-app", "gcp-serverless-api")
 # Known gaps against the bar, each failing until it is fixed (strict xfail).
-BELOW_BAR = {
-    "gcp-three-tier": "has one flow; gallery examples have two or more",
-}
+BELOW_BAR = {}
 
 
 def _load(name, path):

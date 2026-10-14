@@ -70,31 +70,31 @@
     "width": 1400
   },
   "gcp-data-pipeline": {
-    "height": 1043,
+    "height": 1017,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-data-pipeline.png",
-    "source_sha256": "a0bc1ac20a4af2c9bb99bf79e4ab07008c5990d16ab1ad78f2d1313ab53d8733",
+    "source_sha256": "4654a1b1222e9bf11b42c09fb8b8e0aad61fe2ed99c0d8013787829a8f9adde1",
     "width": 1400
   },
   "gcp-gke": {
     "height": 2701,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-gke.png",
-    "source_sha256": "ef7425b6b217dd3b2e33c83a753556c76060c4bd0d82c8634c059adc128ce1d1",
+    "source_sha256": "aaa03e8ee54adee28e35fa8a4b3c48ffdaab5f280c104281177e58f5254c48bd",
     "width": 1400
   },
   "gcp-serverless-api": {
     "height": 1613,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-serverless-api.png",
-    "source_sha256": "91e41643b44943d476f2a791ab41423986de455087f3f1e99414d50b0699cc45",
+    "source_sha256": "5796ec8020c17b9c306c605a746f79f319637706e8c685def712290dffb2107f",
     "width": 1400
   },
   "gcp-three-tier": {
-    "height": 1109,
+    "height": 1154,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-three-tier.png",
-    "source_sha256": "f37498323a12949d0cf8ad0d2672e4d414d71463765c5011eb48183c7e70c5df",
+    "source_sha256": "a777664494ce63d1d1987b3c35d15007f5ca54c77186978588e4208f787bf389",
     "width": 1400
   },
   "three-tier-web": {
