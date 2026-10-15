@@ -1,14 +1,28 @@
 {
   "tv_aws_onprem.corporate_datacentre": [
+    "tv_aws_client.office_staff",
+    "tv_aws_server.erp_system",
+    "aws_customer_gateway.datacentre_router"
+  ],
+  "tv_aws_client.office_staff": [
     "aws_customer_gateway.datacentre_router"
   ],
   "aws_customer_gateway.datacentre_router": [
-    "aws_vpn_connection.ipsec_vpn"
+    "aws_dx_connection.primary",
+    "aws_vpn_connection.ipsec_vpn",
+    "tv_aws_server.erp_system"
+  ],
+  "aws_dx_connection.primary": [
+    "aws_dx_gateway.corporate"
+  ],
+  "aws_dx_gateway.corporate": [
+    "aws_ec2_transit_gateway.hub"
   ],
   "aws_vpn_connection.ipsec_vpn": [
     "aws_ec2_transit_gateway.hub"
   ],
   "aws_account.network": [
+    "aws_dx_gateway.corporate",
     "aws_ec2_transit_gateway.hub",
     "aws_vpc.network_account_inspection",
     "aws_vpc.network_account_egress"
@@ -91,14 +105,16 @@
     "aws_ec2_transit_gateway_vpc_attachment.production"
   ],
   "aws_subnet.production_app": [
+    "aws_alb.orders_internal",
     "aws_ecs_fargate.orders",
     "aws_rds_postgres.orders"
   ],
   "aws_ec2_transit_gateway_vpc_attachment.production": [
-    "aws_ecs_fargate.orders"
+    "aws_alb.orders_internal"
   ],
   "aws_ecs_fargate.orders": [
-    "aws_rds_postgres.orders"
+    "aws_rds_postgres.orders",
+    "aws_ec2_transit_gateway_vpc_attachment.production"
   ],
   "aws_account.development": [
     "aws_vpc.development_account"
@@ -133,6 +149,9 @@
   "aws_ec2_transit_gateway_vpc_attachment.shared_services": [
     "aws_vpc_endpoint.interface_endpoints",
     "aws_directory_service_directory.corporate_ad"
+  ],
+  "aws_alb.orders_internal": [
+    "aws_ecs_fargate.orders"
   ],
   "aws_group.shared_services": [
     "aws_cloudwatch_log_group.flow_logs",

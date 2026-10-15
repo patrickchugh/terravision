@@ -24,7 +24,7 @@
     "height": 1629,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-multi-account-network.png",
-    "source_sha256": "61878b88a8c273d43dfb52593eab42672d896c30412a0e37bfd97cb42eea8d12",
+    "source_sha256": "9c8c466d171d88c777c3ba58d57907c4a61ca49f5ea1171533951539d8e1fe35",
     "width": 1400
   },
   "aws-multi-region": {

@@ -21,7 +21,7 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [AWS serverless event-driven architecture diagram](#aws-serverless-event-driven-architecture-diagram) | AWS |
 | [AWS data lake architecture diagram](#aws-data-lake-architecture-diagram) | AWS |
 | [AWS multi-region failover architecture diagram](#aws-multi-region-failover-architecture-diagram) | AWS |
-| [AWS multi-account network architecture diagram](#aws-multi-account-network-architecture-diagram) | AWS |
+| [AWS multi-account network with Direct Connect architecture diagram](#aws-multi-account-network-architecture-diagram) | AWS |
 | [AWS event-driven order processing architecture diagram](#aws-event-driven-order-processing-architecture-diagram) | AWS |
 | [Azure three-tier web application architecture diagram](#azure-three-tier-web-application-architecture-diagram) | Azure |
 | [Azure hub-and-spoke network architecture diagram](#azure-hub-and-spoke-architecture-diagram) | Azure |
@@ -132,15 +132,15 @@ terravision draw --source aws-multi-region.tvg.json --annotate aws-multi-region.
 
 Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-region.annotations.yml)
 
-## AWS multi-account network architecture diagram { #aws-multi-account-network-architecture-diagram }
+## AWS multi-account network with Direct Connect architecture diagram { #aws-multi-account-network-architecture-diagram }
 
-A hub-and-spoke network for an AWS organisation. A Transit Gateway in the network account connects a site-to-site VPN from the corporate data centre's router to production, development and shared services VPCs, each in its own account. All traffic between VPCs, and out to the internet, passes through AWS Network Firewall in a central inspection VPC across two availability zones. The inspection VPC and a central egress VPC, which holds the NAT gateways and the internet gateway, each attach to the Transit Gateway through a small subnet in each zone; the inspection attachment runs in appliance mode, so both directions of a connection pass the same firewall. The shared services VPC holds interface VPC endpoints and the corporate Active Directory.
+A hub-and-spoke network for an AWS organisation, connected to the corporate data centre. The data centre's router reaches AWS over a 10 Gbps Direct Connect connection and a transit virtual interface to a Direct Connect gateway, associated with a Transit Gateway in the network account, with a site-to-site VPN to the Transit Gateway as the backup path. All traffic between the data centre, the production, development and shared services spoke VPCs and the internet passes through AWS Network Firewall in a central inspection VPC, whose Transit Gateway attachments run in appliance mode in two availability zones; a central egress VPC holds the NAT gateways and the internet gateway. The flows show office staff reaching an internal Application Load Balancer and ECS Fargate orders service, that service calling the on-premises ERP system's REST API over Direct Connect, and a development instance reaching the internet through central inspection and egress.
 
-[![AWS multi-account network architecture diagram](assets/gallery/aws-multi-account-network.webp){ width=1400 height=1629 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png)
+[![AWS multi-account network with Direct Connect architecture diagram](assets/gallery/aws-multi-account-network.webp){ width=1400 height=1629 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png)
 
 **Ask your AI assistant:**
 
-> Draw an AWS multi-account network: a Transit Gateway hub in a network account with a site-to-site VPN from the corporate data centre's router, an inspection VPC with Network Firewall and appliance-mode Transit Gateway attachments in two availability zones, a central egress VPC with NAT gateways and an internet gateway, and spoke VPCs for production (ECS Fargate and RDS), development (EC2) and shared services (VPC endpoints and Directory Service), each attached through its own Transit Gateway subnet.
+> Draw an AWS multi-account network: a corporate data centre with office staff, an ERP server and a router connected by Direct Connect and a Direct Connect gateway to a Transit Gateway in a network account, with a site-to-site VPN as backup; an inspection VPC with Network Firewall in two availability zones; a central egress VPC with NAT gateways; and spoke VPCs for production (internal ALB, ECS Fargate, RDS), development (EC2) and shared services (VPC endpoints, Directory Service).
 
 **Or reproduce it exactly** from the source file [aws-multi-account-network.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-multi-account-network.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-multi-account-network.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-multi-account-network.annotations.yml):
 
