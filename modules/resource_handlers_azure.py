@@ -4,7 +4,7 @@ Handles special cases for Azure resources including resource groups, virtual net
 network security groups, load balancers, and other Azure-specific relationships.
 """
 
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 import modules.config.cloud_config_azure as cloud_config
 import modules.helpers as helpers
 import ast
@@ -588,7 +588,7 @@ _ZONE_ARITHMETIC_OPS = {
 _ZONE_EXPRESSION_MAX_LENGTH = 100
 
 
-def _eval_zone_arithmetic(expression: str) -> Union[int, float]:
+def _eval_zone_arithmetic(expression: str) -> int | float:
     """Evaluate integer arithmetic such as "0 + 1" from a zone expression.
 
     Args:
@@ -603,7 +603,7 @@ def _eval_zone_arithmetic(expression: str) -> Union[int, float]:
         SyntaxError: If the expression does not parse
     """
 
-    def _eval(node: ast.AST) -> Union[int, float]:
+    def _eval(node: ast.AST) -> int | float:
         if isinstance(node, ast.Constant) and type(node.value) is int:
             return node.value
         if isinstance(node, ast.BinOp) and type(node.op) in _ZONE_ARITHMETIC_OPS:
