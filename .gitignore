@@ -93,3 +93,7 @@ site/
 *.orig
 terravision-offsite-kit.md
 HANDOFF-discoverability.md
+
+# Test coverage (pytest --cov; CI passes coverage.xml to SonarQube)
+.coverage
+coverage.xml
