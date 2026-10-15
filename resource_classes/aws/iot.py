@@ -66,6 +66,10 @@ class IotGreengrassConnector(_Iot):
     _icon = "iot-greengrass-connector.png"
 
 
+class IotSensor(_Iot):
+    _icon = "iot-sensor.png"
+
+
 class IotGreengrass(_Iot):
     _icon = "iot-greengrass.png"
 
@@ -138,3 +142,4 @@ aws_iot_analytics_dataset = IotAnalytics
 aws_iotevents_detector_model = IotEvents
 aws_greengrass_group = IotGreengrass
 aws_greengrass_core_definition = IotGreengrass
+tv_aws_iot_sensor = IotSensor
