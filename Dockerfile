@@ -49,11 +49,23 @@ RUN git clone --quiet --depth 1 --branch "$TFENV_VERSION" https://github.com/tfu
     rm -rf tfenv/.git && \
     echo "binary: gpgv" > tfenv/use-gpgv
 
+# Turns poetry.lock into a pip requirements file with a hash for every
+# package, so the image installs exactly the locked, audited versions.
+FROM alpine:3.23 AS locked-requirements
+
+RUN apk add --no-cache python3 py3-pip && \
+    python3 -m venv /poetry && \
+    /poetry/bin/pip install --no-cache-dir poetry==2.3.2 poetry-plugin-export==1.10.1
+
+WORKDIR /lock
+COPY pyproject.toml poetry.lock ./
+RUN /poetry/bin/poetry export --extras mcp --format requirements.txt --output requirements.txt
+
 FROM alpine:3.23 AS base
 
 # Install required packages (graphviz-dev needed for pygraphviz/graphviz2drawio)
 RUN apk update && \
-    apk add --no-cache git python3 py3-pip graphviz graphviz-dev gcc musl-dev python3-dev binutils curl unzip bash gpgv && \
+    apk add --no-cache git python3 graphviz graphviz-dev gcc musl-dev python3-dev binutils curl unzip bash gpgv && \
     rm /usr/lib/python*/EXTERNALLY-MANAGED && \
     python3 -m ensurepip && \
     addgroup -S -g 1000 terravision && \
@@ -76,9 +88,14 @@ COPY --from=verified-downloads /verify/hashicorp.gpg /home/terravision/.gnupg/tr
 
 # Install terravision and dependencies, with the [mcp] extra (MCP SDK and
 # Pillow for inline previews) so `terravision mcp` works in the container
+COPY --from=locked-requirements /lock/requirements.txt /tmp/requirements.txt
 COPY --chown=terravision:terravision . /opt/terravision
 WORKDIR /opt/terravision
-RUN pip install --no-cache-dir ".[mcp]" && \
+# Dependencies come only from the lock file, and pip rejects any download
+# whose hash differs; then terravision itself, without re-resolving them.
+RUN python3 -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt && \
+    python3 -m pip install --no-cache-dir --no-deps . && \
+    rm /tmp/requirements.txt && \
     mkdir -p /project && \
     chown -R terravision:terravision /project /home/terravision/.tfenv /home/terravision/.gnupg && \
     chmod 700 /home/terravision/.gnupg && \
