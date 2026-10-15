@@ -278,6 +278,57 @@ def move_to_parent(
     return tfdata
 
 
+def move_into_group(
+    tfdata: Dict[str, Any],
+    resource_pattern: str,
+    group_name: str,
+) -> Dict[str, Any]:
+    """Draw every resource matching a pattern inside one named box.
+
+    Creates the box (``group_name``, a container type) if the graph does not
+    have it, and takes each matching resource out of any other container,
+    since a node is drawn in one box only.
+
+    Args:
+        tfdata: Terraform data dictionary
+        resource_pattern: Pattern to match resources to move
+        group_name: The box to draw them in, such as
+            ``tv_aws_onprem.corporate_datacenter``
+
+    Returns:
+        Updated tfdata with the resources inside the box
+    """
+    resources = [
+        r
+        for r in helpers.list_of_dictkeys_containing(
+            tfdata["graphdict"], resource_pattern
+        )
+        if helpers.get_no_module_name(r).startswith(resource_pattern)
+    ]
+    if not resources:
+        return tfdata
+    containers = _group_node_types(tfdata)
+    for parent, children in tfdata["graphdict"].items():
+        if parent == group_name:
+            continue
+        if helpers.get_no_module_name(parent).split(".")[0] not in containers:
+            continue
+        for resource in resources:
+            if resource in children:
+                children.remove(resource)
+    return create_group_node(tfdata, group_name, resources)
+
+
+def _group_node_types(tfdata: Dict[str, Any]) -> List[str]:
+    """The container types of the diagram's provider."""
+    from modules.config_loader import load_config
+    from modules.provider_detector import get_primary_provider_or_default
+
+    provider = get_primary_provider_or_default(tfdata)
+    config = load_config(provider)
+    return list(getattr(config, f"{provider.upper()}_GROUP_NODES", []))
+
+
 def delete_nodes(
     tfdata: Dict[str, Any],
     resource_pattern: str,

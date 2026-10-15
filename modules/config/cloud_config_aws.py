@@ -53,6 +53,15 @@ AWS_CONSOLIDATED_NODES = [
             "import_location": "resource_classes.aws.management",
         }
     },
+    # Before aws_dx, which would also match it: the Direct Connect gateway
+    # is its own node, and its associations (to a Transit Gateway or virtual
+    # private gateway) become its arrows
+    {
+        "aws_dx_gateway": {
+            "resource_name": "aws_dx_gateway.directconnect",
+            "import_location": "resource_classes.aws.network",
+        }
+    },
     {
         "aws_dx": {
             "resource_name": "aws_dx_connection.directconnect",
@@ -249,13 +258,13 @@ AWS_AUTO_ANNOTATIONS = [
             "arrow": "reverse",
         }
     },
+    # The connection starts at the customer's router: the graph's customer
+    # gateway if it has one, otherwise a new one. The aws_customer_gateway
+    # handler draws it in the corporate data centre box.
     {
-        "aws_dx": {
-            "link": [
-                "tv_aws_onprem.corporate_datacenter",
-                "tv_aws_cgw.customer_gateway",
-            ],
-            "arrow": "forward",
+        "aws_dx_connection": {
+            "link": ["aws_customer_gateway.*"],
+            "arrow": "reverse",
         }
     },
     {

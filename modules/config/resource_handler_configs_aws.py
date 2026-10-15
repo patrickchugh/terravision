@@ -81,6 +81,20 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    "aws_customer_gateway": {
+        "description": "Pure config-driven: draw customer gateways, the AWS record "
+        "of a router on the customer's premises, inside a corporate data centre "
+        "box outside the AWS Cloud",
+        "transformations": [
+            {
+                "operation": "move_into_group",
+                "params": {
+                    "resource_pattern": "aws_customer_gateway",
+                    "group_name": "tv_aws_onprem.corporate_datacenter",
+                },
+            },
+        ],
+    },
     "aws_vpc_endpoint": {
         "description": "Move VPC endpoints into VPC parent and delete endpoint nodes",
         "transformations": [
