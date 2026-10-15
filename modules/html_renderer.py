@@ -227,7 +227,8 @@ def _serialize_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         for entry in consolidated_nodes_config:
             for prefix, details in entry.items():
                 consolidated_prefixes.append((prefix, details.get("resource_name", "")))
-    except Exception:
+    # Without the provider's config there are no consolidated prefixes to add
+    except Exception:  # noqa: S110
         pass
 
     # Group original_metadata keys by consolidated prefix and module scope

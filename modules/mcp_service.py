@@ -1134,8 +1134,9 @@ def read_output_file(path: str) -> Dict[str, Any]:
     }
 
 
-# Where X11 display sockets live on Linux.
-_X11_SOCKET_DIR = Path("/tmp/.X11-unix")
+# Where X11 display sockets live on Linux. Only read, to find a display;
+# nothing is written there.
+_X11_SOCKET_DIR = Path("/tmp/.X11-unix")  # noqa: S108
 
 
 # Session variables xdg-open needs: where to display, how to reach the
@@ -1245,7 +1246,8 @@ def _launch(target: str, reveal: bool = False) -> None:
     }
     if system == "Windows":
         if not reveal:
-            os.startfile(target)  # type: ignore[attr-defined]  # Windows only
+            # Opening the diagram in its default app is the point of the tool
+            os.startfile(target)  # type: ignore[attr-defined]  # noqa: S606
             return
         command = ["explorer", f"/select,{target}"]
     else:

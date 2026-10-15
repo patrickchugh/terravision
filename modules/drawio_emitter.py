@@ -149,7 +149,8 @@ def _build_class_to_alias_map() -> Dict[str, str]:
         for _importer, modname, _ispkg in pkgutil.iter_modules(pkg_path):
             try:
                 modules_to_scan.append(importlib.import_module(f"{pkg_name}.{modname}"))
-            except Exception:
+            # Best effort: a module that fails to import has no icons to map
+            except Exception:  # noqa: S112
                 continue
 
         for mod in modules_to_scan:

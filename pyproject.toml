@@ -126,5 +126,20 @@ extend-exclude = '''
 )/
 '''
 
+[tool.ruff.lint]
+# Ruff's security rules (Bandit's checks). The security workflow fails on
+# any finding in terravision, modules and resource_classes.
+select = ["S"]
+ignore = [
+    # Subprocesses get argument lists and never a shell; terraform, git and
+    # dot are found on PATH on purpose.
+    "S603",
+    "S607",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest checks with assert
+"tests/**" = ["S101"]
+
 [tool.isort]
 skip = ["drawing.py"]

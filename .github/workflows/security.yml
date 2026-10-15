@@ -1,0 +1,82 @@
+# yamllint disable rule:line-length
+---
+name: Security
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Weekly, so vulnerabilities published since the last push, and new
+    # CodeQL queries, show up even when the code has not changed.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    name: Dependency vulnerabilities (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Every locked package, test and dev tools included, as installed by
+      # CI, the Docker image and pip with the mcp extra.
+      - name: Export the lock file with hashes
+        run: |
+          pipx install poetry==2.3.2
+          pipx inject poetry poetry-plugin-export==1.10.1
+          poetry export --with test,dev --extras mcp --format requirements.txt --output locked-requirements.txt
+
+      - name: Audit every locked package
+        run: pipx run --spec pip-audit==2.10.1 pip-audit --progress-spinner off --disable-pip --require-hashes -r locked-requirements.txt
+
+  ruff:
+    name: Python security rules (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Rules and reviewed exceptions are in [tool.ruff.lint] in pyproject.toml.
+      - name: Check terravision, modules and resource_classes
+        run: pipx run --spec ruff==0.17.0 ruff check --output-format github terravision modules resource_classes
+
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Uploads results to the repository's Security tab
+    strategy:
+      fail-fast: false
+      matrix:
+        # actions checks the workflows themselves
+        language: [python, actions]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config: |
+            paths-ignore:
+              - modules/vendor
+              - resource_images
+              - site
+              - examples
+              - tests
+
+      - name: Analyse
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          category: /language:${{ matrix.language }}
