@@ -26,6 +26,9 @@ jobs:
       # (terraform plan against AWS); those run on main after the merge.
       # pull_request_target would hand the role to untrusted code instead.
       FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+      # Whether the SonarQube token is available; the token itself stays in
+      # the scan step. Fork and Dependabot pull requests get no secrets.
+      HAS_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -118,12 +121,12 @@ jobs:
           fi
 
       #----------------------------------------------
-      # SonarQube Cloud: settings in sonar-project.properties. A pull
-      # request from a fork gets no secrets, so it is analysed on main
+      # SonarQube Cloud: settings in sonar-project.properties. Pull
+      # requests without the token (forks, Dependabot) are analysed on main
       # after the merge.
       #----------------------------------------------
       - name: SonarQube Cloud scan
-        if: env.FORK_PR != 'true'
+        if: env.HAS_SONAR_TOKEN == 'true'
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
