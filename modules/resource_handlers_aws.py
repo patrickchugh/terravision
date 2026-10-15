@@ -1751,6 +1751,10 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
     # Place managed resources into matching subnets via subnet_id metadata
     place_resources_in_subnets(tfdata)
+    # Gateway VPC endpoints belong to a VPC, not a subnet
+    place_gateway_endpoints(tfdata)
+    # Databases go in the subnets of their DB subnet group, or their VPC
+    place_databases(tfdata)
     # Place regional (multi-AZ) NAT gateways in the public subnet of each AZ
     place_regional_nat_gateways(tfdata)
     # Connect load balancers to ECS services via target_group_arn
@@ -2158,6 +2162,172 @@ def _collect_subnet_ids_from_meta(meta: Dict[str, Any]) -> List[str]:
     return ids
 
 
+# Database types, after consolidation and variants (aws_db_instance with
+# engine postgres is drawn as aws_rds_postgres). Aurora always keeps a
+# writer and readers across zones; other engines only when Multi-AZ.
+_DATABASE_PREFIXES = ("aws_rds_", "aws_db_instance.")
+_AURORA_PREFIXES = ("aws_rds_aurora", "aws_rds_cluster")
+
+
+def place_databases(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each RDS database in the subnets of its DB subnet group.
+
+    A Multi-AZ instance or an Aurora cluster gets a numbered copy in each of
+    the group's subnets, as it runs a standby or readers in each zone. A
+    single-AZ instance runs in one subnet the plan cannot name, so it is
+    drawn in the VPC around those subnets. Without this, a database whose
+    subnet group name was only known after apply was drawn outside every
+    VPC, and one with a resolved name in the group's first subnet only.
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _value(node: str, key: str) -> Any:
+        for source in (original_metadata, meta_data):
+            value = (source.get(node) or source.get(node.split("~")[0]) or {}).get(key)
+            # True is a value only known after apply
+            if value not in (None, "", [], True):
+                return value
+        return None
+
+    def _base(node: str) -> str:
+        return helpers.get_no_module_name(node).split("~")[0]
+
+    subnets = [n for n in graphdict if _base(n).startswith("aws_subnet.")]
+    subnet_by_id = {}
+    for subnet in subnets:
+        sid = _value(subnet, "id")
+        if isinstance(sid, str) and sid:
+            subnet_by_id[sid] = subnet
+
+    groups = [
+        n
+        for n in set(graphdict) | set(meta_data)
+        if _base(n).startswith("aws_db_subnet_group.")
+    ]
+    group_by_name = {}
+    for group in groups:
+        name = _value(group, "name")
+        if isinstance(name, str) and not name.startswith("${"):
+            group_by_name[name] = group
+
+    def _group_subnets(group: str) -> List[str]:
+        found: List[str] = []
+        for source in (original_metadata, meta_data):
+            ids = (source.get(group) or {}).get("subnet_ids")
+            if isinstance(ids, list):
+                found += [subnet_by_id[i] for i in ids if i in subnet_by_id]
+            if found:
+                return list(dict.fromkeys(found))
+        refs = re.findall(r"aws_subnet\.[\w-]+", str(_value(group, "subnet_ids") or ""))
+        for ref in refs:
+            found += [
+                s for s in subnets if _base(s) == ref or _base(s).startswith(ref + "[")
+            ]
+        return list(dict.fromkeys(found))
+
+    def _group_of(db: str) -> str:
+        for group in groups:
+            if db in graphdict.get(group, []):
+                return group
+        name = _value(db, "db_subnet_group_name")
+        if isinstance(name, str):
+            match = re.search(r"aws_db_subnet_group\.[\w-]+", name)
+            if match:
+                for group in groups:
+                    if _base(group) == match.group(0):
+                        return group
+            return group_by_name.get(name, "")
+        return ""
+
+    databases = [
+        n
+        for n in list(graphdict)
+        if "~" not in n
+        and _base(n).startswith(_DATABASE_PREFIXES)
+        and not _base(n).startswith("aws_rds_cluster_parameter")
+    ]
+    for db in databases:
+        group = _group_of(db)
+        group_subnets = _group_subnets(group) if group else []
+        if not group_subnets:
+            continue
+        aurora = _base(db).startswith(_AURORA_PREFIXES)
+        # A boolean the plan knows: True here is the value, not "unknown"
+        multi_az = any(
+            (source.get(db) or {}).get("multi_az") in (True, "true", "True")
+            for source in (original_metadata, meta_data)
+        )
+        for subnet in subnets:
+            if db in graphdict.get(subnet, []):
+                graphdict[subnet].remove(db)
+        if (aurora or multi_az) and len(group_subnets) > 1:
+            copies = [f"{db}~{i}" for i in range(1, len(group_subnets) + 1)]
+            for copy_name, subnet in zip(copies, group_subnets):
+                graphdict[copy_name] = list(graphdict.get(db, []))
+                meta_data[copy_name] = copy.deepcopy(meta_data.get(db, {}))
+                if db in original_metadata:
+                    original_metadata[copy_name] = copy.deepcopy(original_metadata[db])
+                graphdict[subnet].append(copy_name)
+            for parent, kids in graphdict.items():
+                if db in kids:
+                    kids.remove(db)
+                    kids.extend(c for c in copies if c not in kids)
+            helpers.delete_node(
+                tfdata, db, remove_from_connections=False, delete_meta_data=False
+            )
+        else:
+            for vpc in transformers._vpcs_above_subnet(tfdata, group_subnets[0]):
+                if db not in graphdict[vpc]:
+                    graphdict[vpc].append(db)
+    return tfdata
+
+
+def place_gateway_endpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each gateway VPC endpoint (S3, DynamoDB) in its own VPC.
+
+    A gateway endpoint has no subnet or network interface: it is a route
+    target in the VPC's route tables. Interface endpoints have one network
+    interface per subnet and are drawn in those subnets (numbered copies,
+    see AWS_MULTI_INSTANCE_PATTERNS). This takes a gateway endpoint out of
+    any subnet and, when it is in no VPC yet, adds it to the VPC whose id
+    matches its vpc_id (plans with resolved ids carry no graph edge to it).
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _value(node: str, key: str) -> Any:
+        for source in (original_metadata, meta_data):
+            value = (source.get(node) or source.get(node.split("~")[0]) or {}).get(key)
+            if value not in (None, "", [], True):
+                return value
+        return None
+
+    vpcs = [
+        n for n in graphdict if helpers.get_no_module_name(n).startswith("aws_vpc.")
+    ]
+    vpc_by_id = {_value(v, "id"): v for v in vpcs if _value(v, "id")}
+
+    for node in list(graphdict):
+        if not helpers.get_no_module_name(node).startswith("aws_vpc_endpoint."):
+            continue
+        if _value(node, "vpc_endpoint_type") != "Gateway":
+            continue
+        for parent, children in graphdict.items():
+            if node in children and helpers.get_no_module_name(parent).startswith(
+                "aws_subnet."
+            ):
+                children.remove(node)
+        if any(node in graphdict.get(v, []) for v in vpcs):
+            continue
+        vpc = vpc_by_id.get(_value(node, "vpc_id"))
+        if vpc:
+            graphdict[vpc].append(node)
+    return tfdata
+
+
 def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Place managed resources into the subnets their metadata references.
 
@@ -2262,6 +2432,15 @@ def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         ids = _collect_subnet_ids_from_meta(direct)
         if ids or direct.get("db_subnet_group_name"):
             return direct
+        # A resource with metadata of its own and no subnet in it is not in
+        # a subnet (an S3 gateway endpoint, a Lambda outside the VPC); only
+        # a renamed node borrows a same-typed resource's subnets below.
+        if any(n in meta_data or n in original_metadata for n in [base, *instances]):
+            if (
+                helpers.get_no_module_name(base).split(".")[0]
+                not in variant_to_original
+            ):
+                return direct
 
         base_type = helpers.get_no_module_name(base).split(".")[0]
         candidate_types = {base_type}

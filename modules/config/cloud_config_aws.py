@@ -53,6 +53,15 @@ AWS_CONSOLIDATED_NODES = [
             "import_location": "resource_classes.aws.management",
         }
     },
+    # Before aws_dx, which would also match it: the Direct Connect gateway
+    # is its own node, and its associations (to a Transit Gateway or virtual
+    # private gateway) become its arrows
+    {
+        "aws_dx_gateway": {
+            "resource_name": "aws_dx_gateway.directconnect",
+            "import_location": "resource_classes.aws.network",
+        }
+    },
     {
         "aws_dx": {
             "resource_name": "aws_dx_connection.directconnect",
@@ -249,13 +258,13 @@ AWS_AUTO_ANNOTATIONS = [
             "arrow": "reverse",
         }
     },
+    # The connection starts at the customer's router: the graph's customer
+    # gateway if it has one, otherwise a new one. The aws_customer_gateway
+    # handler draws it in the corporate data centre box.
     {
-        "aws_dx": {
-            "link": [
-                "tv_aws_onprem.corporate_datacenter",
-                "tv_aws_cgw.customer_gateway",
-            ],
-            "arrow": "forward",
+        "aws_dx_connection": {
+            "link": ["aws_customer_gateway.*"],
+            "arrow": "reverse",
         }
     },
     {
@@ -389,6 +398,17 @@ AWS_HIDE_NODES = [
     # the same icon again with nothing added.
     "aws_route",
     "aws_route_table",
+    # The same for a Transit Gateway: its route tables, routes and their
+    # associations decide where traffic goes between attachments, which the
+    # attachments' arrows already show.
+    "aws_ec2_transit_gateway_route",
+    "aws_ec2_transit_gateway_route_table",
+    "aws_ec2_transit_gateway_route_table_association",
+    "aws_ec2_transit_gateway_route_table_propagation",
+    # Network Firewall's rules: the firewall endpoints are what sits in the
+    # network, and the policy and its rule groups configure them.
+    "aws_networkfirewall_firewall_policy",
+    "aws_networkfirewall_rule_group",
     "aws_vpc_dhcp_options",
     "aws_vpc_dhcp_options_association",
     # Wraps an IAM role for attachment to an instance; the role is what
@@ -517,6 +537,36 @@ AWS_MULTI_INSTANCE_PATTERNS = [
         "also_expand_attributes": ["security_groups"],
         "resource_pattern": r"\$\{(aws_\w+\.\w+)",
         "description": "ECS service spanning multiple subnets",
+    },
+    # Network-attached resources with one network interface per subnet.
+    # Only subnet references count: vpc_id and the like sit beside them.
+    {
+        "resource_types": ["aws_ec2_transit_gateway_vpc_attachment"],
+        "trigger_attributes": ["subnet_ids"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Transit Gateway attachment with a subnet in each zone",
+    },
+    {
+        "resource_types": ["aws_networkfirewall_firewall"],
+        "trigger_attributes": ["subnet_mapping", "dynamic"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Network Firewall with an endpoint in each subnet",
+    },
+    {
+        "resource_types": ["aws_vpc_endpoint"],
+        "trigger_attributes": ["subnet_ids"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Interface VPC endpoint with a network interface in each subnet",
+    },
+    {
+        "resource_types": ["aws_directory_service_directory"],
+        "trigger_attributes": ["vpc_settings", "connect_settings"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Directory Service with domain controllers in two subnets",
     },
     # Add more AWS patterns as needed
 ]

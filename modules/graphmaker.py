@@ -32,14 +32,57 @@ def extract_resource_references(attribute_value: Any, pattern: str) -> List[str]
 
     if isinstance(attribute_value, list):
         for item in attribute_value:
-            if isinstance(item, str):
-                matches = re.findall(pattern, item)
-                references.extend(matches)
+            references.extend(extract_resource_references(item, pattern))
+    elif isinstance(attribute_value, dict):
+        # Nested blocks: vpc_settings { subnet_ids = [...] }, or a dynamic
+        # block whose for_each lists the subnets
+        for item in attribute_value.values():
+            references.extend(extract_resource_references(item, pattern))
     elif isinstance(attribute_value, str):
         matches = re.findall(pattern, attribute_value)
         references.extend(matches)
 
     return references
+
+
+def _count_references(
+    attribute_value: Any, pattern: str, graphdict: Optional[Dict[str, Any]]
+) -> int:
+    """How many resources an attribute refers to.
+
+    Each reference counts once, except a splat over a counted resource
+    (``aws_subnet.private[*].id``), which counts as that resource's number
+    of instances in the graph (``aws_subnet.private[0]``, ``[1]``...).
+    """
+    if isinstance(attribute_value, (list, dict)):
+        items = (
+            attribute_value.values()
+            if isinstance(attribute_value, dict)
+            else attribute_value
+        )
+        return sum(_count_references(item, pattern, graphdict) for item in items)
+    if not isinstance(attribute_value, str):
+        return 0
+    total = 0
+    for match in re.finditer(pattern, attribute_value):
+        rest = attribute_value[match.end(1) :]
+        if graphdict and (rest.startswith("[*]") or rest.startswith(".*")):
+            total += max(_instance_count(match.group(1), graphdict), 1)
+        else:
+            total += 1
+    return total
+
+
+def _instance_count(resource: str, graphdict: Dict[str, Any]) -> int:
+    """Number of instances of a counted resource in the graph."""
+    prefix = resource + "["
+    return len(
+        {
+            node.split("~")[0]
+            for node in graphdict
+            if helpers.get_no_module_name(node).startswith(prefix)
+        }
+    )
 
 
 def find_matching_node_in_graphdict(
@@ -59,6 +102,16 @@ def find_matching_node_in_graphdict(
     Returns:
         List of matching node names in graphdict
     """
+    # A resource still under its own name is that node alone: matching by
+    # type would number every attachment when one of them spans subnets
+    exact = [
+        node
+        for node in graphdict
+        if "~" not in node and helpers.get_no_module_name(node) == original_resource
+    ]
+    if exact:
+        return exact
+
     matching_nodes = []
     resource_type = original_resource.split(".")[0]
 
@@ -84,6 +137,7 @@ def _check_instance_for_multi_refs(
     pattern: Dict[str, Any],
     resource_key: str,
     resources_to_expand: Dict[str, tuple],
+    graphdict: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Check a resource instance for multi-reference trigger attributes.
 
@@ -101,14 +155,12 @@ def _check_instance_for_multi_refs(
         if not attr_value:
             continue
 
-        references = extract_resource_references(
-            attr_value, pattern["resource_pattern"]
-        )
-        if len(references) <= 1:
+        count = _count_references(attr_value, pattern["resource_pattern"], graphdict)
+        if count <= 1:
             continue
 
         if resource_key not in resources_to_expand:
-            resources_to_expand[resource_key] = (len(references), set())
+            resources_to_expand[resource_key] = (count, set())
 
         for assoc_attr in pattern["also_expand_attributes"]:
             assoc_value = instance_data.get(assoc_attr)
@@ -120,13 +172,16 @@ def _check_instance_for_multi_refs(
 
 
 def _scan_resources_for_patterns(
-    all_resource: Dict[str, Any], patterns: List[Dict[str, Any]]
+    all_resource: Dict[str, Any],
+    patterns: List[Dict[str, Any]],
+    graphdict: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, tuple]:
     """Scan all Terraform resources for multi-instance patterns.
 
     Args:
         all_resource: Dict of terraform file -> resource blocks
         patterns: List of multi-instance pattern configurations
+        graphdict: The graph, to count the instances a splat refers to
 
     Returns:
         Dict mapping resource_key -> (count, set_of_associated_resources)
@@ -149,7 +204,11 @@ def _scan_resources_for_patterns(
                     for instance_name, instance_data in instances.items():
                         resource_key = f"{resource_type}.{instance_name}"
                         _check_instance_for_multi_refs(
-                            instance_data, pattern, resource_key, resources_to_expand
+                            instance_data,
+                            pattern,
+                            resource_key,
+                            resources_to_expand,
+                            graphdict,
                         )
 
     return resources_to_expand
@@ -251,7 +310,7 @@ def detect_and_set_counts(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         return tfdata
 
     resources_to_expand = _scan_resources_for_patterns(
-        tfdata.get("all_resource", {}), patterns
+        tfdata.get("all_resource", {}), patterns, tfdata.get("graphdict", {})
     )
 
     _apply_counts_to_graph(

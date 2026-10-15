@@ -65,7 +65,9 @@
         "aws_fargate.ecs~3"
     ],
     "aws_db_subnet_group.this": [
-        "aws_rds_aurora_mysql.this"
+        "aws_rds_aurora_mysql.this~1",
+        "aws_rds_aurora_mysql.this~2",
+        "aws_rds_aurora_mysql.this~3"
     ],
     "aws_ecr_repository.ecr": [],
     "aws_ecs_cluster.ecs": [],
@@ -88,7 +90,9 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[0]~1",
-        "aws_rds_aurora_mysql.this",
+        "aws_rds_aurora_mysql.this~1",
+        "aws_rds_aurora_mysql.this~2",
+        "aws_rds_aurora_mysql.this~3",
         "aws_ssm_parameter.ssmparam"
     ],
     "aws_fargate.ecs~2": [
@@ -97,7 +101,9 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[1]~2",
-        "aws_rds_aurora_mysql.this",
+        "aws_rds_aurora_mysql.this~1",
+        "aws_rds_aurora_mysql.this~2",
+        "aws_rds_aurora_mysql.this~3",
         "aws_ssm_parameter.ssmparam"
     ],
     "aws_fargate.ecs~3": [
@@ -106,7 +112,9 @@
         "aws_ecs_cluster.ecs",
         "aws_efs_mount_target.this",
         "aws_efs_mount_target.this[2]~3",
-        "aws_rds_aurora_mysql.this",
+        "aws_rds_aurora_mysql.this~1",
+        "aws_rds_aurora_mysql.this~2",
+        "aws_rds_aurora_mysql.this~3",
         "aws_ssm_parameter.ssmparam"
     ],
     "aws_group.shared_services": [
@@ -141,7 +149,9 @@
         "aws_alb.elb~2",
         "aws_alb.elb~3"
     ],
-    "aws_rds_aurora_mysql.this": [],
+    "aws_rds_aurora_mysql.this~1": [],
+    "aws_rds_aurora_mysql.this~2": [],
+    "aws_rds_aurora_mysql.this~3": [],
     "aws_route53_record.route_53": [
         "aws_acm_certificate.acm"
     ],
@@ -219,16 +229,19 @@
     "module.vpc.aws_route_table_association.public[2]~3": [],
     "module.vpc.aws_subnet.private[0]~1": [
         "aws_appautoscaling_target.this~1",
+        "aws_rds_aurora_mysql.this~1",
         "aws_security_group.efs~1",
         "module.vpc.aws_route_table_association.private[0]~1"
     ],
     "module.vpc.aws_subnet.private[1]~2": [
         "aws_appautoscaling_target.this~2",
+        "aws_rds_aurora_mysql.this~2",
         "aws_security_group.efs~2",
         "module.vpc.aws_route_table_association.private[1]~2"
     ],
     "module.vpc.aws_subnet.private[2]~3": [
         "aws_appautoscaling_target.this~3",
+        "aws_rds_aurora_mysql.this~3",
         "aws_security_group.efs~3",
         "module.vpc.aws_route_table_association.private[2]~3"
     ],

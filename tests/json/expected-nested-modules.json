@@ -82,7 +82,8 @@
   ],
   "aws_route53_record.route_53": [
     "aws_lb.elb",
-    "module.mkhan-test_aws_rds.aws_db_instance.this",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2",
     "module.mkhan-test_vpc.aws_vpc.this"
   ],
   "aws_secretsmanager_secret.secretsmanager": [],
@@ -99,7 +100,7 @@
   "module.az1_subnets[\"data-1\"].aws_subnet.this": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
     "module.az1_aws_route_table_association[\"data-1\"].aws_route_table_association.this",
-    "module.mkhan-test_aws_rds.aws_db_instance.this"
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1"
   ],
   "module.az1_subnets[\"data-2\"].aws_subnet.this": [
     "module.az1_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
@@ -135,7 +136,8 @@
   "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this": [],
   "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this": [],
   "module.az2_subnets[\"data-1\"].aws_subnet.this": [
-    "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this"
+    "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2"
   ],
   "module.az2_subnets[\"data-2\"].aws_subnet.this": [
     "module.az2_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
@@ -156,17 +158,27 @@
     "module.az2_aws_route_table_association[\"pvt-2\"].aws_route_table_association.this"
   ],
   "module.az2_subnets[\"vpce-1\"].aws_subnet.this": [
-    "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this"
+    "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this",
+    "module.mkhan-test_vpce_pl[\"ec2messages\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"kms\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"lambda\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"secretsmanager\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"ssm\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"ssmmessages\"].aws_vpc_endpoint.this"
   ],
   "module.az2_subnets[\"vpce-2\"].aws_subnet.this": [
     "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this"
   ],
-  "module.mkhan-test_aws_rds.aws_db_instance.this": [
+  "module.mkhan-test_aws_rds.aws_db_instance.this~1": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_db_instance.this~2": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
   ],
   "module.mkhan-test_aws_rds.aws_iam_role.rds_enhanced_monitoring": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
-    "module.mkhan-test_aws_rds.aws_db_instance.this"
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2"
   ],
   "module.mkhan-test_aws_rds.aws_vpc_security_group_egress_rule.all": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
@@ -269,8 +281,15 @@
     "module.rt_data.aws_route_table.this",
     "module.rt_pub.aws_route_table.this",
     "module.rt_pvt.aws_route_table.this",
-    "module.rt_vpce.aws_route_table.this"
+    "module.rt_vpce.aws_route_table.this",
+    "module.s3_vpce_gw.aws_vpc_endpoint.this"
   ],
+  "module.mkhan-test_vpce_pl[\"ec2messages\"].aws_vpc_endpoint.this": [],
+  "module.mkhan-test_vpce_pl[\"kms\"].aws_vpc_endpoint.this": [],
+  "module.mkhan-test_vpce_pl[\"lambda\"].aws_vpc_endpoint.this": [],
+  "module.mkhan-test_vpce_pl[\"secretsmanager\"].aws_vpc_endpoint.this": [],
+  "module.mkhan-test_vpce_pl[\"ssm\"].aws_vpc_endpoint.this": [],
+  "module.mkhan-test_vpce_pl[\"ssmmessages\"].aws_vpc_endpoint.this": [],
   "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
   "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]": [],
   "module.pgadmin_alb_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
@@ -289,6 +308,7 @@
     "aws_nat_gateway.this~2"
   ],
   "module.rt_vpce.aws_route_table.this": [],
+  "module.s3_vpce_gw.aws_vpc_endpoint.this": [],
   "module.ssm_bastion_host.aws_instance.bastion": [],
   "module.ssm_bastion_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]~1": [],
   "module.ssm_bastion_sg.aws_vpc_security_group_egress_rule.this[\"1-0.0.0.0/0\"][1-0.0.0.0/0]~1": [],
