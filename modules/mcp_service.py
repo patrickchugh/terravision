@@ -604,8 +604,12 @@ _CARRY_ANNOTATIONS = (
     "Terraform address that creates it (aws_ecs_fargate.api becomes "
     "aws_ecs_service.api, numbered copies such as aws_alb.web~1 become the one "
     "resource), and add the external actors (users, internet) under add:, "
-    "since Terraform has none. TerraVision loads that file whenever it draws "
-    "the Terraform, including in CI."
+    "since Terraform has none. For a hybrid design, TerraVision draws each "
+    "aws_customer_gateway in tv_aws_onprem.corporate_datacenter, so declare "
+    "that box and the on-premises systems (tv_aws_server, tv_aws_client) under "
+    "add: and list the systems in it under connect:, instead of a second data "
+    "centre box. TerraVision loads that file whenever it draws the Terraform, "
+    "including in CI."
 )
 
 
