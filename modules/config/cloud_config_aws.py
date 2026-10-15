@@ -527,6 +527,29 @@ AWS_MULTI_INSTANCE_PATTERNS = [
         "resource_pattern": r"\$\{(aws_\w+\.\w+)",
         "description": "ECS service spanning multiple subnets",
     },
+    # Network-attached resources with one network interface per subnet.
+    # Only subnet references count: vpc_id and the like sit beside them.
+    {
+        "resource_types": ["aws_ec2_transit_gateway_vpc_attachment"],
+        "trigger_attributes": ["subnet_ids"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Transit Gateway attachment with a subnet in each zone",
+    },
+    {
+        "resource_types": ["aws_networkfirewall_firewall"],
+        "trigger_attributes": ["subnet_mapping", "dynamic"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Network Firewall with an endpoint in each subnet",
+    },
+    {
+        "resource_types": ["aws_directory_service_directory"],
+        "trigger_attributes": ["vpc_settings", "connect_settings"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Directory Service with domain controllers in two subnets",
+    },
     # Add more AWS patterns as needed
 ]
 

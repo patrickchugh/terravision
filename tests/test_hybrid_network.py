@@ -102,3 +102,63 @@ def test_move_into_group_takes_the_node_out_of_other_boxes():
     assert ROUTER not in tfdata["graphdict"]["aws_vpc.main"]
     # connections are not containers and keep their arrows
     assert tfdata["graphdict"][ROUTER] == [DX]
+
+
+# ---- Resources with a network interface in each subnet ----
+
+
+def boxes_holding(graph, node):
+    return [
+        box
+        for box, children in graph.items()
+        if node in children and box.startswith("aws_subnet.")
+    ]
+
+
+@pytest.mark.parametrize(
+    "resource",
+    [
+        "aws_networkfirewall_firewall.inspection",
+        "aws_ec2_transit_gateway_vpc_attachment.inspection",
+        "aws_ec2_transit_gateway_vpc_attachment.egress",
+        "aws_directory_service_directory.corporate_ad",
+    ],
+)
+def test_resource_spanning_subnets_has_a_copy_in_each(graph, resource):
+    """subnet_ids = aws_subnet.x[*].id names two subnets, not one."""
+    copies = [f"{resource}~1", f"{resource}~2"]
+    for copy in copies:
+        assert len(boxes_holding(graph, copy)) == 1, copy
+    assert boxes_holding(graph, copies[0]) != boxes_holding(graph, copies[1])
+    assert resource not in graph
+
+
+@pytest.mark.parametrize(
+    "resource",
+    [
+        "aws_ec2_transit_gateway_vpc_attachment.production",
+        "aws_ec2_transit_gateway_vpc_attachment.development",
+        "aws_ec2_transit_gateway_vpc_attachment.shared_services",
+    ],
+)
+def test_resource_in_one_subnet_stays_one_node(graph, resource):
+    """Numbering one attachment must not number every attachment."""
+    assert resource in graph
+    assert f"{resource}~1" not in graph
+
+
+def test_splat_counts_the_instances_it_refers_to():
+    from modules.graphmaker import _count_references
+
+    graph = {"aws_subnet.a[0]~1": [], "aws_subnet.a[1]~2": [], "aws_subnet.b": []}
+    pattern = r"\$\{(aws_subnet\.\w+)"
+    assert _count_references("${aws_subnet.a[*].id}", pattern, graph) == 2
+    assert _count_references(["${aws_subnet.b.id}"], pattern, graph) == 1
+    assert (
+        _count_references(
+            {"subnet_ids": "${aws_subnet.a[*].id}", "vpc_id": "${aws_vpc.v.id}"},
+            pattern,
+            graph,
+        )
+        == 2
+    )
