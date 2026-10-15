@@ -190,3 +190,31 @@ def test_routing_and_firewall_rules_are_not_drawn(tmp_path):
     ):
         assert f'tf_resource_name="{hidden}.' not in text
     assert 'tf_resource_name="aws_networkfirewall_firewall.inspection~1"' in text
+
+
+# ---- VPC endpoints ----
+
+
+def test_interface_endpoint_is_in_each_of_its_subnets(graph):
+    """It was moved to the first VPC in the graph (here the development VPC)."""
+    for copy in ("aws_vpc_endpoint.ssm~1", "aws_vpc_endpoint.ssm~2"):
+        assert len(boxes_holding(graph, copy)) == 1
+    assert all("aws_vpc_endpoint" not in c for c in graph["aws_vpc.development"])
+
+
+def test_gateway_endpoint_is_in_its_vpc_not_a_subnet():
+    """A gateway endpoint (S3, DynamoDB) has no subnet; with resolved ids it
+    was given an interface endpoint's subnets."""
+    from modules.resource_handlers_aws import place_gateway_endpoints
+
+    gw, vpc = "aws_vpc_endpoint.s3", "aws_vpc.main"
+    tfdata = {
+        "graphdict": {vpc: ["aws_subnet.a"], "aws_subnet.a": [gw], gw: []},
+        "meta_data": {
+            gw: {"vpc_endpoint_type": "Gateway", "vpc_id": "vpc-1"},
+            vpc: {"id": "vpc-1"},
+        },
+    }
+    place_gateway_endpoints(tfdata)
+    assert gw not in tfdata["graphdict"]["aws_subnet.a"]
+    assert gw in tfdata["graphdict"][vpc]

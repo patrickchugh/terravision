@@ -95,26 +95,6 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
-    "aws_vpc_endpoint": {
-        "description": "Move VPC endpoints into VPC parent and delete endpoint nodes",
-        "transformations": [
-            {
-                "operation": "move_to_parent",
-                "params": {
-                    "resource_pattern": "aws_vpc_endpoint",
-                    "from_parent_pattern": "aws_subnet",
-                    "to_parent_pattern": "aws_vpc.",
-                },
-            },
-            {
-                "operation": "delete_nodes",
-                "params": {
-                    "resource_pattern": "aws_vpc_endpoint",
-                    "remove_from_parents": False,
-                },
-            },
-        ],
-    },
     "aws_db_subnet_group": {
         "description": "Move DB subnet groups from subnets to VPC, redirect to security groups",
         "transformations": [

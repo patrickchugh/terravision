@@ -1751,6 +1751,8 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     tfdata["graphdict"] = split_nat_gateways(tfdata["graphdict"])
     # Place managed resources into matching subnets via subnet_id metadata
     place_resources_in_subnets(tfdata)
+    # Gateway VPC endpoints belong to a VPC, not a subnet
+    place_gateway_endpoints(tfdata)
     # Place regional (multi-AZ) NAT gateways in the public subnet of each AZ
     place_regional_nat_gateways(tfdata)
     # Connect load balancers to ECS services via target_group_arn
@@ -2158,6 +2160,50 @@ def _collect_subnet_ids_from_meta(meta: Dict[str, Any]) -> List[str]:
     return ids
 
 
+def place_gateway_endpoints(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each gateway VPC endpoint (S3, DynamoDB) in its own VPC.
+
+    A gateway endpoint has no subnet or network interface: it is a route
+    target in the VPC's route tables. Interface endpoints have one network
+    interface per subnet and are drawn in those subnets (numbered copies,
+    see AWS_MULTI_INSTANCE_PATTERNS). This takes a gateway endpoint out of
+    any subnet and, when it is in no VPC yet, adds it to the VPC whose id
+    matches its vpc_id (plans with resolved ids carry no graph edge to it).
+    """
+    graphdict = tfdata.get("graphdict", {})
+    meta_data = tfdata.get("meta_data", {})
+    original_metadata = tfdata.get("original_metadata", {})
+
+    def _value(node: str, key: str) -> Any:
+        for source in (original_metadata, meta_data):
+            value = (source.get(node) or source.get(node.split("~")[0]) or {}).get(key)
+            if value not in (None, "", [], True):
+                return value
+        return None
+
+    vpcs = [
+        n for n in graphdict if helpers.get_no_module_name(n).startswith("aws_vpc.")
+    ]
+    vpc_by_id = {_value(v, "id"): v for v in vpcs if _value(v, "id")}
+
+    for node in list(graphdict):
+        if not helpers.get_no_module_name(node).startswith("aws_vpc_endpoint."):
+            continue
+        if _value(node, "vpc_endpoint_type") != "Gateway":
+            continue
+        for parent, children in graphdict.items():
+            if node in children and helpers.get_no_module_name(parent).startswith(
+                "aws_subnet."
+            ):
+                children.remove(node)
+        if any(node in graphdict.get(v, []) for v in vpcs):
+            continue
+        vpc = vpc_by_id.get(_value(node, "vpc_id"))
+        if vpc:
+            graphdict[vpc].append(node)
+    return tfdata
+
+
 def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Place managed resources into the subnets their metadata references.
 
@@ -2262,6 +2308,15 @@ def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         ids = _collect_subnet_ids_from_meta(direct)
         if ids or direct.get("db_subnet_group_name"):
             return direct
+        # A resource with metadata of its own and no subnet in it is not in
+        # a subnet (an S3 gateway endpoint, a Lambda outside the VPC); only
+        # a renamed node borrows a same-typed resource's subnets below.
+        if any(n in meta_data or n in original_metadata for n in [base, *instances]):
+            if (
+                helpers.get_no_module_name(base).split(".")[0]
+                not in variant_to_original
+            ):
+                return direct
 
         base_type = helpers.get_no_module_name(base).split(".")[0]
         candidate_types = {base_type}

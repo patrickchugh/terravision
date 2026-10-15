@@ -555,6 +555,13 @@ AWS_MULTI_INSTANCE_PATTERNS = [
         "description": "Network Firewall with an endpoint in each subnet",
     },
     {
+        "resource_types": ["aws_vpc_endpoint"],
+        "trigger_attributes": ["subnet_ids"],
+        "also_expand_attributes": [],
+        "resource_pattern": r"\$\{(aws_subnet\.\w+)",
+        "description": "Interface VPC endpoint with a network interface in each subnet",
+    },
+    {
         "resource_types": ["aws_directory_service_directory"],
         "trigger_attributes": ["vpc_settings", "connect_settings"],
         "also_expand_attributes": [],
