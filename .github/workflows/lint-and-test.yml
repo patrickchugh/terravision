@@ -87,6 +87,9 @@ jobs:
         uses: autero1/action-terragrunt@aefb0a43c4f5503a91fefb307745c4d51c26ed0e # v3.0.2
         with:
           terragrunt-version: latest
+          # Looks up "latest" through the GitHub API; unauthenticated, that
+          # shares the runner's rate limit and can fail the job.
+          token: ${{ github.token }}
       - name: Mock ssh file
         # The bastion test's Terraform reads id_rsa.pub; an empty file will do.
         run: touch id_rsa.pub
