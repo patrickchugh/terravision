@@ -33,14 +33,31 @@ update:
     cidr_block: 10.130.0.0/28
   aws_subnet.shared_endpoints:
     cidr_block: 10.130.1.0/24
+  aws_subnet.inspection_tgw~1:
+    cidr_block: 10.100.0.128/28
+  aws_subnet.inspection_tgw~2:
+    cidr_block: 10.100.0.144/28
+  aws_subnet.egress_tgw~1:
+    cidr_block: 10.100.1.128/28
+  aws_subnet.egress_tgw~2:
+    cidr_block: 10.100.1.144/28
 connect:
   aws_customer_gateway.datacentre_router:
   - aws_vpn_connection.ipsec_vpn: IPsec with BGP
   aws_vpn_connection.ipsec_vpn:
   - aws_ec2_transit_gateway.hub: VPN attachment
   aws_ec2_transit_gateway.hub:
-  - aws_networkfirewall_firewall.inspection~1: Inspection route
-  - aws_networkfirewall_firewall.inspection~2: Inspection route
+  - aws_ec2_transit_gateway_vpc_attachment.inspection~1: Inspection route table
+  - aws_ec2_transit_gateway_vpc_attachment.inspection~2: Inspection route table
+  - aws_ec2_transit_gateway_vpc_attachment.egress~1: Default route
+  - aws_ec2_transit_gateway_vpc_attachment.egress~2: Default route
+  - aws_ec2_transit_gateway_vpc_attachment.production: Spoke route table
+  - aws_ec2_transit_gateway_vpc_attachment.development: Spoke route table
+  - aws_ec2_transit_gateway_vpc_attachment.shared_services: Spoke route table
+  aws_ec2_transit_gateway_vpc_attachment.inspection~1:
+  - aws_networkfirewall_firewall.inspection~1: Appliance mode
+  aws_ec2_transit_gateway_vpc_attachment.inspection~2:
+  - aws_networkfirewall_firewall.inspection~2: Appliance mode
   aws_ecs_fargate.orders:
   - aws_rds_postgres.orders: PostgreSQL 5432
   aws_ec2_transit_gateway_vpc_attachment.shared_services:
@@ -53,31 +70,40 @@ flows:
     steps:
     - resource: aws_customer_gateway.datacentre_router -> aws_vpn_connection.ipsec_vpn
       xlabel: VPN
-      detail: The data centre router connects over a site-to-site IPsec VPN
+      detail: The data centre router connects over a site-to-site IPsec VPN with BGP
     - resource: aws_vpn_connection.ipsec_vpn -> aws_ec2_transit_gateway.hub
       xlabel: Attach
       detail: The VPN terminates on the Transit Gateway in the network account
-    - resource: aws_ec2_transit_gateway.hub -> aws_networkfirewall_firewall.inspection~1
+    - resource: aws_ec2_transit_gateway.hub -> aws_ec2_transit_gateway_vpc_attachment.inspection~1
       xlabel: Inspect
-      detail: Transit Gateway routes send the traffic through Network Firewall in the inspection VPC
-    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_ec2_transit_gateway_vpc_attachment.production
-      xlabel: Allow
-      detail: Allowed traffic returns through the Transit Gateway to the production VPC attachment
+      detail: The VPN route table sends the traffic to the inspection VPC attachment
+    - resource: aws_ec2_transit_gateway_vpc_attachment.inspection~1 -> aws_networkfirewall_firewall.inspection~1
+      xlabel: Filter
+      detail: Network Firewall in the same availability zone inspects it; appliance mode keeps both directions on one firewall
+    - resource: aws_ec2_transit_gateway.hub -> aws_ec2_transit_gateway_vpc_attachment.production
+      xlabel: Forward
+      detail: Allowed traffic returns to the Transit Gateway, which forwards it to the production VPC attachment
     - resource: aws_ec2_transit_gateway_vpc_attachment.production -> aws_ecs_fargate.orders
       xlabel: Deliver
-      detail: and reaches the ECS Fargate orders service
+      detail: and on to the ECS Fargate orders service
   Internet egress:
-    description: A spoke reaches the internet through central egress
+    description: A spoke reaches the internet through central inspection and egress
     steps:
     - resource: aws_instance.dev_workloads -> aws_ec2_transit_gateway_vpc_attachment.development
       xlabel: Outbound
-      detail: A development instance sends outbound traffic to its Transit Gateway attachment
-    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_ec2_transit_gateway_vpc_attachment.development
+      detail: A development instance sends internet-bound traffic to its Transit Gateway attachment
+    - resource: aws_ec2_transit_gateway.hub -> aws_ec2_transit_gateway_vpc_attachment.development
+      xlabel: Hub
+      detail: The spoke route table's default route points at the inspection VPC
+    - resource: aws_ec2_transit_gateway_vpc_attachment.inspection~2 -> aws_networkfirewall_firewall.inspection~2
       xlabel: Filter
-      detail: The Transit Gateway routes it to Network Firewall, which filters it
-    - resource: aws_networkfirewall_firewall.inspection~1 -> aws_nat_gateway.egress~1
+      detail: Network Firewall allows only approved domains
+    - resource: aws_ec2_transit_gateway.hub -> aws_ec2_transit_gateway_vpc_attachment.egress~2
+      xlabel: Egress
+      detail: The Transit Gateway sends inspected traffic to the egress VPC
+    - resource: aws_ec2_transit_gateway_vpc_attachment.egress~2 -> aws_nat_gateway.egress~2
       xlabel: NAT
-      detail: Allowed traffic goes to a NAT gateway in the central egress VPC
+      detail: where a NAT gateway translates it
     - resource: aws_internet_gateway.egress -> tv_aws_internet.internet
       xlabel: Internet
-      detail: and leaves through the egress VPC's internet gateway
+      detail: and it leaves through the egress VPC's internet gateway

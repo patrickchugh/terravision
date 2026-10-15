@@ -21,10 +21,10 @@
     "width": 1400
   },
   "aws-multi-account-network": {
-    "height": 1738,
+    "height": 1370,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-multi-account-network.png",
-    "source_sha256": "1fd0945617a44a84f0280e6981b457ce636f5110f41ff402be4740e4a3462b23",
+    "source_sha256": "2a12ec5ff29dbb0fa204464b9f1c8d06e7fc3c4d192c2e42865d073a376d4030",
     "width": 1400
   },
   "aws-multi-region": {
