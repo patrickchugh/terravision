@@ -24,7 +24,7 @@ Please include:
 - An assessment within 14 days: whether the report is accepted, and the planned fix.
 - For an accepted report, a fixed release and a GitHub Security Advisory, with a CVE where the issue warrants one. You are credited in the advisory unless you ask not to be.
 
-Please allow 90 days from your report, or until a fix is released if sooner, before disclosing publicly.
+Please allow 60 days from your report, or until a fix is released if sooner, before disclosing publicly.
 
 ## Security model
 
