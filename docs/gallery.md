@@ -136,7 +136,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A hub-and-spoke network for an AWS organisation. A Transit Gateway in the network account connects a site-to-site VPN from the corporate data centre's router to production, development and shared services VPCs, each in its own account. All traffic between VPCs, and out to the internet, passes through AWS Network Firewall in a central inspection VPC across two availability zones. The inspection VPC and a central egress VPC, which holds the NAT gateways and the internet gateway, each attach to the Transit Gateway through a small subnet in each zone; the inspection attachment runs in appliance mode, so both directions of a connection pass the same firewall. The shared services VPC holds interface VPC endpoints and the corporate Active Directory.
 
-[![AWS multi-account network architecture diagram](assets/gallery/aws-multi-account-network.webp){ width=1400 height=1370 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png)
+[![AWS multi-account network architecture diagram](assets/gallery/aws-multi-account-network.webp){ width=1400 height=1346 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-multi-account-network.png)
 
 **Ask your AI assistant:**
 
