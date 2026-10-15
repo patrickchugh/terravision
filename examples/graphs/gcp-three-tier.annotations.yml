@@ -5,8 +5,6 @@ title: Google Cloud three-tier web application
 update:
   google_compute_subnetwork.app:
     ip_cidr_range: 10.80.0.0/20
-  google_monitoring_metric_descriptor.cpu_utilization:
-    label: Cloud Monitoring
 connect:
   google_compute_url_map.web:
   - google_compute_backend_bucket.frontend: Path /*
@@ -19,12 +17,27 @@ connect:
   google_compute_instance.api~2:
   - google_sql_database_instance.main: PostgreSQL 5432
   - google_redis_instance.cache: Redis 6379
-  google_compute_instance_group_manager.api:
+  google_compute_region_instance_group_manager.api:
   - google_compute_instance.api~1: Autoscale 2-10 VMs at 60% CPU
   - google_compute_instance.api~2: Autoscale 2-10 VMs at 60% CPU
+  - google_compute_health_check.api: Autohealing
+  tv_gcp_users_icon.users:
+  - google_compute_global_forwarding_rule.https: HTTPS 443
+  google_compute_global_forwarding_rule.https:
+  - google_compute_target_https_proxy.web: Managed certificate
+  google_compute_target_https_proxy.web:
+  - google_compute_url_map.web: Host and path rules
+  google_compute_backend_bucket.frontend:
+  - google_storage_bucket.react_site: React build
+  google_compute_backend_service.api:
+  - google_compute_region_instance_group_manager.api: Health-checked backends
+  - google_compute_health_check.api: Load balancer health
+  google_compute_router.main:
+  - google_compute_router_nat.egress: Outbound only
 flows:
   Customer request:
     description: A customer uses the web app
+    color: '#D93025'
     steps:
     - resource: tv_gcp_users_icon.users -> google_compute_global_forwarding_rule.https
       xlabel: HTTPS
@@ -38,7 +51,7 @@ flows:
     - resource: google_compute_url_map.web -> google_compute_backend_service.api
       xlabel: API
       detail: and API requests to the backend service, where Cloud Armor filters attacks
-    - resource: google_compute_backend_service.api -> google_compute_instance_group_manager.api
+    - resource: google_compute_backend_service.api -> google_compute_region_instance_group_manager.api
       xlabel: Instances
       detail: The managed instance group spreads requests across two zones
     - resource: google_compute_instance.api~1 -> google_redis_instance.cache
@@ -47,3 +60,16 @@ flows:
     - resource: google_compute_instance.api~1 -> google_sql_database_instance.main
       xlabel: Query
       detail: and queries Cloud SQL
+  Autoscaling:
+    description: The managed instance group scales and heals itself
+    color: '#188038'
+    steps:
+    - resource: google_compute_region_instance_group_manager.api -> google_compute_instance.api~1
+      xlabel: Scale out
+      detail: 'The autoscaler on the regional managed instance group targets 60% average CPU: above it, the group adds VMs spread evenly across both zones, up to ten'
+    - resource: google_compute_region_instance_group_manager.api -> google_compute_instance.api~2
+      xlabel: Scale in
+      detail: below it, the group removes VMs, never fewer than two
+    - resource: google_compute_region_instance_group_manager.api -> google_compute_health_check.api
+      xlabel: Heal
+      detail: Autohealing recreates any VM that fails the health check

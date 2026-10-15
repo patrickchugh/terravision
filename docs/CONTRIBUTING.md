@@ -9,6 +9,7 @@ Thank you for your interest in contributing to TerraVision! This document provid
 - [Development Workflow](#development-workflow)
 - [Code Standards](#code-standards)
 - [Testing Requirements](#testing-requirements)
+- [Adding a gallery example](#adding-a-gallery-example)
 - [Pull Request Process](#pull-request-process)
 - [AI-Assisted Development](#ai-assisted-development)
 - [Architecture Guidelines](#architecture-guidelines)
@@ -164,6 +165,28 @@ poetry run black --check -v modules
 # Pre-commit hooks pass
 pre-commit run --all-files
 ```
+
+## Adding a gallery example
+
+The [gallery](gallery.md) examples live in `examples/graphs/`. Name a new one `<cloud>-<pattern>`, with the cloud `aws`, `azure` or `gcp`, and match the depth of the existing ones: 25 to 50 nodes, a CIDR range on every network and subnet, managed services reached through private endpoints, and two or three flows. An example consists of five files:
+
+- `examples/graphs/<name>.tvg.json`: the graph ([Graph Format](graph-format.md))
+- `examples/graphs/<name>.annotations.yml`: its title, CIDR ranges (`update:`), arrow labels (`connect:`) and numbered flows (`flows:`)
+- `examples/graphs/<name>.png` and `examples/graphs/<name>.svg`: the renders
+- `docs/assets/gallery/<name>.webp`: the web-sized copy the gallery page shows
+
+plus a section in `docs/gallery.md`, in the same format as the others (heading with its anchor, description, image, "**Ask your AI assistant:**" prompt, the reproduce commands and the Download line), and a row in the table in `examples/graphs/README.md`. Write the graph and annotations, the gallery section and the README row by hand; the rest is generated:
+
+```bash
+# Validate, render the PNG and SVG, make the WebP, set the image size in
+# docs/gallery.md and regenerate the example list in docs/llms.txt
+poetry run python scripts/render_examples.py
+
+# Check every example is complete and draws without warnings
+poetry run pytest tests/test_examples_gallery.py
+```
+
+`render_examples.py` prints every warning: a flow step or arrow label that draws nothing, a node listed in two boxes, a network or subnet with no CIDR range. Fix them in the graph or annotations and run it again. The Hugging Face dataset is built from the same files with `scripts/hf_dataset/build_dataset.py`.
 
 ## Pull Request Process
 

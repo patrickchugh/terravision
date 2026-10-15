@@ -1,17 +1,52 @@
 {
+  "tv_aws_onprem.corporate_datacentre": [
+    "tv_aws_client.office_staff",
+    "tv_aws_server.erp_system",
+    "aws_customer_gateway.datacentre_router"
+  ],
+  "tv_aws_client.office_staff": [
+    "aws_customer_gateway.datacentre_router"
+  ],
   "aws_customer_gateway.datacentre_router": [
-    "aws_vpn_connection.ipsec_vpn"
+    "aws_dx_connection.primary",
+    "aws_vpn_connection.ipsec_vpn",
+    "tv_aws_server.erp_system"
+  ],
+  "aws_dx_connection.primary": [
+    "aws_dx_gateway.corporate"
+  ],
+  "aws_dx_gateway.corporate": [
+    "aws_ec2_transit_gateway.hub"
   ],
   "aws_vpn_connection.ipsec_vpn": [
     "aws_ec2_transit_gateway.hub"
   ],
+  "aws_account.network": [
+    "aws_dx_gateway.corporate",
+    "aws_ec2_transit_gateway.hub",
+    "aws_vpc.network_account_inspection",
+    "aws_vpc.network_account_egress"
+  ],
   "aws_ec2_transit_gateway.hub": [
-    "aws_networkfirewall_firewall.inspection~1",
-    "aws_networkfirewall_firewall.inspection~2"
+    "aws_ec2_transit_gateway_vpc_attachment.inspection~1",
+    "aws_ec2_transit_gateway_vpc_attachment.inspection~2",
+    "aws_ec2_transit_gateway_vpc_attachment.egress~1",
+    "aws_ec2_transit_gateway_vpc_attachment.egress~2",
+    "aws_ec2_transit_gateway_vpc_attachment.production",
+    "aws_ec2_transit_gateway_vpc_attachment.development",
+    "aws_ec2_transit_gateway_vpc_attachment.shared_services"
   ],
   "aws_vpc.network_account_inspection": [
+    "aws_subnet.inspection_tgw~1",
+    "aws_subnet.inspection_tgw~2",
     "aws_subnet.firewall~1",
     "aws_subnet.firewall~2"
+  ],
+  "aws_subnet.inspection_tgw~1": [
+    "aws_ec2_transit_gateway_vpc_attachment.inspection~1"
+  ],
+  "aws_subnet.inspection_tgw~2": [
+    "aws_ec2_transit_gateway_vpc_attachment.inspection~2"
   ],
   "aws_subnet.firewall~1": [
     "aws_networkfirewall_firewall.inspection~1"
@@ -19,24 +54,35 @@
   "aws_subnet.firewall~2": [
     "aws_networkfirewall_firewall.inspection~2"
   ],
-  "aws_networkfirewall_firewall.inspection~1": [
-    "aws_nat_gateway.egress~1",
-    "aws_ec2_transit_gateway_vpc_attachment.production",
-    "aws_ec2_transit_gateway_vpc_attachment.development",
-    "aws_ec2_transit_gateway_vpc_attachment.shared_services"
+  "aws_ec2_transit_gateway_vpc_attachment.inspection~1": [
+    "aws_networkfirewall_firewall.inspection~1"
   ],
-  "aws_networkfirewall_firewall.inspection~2": [
-    "aws_nat_gateway.egress~2"
+  "aws_ec2_transit_gateway_vpc_attachment.inspection~2": [
+    "aws_networkfirewall_firewall.inspection~2"
   ],
   "aws_vpc.network_account_egress": [
+    "aws_subnet.egress_tgw~1",
+    "aws_subnet.egress_tgw~2",
     "aws_subnet.egress_public~1",
     "aws_subnet.egress_public~2",
     "aws_internet_gateway.egress"
+  ],
+  "aws_subnet.egress_tgw~1": [
+    "aws_ec2_transit_gateway_vpc_attachment.egress~1"
+  ],
+  "aws_subnet.egress_tgw~2": [
+    "aws_ec2_transit_gateway_vpc_attachment.egress~2"
   ],
   "aws_subnet.egress_public~1": [
     "aws_nat_gateway.egress~1"
   ],
   "aws_subnet.egress_public~2": [
+    "aws_nat_gateway.egress~2"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.egress~1": [
+    "aws_nat_gateway.egress~1"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.egress~2": [
     "aws_nat_gateway.egress~2"
   ],
   "aws_nat_gateway.egress~1": [
@@ -48,6 +94,9 @@
   "aws_internet_gateway.egress": [
     "tv_aws_internet.internet"
   ],
+  "aws_account.production": [
+    "aws_vpc.production_account"
+  ],
   "aws_vpc.production_account": [
     "aws_subnet.production_tgw",
     "aws_subnet.production_app"
@@ -56,14 +105,19 @@
     "aws_ec2_transit_gateway_vpc_attachment.production"
   ],
   "aws_subnet.production_app": [
+    "aws_alb.orders_internal",
     "aws_ecs_fargate.orders",
     "aws_rds_postgres.orders"
   ],
   "aws_ec2_transit_gateway_vpc_attachment.production": [
-    "aws_ecs_fargate.orders"
+    "aws_alb.orders_internal"
   ],
   "aws_ecs_fargate.orders": [
-    "aws_rds_postgres.orders"
+    "aws_rds_postgres.orders",
+    "aws_ec2_transit_gateway_vpc_attachment.production"
+  ],
+  "aws_account.development": [
+    "aws_vpc.development_account"
   ],
   "aws_vpc.development_account": [
     "aws_subnet.development_tgw",
@@ -75,8 +129,11 @@
   "aws_subnet.development_app": [
     "aws_instance.dev_workloads"
   ],
-  "aws_ec2_transit_gateway_vpc_attachment.development": [
-    "aws_instance.dev_workloads"
+  "aws_instance.dev_workloads": [
+    "aws_ec2_transit_gateway_vpc_attachment.development"
+  ],
+  "aws_account.shared_services": [
+    "aws_vpc.shared_services_account"
   ],
   "aws_vpc.shared_services_account": [
     "aws_subnet.shared_tgw",
@@ -93,22 +150,11 @@
     "aws_vpc_endpoint.interface_endpoints",
     "aws_directory_service_directory.corporate_ad"
   ],
+  "aws_alb.orders_internal": [
+    "aws_ecs_fargate.orders"
+  ],
   "aws_group.shared_services": [
     "aws_cloudwatch_log_group.flow_logs",
     "aws_kms_key.network"
-  ],
-  "aws_account.network": [
-    "aws_ec2_transit_gateway.hub",
-    "aws_vpc.network_account_inspection",
-    "aws_vpc.network_account_egress"
-  ],
-  "aws_account.production": [
-    "aws_vpc.production_account"
-  ],
-  "aws_account.development": [
-    "aws_vpc.development_account"
-  ],
-  "aws_account.shared_services": [
-    "aws_vpc.shared_services_account"
   ]
 }

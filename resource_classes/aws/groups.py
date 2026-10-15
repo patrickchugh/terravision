@@ -152,7 +152,10 @@ class OnPrem(Cluster):
             "labeljust": "l",
             "_shift": "1",
         }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        # office-building.png is 256 px, also used as a node icon; scale it to
+        # the size of the 120 px account, VPC and region box icons, which
+        # Graphviz reads at 96 dpi: 90 points.
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD FIXEDSIZE="TRUE" WIDTH="90" HEIGHT="90"><IMG SCALE="TRUE" SRC="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 

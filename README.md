@@ -28,7 +28,7 @@ Ask your AI assistant for a cloud architecture diagram, in plain words, and get 
 
 ## Gallery
 
-The same three-tier design on each cloud, then a flagship for each. Every example comes with the prompt and the source file: **[see the full gallery of 12 →](https://patrickchugh.github.io/terravision/gallery/)**
+The same three-tier design on each cloud, then a flagship for each. Every example comes with the prompt and the source file: **[see the full gallery →](https://patrickchugh.github.io/terravision/gallery/)**
 
 <table>
 <tr>

@@ -1,11 +1,82 @@
 {
-  "tv_azurerm_users.users": ["azurerm_frontdoor.entry"],
-  "azurerm_frontdoor.entry": ["azurerm_linux_web_app.frontend"],
-  "azurerm_resource_group.rg": ["azurerm_linux_web_app.frontend", "azurerm_function_app.api", "azurerm_mssql_server.sql", "azurerm_storage_account.blobs", "azurerm_key_vault.secrets", "azurerm_servicebus_namespace.bus"],
-  "azurerm_linux_web_app.frontend": ["azurerm_function_app.api"],
-  "azurerm_function_app.api": ["azurerm_mssql_server.sql", "azurerm_servicebus_namespace.bus", "azurerm_key_vault.secrets"],
-  "azurerm_servicebus_namespace.bus": ["azurerm_storage_account.blobs"],
-  "azurerm_mssql_server.sql": [],
-  "azurerm_storage_account.blobs": [],
-  "azurerm_key_vault.secrets": []
+  "tv_azurerm_users.customers": [
+    "azurerm_dns_zone.portal"
+  ],
+  "azurerm_dns_zone.portal": [
+    "azurerm_cdn_frontdoor_profile.portal"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.portal"
+  ],
+  "azurerm_cdn_frontdoor_profile.portal": [
+    "azurerm_linux_web_app.frontend"
+  ],
+  "azurerm_resource_group.portal": [
+    "azurerm_virtual_network.portal",
+    "azurerm_public_ip.egress",
+    "azurerm_mssql_database.portal",
+    "azurerm_servicebus_namespace.portal",
+    "azurerm_storage_container.documents",
+    "azurerm_managed_redis.sessions"
+  ],
+  "azurerm_virtual_network.portal": [
+    "azurerm_subnet.web_integration",
+    "azurerm_subnet.functions_integration",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.web_integration": [
+    "azurerm_linux_web_app.frontend"
+  ],
+  "azurerm_subnet.functions_integration": [
+    "azurerm_linux_function_app.api",
+    "azurerm_linux_function_app.worker",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.api",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob",
+    "azurerm_private_endpoint.redis"
+  ],
+  "azurerm_linux_web_app.frontend": [
+    "azurerm_private_endpoint.api",
+    "azurerm_private_endpoint.redis"
+  ],
+  "azurerm_private_endpoint.api": [
+    "azurerm_linux_function_app.api"
+  ],
+  "azurerm_linux_function_app.api": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_linux_function_app.worker": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.portal"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_namespace.portal"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.documents"
+  ],
+  "azurerm_private_endpoint.redis": [
+    "azurerm_managed_redis.sessions"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.email_provider"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_application_insights.portal",
+    "azurerm_log_analytics_workspace.portal",
+    "azurerm_private_dns_zone.privatelink"
+  ]
 }

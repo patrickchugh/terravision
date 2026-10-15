@@ -15,10 +15,11 @@
   "google_dataproc_batch.spark_transform": ["google_compute_global_forwarding_rule.psc_google_apis"],
   "google_compute_global_forwarding_rule.psc_google_apis": ["google_pubsub_subscription.clickstream", "google_storage_bucket.partner_landing", "google_bigquery_dataset.raw", "google_bigquery_dataset.curated", "google_bigtable_instance.realtime_features"],
   "tv_gcp_logical_group.storage_and_governance": ["google_bigquery_dataset.raw", "google_bigquery_dataset.curated", "google_bigtable_instance.realtime_features", "google_dataplex_lake.governance"],
-  "tv_gcp_logical_group.serving": ["google_looker_instance.dashboards", "google_vertex_ai_endpoint.churn_model", "google_cloud_run_v2_service.recommendations_api"],
-  "google_bigquery_dataset.curated": ["google_looker_instance.dashboards", "google_vertex_ai_endpoint.churn_model"],
+  "tv_gcp_logical_group.serving": ["google_looker_instance.dashboards", "google_vertex_ai_model.churn_model", "google_vertex_ai_endpoint.churn_model", "google_cloud_run_v2_service.recommendations_api"],
+  "google_bigquery_dataset.curated": ["google_looker_instance.dashboards", "google_vertex_ai_model.churn_model"],
   "google_bigtable_instance.realtime_features": ["google_cloud_run_v2_service.recommendations_api"],
   "google_kms_key_ring.data": [],
   "google_logging_project_sink.pipeline_logs": [],
-  "google_secret_manager_secret.source_credentials": []
+  "google_secret_manager_secret.source_credentials": [],
+  "google_vertex_ai_model.churn_model": ["google_vertex_ai_endpoint.churn_model"]
 }

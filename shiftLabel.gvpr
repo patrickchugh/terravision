@@ -9,7 +9,9 @@ BEGIN{
   double childGap = 30.0;
   graph_t kidG, otherG;
   double othMinX, othMinY, othMaxX, othMaxY;
-  double topMostY, bottomMostY, topEdgeY, nodeTop;
+  double topMostY, bottomMostY, topEdgeY, nodeTop, nodeBottom;
+  // Gap from the lowest drawn edge to the top of the footer and legend row
+  double rowGap = 310.0;
   int hasLegend;
   string fld[int];
   node_t n;
@@ -521,7 +523,11 @@ BEG_G{
     if (hasAttr(n, "_legendnode") && n._legendnode == "1") { hasLegend = 1; continue; }
     nodeY = yOf(n.pos);
     if (nodeY > topMostY) topMostY = nodeY;
-    if (nodeY < bottomMostY) bottomMostY = nodeY;
+    // The bottom EDGE, not the centre: a node outside the cloud (the
+    // internet, an on-premises box's contents) can hang below it, and the
+    // footer and legend must clear all of it.
+    nodeBottom = nodeY - (atof(n.height) * 72.0) / 2.0;
+    if (nodeBottom < bottomMostY) bottomMostY = nodeBottom;
     // Track the topmost node EDGE too: node.pos is the centre, and a tall
     // card (Azure nodes are ~5.2in) extends ~190pt above it, which is what
     // the title must clear.
@@ -567,22 +573,24 @@ N[_titlenode=="1"]{
 // Footer + optional legend sit on the same Y below the cloud.
 // If a legend exists, footer shifts left and legend goes right so the
 // two occupy a single row. If no legend, footer stays centred.
-// Vertical offset of 400 matches the old legend-below-footer position
-// so the outer cluster border keeps its usual breathing room.
 // Footer width=18in → half-width ~648 pts; ±750 keeps the pair clear
 // of each other either side of cloudCenterX.
+// Both hang from their TOP edge, rowGap below the lowest edge drawn, so a
+// tall legend (many flow steps) grows downwards instead of rising over the
+// nodes above it. rowGap: a provider's corner branding (the Azure logo is
+// a ~560pt image hung below the cloud border) reaches ~280pt under
+// bottomMostY, so anything shallower overlaps the logo on narrow diagrams.
 N[_footernode=="1"]{
-  // -400 in both branches: a provider's corner branding (the Azure logo is
-  // a ~560pt image hung below the cloud border) reaches ~280pt under
-  // bottomMostY, and the footer's own half-height is ~90pt, so anything
-  // shallower overlaps the logo on narrow diagrams.
   if (hasLegend) {
-    pos=sprintf("%.0f,%.0f!", cloudCenterX - 750, bottomMostY - 400);
+    pos=sprintf("%.0f,%.0f!", cloudCenterX - 750,
+                bottomMostY - rowGap - (atof($.height) * 72.0) / 2.0);
   } else {
-    pos=sprintf("%.0f,%.0f!", cloudCenterX, bottomMostY - 400);
+    pos=sprintf("%.0f,%.0f!", cloudCenterX,
+                bottomMostY - rowGap - (atof($.height) * 72.0) / 2.0);
   }
 }
 N[_legendnode=="1"]{
-  pos=sprintf("%.0f,%.0f!", cloudCenterX + 750, bottomMostY - 400);
+  pos=sprintf("%.0f,%.0f!", cloudCenterX + 750,
+              bottomMostY - rowGap - (atof($.height) * 72.0) / 2.0);
 }
 

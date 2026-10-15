@@ -119,3 +119,6 @@ tv_empty = Blank
 no_icon = Blank
 aws_security_group_rule = Blank
 tv_aws_mobile_client = MobileClient
+tv_aws_server = TraditionalServer
+tv_aws_database = GenericDatabase
+tv_aws_client = Client
