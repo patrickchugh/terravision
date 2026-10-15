@@ -2,7 +2,7 @@
 """Build the terravision-cloud-diagrams dataset from the gallery examples.
 
     poetry run python scripts/hf_dataset/build_dataset.py --repo .            # build locally
-    poetry run python scripts/hf_dataset/build_dataset.py --repo . --push     # build and upload
+    uv run --no-project --with huggingface_hub python scripts/hf_dataset/build_dataset.py --repo . --push
 
 One row per examples/graphs/<name>.tvg.json: the prompt from that example's
 section in docs/gallery.md (or from extra_prompts.json beside this script,
@@ -12,9 +12,12 @@ this script copies their PNGs and renders nothing.
 
 The output folder (default build/hf-dataset) is in Hugging Face ImageFolder
 layout: data/metadata.jsonl, one JSON object per row whose file_name names
-the PNG beside it, plus the dataset card README.md from this folder. --push
-uploads it to patrickchugh/terravision-cloud-diagrams with huggingface_hub
-(pip install huggingface_hub, then huggingface-cli login).
+the PNG beside it; sources/, each example's .tvg.json and .annotations.yml
+to download and re-render; and the dataset card README.md from this folder.
+--push mirrors the folder to patrickchugh/terravision-cloud-diagrams with
+huggingface_hub, creating the dataset on the first push. huggingface_hub is
+not a project dependency: the uv command above brings it, after
+`uvx --from huggingface_hub hf auth login` with a write token.
 
 Prints the row count and every example skipped, and exits 1 if any was.
 """
@@ -68,6 +71,8 @@ def build(repo, out):
         shutil.rmtree(out)
     data = out / "data"
     data.mkdir(parents=True)
+    sources = out / "sources"
+    sources.mkdir()
     rows, skipped = [], []
     for graph_path in sorted(examples.glob("*.tvg.json")):
         stem = graph_path.name[: -len(".tvg.json")]
@@ -84,6 +89,11 @@ def build(repo, out):
             continue
         graph = json.loads(graph_path.read_text())
         shutil.copy(png, data / png.name)
+        # The files a user downloads to re-render or edit the example; the
+        # rows carry the same text in the graph and annotations columns
+        shutil.copy(graph_path, sources / graph_path.name)
+        if annotations.exists():
+            shutil.copy(annotations, sources / annotations.name)
         annotate = f" --annotate {annotations.name}" if annotations.exists() else ""
         rows.append({
             "file_name": png.name,
@@ -108,10 +118,15 @@ def push(out):
         from huggingface_hub import HfApi
     except ImportError:
         raise SystemExit("--push needs huggingface_hub: pip install huggingface_hub")
-    HfApi().upload_folder(
+    api = HfApi()
+    # The first push creates the dataset; later ones find it there
+    api.create_repo(DATASET_REPO, repo_type="dataset", exist_ok=True)
+    api.upload_folder(
         repo_id=DATASET_REPO,
         repo_type="dataset",
         folder_path=str(out),
+        # Mirror the build: an example removed or renamed here goes there too
+        delete_patterns=["data/**", "sources/**"],
         commit_message="Update from the TerraVision gallery",
     )
     print(f"pushed {out} to https://huggingface.co/datasets/{DATASET_REPO}")

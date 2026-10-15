@@ -17,6 +17,11 @@ tags:
 pretty_name: TerraVision Cloud Architecture Diagrams
 size_categories:
   - n<1K
+configs:
+  - config_name: default
+    data_files:
+      - split: train
+        path: data/*
 ---
 
 # TerraVision cloud architecture diagrams
@@ -26,6 +31,11 @@ Natural-language architecture descriptions, each paired with the [TerraVision Gr
 Every row is an example from the [TerraVision gallery](https://patrickchugh.github.io/terravision/gallery/), designed the way a solutions architect on that cloud draws it for a design review: workloads in VPCs, subnets and zones, managed services reached through private endpoints, and numbered steps showing how requests and data move.
 
 Intended use: teaching and evaluating language models to produce cloud architecture diagrams as structured JSON that a renderer turns into an architect-quality picture, instead of Mermaid box-and-arrow output.
+
+## Files
+
+- `data/`: the rows. `metadata.jsonl` has one JSON object per example (fields below), and the PNG it names sits beside it.
+- `sources/`: each example's source files, to download, edit and re-render: `<id>.tvg.json` (the graph) and `<id>.annotations.yml` (title, CIDR ranges, arrow labels, flows). The `graph` and `annotations` columns hold the same text.
 
 ## Fields
 
@@ -45,7 +55,8 @@ Intended use: teaching and evaluating language models to produce cloud architect
 
 ```bash
 pipx install terravision      # plus Graphviz
-terravision draw --source graph.tvg.json --annotate graph.annotations.yml --format png
+terravision draw --source sources/aws-data-lake.tvg.json \
+  --annotate sources/aws-data-lake.annotations.yml --format png
 ```
 
 Schema: https://patrickchugh.github.io/terravision/schemas/terravision-graph-1.0.schema.json
