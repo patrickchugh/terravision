@@ -125,8 +125,15 @@ jobs:
       # requests without the token (forks, Dependabot) are analysed on main
       # after the merge.
       #----------------------------------------------
+      # New code is "since the previous version", so each release resets it
+      - name: Read the project version
+        if: env.HAS_SONAR_TOKEN == 'true'
+        id: version
+        run: echo "version=$(poetry version --short)" >> "$GITHUB_OUTPUT"
       - name: SonarQube Cloud scan
         if: env.HAS_SONAR_TOKEN == 'true'
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        with:
+          args: -Dsonar.projectVersion=${{ steps.version.outputs.version }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
