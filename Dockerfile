@@ -63,9 +63,11 @@ RUN /poetry/bin/poetry export --extras mcp --format requirements.txt --output re
 
 FROM alpine:3.23 AS base
 
-# Install required packages (graphviz-dev needed for pygraphviz/graphviz2drawio)
+# Runtime packages only: graphviz provides dot, neato and gvpr; git fetches
+# modules; bash, curl, unzip and gpgv are for tfenv. Every Python dependency
+# installs from a prebuilt wheel, so no compiler is needed.
 RUN apk update && \
-    apk add --no-cache git python3 graphviz graphviz-dev gcc musl-dev python3-dev binutils curl unzip bash gpgv && \
+    apk add --no-cache git python3 graphviz curl unzip bash gpgv && \
     rm /usr/lib/python*/EXTERNALLY-MANAGED && \
     python3 -m ensurepip && \
     addgroup -S -g 1000 terravision && \
@@ -92,8 +94,10 @@ COPY --from=locked-requirements /lock/requirements.txt /tmp/requirements.txt
 COPY --chown=terravision:terravision . /opt/terravision
 WORKDIR /opt/terravision
 # Dependencies come only from the lock file, and pip rejects any download
-# whose hash differs; then terravision itself, without re-resolving them.
-RUN python3 -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt && \
+# whose hash differs. Prebuilt wheels only: a dependency that would need
+# compiling fails here with a clear message. Then terravision itself,
+# without re-resolving them.
+RUN python3 -m pip install --no-cache-dir --require-hashes --only-binary :all: -r /tmp/requirements.txt && \
     python3 -m pip install --no-cache-dir --no-deps . && \
     rm /tmp/requirements.txt && \
     mkdir -p /project && \
