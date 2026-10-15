@@ -23,6 +23,18 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [AWS multi-region failover architecture diagram](#aws-multi-region-failover-architecture-diagram) | AWS |
 | [AWS multi-account network with Direct Connect architecture diagram](#aws-multi-account-network-architecture-diagram) | AWS |
 | [AWS event-driven order processing architecture diagram](#aws-event-driven-order-processing-architecture-diagram) | AWS |
+| [Amazon ECS on Fargate API architecture diagram](#amazon-ecs-fargate-api-architecture-diagram) | AWS |
+| [AWS real-time streaming analytics architecture diagram](#aws-streaming-analytics-architecture-diagram) | AWS |
+| [Amazon SageMaker MLOps architecture diagram](#amazon-sagemaker-mlops-architecture-diagram) | AWS |
+| [AWS IoT telemetry architecture diagram](#aws-iot-telemetry-architecture-diagram) | AWS |
+| [AWS Direct Connect hybrid architecture diagram](#aws-direct-connect-hybrid-architecture-diagram) | AWS |
+| [AWS static website with CI/CD architecture diagram](#aws-static-site-cicd-architecture-diagram) | AWS |
+| [AWS Batch HPC architecture diagram](#aws-batch-hpc-architecture-diagram) | AWS |
+| [AWS SaaS multi-tenant architecture diagram](#aws-saas-multi-tenant-architecture-diagram) | AWS |
+| [AWS payments processing architecture diagram](#aws-payments-processing-architecture-diagram) | AWS |
+| [AWS security logging architecture diagram](#aws-security-logging-architecture-diagram) | AWS |
+| [AWS video processing architecture diagram](#aws-media-processing-architecture-diagram) | AWS |
+| [AWS VM lift-and-shift migration architecture diagram](#aws-vm-lift-and-shift-architecture-diagram) | AWS |
 | [Azure three-tier web application architecture diagram](#azure-three-tier-web-application-architecture-diagram) | Azure |
 | [Azure hub-and-spoke network architecture diagram](#azure-hub-and-spoke-architecture-diagram) | Azure |
 | [Azure AKS microservices architecture diagram](#azure-aks-architecture-diagram) | Azure |
@@ -169,6 +181,234 @@ terravision draw --source aws-event-driven.tvg.json --annotate aws-event-driven.
 ```
 
 Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-event-driven.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-event-driven.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-event-driven.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-event-driven.annotations.yml)
+
+## Amazon ECS on Fargate API architecture diagram { #amazon-ecs-fargate-api-architecture-diagram }
+
+A containerised API on Amazon ECS with AWS Fargate, spread across two availability zones. Route 53 points clients at an Application Load Balancer, protected by AWS WAF, in the public subnets, which sends requests to API tasks in private subnets. The tasks cache in ElastiCache and store orders in Aurora PostgreSQL in data subnets, and reach SQS, Secrets Manager and ECR through interface endpoints and S3 through a gateway endpoint. A worker service consumes the SQS queue, with a dead-letter queue for failures, and is the only part that leaves the VPC, through the NAT gateways, to call an email provider.
+
+[![Amazon ECS on Fargate API architecture diagram](assets/gallery/aws-ecs-fargate-api.webp){ width=1400 height=990 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-ecs-fargate-api.png)
+
+**Ask your AI assistant:**
+
+> Draw an Amazon ECS on Fargate API across two availability zones: Route 53 and an Application Load Balancer with AWS WAF in public subnets, API and worker tasks in private subnets, Aurora PostgreSQL and ElastiCache in data subnets, interface endpoints for ECR, SQS and Secrets Manager, an S3 gateway endpoint, an SQS job queue with a dead-letter queue feeding the worker, and NAT gateways for the worker's calls to an email provider.
+
+**Or reproduce it exactly** from the source file [aws-ecs-fargate-api.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-ecs-fargate-api.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-ecs-fargate-api.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-ecs-fargate-api.annotations.yml):
+
+```bash
+terravision draw --source aws-ecs-fargate-api.tvg.json --annotate aws-ecs-fargate-api.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-ecs-fargate-api.tvg.json --annotate aws-ecs-fargate-api.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-ecs-fargate-api.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-ecs-fargate-api.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-ecs-fargate-api.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-ecs-fargate-api.annotations.yml)
+
+## AWS real-time streaming analytics architecture diagram { #aws-streaming-analytics-architecture-diagram }
+
+A streaming analytics platform on AWS that serves the same click stream to search, a warehouse and a lake. Mobile apps write events to Kinesis Data Streams. Inside a VPC across two availability zones, a Managed Service for Apache Flink application reads the stream through an interface endpoint, enriches the events and indexes them in Amazon OpenSearch Service, checkpointing to S3 through a gateway endpoint. Redshift Serverless ingests the same stream into a materialised view that QuickSight queries over a VPC connection. Firehose delivers every event as Parquet to an S3 event lake, catalogued by Glue and queried with Athena.
+
+[![AWS real-time streaming analytics architecture diagram](assets/gallery/aws-streaming-analytics.webp){ width=1400 height=1944 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-streaming-analytics.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS real-time streaming analytics platform: mobile apps writing to Kinesis Data Streams, a Managed Service for Apache Flink application in private subnets across two availability zones reading through a Kinesis interface endpoint and indexing into OpenSearch, Redshift Serverless with streaming ingestion queried by QuickSight, an S3 gateway endpoint for Flink checkpoints, and Firehose delivering Parquet to an S3 event lake with a Glue crawler and Athena.
+
+**Or reproduce it exactly** from the source file [aws-streaming-analytics.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-streaming-analytics.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-streaming-analytics.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-streaming-analytics.annotations.yml):
+
+```bash
+terravision draw --source aws-streaming-analytics.tvg.json --annotate aws-streaming-analytics.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-streaming-analytics.tvg.json --annotate aws-streaming-analytics.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-streaming-analytics.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-streaming-analytics.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-streaming-analytics.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-streaming-analytics.annotations.yml)
+
+## Amazon SageMaker MLOps architecture diagram { #amazon-sagemaker-mlops-architecture-diagram }
+
+An MLOps platform on Amazon SageMaker with no path to the internet. Data scientists reach SageMaker Studio, running in VPC-only mode across two availability zones, through Client VPN, and build features in Feature Store. Each week an EventBridge Scheduler schedule starts a Step Functions workflow that runs a SageMaker pipeline, registers the evaluated model in the Model Registry and deploys the approved version to a real-time endpoint with a blue/green update. The customer app calls API Gateway, whose Lambda function in the VPC scores customers through the SageMaker runtime interface endpoint. Studio and training reach S3 through a gateway endpoint and the SageMaker API through interface endpoints.
+
+[![Amazon SageMaker MLOps architecture diagram](assets/gallery/aws-sagemaker-mlops.webp){ width=1400 height=1074 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-sagemaker-mlops.png)
+
+**Ask your AI assistant:**
+
+> Draw an Amazon SageMaker MLOps platform in a VPC across two availability zones: SageMaker Studio in VPC-only mode reached through Client VPN, Feature Store, a Step Functions retraining workflow started weekly by EventBridge Scheduler that runs SageMaker Pipelines and registers models in the Model Registry, a real-time endpoint called by a Lambda function behind API Gateway, SageMaker API and runtime interface endpoints, and an S3 gateway endpoint for training data and model artifacts.
+
+**Or reproduce it exactly** from the source file [aws-sagemaker-mlops.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-sagemaker-mlops.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-sagemaker-mlops.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-sagemaker-mlops.annotations.yml):
+
+```bash
+terravision draw --source aws-sagemaker-mlops.tvg.json --annotate aws-sagemaker-mlops.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-sagemaker-mlops.tvg.json --annotate aws-sagemaker-mlops.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-sagemaker-mlops.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-sagemaker-mlops.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-sagemaker-mlops.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-sagemaker-mlops.annotations.yml)
+
+## AWS IoT telemetry architecture diagram { #aws-iot-telemetry-architecture-diagram }
+
+An IoT telemetry platform on AWS for a wind farm. Turbine sensors report to an AWS IoT Greengrass gateway on site, which publishes to AWS IoT Core over MQTT with TLS, using device certificates and policies from the registry. One IoT rule sends readings to Kinesis Data Streams, where Lambda functions in a VPC across two availability zones aggregate them and write to Amazon Timestream through an interface endpoint, for operators watching Amazon Managed Grafana. A second rule feeds an IoT Events detector model that raises over-speed alarms through SNS, and a third archives every message to S3 through Firehose.
+
+[![AWS IoT telemetry architecture diagram](assets/gallery/aws-iot-telemetry.webp){ width=1400 height=2281 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS IoT telemetry platform for a wind farm: turbine sensors and an IoT Greengrass gateway on site publishing to IoT Core, IoT rules routing readings to Kinesis Data Streams, alarms to an IoT Events detector model with SNS alerts, and everything to Firehose and an S3 archive, with Lambda functions in a VPC across two availability zones writing to Timestream through an interface endpoint for operators using Amazon Managed Grafana.
+
+**Or reproduce it exactly** from the source file [aws-iot-telemetry.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-iot-telemetry.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-iot-telemetry.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-iot-telemetry.annotations.yml):
+
+```bash
+terravision draw --source aws-iot-telemetry.tvg.json --annotate aws-iot-telemetry.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-iot-telemetry.tvg.json --annotate aws-iot-telemetry.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.annotations.yml)
+
+## AWS Direct Connect hybrid architecture diagram { #aws-direct-connect-hybrid-architecture-diagram }
+
+A hybrid design that runs an ERP system in AWS for a head office, with all traffic on private links. The office router reaches a Transit Gateway over Direct Connect, a transit virtual interface and a Direct Connect gateway, with a site-to-site VPN as the backup path. Staff use the application through an internal Application Load Balancer and EC2 servers in two availability zones, backed by Multi-AZ RDS for Oracle. Route 53 Resolver inbound and outbound endpoints resolve names in both directions, an on-premises File Gateway stores SMB shares in S3 through Storage Gateway and S3 interface endpoints, and AWS Backup protects the servers and database.
+
+[![AWS Direct Connect hybrid architecture diagram](assets/gallery/aws-hybrid-direct-connect.webp){ width=1400 height=1962 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-hybrid-direct-connect.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS hybrid network for a head office: staff, DNS servers, a File Gateway and a router connected by Direct Connect, a transit VIF and a Direct Connect gateway to a Transit Gateway, with a site-to-site VPN as backup, and a VPC across two availability zones with an internal ALB, EC2 app servers, Multi-AZ RDS for Oracle, Route 53 Resolver inbound and outbound endpoints with a private hosted zone, Storage Gateway and S3 interface endpoints, and AWS Backup.
+
+**Or reproduce it exactly** from the source file [aws-hybrid-direct-connect.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-hybrid-direct-connect.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-hybrid-direct-connect.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-hybrid-direct-connect.annotations.yml):
+
+```bash
+terravision draw --source aws-hybrid-direct-connect.tvg.json --annotate aws-hybrid-direct-connect.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-hybrid-direct-connect.tvg.json --annotate aws-hybrid-direct-connect.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-hybrid-direct-connect.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-hybrid-direct-connect.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-hybrid-direct-connect.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-hybrid-direct-connect.annotations.yml)
+
+## AWS static website with CI/CD architecture diagram { #aws-static-site-cicd-architecture-diagram }
+
+A static website on AWS with a fully automated release. Route 53 points visitors at CloudFront, protected by AWS WAF and serving an ACM certificate, which reads the site from a private S3 bucket through origin access control and fails over to a replica bucket in a second Region. Lambda@Edge adds security headers, and access logs go to S3. A push to GitHub starts CodePipeline through a CodeConnections connection: CodeBuild builds the site, deploys it to a staging bucket and distribution, runs browser tests, then syncs production and invalidates the cache. SNS and AWS Chatbot post releases and error-rate alarms to Slack.
+
+[![AWS static website with CI/CD architecture diagram](assets/gallery/aws-static-site-cicd.webp){ width=1400 height=1563 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS static website with CI/CD: Route 53, AWS WAF and an ACM certificate on a CloudFront distribution reading a private S3 bucket through origin access control, with a cross-Region replica bucket as failover origin, Lambda@Edge security headers and an access-log bucket, and a release where a GitHub push through CodeConnections starts CodePipeline, whose CodeBuild projects build, deploy to a staging bucket and distribution, run browser tests and deploy production, with SNS and AWS Chatbot notifying Slack.
+
+**Or reproduce it exactly** from the source file [aws-static-site-cicd.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-static-site-cicd.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-static-site-cicd.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-static-site-cicd.annotations.yml):
+
+```bash
+terravision draw --source aws-static-site-cicd.tvg.json --annotate aws-static-site-cicd.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-static-site-cicd.tvg.json --annotate aws-static-site-cicd.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.annotations.yml)
+
+## AWS Batch HPC architecture diagram { #aws-batch-hpc-architecture-diagram }
+
+A genomics pipeline on AWS Batch that runs thousands of jobs on EC2 Spot. Uploading a sequencing run to S3 fires an EventBridge rule that starts a Step Functions workflow, which submits array jobs to Batch compute environments in private subnets across two availability zones and tracks the run in DynamoDB. The Spot workers pull their container image through an ECR interface endpoint, send logs through a CloudWatch Logs endpoint and read their input from FSx for Lustre, which lazy-loads it from the upload bucket. Results go to S3 through a gateway endpoint, and SNS tells the researchers when the run is done.
+
+[![AWS Batch HPC architecture diagram](assets/gallery/aws-batch-hpc.webp){ width=1400 height=2122 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS Batch HPC genomics pipeline: an S3 upload triggering an EventBridge rule and a Step Functions workflow that submits array jobs to AWS Batch compute environments running EC2 Spot instances in private subnets across two availability zones, FSx for Lustre linked to the upload bucket, ECR and CloudWatch Logs interface endpoints, an S3 gateway endpoint for results, a DynamoDB run table and SNS notifications to researchers.
+
+**Or reproduce it exactly** from the source file [aws-batch-hpc.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-batch-hpc.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-batch-hpc.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-batch-hpc.annotations.yml):
+
+```bash
+terravision draw --source aws-batch-hpc.tvg.json --annotate aws-batch-hpc.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-batch-hpc.tvg.json --annotate aws-batch-hpc.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.annotations.yml)
+
+## AWS SaaS multi-tenant architecture diagram { #aws-saas-multi-tenant-architecture-diagram }
+
+A multi-tenant SaaS product on AWS that mixes pooled and silo tenancy. Tenant users call an API Gateway HTTP API, which validates their token against Cognito and passes the request over a VPC link to internal load balancers in two availability zones. Shared-tier tenants go to a pooled ECS Fargate service that keeps each tenant in its own schema in an Aurora PostgreSQL cluster, while a premium tenant has its own service and cluster; every service reads the tenant registry in DynamoDB and tenant files in S3 through gateway endpoints. The control plane publishes lifecycle events through an EventBridge interface endpoint, starting a Step Functions provisioning workflow and metering usage through Firehose to S3.
+
+[![AWS SaaS multi-tenant architecture diagram](assets/gallery/aws-saas-multi-tenant.webp){ width=1400 height=1701 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS multi-tenant SaaS platform: API Gateway HTTP API with a Cognito JWT authorizer and a VPC link to internal ALBs across two availability zones, ECS Fargate services for a pooled tier, a premium silo tenant and the control plane, Aurora PostgreSQL with a schema per tenant plus a dedicated premium cluster, a DynamoDB tenant registry and S3 tenant files through gateway endpoints, EventBridge and Secrets Manager interface endpoints, a Step Functions provisioning workflow and Firehose usage metering.
+
+**Or reproduce it exactly** from the source file [aws-saas-multi-tenant.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-saas-multi-tenant.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-saas-multi-tenant.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-saas-multi-tenant.annotations.yml):
+
+```bash
+terravision draw --source aws-saas-multi-tenant.tvg.json --annotate aws-saas-multi-tenant.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-saas-multi-tenant.tvg.json --annotate aws-saas-multi-tenant.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.annotations.yml)
+
+## AWS payments processing architecture diagram { #aws-payments-processing-architecture-diagram }
+
+A card payments platform on AWS designed for the resilience and isolation that PCI DSS workloads need. Merchants call an API Gateway REST API over mutual TLS, behind AWS WAF, which reaches Network Load Balancers through a VPC link; authorisation and settlement services run on ECS Fargate across three availability zones. Authorisation records an idempotency key in DynamoDB through a gateway endpoint, uses CloudHSM for card keys, asks the card network for approval over PrivateLink and writes to an Aurora PostgreSQL ledger with readers in every zone. Approved payments go through an SQS FIFO queue to the settlement service, and Secrets Manager and SQS are reached through interface endpoints.
+
+[![AWS payments processing architecture diagram](assets/gallery/aws-payments-processing.webp){ width=1400 height=1177 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-payments-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS card payments platform across three availability zones: API Gateway with mutual TLS and AWS WAF, a VPC link to Network Load Balancers, ECS Fargate authorisation and settlement services, Aurora PostgreSQL Multi-AZ with a writer and readers, a DynamoDB idempotency table through a gateway endpoint, an SQS FIFO settlement queue with a dead-letter queue, CloudHSM in its own subnets, KMS, a Secrets Manager interface endpoint and a PrivateLink endpoint to the card network.
+
+**Or reproduce it exactly** from the source file [aws-payments-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-payments-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-payments-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-payments-processing.annotations.yml):
+
+```bash
+terravision draw --source aws-payments-processing.tvg.json --annotate aws-payments-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-payments-processing.tvg.json --annotate aws-payments-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-payments-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-payments-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-payments-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-payments-processing.annotations.yml)
+
+## AWS security logging architecture diagram { #aws-security-logging-architecture-diagram }
+
+Security logging and threat detection for an AWS organisation, laid out by account as AWS Control Tower does. An organisation trail in the management account, and Config and VPC flow logs from the workload accounts, write to S3 buckets with Object Lock in a dedicated log archive account, where investigators query them with Athena through Glue tables. In the security tooling account, a delegated GuardDuty administrator and Config rules feed Security Hub. An EventBridge rule sends high and critical findings to a remediation Lambda function, to Slack through SNS and AWS Chatbot, and through Firehose to an OpenSearch domain in a private VPC.
+
+[![AWS security logging architecture diagram](assets/gallery/aws-security-logging.webp){ width=1400 height=2567 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-security-logging.png)
+
+**Ask your AI assistant:**
+
+> Draw AWS organisation security logging by account: an organisation CloudTrail trail in the management account; Config, GuardDuty and VPC flow logs in workload accounts; a log archive account with S3 buckets using Object Lock; and a security tooling account with the delegated GuardDuty administrator, Security Hub, Config rules, an EventBridge rule for high-severity findings driving a remediation Lambda, SNS and AWS Chatbot to Slack, Firehose to OpenSearch in a VPC, and Athena with Glue.
+
+**Or reproduce it exactly** from the source file [aws-security-logging.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-security-logging.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-security-logging.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-security-logging.annotations.yml):
+
+```bash
+terravision draw --source aws-security-logging.tvg.json --annotate aws-security-logging.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-security-logging.tvg.json --annotate aws-security-logging.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-security-logging.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-security-logging.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-security-logging.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-security-logging.annotations.yml)
+
+## AWS video processing architecture diagram { #aws-media-processing-architecture-diagram }
+
+A serverless video-on-demand platform on AWS. Creators get presigned URLs from an API Gateway HTTP API, authenticated with Cognito, and upload master files straight to S3, where masters move to S3 Glacier after 30 days. An EventBridge rule starts a Step Functions workflow that probes the file with Lambda, transcodes an adaptive bitrate ladder with AWS Elemental MediaConvert, moderates and tags it with Rekognition, publishes it to a DynamoDB catalogue and notifies the creator through SNS. Members browse the catalogue through the same API, which signs short-lived CloudFront URLs, and CloudFront with AWS WAF serves the HLS segments from S3 through origin access control.
+
+[![AWS video processing architecture diagram](assets/gallery/aws-media-processing.webp){ width=1400 height=2653 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS video-on-demand platform: creators uploading through presigned URLs from an API Gateway HTTP API with Cognito, an S3 upload bucket archiving masters to Glacier, an EventBridge rule starting a Step Functions workflow with a Lambda probe, MediaConvert, Rekognition moderation, a DynamoDB catalogue and SNS notifications, and viewers streaming HLS from S3 through CloudFront with signed URLs, origin access control, AWS WAF and Route 53.
+
+**Or reproduce it exactly** from the source file [aws-media-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-media-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-media-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-media-processing.annotations.yml):
+
+```bash
+terravision draw --source aws-media-processing.tvg.json --annotate aws-media-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-media-processing.tvg.json --annotate aws-media-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.annotations.yml)
+
+## AWS VM lift-and-shift migration architecture diagram { #aws-vm-lift-and-shift-architecture-diagram }
+
+A Windows three-tier application moved from a data centre to AWS with AWS Application Migration Service. The agent on each on-premises server replicates its disks over a site-to-site VPN to a replication server in a staging subnet, and at cutover the web and app tiers launch as EC2 instances in Auto Scaling groups across two availability zones. Customers reach the IIS web tier through an internet-facing Application Load Balancer, the web tier calls the app tier through an internal one, and the app tier uses Multi-AZ RDS for SQL Server and FSx for Windows File Server joined to AWS Managed Microsoft AD. Systems Manager patches the instances through interface endpoints, AWS Backup protects the data, and NAT gateways give the app tier outbound access.
+
+[![AWS VM lift-and-shift migration architecture diagram](assets/gallery/aws-vm-lift-and-shift.webp){ width=1400 height=2277 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-vm-lift-and-shift.png)
+
+**Ask your AI assistant:**
+
+> Draw an AWS lift-and-shift of a Windows three-tier app: on-premises web, app, SQL Server and file servers replicating with Application Migration Service over a site-to-site VPN to a replication server in a staging subnet; then, across two availability zones, an internet-facing ALB, EC2 web and app Auto Scaling groups with an internal ALB, Multi-AZ RDS for SQL Server, FSx for Windows File Server with AWS Managed Microsoft AD, NAT gateways, Systems Manager patching through interface endpoints and AWS Backup.
+
+**Or reproduce it exactly** from the source file [aws-vm-lift-and-shift.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-vm-lift-and-shift.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-vm-lift-and-shift.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-vm-lift-and-shift.annotations.yml):
+
+```bash
+terravision draw --source aws-vm-lift-and-shift.tvg.json --annotate aws-vm-lift-and-shift.annotations.yml --format svg      # or png, pdf
+terravision draw --source aws-vm-lift-and-shift.tvg.json --annotate aws-vm-lift-and-shift.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-vm-lift-and-shift.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-vm-lift-and-shift.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-vm-lift-and-shift.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-vm-lift-and-shift.annotations.yml)
 
 ## Azure three-tier web application architecture diagram { #azure-three-tier-web-application-architecture-diagram }
 

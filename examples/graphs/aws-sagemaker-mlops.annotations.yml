@@ -1,0 +1,93 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-sagemaker-mlops.tvg.json --annotate aws-sagemaker-mlops.annotations.yml
+format: '0.3'
+title: Amazon SageMaker MLOps with a private Studio, Pipelines and a real-time endpoint
+update:
+  aws_vpc.ml:
+    cidr_block: 10.30.0.0/16
+  aws_subnet.studio~1:
+    cidr_block: 10.30.16.0/20
+  aws_subnet.inference~1:
+    cidr_block: 10.30.64.0/24
+  aws_subnet.endpoints~1:
+    cidr_block: 10.30.240.0/24
+  aws_subnet.studio~2:
+    cidr_block: 10.30.32.0/20
+  aws_subnet.inference~2:
+    cidr_block: 10.30.65.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.30.241.0/24
+  aws_sagemaker_domain.studio~1:
+    label: SageMaker Studio
+  aws_sagemaker_domain.studio~2:
+    label: SageMaker Studio
+  aws_sagemaker_pipeline.churn_training:
+    label: SageMaker Pipelines Churn Training
+  aws_sagemaker_feature_group.customer_features:
+    label: Feature Store Customer Features
+  aws_sagemaker_model_package_group.churn_models:
+    label: Model Registry Churn Models
+connect:
+  aws_ec2_client_vpn_endpoint.data_science:
+  - aws_sagemaker_domain.studio~1: VPC-only Studio
+  aws_scheduler_schedule.weekly_retrain:
+  - aws_sfn_state_machine.retrain: Weekly
+  aws_sfn_state_machine.retrain:
+  - aws_sagemaker_pipeline.churn_training: StartPipelineExecution
+  - aws_sagemaker_endpoint.churn~1: Blue/green deploy
+  - aws_sagemaker_endpoint.churn~2: Blue/green deploy
+  aws_sagemaker_pipeline.churn_training:
+  - aws_sagemaker_model_package_group.churn_models: Register version
+  aws_vpc_endpoint.sagemaker_runtime~1:
+  - aws_sagemaker_endpoint.churn~1: InvokeEndpoint
+  aws_vpc_endpoint.sagemaker_runtime~2:
+  - aws_sagemaker_endpoint.churn~2: InvokeEndpoint
+flows:
+  Experiment:
+    description: A data scientist builds features
+    steps:
+    - resource: tv_aws_users.data_scientists -> aws_ec2_client_vpn_endpoint.data_science
+      xlabel: VPN
+      detail: Data scientists connect through Client VPN
+    - resource: aws_ec2_client_vpn_endpoint.data_science -> aws_sagemaker_domain.studio~1
+      xlabel: Studio
+      detail: to SageMaker Studio, which runs in VPC-only mode with no internet access
+    - resource: aws_sagemaker_domain.studio~1 -> aws_vpc_endpoint.sagemaker_api~1
+      xlabel: API
+      detail: Notebooks call SageMaker through the interface endpoint
+    - resource: aws_vpc_endpoint.sagemaker_api~1 -> aws_sagemaker_feature_group.customer_features
+      xlabel: Features
+      detail: to define and fill feature groups in Feature Store
+  Retrain and deploy:
+    description: A new model reaches production
+    steps:
+    - resource: aws_scheduler_schedule.weekly_retrain -> aws_sfn_state_machine.retrain
+      xlabel: Start
+      detail: An EventBridge Scheduler schedule starts the Step Functions workflow each week
+    - resource: aws_sfn_state_machine.retrain -> aws_sagemaker_pipeline.churn_training
+      xlabel: Train
+      detail: which runs the SageMaker pipeline
+    - resource: aws_sagemaker_pipeline.churn_training -> aws_sagemaker_feature_group.customer_features
+      xlabel: Read
+      detail: The pipeline trains on offline features and the training data in S3
+    - resource: aws_sagemaker_pipeline.churn_training -> aws_sagemaker_model_package_group.churn_models
+      xlabel: Register
+      detail: and registers the evaluated model in the Model Registry
+    - resource: aws_sfn_state_machine.retrain -> aws_sagemaker_endpoint.churn~1
+      xlabel: Deploy
+      detail: Once the version is approved, the workflow updates the endpoint with a blue/green deployment
+  Prediction:
+    description: The app asks for a churn score
+    steps:
+    - resource: tv_aws_mobile_client.customer_app -> aws_api_gateway_rest_api.predictions
+      xlabel: Request
+      detail: The customer app calls the predictions API
+    - resource: aws_api_gateway_rest_api.predictions -> aws_lambda_function.predict~1
+      xlabel: Invoke
+      detail: API Gateway invokes a Lambda function in the VPC
+    - resource: aws_lambda_function.predict~1 -> aws_vpc_endpoint.sagemaker_runtime~1
+      xlabel: Score
+      detail: which calls the SageMaker runtime through its interface endpoint
+    - resource: aws_vpc_endpoint.sagemaker_runtime~1 -> aws_sagemaker_endpoint.churn~1
+      xlabel: Infer
+      detail: and the real-time endpoint returns the score

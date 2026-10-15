@@ -1,0 +1,95 @@
+{
+  "aws_account.management": [
+    "aws_cloudtrail.organization_trail"
+  ],
+  "aws_account.workloads": [
+    "aws_config_configuration_recorder.workloads",
+    "aws_guardduty_member.workloads",
+    "aws_vpc_flow_log.workloads"
+  ],
+  "aws_account.log_archive": [
+    "aws_s3_bucket.cloudtrail_logs",
+    "aws_s3_bucket.config_history",
+    "aws_s3_bucket.flow_logs"
+  ],
+  "aws_account.security_tooling": [
+    "aws_guardduty_detector.delegated_admin",
+    "aws_securityhub_account.aggregator",
+    "aws_config_config_rule.conformance",
+    "aws_cloudwatch_event_rule.high_severity",
+    "aws_sns_topic.security_alerts",
+    "aws_chatbot_slack_channel_configuration.secops",
+    "aws_lambda_function.auto_remediate",
+    "aws_kinesis_firehose_delivery_stream.findings",
+    "aws_athena_workgroup.investigations",
+    "aws_glue_catalog_database.security_logs",
+    "aws_vpc.security_tooling"
+  ],
+  "aws_cloudtrail.organization_trail": [
+    "aws_s3_bucket.cloudtrail_logs"
+  ],
+  "aws_config_configuration_recorder.workloads": [
+    "aws_s3_bucket.config_history",
+    "aws_config_config_rule.conformance"
+  ],
+  "aws_vpc_flow_log.workloads": [
+    "aws_s3_bucket.flow_logs"
+  ],
+  "aws_guardduty_member.workloads": [
+    "aws_guardduty_detector.delegated_admin"
+  ],
+  "aws_guardduty_detector.delegated_admin": [
+    "aws_securityhub_account.aggregator"
+  ],
+  "aws_config_config_rule.conformance": [
+    "aws_securityhub_account.aggregator"
+  ],
+  "aws_securityhub_account.aggregator": [
+    "aws_cloudwatch_event_rule.high_severity"
+  ],
+  "aws_cloudwatch_event_rule.high_severity": [
+    "aws_sns_topic.security_alerts",
+    "aws_lambda_function.auto_remediate",
+    "aws_kinesis_firehose_delivery_stream.findings"
+  ],
+  "aws_sns_topic.security_alerts": [
+    "aws_chatbot_slack_channel_configuration.secops"
+  ],
+  "aws_chatbot_slack_channel_configuration.secops": [
+    "tv_aws_users.security_team"
+  ],
+  "aws_athena_workgroup.investigations": [
+    "aws_glue_catalog_database.security_logs"
+  ],
+  "aws_glue_catalog_database.security_logs": [
+    "aws_s3_bucket.cloudtrail_logs",
+    "aws_s3_bucket.flow_logs"
+  ],
+  "aws_vpc.security_tooling": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.search~1"
+  ],
+  "aws_subnet.search~1": [
+    "aws_opensearch_domain.siem~1"
+  ],
+  "aws_kinesis_firehose_delivery_stream.findings": [
+    "aws_opensearch_domain.siem~1",
+    "aws_opensearch_domain.siem~2"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.search~2"
+  ],
+  "aws_subnet.search~2": [
+    "aws_opensearch_domain.siem~2"
+  ],
+  "tv_aws_users.security_team": [
+    "aws_athena_workgroup.investigations"
+  ],
+  "aws_group.shared_services": [
+    "aws_kms_key.log_archive",
+    "aws_cloudwatch_log_group.remediation"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "tv_aws_users.researchers": [
+    "aws_s3_bucket.sequencer_uploads"
+  ],
+  "aws_s3_bucket.sequencer_uploads": [
+    "aws_cloudwatch_event_rule.new_run"
+  ],
+  "aws_cloudwatch_event_rule.new_run": [
+    "aws_sfn_state_machine.genomics_pipeline"
+  ],
+  "aws_sfn_state_machine.genomics_pipeline": [
+    "aws_batch_compute_environment.spot~1",
+    "aws_batch_compute_environment.spot~2",
+    "aws_dynamodb_table.runs",
+    "aws_sns_topic.run_complete"
+  ],
+  "aws_sns_topic.run_complete": [
+    "tv_aws_users.researchers"
+  ],
+  "aws_vpc.hpc": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.compute~1",
+    "aws_subnet.endpoints~1",
+    "aws_subnet.storage"
+  ],
+  "aws_subnet.compute~1": [
+    "aws_batch_compute_environment.spot~1",
+    "aws_instance.spot_workers~1"
+  ],
+  "aws_subnet.endpoints~1": [
+    "aws_vpc_endpoint.ecr~1",
+    "aws_vpc_endpoint.logs~1"
+  ],
+  "aws_batch_compute_environment.spot~1": [
+    "aws_instance.spot_workers~1"
+  ],
+  "aws_instance.spot_workers~1": [
+    "aws_fsx_lustre_file_system.scratch",
+    "aws_vpc_endpoint.ecr~1",
+    "aws_vpc_endpoint.logs~1",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.compute~2",
+    "aws_subnet.endpoints~2"
+  ],
+  "aws_subnet.compute~2": [
+    "aws_batch_compute_environment.spot~2",
+    "aws_instance.spot_workers~2"
+  ],
+  "aws_subnet.endpoints~2": [
+    "aws_vpc_endpoint.ecr~2",
+    "aws_vpc_endpoint.logs~2"
+  ],
+  "aws_batch_compute_environment.spot~2": [
+    "aws_instance.spot_workers~2"
+  ],
+  "aws_instance.spot_workers~2": [
+    "aws_fsx_lustre_file_system.scratch",
+    "aws_vpc_endpoint.ecr~2",
+    "aws_vpc_endpoint.logs~2",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "aws_subnet.storage": [
+    "aws_fsx_lustre_file_system.scratch"
+  ],
+  "aws_fsx_lustre_file_system.scratch": [
+    "aws_s3_bucket.sequencer_uploads"
+  ],
+  "aws_vpc_endpoint.s3_gateway": [
+    "aws_s3_bucket.results"
+  ],
+  "aws_group.shared_services": [
+    "aws_ecr_repository.pipeline_images",
+    "aws_cloudwatch_log_group.batch_jobs",
+    "aws_kms_key.genomics"
+  ]
+}
