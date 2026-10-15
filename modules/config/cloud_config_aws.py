@@ -398,6 +398,17 @@ AWS_HIDE_NODES = [
     # the same icon again with nothing added.
     "aws_route",
     "aws_route_table",
+    # The same for a Transit Gateway: its route tables, routes and their
+    # associations decide where traffic goes between attachments, which the
+    # attachments' arrows already show.
+    "aws_ec2_transit_gateway_route",
+    "aws_ec2_transit_gateway_route_table",
+    "aws_ec2_transit_gateway_route_table_association",
+    "aws_ec2_transit_gateway_route_table_propagation",
+    # Network Firewall's rules: the firewall endpoints are what sits in the
+    # network, and the policy and its rule groups configure them.
+    "aws_networkfirewall_firewall_policy",
+    "aws_networkfirewall_rule_group",
     "aws_vpc_dhcp_options",
     "aws_vpc_dhcp_options_association",
     # Wraps an IAM role for attachment to an instance; the role is what

@@ -162,3 +162,31 @@ def test_splat_counts_the_instances_it_refers_to():
         )
         == 2
     )
+
+
+# ---- Plumbing with no icon is not drawn ----
+
+
+def test_routing_and_firewall_rules_are_not_drawn(tmp_path):
+    """Transit Gateway route tables and routes, and Network Firewall's policy
+    and rule groups, drew as blank boxes; like aws_route_table they are
+    hidden."""
+    result = CliRunner().invoke(
+        cli,
+        ["draw", "--source", str(FIXTURE),
+         "--planfile", str(FIXTURE / "plan.json"),
+         "--graphfile", str(FIXTURE / "graph.dot"),
+         "--format", "dot", "--outfile", str(tmp_path / "out")],
+        catch_exceptions=False,
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    assert "no icon for" not in result.output
+    [dot] = list(tmp_path.glob("out*.dot"))
+    text = dot.read_text()
+    for hidden in (
+        "aws_ec2_transit_gateway_route",
+        "aws_networkfirewall_firewall_policy",
+        "aws_networkfirewall_rule_group",
+    ):
+        assert f'tf_resource_name="{hidden}.' not in text
+    assert 'tf_resource_name="aws_networkfirewall_firewall.inspection~1"' in text
