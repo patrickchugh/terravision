@@ -2,7 +2,7 @@
 """Build the terravision-cloud-diagrams dataset from the gallery examples.
 
     poetry run python scripts/hf_dataset/build_dataset.py --repo .            # build locally
-    poetry run python scripts/hf_dataset/build_dataset.py --repo . --push     # build and upload
+    uv run --no-project --with huggingface_hub python scripts/hf_dataset/build_dataset.py --repo . --push
 
 One row per examples/graphs/<name>.tvg.json: the prompt from that example's
 section in docs/gallery.md (or from extra_prompts.json beside this script,
@@ -13,8 +13,10 @@ this script copies their PNGs and renders nothing.
 The output folder (default build/hf-dataset) is in Hugging Face ImageFolder
 layout: data/metadata.jsonl, one JSON object per row whose file_name names
 the PNG beside it, plus the dataset card README.md from this folder. --push
-uploads it to patrickchugh/terravision-cloud-diagrams with huggingface_hub
-(pip install huggingface_hub, then huggingface-cli login).
+uploads it to patrickchugh/terravision-cloud-diagrams with huggingface_hub,
+creating the dataset on the first push. It is not a project dependency:
+the uv command above brings it, after `uvx --from huggingface_hub hf auth
+login` with a write token.
 
 Prints the row count and every example skipped, and exits 1 if any was.
 """
@@ -108,7 +110,10 @@ def push(out):
         from huggingface_hub import HfApi
     except ImportError:
         raise SystemExit("--push needs huggingface_hub: pip install huggingface_hub")
-    HfApi().upload_folder(
+    api = HfApi()
+    # The first push creates the dataset; later ones find it there
+    api.create_repo(DATASET_REPO, repo_type="dataset", exist_ok=True)
+    api.upload_folder(
         repo_id=DATASET_REPO,
         repo_type="dataset",
         folder_path=str(out),
