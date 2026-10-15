@@ -120,6 +120,7 @@ nav:
       - Troubleshooting: troubleshooting.md
   - Contributing:
       - Contributing Guide: CONTRIBUTING.md
+      - Security Policy: SECURITY.md
       - Developer Guide: developer-guide.md
       - Resource Handler Guide: resource-handler-guide.md
       - Project Constitution: constitution.md

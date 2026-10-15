@@ -1134,8 +1134,23 @@ def read_output_file(path: str) -> Dict[str, Any]:
     }
 
 
-# Where X11 display sockets live on Linux.
-_X11_SOCKET_DIR = Path("/tmp/.X11-unix")
+# Where X11 display sockets live on Linux. Only read, to find a display;
+# nothing is written there, and only sockets owned by the user or root are
+# trusted (see _owned_by_user_or_root).
+_X11_SOCKET_DIR = Path("/tmp/.X11-unix")  # noqa: S108  # NOSONAR
+
+
+def _owned_by_user_or_root(path: Path) -> bool:
+    """Return True if path belongs to this user or to root.
+
+    /tmp/.X11-unix is writable by every user, so another local user could
+    plant a display socket there and receive the window a diagram opens in.
+    A real X server's socket belongs to root, or to the user for Xwayland.
+    """
+    try:
+        return path.stat().st_uid in (os.getuid(), 0)
+    except OSError:
+        return False
 
 
 # Session variables xdg-open needs: where to display, how to reach the
@@ -1216,7 +1231,9 @@ def _linux_desktop_env() -> Optional[Dict[str, str]]:
                 env["WAYLAND_DISPLAY"] = wayland[0]
     if not env.get("DISPLAY") and _X11_SOCKET_DIR.is_dir():
         displays = sorted(
-            p.name[1:] for p in _X11_SOCKET_DIR.glob("X*") if p.name[1:].isdigit()
+            p.name[1:]
+            for p in _X11_SOCKET_DIR.glob("X*")
+            if p.name[1:].isdigit() and _owned_by_user_or_root(p)
         )
         if displays:
             env["DISPLAY"] = f":{displays[0]}"
@@ -1245,7 +1262,8 @@ def _launch(target: str, reveal: bool = False) -> None:
     }
     if system == "Windows":
         if not reveal:
-            os.startfile(target)  # type: ignore[attr-defined]  # Windows only
+            # Opening the diagram in its default app is the point of the tool
+            os.startfile(target)  # type: ignore[attr-defined]  # noqa: S606
             return
         command = ["explorer", f"/select,{target}"]
     else:

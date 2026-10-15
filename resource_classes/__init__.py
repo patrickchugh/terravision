@@ -608,8 +608,9 @@ class Edge:
         :param style: Edge style.
         :param attrs: Other edge attributes
         """
+        # A programming-error check on our own callers, not input validation
         if node is not None:
-            assert isinstance(node, Node)
+            assert isinstance(node, Node)  # noqa: S101
 
         self.node = node
         self.forward = forward

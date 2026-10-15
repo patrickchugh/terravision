@@ -243,6 +243,21 @@ def test_open_recovers_the_desktop_session(
     assert env["XDG_RUNTIME_DIR"] == str(stripped_env)
 
 
+def test_ignores_x11_sockets_of_other_users(monkeypatch, stripped_env):
+    """/tmp/.X11-unix is writable by every user: a socket another user
+    planted there must not become the display a diagram opens on."""
+    if os.getuid() == 0:
+        pytest.skip("files created by root count as trusted")
+    x11 = stripped_env.parent / "x11"
+    x11.mkdir()
+    (x11 / "X0").touch()
+    monkeypatch.setattr(mcp_service, "_X11_SOCKET_DIR", x11)
+    uid = os.getuid()
+    monkeypatch.setattr(mcp_service.os, "getuid", lambda: uid + 1)
+
+    assert mcp_service._linux_desktop_env() is None
+
+
 def test_open_uses_the_systemd_session(rendered, launched, monkeypatch, stripped_env):
     """The session's own values win, so xdg-open picks the desktop's apps."""
     _on(monkeypatch, "Linux")

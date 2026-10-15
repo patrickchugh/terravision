@@ -18,7 +18,6 @@ Strategy:
 
 from typing import Any, Dict, List, Optional, Set
 
-
 # HCL built-in function names that can false-positive as module attributes
 # when the regex in interpreter.py over-matches (see issue #190).
 _HCL_FUNCTION_NAMES = frozenset(

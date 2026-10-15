@@ -24,9 +24,10 @@ from modules.resource_handlers_azure import (
     match_nsg_to_subnets,
     match_nic_to_vm,
     remove_empty_groups,
+    create_vm_zone_containers,
+    _eval_zone_arithmetic,
 )
 from modules.provider_detector import detect_providers, get_provider_for_resource
-
 
 # ============================================================================
 # Test Utility Functions (T012)
@@ -594,3 +595,68 @@ class TestAzureAKSHandling:
 
         # Verify AKS is in ALWAYS_DRAW_LINE list
         assert "azurerm_kubernetes_cluster" in cloud_config_azure.AZURE_ALWAYS_DRAW_LINE
+
+
+# ============================================================================
+# Zone Expression Arithmetic
+# ============================================================================
+
+
+class TestZoneArithmetic:
+    """Zone expressions come from untrusted .tf metadata, so only integer
+    arithmetic may be evaluated, and never with eval()."""
+
+    @pytest.mark.parametrize(
+        "expression,expected",
+        [("0 + 1", 1), ("2 * 3 - 1", 5), ("7 // 2", 3), ("-1", -1), ("2", 2)],
+    )
+    def test_evaluates_integer_arithmetic(self, expression, expected):
+        assert _eval_zone_arithmetic(expression) == expected
+
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            "9 ** 9 ** 9 ** 9",
+            '__import__("os").system("id")',
+            "True + 1",
+            "1 if 1 else 2",
+            "count.index + 1",
+            "-" * 100000 + "1",
+        ],
+    )
+    def test_rejects_anything_else(self, expression):
+        with pytest.raises(ValueError):
+            _eval_zone_arithmetic(expression)
+
+    @staticmethod
+    def _zoned_vms_tfdata(zone: str) -> Dict[str, Any]:
+        vms = [
+            "azurerm_linux_virtual_machine.web~1",
+            "azurerm_linux_virtual_machine.web~2",
+        ]
+        return {
+            "graphdict": {"azurerm_subnet.app": list(vms), **{vm: [] for vm in vms}},
+            "meta_data": {
+                "azurerm_subnet.app": {},
+                **{vm: {"zone": zone} for vm in vms},
+            },
+        }
+
+    def test_count_index_zones_resolve(self):
+        tfdata = create_vm_zone_containers(
+            self._zoned_vms_tfdata("${tostring(count.index + 1)}")
+        )
+
+        assert tfdata["graphdict"]["tv_azurerm_zone.zone1"] == [
+            "azurerm_linux_virtual_machine.web~1"
+        ]
+        assert tfdata["graphdict"]["tv_azurerm_zone.zone2"] == [
+            "azurerm_linux_virtual_machine.web~2"
+        ]
+
+    def test_hostile_zone_expression_is_not_evaluated(self):
+        tfdata = create_vm_zone_containers(
+            self._zoned_vms_tfdata("${tostring(count.index + 9 ** 9 ** 9 ** 9)}")
+        )
+
+        assert "tv_azurerm_zone.zone0 + 9 ** 9 ** 9 ** 9" in tfdata["graphdict"]

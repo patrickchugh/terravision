@@ -15,3 +15,14 @@ test-html-output.html
 test-png-check.dot.png
 architecture.html
 architecture.dot.png
+# Not needed in the image, and must not leak into it: history, local
+# environments, Terraform state and secrets
+.git
+.venv
+**/.terraform
+*.tfstate
+*.tfstate.*
+.env
+dist
+build
+site

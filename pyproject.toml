@@ -31,9 +31,9 @@ keywords = [
 ]
 dependencies = [
     "click>=8.1.3",
-    "GitPython>=3.1.31",
+    "GitPython>=3.1.60",
     "graphviz>=0.21",
-    "tqdm>=4.65.0",
+    "tqdm>=4.66.3",
     "python-hcl2==4.3.0",
     "PyYAML>=6.0",
     "ollama>=0.6.1",
@@ -79,9 +79,9 @@ include = [
 
 [tool.poetry.dependencies]
 click = "8.1.3"
-GitPython = "3.1.31"
+GitPython = ">=3.1.60"
 graphviz = "^0.21"
-tqdm = "4.65.0"
+tqdm = ">=4.66.3"
 python-hcl2 = "4.3.0"
 python = ">=3.11"
 PyYAML = ">=6.0"
@@ -96,13 +96,14 @@ boto3 = ">=1.35.0"
 terravision = "terravision.terravision:main"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7.3.1"
-black = "24.3.0"
+pytest = ">=9.0.3"
+black = "26.10.1"
 isort = "^5.12.0"
 # Installed for tests so CI covers the MCP server. Runtime users get these
 # from the `mcp` extra instead; they are never required dependencies.
 mcp = ">=2.0,<3"
 pillow = ">=10"
+pytest-cov = "^7.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "<4.0"
@@ -125,6 +126,21 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+[tool.ruff.lint]
+# Ruff's security rules (Bandit's checks). The security workflow fails on
+# any finding in terravision, modules and resource_classes.
+select = ["S"]
+ignore = [
+    # Subprocesses get argument lists and never a shell; terraform, git and
+    # dot are found on PATH on purpose.
+    "S603",
+    "S607",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest checks with assert
+"tests/**" = ["S101"]
 
 [tool.isort]
 skip = ["drawing.py"]

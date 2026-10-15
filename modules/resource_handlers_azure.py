@@ -7,7 +7,9 @@ network security groups, load balancers, and other Azure-specific relationships.
 from typing import Dict, List, Any, Optional
 import modules.config.cloud_config_azure as cloud_config
 import modules.helpers as helpers
+import ast
 from ast import literal_eval
+import operator
 import re
 import copy
 
@@ -572,6 +574,53 @@ def match_resources(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     return tfdata
 
 
+# Operators a zone expression may use. Power is left out on purpose: the
+# expression comes from untrusted .tf metadata, and "9**9**9**9" would hang.
+_ZONE_ARITHMETIC_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv,
+    ast.UAdd: operator.pos,
+    ast.USub: operator.neg,
+}
+_ZONE_EXPRESSION_MAX_LENGTH = 100
+
+
+def _eval_zone_arithmetic(expression: str) -> int | float:
+    """Evaluate integer arithmetic such as "0 + 1" from a zone expression.
+
+    Args:
+        expression: Arithmetic over integer literals
+
+    Returns:
+        The result of the expression
+
+    Raises:
+        ValueError: If the expression is too long or holds anything but
+            integers and + - * / //
+        SyntaxError: If the expression does not parse
+    """
+
+    def _eval(node: ast.AST) -> int | float:
+        if isinstance(node, ast.Constant) and type(node.value) is int:
+            return node.value
+        if isinstance(node, ast.BinOp) and type(node.op) in _ZONE_ARITHMETIC_OPS:
+            return _ZONE_ARITHMETIC_OPS[type(node.op)](
+                _eval(node.left), _eval(node.right)
+            )
+        if isinstance(node, ast.UnaryOp) and type(node.op) in _ZONE_ARITHMETIC_OPS:
+            return _ZONE_ARITHMETIC_OPS[type(node.op)](_eval(node.operand))
+        raise ValueError(f"Unsupported zone expression: {expression!r}")
+
+    # Real zone expressions are a few characters; a long one such as
+    # thousands of "-" signs exhausts the parser with a MemoryError.
+    if len(expression) > _ZONE_EXPRESSION_MAX_LENGTH:
+        raise ValueError(f"Zone expression too long: {len(expression)} characters")
+    return _eval(ast.parse(expression, mode="eval").body)
+
+
 def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     """Create availability zone containers for numbered VM instances.
 
@@ -653,14 +702,11 @@ def create_vm_zone_containers(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         # Remove ${} and tostring() wrappers
                         zone = zone.replace("${", "").replace("}", "")
                         zone = zone.replace("tostring(", "").replace(")", "")
-                        # Only plain arithmetic may be evaluated — the zone
-                        # value originates from untrusted .tf metadata
-                        if re.fullmatch(r"[\d\s+\-*/()]+", zone):
-                            try:
-                                zone = str(eval(zone))
-                            except Exception:
-                                # If evaluation fails, keep original
-                                pass
+                        try:
+                            zone = str(_eval_zone_arithmetic(zone))
+                        except (ValueError, SyntaxError, ZeroDivisionError):
+                            # Not plain arithmetic: keep the original value
+                            pass
 
                 if zone not in zones_used:
                     zones_used[zone] = []
