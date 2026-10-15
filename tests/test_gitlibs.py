@@ -4,9 +4,15 @@ Tests that various Terraform module source URL formats are correctly parsed
 into (clone_url, subfolder, git_tag) tuples.
 """
 
+import io
+import tarfile
+import zipfile
+
 import pytest
 
+import modules.gitlibs as gitlibs
 from modules.gitlibs import (
+    _download_and_extract_archive,
     _handle_git_prefix_url,
     _handle_http_archive_url,
     _is_http_archive,
@@ -240,3 +246,127 @@ class TestHandleHttpArchiveUrl:
         url = "https://example.com/module.tar.gz"
         _, _, tag = _handle_http_archive_url(url)
         assert tag == ""
+
+
+class TestDownloadAndExtractArchive:
+    """A module archive comes from an untrusted URL: extraction must stay
+    inside the destination and refuse archive bombs."""
+
+    @staticmethod
+    def _serve(monkeypatch, data: bytes) -> None:
+        class FakeResponse:
+            def raise_for_status(self):
+                pass
+
+            def iter_content(self, chunk_size):
+                yield data
+
+        monkeypatch.setattr(gitlibs.requests, "get", lambda *a, **k: FakeResponse())
+
+    @staticmethod
+    def _tar(members) -> bytes:
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+            for info, content in members:
+                tf.addfile(info, io.BytesIO(content) if content is not None else None)
+        return buf.getvalue()
+
+    @staticmethod
+    def _file(name: str, content: bytes = b"x"):
+        info = tarfile.TarInfo(name)
+        info.size = len(content)
+        return info, content
+
+    @staticmethod
+    def _zip(names) -> bytes:
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            for name in names:
+                zf.writestr(name, "x")
+        return buf.getvalue()
+
+    def test_tar_extracts(self, monkeypatch, tmp_path):
+        self._serve(monkeypatch, self._tar([self._file("mod/main.tf", b"# ok")]))
+        dest = tmp_path / "dest"
+
+        _download_and_extract_archive("https://example.com/mod.tar.gz", str(dest))
+
+        assert (dest / "mod" / "main.tf").read_bytes() == b"# ok"
+
+    def test_zip_extracts(self, monkeypatch, tmp_path):
+        self._serve(monkeypatch, self._zip(["mod/main.tf"]))
+        dest = tmp_path / "dest"
+
+        _download_and_extract_archive("https://example.com/mod.zip", str(dest))
+
+        assert (dest / "mod" / "main.tf").exists()
+
+    @pytest.mark.parametrize(
+        "name", ["../evil.tf", "mod/../../evil.tf", "/tmp/evil.tf"]
+    )
+    def test_tar_path_outside_destination_is_refused(self, monkeypatch, tmp_path, name):
+        self._serve(monkeypatch, self._tar([self._file(name)]))
+        dest = tmp_path / "dest"
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive("https://example.com/mod.tar.gz", str(dest))
+
+        assert not (tmp_path / "evil.tf").exists()
+
+    def test_tar_link_outside_destination_is_refused(self, monkeypatch, tmp_path):
+        link = tarfile.TarInfo("mod/passwd")
+        link.type = tarfile.SYMTYPE
+        link.linkname = "../../../../etc/passwd"
+        self._serve(monkeypatch, self._tar([(link, None)]))
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive(
+                "https://example.com/mod.tar.gz", str(tmp_path / "dest")
+            )
+
+    def test_zip_path_outside_destination_is_refused(self, monkeypatch, tmp_path):
+        self._serve(monkeypatch, self._zip(["../evil.tf"]))
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive(
+                "https://example.com/mod.zip", str(tmp_path / "dest")
+            )
+
+        assert not (tmp_path / "evil.tf").exists()
+
+    def test_too_many_entries_is_refused(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(gitlibs, "_ARCHIVE_MAX_ENTRIES", 2)
+        self._serve(monkeypatch, self._zip(["a.tf", "b.tf", "c.tf"]))
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive(
+                "https://example.com/mod.zip", str(tmp_path / "dest")
+            )
+
+    def test_too_large_is_refused(self, monkeypatch, tmp_path):
+        monkeypatch.setattr(gitlibs, "_ARCHIVE_MAX_BYTES", 10)
+        self._serve(monkeypatch, self._tar([self._file("mod/main.tf", b"x" * 11)]))
+        dest = tmp_path / "dest"
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive("https://example.com/mod.tar.gz", str(dest))
+
+        assert not (dest / "mod" / "main.tf").exists()
+
+    def test_tar_without_data_filter_is_refused(self, monkeypatch, tmp_path):
+        monkeypatch.delattr(tarfile, "data_filter")
+        self._serve(monkeypatch, self._tar([self._file("mod/main.tf")]))
+        dest = tmp_path / "dest"
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive("https://example.com/mod.tar.gz", str(dest))
+
+        assert not (dest / "mod" / "main.tf").exists()
+
+    def test_corrupt_archive_is_refused(self, monkeypatch, tmp_path):
+        self._serve(monkeypatch, b"not an archive")
+
+        with pytest.raises(SystemExit):
+            _download_and_extract_archive(
+                "https://example.com/mod.zip", str(tmp_path / "dest")
+            )

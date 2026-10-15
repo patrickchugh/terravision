@@ -197,6 +197,39 @@ def _is_http_archive(url: str) -> bool:
     return any(clean.endswith(ext) for ext in ARCHIVE_EXTENSIONS)
 
 
+# Limits for a downloaded module archive. Terraform modules are small; these
+# stop a crafted archive (an "archive bomb") from filling the disk.
+_ARCHIVE_MAX_ENTRIES = 10_000
+_ARCHIVE_MAX_BYTES = 1024**3  # 1 GiB uncompressed
+
+
+def _check_archive_members(members: List[Tuple[str, int]], destination: str) -> None:
+    """Refuse an archive that is too large or writes outside its destination.
+
+    Args:
+        members: (path, uncompressed size) of each archive entry
+        destination: Directory the archive will be extracted into
+
+    Raises:
+        ValueError: If the archive has too many entries, expands past the
+            size limit, or has a path that leaves the destination
+    """
+    if len(members) > _ARCHIVE_MAX_ENTRIES:
+        raise ValueError(
+            f"archive has {len(members)} entries, more than {_ARCHIVE_MAX_ENTRIES}"
+        )
+    total = sum(size for _, size in members)
+    if total > _ARCHIVE_MAX_BYTES:
+        raise ValueError(
+            f"archive expands to {total} bytes, more than {_ARCHIVE_MAX_BYTES}"
+        )
+    root = os.path.realpath(destination)
+    for name, _ in members:
+        target = os.path.realpath(os.path.join(root, name))
+        if os.path.commonpath([root, target]) != root:
+            raise ValueError(f"archive entry {name!r} is outside the destination")
+
+
 def _download_and_extract_archive(url: str, destination: str) -> None:
     """Download an archive from HTTP URL and extract it to destination.
 
@@ -241,7 +274,12 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
 
         if download_url.endswith(".zip"):
             with zipfile.ZipFile(tmp_path, "r") as zf:
-                zf.extractall(destination)
+                _check_archive_members(
+                    [(info.filename, info.file_size) for info in zf.infolist()],
+                    destination,
+                )
+                # Every member was checked above
+                zf.extractall(destination)  # noqa: S202  # nosec B202
         elif any(
             download_url.endswith(ext)
             for ext in (
@@ -254,12 +292,25 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
                 ".tar",
             )
         ):
+            # The "data" filter blocks links out of the destination, device
+            # files and absolute paths. Python 3.11.4 and later have it;
+            # extracting without it is unsafe, so older versions stop here.
+            if not hasattr(tarfile, "data_filter"):
+                click.echo(
+                    click.style(
+                        "\nERROR: Extracting a .tar module archive safely needs "
+                        "Python 3.11.4 or later.",
+                        fg="red",
+                        bold=True,
+                    )
+                )
+                exit(1)
             with tarfile.open(tmp_path, "r:*") as tf:
-                try:
-                    tf.extractall(destination, filter="data")
-                except TypeError:
-                    # Python < 3.12 has no filter= parameter
-                    tf.extractall(destination)
+                _check_archive_members(
+                    [(member.name, member.size) for member in tf.getmembers()],
+                    destination,
+                )
+                tf.extractall(destination, filter="data")
         else:
             click.echo(
                 click.style(
@@ -271,6 +322,15 @@ def _download_and_extract_archive(url: str, destination: str) -> None:
             exit(1)
 
         click.echo(click.style(f"  Extracted archive to {destination}", fg="green"))
+    except (ValueError, tarfile.TarError, zipfile.BadZipFile) as e:
+        click.echo(
+            click.style(
+                f"\nERROR: Refusing to extract archive from {download_url}: {e}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit(1)
     finally:
         os.unlink(tmp_path)
 
