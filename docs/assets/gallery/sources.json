@@ -45,14 +45,14 @@
     "height": 1048,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-aks.png",
-    "source_sha256": "3c1e3ea551d032af180263d63b704b9074562d6b45d364657c9fe3c128f72e22",
+    "source_sha256": "5e193d17933d3e23e8955b04840cfde81e6819f5880143736fd21906c902b722",
     "width": 1400
   },
   "azure-hub-spoke": {
-    "height": 1746,
+    "height": 1759,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-hub-spoke.png",
-    "source_sha256": "0da1f0eaeb28936908f03d4868d65940cafab3bebcdd8bbdde9f0b157824e9e5",
+    "source_sha256": "abe7bd825a9310e71d31f9127c246eed5bcdf5535f405a151ab19edf68b2844f",
     "width": 1400
   },
   "azure-three-tier": {
@@ -66,21 +66,21 @@
     "height": 1912,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-web-app.png",
-    "source_sha256": "3d2bdb2c05c30bff4bfeb87d2a2df8a9f3a029e245773a6f2aa218c0e35f27e4",
+    "source_sha256": "e5869af1745a93c1cd621da355211118e8e856782f0c13fb3c2a30dbc9e87f0c",
     "width": 1400
   },
   "gcp-data-pipeline": {
-    "height": 1017,
+    "height": 1150,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-data-pipeline.png",
-    "source_sha256": "4654a1b1222e9bf11b42c09fb8b8e0aad61fe2ed99c0d8013787829a8f9adde1",
+    "source_sha256": "aecb372a955551b9eaca33558a9702e64523fcf43878c04356ffd342383ac185",
     "width": 1400
   },
   "gcp-gke": {
-    "height": 2701,
+    "height": 2750,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-gke.png",
-    "source_sha256": "aaa03e8ee54adee28e35fa8a4b3c48ffdaab5f280c104281177e58f5254c48bd",
+    "source_sha256": "5bd962d48f3f940e1070b6ca405232dafd341069e80af3e1c6981cc5818d8a18",
     "width": 1400
   },
   "gcp-serverless-api": {
@@ -94,7 +94,7 @@
     "height": 1154,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-three-tier.png",
-    "source_sha256": "a777664494ce63d1d1987b3c35d15007f5ca54c77186978588e4208f787bf389",
+    "source_sha256": "85e040aca9fadd50d5da94234646c45122a6d985fca9c848bb704163fe32faeb",
     "width": 1400
   },
   "three-tier-web": {

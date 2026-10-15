@@ -17,7 +17,7 @@
     "azurerm_mssql_database.portal",
     "azurerm_servicebus_namespace.portal",
     "azurerm_storage_container.documents",
-    "azurerm_redis_cache.sessions"
+    "azurerm_managed_redis.sessions"
   ],
   "azurerm_virtual_network.portal": [
     "azurerm_subnet.web_integration",
@@ -65,7 +65,7 @@
     "azurerm_storage_container.documents"
   ],
   "azurerm_private_endpoint.redis": [
-    "azurerm_redis_cache.sessions"
+    "azurerm_managed_redis.sessions"
   ],
   "azurerm_nat_gateway.egress": [
     "azurerm_public_ip.egress"

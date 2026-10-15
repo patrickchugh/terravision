@@ -27,7 +27,11 @@ connect:
   azurerm_private_endpoint.service_bus:
   - azurerm_servicebus_namespace.orders: AMQP 5671
   azurerm_private_endpoint.redis:
-  - azurerm_redis_cache.sessions: Redis TLS 6380
+  - azurerm_managed_redis.sessions: Redis TLS 10000
+  azurerm_kubernetes_cluster.shop:
+  - azurerm_kubernetes_cluster_node_pool.apps~1: Cluster autoscaler
+  - azurerm_kubernetes_cluster_node_pool.apps~2: Cluster autoscaler
+  - azurerm_kubernetes_cluster_node_pool.apps~3: Cluster autoscaler
 flows:
   Customer request:
     description: A customer places an order

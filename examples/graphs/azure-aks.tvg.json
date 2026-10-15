@@ -17,7 +17,7 @@
     "azurerm_public_ip.egress",
     "azurerm_cosmosdb_account.catalogue",
     "azurerm_servicebus_namespace.orders",
-    "azurerm_redis_cache.sessions"
+    "azurerm_managed_redis.sessions"
   ],
   "azurerm_virtual_network.aks": [
     "azurerm_subnet.app_gateway",
@@ -57,7 +57,7 @@
     "azurerm_servicebus_namespace.orders"
   ],
   "azurerm_private_endpoint.redis": [
-    "azurerm_redis_cache.sessions"
+    "azurerm_managed_redis.sessions"
   ],
   "azurerm_application_gateway.ingress": [
     "azurerm_kubernetes_cluster_node_pool.apps~1",

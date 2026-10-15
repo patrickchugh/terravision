@@ -5,6 +5,8 @@ title: Google Cloud GKE microservices with Private Service Connect
 update:
   google_compute_subnetwork.gke_nodes:
     ip_cidr_range: 10.90.0.0/20
+  google_container_node_pool.apps:
+    label: Node Pool Apps (cluster autoscaler, 1 to 5 nodes per zone)
 connect:
   google_compute_security_policy.cloud_armor:
   - google_compute_backend_service.storefront: WAF and rate limits
@@ -71,3 +73,13 @@ flows:
     - resource: google_pubsub_topic.order_placed -> google_bigquery_dataset.sales
       xlabel: Analytics
       detail: A BigQuery subscription streams every order into the sales dataset
+  Scaling:
+    description: The platform scales with demand
+    color: '#8430CE'
+    steps:
+    - resource: google_compute_instance.gke_node~1
+      xlabel: Pods
+      detail: The Horizontal Pod Autoscaler adds storefront replicas when average CPU passes 70%
+    - resource: google_compute_instance.gke_node~3
+      xlabel: Nodes
+      detail: Replicas that do not fit make the cluster autoscaler add nodes to the pool in that zone, up to five per zone, and remove idle ones

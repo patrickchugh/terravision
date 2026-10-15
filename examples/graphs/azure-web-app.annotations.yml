@@ -29,7 +29,7 @@ connect:
   azurerm_private_endpoint.blob:
   - azurerm_storage_container.documents: Blob HTTPS 443
   azurerm_private_endpoint.redis:
-  - azurerm_redis_cache.sessions: Redis TLS 6380
+  - azurerm_managed_redis.sessions: Redis TLS 10000
   azurerm_public_ip.egress:
   - tv_azurerm_internet.email_provider: HTTPS 443
 flows:

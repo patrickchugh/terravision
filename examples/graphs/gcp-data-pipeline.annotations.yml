@@ -13,7 +13,7 @@ connect:
   - google_dataproc_batch.spark_transform: Nightly DAG
   google_bigquery_dataset.curated:
   - google_looker_instance.dashboards: SQL queries
-  - google_vertex_ai_endpoint.churn_model: Training data
+  - google_vertex_ai_model.churn_model: Training data
   google_bigtable_instance.realtime_features:
   - google_cloud_run_v2_service.recommendations_api: Low-latency reads
   tv_gcp_users_icon.mobile_and_web_apps:
@@ -35,6 +35,8 @@ connect:
   google_compute_global_forwarding_rule.psc_google_apis:
   - google_bigtable_instance.realtime_features: Writes features
   - google_bigquery_dataset.curated: Curated tables
+  google_vertex_ai_model.churn_model:
+  - google_vertex_ai_endpoint.churn_model: Deployed
 flows:
   Streaming:
     description: Click events become real-time features
@@ -70,4 +72,7 @@ flows:
       detail: The jobs write the curated BigQuery dataset through Private Service Connect
     - resource: google_bigquery_dataset.curated -> google_looker_instance.dashboards
       xlabel: Dashboards
-      detail: Looker dashboards and the Vertex AI churn model read the curated data
+      detail: Looker dashboards query the curated data
+    - resource: google_bigquery_dataset.curated -> google_vertex_ai_model.churn_model
+      xlabel: Train
+      detail: Vertex AI trains the churn model on it and serves the model from an endpoint

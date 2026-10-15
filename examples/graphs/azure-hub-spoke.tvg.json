@@ -12,7 +12,7 @@
   "azurerm_subnet.dns_resolver": ["azurerm_private_dns_resolver.hub"],
   "azurerm_virtual_network_gateway.vpn": ["azurerm_firewall.hub"],
   "azurerm_firewall_policy.central": ["azurerm_firewall.hub"],
-  "azurerm_firewall.hub": ["azurerm_public_ip.firewall_egress"],
+  "azurerm_firewall.hub": ["azurerm_public_ip.firewall_egress", "azurerm_windows_virtual_machine.hr_app"],
   "azurerm_public_ip.firewall_egress": ["tv_azurerm_internet.internet"],
   "azurerm_virtual_network_peering.hub_to_web": ["azurerm_virtual_network.spoke_web"],
   "azurerm_virtual_network_peering.hub_to_internal": ["azurerm_virtual_network.spoke_internal"],
