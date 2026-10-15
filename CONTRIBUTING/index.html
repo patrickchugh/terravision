@@ -1655,6 +1655,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#adding-a-gallery-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a gallery example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pull-request-process" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2370,6 +2381,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#adding-a-gallery-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a gallery example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pull-request-process" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2608,6 +2630,7 @@
 <li><a href="#development-workflow">Development Workflow</a></li>
 <li><a href="#code-standards">Code Standards</a></li>
 <li><a href="#testing-requirements">Testing Requirements</a></li>
+<li><a href="#adding-a-gallery-example">Adding a gallery example</a></li>
 <li><a href="#pull-request-process">Pull Request Process</a></li>
 <li><a href="#ai-assisted-development">AI-Assisted Development</a></li>
 <li><a href="#architecture-guidelines">Architecture Guidelines</a></li>
@@ -2733,6 +2756,23 @@
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Pre-commit hooks pass</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
 </span></code></pre></div>
+<h2 id="adding-a-gallery-example">Adding a gallery example<a class="headerlink" href="#adding-a-gallery-example" title="Permanent link">¶</a></h2>
+<p>The <a href="../gallery/">gallery</a> examples live in <code>examples/graphs/</code>. Name a new one <code>&lt;cloud&gt;-&lt;pattern&gt;</code>, with the cloud <code>aws</code>, <code>azure</code> or <code>gcp</code>, and match the depth of the existing ones: 25 to 50 nodes, a CIDR range on every network and subnet, managed services reached through private endpoints, and two or three flows. An example consists of five files:</p>
+<ul>
+<li><code>examples/graphs/&lt;name&gt;.tvg.json</code>: the graph (<a href="../graph-format/">Graph Format</a>)</li>
+<li><code>examples/graphs/&lt;name&gt;.annotations.yml</code>: its title, CIDR ranges (<code>update:</code>), arrow labels (<code>connect:</code>) and numbered flows (<code>flows:</code>)</li>
+<li><code>examples/graphs/&lt;name&gt;.png</code> and <code>examples/graphs/&lt;name&gt;.svg</code>: the renders</li>
+<li><code>docs/assets/gallery/&lt;name&gt;.webp</code>: the web-sized copy the gallery page shows</li>
+</ul>
+<p>plus a section in <code>docs/gallery.md</code>, in the same format as the others (heading with its anchor, description, image, "<strong>Ask your AI assistant:</strong>" prompt, the reproduce commands and the Download line), and a row in the table in <code>examples/graphs/README.md</code>. Write the graph and annotations, the gallery section and the README row by hand; the rest is generated:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Validate, render the PNG and SVG, make the WebP, set the image size in</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># docs/gallery.md and regenerate the example list in docs/llms.txt</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/render_examples.py
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Check every example is complete and draws without warnings</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/test_examples_gallery.py
+</span></code></pre></div>
+<p><code>render_examples.py</code> prints every warning: a flow step or arrow label that draws nothing, a node listed in two boxes, a network or subnet with no CIDR range. Fix them in the graph or annotations and run it again. The Hugging Face dataset is built from the same files with <code>scripts/hf_dataset/build_dataset.py</code>.</p>
 <h2 id="pull-request-process">Pull Request Process<a class="headerlink" href="#pull-request-process" title="Permanent link">¶</a></h2>
 <h3 id="before-submitting">Before Submitting<a class="headerlink" href="#before-submitting" title="Permanent link">¶</a></h3>
 <ul class="task-list">
@@ -2745,27 +2785,27 @@
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled=""><span class="task-list-indicator"></span></label> AI assistance disclosed (see below)</li>
 </ul>
 <h3 id="pr-description-template">PR Description Template<a class="headerlink" href="#pr-description-template" title="Permanent link">¶</a></h3>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gu">## Description</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Brief description of changes
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="gu">## Type of Change</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">- [ ]</span> Bug fix
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">- [ ]</span> New feature
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="k">- [ ]</span> Breaking change
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">- [ ]</span> Documentation update
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="gu">## Testing</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>Describe testing performed
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="gu">## AI Assistance</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="k">-</span><span class="w"> </span>Tools used: [e.g., Claude Code, GitHub Copilot]
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="k">-</span><span class="w"> </span>Model: [e.g., Claude Sonnet 4.5, GPT-4]
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="k">-</span><span class="w"> </span>Scope: [e.g., "Generated test cases", "Refactored function X"]
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="gu">## Checklist</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="k">- [ ]</span> Tests pass
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="k">- [ ]</span> Code formatted with Black
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="k">- [ ]</span> Documentation updated
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gu">## Description</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Brief description of changes
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="gu">## Type of Change</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">- [ ]</span> Bug fix
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">- [ ]</span> New feature
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="k">- [ ]</span> Breaking change
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="k">- [ ]</span> Documentation update
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="gu">## Testing</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>Describe testing performed
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="gu">## AI Assistance</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="k">-</span><span class="w"> </span>Tools used: [e.g., Claude Code, GitHub Copilot]
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="k">-</span><span class="w"> </span>Model: [e.g., Claude Sonnet 4.5, GPT-4]
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="k">-</span><span class="w"> </span>Scope: [e.g., "Generated test cases", "Refactored function X"]
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="gu">## Checklist</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="k">- [ ]</span> Tests pass
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="k">- [ ]</span> Code formatted with Black
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="k">- [ ]</span> Documentation updated
 </span></code></pre></div>
 <h3 id="review-process">Review Process<a class="headerlink" href="#review-process" title="Permanent link">¶</a></h3>
 <ol>
@@ -2785,14 +2825,14 @@
 <li><strong>Scope of assistance</strong>: What the AI helped with (e.g., "Generated test fixtures", "Refactored VPC handler", "Wrote docstrings")</li>
 </ol>
 <h3 id="example-disclosure">Example Disclosure<a class="headerlink" href="#example-disclosure" title="Permanent link">¶</a></h3>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gu">## AI Assistance</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Tools**</span>: Claude Code CLI
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Model**</span>: Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Scope**</span>:
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Generated initial implementation of Azure resource handlers
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Created unit tests for provider detection
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Assisted with debugging Terraform graph parsing logic
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="gu">## AI Assistance</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Tools**</span>: Claude Code CLI
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Model**</span>: Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Scope**</span>:
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Generated initial implementation of Azure resource handlers
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Created unit tests for provider detection
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Assisted with debugging Terraform graph parsing logic
 </span></code></pre></div>
 <h3 id="why-disclose">Why Disclose?<a class="headerlink" href="#why-disclose" title="Permanent link">¶</a></h3>
 <ul>
@@ -2821,61 +2861,61 @@
 </ol>
 <h3 id="multi-cloud-support-pattern">Multi-Cloud Support Pattern<a class="headerlink" href="#multi-cloud-support-pattern" title="Permanent link">¶</a></h3>
 <p>TerraVision uses <strong>dynamic provider detection</strong> and <strong>configuration loading</strong>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Detect provider from resource prefixes</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">get_primary_provider_or_default</span><span class="p">(</span><span class="n">tfdata</span><span class="p">)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Load provider-specific configuration</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Use provider-specific constants</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">icons</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">ICON_LIBRARY</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">special_resources</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">SPECIAL_RESOURCES</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Detect provider from resource prefixes</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">get_primary_provider_or_default</span><span class="p">(</span><span class="n">tfdata</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Load provider-specific configuration</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Use provider-specific constants</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">icons</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">ICON_LIBRARY</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">special_resources</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">SPECIAL_RESOURCES</span>
 </span></code></pre></div>
 <h3 id="resource-handler-pattern">Resource Handler Pattern<a class="headerlink" href="#resource-handler-pattern" title="Permanent link">¶</a></h3>
 <p>Special resources (VPCs, security groups, networks) follow a handler pattern:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># In cloud_config_&lt;provider&gt;.py</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">SPECIAL_RESOURCES</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="s2">"provider_resource_type"</span><span class="p">:</span> <span class="s2">"handler_function_name"</span><span class="p">,</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">}</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># In resource_handlers_&lt;provider&gt;.py</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">handler_function_name</span><span class="p">(</span><span class="n">tfdata</span><span class="p">,</span> <span class="n">resource</span><span class="p">):</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="c1"># Implementation</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="k">return</span> <span class="n">tfdata</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># In cloud_config_&lt;provider&gt;.py</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">SPECIAL_RESOURCES</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="s2">"provider_resource_type"</span><span class="p">:</span> <span class="s2">"handler_function_name"</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">}</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># In resource_handlers_&lt;provider&gt;.py</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">handler_function_name</span><span class="p">(</span><span class="n">tfdata</span><span class="p">,</span> <span class="n">resource</span><span class="p">):</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="c1"># Implementation</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="k">return</span> <span class="n">tfdata</span>
 </span></code></pre></div>
 <h3 id="debug-workflow">Debug Workflow<a class="headerlink" href="#debug-workflow" title="Permanent link">¶</a></h3>
 <p>When debugging issues:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Generate debug output</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>python<span class="w"> </span>terravision.py<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>&lt;path&gt;<span class="w"> </span>--debug
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Inspect tfdata.json</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict'</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Replay from debug file (skips terraform init/plan)</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>python<span class="w"> </span>terravision.py<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>tfdata.json
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Generate debug output</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>python<span class="w"> </span>terravision.py<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>&lt;path&gt;<span class="w"> </span>--debug
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Inspect tfdata.json</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>cat<span class="w"> </span>tfdata.json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.graphdict'</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># Replay from debug file (skips terraform init/plan)</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>python<span class="w"> </span>terravision.py<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>tfdata.json
 </span></code></pre></div>
 <h2 id="project-structure">Project Structure<a class="headerlink" href="#project-structure" title="Permanent link">¶</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>terravision/
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>├── modules/
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>│   ├── config/              # Provider-specific configurations
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>│   │   ├── cloud_config_aws.py
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>│   │   ├── cloud_config_azure.py
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>│   │   └── cloud_config_gcp.py
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>│   ├── resource_handlers_*.py  # Provider resource handlers
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>│   ├── resource_transformers.py  # Reusable Core graph transformers for all providers
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>│   ├── provider_detector.py    # Provider detection logic
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>│   ├── config_loader.py        # Dynamic config loading
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>│   ├── graphmaker.py           # Core graph construction
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>│   ├── drawing.py              # Graphviz rendering
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>│   └── helpers.py              # Utility functions
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>├── resource_classes/        # Icon libraries by provider
-</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>│   ├── aws/
-</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>│   ├── azure/
-</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>│   ├── gcp/
-</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>│   └── generic/
-</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>├── tests/                   # Test suite
-</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>├── terravision.py          # Main CLI entry point
-</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>└── pyproject.toml          # Poetry dependencies
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>terravision/
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>├── modules/
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>│   ├── config/              # Provider-specific configurations
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>│   │   ├── cloud_config_aws.py
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>│   │   ├── cloud_config_azure.py
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>│   │   └── cloud_config_gcp.py
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>│   ├── resource_handlers_*.py  # Provider resource handlers
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>│   ├── resource_transformers.py  # Reusable Core graph transformers for all providers
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>│   ├── provider_detector.py    # Provider detection logic
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>│   ├── config_loader.py        # Dynamic config loading
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>│   ├── graphmaker.py           # Core graph construction
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>│   ├── drawing.py              # Graphviz rendering
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>│   └── helpers.py              # Utility functions
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>├── resource_classes/        # Icon libraries by provider
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>│   ├── aws/
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>│   ├── azure/
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>│   ├── gcp/
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>│   └── generic/
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>├── tests/                   # Test suite
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>├── terravision.py          # Main CLI entry point
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>└── pyproject.toml          # Poetry dependencies
 </span></code></pre></div>
 <h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">¶</a></h2>
 <ul>
