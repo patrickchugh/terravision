@@ -899,22 +899,29 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> 
     origin_resource = origin._attrs["tf_resource_name"]
     dest_resource = destination._attrs["tf_resource_name"]
 
-    # Check if destination matches any consolidated node patterns
-    consolidated_dest_prefix = [
-        k
-        for k in list(CONSOLIDATED_NODES)
-        if helpers.get_no_module_name(dest_resource).startswith(list(k.keys())[0])
-    ]
+    def _consolidated(resource: str) -> List[Dict[str, Any]]:
+        """The consolidation entries that renamed this node into what it is:
+        only a node named as the consolidated node (aws_ecs_service.ecs), not
+        every node whose type shares the prefix (aws_ecs_fargate.api)."""
+        name = helpers.get_no_module_name(resource).split("~")[0]
+        return [
+            k
+            for k in CONSOLIDATED_NODES
+            if name.startswith(list(k.keys())[0])
+            and name == list(k.values())[0].get("resource_name")
+        ]
 
-    # Check if origin matches any consolidated node patterns
-    consolidated_origin_prefix = [
-        k
-        for k in CONSOLIDATED_NODES
-        if helpers.get_no_module_name(origin_resource).startswith(list(k.keys())[0])
-    ]
+    consolidated_dest_prefix = _consolidated(dest_resource)
+    consolidated_origin_prefix = _consolidated(origin_resource)
 
-    # Find edge labels from consolidated or direct origin resource
-    if consolidated_origin_prefix:
+    # Find edge labels from the origin itself, then from the node it was
+    # consolidated into. Checking the origin first matters when several nodes
+    # share a consolidated prefix (aws_ecs_fargate.a and .b both match
+    # aws_ecs): the first one with labels would otherwise lend them to all.
+    own_labels = tfdata["meta_data"].get(origin_resource, {}).get("edge_labels")
+    if own_labels:
+        edge_labels_list = own_labels
+    elif consolidated_origin_prefix:
         candidate_resources = helpers.list_of_dictkeys_containing(
             tfdata["meta_data"],
             list(consolidated_origin_prefix[0].keys())[0],
@@ -927,14 +934,18 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> 
     else:
         edge_labels_list = tfdata["meta_data"][origin_resource].get("edge_labels")
 
-    # Match edge label to destination resource
+    # Match edge label to destination resource: an exact name first, so two
+    # targets sharing a consolidated prefix keep their own labels, then the
+    # consolidated pattern for a destination renamed by consolidation
     if edge_labels_list:
         for labeldict in edge_labels_list:
             key = [k for k in labeldict][0]
-            # Check for exact match or consolidated pattern match
-            if key == dest_resource or (
-                consolidated_dest_prefix
-                and key.startswith(list(consolidated_dest_prefix[0].keys())[0])
+            if key == dest_resource:
+                return labeldict[key]
+        for labeldict in edge_labels_list:
+            key = [k for k in labeldict][0]
+            if consolidated_dest_prefix and key.startswith(
+                list(consolidated_dest_prefix[0].keys())[0]
             ):
                 label = labeldict[key]
                 break
