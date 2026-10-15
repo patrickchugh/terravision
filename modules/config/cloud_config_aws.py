@@ -229,6 +229,9 @@ AWS_OUTER_NODES = [
     "tv_aws_device",
     "tv_aws_onprem",
     "tv_aws_mobile_client",
+    "tv_aws_server",
+    "tv_aws_database",
+    "tv_aws_client",
 ]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
