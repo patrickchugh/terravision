@@ -82,7 +82,8 @@
   ],
   "aws_route53_record.route_53": [
     "aws_lb.elb",
-    "module.mkhan-test_aws_rds.aws_db_instance.this",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2",
     "module.mkhan-test_vpc.aws_vpc.this"
   ],
   "aws_secretsmanager_secret.secretsmanager": [],
@@ -99,7 +100,7 @@
   "module.az1_subnets[\"data-1\"].aws_subnet.this": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
     "module.az1_aws_route_table_association[\"data-1\"].aws_route_table_association.this",
-    "module.mkhan-test_aws_rds.aws_db_instance.this"
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1"
   ],
   "module.az1_subnets[\"data-2\"].aws_subnet.this": [
     "module.az1_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
@@ -135,7 +136,8 @@
   "module.az2_aws_route_table_association[\"vpce-1\"].aws_route_table_association.this": [],
   "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this": [],
   "module.az2_subnets[\"data-1\"].aws_subnet.this": [
-    "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this"
+    "module.az2_aws_route_table_association[\"data-1\"].aws_route_table_association.this",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2"
   ],
   "module.az2_subnets[\"data-2\"].aws_subnet.this": [
     "module.az2_aws_route_table_association[\"data-2\"].aws_route_table_association.this"
@@ -167,12 +169,16 @@
   "module.az2_subnets[\"vpce-2\"].aws_subnet.this": [
     "module.az2_aws_route_table_association[\"vpce-2\"].aws_route_table_association.this"
   ],
-  "module.mkhan-test_aws_rds.aws_db_instance.this": [
+  "module.mkhan-test_aws_rds.aws_db_instance.this~1": [
+    "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
+  ],
+  "module.mkhan-test_aws_rds.aws_db_instance.this~2": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
   ],
   "module.mkhan-test_aws_rds.aws_iam_role.rds_enhanced_monitoring": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data",
-    "module.mkhan-test_aws_rds.aws_db_instance.this"
+    "module.mkhan-test_aws_rds.aws_db_instance.this~1",
+    "module.mkhan-test_aws_rds.aws_db_instance.this~2"
   ],
   "module.mkhan-test_aws_rds.aws_vpc_security_group_egress_rule.all": [
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"

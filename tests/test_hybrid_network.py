@@ -218,3 +218,57 @@ def test_gateway_endpoint_is_in_its_vpc_not_a_subnet():
     place_gateway_endpoints(tfdata)
     assert gw not in tfdata["graphdict"]["aws_subnet.a"]
     assert gw in tfdata["graphdict"][vpc]
+
+
+# ---- Databases ----
+
+
+def _db_tfdata(multi_az):
+    subnets = ["aws_subnet.data[0]~1", "aws_subnet.data[1]~2"]
+    return {
+        "graphdict": {
+            "aws_vpc.main": ["aws_az.a", "aws_az.b"],
+            "aws_az.a": [subnets[0]],
+            "aws_az.b": [subnets[1]],
+            subnets[0]: [],
+            subnets[1]: [],
+            "aws_db_subnet_group.db": ["aws_rds_postgres.db"],
+            "aws_ecs_fargate.app": ["aws_rds_postgres.db"],
+            "aws_rds_postgres.db": [],
+        },
+        "meta_data": {
+            "aws_db_subnet_group.db": {"subnet_ids": "${aws_subnet.data[*].id}"},
+            "aws_rds_postgres.db": {
+                "db_subnet_group_name": "${aws_db_subnet_group.db.name}",
+                "multi_az": multi_az,
+            },
+        },
+        "original_metadata": {"aws_db_subnet_group.db": {"subnet_ids": True}},
+    }
+
+
+def test_single_az_database_is_in_its_vpc(graph):
+    """It was drawn outside every VPC; which subnet it runs in is not known."""
+    assert "aws_rds_postgres.orders" in graph["aws_vpc.production"]
+
+
+def test_multi_az_database_has_a_copy_in_each_subnet_of_its_group():
+    from modules.resource_handlers_aws import place_databases
+
+    tfdata = place_databases(_db_tfdata(multi_az=True))
+    g = tfdata["graphdict"]
+    assert g["aws_subnet.data[0]~1"] == ["aws_rds_postgres.db~1"]
+    assert g["aws_subnet.data[1]~2"] == ["aws_rds_postgres.db~2"]
+    assert "aws_rds_postgres.db" not in g
+    # arrows to the database now point at both copies
+    assert g["aws_ecs_fargate.app"] == [
+        "aws_rds_postgres.db~1",
+        "aws_rds_postgres.db~2",
+    ]
+
+
+def test_single_az_database_from_references_is_in_the_vpc():
+    from modules.resource_handlers_aws import place_databases
+
+    tfdata = place_databases(_db_tfdata(multi_az=False))
+    assert "aws_rds_postgres.db" in tfdata["graphdict"]["aws_vpc.main"]
