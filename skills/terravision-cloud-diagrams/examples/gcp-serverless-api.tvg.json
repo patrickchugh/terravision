@@ -1,11 +1,83 @@
 {
-  "tv_gcp_users_icon.users": ["google_compute_global_forwarding_rule.https_lb"],
-  "google_compute_global_forwarding_rule.https_lb": ["google_cloud_run_service.api"],
-  "google_cloud_run_service.api": ["google_sql_database_instance.postgres", "google_pubsub_topic.events", "google_secret_manager_secret.db_password"],
-  "google_pubsub_topic.events": ["google_cloudfunctions_function.processor"],
-  "google_cloudfunctions_function.processor": ["google_bigquery_dataset.analytics", "google_storage_bucket.raw_events"],
-  "google_sql_database_instance.postgres": [],
-  "google_bigquery_dataset.analytics": [],
-  "google_storage_bucket.raw_events": [],
-  "google_secret_manager_secret.db_password": []
+  "tv_gcp_users_icon.api_clients": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.api",
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.api"
+  ],
+  "google_compute_url_map.api": [
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_security_policy.cloud_armor": [
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_backend_service.api": [
+    "google_cloud_run_v2_service.api"
+  ],
+  "google_compute_network.serverless": [
+    "tv_gcp_region.us_central1",
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_redis_instance.cache"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.serverless_egress",
+    "google_compute_subnetwork.psc_endpoints",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.serverless_egress": [
+    "google_cloud_run_v2_service.api",
+    "google_cloudfunctions2_function.processor"
+  ],
+  "google_compute_subnetwork.psc_endpoints": [
+    "google_compute_forwarding_rule.psc_cloud_sql"
+  ],
+  "google_cloud_run_v2_service.api": [
+    "google_redis_instance.cache",
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_forwarding_rule.psc_cloud_sql": [
+    "google_sql_database_instance.postgres"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_pubsub_topic.events",
+    "google_bigquery_dataset.analytics",
+    "google_storage_bucket.raw_events"
+  ],
+  "google_pubsub_topic.events": [
+    "google_eventarc_trigger.events",
+    "google_pubsub_topic.events_dead_letter"
+  ],
+  "google_eventarc_trigger.events": [
+    "google_cloudfunctions2_function.processor"
+  ],
+  "google_cloudfunctions2_function.processor": [
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "tv_gcp_logical_group.delivery": [
+    "google_cloudbuildv2_repository.api",
+    "google_cloudbuild_trigger.deploy",
+    "google_artifact_registry_repository.images"
+  ],
+  "google_cloudbuildv2_repository.api": [
+    "google_cloudbuild_trigger.deploy"
+  ],
+  "google_cloudbuild_trigger.deploy": [
+    "google_artifact_registry_repository.images"
+  ],
+  "google_artifact_registry_repository.images": [
+    "google_cloud_run_v2_service.api"
+  ],
+  "google_secret_manager_secret.db_password": [],
+  "google_kms_key_ring.data": [],
+  "google_logging_project_sink.api_logs": []
 }

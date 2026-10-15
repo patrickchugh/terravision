@@ -128,6 +128,17 @@ def test_shipped_examples_are_valid(example):
     assert _validator().validate(json.loads(example.read_text())) == []
 
 
+@pytest.mark.parametrize("example", sorted((SKILL / "examples").glob("*.tvg.json")))
+def test_shipped_examples_match_the_gallery(example):
+    """The skill (and diagram_guide) ships copies of gallery examples; they
+    drifted to older, simpler versions when only the gallery was updated."""
+    gallery = SKILL.parents[1] / "examples" / "graphs" / example.name
+    assert gallery.is_file(), f"{example.name} is not a gallery example"
+    assert json.loads(example.read_text()) == json.loads(
+        gallery.read_text()
+    ), f"copy examples/graphs/{example.name} to the skill's examples folder"
+
+
 def test_minimal_example_is_clean():
     validator = _validator()
     graph = _minimal_example()
