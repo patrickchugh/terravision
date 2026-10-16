@@ -1,0 +1,101 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-multi-region-dr.tvg.json --annotate gcp-multi-region-dr.annotations.yml
+format: '0.3'
+title: Google Cloud multi-region with a global load balancer, Cloud SQL cross-region replica and automated failover
+update:
+  google_compute_subnetwork.services_us_east1:
+    ip_cidr_range: 10.90.0.0/20
+  google_compute_subnetwork.services_us_west1:
+    ip_cidr_range: 10.90.16.0/20
+  google_sql_database_instance.primary:
+    label: Cloud SQL Primary (us-east1, HA)
+  google_sql_database_instance.replica:
+    label: Cloud SQL Replica (us-west1)
+  tv_gcp_logical_group.global_services:
+    label: Multi-region Services
+  google_monitoring_uptime_check_config.shop:
+    label: Uptime Check Shop
+  google_cloud_run_v2_service.web_us_east1:
+    label: Cloud Run Web Us East1
+  google_cloud_run_v2_service.web_us_west1:
+    label: Cloud Run Web Us West1
+  google_cloud_run_v2_service.worker_us_east1:
+    label: Cloud Run Worker Us East1
+  google_cloud_run_v2_service.worker_us_west1:
+    label: Cloud Run Worker Us West1
+  google_compute_backend_service.web:
+    label: Backend Service Web
+  google_compute_global_forwarding_rule.https:
+    label: Forwarding Rule Https
+  google_compute_security_policy.edge:
+    label: Cloud Armor Edge
+  google_compute_url_map.shop:
+    label: URL Map Shop
+  google_firestore_database.sessions:
+    label: Firestore Sessions
+  google_kms_key_ring.shop:
+    label: Cloud KMS Shop
+  google_logging_project_sink.shop:
+    label: Log Sink Shop
+  google_monitoring_alert_policy.region_down:
+    label: Alert Policy Region Down
+  google_pubsub_topic.orders:
+    label: Pub/Sub Orders
+  google_redis_instance.cache_us_east1:
+    label: Memorystore Cache Us East1
+  google_redis_instance.cache_us_west1:
+    label: Memorystore Cache Us West1
+  google_secret_manager_secret.db_password:
+    label: Secret Manager Db Password
+  google_storage_bucket.invoices:
+    label: Cloud Storage Invoices
+  google_workflows_workflow.failover:
+    label: Workflows Failover
+connect:
+  google_compute_backend_service.web:
+  - google_cloud_run_v2_service.web_us_east1: Serverless NEG us-east1
+  - google_cloud_run_v2_service.web_us_west1: Serverless NEG us-west1
+  google_sql_database_instance.primary:
+  - google_sql_database_instance.replica: Cross-region replication
+flows:
+  Normal operation:
+    description: Both regions serve, one database writes
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.customers -> google_compute_global_forwarding_rule.https
+      xlabel: HTTPS
+      detail: Customers reach one anycast IP on the global external Application Load Balancer
+    - resource: google_compute_backend_service.web -> google_cloud_run_v2_service.web_us_east1
+      xlabel: Nearest
+      detail: which sends each request to the nearest healthy region's Cloud Run service
+    - resource: google_cloud_run_v2_service.web_us_east1 -> google_firestore_database.sessions
+      xlabel: Session
+      detail: Sessions are in multi-region Firestore, so either region can serve any customer
+    - resource: google_cloud_run_v2_service.web_us_east1 -> google_sql_database_instance.primary
+      xlabel: Write
+      detail: Both regions write orders to the Cloud SQL primary in us-east1
+    - resource: google_sql_database_instance.primary -> google_sql_database_instance.replica
+      xlabel: Replicate
+      detail: which replicates to a read replica in us-west1
+    - resource: google_cloud_run_v2_service.worker_us_east1 -> google_storage_bucket.invoices
+      xlabel: Invoice
+      detail: Workers in each region take order events from Pub/Sub and write invoices to a dual-region bucket
+  Regional failover:
+    description: us-east1 is lost
+    color: '#188038'
+    steps:
+    - resource: google_compute_backend_service.web -> google_cloud_run_v2_service.web_us_west1
+      xlabel: Reroute
+      detail: Health checks fail and the load balancer sends all traffic to us-west1
+    - resource: google_monitoring_uptime_check_config.shop -> google_monitoring_alert_policy.region_down
+      xlabel: Alert
+      detail: An uptime check from several locations fires the region-down alert
+    - resource: google_monitoring_alert_policy.region_down -> google_workflows_workflow.failover
+      xlabel: Run book
+      detail: which starts the failover workflow
+    - resource: google_workflows_workflow.failover -> google_sql_database_instance.replica
+      xlabel: Promote
+      detail: The workflow promotes the us-west1 replica and points the services at it
+    - resource: google_cloud_run_v2_service.web_us_west1 -> google_redis_instance.cache_us_west1
+      xlabel: Warm
+      detail: The us-west1 services refill their regional Memorystore cache

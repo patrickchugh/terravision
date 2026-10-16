@@ -1,0 +1,97 @@
+{
+  "tv_azure_onprem.datacenter": [
+    "tv_azurerm_server.firewalls",
+    "tv_azurerm_server.domain_controllers",
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_server.firewalls": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_server.domain_controllers": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "azurerm_local_network_gateway.datacenter": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_resource_group.connectivity": [
+    "azurerm_virtual_network.hub",
+    "azurerm_firewall_policy.hub",
+    "azurerm_monitor_diagnostic_setting.firewall",
+    "azurerm_network_watcher_flow_log.vnets",
+    "azurerm_storage_container.flow_logs"
+  ],
+  "azurerm_virtual_network.hub": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.firewall",
+    "azurerm_subnet.log_forwarders"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.firewall": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_subnet.log_forwarders": [
+    "azurerm_linux_virtual_machine_scale_set.syslog_forwarders"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_linux_virtual_machine_scale_set.syslog_forwarders"
+  ],
+  "azurerm_firewall_policy.hub": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_firewall.hub": [
+    "azurerm_monitor_diagnostic_setting.firewall"
+  ],
+  "azurerm_monitor_diagnostic_setting.firewall": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_network_watcher_flow_log.vnets": [
+    "azurerm_storage_container.flow_logs",
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_linux_virtual_machine_scale_set.syslog_forwarders": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_resource_group.security": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc",
+    "azurerm_sentinel_data_connector.entra_id",
+    "azurerm_sentinel_data_connector.defender",
+    "azurerm_monitor_diagnostic_setting.activity_log",
+    "azurerm_security_center_subscription_pricing.defender",
+    "azurerm_sentinel_alert_rule.impossible_travel",
+    "azurerm_logic_app_workflow.contain",
+    "azurerm_storage_container.archive"
+  ],
+  "azurerm_sentinel_data_connector.entra_id": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_security_center_subscription_pricing.defender": [
+    "azurerm_sentinel_data_connector.defender"
+  ],
+  "azurerm_sentinel_data_connector.defender": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_monitor_diagnostic_setting.activity_log": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_sentinel_log_analytics_workspace_onboarding.soc": [
+    "azurerm_sentinel_alert_rule.impossible_travel",
+    "azurerm_storage_container.archive"
+  ],
+  "azurerm_sentinel_alert_rule.impossible_travel": [
+    "azurerm_logic_app_workflow.contain"
+  ],
+  "azurerm_logic_app_workflow.contain": [
+    "azurerm_firewall_policy.hub",
+    "tv_azurerm_internet.teams"
+  ],
+  "tv_azurerm_users.soc_analysts": [
+    "azurerm_sentinel_log_analytics_workspace_onboarding.soc"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_log_analytics_workspace.sentinel",
+    "azurerm_key_vault.soc",
+    "azurerm_policy_assignment.diagnostics"
+  ]
+}

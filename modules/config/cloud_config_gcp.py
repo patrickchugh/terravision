@@ -74,6 +74,10 @@ GCP_GROUP_NODES = [
     # Within User/System
     "tv_gcp_infra_system2",
     "tv_gcp_onprem",
+    "tv_gcp_external_saas",
+    "tv_gcp_external_data",
+    "tv_gcp_external_3p",
+    "tv_gcp_external_1p",
     # Within System (external services)
     "tv_gcp_external_saas",
     "tv_gcp_external_data",
@@ -140,7 +144,20 @@ GCP_EDGE_NODES = [
 ]
 
 # Nodes outside Cloud boundary
-GCP_OUTER_NODES = ["tv_gcp_users", "tv_gcp_users_icon", "tv_gcp_internet"]
+GCP_OUTER_NODES = [
+    "tv_gcp_users",
+    "tv_gcp_users_icon",
+    "tv_gcp_onprem",
+    "tv_gcp_external_saas",
+    "tv_gcp_external_data",
+    "tv_gcp_external_3p",
+    "tv_gcp_external_1p",
+    "tv_gcp_internet",
+    "tv_gcp_server",
+    "tv_gcp_database",
+    "tv_gcp_client",
+    "tv_gcp_iot_device",
+]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 GCP_DRAW_ORDER = [

@@ -1,0 +1,81 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-batch-hpc.tvg.json --annotate aws-batch-hpc.annotations.yml
+format: '0.3'
+title: AWS Batch genomics pipeline on EC2 Spot with FSx for Lustre
+update:
+  aws_vpc.hpc:
+    cidr_block: 10.60.0.0/16
+  aws_subnet.compute~1:
+    cidr_block: 10.60.0.0/18
+  aws_subnet.endpoints~1:
+    cidr_block: 10.60.240.0/24
+  aws_subnet.compute~2:
+    cidr_block: 10.60.64.0/18
+  aws_subnet.endpoints~2:
+    cidr_block: 10.60.241.0/24
+  aws_subnet.storage:
+    cidr_block: 10.60.128.0/24
+  aws_spot_instance_request.spot_workers~1:
+    label: EC2 Spot Workers
+  aws_spot_instance_request.spot_workers~2:
+    label: EC2 Spot Workers
+connect:
+  tv_aws_users.researchers:
+  - aws_s3_bucket.sequencer_uploads: FASTQ upload
+  aws_s3_bucket.sequencer_uploads:
+  - aws_cloudwatch_event_rule.new_run: Object created
+  aws_sfn_state_machine.genomics_pipeline:
+  - aws_batch_compute_environment.spot~1: SubmitJob, array of 500
+  - aws_batch_compute_environment.spot~2: SubmitJob, array of 500
+  aws_fsx_lustre_file_system.scratch:
+  - aws_s3_bucket.sequencer_uploads: Data repository link
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.results: Variant calls
+  aws_batch_compute_environment.spot~1:
+  - aws_spot_instance_request.spot_workers~1: Spot, capacity-optimised
+  aws_spot_instance_request.spot_workers~1:
+  - aws_fsx_lustre_file_system.scratch: Lustre mount
+  aws_batch_compute_environment.spot~2:
+  - aws_spot_instance_request.spot_workers~2: Spot, capacity-optimised
+  aws_spot_instance_request.spot_workers~2:
+  - aws_fsx_lustre_file_system.scratch: Lustre mount
+flows:
+  Submit a run:
+    description: A sequencing run starts the pipeline
+    steps:
+    - resource: tv_aws_users.researchers -> aws_s3_bucket.sequencer_uploads
+      xlabel: Upload
+      detail: The lab uploads a sequencing run to S3
+    - resource: aws_s3_bucket.sequencer_uploads -> aws_cloudwatch_event_rule.new_run
+      xlabel: Event
+      detail: An EventBridge rule matches the new run
+    - resource: aws_cloudwatch_event_rule.new_run -> aws_sfn_state_machine.genomics_pipeline
+      xlabel: Start
+      detail: and starts the Step Functions pipeline
+    - resource: aws_sfn_state_machine.genomics_pipeline -> aws_batch_compute_environment.spot~1
+      xlabel: Submit
+      detail: which submits an array job to AWS Batch for each stage
+    - resource: aws_sfn_state_machine.genomics_pipeline -> aws_dynamodb_table.runs
+      xlabel: Track
+      detail: and records the run's progress in DynamoDB
+  Compute:
+    description: Spot workers process the samples
+    steps:
+    - resource: aws_batch_compute_environment.spot~1 -> aws_spot_instance_request.spot_workers~1
+      xlabel: Launch
+      detail: Batch launches EC2 Spot instances in the private subnets of both zones
+    - resource: aws_spot_instance_request.spot_workers~1 -> aws_vpc_endpoint.ecr~1
+      xlabel: Image
+      detail: which pull the pipeline image through the ECR interface endpoint
+    - resource: aws_spot_instance_request.spot_workers~1 -> aws_fsx_lustre_file_system.scratch
+      xlabel: Read
+      detail: and read the reads from FSx for Lustre
+    - resource: aws_fsx_lustre_file_system.scratch -> aws_s3_bucket.sequencer_uploads
+      xlabel: Lazy load
+      detail: which loads them from the upload bucket on first access
+    - resource: aws_spot_instance_request.spot_workers~2 -> aws_vpc_endpoint.s3_gateway
+      xlabel: Write
+      detail: Results go to S3 through the gateway endpoint
+    - resource: aws_sns_topic.run_complete -> tv_aws_users.researchers
+      xlabel: Done
+      detail: When every stage has finished, SNS tells the researchers

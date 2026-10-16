@@ -1,0 +1,96 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-batch-hpc.tvg.json --annotate azure-batch-hpc.annotations.yml
+format: '0.3'
+title: Azure Batch HPC with dedicated and Spot pools, Azure NetApp Files and an on-premises licence server
+update:
+  azurerm_virtual_network.hpc:
+    address_space:
+    - 10.67.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.67.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.portal:
+    address_prefixes:
+    - 10.67.1.0/26
+  azurerm_subnet.compute:
+    address_prefixes:
+    - 10.67.16.0/20
+  azurerm_subnet.netapp:
+    address_prefixes:
+    - 10.67.2.0/26
+    label: Subnet NetApp (delegated)
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.67.10.0/24
+  tv_azurerm_users.engineers:
+    label: Simulation Engineers
+  azurerm_linux_web_app.job_portal:
+    label: Job Portal
+  tv_azure_onprem.datacenter:
+    label: Corporate Datacenter
+  tv_azurerm_server.licence_server:
+    label: FlexLM Licence Server
+  azurerm_local_network_gateway.datacenter:
+    label: VPN Device
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway
+  azurerm_batch_account.simulation:
+    label: Batch Account
+  azurerm_batch_pool.dedicated:
+    label: HBv4 Pool (dedicated)
+  azurerm_batch_pool.spot:
+    label: HBv4 Pool (Spot)
+  azurerm_netapp_volume.scratch:
+    label: NetApp Files Scratch
+  azurerm_storage_container.inputs:
+    label: Input Models
+  azurerm_storage_container.results:
+    label: Results
+  azurerm_container_registry.solver_images:
+    label: Solver Images (ACR)
+  azurerm_log_analytics_workspace.hpc:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_batch_pool.dedicated:
+  - azurerm_netapp_volume.scratch: NFS 4.1
+  azurerm_batch_pool.spot:
+  - azurerm_netapp_volume.scratch: NFS 4.1
+  azurerm_local_network_gateway.datacenter:
+  - tv_azurerm_server.licence_server: FlexLM 27000
+flows:
+  Submit:
+    description: An engineer runs a simulation
+    steps:
+    - resource: tv_azurerm_users.engineers -> azurerm_linux_web_app.job_portal
+      xlabel: Submit
+      detail: An engineer submits a simulation in the job portal
+    - resource: azurerm_linux_web_app.job_portal -> azurerm_private_endpoint.blob
+      xlabel: Upload
+      detail: The portal uploads the input model to Blob Storage
+    - resource: azurerm_linux_web_app.job_portal -> azurerm_private_endpoint.batch
+      xlabel: Job
+      detail: and creates a Batch job with one task per load case
+    - resource: azurerm_batch_account.simulation -> azurerm_batch_pool.dedicated
+      xlabel: Schedule
+      detail: Batch schedules the tasks on the dedicated HBv4 pool, which autoscales on pending tasks
+    - resource: azurerm_batch_pool.dedicated -> azurerm_virtual_network_gateway.vpn
+      xlabel: Licence
+      detail: Each solver checks out a licence from the data centre's licence server over the VPN
+  Burst and results:
+    description: Spare work runs on Spot, results come back
+    steps:
+    - resource: azurerm_batch_account.simulation -> azurerm_batch_pool.spot
+      xlabel: Burst
+      detail: Low-priority tasks run on the Spot pool; Batch requeues any that are evicted
+    - resource: azurerm_batch_pool.spot -> azurerm_netapp_volume.scratch
+      xlabel: Scratch
+      detail: Nodes share scratch files on Azure NetApp Files over NFS
+    - resource: azurerm_batch_pool.spot -> azurerm_private_endpoint.blob
+      xlabel: Results
+      detail: and write the results to Blob Storage when each task ends
+    - resource: azurerm_linux_web_app.job_portal -> azurerm_private_endpoint.blob
+      xlabel: Download
+      detail: Engineers download the results from the portal

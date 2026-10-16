@@ -1,0 +1,90 @@
+{
+  "tv_gcp_users_icon.risk_analysts": [
+    "google_cloud_run_v2_service.risk_portal",
+    "google_looker_instance.risk_reports"
+  ],
+  "google_cloud_scheduler_job.nightly_risk": [
+    "google_workflows_workflow.risk_run"
+  ],
+  "google_cloud_run_v2_service.risk_portal": [
+    "google_workflows_workflow.risk_run"
+  ],
+  "google_workflows_workflow.risk_run": [
+    "google_batch_job.monte_carlo",
+    "google_pubsub_topic.run_status"
+  ],
+  "google_compute_network.hpc": [
+    "tv_gcp_region.us_central1",
+    "google_lustre_instance.scratch"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.compute",
+    "google_compute_subnetwork.portal"
+  ],
+  "google_compute_subnetwork.compute": [
+    "google_batch_job.monte_carlo",
+    "tv_gcp_zone.us_central1_a",
+    "tv_gcp_zone.us_central1_b",
+    "tv_gcp_zone.us_central1_c"
+  ],
+  "google_compute_subnetwork.portal": [
+    "google_cloud_run_v2_service.risk_portal"
+  ],
+  "tv_gcp_zone.us_central1_a": [
+    "google_compute_instance.spot_worker~1"
+  ],
+  "google_batch_job.monte_carlo": [
+    "google_compute_instance.spot_worker~1",
+    "google_compute_instance.spot_worker~2",
+    "google_compute_instance.spot_worker~3"
+  ],
+  "google_compute_instance.spot_worker~1": [
+    "google_lustre_instance.scratch",
+    "google_storage_bucket.scenarios",
+    "google_bigquery_table.risk_results"
+  ],
+  "tv_gcp_zone.us_central1_b": [
+    "google_compute_instance.spot_worker~2"
+  ],
+  "google_compute_instance.spot_worker~2": [
+    "google_lustre_instance.scratch",
+    "google_storage_bucket.scenarios",
+    "google_bigquery_table.risk_results"
+  ],
+  "tv_gcp_zone.us_central1_c": [
+    "google_compute_instance.spot_worker~3"
+  ],
+  "google_compute_instance.spot_worker~3": [
+    "google_lustre_instance.scratch",
+    "google_storage_bucket.scenarios",
+    "google_bigquery_table.risk_results"
+  ],
+  "google_pubsub_topic.run_status": [
+    "google_cloud_run_v2_service.risk_portal"
+  ],
+  "google_looker_instance.risk_reports": [
+    "google_bigquery_table.risk_results"
+  ],
+  "tv_gcp_logical_group.data": [
+    "google_bigquery_dataset.risk",
+    "google_bigquery_table.market_data",
+    "google_bigquery_table.risk_results",
+    "google_storage_bucket.scenarios"
+  ],
+  "google_bigquery_table.market_data": [
+    "google_storage_bucket.scenarios"
+  ],
+  "tv_gcp_logical_group.delivery": [
+    "google_cloudbuild_trigger.engine",
+    "google_artifact_registry_repository.engine"
+  ],
+  "google_cloudbuild_trigger.engine": [
+    "google_artifact_registry_repository.engine"
+  ],
+  "google_artifact_registry_repository.engine": [
+    "google_batch_job.monte_carlo"
+  ],
+  "google_secret_manager_secret.market_feed": [],
+  "google_logging_project_sink.batch": [],
+  "google_kms_key_ring.risk": []
+}

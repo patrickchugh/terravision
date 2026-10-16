@@ -241,6 +241,7 @@ AWS_OUTER_NODES = [
     "tv_aws_server",
     "tv_aws_database",
     "tv_aws_client",
+    "tv_aws_iot_sensor",
 ]
 
 # Order to draw nodes - leave empty string list till last to denote everything else

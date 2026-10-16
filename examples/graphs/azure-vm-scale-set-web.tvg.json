@@ -1,0 +1,141 @@
+{
+  "tv_azure_onprem.datacenter": [
+    "tv_azurerm_server.web_servers",
+    "tv_azurerm_database.sql_server",
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_server.web_servers": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_database.sql_server": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "azurerm_local_network_gateway.datacenter": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "tv_azurerm_users.customers": [
+    "azurerm_dns_zone.shop"
+  ],
+  "azurerm_dns_zone.shop": [
+    "azurerm_public_ip.app_gateway"
+  ],
+  "azurerm_public_ip.app_gateway": [
+    "azurerm_application_gateway.web"
+  ],
+  "azurerm_web_application_firewall_policy.waf": [
+    "azurerm_application_gateway.web"
+  ],
+  "azurerm_resource_group.web": [
+    "azurerm_virtual_network.web",
+    "azurerm_public_ip.app_gateway",
+    "azurerm_public_ip.egress",
+    "azurerm_mssql_database.shop",
+    "azurerm_storage_share.content",
+    "azurerm_managed_redis.sessions",
+    "azurerm_monitor_autoscale_setting.web",
+    "azurerm_recovery_services_vault.migration"
+  ],
+  "azurerm_virtual_network.web": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.app_gateway",
+    "azurerm_subnet.web",
+    "azurerm_subnet.migration",
+    "azurerm_subnet.bastion",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.app_gateway": [
+    "azurerm_application_gateway.web"
+  ],
+  "azurerm_subnet.web": [
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2",
+    "tv_azurerm_zone.zone_3",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.migration": [
+    "azurerm_database_migration_service.dms"
+  ],
+  "azurerm_subnet.bastion": [
+    "azurerm_bastion_host.admin"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.files",
+    "azurerm_private_endpoint.redis",
+    "azurerm_private_endpoint.vault"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_linux_virtual_machine_scale_set.web~1"
+  ],
+  "azurerm_application_gateway.web": [
+    "azurerm_linux_virtual_machine_scale_set.web~1",
+    "azurerm_linux_virtual_machine_scale_set.web~2",
+    "azurerm_linux_virtual_machine_scale_set.web~3"
+  ],
+  "azurerm_monitor_autoscale_setting.web": [
+    "azurerm_linux_virtual_machine_scale_set.web~1",
+    "azurerm_linux_virtual_machine_scale_set.web~2",
+    "azurerm_linux_virtual_machine_scale_set.web~3"
+  ],
+  "azurerm_linux_virtual_machine_scale_set.web~1": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.files",
+    "azurerm_private_endpoint.redis",
+    "azurerm_nat_gateway.egress"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_linux_virtual_machine_scale_set.web~2"
+  ],
+  "azurerm_linux_virtual_machine_scale_set.web~2": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.files",
+    "azurerm_private_endpoint.redis",
+    "azurerm_nat_gateway.egress"
+  ],
+  "tv_azurerm_zone.zone_3": [
+    "azurerm_linux_virtual_machine_scale_set.web~3"
+  ],
+  "azurerm_linux_virtual_machine_scale_set.web~3": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.files",
+    "azurerm_private_endpoint.redis",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_database_migration_service.dms",
+    "azurerm_private_endpoint.vault"
+  ],
+  "azurerm_database_migration_service.dms": [
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.shop"
+  ],
+  "azurerm_private_endpoint.files": [
+    "azurerm_storage_share.content"
+  ],
+  "azurerm_private_endpoint.redis": [
+    "azurerm_managed_redis.sessions"
+  ],
+  "azurerm_private_endpoint.vault": [
+    "azurerm_recovery_services_vault.migration"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.payment_provider"
+  ],
+  "azurerm_bastion_host.admin": [
+    "azurerm_linux_virtual_machine_scale_set.web~1"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.web",
+    "azurerm_shared_image_gallery.golden_images",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

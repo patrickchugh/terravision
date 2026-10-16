@@ -1,0 +1,108 @@
+{
+  "tv_azurerm_users.tenant_users": [
+    "azurerm_dns_zone.saas",
+    "azurerm_aadb2c_directory.tenants"
+  ],
+  "azurerm_dns_zone.saas": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_private_link_service.ingress"
+  ],
+  "azurerm_resource_group.saas": [
+    "azurerm_virtual_network.saas",
+    "azurerm_mssql_database.tenant_catalog",
+    "azurerm_mssql_elasticpool.pooled_tenants",
+    "azurerm_mssql_database.premium_tenant",
+    "azurerm_managed_redis.cache",
+    "azurerm_app_configuration.tiers",
+    "azurerm_servicebus_queue.provisioning",
+    "azurerm_aadb2c_directory.tenants"
+  ],
+  "azurerm_virtual_network.saas": [
+    "azurerm_subnet.aks_nodes",
+    "azurerm_subnet.control_plane",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.aks_nodes": [
+    "azurerm_private_link_service.ingress",
+    "azurerm_kubernetes_cluster.saas",
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2",
+    "tv_azurerm_zone.zone_3"
+  ],
+  "azurerm_subnet.control_plane": [
+    "azurerm_linux_function_app.onboarding"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.redis",
+    "azurerm_private_endpoint.app_config",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_kubernetes_cluster.saas": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1",
+    "azurerm_kubernetes_cluster_node_pool.apps~2",
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1"
+  ],
+  "azurerm_private_link_service.ingress": [
+    "azurerm_kubernetes_cluster_node_pool.apps~1",
+    "azurerm_kubernetes_cluster_node_pool.apps~2",
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~1": [
+    "azurerm_private_endpoint.app_config",
+    "azurerm_private_endpoint.redis",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_kubernetes_cluster_node_pool.apps~2"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~2": [
+    "azurerm_private_endpoint.app_config",
+    "azurerm_private_endpoint.redis",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "tv_azurerm_zone.zone_3": [
+    "azurerm_kubernetes_cluster_node_pool.apps~3"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.apps~3": [
+    "azurerm_private_endpoint.app_config",
+    "azurerm_private_endpoint.redis",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.tenant_catalog",
+    "azurerm_mssql_elasticpool.pooled_tenants",
+    "azurerm_mssql_database.premium_tenant"
+  ],
+  "azurerm_private_endpoint.redis": [
+    "azurerm_managed_redis.cache"
+  ],
+  "azurerm_private_endpoint.app_config": [
+    "azurerm_app_configuration.tiers"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_queue.provisioning"
+  ],
+  "azurerm_linux_function_app.onboarding": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.images",
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.saas",
+    "azurerm_application_insights.saas",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

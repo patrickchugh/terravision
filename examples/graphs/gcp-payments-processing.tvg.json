@@ -1,0 +1,109 @@
+{
+  "tv_gcp_users_icon.merchants": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.payments",
+    "google_compute_backend_service.apigee"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.payments"
+  ],
+  "google_compute_url_map.payments": [
+    "google_compute_backend_service.apigee"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.apigee"
+  ],
+  "google_compute_backend_service.apigee": [
+    "google_apigee_instance.payments"
+  ],
+  "google_apigee_instance.payments": [
+    "google_compute_forwarding_rule.psc_payments_api"
+  ],
+  "google_project.cde": [
+    "google_compute_network.cde",
+    "google_spanner_instance.ledger",
+    "google_kms_crypto_key.tokenisation",
+    "google_pubsub_topic.captured",
+    "google_storage_bucket.settlement_audit"
+  ],
+  "google_compute_network.cde": [
+    "tv_gcp_region.us_east4",
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_sql_database_instance.token_vault"
+  ],
+  "tv_gcp_region.us_east4": [
+    "google_compute_subnetwork.gke",
+    "google_compute_subnetwork.psc",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.psc": [
+    "google_compute_forwarding_rule.psc_payments_api",
+    "google_compute_service_attachment.payments_api"
+  ],
+  "google_compute_forwarding_rule.psc_payments_api": [
+    "google_compute_service_attachment.payments_api"
+  ],
+  "google_compute_service_attachment.payments_api": [
+    "google_compute_region_backend_service.payments_api"
+  ],
+  "google_compute_subnetwork.gke": [
+    "google_compute_region_backend_service.payments_api",
+    "google_container_cluster.cde",
+    "google_cloud_run_v2_job.settlement"
+  ],
+  "google_container_cluster.cde": [
+    "google_container_node_pool.payments"
+  ],
+  "google_container_node_pool.payments": [
+    "tv_gcp_zone.us_east4_a",
+    "tv_gcp_zone.us_east4_b"
+  ],
+  "tv_gcp_zone.us_east4_a": [
+    "google_compute_instance.payments_node~1"
+  ],
+  "tv_gcp_zone.us_east4_b": [
+    "google_compute_instance.payments_node~2"
+  ],
+  "google_compute_region_backend_service.payments_api": [
+    "google_compute_instance.payments_node~1",
+    "google_compute_instance.payments_node~2"
+  ],
+  "google_compute_instance.payments_node~1": [
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_sql_database_instance.token_vault",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_instance.payments_node~2": [
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_sql_database_instance.token_vault",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_kms_crypto_key.tokenisation",
+    "google_spanner_instance.ledger",
+    "google_pubsub_topic.captured",
+    "google_storage_bucket.settlement_audit"
+  ],
+  "google_cloud_run_v2_job.settlement": [
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.card_networks"
+  ],
+  "tv_gcp_external_3p.card_schemes": [
+    "tv_gcp_server.card_networks"
+  ],
+  "google_binary_authorization_policy.cde": [],
+  "google_access_context_manager_service_perimeter.cde": [],
+  "google_data_loss_prevention_inspect_template.pan": [],
+  "google_logging_project_sink.cde": [],
+  "google_kms_key_ring.cde": []
+}

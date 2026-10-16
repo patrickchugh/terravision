@@ -1,0 +1,75 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-streaming-analytics.tvg.json --annotate aws-streaming-analytics.annotations.yml
+format: '0.3'
+title: AWS real-time streaming analytics with Kinesis, Managed Flink and Redshift Serverless
+update:
+  aws_vpc.streaming:
+    cidr_block: 10.20.0.0/16
+  aws_subnet.processing~1:
+    cidr_block: 10.20.16.0/20
+  aws_subnet.analytics~1:
+    cidr_block: 10.20.64.0/24
+  aws_subnet.endpoints~1:
+    cidr_block: 10.20.240.0/24
+  aws_subnet.processing~2:
+    cidr_block: 10.20.32.0/20
+  aws_subnet.analytics~2:
+    cidr_block: 10.20.65.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.20.241.0/24
+connect:
+  tv_aws_mobile_client.mobile_apps:
+  - aws_kinesis_stream.clickstream: PutRecords
+  aws_kinesisanalyticsv2_application.enrich~1:
+  - aws_opensearch_domain.events~1: Bulk index
+  aws_redshiftserverless_workgroup.analytics~1:
+  - aws_vpc_endpoint.kinesis~1: Streaming ingestion
+  aws_kinesisanalyticsv2_application.enrich~2:
+  - aws_opensearch_domain.events~2: Bulk index
+  aws_redshiftserverless_workgroup.analytics~2:
+  - aws_vpc_endpoint.kinesis~2: Streaming ingestion
+  aws_vpc_endpoint.kinesis~1:
+  - aws_kinesis_stream.clickstream: GetRecords
+  aws_vpc_endpoint.kinesis~2:
+  - aws_kinesis_stream.clickstream: GetRecords
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.flink_checkpoints: Checkpoints
+  aws_kinesis_firehose_delivery_stream.lake:
+  - aws_s3_bucket.event_lake: Parquet, 5 min
+  aws_quicksight_data_source.dashboards:
+  - aws_redshiftserverless_workgroup.analytics~1: VPC connection
+  - aws_redshiftserverless_workgroup.analytics~2: VPC connection
+flows:
+  Real-time:
+    description: Clicks become searchable within seconds
+    steps:
+    - resource: tv_aws_mobile_client.mobile_apps -> aws_kinesis_stream.clickstream
+      xlabel: Events
+      detail: Mobile apps write click events to Kinesis Data Streams
+    - resource: aws_kinesisanalyticsv2_application.enrich~1 -> aws_vpc_endpoint.kinesis~1
+      xlabel: Read
+      detail: The Managed Service for Apache Flink application reads the stream through the interface endpoint
+    - resource: aws_kinesisanalyticsv2_application.enrich~1 -> aws_opensearch_domain.events~1
+      xlabel: Index
+      detail: enriches and sessionises the events, and indexes them in OpenSearch for live dashboards
+    - resource: aws_kinesisanalyticsv2_application.enrich~1 -> aws_vpc_endpoint.s3_gateway
+      xlabel: Checkpoint
+      detail: checkpointing its state to S3 through the gateway endpoint
+  Warehouse and lake:
+    description: The same stream feeds the warehouse and the lake
+    steps:
+    - resource: aws_redshiftserverless_workgroup.analytics~1 -> aws_vpc_endpoint.kinesis~1
+      xlabel: Ingest
+      detail: Redshift Serverless streaming ingestion reads the stream into a materialised view
+    - resource: aws_quicksight_data_source.dashboards -> aws_redshiftserverless_workgroup.analytics~1
+      xlabel: Dashboards
+      detail: QuickSight queries it over a VPC connection
+    - resource: aws_kinesis_stream.clickstream -> aws_kinesis_firehose_delivery_stream.lake
+      xlabel: Deliver
+      detail: Firehose reads the stream too
+    - resource: aws_kinesis_firehose_delivery_stream.lake -> aws_s3_bucket.event_lake
+      xlabel: Store
+      detail: and writes Parquet files to the S3 event lake, catalogued by a Glue crawler
+    - resource: aws_athena_workgroup.analysts -> aws_glue_catalog_database.events
+      xlabel: Query
+      detail: Analysts query the full history with Athena

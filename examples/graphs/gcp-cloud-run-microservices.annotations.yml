@@ -1,0 +1,116 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-cloud-run-microservices.tvg.json --annotate gcp-cloud-run-microservices.annotations.yml
+format: '0.3'
+title: Google Cloud Run microservices with a global load balancer, Direct VPC egress and Cloud Deploy
+update:
+  google_compute_subnetwork.services:
+    ip_cidr_range: 10.30.0.0/20
+  google_compute_subnetwork.psc_endpoints:
+    ip_cidr_range: 10.30.16.0/28
+  google_artifact_registry_repository.images:
+    label: Artifact Registry Images
+  google_cloud_run_v2_service.notifications:
+    label: Cloud Run Notifications
+  google_cloud_run_v2_service.orders:
+    label: Cloud Run Orders
+  google_cloud_run_v2_service.payments:
+    label: Cloud Run Payments
+  google_cloud_run_v2_service.storefront:
+    label: Cloud Run Storefront
+  google_cloudbuild_trigger.release:
+    label: Cloud Build Release
+  google_cloudbuildv2_repository.shop:
+    label: Repository Shop
+  google_clouddeploy_delivery_pipeline.shop:
+    label: Cloud Deploy Shop
+  google_compute_backend_service.storefront:
+    label: Backend Service Storefront
+  google_compute_forwarding_rule.psc_cloud_sql:
+    label: Forwarding Rule Psc Cloud Sql
+  google_compute_global_forwarding_rule.https:
+    label: Forwarding Rule Https
+  google_compute_global_forwarding_rule.psc_google_apis:
+    label: Forwarding Rule Psc Google Apis
+  google_compute_router.egress:
+    label: Cloud Router Egress
+  google_compute_router_nat.egress:
+    label: Cloud NAT Egress
+  google_compute_security_policy.edge:
+    label: Cloud Armor Edge
+  google_compute_url_map.shop:
+    label: URL Map Shop
+  google_firestore_database.carts:
+    label: Firestore Carts
+  google_kms_key_ring.shop:
+    label: Cloud KMS Shop
+  google_logging_project_sink.services:
+    label: Log Sink Services
+  google_pubsub_subscription.notifications:
+    label: Subscription Notifications
+  google_pubsub_topic.order_events:
+    label: Pub/Sub Order Events
+  google_redis_instance.sessions:
+    label: Memorystore Sessions
+  google_secret_manager_secret.payment_api_key:
+    label: Secret Manager Payment Api Key
+  google_sql_database_instance.orders:
+    label: Cloud SQL Orders
+connect:
+  google_compute_backend_service.storefront:
+  - google_cloud_run_v2_service.storefront: Serverless NEG
+  google_cloud_run_v2_service.storefront:
+  - google_cloud_run_v2_service.orders: Internal ingress
+  google_pubsub_subscription.notifications:
+  - google_cloud_run_v2_service.notifications: Push, OIDC
+flows:
+  Checkout:
+    description: A shopper places an order
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.shoppers -> google_compute_global_forwarding_rule.https
+      xlabel: HTTPS
+      detail: The shopper reaches the global external Application Load Balancer
+    - resource: google_compute_backend_service.storefront -> google_cloud_run_v2_service.storefront
+      xlabel: Route
+      detail: Cloud Armor filters the request and a serverless NEG sends it to the storefront on Cloud Run
+    - resource: google_cloud_run_v2_service.storefront -> google_redis_instance.sessions
+      xlabel: Session
+      detail: The storefront reads the session from Memorystore through Direct VPC egress
+    - resource: google_cloud_run_v2_service.storefront -> google_cloud_run_v2_service.orders
+      xlabel: Order
+      detail: and calls the orders service, which accepts only internal traffic
+    - resource: google_cloud_run_v2_service.orders -> google_compute_forwarding_rule.psc_cloud_sql
+      xlabel: Save
+      detail: Orders saves the order to Cloud SQL through Private Service Connect
+    - resource: google_cloud_run_v2_service.payments -> google_compute_router_nat.egress
+      xlabel: Pay
+      detail: The payments service charges the card through Cloud NAT
+    - resource: google_compute_router_nat.egress -> tv_gcp_server.payment_gateway
+      xlabel: Charge
+      detail: to the payment provider, from a fixed IP
+  Order events:
+    description: Order events notify the shopper
+    color: '#188038'
+    steps:
+    - resource: google_cloud_run_v2_service.orders -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Publish
+      detail: Orders publishes OrderPlaced to Pub/Sub through the Google APIs endpoint
+    - resource: google_pubsub_topic.order_events -> google_pubsub_subscription.notifications
+      xlabel: Fan out
+      detail: A subscription takes each event
+    - resource: google_pubsub_subscription.notifications -> google_cloud_run_v2_service.notifications
+      xlabel: Push
+      detail: and pushes it to the notifications service with an OIDC token
+  Release:
+    description: A merged change rolls out
+    color: '#8430CE'
+    steps:
+    - resource: google_cloudbuild_trigger.release -> google_artifact_registry_repository.images
+      xlabel: Build
+      detail: A push to main runs Cloud Build, which pushes the images to Artifact Registry
+    - resource: google_cloudbuild_trigger.release -> google_clouddeploy_delivery_pipeline.shop
+      xlabel: Release
+      detail: and creates a Cloud Deploy release
+    - resource: google_clouddeploy_delivery_pipeline.shop -> google_cloud_run_v2_service.storefront
+      xlabel: Canary
+      detail: Cloud Deploy rolls it out to the services as a canary, then to all traffic

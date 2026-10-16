@@ -165,6 +165,24 @@ class TestGCPZoneHexColors:
         finally:
             setdiagram(None)
 
+    @pytest.mark.parametrize(
+        "on_cloud_frame, colour", [(True, "#FFFFFF"), (False, "#202124")]
+    )
+    def test_vpc_label_is_readable_on_its_background(self, on_cloud_frame, colour):
+        """A VPC inside a project box drew its white label on a light fill."""
+        from resource_classes import Canvas, setdiagram
+        from resource_classes.gcp.groups import INK, VPCNetworkZone
+
+        diagram = Canvas("test", "test_output", outformat="png", show=False)
+        setdiagram(diagram)
+        try:
+            zone = VPCNetworkZone()
+            zone.placed_in(on_cloud_frame=on_cloud_frame)
+            assert zone.dot.graph_attr["fontcolor"] == colour
+            assert INK == "#202124"
+        finally:
+            setdiagram(None)
+
     def test_region_zone_has_solid_dark_border(self):
         """RegionZone must be white with a solid dark border."""
         from resource_classes import Canvas, setdiagram

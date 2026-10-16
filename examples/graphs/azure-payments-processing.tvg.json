@@ -1,0 +1,127 @@
+{
+  "tv_azurerm_users.merchants": [
+    "azurerm_public_ip.ingress"
+  ],
+  "azurerm_public_ip.ingress": [
+    "azurerm_application_gateway.payments"
+  ],
+  "azurerm_web_application_firewall_policy.waf": [
+    "azurerm_application_gateway.payments"
+  ],
+  "azurerm_resource_group.connectivity": [
+    "azurerm_virtual_network.hub",
+    "azurerm_public_ip.egress",
+    "azurerm_firewall_policy.cde"
+  ],
+  "azurerm_virtual_network.hub": [
+    "azurerm_subnet.firewall",
+    "azurerm_subnet.bastion",
+    "azurerm_virtual_network_peering.hub_to_cde"
+  ],
+  "azurerm_subnet.firewall": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_subnet.bastion": [
+    "azurerm_bastion_host.admin"
+  ],
+  "azurerm_firewall_policy.cde": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_firewall.hub": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.card_networks"
+  ],
+  "azurerm_virtual_network_peering.hub_to_cde": [
+    "azurerm_virtual_network.cde"
+  ],
+  "azurerm_resource_group.cde": [
+    "azurerm_virtual_network.cde",
+    "azurerm_public_ip.ingress",
+    "azurerm_key_vault_managed_hardware_security_module.tokens",
+    "azurerm_mssql_database.card_vault",
+    "azurerm_mssql_database.transactions",
+    "azurerm_servicebus_queue.settlement",
+    "azurerm_storage_container.audit"
+  ],
+  "azurerm_virtual_network.cde": [
+    "azurerm_subnet.app_gateway",
+    "azurerm_subnet.aks",
+    "azurerm_subnet.settlement",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.app_gateway": [
+    "azurerm_application_gateway.payments"
+  ],
+  "azurerm_subnet.aks": [
+    "azurerm_kubernetes_cluster.payments",
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2"
+  ],
+  "azurerm_subnet.settlement": [
+    "azurerm_linux_function_app.settlement"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.hsm",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_kubernetes_cluster.payments": [
+    "azurerm_kubernetes_cluster_node_pool.payments~1",
+    "azurerm_kubernetes_cluster_node_pool.payments~2"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_kubernetes_cluster_node_pool.payments~1"
+  ],
+  "azurerm_application_gateway.payments": [
+    "azurerm_kubernetes_cluster_node_pool.payments~1",
+    "azurerm_kubernetes_cluster_node_pool.payments~2"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.payments~1": [
+    "azurerm_private_endpoint.hsm",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_firewall.hub"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_kubernetes_cluster_node_pool.payments~2"
+  ],
+  "azurerm_kubernetes_cluster_node_pool.payments~2": [
+    "azurerm_private_endpoint.hsm",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_linux_function_app.settlement": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.blob",
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_private_endpoint.hsm": [
+    "azurerm_key_vault_managed_hardware_security_module.tokens"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.card_vault",
+    "azurerm_mssql_database.transactions"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_queue.settlement"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.audit"
+  ],
+  "azurerm_bastion_host.admin": [
+    "azurerm_kubernetes_cluster.payments"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_log_analytics_workspace.security",
+    "azurerm_security_center_subscription_pricing.defender",
+    "azurerm_policy_assignment.pci_dss",
+    "azurerm_network_ddos_protection_plan.cde",
+    "azurerm_container_registry.images",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

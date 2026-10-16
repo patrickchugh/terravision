@@ -895,51 +895,63 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> 
     Returns:
         Label string for the edge, or empty string if no label found
     """
-    label = ""
     origin_resource = origin._attrs["tf_resource_name"]
     dest_resource = destination._attrs["tf_resource_name"]
+    edge_labels_list = _origin_edge_labels(origin_resource, tfdata)
+    if not edge_labels_list:
+        return ""
+    return _label_for_destination(edge_labels_list, dest_resource)
 
-    # Check if destination matches any consolidated node patterns
-    consolidated_dest_prefix = [
-        k
-        for k in list(CONSOLIDATED_NODES)
-        if helpers.get_no_module_name(dest_resource).startswith(list(k.keys())[0])
-    ]
 
-    # Check if origin matches any consolidated node patterns
-    consolidated_origin_prefix = [
-        k
-        for k in CONSOLIDATED_NODES
-        if helpers.get_no_module_name(origin_resource).startswith(list(k.keys())[0])
-    ]
+def _consolidated_prefix(resource: str) -> Optional[str]:
+    """The consolidated prefix that renamed this node into what it is.
 
-    # Find edge labels from consolidated or direct origin resource
-    if consolidated_origin_prefix:
-        candidate_resources = helpers.list_of_dictkeys_containing(
-            tfdata["meta_data"],
-            list(consolidated_origin_prefix[0].keys())[0],
-        )
-        edge_labels_list = None
-        for resource in candidate_resources:
-            edge_labels_list = tfdata["meta_data"][resource].get("edge_labels")
-            if edge_labels_list:
-                break
-    else:
-        edge_labels_list = tfdata["meta_data"][origin_resource].get("edge_labels")
+    Only a node named as the consolidated node (aws_ecs_service.ecs) has one,
+    not every node whose type shares the prefix (aws_ecs_fargate.api).
+    """
+    name = helpers.get_no_module_name(resource).split("~")[0]
+    for entry in CONSOLIDATED_NODES:
+        prefix = next(iter(entry))
+        if name.startswith(prefix) and name == entry[prefix].get("resource_name"):
+            return prefix
+    return None
 
-    # Match edge label to destination resource
-    if edge_labels_list:
+
+def _origin_edge_labels(origin_resource: str, tfdata: Dict[str, Any]) -> List:
+    """Edge labels from the origin itself, then from the node it was
+    consolidated into.
+
+    Checking the origin first matters when several nodes share a consolidated
+    prefix (aws_ecs_fargate.a and .b both match aws_ecs): the first one with
+    labels would otherwise lend them to all.
+    """
+    meta_data = tfdata["meta_data"]
+    own_labels = meta_data.get(origin_resource, {}).get("edge_labels")
+    prefix = _consolidated_prefix(origin_resource)
+    if own_labels or not prefix:
+        return own_labels or []
+    for resource in helpers.list_of_dictkeys_containing(meta_data, prefix):
+        labels = meta_data[resource].get("edge_labels")
+        if labels:
+            return labels
+    return []
+
+
+def _label_for_destination(edge_labels_list: List, dest_resource: str) -> str:
+    """Match an edge label to the destination: an exact name first, so two
+    targets sharing a consolidated prefix keep their own labels, then the
+    consolidated pattern for a destination renamed by consolidation."""
+    for labeldict in edge_labels_list:
+        key = next(iter(labeldict))
+        if key == dest_resource:
+            return labeldict[key]
+    prefix = _consolidated_prefix(dest_resource)
+    if prefix:
         for labeldict in edge_labels_list:
-            key = [k for k in labeldict][0]
-            # Check for exact match or consolidated pattern match
-            if key == dest_resource or (
-                consolidated_dest_prefix
-                and key.startswith(list(consolidated_dest_prefix[0].keys())[0])
-            ):
-                label = labeldict[key]
-                break
-
-    return label
+            key = next(iter(labeldict))
+            if key.startswith(prefix):
+                return labeldict[key]
+    return ""
 
 
 def handle_nodes(
@@ -1355,6 +1367,10 @@ def handle_group(
     else:
         newGroup = group_class(label=node_label)
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
+    # A box styled for one background (a GCP VPC's white label on the blue
+    # cloud frame) restyles itself when it is placed inside another box
+    if hasattr(newGroup, "placed_in"):
+        newGroup.placed_in(on_cloud_frame=targetGroup is cloudGroup)
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
 

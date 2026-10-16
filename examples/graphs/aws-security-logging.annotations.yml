@@ -1,0 +1,66 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-security-logging.tvg.json --annotate aws-security-logging.annotations.yml
+format: '0.3'
+title: AWS organisation security logging and threat detection
+update:
+  aws_vpc.security_tooling:
+    cidr_block: 10.90.0.0/24
+  aws_subnet.search~1:
+    cidr_block: 10.90.0.0/26
+  aws_subnet.search~2:
+    cidr_block: 10.90.0.64/26
+  aws_s3_bucket.cloudtrail_logs:
+    label: S3 CloudTrail Logs (Object Lock)
+connect:
+  aws_cloudtrail.organization_trail:
+  - aws_s3_bucket.cloudtrail_logs: All accounts, all Regions
+  aws_guardduty_member.workloads:
+  - aws_guardduty_detector.delegated_admin: Findings
+  aws_guardduty_detector.delegated_admin:
+  - aws_securityhub_account.aggregator: ASFF findings
+  aws_config_config_rule.conformance:
+  - aws_securityhub_account.aggregator: Compliance
+  aws_securityhub_account.aggregator:
+  - aws_cloudwatch_event_rule.high_severity: HIGH and CRITICAL
+  aws_kinesis_firehose_delivery_stream.findings:
+  - aws_opensearch_domain.siem~1: VPC delivery
+  - aws_opensearch_domain.siem~2: VPC delivery
+  aws_cloudwatch_event_rule.high_severity:
+  - aws_lambda_function.auto_remediate: Quarantine instance
+flows:
+  Audit trail:
+    description: Every API call is kept and searchable
+    steps:
+    - resource: aws_cloudtrail.organization_trail -> aws_s3_bucket.cloudtrail_logs
+      xlabel: Record
+      detail: The organisation trail records every API call in every account and Region
+    - resource: aws_vpc_flow_log.workloads -> aws_s3_bucket.flow_logs
+      xlabel: Flows
+      detail: Workload VPC flow logs and Config history land in the log archive account too
+    - resource: tv_aws_users.security_team -> aws_athena_workgroup.investigations
+      xlabel: Investigate
+      detail: Investigators query them with Athena
+    - resource: aws_glue_catalog_database.security_logs -> aws_s3_bucket.cloudtrail_logs
+      xlabel: Read
+      detail: through Glue tables over the immutable, Object Lock protected buckets
+  Threat response:
+    description: A finding reaches the security team
+    steps:
+    - resource: aws_guardduty_member.workloads -> aws_guardduty_detector.delegated_admin
+      xlabel: Detect
+      detail: GuardDuty in each workload account reports to the delegated administrator
+    - resource: aws_guardduty_detector.delegated_admin -> aws_securityhub_account.aggregator
+      xlabel: Aggregate
+      detail: Security Hub aggregates its findings with Config compliance
+    - resource: aws_securityhub_account.aggregator -> aws_cloudwatch_event_rule.high_severity
+      xlabel: Match
+      detail: An EventBridge rule matches high and critical findings
+    - resource: aws_cloudwatch_event_rule.high_severity -> aws_lambda_function.auto_remediate
+      xlabel: Contain
+      detail: A Lambda function quarantines the affected instance
+    - resource: aws_sns_topic.security_alerts -> aws_chatbot_slack_channel_configuration.secops
+      xlabel: Alert
+      detail: SNS and AWS Chatbot post the finding to the SecOps Slack channel
+    - resource: aws_kinesis_firehose_delivery_stream.findings -> aws_opensearch_domain.siem~1
+      xlabel: Index
+      detail: and Firehose indexes it in OpenSearch for correlation

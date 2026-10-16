@@ -1,0 +1,73 @@
+{
+  "tv_gcp_users_icon.suppliers": [
+    "google_storage_bucket.invoice_uploads"
+  ],
+  "google_storage_bucket.invoice_uploads": [
+    "google_eventarc_trigger.invoice_uploaded"
+  ],
+  "google_eventarc_trigger.invoice_uploaded": [
+    "google_cloudfunctions2_function.extract"
+  ],
+  "google_compute_network.finance": [
+    "tv_gcp_region.europe_west1"
+  ],
+  "tv_gcp_region.europe_west1": [
+    "google_compute_subnetwork.functions",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.functions": [
+    "google_cloudfunctions2_function.extract",
+    "google_cloudfunctions2_function.validate",
+    "google_cloud_run_v2_service.approvals",
+    "google_cloud_run_v2_job.reconcile"
+  ],
+  "google_cloudfunctions2_function.extract": [
+    "google_document_ai_processor.invoice_parser",
+    "google_firestore_database.invoices",
+    "google_pubsub_topic.invoice_extracted"
+  ],
+  "google_pubsub_topic.invoice_extracted": [
+    "google_eventarc_trigger.invoice_extracted",
+    "google_pubsub_subscription.to_bigquery",
+    "google_pubsub_topic.invoice_dead_letter"
+  ],
+  "google_pubsub_subscription.to_bigquery": [
+    "google_bigquery_dataset.finance"
+  ],
+  "google_eventarc_trigger.invoice_extracted": [
+    "google_cloudfunctions2_function.validate"
+  ],
+  "google_cloudfunctions2_function.validate": [
+    "google_firestore_database.invoices",
+    "google_workflows_workflow.approval"
+  ],
+  "google_workflows_workflow.approval": [
+    "google_cloud_run_v2_service.approvals"
+  ],
+  "tv_gcp_users_icon.finance_team": [
+    "google_cloud_run_v2_service.approvals"
+  ],
+  "google_cloud_run_v2_service.approvals": [
+    "google_firestore_database.invoices",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.erp_api"
+  ],
+  "tv_gcp_external_saas.erp": [
+    "tv_gcp_server.erp_api"
+  ],
+  "google_cloud_scheduler_job.nightly": [
+    "google_cloud_run_v2_job.reconcile"
+  ],
+  "google_cloud_run_v2_job.reconcile": [
+    "google_bigquery_dataset.finance"
+  ],
+  "google_secret_manager_secret.erp_token": [],
+  "google_kms_key_ring.invoices": [],
+  "google_logging_project_sink.functions": []
+}

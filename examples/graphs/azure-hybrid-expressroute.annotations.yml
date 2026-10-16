@@ -1,0 +1,122 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-hybrid-expressroute.tvg.json --annotate azure-hybrid-expressroute.annotations.yml
+format: '0.3'
+title: Azure hybrid network with ExpressRoute, VPN backup, Azure Firewall and DNS Private Resolver
+update:
+  azurerm_virtual_network.hub:
+    address_space:
+    - 10.0.0.0/22
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.0.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.firewall:
+    address_prefixes:
+    - 10.0.1.0/26
+    label: AzureFirewallSubnet
+  azurerm_subnet.dns_inbound:
+    address_prefixes:
+    - 10.0.2.0/28
+    label: Subnet DNS Inbound
+  azurerm_subnet.bastion:
+    address_prefixes:
+    - 10.0.3.0/26
+    label: AzureBastionSubnet
+  azurerm_virtual_network.apps:
+    address_space:
+    - 10.1.0.0/16
+  azurerm_subnet.app:
+    address_prefixes:
+    - 10.1.1.0/24
+  azurerm_subnet.data:
+    address_prefixes:
+    - 10.1.8.0/27
+  tv_azure_onprem.datacenter:
+    label: Corporate Datacenter
+  tv_azurerm_client.workstations:
+    label: Workstations
+  tv_azurerm_server.dns:
+    label: DNS Servers
+  tv_azurerm_server.app_servers:
+    label: App Servers
+  azurerm_local_network_gateway.edge_routers:
+    label: Edge Routers (BGP)
+  azurerm_express_route_circuit.primary:
+    label: ExpressRoute 1 Gbps
+  azurerm_virtual_network_gateway.expressroute:
+    label: ExpressRoute Gateway
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway (backup)
+  azurerm_firewall.hub:
+    label: Azure Firewall
+  azurerm_firewall_policy.central:
+    label: Firewall Policy
+  azurerm_private_dns_resolver.hub:
+    label: DNS Private Resolver
+  azurerm_route_table.gateway:
+    label: Gateway Route Table
+  azurerm_bastion_host.admin:
+    label: Azure Bastion
+  azurerm_lb.app:
+    label: Internal Load Balancer
+  azurerm_mssql_managed_instance.erp:
+    label: SQL Managed Instance
+  azurerm_windows_virtual_machine.app~1:
+    label: ERP App VM
+  azurerm_windows_virtual_machine.app~2:
+    label: ERP App VM
+  azurerm_recovery_services_vault.backup:
+    label: Backup Vault
+  azurerm_log_analytics_workspace.platform:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_local_network_gateway.edge_routers:
+  - azurerm_express_route_circuit.primary: Private peering
+  - azurerm_virtual_network_gateway.vpn: IPsec backup
+  azurerm_route_table.gateway:
+  - azurerm_virtual_network_gateway.expressroute: Spokes via firewall
+flows:
+  Office user:
+    description: A user in the data centre opens the ERP in Azure
+    steps:
+    - resource: tv_azurerm_client.workstations -> azurerm_local_network_gateway.edge_routers
+      xlabel: Route
+      detail: The workstation's traffic for 10.1.0.0/16 goes to the edge routers, which learned it over BGP
+    - resource: azurerm_local_network_gateway.edge_routers -> azurerm_express_route_circuit.primary
+      xlabel: Circuit
+      detail: The routers send it over the ExpressRoute circuit's private peering
+    - resource: azurerm_express_route_circuit.primary -> azurerm_virtual_network_gateway.expressroute
+      xlabel: Gateway
+      detail: to the ExpressRoute gateway in the hub
+    - resource: azurerm_virtual_network_gateway.expressroute -> azurerm_firewall.hub
+      xlabel: Inspect
+      detail: The gateway route table sends spoke traffic through Azure Firewall
+    - resource: azurerm_firewall.hub -> azurerm_lb.app
+      xlabel: Allow
+      detail: The firewall policy allows it to the internal load balancer in the peered spoke
+    - resource: azurerm_lb.app -> azurerm_windows_virtual_machine.app~1
+      xlabel: App
+      detail: which balances it across ERP VMs in two availability zones
+    - resource: azurerm_windows_virtual_machine.app~1 -> azurerm_mssql_managed_instance.erp
+      xlabel: Query
+      detail: The VMs use SQL Managed Instance in a delegated subnet
+  DNS and failover:
+    description: Names resolve both ways, and a VPN stands by
+    steps:
+    - resource: tv_azurerm_server.dns -> azurerm_local_network_gateway.edge_routers
+      xlabel: Forward
+      detail: The data centre DNS servers forward Azure private zones to the resolver's inbound endpoint
+    - resource: azurerm_virtual_network_gateway.expressroute -> azurerm_private_dns_resolver.hub
+      xlabel: Resolve
+      detail: The DNS Private Resolver answers from the linked private DNS zones
+    - resource: azurerm_local_network_gateway.edge_routers -> azurerm_virtual_network_gateway.vpn
+      xlabel: Backup
+      detail: If the circuit fails, BGP moves traffic to the site-to-site VPN
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_firewall.hub
+      xlabel: Same path
+      detail: which takes the same path through the firewall
+    - resource: azurerm_bastion_host.admin -> azurerm_windows_virtual_machine.app~1
+      xlabel: Admin
+      detail: Administrators reach the VMs only through Azure Bastion

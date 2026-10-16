@@ -1,0 +1,76 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-iot-telemetry.tvg.json --annotate aws-iot-telemetry.annotations.yml
+format: '0.3'
+title: AWS IoT telemetry with Greengrass, IoT Core rules, Timestream and Grafana
+update:
+  aws_vpc.telemetry:
+    cidr_block: 10.40.0.0/16
+  aws_subnet.processing~1:
+    cidr_block: 10.40.16.0/20
+  aws_subnet.endpoints~1:
+    cidr_block: 10.40.240.0/24
+  aws_subnet.processing~2:
+    cidr_block: 10.40.32.0/20
+  aws_subnet.endpoints~2:
+    cidr_block: 10.40.241.0/24
+  aws_greengrass_group.site_gateway:
+    label: IoT Greengrass Site Gateway
+connect:
+  tv_aws_iot_sensor.turbine_sensors:
+  - aws_greengrass_group.site_gateway: Modbus, local MQTT
+  aws_greengrass_group.site_gateway:
+  - aws_iot_topic_rule.telemetry: MQTT over TLS 8883
+  aws_iot_topic_rule.telemetry:
+  - aws_kinesis_stream.telemetry: Rule action
+  aws_iot_topic_rule.archive:
+  - aws_kinesis_firehose_delivery_stream.archive: Rule action
+  aws_kinesis_firehose_delivery_stream.archive:
+  - aws_s3_bucket.raw_archive: Partitioned by day
+  aws_iotevents_detector_model.overspeed:
+  - aws_sns_topic.alerts: Over-speed alarm
+  aws_grafana_workspace.operations:
+  - aws_timestreamwrite_database.telemetry: Timestream data source
+  aws_vpc_endpoint.timestream~1:
+  - aws_timestreamwrite_database.telemetry: WriteRecords
+  aws_vpc_endpoint.timestream~2:
+  - aws_timestreamwrite_database.telemetry: WriteRecords
+flows:
+  Telemetry:
+    description: Turbine readings reach the operations dashboards
+    steps:
+    - resource: tv_aws_iot_sensor.turbine_sensors -> aws_greengrass_group.site_gateway
+      xlabel: Collect
+      detail: Turbine sensors report to the Greengrass gateway at the wind farm
+    - resource: aws_greengrass_group.site_gateway -> aws_iot_topic_rule.telemetry
+      xlabel: Publish
+      detail: which publishes readings to AWS IoT Core over MQTT with its device certificate
+    - resource: aws_iot_topic_rule.telemetry -> aws_kinesis_stream.telemetry
+      xlabel: Route
+      detail: An IoT rule sends them to Kinesis Data Streams
+    - resource: aws_kinesis_stream.telemetry -> aws_lambda_function.process~1
+      xlabel: Process
+      detail: Lambda functions in the VPC read batches, clean and aggregate them
+    - resource: aws_lambda_function.process~1 -> aws_vpc_endpoint.timestream~1
+      xlabel: Store
+      detail: and write them to Timestream through the interface endpoint
+    - resource: aws_grafana_workspace.operations -> aws_timestreamwrite_database.telemetry
+      xlabel: Visualise
+      detail: Operators watch them in Amazon Managed Grafana
+  Alarms and archive:
+    description: Alarms reach the operators and raw data is kept
+    steps:
+    - resource: aws_greengrass_group.site_gateway -> aws_iot_topic_rule.alarms
+      xlabel: Alarm
+      detail: Alarm messages match a second rule
+    - resource: aws_iot_topic_rule.alarms -> aws_iotevents_detector_model.overspeed
+      xlabel: Detect
+      detail: which feeds an IoT Events detector model for each turbine
+    - resource: aws_sns_topic.alerts -> tv_aws_users.operators
+      xlabel: Notify
+      detail: An over-speed state notifies operators through SNS
+    - resource: aws_iot_topic_rule.archive -> aws_kinesis_firehose_delivery_stream.archive
+      xlabel: Archive
+      detail: A third rule sends every message to Firehose
+    - resource: aws_kinesis_firehose_delivery_stream.archive -> aws_s3_bucket.raw_archive
+      xlabel: Keep
+      detail: which writes it to the S3 archive, partitioned by day

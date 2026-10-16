@@ -1,0 +1,69 @@
+{
+  "tv_gcp_users_icon.players": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.telemetry",
+    "google_compute_backend_service.collector"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.telemetry"
+  ],
+  "google_compute_url_map.telemetry": [
+    "google_compute_backend_service.collector"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.collector"
+  ],
+  "google_compute_backend_service.collector": [
+    "google_cloud_run_v2_service.collector"
+  ],
+  "google_cloud_run_v2_service.collector": [
+    "google_pubsub_topic.game_events"
+  ],
+  "google_pubsub_topic.game_events": [
+    "google_pubsub_subscription.dataflow",
+    "google_pubsub_topic.events_dead_letter"
+  ],
+  "google_compute_network.analytics": [
+    "tv_gcp_region.us_central1"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.dataflow",
+    "google_compute_subnetwork.serving"
+  ],
+  "google_compute_subnetwork.dataflow": [
+    "google_dataflow_flex_template_job.sessionise"
+  ],
+  "google_compute_subnetwork.serving": [
+    "google_cloud_run_v2_service.leaderboard_api",
+    "google_cloud_run_v2_service.collector"
+  ],
+  "google_dataflow_flex_template_job.sessionise": [
+    "google_pubsub_subscription.dataflow",
+    "google_bigquery_table.events",
+    "google_bigtable_instance.player_state",
+    "google_vertex_ai_endpoint.cheat_detection"
+  ],
+  "google_cloud_run_v2_service.leaderboard_api": [
+    "google_bigtable_instance.player_state"
+  ],
+  "tv_gcp_users_icon.game_clients": [
+    "google_cloud_run_v2_service.leaderboard_api"
+  ],
+  "tv_gcp_logical_group.analytics": [
+    "google_bigquery_dataset.game_analytics",
+    "google_bigquery_table.events",
+    "google_looker_instance.dashboards"
+  ],
+  "google_looker_instance.dashboards": [
+    "google_bigquery_table.events"
+  ],
+  "tv_gcp_users_icon.analysts": [
+    "google_looker_instance.dashboards"
+  ],
+  "google_secret_manager_secret.collector_keys": [],
+  "google_logging_project_sink.pipeline": [],
+  "google_monitoring_dashboard.pipeline": []
+}

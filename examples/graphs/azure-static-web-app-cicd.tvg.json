@@ -1,0 +1,73 @@
+{
+  "tv_azurerm_users.visitors": [
+    "azurerm_dns_zone.site",
+    "azurerm_aadb2c_directory.customers"
+  ],
+  "azurerm_dns_zone.site": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_static_web_app.site",
+    "azurerm_storage_container.media"
+  ],
+  "azurerm_static_web_app.site": [
+    "azurerm_linux_function_app.api"
+  ],
+  "tv_azurerm_internet.github": [
+    "azurerm_static_web_app.site",
+    "azurerm_linux_function_app.api"
+  ],
+  "azurerm_resource_group.site": [
+    "azurerm_static_web_app.site",
+    "azurerm_virtual_network.site",
+    "azurerm_cosmosdb_account.content",
+    "azurerm_servicebus_queue.contact",
+    "azurerm_storage_container.media",
+    "azurerm_public_ip.egress",
+    "azurerm_communication_service.email",
+    "azurerm_aadb2c_directory.customers"
+  ],
+  "azurerm_virtual_network.site": [
+    "azurerm_subnet.functions",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.functions": [
+    "azurerm_linux_function_app.api",
+    "azurerm_linux_function_app.contact",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_linux_function_app.api": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_linux_function_app.contact": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.content"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_queue.contact"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "azurerm_communication_service.email"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_application_insights.site",
+    "azurerm_log_analytics_workspace.site",
+    "azurerm_private_dns_zone.privatelink",
+    "azurerm_user_assigned_identity.github_deploy"
+  ]
+}

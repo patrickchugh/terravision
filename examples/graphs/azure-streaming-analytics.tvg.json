@@ -1,0 +1,75 @@
+{
+  "tv_azurerm_users.shoppers": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_linux_web_app.storefront"
+  ],
+  "azurerm_resource_group.analytics": [
+    "azurerm_virtual_network.analytics",
+    "azurerm_eventhub.clickstream",
+    "azurerm_storage_data_lake_gen2_filesystem.raw_events",
+    "azurerm_cosmosdb_account.profiles",
+    "azurerm_kusto_cluster.analytics",
+    "azurerm_dashboard_grafana.operations",
+    "azurerm_monitor_action_group.on_call"
+  ],
+  "azurerm_virtual_network.analytics": [
+    "azurerm_subnet.web_integration",
+    "azurerm_subnet.stream_processing",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.web_integration": [
+    "azurerm_linux_web_app.storefront"
+  ],
+  "azurerm_subnet.stream_processing": [
+    "azurerm_stream_analytics_job.sessionise",
+    "azurerm_linux_function_app.anomalies"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.kusto"
+  ],
+  "azurerm_linux_web_app.storefront": [
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_private_endpoint.cosmos"
+  ],
+  "azurerm_private_endpoint.event_hubs": [
+    "azurerm_eventhub.clickstream"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.profiles"
+  ],
+  "azurerm_private_endpoint.kusto": [
+    "azurerm_kusto_cluster.analytics"
+  ],
+  "azurerm_eventhub.clickstream": [
+    "azurerm_storage_data_lake_gen2_filesystem.raw_events",
+    "azurerm_kusto_cluster.analytics"
+  ],
+  "azurerm_stream_analytics_job.sessionise": [
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_private_endpoint.cosmos"
+  ],
+  "azurerm_linux_function_app.anomalies": [
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_private_endpoint.kusto",
+    "azurerm_monitor_action_group.on_call"
+  ],
+  "tv_azurerm_users.analysts": [
+    "azurerm_dashboard_grafana.operations"
+  ],
+  "azurerm_dashboard_grafana.operations": [
+    "azurerm_kusto_cluster.analytics"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.platform",
+    "azurerm_application_insights.storefront",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

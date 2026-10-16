@@ -1,0 +1,84 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-saas-multi-tenant.tvg.json --annotate aws-saas-multi-tenant.annotations.yml
+format: '0.3'
+title: AWS multi-tenant SaaS with pooled and silo tiers on ECS Fargate
+update:
+  aws_vpc.saas:
+    cidr_block: 10.70.0.0/16
+  aws_subnet.app~1:
+    cidr_block: 10.70.16.0/20
+  aws_subnet.data~1:
+    cidr_block: 10.70.64.0/24
+  aws_subnet.endpoints~1:
+    cidr_block: 10.70.240.0/24
+  aws_subnet.app~2:
+    cidr_block: 10.70.32.0/20
+  aws_subnet.data~2:
+    cidr_block: 10.70.65.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.70.241.0/24
+connect:
+  aws_apigatewayv2_api.saas:
+  - aws_cognito_user_pool.tenants: JWT authorizer
+  - aws_alb.internal~1: VPC link
+  - aws_alb.internal~2: VPC link
+  aws_alb.internal~1:
+  - aws_ecs_fargate.pooled_tier~1: Basic and standard tenants
+  - aws_ecs_fargate.premium_tenant~1: Host acme.example.com
+  aws_ecs_fargate.pooled_tier~1:
+  - aws_rds_aurora_postgres.pooled~1: Schema per tenant
+  aws_alb.internal~2:
+  - aws_ecs_fargate.pooled_tier~2: Basic and standard tenants
+  - aws_ecs_fargate.premium_tenant~2: Host acme.example.com
+  aws_ecs_fargate.pooled_tier~2:
+  - aws_rds_aurora_postgres.pooled~2: Schema per tenant
+  aws_vpc_endpoint.dynamodb_gateway:
+  - aws_dynamodb_table.tenant_registry: Tenant tier and config
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.tenant_files: Prefix per tenant
+  aws_cloudwatch_event_bus.tenant_lifecycle:
+  - aws_sfn_state_machine.provision_tenant: TenantCreated
+  - aws_kinesis_firehose_delivery_stream.usage: UsageRecorded
+flows:
+  Tenant request:
+    description: A tenant's user calls the product
+    steps:
+    - resource: tv_aws_users.tenant_users -> aws_apigatewayv2_api.saas
+      xlabel: Call
+      detail: A tenant's user calls the HTTP API with a token carrying their tenant ID
+    - resource: aws_apigatewayv2_api.saas -> aws_cognito_user_pool.tenants
+      xlabel: Verify
+      detail: API Gateway validates it against the Cognito user pool
+    - resource: aws_apigatewayv2_api.saas -> aws_alb.internal~1
+      xlabel: Route
+      detail: and passes the request over a VPC link to the internal load balancer
+    - resource: aws_alb.internal~1 -> aws_ecs_fargate.pooled_tier~1
+      xlabel: Pooled
+      detail: which sends shared-tier tenants to the pooled service
+    - resource: aws_ecs_fargate.pooled_tier~1 -> aws_vpc_endpoint.dynamodb_gateway
+      xlabel: Config
+      detail: The service looks up the tenant's tier and settings in DynamoDB
+    - resource: aws_ecs_fargate.pooled_tier~1 -> aws_rds_aurora_postgres.pooled~1
+      xlabel: Data
+      detail: and works in the tenant's own schema in the pooled Aurora cluster
+    - resource: aws_alb.internal~2 -> aws_ecs_fargate.premium_tenant~2
+      xlabel: Silo
+      detail: A premium tenant's host name routes to its own service and its own Aurora cluster
+  Onboarding:
+    description: A new tenant signs up
+    steps:
+    - resource: tv_aws_users.saas_admins -> aws_apigatewayv2_api.saas
+      xlabel: Sign up
+      detail: The SaaS team onboards a tenant through the admin API
+    - resource: aws_alb.internal~1 -> aws_ecs_fargate.tenant_management~1
+      xlabel: Control
+      detail: which reaches the tenant management service
+    - resource: aws_ecs_fargate.tenant_management~1 -> aws_vpc_endpoint.eventbridge~1
+      xlabel: Event
+      detail: It publishes TenantCreated to EventBridge through the interface endpoint
+    - resource: aws_cloudwatch_event_bus.tenant_lifecycle -> aws_sfn_state_machine.provision_tenant
+      xlabel: Provision
+      detail: A Step Functions workflow creates the tenant's Cognito group, registry entry and key
+    - resource: aws_cloudwatch_event_bus.tenant_lifecycle -> aws_kinesis_firehose_delivery_stream.usage
+      xlabel: Meter
+      detail: Usage events flow through Firehose to S3 for billing

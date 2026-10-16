@@ -1,0 +1,94 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-static-web-app-cicd.tvg.json --annotate azure-static-web-app-cicd.annotations.yml
+format: '0.3'
+title: Azure Static Web Apps with Front Door, a linked Functions API and GitHub Actions
+update:
+  azurerm_virtual_network.site:
+    address_space:
+    - 10.66.0.0/16
+  azurerm_subnet.functions:
+    address_prefixes:
+    - 10.66.1.0/26
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.66.10.0/24
+  azurerm_static_web_app.site:
+    label: Static Web App
+  azurerm_linux_function_app.api:
+    label: API Function App
+  azurerm_linux_function_app.contact:
+    label: Contact Function
+  azurerm_storage_container.media:
+    label: Media Blobs
+  azurerm_cosmosdb_account.content:
+    label: Cosmos DB Content
+  azurerm_servicebus_queue.contact:
+    label: Contact Queue
+  azurerm_communication_service.email:
+    label: Communication Services
+  azurerm_aadb2c_directory.customers:
+    label: Entra External ID
+  tv_azurerm_internet.github:
+    label: GitHub Actions
+  azurerm_user_assigned_identity.github_deploy:
+    label: Deploy Identity (OIDC)
+  azurerm_application_insights.site:
+    label: Application Insights
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.edge:
+    label: Azure Front Door
+  azurerm_dns_zone.site:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.site:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_static_web_app.site:
+  - azurerm_linux_function_app.api: Linked backend /api
+  azurerm_private_endpoint.cosmos:
+  - azurerm_cosmosdb_account.content: HTTPS 443
+flows:
+  Visit:
+    description: A visitor loads the site and signs in
+    steps:
+    - resource: tv_azurerm_users.visitors -> azurerm_dns_zone.site
+      xlabel: Resolve
+      detail: The site's name resolves in Azure DNS to Front Door
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_static_web_app.site
+      xlabel: Pages
+      detail: Front Door, with its WAF, serves the pages from Static Web Apps and caches them at the edge
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_storage_container.media
+      xlabel: Media
+      detail: and images and video from a Blob container over Private Link
+    - resource: tv_azurerm_users.visitors -> azurerm_aadb2c_directory.customers
+      xlabel: Sign in
+      detail: Visitors sign in with Entra External ID
+    - resource: azurerm_static_web_app.site -> azurerm_linux_function_app.api
+      xlabel: API
+      detail: Calls to /api go to the linked Function App
+    - resource: azurerm_linux_function_app.api -> azurerm_private_endpoint.cosmos
+      xlabel: Content
+      detail: which reads member content from Cosmos DB through a private endpoint
+  Contact form:
+    description: A message reaches the team
+    steps:
+    - resource: azurerm_linux_function_app.api -> azurerm_private_endpoint.service_bus
+      xlabel: Queue
+      detail: The API queues contact form messages on Service Bus
+    - resource: azurerm_linux_function_app.contact -> azurerm_private_endpoint.service_bus
+      xlabel: Process
+      detail: The contact function takes each message
+    - resource: azurerm_public_ip.egress -> azurerm_communication_service.email
+      xlabel: Email
+      detail: and emails the team through Communication Services, from the NAT gateway's IP
+  Release:
+    description: A pull request merged to main ships
+    steps:
+    - resource: tv_azurerm_internet.github -> azurerm_static_web_app.site
+      xlabel: Site
+      detail: GitHub Actions builds the site and deploys it; pull requests get their own preview environments
+    - resource: tv_azurerm_internet.github -> azurerm_linux_function_app.api
+      xlabel: API
+      detail: The same workflow deploys the API with an OIDC federated identity, with no stored secret

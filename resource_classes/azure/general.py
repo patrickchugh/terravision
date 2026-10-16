@@ -468,5 +468,38 @@ class Workflow(_General):
 # Note: azurerm_resource_group alias is defined in groups.py as a Cluster class
 azurerm_subscription = Subscriptions
 azurerm_management_group = ManagementGroups
+
+
+# Systems outside Azure, such as on-premises servers in a tv_azure_onprem box.
+# Azure's icon set has no plain server or workstation, so these use the
+# neutral generic icons, drawn on Azure's node cards.
+class OnPremServer(_Azure):
+    _type = "general"
+    _icon_dir = "resource_images/generic/compute"
+    _icon = "rack.png"
+
+
+class OnPremClient(_Azure):
+    _type = "general"
+    _icon_dir = "resource_images/onprem/client"
+    _icon = "client.png"
+
+
+class OnPremDatabase(_Azure):
+    _type = "general"
+    _icon_dir = "resource_images/generic/database"
+    _icon = "sql.png"
+
+
+class IotEdgeDevice(_Azure):
+    _type = "iot"
+    _icon_dir = "resource_images/azure/iot"
+    _icon = "iot-edge.png"
+
+
 tv_azurerm_users = Usericon
+tv_azurerm_server = OnPremServer
+tv_azurerm_client = OnPremClient
+tv_azurerm_database = OnPremDatabase
+tv_azurerm_iot_device = IotEdgeDevice
 tv_azurerm_internet = WebsitePower

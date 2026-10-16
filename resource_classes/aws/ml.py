@@ -126,6 +126,9 @@ aws_sagemaker_domain = Sagemaker
 aws_sagemaker_endpoint = Sagemaker
 aws_sagemaker_notebook_instance = SagemakerNotebook
 aws_sagemaker_model = SagemakerModel
+aws_sagemaker_model_package_group = SagemakerModel
+aws_sagemaker_feature_group = Sagemaker
+aws_sagemaker_pipeline = Sagemaker
 aws_transcribe_vocabulary = Transcribe
 
 # Current aws resource types linked to existing icons

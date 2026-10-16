@@ -1,0 +1,155 @@
+{
+  "tv_aws_onprem.head_office": [
+    "tv_aws_client.staff",
+    "tv_aws_server.dns_servers",
+    "aws_storagegateway_gateway.file_gateway",
+    "aws_customer_gateway.office_router"
+  ],
+  "tv_aws_client.staff": [
+    "aws_customer_gateway.office_router"
+  ],
+  "aws_storagegateway_gateway.file_gateway": [
+    "aws_customer_gateway.office_router"
+  ],
+  "aws_customer_gateway.office_router": [
+    "aws_dx_connection.primary",
+    "aws_vpn_connection.backup"
+  ],
+  "aws_dx_connection.primary": [
+    "aws_dx_gateway.corporate"
+  ],
+  "aws_dx_gateway.corporate": [
+    "aws_ec2_transit_gateway.hub"
+  ],
+  "aws_vpn_connection.backup": [
+    "aws_ec2_transit_gateway.hub"
+  ],
+  "aws_vpc.erp": [
+    "tv_aws_az.eu_west_2a",
+    "tv_aws_az.eu_west_2b",
+    "aws_route53_zone.aws_internal"
+  ],
+  "tv_aws_az.eu_west_2a": [
+    "aws_subnet.tgw~1",
+    "aws_subnet.app~1",
+    "aws_subnet.data~1",
+    "aws_subnet.dns~1",
+    "aws_subnet.endpoints~1"
+  ],
+  "aws_subnet.tgw~1": [
+    "aws_ec2_transit_gateway_vpc_attachment.erp~1"
+  ],
+  "aws_subnet.app~1": [
+    "aws_alb.erp_internal~1",
+    "aws_instance.erp_app~1"
+  ],
+  "aws_subnet.data~1": [
+    "aws_rds_oracle.erp~1"
+  ],
+  "aws_subnet.dns~1": [
+    "aws_route53_resolver_endpoint.inbound~1",
+    "aws_route53_resolver_endpoint.outbound~1"
+  ],
+  "aws_subnet.endpoints~1": [
+    "aws_vpc_endpoint.storage_gateway~1",
+    "aws_vpc_endpoint.s3~1"
+  ],
+  "aws_ec2_transit_gateway.hub": [
+    "aws_ec2_transit_gateway_vpc_attachment.erp~1",
+    "aws_ec2_transit_gateway_vpc_attachment.erp~2"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.erp~1": [
+    "aws_alb.erp_internal~1",
+    "aws_route53_resolver_endpoint.inbound~1",
+    "aws_vpc_endpoint.storage_gateway~1",
+    "aws_vpc_endpoint.s3~1"
+  ],
+  "aws_alb.erp_internal~1": [
+    "aws_instance.erp_app~1"
+  ],
+  "aws_instance.erp_app~1": [
+    "aws_rds_oracle.erp~1"
+  ],
+  "aws_route53_resolver_endpoint.inbound~1": [
+    "aws_route53_zone.aws_internal"
+  ],
+  "aws_route53_resolver_endpoint.outbound~1": [
+    "aws_route53_resolver_rule.corp_forward"
+  ],
+  "aws_vpc_endpoint.storage_gateway~1": [
+    "aws_storagegateway_smb_file_share.finance"
+  ],
+  "aws_vpc_endpoint.s3~1": [
+    "aws_s3_bucket.file_shares"
+  ],
+  "aws_backup_plan.erp": [
+    "aws_instance.erp_app~1",
+    "aws_rds_oracle.erp~1",
+    "aws_instance.erp_app~2",
+    "aws_rds_oracle.erp~2",
+    "aws_backup_vault.erp"
+  ],
+  "tv_aws_az.eu_west_2b": [
+    "aws_subnet.tgw~2",
+    "aws_subnet.app~2",
+    "aws_subnet.data~2",
+    "aws_subnet.dns~2",
+    "aws_subnet.endpoints~2"
+  ],
+  "aws_subnet.tgw~2": [
+    "aws_ec2_transit_gateway_vpc_attachment.erp~2"
+  ],
+  "aws_subnet.app~2": [
+    "aws_alb.erp_internal~2",
+    "aws_instance.erp_app~2"
+  ],
+  "aws_subnet.data~2": [
+    "aws_rds_oracle.erp~2"
+  ],
+  "aws_subnet.dns~2": [
+    "aws_route53_resolver_endpoint.inbound~2",
+    "aws_route53_resolver_endpoint.outbound~2"
+  ],
+  "aws_subnet.endpoints~2": [
+    "aws_vpc_endpoint.storage_gateway~2",
+    "aws_vpc_endpoint.s3~2"
+  ],
+  "aws_ec2_transit_gateway_vpc_attachment.erp~2": [
+    "aws_alb.erp_internal~2",
+    "aws_route53_resolver_endpoint.inbound~2",
+    "aws_vpc_endpoint.storage_gateway~2",
+    "aws_vpc_endpoint.s3~2"
+  ],
+  "aws_alb.erp_internal~2": [
+    "aws_instance.erp_app~2"
+  ],
+  "aws_instance.erp_app~2": [
+    "aws_rds_oracle.erp~2"
+  ],
+  "aws_route53_resolver_endpoint.inbound~2": [
+    "aws_route53_zone.aws_internal"
+  ],
+  "aws_route53_resolver_endpoint.outbound~2": [
+    "aws_route53_resolver_rule.corp_forward"
+  ],
+  "aws_vpc_endpoint.storage_gateway~2": [
+    "aws_storagegateway_smb_file_share.finance"
+  ],
+  "aws_vpc_endpoint.s3~2": [
+    "aws_s3_bucket.file_shares"
+  ],
+  "aws_route53_resolver_rule.corp_forward": [
+    "tv_aws_server.dns_servers"
+  ],
+  "tv_aws_server.dns_servers": [
+    "aws_route53_resolver_endpoint.inbound~1",
+    "aws_route53_resolver_endpoint.inbound~2"
+  ],
+  "aws_storagegateway_smb_file_share.finance": [
+    "aws_s3_bucket.file_shares"
+  ],
+  "aws_group.shared_services": [
+    "aws_kms_key.erp",
+    "aws_cloudwatch_log_group.erp"
+  ]
+}

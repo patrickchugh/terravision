@@ -1,0 +1,112 @@
+{
+  "tv_aws_users.data_scientists": [
+    "aws_ec2_client_vpn_endpoint.data_science"
+  ],
+  "tv_aws_mobile_client.customer_app": [
+    "aws_api_gateway_rest_api.predictions"
+  ],
+  "aws_api_gateway_rest_api.predictions": [
+    "aws_lambda_function.predict~1",
+    "aws_lambda_function.predict~2"
+  ],
+  "aws_vpc.ml": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.studio~1",
+    "aws_subnet.inference~1",
+    "aws_subnet.endpoints~1"
+  ],
+  "aws_subnet.studio~1": [
+    "aws_sagemaker_domain.studio~1",
+    "aws_ec2_client_vpn_endpoint.data_science"
+  ],
+  "aws_subnet.inference~1": [
+    "aws_lambda_function.predict~1",
+    "aws_sagemaker_endpoint.churn~1"
+  ],
+  "aws_subnet.endpoints~1": [
+    "aws_vpc_endpoint.sagemaker_api~1",
+    "aws_vpc_endpoint.sagemaker_runtime~1"
+  ],
+  "aws_sagemaker_domain.studio~1": [
+    "aws_vpc_endpoint.sagemaker_api~1",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "aws_vpc_endpoint.sagemaker_api~1": [
+    "aws_sagemaker_feature_group.customer_features",
+    "aws_sagemaker_pipeline.churn_training"
+  ],
+  "aws_lambda_function.predict~1": [
+    "aws_vpc_endpoint.sagemaker_runtime~1"
+  ],
+  "aws_vpc_endpoint.sagemaker_runtime~1": [
+    "aws_sagemaker_endpoint.churn~1"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.studio~2",
+    "aws_subnet.inference~2",
+    "aws_subnet.endpoints~2"
+  ],
+  "aws_subnet.studio~2": [
+    "aws_sagemaker_domain.studio~2"
+  ],
+  "aws_subnet.inference~2": [
+    "aws_lambda_function.predict~2",
+    "aws_sagemaker_endpoint.churn~2"
+  ],
+  "aws_subnet.endpoints~2": [
+    "aws_vpc_endpoint.sagemaker_api~2",
+    "aws_vpc_endpoint.sagemaker_runtime~2"
+  ],
+  "aws_sagemaker_domain.studio~2": [
+    "aws_vpc_endpoint.sagemaker_api~2",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "aws_vpc_endpoint.sagemaker_api~2": [
+    "aws_sagemaker_feature_group.customer_features",
+    "aws_sagemaker_pipeline.churn_training"
+  ],
+  "aws_lambda_function.predict~2": [
+    "aws_vpc_endpoint.sagemaker_runtime~2"
+  ],
+  "aws_vpc_endpoint.sagemaker_runtime~2": [
+    "aws_sagemaker_endpoint.churn~2"
+  ],
+  "aws_ec2_client_vpn_endpoint.data_science": [
+    "aws_sagemaker_domain.studio~1"
+  ],
+  "aws_vpc_endpoint.s3_gateway": [
+    "aws_s3_bucket.training_data",
+    "aws_s3_bucket.model_artifacts"
+  ],
+  "aws_group.ml_pipeline": [
+    "aws_scheduler_schedule.weekly_retrain",
+    "aws_sfn_state_machine.retrain",
+    "aws_sagemaker_pipeline.churn_training",
+    "aws_sagemaker_feature_group.customer_features",
+    "aws_sagemaker_model_package_group.churn_models"
+  ],
+  "aws_scheduler_schedule.weekly_retrain": [
+    "aws_sfn_state_machine.retrain"
+  ],
+  "aws_sfn_state_machine.retrain": [
+    "aws_sagemaker_pipeline.churn_training",
+    "aws_sagemaker_model_package_group.churn_models",
+    "aws_sagemaker_endpoint.churn~1",
+    "aws_sagemaker_endpoint.churn~2"
+  ],
+  "aws_sagemaker_pipeline.churn_training": [
+    "aws_sagemaker_feature_group.customer_features",
+    "aws_s3_bucket.training_data",
+    "aws_sagemaker_model_package_group.churn_models",
+    "aws_s3_bucket.model_artifacts"
+  ],
+  "aws_group.shared_services": [
+    "aws_ecr_repository.training_images",
+    "aws_kms_key.ml",
+    "aws_cloudwatch_log_group.ml"
+  ]
+}
