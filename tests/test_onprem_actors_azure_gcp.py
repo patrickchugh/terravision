@@ -48,6 +48,16 @@ def test_onprem_actor_is_drawn_outside_the_cloud(module, outer, node_type, icon)
     assert node_type in outer
 
 
-def test_gcp_onprem_box_is_drawn_outside_the_google_cloud_frame():
-    """It drew inside the blue Google Cloud frame, as if it were part of it."""
-    assert "tv_gcp_onprem" in cloud_config_gcp.GCP_OUTER_NODES
+@pytest.mark.parametrize(
+    "box",
+    [
+        "tv_gcp_onprem",
+        "tv_gcp_external_saas",
+        "tv_gcp_external_data",
+        "tv_gcp_external_3p",
+        "tv_gcp_external_1p",
+    ],
+)
+def test_gcp_outside_box_is_drawn_outside_the_google_cloud_frame(box):
+    """They drew inside the blue Google Cloud frame, as if part of it."""
+    assert box in cloud_config_gcp.GCP_OUTER_NODES
