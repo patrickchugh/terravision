@@ -580,6 +580,14 @@ def build_server() -> MCPServer:
                 "that graph."
             ),
         ] = None,
+        example: Annotated[
+            Optional[str],
+            Field(
+                description='Name of a design from the "gallery" list, to fetch '
+                "its graph with its title, CIDR ranges, arrow labels and flows "
+                "as render_graph arguments."
+            ),
+        ] = None,
     ) -> Dict[str, Any]:
         """Read this once before calling render_graph.
 
@@ -590,12 +598,16 @@ def build_server() -> MCPServer:
         what to install before drafting a diagram. Base your graph on the
         closest example and keep its level of detail: availability zones,
         public and private subnets, NAT gateways routed to the internet, and
-        shared services in their group. It also lists patterns (EKS,
-        SageMaker, Step Functions, GKE, AKS and more) drawn from TerraVision's
-        output for real Terraform; call again with pattern to get one.
+        shared services in their group. It also lists the gallery, 19
+        architect-designed diagrams per cloud (streaming, MLOps, IoT, hybrid
+        networks, multi-region, SaaS, payments, security and more); call
+        again with example to get one with its CIDR ranges, labels and flows.
+        And it lists patterns (EKS, SageMaker, Step Functions, GKE, AKS and
+        more) drawn from TerraVision's output for real Terraform; call again
+        with pattern to get one.
         """
         with _tool_errors():
-            return mcp_service.diagram_guide(provider, pattern)
+            return mcp_service.diagram_guide(provider, pattern, example)
 
     @mcp.tool()
     def open_diagram_file(path: str, reveal: bool = False) -> Dict[str, Any]:

@@ -1,0 +1,69 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-media-processing.tvg.json --annotate aws-media-processing.annotations.yml
+format: '0.3'
+title: AWS video processing with MediaConvert, Rekognition and CloudFront signed URLs
+connect:
+  tv_aws_users.creators:
+  - aws_s3_bucket.uploads: Multipart upload, presigned
+  aws_apigatewayv2_api.media:
+  - aws_cognito_user_pool.members: JWT authorizer
+  aws_s3_bucket.uploads:
+  - aws_glacier_vault.masters: Lifecycle after 30 days
+  - aws_cloudwatch_event_rule.new_upload: Object created
+  aws_sfn_state_machine.transcode:
+  - aws_media_convert_queue.vod: HLS ladder job
+  - aws_rekognition_collection.moderation: Content moderation, labels
+  aws_media_convert_queue.vod:
+  - aws_s3_bucket.renditions: HLS renditions
+  aws_lambda_function.catalogue_api:
+  - aws_secretsmanager_secret.url_signing_key: Signs URLs
+  aws_cloudfront_distribution.video:
+  - aws_s3_bucket.renditions: Origin access control
+  aws_wafv2_web_acl.video:
+  - aws_cloudfront_distribution.video: Bot control
+flows:
+  Upload and process:
+    description: A creator publishes a video
+    steps:
+    - resource: tv_aws_users.creators -> aws_apigatewayv2_api.media
+      xlabel: Start
+      detail: A creator asks the API for an upload URL; Cognito authenticates them
+    - resource: aws_apigatewayv2_api.media -> aws_lambda_function.upload_url
+      xlabel: Presign
+      detail: and a Lambda function returns presigned multipart URLs
+    - resource: tv_aws_users.creators -> aws_s3_bucket.uploads
+      xlabel: Upload
+      detail: The creator uploads the master file straight to S3
+    - resource: aws_cloudwatch_event_rule.new_upload -> aws_sfn_state_machine.transcode
+      xlabel: Start
+      detail: EventBridge starts the Step Functions workflow
+    - resource: aws_sfn_state_machine.transcode -> aws_lambda_function.probe
+      xlabel: Probe
+      detail: which probes the file for codec and length
+    - resource: aws_sfn_state_machine.transcode -> aws_media_convert_queue.vod
+      xlabel: Transcode
+      detail: MediaConvert writes an adaptive bitrate ladder
+    - resource: aws_sfn_state_machine.transcode -> aws_rekognition_collection.moderation
+      xlabel: Moderate
+      detail: Rekognition checks the content and tags it
+    - resource: aws_sfn_state_machine.transcode -> aws_dynamodb_table.catalogue
+      xlabel: Publish
+      detail: and the video is published to the catalogue, with SNS telling the creator
+  Watch:
+    description: A member watches the video
+    steps:
+    - resource: tv_aws_users.viewers -> aws_apigatewayv2_api.media
+      xlabel: Browse
+      detail: A member browses the catalogue through the API
+    - resource: aws_apigatewayv2_api.media -> aws_lambda_function.catalogue_api
+      xlabel: Catalogue
+      detail: whose Lambda function reads DynamoDB
+    - resource: aws_lambda_function.catalogue_api -> aws_secretsmanager_secret.url_signing_key
+      xlabel: Sign
+      detail: and signs a short-lived CloudFront URL with the key in Secrets Manager
+    - resource: aws_route53_zone.video -> aws_cloudfront_distribution.video
+      xlabel: Play
+      detail: The player streams from CloudFront, which checks the signature
+    - resource: aws_cloudfront_distribution.video -> aws_s3_bucket.renditions
+      xlabel: Segments
+      detail: and serves HLS segments from S3 through origin access control

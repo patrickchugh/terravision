@@ -1,0 +1,107 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-vm-lift-and-shift.tvg.json --annotate aws-vm-lift-and-shift.annotations.yml
+format: '0.3'
+title: AWS lift-and-shift of a Windows three-tier application with Application Migration Service
+update:
+  aws_vpc.erp:
+    cidr_block: 10.100.0.0/16
+  aws_subnet.public~1:
+    cidr_block: 10.100.0.0/24
+  aws_subnet.web~1:
+    cidr_block: 10.100.16.0/22
+  aws_subnet.app~1:
+    cidr_block: 10.100.32.0/22
+  aws_subnet.data~1:
+    cidr_block: 10.100.48.0/24
+  aws_subnet.shared~1:
+    cidr_block: 10.100.56.0/24
+  aws_subnet.endpoints~1:
+    cidr_block: 10.100.240.0/24
+  aws_subnet.public~2:
+    cidr_block: 10.100.1.0/24
+  aws_subnet.web~2:
+    cidr_block: 10.100.20.0/22
+  aws_subnet.app~2:
+    cidr_block: 10.100.36.0/22
+  aws_subnet.data~2:
+    cidr_block: 10.100.49.0/24
+  aws_subnet.shared~2:
+    cidr_block: 10.100.57.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.100.241.0/24
+  aws_subnet.staging:
+    cidr_block: 10.100.200.0/24
+  aws_instance.mgn_replication:
+    label: MGN Replication Server
+  aws_rds_sqlserver.erp~1:
+    label: RDS for SQL Server (primary)
+  aws_rds_sqlserver.erp~2:
+    label: RDS for SQL Server (standby)
+connect:
+  tv_aws_server.web_servers:
+  - aws_customer_gateway.datacentre_router: Replication agent, TCP 1500
+  aws_customer_gateway.datacentre_router:
+  - aws_vpn_connection.migration: IPsec with BGP
+  aws_instance.mgn_replication:
+  - aws_instance.web~1: Cutover launch
+  aws_ssm_maintenance_window.patching:
+  - aws_ssm_patch_baseline.windows: Patch Tuesday
+  aws_alb.app_internal~1:
+  - aws_instance.app~1: HTTP 8080
+  aws_instance.app~1:
+  - aws_rds_sqlserver.erp~1: TDS 1433
+  - aws_fsx_windows_file_system.shares~1: SMB 445
+  aws_alb.app_internal~2:
+  - aws_instance.app~2: HTTP 8080
+  aws_instance.app~2:
+  - aws_rds_sqlserver.erp~2: TDS 1433
+  - aws_fsx_windows_file_system.shares~2: SMB 445
+flows:
+  Migration:
+    description: Servers replicate to AWS and cut over
+    steps:
+    - resource: tv_aws_server.web_servers -> aws_customer_gateway.datacentre_router
+      xlabel: Replicate
+      detail: The Application Migration Service agent on each server replicates its disks continuously
+    - resource: aws_customer_gateway.datacentre_router -> aws_vpn_connection.migration
+      xlabel: VPN
+      detail: over a site-to-site VPN
+    - resource: aws_vpn_connection.migration -> aws_vpn_gateway.erp
+      xlabel: Gateway
+      detail: to the VPC's virtual private gateway
+    - resource: aws_vpn_gateway.erp -> aws_instance.mgn_replication
+      xlabel: Stage
+      detail: and a replication server in the staging subnet, which keeps the copies on EBS
+    - resource: aws_instance.mgn_replication -> aws_instance.web~1
+      xlabel: Cut over
+      detail: At cutover, MGN launches the web and app tiers as EC2 instances in their Auto Scaling groups
+  Customer request:
+    description: The migrated application serves a customer
+    steps:
+    - resource: tv_aws_users.customers -> aws_alb.web~1
+      xlabel: HTTPS
+      detail: Customers reach the internet-facing Application Load Balancer
+    - resource: aws_alb.web~1 -> aws_instance.web~1
+      xlabel: Web
+      detail: which sends them to the IIS web tier
+    - resource: aws_instance.web~1 -> aws_alb.app_internal~1
+      xlabel: App
+      detail: The web tier calls the application tier through an internal load balancer
+    - resource: aws_instance.app~1 -> aws_rds_sqlserver.erp~1
+      xlabel: Data
+      detail: which uses Multi-AZ RDS for SQL Server
+    - resource: aws_instance.app~1 -> aws_fsx_windows_file_system.shares~1
+      xlabel: Files
+      detail: and the file shares moved to FSx for Windows File Server, joined to AWS Managed Microsoft AD
+  Operations:
+    description: Patching and backups replace the old tools
+    steps:
+    - resource: aws_instance.web~2 -> aws_vpc_endpoint.ssm~2
+      xlabel: Agent
+      detail: The SSM agent on each instance reaches Systems Manager through interface endpoints
+    - resource: aws_vpc_endpoint.ssm~2 -> aws_ssm_maintenance_window.patching
+      xlabel: Patch
+      detail: and a maintenance window applies the Windows patch baseline
+    - resource: aws_backup_plan.erp -> aws_rds_sqlserver.erp~1
+      xlabel: Back up
+      detail: AWS Backup protects the database and the file shares

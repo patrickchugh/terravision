@@ -1,0 +1,85 @@
+{
+  "tv_gcp_onprem.datacenter": [
+    "tv_gcp_client.workstations",
+    "tv_gcp_server.dns",
+    "tv_gcp_server.backup_servers",
+    "google_compute_external_vpn_gateway.edge_routers"
+  ],
+  "tv_gcp_client.workstations": [
+    "google_compute_external_vpn_gateway.edge_routers"
+  ],
+  "tv_gcp_server.dns": [
+    "google_compute_external_vpn_gateway.edge_routers"
+  ],
+  "tv_gcp_server.backup_servers": [
+    "google_compute_external_vpn_gateway.edge_routers"
+  ],
+  "google_compute_external_vpn_gateway.edge_routers": [
+    "google_compute_interconnect_attachment.zone1",
+    "google_compute_interconnect_attachment.zone2",
+    "google_compute_ha_vpn_gateway.backup"
+  ],
+  "google_compute_network.hybrid": [
+    "tv_gcp_region.us_east4",
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_dns_policy.inbound",
+    "google_dns_managed_zone.corp_forwarding",
+    "google_sql_database_instance.erp"
+  ],
+  "tv_gcp_region.us_east4": [
+    "google_compute_interconnect_attachment.zone1",
+    "google_compute_interconnect_attachment.zone2",
+    "google_compute_router.interconnect",
+    "google_compute_ha_vpn_gateway.backup",
+    "google_compute_router.vpn",
+    "google_compute_subnetwork.apps"
+  ],
+  "google_compute_interconnect_attachment.zone1": [
+    "google_compute_router.interconnect"
+  ],
+  "google_compute_interconnect_attachment.zone2": [
+    "google_compute_router.interconnect"
+  ],
+  "google_compute_ha_vpn_gateway.backup": [
+    "google_compute_router.vpn"
+  ],
+  "google_compute_router.interconnect": [
+    "google_compute_forwarding_rule.erp_internal_lb",
+    "google_dns_policy.inbound",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_router.vpn": [
+    "google_compute_forwarding_rule.erp_internal_lb"
+  ],
+  "google_compute_subnetwork.apps": [
+    "google_compute_forwarding_rule.erp_internal_lb",
+    "google_compute_region_backend_service.erp",
+    "tv_gcp_zone.us_east4_a",
+    "tv_gcp_zone.us_east4_b"
+  ],
+  "tv_gcp_zone.us_east4_a": [
+    "google_compute_instance.erp~1"
+  ],
+  "tv_gcp_zone.us_east4_b": [
+    "google_compute_instance.erp~2"
+  ],
+  "google_compute_forwarding_rule.erp_internal_lb": [
+    "google_compute_region_backend_service.erp"
+  ],
+  "google_compute_region_backend_service.erp": [
+    "google_compute_instance.erp~1",
+    "google_compute_instance.erp~2"
+  ],
+  "google_compute_instance.erp~1": [
+    "google_sql_database_instance.erp"
+  ],
+  "google_compute_instance.erp~2": [
+    "google_sql_database_instance.erp"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_storage_bucket.backups"
+  ],
+  "google_secret_manager_secret.vpn_shared_secret": [],
+  "google_logging_project_sink.network": [],
+  "google_monitoring_dashboard.interconnect": []
+}

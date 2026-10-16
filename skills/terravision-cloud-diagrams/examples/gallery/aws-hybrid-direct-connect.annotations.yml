@@ -1,0 +1,115 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-hybrid-direct-connect.tvg.json --annotate aws-hybrid-direct-connect.annotations.yml
+format: '0.3'
+title: AWS hybrid workloads over Direct Connect with Route 53 Resolver and Storage Gateway
+update:
+  aws_vpc.erp:
+    cidr_block: 10.50.0.0/16
+  aws_subnet.tgw~1:
+    cidr_block: 10.50.0.0/28
+  aws_subnet.app~1:
+    cidr_block: 10.50.16.0/20
+  aws_subnet.data~1:
+    cidr_block: 10.50.64.0/24
+  aws_subnet.dns~1:
+    cidr_block: 10.50.250.0/28
+  aws_subnet.endpoints~1:
+    cidr_block: 10.50.240.0/24
+  aws_subnet.tgw~2:
+    cidr_block: 10.50.0.16/28
+  aws_subnet.app~2:
+    cidr_block: 10.50.32.0/20
+  aws_subnet.data~2:
+    cidr_block: 10.50.65.0/24
+  aws_subnet.dns~2:
+    cidr_block: 10.50.250.16/28
+  aws_subnet.endpoints~2:
+    cidr_block: 10.50.241.0/24
+  aws_rds_oracle.erp~1:
+    label: RDS for Oracle ERP (primary)
+  aws_rds_oracle.erp~2:
+    label: RDS for Oracle ERP (standby)
+connect:
+  tv_aws_client.staff:
+  - aws_customer_gateway.office_router: HTTPS
+  aws_customer_gateway.office_router:
+  - aws_dx_connection.primary: 10 Gbps, BGP
+  - aws_vpn_connection.backup: 'Backup: IPsec with BGP'
+  aws_dx_connection.primary:
+  - aws_dx_gateway.corporate: Transit VIF
+  aws_dx_gateway.corporate:
+  - aws_ec2_transit_gateway.hub: Gateway association
+  aws_storagegateway_gateway.file_gateway:
+  - aws_customer_gateway.office_router: SMB share cache
+  aws_route53_resolver_rule.corp_forward:
+  - tv_aws_server.dns_servers: Forward corp.example.com
+  aws_backup_plan.erp:
+  - aws_backup_vault.erp: Daily, kept 35 days
+  tv_aws_server.dns_servers:
+  - aws_route53_resolver_endpoint.inbound~1: Conditional forward aws.example.internal
+  aws_alb.erp_internal~1:
+  - aws_instance.erp_app~1: HTTPS 8443
+  aws_instance.erp_app~1:
+  - aws_rds_oracle.erp~1: Oracle 1521
+  aws_alb.erp_internal~2:
+  - aws_instance.erp_app~2: HTTPS 8443
+  aws_instance.erp_app~2:
+  - aws_rds_oracle.erp~2: Oracle 1521
+flows:
+  Staff use the ERP app:
+    description: Office staff reach an application in AWS
+    steps:
+    - resource: tv_aws_client.staff -> aws_customer_gateway.office_router
+      xlabel: Open
+      detail: A member of staff opens the ERP application
+    - resource: aws_customer_gateway.office_router -> aws_dx_connection.primary
+      xlabel: Direct Connect
+      detail: The office router sends it over Direct Connect; the VPN takes over if the link fails
+    - resource: aws_dx_connection.primary -> aws_dx_gateway.corporate
+      xlabel: Transit VIF
+      detail: A transit virtual interface carries it to the Direct Connect gateway
+    - resource: aws_dx_gateway.corporate -> aws_ec2_transit_gateway.hub
+      xlabel: Hub
+      detail: and on to the Transit Gateway
+    - resource: aws_ec2_transit_gateway.hub -> aws_ec2_transit_gateway_vpc_attachment.erp~1
+      xlabel: Attach
+      detail: which delivers it to the VPC's attachment
+    - resource: aws_ec2_transit_gateway_vpc_attachment.erp~1 -> aws_alb.erp_internal~1
+      xlabel: Balance
+      detail: The internal Application Load Balancer
+    - resource: aws_alb.erp_internal~1 -> aws_instance.erp_app~1
+      xlabel: Serve
+      detail: sends it to an EC2 application server
+    - resource: aws_instance.erp_app~1 -> aws_rds_oracle.erp~1
+      xlabel: Query
+      detail: which reads the Multi-AZ RDS for Oracle database
+  Hybrid DNS:
+    description: Names resolve in both directions
+    steps:
+    - resource: tv_aws_server.dns_servers -> aws_route53_resolver_endpoint.inbound~1
+      xlabel: Forward
+      detail: The office DNS servers forward aws.example.internal to the Resolver inbound endpoint over Direct Connect
+    - resource: aws_route53_resolver_endpoint.inbound~1 -> aws_route53_zone.aws_internal
+      xlabel: Answer
+      detail: which answers from the private hosted zone
+    - resource: aws_route53_resolver_endpoint.outbound~2 -> aws_route53_resolver_rule.corp_forward
+      xlabel: Rule
+      detail: Queries from AWS for corp.example.com match a forwarding rule
+    - resource: aws_route53_resolver_rule.corp_forward -> tv_aws_server.dns_servers
+      xlabel: Resolve
+      detail: and the outbound endpoint sends them to the office DNS servers
+  Files and backup:
+    description: File shares and backups stay in AWS
+    steps:
+    - resource: aws_storagegateway_gateway.file_gateway -> aws_customer_gateway.office_router
+      xlabel: Cache
+      detail: The on-premises File Gateway serves SMB shares and uploads changes
+    - resource: aws_vpc_endpoint.storage_gateway~2 -> aws_storagegateway_smb_file_share.finance
+      xlabel: Gateway
+      detail: through the Storage Gateway interface endpoint, over Direct Connect
+    - resource: aws_storagegateway_smb_file_share.finance -> aws_s3_bucket.file_shares
+      xlabel: Store
+      detail: Each file share is stored in S3
+    - resource: aws_backup_plan.erp -> aws_backup_vault.erp
+      xlabel: Back up
+      detail: AWS Backup copies the EC2 servers and the database to a vault every night

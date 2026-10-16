@@ -1,0 +1,93 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-iot-telemetry.tvg.json --annotate azure-iot-telemetry.annotations.yml
+format: '0.3'
+title: Azure IoT factory telemetry with IoT Hub, Stream Analytics, Data Explorer and Digital Twins
+update:
+  azurerm_virtual_network.iot:
+    address_space:
+    - 10.65.0.0/16
+  azurerm_subnet.processing:
+    address_prefixes:
+    - 10.65.1.0/24
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.65.10.0/24
+  tv_azure_onprem.factory:
+    label: Factory Site
+  tv_azurerm_server.opc_ua:
+    label: OPC UA Server (PLCs)
+  tv_azurerm_iot_device.edge_gateway:
+    label: IoT Edge Gateway
+  azurerm_iothub_dps.provisioning:
+    label: Device Provisioning
+  azurerm_iothub.telemetry:
+    label: IoT Hub
+  azurerm_storage_container.telemetry_archive:
+    label: Telemetry Archive
+  azurerm_kusto_cluster.telemetry:
+    label: Data Explorer
+  azurerm_eventhub.anomalies:
+    label: Event Hub Anomalies
+  azurerm_digital_twins_instance.factory:
+    label: Digital Twins
+  azurerm_dashboard_grafana.operations:
+    label: Managed Grafana
+  azurerm_monitor_action_group.maintenance:
+    label: Maintenance Alerts
+  azurerm_stream_analytics_job.anomalies:
+    label: Stream Analytics
+  azurerm_linux_function_app.twin_sync:
+    label: Twin Sync Function
+  azurerm_linux_function_app.alerting:
+    label: Alerting Function
+  tv_azurerm_users.engineers:
+    label: Plant Engineers
+  azurerm_application_insights.functions:
+    label: Application Insights
+  azurerm_log_analytics_workspace.platform:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  tv_azurerm_iot_device.edge_gateway:
+  - azurerm_iothub.telemetry: MQTT 8883
+  azurerm_iothub.telemetry:
+  - azurerm_storage_container.telemetry_archive: Route, Avro
+  - azurerm_kusto_cluster.telemetry: Data connection
+flows:
+  Telemetry:
+    description: Machine readings reach the cloud
+    steps:
+    - resource: tv_azurerm_server.opc_ua -> tv_azurerm_iot_device.edge_gateway
+      xlabel: Read
+      detail: The IoT Edge gateway reads machine values from the PLCs' OPC UA server
+    - resource: tv_azurerm_iot_device.edge_gateway -> azurerm_iothub_dps.provisioning
+      xlabel: Provision
+      detail: On first boot it gets its identity and hub from the Device Provisioning Service
+    - resource: tv_azurerm_iot_device.edge_gateway -> azurerm_iothub.telemetry
+      xlabel: Send
+      detail: It batches readings and sends them to IoT Hub over MQTT with TLS
+    - resource: azurerm_iothub.telemetry -> azurerm_storage_container.telemetry_archive
+      xlabel: Archive
+      detail: A message route archives every reading to Blob Storage
+    - resource: azurerm_iothub.telemetry -> azurerm_kusto_cluster.telemetry
+      xlabel: Ingest
+      detail: and a data connection streams them into Azure Data Explorer
+    - resource: azurerm_dashboard_grafana.operations -> azurerm_kusto_cluster.telemetry
+      xlabel: Trend
+      detail: Plant engineers see line trends in Managed Grafana
+  Anomalies and twins:
+    description: Faults are caught and the twin kept current
+    steps:
+    - resource: azurerm_stream_analytics_job.anomalies -> azurerm_private_endpoint.iothub
+      xlabel: Detect
+      detail: Stream Analytics reads the hub's built-in endpoint and runs anomaly detection on each machine
+    - resource: azurerm_stream_analytics_job.anomalies -> azurerm_private_endpoint.event_hubs
+      xlabel: Flag
+      detail: and writes anomalies to an Event Hub
+    - resource: azurerm_linux_function_app.alerting -> azurerm_monitor_action_group.maintenance
+      xlabel: Alert
+      detail: The alerting function raises a maintenance alert through an action group
+    - resource: azurerm_linux_function_app.twin_sync -> azurerm_private_endpoint.digital_twins
+      xlabel: Twin
+      detail: A second function keeps each machine's state current in Azure Digital Twins

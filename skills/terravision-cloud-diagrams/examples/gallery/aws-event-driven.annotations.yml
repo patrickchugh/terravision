@@ -1,0 +1,86 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-event-driven.tvg.json --annotate aws-event-driven.annotations.yml
+format: '0.3'
+title: AWS event-driven order processing with Lambda in a VPC
+update:
+  aws_vpc.orders:
+    cidr_block: 10.30.0.0/16
+  aws_subnet.functions~1:
+    cidr_block: 10.30.16.0/20
+  aws_subnet.functions~2:
+    cidr_block: 10.30.32.0/20
+  aws_subnet.endpoints~1:
+    cidr_block: 10.30.240.0/24
+  aws_subnet.endpoints~2:
+    cidr_block: 10.30.241.0/24
+connect:
+  aws_wafv2_web_acl.api_protection:
+  - aws_api_gateway_rest_api.orders_api: Rate limits, managed rules
+  aws_api_gateway_rest_api.orders_api:
+  - aws_cognito_user_pool.customers: Cognito authorizer
+  aws_vpc_endpoint.sqs~1:
+  - aws_sqs_queue.order_events: SendMessage
+  aws_vpc_endpoint.sqs~2:
+  - aws_sqs_queue.order_events: SendMessage
+  aws_sqs_queue.order_events:
+  - aws_sqs_queue.order_events_dlq: After 5 receives
+  aws_vpc_endpoint.dynamodb_gateway:
+  - aws_dynamodb_table.orders: Orders and status
+  aws_dynamodb_table.orders:
+  - aws_kinesis_stream.order_changes: Change data capture
+  aws_kinesis_firehose_delivery_stream.archive:
+  - aws_s3_bucket.order_archive: Parquet, hourly
+  aws_sns_topic.notifications:
+  - aws_sqs_queue.notifications_dlq: Failed deliveries
+flows:
+  Place an order:
+    description: A customer places an order
+    steps:
+    - resource: tv_aws_mobile_client.mobile_app -> aws_api_gateway_rest_api.orders_api
+      xlabel: Order
+      detail: The mobile app posts the order to the REST API, where AWS WAF filters the request
+    - resource: aws_api_gateway_rest_api.orders_api -> aws_cognito_user_pool.customers
+      xlabel: Authorise
+      detail: API Gateway checks the customer's token with the Cognito authorizer
+    - resource: aws_api_gateway_rest_api.orders_api -> aws_lambda_function.create_order~1
+      xlabel: Invoke
+      detail: It invokes the create-order Lambda in a private subnet
+    - resource: aws_lambda_function.create_order~1 -> aws_vpc_endpoint.dynamodb_gateway
+      xlabel: Save
+      detail: The Lambda saves the order to DynamoDB through the gateway endpoint
+    - resource: aws_lambda_function.create_order~1 -> aws_vpc_endpoint.sqs~1
+      xlabel: Queue
+      detail: and queues an order event on SQS through the interface endpoint
+  Fulfil the order:
+    description: The order is fulfilled
+    steps:
+    - resource: aws_sqs_queue.order_events -> aws_lambda_function.fulfil_order~1
+      xlabel: Consume
+      detail: The queue triggers the fulfilment Lambda; messages that fail five times move to the dead-letter queue
+    - resource: aws_lambda_function.fulfil_order~1 -> aws_vpc_endpoint.dynamodb_gateway
+      xlabel: Update
+      detail: The Lambda marks the order fulfilled in DynamoDB
+    - resource: aws_lambda_function.fulfil_order~1 -> aws_vpc_endpoint.sns~1
+      xlabel: Notify
+      detail: and publishes a notification to SNS through the interface endpoint
+    - resource: aws_sns_topic.notifications -> aws_sqs_queue.notifications_dlq
+      xlabel: Retry
+      detail: Deliveries that fail land in the notifications dead-letter queue for replay
+  Archive and analyse:
+    description: Order changes reach the data lake
+    steps:
+    - resource: aws_dynamodb_table.orders -> aws_kinesis_stream.order_changes
+      xlabel: Stream
+      detail: DynamoDB streams every order change to Kinesis Data Streams
+    - resource: aws_kinesis_stream.order_changes -> aws_kinesis_firehose_delivery_stream.archive
+      xlabel: Deliver
+      detail: Firehose reads the stream
+    - resource: aws_kinesis_firehose_delivery_stream.archive -> aws_s3_bucket.order_archive
+      xlabel: Archive
+      detail: and writes hourly Parquet files to the S3 archive
+    - resource: aws_glue_crawler.orders -> aws_glue_catalog_database.orders_lake
+      xlabel: Catalogue
+      detail: A Glue crawler adds new partitions to the Data Catalog
+    - resource: aws_athena_workgroup.analytics -> aws_glue_catalog_database.orders_lake
+      xlabel: Query
+      detail: Analysts query the archive with Athena

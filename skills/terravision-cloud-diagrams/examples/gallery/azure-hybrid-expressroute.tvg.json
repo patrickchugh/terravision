@@ -1,0 +1,109 @@
+{
+  "tv_azure_onprem.datacenter": [
+    "tv_azurerm_client.workstations",
+    "tv_azurerm_server.dns",
+    "tv_azurerm_server.app_servers",
+    "azurerm_local_network_gateway.edge_routers"
+  ],
+  "tv_azurerm_client.workstations": [
+    "azurerm_local_network_gateway.edge_routers"
+  ],
+  "tv_azurerm_server.dns": [
+    "azurerm_local_network_gateway.edge_routers"
+  ],
+  "tv_azurerm_server.app_servers": [
+    "azurerm_local_network_gateway.edge_routers"
+  ],
+  "azurerm_local_network_gateway.edge_routers": [
+    "azurerm_express_route_circuit.primary",
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_express_route_circuit.primary": [
+    "azurerm_virtual_network_gateway.expressroute"
+  ],
+  "azurerm_resource_group.connectivity": [
+    "azurerm_virtual_network.hub",
+    "azurerm_express_route_circuit.primary",
+    "azurerm_firewall_policy.central",
+    "azurerm_route_table.gateway"
+  ],
+  "azurerm_virtual_network.hub": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.firewall",
+    "azurerm_subnet.dns_inbound",
+    "azurerm_subnet.bastion",
+    "azurerm_virtual_network_peering.hub_to_apps"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.expressroute",
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.firewall": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_subnet.dns_inbound": [
+    "azurerm_private_dns_resolver.hub"
+  ],
+  "azurerm_subnet.bastion": [
+    "azurerm_bastion_host.admin"
+  ],
+  "azurerm_route_table.gateway": [
+    "azurerm_virtual_network_gateway.expressroute"
+  ],
+  "azurerm_firewall_policy.central": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_virtual_network_gateway.expressroute": [
+    "azurerm_firewall.hub",
+    "azurerm_private_dns_resolver.hub"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_firewall.hub"
+  ],
+  "azurerm_firewall.hub": [
+    "azurerm_lb.app"
+  ],
+  "azurerm_virtual_network_peering.hub_to_apps": [
+    "azurerm_virtual_network.apps"
+  ],
+  "azurerm_resource_group.apps": [
+    "azurerm_virtual_network.apps"
+  ],
+  "azurerm_virtual_network.apps": [
+    "azurerm_subnet.app",
+    "azurerm_subnet.data"
+  ],
+  "azurerm_subnet.app": [
+    "azurerm_lb.app",
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_windows_virtual_machine.app~1"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_windows_virtual_machine.app~2"
+  ],
+  "azurerm_subnet.data": [
+    "azurerm_mssql_managed_instance.erp"
+  ],
+  "azurerm_lb.app": [
+    "azurerm_windows_virtual_machine.app~1",
+    "azurerm_windows_virtual_machine.app~2"
+  ],
+  "azurerm_windows_virtual_machine.app~1": [
+    "azurerm_mssql_managed_instance.erp"
+  ],
+  "azurerm_windows_virtual_machine.app~2": [
+    "azurerm_mssql_managed_instance.erp"
+  ],
+  "azurerm_bastion_host.admin": [
+    "azurerm_windows_virtual_machine.app~1"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_log_analytics_workspace.platform",
+    "azurerm_key_vault.platform",
+    "azurerm_recovery_services_vault.backup",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

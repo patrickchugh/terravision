@@ -1,0 +1,77 @@
+{
+  "tv_gcp_users_icon.data_scientists": [
+    "google_iap_client.workbench"
+  ],
+  "google_iap_client.workbench": [
+    "google_workbench_instance.notebooks"
+  ],
+  "tv_gcp_external_saas.github": [
+    "tv_gcp_server.github"
+  ],
+  "tv_gcp_server.github": [
+    "google_cloudbuildv2_repository.models"
+  ],
+  "tv_gcp_logical_group.delivery": [
+    "google_cloudbuildv2_repository.models",
+    "google_cloudbuild_trigger.train",
+    "google_artifact_registry_repository.training_images"
+  ],
+  "google_cloudbuildv2_repository.models": [
+    "google_cloudbuild_trigger.train"
+  ],
+  "google_cloudbuild_trigger.train": [
+    "google_artifact_registry_repository.training_images",
+    "google_vertex_ai_metadata_store.pipelines"
+  ],
+  "google_compute_network.ml": [
+    "tv_gcp_region.us_central1",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.workbench",
+    "google_compute_subnetwork.training",
+    "google_compute_subnetwork.serving"
+  ],
+  "google_compute_subnetwork.workbench": [
+    "google_workbench_instance.notebooks"
+  ],
+  "google_compute_subnetwork.training": [
+    "google_vertex_ai_metadata_store.pipelines"
+  ],
+  "google_compute_subnetwork.serving": [
+    "google_compute_forwarding_rule.psc_vertex_ai",
+    "google_cloud_run_v2_service.claims"
+  ],
+  "google_workbench_instance.notebooks": [
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_vertex_ai_metadata_store.pipelines": [
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_vertex_ai_model.fraud"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_bigquery_dataset.training",
+    "google_storage_bucket.artifacts",
+    "google_vertex_ai_feature_online_store.features"
+  ],
+  "google_vertex_ai_model.fraud": [
+    "google_vertex_ai_endpoint.fraud"
+  ],
+  "google_cloud_run_v2_service.claims": [
+    "google_compute_forwarding_rule.psc_vertex_ai"
+  ],
+  "google_compute_forwarding_rule.psc_vertex_ai": [
+    "google_vertex_ai_endpoint.fraud"
+  ],
+  "google_vertex_ai_endpoint.fraud": [
+    "google_vertex_ai_feature_online_store.features",
+    "google_bigquery_dataset.prediction_logs"
+  ],
+  "tv_gcp_users_icon.claims_handlers": [
+    "google_cloud_run_v2_service.claims"
+  ],
+  "google_kms_key_ring.ml": [],
+  "google_secret_manager_secret.github_token": [],
+  "google_logging_project_sink.ml": [],
+  "google_access_context_manager_service_perimeter.ml": []
+}

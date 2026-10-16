@@ -1,0 +1,99 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-ml-mlops.tvg.json --annotate azure-ml-mlops.annotations.yml
+format: '0.3'
+title: Azure Machine Learning MLOps with private workspace, CI runners and AKS inference
+update:
+  azurerm_virtual_network.ml:
+    address_space:
+    - 10.64.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.64.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.ci_runners:
+    address_prefixes:
+    - 10.64.1.0/26
+  azurerm_subnet.training:
+    address_prefixes:
+    - 10.64.4.0/22
+  azurerm_subnet.inference:
+    address_prefixes:
+    - 10.64.8.0/22
+  azurerm_subnet.app_integration:
+    address_prefixes:
+    - 10.64.12.0/26
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.64.20.0/24
+  azurerm_linux_virtual_machine_scale_set.github_runners:
+    label: GitHub Runners
+  azurerm_machine_learning_compute_cluster.training:
+    label: GPU Training Cluster
+  azurerm_machine_learning_compute_instance.notebooks:
+    label: Compute Instances
+  azurerm_machine_learning_workspace.ml:
+    label: Azure ML Workspace
+  azurerm_linux_web_app.claims:
+    label: Claims App
+  azurerm_storage_container.training_data:
+    label: Training Data
+  azurerm_storage_container.models:
+    label: Model Artifacts
+  tv_azurerm_internet.github:
+    label: GitHub
+  azurerm_container_registry.images:
+    label: Container Registry
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway
+  azurerm_kubernetes_cluster.inference:
+    label: AKS Inference
+  azurerm_application_insights.ml:
+    label: Application Insights
+  azurerm_log_analytics_workspace.ml:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  tv_azurerm_users.data_scientists:
+  - azurerm_virtual_network_gateway.vpn: Point-to-site VPN
+  azurerm_public_ip.egress:
+  - tv_azurerm_internet.github: HTTPS 443
+  azurerm_linux_web_app.claims:
+  - azurerm_kubernetes_cluster.inference: Score HTTPS
+flows:
+  Train:
+    description: A merged change retrains and registers the model
+    steps:
+    - resource: tv_azurerm_users.data_scientists -> azurerm_virtual_network_gateway.vpn
+      xlabel: Connect
+      detail: Data scientists connect over point-to-site VPN
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_machine_learning_compute_instance.notebooks
+      xlabel: Explore
+      detail: and explore data on their compute instances
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.github
+      xlabel: Pick up
+      detail: A merge to main queues a workflow; the self-hosted runners pick it up from GitHub through the NAT gateway
+    - resource: azurerm_linux_virtual_machine_scale_set.github_runners -> azurerm_private_endpoint.workspace
+      xlabel: Submit
+      detail: The runners submit the training pipeline to the Azure ML workspace through its private endpoint
+    - resource: azurerm_machine_learning_workspace.ml -> azurerm_machine_learning_compute_cluster.training
+      xlabel: Train
+      detail: The workspace scales out the GPU compute cluster for the run
+    - resource: azurerm_machine_learning_compute_cluster.training -> azurerm_private_endpoint.blob
+      xlabel: Data
+      detail: which reads the training data and writes the evaluated model to Blob Storage, then registers it
+  Deploy and score:
+    description: The approved model serves claims
+    steps:
+    - resource: azurerm_linux_virtual_machine_scale_set.github_runners -> azurerm_kubernetes_cluster.inference
+      xlabel: Deploy
+      detail: After approval the runners roll the new model out to the online endpoint on AKS
+    - resource: azurerm_kubernetes_cluster.inference -> azurerm_private_endpoint.blob
+      xlabel: Load
+      detail: AKS loads the model files from Blob Storage and the image from Container Registry
+    - resource: tv_azurerm_users.claims_handlers -> azurerm_linux_web_app.claims
+      xlabel: Claim
+      detail: Claims handlers open a claim in the claims app
+    - resource: azurerm_linux_web_app.claims -> azurerm_kubernetes_cluster.inference
+      xlabel: Score
+      detail: which calls the endpoint over the virtual network for a fraud score

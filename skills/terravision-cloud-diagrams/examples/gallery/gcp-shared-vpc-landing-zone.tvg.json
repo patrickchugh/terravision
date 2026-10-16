@@ -1,0 +1,101 @@
+{
+  "tv_gcp_onprem.datacenter": [
+    "tv_gcp_client.employees",
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "tv_gcp_client.employees": [
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "google_compute_external_vpn_gateway.datacenter": [
+    "google_compute_ha_vpn_gateway.hybrid"
+  ],
+  "google_project.network_host": [
+    "google_compute_network.shared_vpc"
+  ],
+  "google_compute_network.shared_vpc": [
+    "tv_gcp_region.europe_west2",
+    "tv_gcp_region.europe_west1",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "tv_gcp_region.europe_west2": [
+    "google_compute_subnetwork.prod_apps",
+    "google_compute_subnetwork.prod_data",
+    "google_compute_ha_vpn_gateway.hybrid",
+    "google_compute_router.hybrid"
+  ],
+  "tv_gcp_region.europe_west1": [
+    "google_compute_subnetwork.nonprod_apps"
+  ],
+  "google_compute_subnetwork.prod_apps": [
+    "google_compute_forwarding_rule.orders_internal_lb",
+    "google_compute_region_backend_service.orders",
+    "tv_gcp_zone.europe_west2_a",
+    "tv_gcp_zone.europe_west2_b"
+  ],
+  "tv_gcp_zone.europe_west2_a": [
+    "google_compute_instance.orders~1"
+  ],
+  "tv_gcp_zone.europe_west2_b": [
+    "google_compute_instance.orders~2"
+  ],
+  "google_compute_subnetwork.prod_data": [
+    "google_compute_forwarding_rule.psc_cloud_sql"
+  ],
+  "google_compute_subnetwork.nonprod_apps": [
+    "google_workstations_workstation_cluster.developers"
+  ],
+  "google_compute_router.hybrid": [
+    "google_compute_ha_vpn_gateway.hybrid"
+  ],
+  "google_compute_ha_vpn_gateway.hybrid": [
+    "google_compute_forwarding_rule.orders_internal_lb",
+    "google_workstations_workstation_cluster.developers"
+  ],
+  "google_compute_forwarding_rule.orders_internal_lb": [
+    "google_compute_region_backend_service.orders"
+  ],
+  "google_compute_region_backend_service.orders": [
+    "google_compute_instance.orders~1",
+    "google_compute_instance.orders~2"
+  ],
+  "google_compute_instance.orders~1": [
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_instance.orders~2": [
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_compute_forwarding_rule.psc_cloud_sql": [
+    "google_sql_database_instance.orders"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_storage_bucket.order_documents"
+  ],
+  "google_project.prod_orders": [
+    "google_sql_database_instance.orders",
+    "google_storage_bucket.order_documents"
+  ],
+  "google_project.nonprod_sandbox": [
+    "google_sql_database_instance.dev_orders"
+  ],
+  "google_workstations_workstation_cluster.developers": [
+    "google_sql_database_instance.dev_orders"
+  ],
+  "google_project.security": [
+    "google_logging_organization_sink.audit",
+    "google_logging_project_bucket_config.audit_logs",
+    "google_scc_notification_config.findings",
+    "google_pubsub_topic.security_findings",
+    "google_org_policy_policy.allowed_regions",
+    "google_access_context_manager_service_perimeter.prod"
+  ],
+  "google_logging_organization_sink.audit": [
+    "google_logging_project_bucket_config.audit_logs"
+  ],
+  "google_scc_notification_config.findings": [
+    "google_pubsub_topic.security_findings"
+  ],
+  "google_kms_key_ring.landing_zone": [],
+  "google_secret_manager_secret.vpn_shared_secret": []
+}

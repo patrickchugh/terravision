@@ -1,0 +1,78 @@
+{
+  "tv_azure_onprem.factory": [
+    "tv_azurerm_server.opc_ua",
+    "tv_azurerm_iot_device.edge_gateway"
+  ],
+  "tv_azurerm_server.opc_ua": [
+    "tv_azurerm_iot_device.edge_gateway"
+  ],
+  "tv_azurerm_iot_device.edge_gateway": [
+    "azurerm_iothub_dps.provisioning",
+    "azurerm_iothub.telemetry"
+  ],
+  "azurerm_resource_group.iot": [
+    "azurerm_virtual_network.iot",
+    "azurerm_iothub_dps.provisioning",
+    "azurerm_iothub.telemetry",
+    "azurerm_storage_container.telemetry_archive",
+    "azurerm_kusto_cluster.telemetry",
+    "azurerm_eventhub.anomalies",
+    "azurerm_digital_twins_instance.factory",
+    "azurerm_dashboard_grafana.operations",
+    "azurerm_monitor_action_group.maintenance"
+  ],
+  "azurerm_virtual_network.iot": [
+    "azurerm_subnet.processing",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.processing": [
+    "azurerm_stream_analytics_job.anomalies",
+    "azurerm_linux_function_app.twin_sync",
+    "azurerm_linux_function_app.alerting"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.iothub",
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_private_endpoint.digital_twins"
+  ],
+  "azurerm_iothub_dps.provisioning": [
+    "azurerm_iothub.telemetry"
+  ],
+  "azurerm_iothub.telemetry": [
+    "azurerm_storage_container.telemetry_archive",
+    "azurerm_kusto_cluster.telemetry"
+  ],
+  "azurerm_private_endpoint.iothub": [
+    "azurerm_iothub.telemetry"
+  ],
+  "azurerm_private_endpoint.event_hubs": [
+    "azurerm_eventhub.anomalies"
+  ],
+  "azurerm_private_endpoint.digital_twins": [
+    "azurerm_digital_twins_instance.factory"
+  ],
+  "azurerm_stream_analytics_job.anomalies": [
+    "azurerm_private_endpoint.iothub",
+    "azurerm_private_endpoint.event_hubs"
+  ],
+  "azurerm_linux_function_app.twin_sync": [
+    "azurerm_private_endpoint.iothub",
+    "azurerm_private_endpoint.digital_twins"
+  ],
+  "azurerm_linux_function_app.alerting": [
+    "azurerm_private_endpoint.event_hubs",
+    "azurerm_monitor_action_group.maintenance"
+  ],
+  "tv_azurerm_users.engineers": [
+    "azurerm_dashboard_grafana.operations"
+  ],
+  "azurerm_dashboard_grafana.operations": [
+    "azurerm_kusto_cluster.telemetry"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.platform",
+    "azurerm_application_insights.functions",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

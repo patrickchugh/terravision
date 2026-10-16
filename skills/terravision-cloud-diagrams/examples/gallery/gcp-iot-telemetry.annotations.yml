@@ -1,0 +1,98 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-iot-telemetry.tvg.json --annotate gcp-iot-telemetry.annotations.yml
+format: '0.3'
+title: Google Cloud IoT telemetry with MQTT brokers, Pub/Sub, Dataflow, Bigtable and BigQuery
+update:
+  google_compute_subnetwork.brokers:
+    ip_cidr_range: 10.70.0.0/24
+  google_compute_subnetwork.processing:
+    ip_cidr_range: 10.70.16.0/20
+  tv_gcp_onprem.factory:
+    label: Factory Site
+  tv_gcp_external_saas.paging:
+    label: PagerDuty
+  google_compute_forwarding_rule.mqtt:
+    label: Network Load Balancer Mqtt
+  google_bigquery_dataset.plant:
+    label: BigQuery Plant
+  google_bigquery_table.readings:
+    label: BigQuery Table Readings
+  google_bigtable_instance.timeseries:
+    label: Bigtable Timeseries
+  google_cloud_run_v2_service.maintenance:
+    label: Cloud Run Maintenance
+  google_compute_region_backend_service.mqtt:
+    label: Backend Service Mqtt
+  google_compute_router.egress:
+    label: Cloud Router Egress
+  google_compute_router_nat.egress:
+    label: Cloud NAT Egress
+  google_dataflow_flex_template_job.telemetry:
+    label: Dataflow Telemetry
+  google_firestore_database.work_orders:
+    label: Firestore Work Orders
+  google_logging_project_sink.iot:
+    label: Log Sink Iot
+  google_looker_instance.plant_dashboards:
+    label: Looker Plant Dashboards
+  google_privateca_certificate_authority.devices:
+    label: CA Service Devices
+  google_pubsub_subscription.dataflow:
+    label: Subscription Dataflow
+  google_pubsub_subscription.maintenance:
+    label: Subscription Maintenance
+  google_pubsub_topic.anomalies:
+    label: Pub/Sub Anomalies
+  google_pubsub_topic.telemetry:
+    label: Pub/Sub Telemetry
+  google_secret_manager_secret.broker_admin:
+    label: Secret Manager Broker Admin
+connect:
+  tv_gcp_server.edge_gateway:
+  - google_compute_forwarding_rule.mqtt: MQTT TLS 8883
+  google_compute_instance.mqtt_broker~1:
+  - google_pubsub_topic.telemetry: Bridge
+  google_compute_instance.mqtt_broker~2:
+  - google_pubsub_topic.telemetry: Bridge
+flows:
+  Telemetry:
+    description: Sensor readings reach Google Cloud
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_iot_device.line_sensors -> tv_gcp_server.edge_gateway
+      xlabel: Read
+      detail: Line sensors report to the factory's edge gateway
+    - resource: tv_gcp_server.edge_gateway -> google_compute_forwarding_rule.mqtt
+      xlabel: Connect
+      detail: which connects over MQTT with TLS and a device certificate from CA Service
+    - resource: google_compute_region_backend_service.mqtt -> google_compute_instance.mqtt_broker~1
+      xlabel: Broker
+      detail: A passthrough network load balancer spreads connections over MQTT brokers in two zones
+    - resource: google_compute_instance.mqtt_broker~1 -> google_pubsub_topic.telemetry
+      xlabel: Bridge
+      detail: The brokers bridge every message to Pub/Sub
+    - resource: google_dataflow_flex_template_job.telemetry -> google_pubsub_subscription.dataflow
+      xlabel: Process
+      detail: A streaming Dataflow job reads the subscription and cleans the readings
+    - resource: google_dataflow_flex_template_job.telemetry -> google_bigtable_instance.timeseries
+      xlabel: Store
+      detail: writes them to Bigtable keyed by machine and time
+    - resource: google_dataflow_flex_template_job.telemetry -> google_bigquery_table.readings
+      xlabel: Analyse
+      detail: and to BigQuery, where plant engineers chart them in Looker
+  Maintenance:
+    description: An anomaly becomes a work order
+    color: '#188038'
+    steps:
+    - resource: google_dataflow_flex_template_job.telemetry -> google_pubsub_topic.anomalies
+      xlabel: Detect
+      detail: Dataflow publishes readings outside each machine's normal range
+    - resource: google_pubsub_subscription.maintenance -> google_cloud_run_v2_service.maintenance
+      xlabel: Push
+      detail: A push subscription sends them to the maintenance service on Cloud Run
+    - resource: google_cloud_run_v2_service.maintenance -> google_firestore_database.work_orders
+      xlabel: Work order
+      detail: which opens a work order in Firestore
+    - resource: google_compute_router_nat.egress -> tv_gcp_server.pagerduty
+      xlabel: Page
+      detail: and pages the on-call engineer through Cloud NAT

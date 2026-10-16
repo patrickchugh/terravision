@@ -1,0 +1,151 @@
+{
+  "tv_gcp_onprem.datacenter": [
+    "tv_gcp_server.web_vms",
+    "tv_gcp_server.app_vms",
+    "tv_gcp_database.mysql",
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "tv_gcp_server.web_vms": [
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "tv_gcp_server.app_vms": [
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "tv_gcp_database.mysql": [
+    "google_compute_external_vpn_gateway.datacenter"
+  ],
+  "google_compute_external_vpn_gateway.datacenter": [
+    "google_compute_ha_vpn_gateway.migration"
+  ],
+  "tv_gcp_users_icon.customers": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.shop",
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.shop"
+  ],
+  "google_compute_url_map.shop": [
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_network.shop": [
+    "tv_gcp_region.europe_west2",
+    "google_sql_database_instance.shop",
+    "google_filestore_instance.shared_content"
+  ],
+  "tv_gcp_region.europe_west2": [
+    "google_compute_ha_vpn_gateway.migration",
+    "google_compute_router.migration",
+    "google_compute_subnetwork.web",
+    "google_compute_subnetwork.app",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router.migration": [
+    "google_compute_ha_vpn_gateway.migration"
+  ],
+  "google_compute_ha_vpn_gateway.migration": [
+    "google_compute_machine_image.migrated",
+    "google_database_migration_service_migration_job.mysql"
+  ],
+  "google_compute_machine_image.migrated": [
+    "google_compute_instance_template.web",
+    "google_compute_instance_template.app"
+  ],
+  "google_database_migration_service_migration_job.mysql": [
+    "google_sql_database_instance.shop"
+  ],
+  "tv_gcp_logical_group.migration": [
+    "google_compute_machine_image.migrated",
+    "google_database_migration_service_migration_job.mysql",
+    "google_database_migration_service_connection_profile.source",
+    "google_compute_instance_template.web",
+    "google_compute_instance_template.app"
+  ],
+  "google_database_migration_service_connection_profile.source": [
+    "google_database_migration_service_migration_job.mysql"
+  ],
+  "google_compute_subnetwork.web": [
+    "google_compute_region_instance_group_manager.web",
+    "tv_gcp_zone.europe_west2_a",
+    "tv_gcp_zone.europe_west2_b"
+  ],
+  "google_compute_subnetwork.app": [
+    "google_compute_forwarding_rule.app_internal_lb",
+    "google_compute_region_backend_service.app",
+    "google_compute_region_instance_group_manager.app",
+    "tv_gcp_zone.europe_west2_a_app",
+    "tv_gcp_zone.europe_west2_b_app"
+  ],
+  "tv_gcp_zone.europe_west2_a": [
+    "google_compute_instance.web~1"
+  ],
+  "tv_gcp_zone.europe_west2_b": [
+    "google_compute_instance.web~2"
+  ],
+  "tv_gcp_zone.europe_west2_a_app": [
+    "google_compute_instance.app~1"
+  ],
+  "tv_gcp_zone.europe_west2_b_app": [
+    "google_compute_instance.app~2"
+  ],
+  "google_compute_instance_template.web": [
+    "google_compute_region_instance_group_manager.web"
+  ],
+  "google_compute_instance_template.app": [
+    "google_compute_region_instance_group_manager.app"
+  ],
+  "google_compute_region_instance_group_manager.web": [
+    "google_compute_instance.web~1",
+    "google_compute_instance.web~2"
+  ],
+  "google_compute_region_instance_group_manager.app": [
+    "google_compute_instance.app~1",
+    "google_compute_instance.app~2"
+  ],
+  "google_compute_backend_service.web": [
+    "google_compute_instance.web~1",
+    "google_compute_instance.web~2"
+  ],
+  "google_compute_instance.web~1": [
+    "google_compute_forwarding_rule.app_internal_lb",
+    "google_filestore_instance.shared_content"
+  ],
+  "google_compute_instance.app~1": [
+    "google_sql_database_instance.shop",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_instance.web~2": [
+    "google_compute_forwarding_rule.app_internal_lb",
+    "google_filestore_instance.shared_content"
+  ],
+  "google_compute_instance.app~2": [
+    "google_sql_database_instance.shop",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_forwarding_rule.app_internal_lb": [
+    "google_compute_region_backend_service.app"
+  ],
+  "google_compute_region_backend_service.app": [
+    "google_compute_instance.app~1",
+    "google_compute_instance.app~2"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.payment_gateway"
+  ],
+  "tv_gcp_external_3p.payment_provider": [
+    "tv_gcp_server.payment_gateway"
+  ],
+  "google_secret_manager_secret.db_password": [],
+  "google_kms_key_ring.shop": [],
+  "google_logging_project_sink.shop": []
+}

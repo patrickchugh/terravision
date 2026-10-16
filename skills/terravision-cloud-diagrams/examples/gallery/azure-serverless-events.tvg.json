@@ -1,0 +1,95 @@
+{
+  "tv_azurerm_users.customers": [
+    "azurerm_api_management.gateway"
+  ],
+  "azurerm_resource_group.orders": [
+    "azurerm_virtual_network.orders",
+    "azurerm_public_ip.egress",
+    "azurerm_cosmosdb_account.orders",
+    "azurerm_eventgrid_topic.order_events",
+    "azurerm_eventgrid_event_subscription.to_service_bus",
+    "azurerm_servicebus_topic.order_events",
+    "azurerm_storage_container.receipts",
+    "azurerm_communication_service.email"
+  ],
+  "azurerm_virtual_network.orders": [
+    "azurerm_subnet.apim",
+    "azurerm_subnet.functions",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.apim": [
+    "azurerm_api_management.gateway"
+  ],
+  "azurerm_subnet.functions": [
+    "azurerm_function_app_flex_consumption.orders_api",
+    "azurerm_function_app_flex_consumption.projector",
+    "azurerm_function_app_flex_consumption.fulfilment",
+    "azurerm_function_app_flex_consumption.notifications",
+    "azurerm_logic_app_standard.erp_sync",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.orders_api",
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.event_grid",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_api_management.gateway": [
+    "azurerm_private_endpoint.orders_api"
+  ],
+  "azurerm_private_endpoint.orders_api": [
+    "azurerm_function_app_flex_consumption.orders_api"
+  ],
+  "azurerm_function_app_flex_consumption.orders_api": [
+    "azurerm_private_endpoint.cosmos"
+  ],
+  "azurerm_function_app_flex_consumption.projector": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.event_grid"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.orders"
+  ],
+  "azurerm_private_endpoint.event_grid": [
+    "azurerm_eventgrid_topic.order_events"
+  ],
+  "azurerm_eventgrid_topic.order_events": [
+    "azurerm_eventgrid_event_subscription.to_service_bus"
+  ],
+  "azurerm_eventgrid_event_subscription.to_service_bus": [
+    "azurerm_servicebus_topic.order_events"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_topic.order_events"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.receipts"
+  ],
+  "azurerm_function_app_flex_consumption.fulfilment": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_function_app_flex_consumption.notifications": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_logic_app_standard.erp_sync": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "azurerm_communication_service.email",
+    "tv_azurerm_internet.erp"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_application_insights.orders",
+    "azurerm_log_analytics_workspace.orders",
+    "azurerm_storage_account.function_packages",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

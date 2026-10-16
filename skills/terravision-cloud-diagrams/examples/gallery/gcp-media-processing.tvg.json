@@ -1,0 +1,76 @@
+{
+  "tv_gcp_users_icon.creators": [
+    "google_identity_platform_config.creators",
+    "google_cloud_run_v2_service.studio_api",
+    "google_storage_bucket.uploads"
+  ],
+  "tv_gcp_users_icon.viewers": [
+    "google_dns_managed_zone.video"
+  ],
+  "google_dns_managed_zone.video": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.video",
+    "google_compute_backend_bucket.renditions",
+    "google_compute_backend_service.catalogue"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.video"
+  ],
+  "google_compute_url_map.video": [
+    "google_compute_backend_bucket.renditions",
+    "google_compute_backend_service.catalogue"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.catalogue"
+  ],
+  "google_compute_backend_bucket.renditions": [
+    "google_storage_bucket.renditions"
+  ],
+  "google_compute_backend_service.catalogue": [
+    "google_cloud_run_v2_service.catalogue_api"
+  ],
+  "google_cloud_run_v2_service.studio_api": [
+    "google_storage_bucket.uploads",
+    "google_firestore_database.catalogue"
+  ],
+  "google_storage_bucket.uploads": [
+    "google_eventarc_trigger.video_uploaded"
+  ],
+  "google_eventarc_trigger.video_uploaded": [
+    "google_workflows_workflow.process_video"
+  ],
+  "google_workflows_workflow.process_video": [
+    "google_transcoder_job.renditions",
+    "google_cloud_run_v2_job.thumbnails",
+    "google_firestore_database.catalogue"
+  ],
+  "google_video_transcoder_job_template.hls_dash": [
+    "google_transcoder_job.renditions"
+  ],
+  "google_transcoder_job.renditions": [
+    "google_storage_bucket.renditions",
+    "google_pubsub_topic.transcoder_events"
+  ],
+  "google_pubsub_topic.transcoder_events": [
+    "google_workflows_workflow.process_video"
+  ],
+  "google_cloud_run_v2_job.thumbnails": [
+    "google_storage_bucket.renditions"
+  ],
+  "google_cloud_run_v2_service.catalogue_api": [
+    "google_firestore_database.catalogue",
+    "google_pubsub_topic.watch_events"
+  ],
+  "google_pubsub_topic.watch_events": [
+    "google_pubsub_subscription.watch_to_bigquery"
+  ],
+  "google_pubsub_subscription.watch_to_bigquery": [
+    "google_bigquery_dataset.viewing"
+  ],
+  "google_secret_manager_secret.cdn_signing_key": [],
+  "google_kms_key_ring.media": [],
+  "google_logging_project_sink.media": []
+}

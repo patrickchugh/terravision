@@ -1,0 +1,99 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-security-command-center.tvg.json --annotate gcp-security-command-center.annotations.yml
+format: '0.3'
+title: Google Cloud security operations with Security Command Center, Cloud NGFW and automated remediation
+update:
+  google_compute_subnetwork.web:
+    ip_cidr_range: 10.130.0.0/24
+  google_project.workloads:
+    label: Workload Project
+  google_project.security:
+    label: Security Project
+  tv_gcp_external_3p.internet:
+    label: Internet
+  google_org_policy_policy.no_public_buckets:
+    label: Org Policy No Public Buckets
+  google_scc_notification_config.high_findings:
+    label: Security Command Center High Findings
+  google_bigquery_dataset.security_analytics:
+    label: BigQuery Security Analytics
+  google_cloud_asset_folder_feed.iam_changes:
+    label: Asset Feed Iam Changes
+  google_cloudfunctions2_function.iam_review:
+    label: Cloud Functions Iam Review
+  google_cloudfunctions2_function.remediate:
+    label: Cloud Functions Remediate
+  google_compute_router.egress:
+    label: Cloud Router Egress
+  google_compute_router_nat.egress:
+    label: Cloud NAT Egress
+  google_data_loss_prevention_job_trigger.uploads:
+    label: Sensitive Data Protection Uploads
+  google_kms_key_ring.security:
+    label: Cloud KMS Security
+  google_logging_metric.firewall_threats:
+    label: Log-based Metric Firewall Threats
+  google_logging_organization_sink.all_logs:
+    label: Org Log Sink All Logs
+  google_logging_project_bucket_config.security_logs:
+    label: Log Bucket Security Logs
+  google_monitoring_alert_policy.threats:
+    label: Alert Policy Threats
+  google_monitoring_notification_channel.soc:
+    label: Notification Channel Soc
+  google_network_security_firewall_endpoint.ips:
+    label: Cloud NGFW Ips
+  google_pubsub_topic.asset_changes:
+    label: Pub/Sub Asset Changes
+  google_pubsub_topic.findings:
+    label: Pub/Sub Findings
+  google_secret_manager_secret.chat_webhook:
+    label: Secret Manager Chat Webhook
+  google_storage_bucket.customer_uploads:
+    label: Cloud Storage Customer Uploads
+connect:
+  google_compute_instance.web~1:
+  - google_network_security_firewall_endpoint.ips: Inspected
+  google_compute_instance.web~2:
+  - google_network_security_firewall_endpoint.ips: Inspected
+  google_cloudfunctions2_function.remediate:
+  - google_storage_bucket.customer_uploads: Remove public access
+flows:
+  Detect and alert:
+    description: A threat is blocked and reported
+    color: '#D93025'
+    steps:
+    - resource: google_compute_instance.web~1 -> google_network_security_firewall_endpoint.ips
+      xlabel: Inspect
+      detail: Cloud NGFW Enterprise inspects the web VMs' traffic and blocks known exploits
+    - resource: google_logging_organization_sink.all_logs -> google_logging_project_bucket_config.security_logs
+      xlabel: Collect
+      detail: An organisation sink gathers threat, audit and flow logs from every project
+    - resource: google_logging_project_bucket_config.security_logs -> google_logging_metric.firewall_threats
+      xlabel: Count
+      detail: A log-based metric counts blocked threats
+    - resource: google_monitoring_alert_policy.threats -> google_monitoring_notification_channel.soc
+      xlabel: Alert
+      detail: and an alert policy notifies the SOC channel when they spike
+    - resource: tv_gcp_users_icon.soc_analysts -> google_bigquery_dataset.security_analytics
+      xlabel: Hunt
+      detail: Analysts query the linked BigQuery dataset to investigate
+  Remediate:
+    description: Misconfigurations are fixed automatically
+    color: '#188038'
+    steps:
+    - resource: google_scc_notification_config.high_findings -> google_pubsub_topic.findings
+      xlabel: Finding
+      detail: 'Security Command Center publishes a high-severity finding: a bucket made public'
+    - resource: google_pubsub_topic.findings -> google_cloudfunctions2_function.remediate
+      xlabel: Trigger
+      detail: which triggers the remediation function
+    - resource: google_cloudfunctions2_function.remediate -> google_storage_bucket.customer_uploads
+      xlabel: Fix
+      detail: The function removes the public binding and marks the finding resolved
+    - resource: google_cloud_asset_folder_feed.iam_changes -> google_pubsub_topic.asset_changes
+      xlabel: IAM change
+      detail: A Cloud Asset feed reports every IAM policy change in the folder
+    - resource: google_cloudfunctions2_function.iam_review -> google_monitoring_notification_channel.soc
+      xlabel: Review
+      detail: and a function flags grants of owner or editor to the SOC

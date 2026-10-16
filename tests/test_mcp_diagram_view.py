@@ -795,6 +795,53 @@ def test_diagram_guide_lists_and_fetches_patterns():
     assert any(n.startswith("aws_eks") for n in eks["graph"])
 
 
+GALLERY_README = Path(__file__).resolve().parents[1] / "examples" / "graphs"
+
+
+@pytest.mark.parametrize("provider", ["aws", "azure", "gcp"])
+def test_diagram_guide_lists_the_gallery(provider):
+    """Every gallery design for the provider, so smaller models can start
+    from the closest one instead of a three-tier app."""
+    gallery = mcp_service.diagram_guide(provider)["gallery"]
+    index = json.loads(
+        (mcp_service._SKILL_DIR / "examples" / "gallery" / "index.json").read_text()
+    )
+    assert [g["name"] for g in gallery] == [
+        e["name"] for e in index if e["provider"] == provider
+    ]
+    assert len(gallery) >= 19
+    assert all(set(g) == {"name", "title", "description"} for g in gallery)
+
+
+@pytest.mark.parametrize(
+    "provider, example",
+    [
+        ("aws", "aws-ecs-fargate-api"),
+        ("azure", "azure-hybrid-expressroute"),
+        ("gcp", "gcp-gke"),
+    ],
+)
+def test_diagram_guide_example_renders_as_the_gallery_does(outdir, provider, example):
+    """A fetched design's render_graph_args draw it with its title, CIDR
+    ranges, labels and flows, and no warnings. gcp-gke is also a pattern
+    name; example= fetches the gallery design."""
+    fetched = mcp_service.diagram_guide(provider, example=example)
+    assert fetched["graph"] == json.loads(
+        (GALLERY_README / f"{example}.tvg.json").read_text()
+    )
+    args = fetched["render_graph_args"]
+    assert set(args) == {"title", "attributes", "edge_labels", "flows"}
+    result = mcp_service.run_render_graph(
+        fetched["graph"], outfile=example, preview=False, **args
+    )
+    assert "warnings" not in result, result.get("warnings")
+
+
+def test_diagram_guide_rejects_unknown_example():
+    with pytest.raises(McpServiceError, match="Available: azure-three-tier"):
+        mcp_service.diagram_guide("azure", example="aws-ecs-fargate-api")
+
+
 def test_diagram_guide_rejects_unknown_pattern():
     with pytest.raises(McpServiceError, match="Available: azure-aks"):
         mcp_service.diagram_guide("azure", pattern="aws-eks")

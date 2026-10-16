@@ -1,0 +1,71 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-static-site-cicd.tvg.json --annotate aws-static-site-cicd.annotations.yml
+format: '0.3'
+title: AWS static website on CloudFront and S3 with a CodePipeline release
+update:
+  tv_aws_internet.github:
+    label: GitHub repository
+  aws_lambda_function.security_headers:
+    label: Lambda@Edge Security Headers
+connect:
+  aws_route53_zone.site:
+  - aws_cloudfront_distribution.production: Alias record
+  aws_wafv2_web_acl.site:
+  - aws_cloudfront_distribution.production: Managed rules, rate limit
+  aws_cloudfront_distribution.production:
+  - aws_s3_bucket.site: Origin access control
+  - aws_s3_bucket.site_replica: Failover origin
+  - aws_lambda_function.security_headers: Viewer response
+  aws_s3_bucket.site:
+  - aws_s3_bucket.site_replica: Cross-Region replication
+  aws_codeconnections_connection.github:
+  - aws_codepipeline.site: Push to main
+  aws_codebuild_project.browser_tests:
+  - aws_cloudfront_distribution.staging: Playwright tests
+  aws_codebuild_project.deploy_production:
+  - aws_cloudfront_distribution.production: Invalidate /*
+  aws_cloudwatch_metric_alarm.error_rate:
+  - aws_sns_topic.releases: 5xx above 1%
+flows:
+  Page load:
+    description: A visitor opens the site
+    steps:
+    - resource: tv_aws_users.visitors -> aws_route53_zone.site
+      xlabel: DNS
+      detail: Route 53 resolves www.example.com to CloudFront
+    - resource: aws_wafv2_web_acl.site -> aws_cloudfront_distribution.production
+      xlabel: Filter
+      detail: AWS WAF filters the request at the edge
+    - resource: aws_cloudfront_distribution.production -> aws_s3_bucket.site
+      xlabel: Fetch
+      detail: CloudFront serves cached pages, fetching misses from S3 through origin access control
+    - resource: aws_cloudfront_distribution.production -> aws_s3_bucket.site_replica
+      xlabel: Failover
+      detail: If the origin fails, the origin group switches to the replica bucket in a second Region
+    - resource: aws_cloudfront_distribution.production -> aws_lambda_function.security_headers
+      xlabel: Headers
+      detail: Lambda@Edge adds the security headers
+  Release:
+    description: A change reaches production
+    steps:
+    - resource: tv_aws_users.developers -> tv_aws_internet.github
+      xlabel: Push
+      detail: A developer merges to main on GitHub
+    - resource: aws_codeconnections_connection.github -> aws_codepipeline.site
+      xlabel: Source
+      detail: The CodeConnections connection starts CodePipeline
+    - resource: aws_codepipeline.site -> aws_codebuild_project.build
+      xlabel: Build
+      detail: CodeBuild builds the site and stores the bundle
+    - resource: aws_codebuild_project.deploy_staging -> aws_s3_bucket.staging
+      xlabel: Stage
+      detail: deploys it to the staging bucket
+    - resource: aws_codebuild_project.browser_tests -> aws_cloudfront_distribution.staging
+      xlabel: Test
+      detail: and runs browser tests against the staging distribution
+    - resource: aws_codebuild_project.deploy_production -> aws_s3_bucket.site
+      xlabel: Release
+      detail: Once they pass, it syncs the production bucket and invalidates the CloudFront cache
+    - resource: aws_sns_topic.releases -> aws_chatbot_slack_channel_configuration.web_team
+      xlabel: Announce
+      detail: SNS and AWS Chatbot post the result, and any error-rate alarm, to the team's Slack channel

@@ -1,0 +1,103 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-shared-vpc-landing-zone.tvg.json --annotate gcp-shared-vpc-landing-zone.annotations.yml
+format: '0.3'
+title: Google Cloud landing zone with a Shared VPC host project, service projects and HA VPN
+update:
+  google_compute_subnetwork.prod_apps:
+    ip_cidr_range: 10.10.0.0/20
+  google_compute_subnetwork.prod_data:
+    ip_cidr_range: 10.10.16.0/24
+  google_compute_subnetwork.nonprod_apps:
+    ip_cidr_range: 10.20.0.0/20
+  google_project.network_host:
+    label: Host Project (Shared VPC)
+  google_project.prod_orders:
+    label: Service Project Prod Orders
+  google_project.nonprod_sandbox:
+    label: Service Project Nonprod
+  google_project.security:
+    label: Security and Logging Project
+  tv_gcp_onprem.datacenter:
+    label: Corporate Datacenter
+  google_access_context_manager_service_perimeter.prod:
+    label: VPC-SC Perimeter Prod
+  google_compute_external_vpn_gateway.datacenter:
+    label: Peer VPN Gateway Datacenter
+  google_compute_forwarding_rule.orders_internal_lb:
+    label: Forwarding Rule Orders Internal Lb
+  google_compute_forwarding_rule.psc_cloud_sql:
+    label: Forwarding Rule Psc Cloud Sql
+  google_compute_global_forwarding_rule.psc_google_apis:
+    label: Forwarding Rule Psc Google Apis
+  google_compute_ha_vpn_gateway.hybrid:
+    label: HA VPN Hybrid
+  google_compute_region_backend_service.orders:
+    label: Backend Service Orders
+  google_compute_router.hybrid:
+    label: Cloud Router Hybrid
+  google_kms_key_ring.landing_zone:
+    label: Cloud KMS Landing Zone
+  google_logging_organization_sink.audit:
+    label: Org Log Sink Audit
+  google_logging_project_bucket_config.audit_logs:
+    label: Log Bucket Audit Logs
+  google_pubsub_topic.security_findings:
+    label: Pub/Sub Security Findings
+  google_scc_notification_config.findings:
+    label: SCC Notifications Findings
+  google_secret_manager_secret.vpn_shared_secret:
+    label: Secret Manager Vpn Shared Secret
+  google_sql_database_instance.dev_orders:
+    label: Cloud SQL Dev Orders
+  google_sql_database_instance.orders:
+    label: Cloud SQL Orders
+  google_storage_bucket.order_documents:
+    label: Cloud Storage Order Documents
+  google_workstations_workstation_cluster.developers:
+    label: Workstations Developers
+connect:
+  google_compute_external_vpn_gateway.datacenter:
+  - google_compute_ha_vpn_gateway.hybrid: HA VPN, 4 tunnels
+  google_compute_router.hybrid:
+  - google_compute_ha_vpn_gateway.hybrid: BGP
+  google_logging_organization_sink.audit:
+  - google_logging_project_bucket_config.audit_logs: All projects
+flows:
+  Employee request:
+    description: An employee in the data centre uses the orders app
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_client.employees -> google_compute_external_vpn_gateway.datacenter
+      xlabel: Route
+      detail: An employee's request goes to the data centre's VPN gateway
+    - resource: google_compute_external_vpn_gateway.datacenter -> google_compute_ha_vpn_gateway.hybrid
+      xlabel: VPN
+      detail: across HA VPN to the Shared VPC in the host project; Cloud Router exchanges routes over BGP
+    - resource: google_compute_ha_vpn_gateway.hybrid -> google_compute_forwarding_rule.orders_internal_lb
+      xlabel: Balance
+      detail: to the orders internal load balancer in the prod subnet
+    - resource: google_compute_region_backend_service.orders -> google_compute_instance.orders~1
+      xlabel: Serve
+      detail: which spreads requests over VMs in two zones
+    - resource: google_compute_instance.orders~1 -> google_compute_forwarding_rule.psc_cloud_sql
+      xlabel: Query
+      detail: The VMs query Cloud SQL in the prod service project through a Private Service Connect endpoint
+    - resource: google_compute_instance.orders~1 -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Store
+      detail: and store documents in Cloud Storage through the Google APIs endpoint, inside the VPC Service Controls perimeter
+  Governance:
+    description: Every project reports to the security project
+    color: '#188038'
+    steps:
+    - resource: google_logging_organization_sink.audit -> google_logging_project_bucket_config.audit_logs
+      xlabel: Audit
+      detail: An organisation log sink sends every project's audit logs to a locked log bucket
+    - resource: google_scc_notification_config.findings -> google_pubsub_topic.security_findings
+      xlabel: Findings
+      detail: Security Command Center publishes new findings to Pub/Sub for the security team
+    - resource: google_compute_ha_vpn_gateway.hybrid -> google_workstations_workstation_cluster.developers
+      xlabel: Develop
+      detail: Developers work in Cloud Workstations in the nonprod subnet in another region
+    - resource: google_workstations_workstation_cluster.developers -> google_sql_database_instance.dev_orders
+      xlabel: Test
+      detail: against the nonprod project's database, with no route to prod

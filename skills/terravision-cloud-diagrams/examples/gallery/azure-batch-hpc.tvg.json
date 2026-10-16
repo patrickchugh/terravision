@@ -1,0 +1,76 @@
+{
+  "tv_azurerm_users.engineers": [
+    "azurerm_linux_web_app.job_portal"
+  ],
+  "tv_azure_onprem.datacenter": [
+    "tv_azurerm_server.licence_server",
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "azurerm_local_network_gateway.datacenter": [
+    "tv_azurerm_server.licence_server"
+  ],
+  "azurerm_resource_group.hpc": [
+    "azurerm_virtual_network.hpc",
+    "azurerm_batch_account.simulation",
+    "azurerm_storage_container.inputs",
+    "azurerm_storage_container.results"
+  ],
+  "azurerm_virtual_network.hpc": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.portal",
+    "azurerm_subnet.compute",
+    "azurerm_subnet.netapp",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.portal": [
+    "azurerm_linux_web_app.job_portal"
+  ],
+  "azurerm_subnet.compute": [
+    "azurerm_batch_pool.dedicated",
+    "azurerm_batch_pool.spot"
+  ],
+  "azurerm_subnet.netapp": [
+    "azurerm_netapp_volume.scratch"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.batch",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_linux_web_app.job_portal": [
+    "azurerm_private_endpoint.blob",
+    "azurerm_private_endpoint.batch"
+  ],
+  "azurerm_private_endpoint.batch": [
+    "azurerm_batch_account.simulation"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.inputs",
+    "azurerm_storage_container.results"
+  ],
+  "azurerm_batch_account.simulation": [
+    "azurerm_batch_pool.dedicated",
+    "azurerm_batch_pool.spot"
+  ],
+  "azurerm_batch_pool.dedicated": [
+    "azurerm_netapp_volume.scratch",
+    "azurerm_private_endpoint.blob",
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_batch_pool.spot": [
+    "azurerm_netapp_volume.scratch",
+    "azurerm_private_endpoint.blob",
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.solver_images",
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.hpc",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}
