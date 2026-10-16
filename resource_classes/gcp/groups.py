@@ -255,6 +255,10 @@ class VPCNetworkZone(Cluster):
         attrs["fontcolor"] = "#FFFFFF"
         super().__init__(LABEL_PADDING + label, defaultdir, attrs)
 
+    def placed_in(self, on_cloud_frame):
+        """Inside a project or other light box the white label vanishes."""
+        self.dot.graph_attr["fontcolor"] = "#FFFFFF" if on_cloud_frame else INK
+
 
 # =============================================================================
 # Within Region/LogicalGroup Zones

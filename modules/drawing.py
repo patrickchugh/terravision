@@ -1366,6 +1366,10 @@ def handle_group(
     else:
         newGroup = group_class(label=node_label)
     targetGroup = diagramCanvas if resource_type in OUTER_NODES else inGroup
+    # A box styled for one background (a GCP VPC's white label on the blue
+    # cloud frame) restyles itself when it is placed inside another box
+    if hasattr(newGroup, "placed_in"):
+        newGroup.placed_in(on_cloud_frame=targetGroup is cloudGroup)
     targetGroup.subgraph(newGroup.dot)
     drawn_resources.append(resource)
 
