@@ -2387,6 +2387,12 @@ and Python, not these programs.</p>
 GKE, AKS and others), each TerraVision's own output for real Terraform with the addresses written
 plainly. Pass <code>pattern: "&lt;name&gt;"</code> to fetch one. <code>scripts/gen_example_patterns.py</code> rebuilds the
 library from <code>tests/json</code> and refuses any pattern that would draw differently from the original.</p>
+<p>And it lists the <a href="../gallery/">gallery</a> designs for that provider, 19 per cloud, each with a
+one-line description. Pass <code>example: "&lt;name&gt;"</code> to fetch one: its graph, plus its title, CIDR
+ranges, arrow labels and numbered flows as <code>render_graph</code> arguments (<code>render_graph_args</code>), so an
+agent can start from the closest design and keep its level of detail.
+<code>scripts/sync_skill_gallery.py</code>, run by <code>scripts/render_examples.py</code>, copies the gallery into the
+skill's <code>examples/gallery/</code> folder that this reads.</p>
 <h3 id="render_graph"><code>render_graph</code><a class="headerlink" href="#render_graph" title="Permanent link">¶</a></h3>
 <p>Renders a diagram from a graph passed directly as JSON, so an agent never has to write a file.
 <code>graph</code> maps each node address (<code>&lt;terraform_resource_type&gt;.&lt;name&gt;</code>) to the list of addresses it
