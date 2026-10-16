@@ -1,0 +1,96 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-serverless-events.tvg.json --annotate azure-serverless-events.annotations.yml
+format: '0.3'
+title: Azure serverless event-driven orders with Functions, Event Grid and Service Bus
+update:
+  azurerm_virtual_network.orders:
+    address_space:
+    - 10.61.0.0/16
+  azurerm_subnet.apim:
+    address_prefixes:
+    - 10.61.0.0/27
+  azurerm_subnet.functions:
+    address_prefixes:
+    - 10.61.1.0/24
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.61.10.0/24
+  tv_azurerm_internet.erp:
+    label: ERP (SaaS)
+  azurerm_function_app_flex_consumption.orders_api:
+    label: Orders API
+  azurerm_function_app_flex_consumption.projector:
+    label: Projector
+  azurerm_function_app_flex_consumption.fulfilment:
+    label: Fulfilment
+  azurerm_function_app_flex_consumption.notifications:
+    label: Notifications
+  azurerm_logic_app_standard.erp_sync:
+    label: Logic App ERP Sync
+  azurerm_eventgrid_event_subscription.to_service_bus:
+    label: Event Subscription
+  azurerm_eventgrid_topic.order_events:
+    label: Event Grid Topic
+  azurerm_servicebus_topic.order_events:
+    label: Service Bus Topic
+  azurerm_communication_service.email:
+    label: Communication Services
+  azurerm_cosmosdb_account.orders:
+    label: Cosmos DB Orders
+  azurerm_storage_account.function_packages:
+    label: Function Storage
+  azurerm_storage_container.receipts:
+    label: Blob Receipts
+  azurerm_application_insights.orders:
+    label: Application Insights
+  azurerm_log_analytics_workspace.orders:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_private_endpoint.orders_api:
+  - azurerm_function_app_flex_consumption.orders_api: HTTPS 443
+  azurerm_private_endpoint.service_bus:
+  - azurerm_servicebus_topic.order_events: AMQP 5671
+  azurerm_public_ip.egress:
+  - azurerm_communication_service.email: Email API
+flows:
+  Place order:
+    description: A customer places an order through the API
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_api_management.gateway
+      xlabel: HTTPS
+      detail: The client calls API Management, which validates the token and applies rate limits
+    - resource: azurerm_api_management.gateway -> azurerm_private_endpoint.orders_api
+      xlabel: Forward
+      detail: API Management forwards the call to the orders Function App's private endpoint
+    - resource: azurerm_function_app_flex_consumption.orders_api -> azurerm_private_endpoint.cosmos
+      xlabel: Save
+      detail: The function saves the order to Cosmos DB and returns 202 Accepted
+  Order events:
+    description: The order event fans out to the back office
+    steps:
+    - resource: azurerm_function_app_flex_consumption.projector -> azurerm_private_endpoint.cosmos
+      xlabel: Change feed
+      detail: A Cosmos DB change feed trigger runs the projector for the new order
+    - resource: azurerm_function_app_flex_consumption.projector -> azurerm_private_endpoint.event_grid
+      xlabel: Publish
+      detail: which publishes an OrderPlaced event to the Event Grid topic
+    - resource: azurerm_eventgrid_topic.order_events -> azurerm_eventgrid_event_subscription.to_service_bus
+      xlabel: Filter
+      detail: An event subscription filters for order events
+    - resource: azurerm_eventgrid_event_subscription.to_service_bus -> azurerm_servicebus_topic.order_events
+      xlabel: Deliver
+      detail: and delivers them to a Service Bus topic with its managed identity
+    - resource: azurerm_function_app_flex_consumption.fulfilment -> azurerm_private_endpoint.blob
+      xlabel: Receipt
+      detail: The fulfilment function takes its subscription's copy and writes the receipt to Blob Storage
+    - resource: azurerm_function_app_flex_consumption.notifications -> azurerm_nat_gateway.egress
+      xlabel: Notify
+      detail: The notifications function takes its copy and sends the confirmation
+    - resource: azurerm_public_ip.egress -> azurerm_communication_service.email
+      xlabel: Email
+      detail: through Azure Communication Services email, from the NAT gateway's public IP
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.erp
+      xlabel: ERP
+      detail: A Logic App takes a third copy and posts the order to the ERP

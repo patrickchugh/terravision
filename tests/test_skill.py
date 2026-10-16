@@ -139,6 +139,34 @@ def test_shipped_examples_match_the_gallery(example):
     ), f"copy examples/graphs/{example.name} to the skill's examples folder"
 
 
+GALLERY = SKILL / "examples" / "gallery"
+
+
+def test_skill_gallery_matches_the_gallery():
+    """examples/gallery is a copy of every example in examples/graphs, listed
+    in README order; scripts/render_examples.py refreshes it."""
+    spec = importlib.util.spec_from_file_location(
+        "sync_skill_gallery", SKILL.parents[1] / "scripts" / "sync_skill_gallery.py"
+    )
+    sync = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sync)
+    expected = sync.index()
+    assert (
+        json.loads((GALLERY / "index.json").read_text()) == expected
+    ), "run scripts/sync_skill_gallery.py"
+    source = SKILL.parents[1] / "examples" / "graphs"
+    wanted = {"index.json"}
+    for entry in expected:
+        for suffix in (".tvg.json", ".annotations.yml"):
+            name = entry["name"] + suffix
+            wanted.add(name)
+            assert (GALLERY / name).read_text() == (source / name).read_text(), name
+    assert {p.name for p in GALLERY.iterdir()} == wanted
+    assert {p.name[: -len(".tvg.json")] for p in source.glob("*.tvg.json")} == {
+        e["name"] for e in expected
+    }
+
+
 def test_minimal_example_is_clean():
     validator = _validator()
     graph = _minimal_example()

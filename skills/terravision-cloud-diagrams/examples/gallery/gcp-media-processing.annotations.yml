@@ -1,0 +1,105 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-media-processing.tvg.json --annotate gcp-media-processing.annotations.yml
+format: '0.3'
+title: Google Cloud video processing with the Transcoder API, Workflows and Cloud CDN
+update:
+  google_cloud_run_v2_job.thumbnails:
+    label: Cloud Run Job Thumbnails
+  google_video_transcoder_job_template.hls_dash:
+    label: Transcoder Template Hls Dash
+  google_bigquery_dataset.viewing:
+    label: BigQuery Viewing
+  google_cloud_run_v2_service.catalogue_api:
+    label: Cloud Run Catalogue Api
+  google_cloud_run_v2_service.studio_api:
+    label: Cloud Run Studio Api
+  google_compute_backend_bucket.renditions:
+    label: Backend Bucket Renditions
+  google_compute_backend_service.catalogue:
+    label: Backend Service Catalogue
+  google_compute_global_forwarding_rule.https:
+    label: Forwarding Rule Https
+  google_compute_security_policy.edge:
+    label: Cloud Armor Edge
+  google_compute_url_map.video:
+    label: URL Map Video
+  google_dns_managed_zone.video:
+    label: Cloud DNS Video
+  google_eventarc_trigger.video_uploaded:
+    label: Eventarc Video Uploaded
+  google_firestore_database.catalogue:
+    label: Firestore Catalogue
+  google_identity_platform_config.creators:
+    label: Identity Platform Creators
+  google_kms_key_ring.media:
+    label: Cloud KMS Media
+  google_logging_project_sink.media:
+    label: Log Sink Media
+  google_pubsub_subscription.watch_to_bigquery:
+    label: Subscription Watch To Bigquery
+  google_pubsub_topic.transcoder_events:
+    label: Pub/Sub Transcoder Events
+  google_pubsub_topic.watch_events:
+    label: Pub/Sub Watch Events
+  google_secret_manager_secret.cdn_signing_key:
+    label: Secret Manager Cdn Signing Key
+  google_storage_bucket.renditions:
+    label: Cloud Storage Renditions
+  google_storage_bucket.uploads:
+    label: Cloud Storage Uploads
+  google_transcoder_job.renditions:
+    label: Transcoder Renditions
+  google_workflows_workflow.process_video:
+    label: Workflows Process Video
+connect:
+  tv_gcp_users_icon.creators:
+  - google_storage_bucket.uploads: Signed URL upload
+  google_compute_backend_bucket.renditions:
+  - google_storage_bucket.renditions: Cloud CDN, signed cookies
+  google_transcoder_job.renditions:
+  - google_pubsub_topic.transcoder_events: Job state
+flows:
+  Ingest:
+    description: A creator's upload becomes a stream
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.creators -> google_cloud_run_v2_service.studio_api
+      xlabel: Start
+      detail: A signed-in creator starts an upload in the studio API, which returns a signed URL
+    - resource: tv_gcp_users_icon.creators -> google_storage_bucket.uploads
+      xlabel: Upload
+      detail: The browser uploads the source video straight to Cloud Storage
+    - resource: google_eventarc_trigger.video_uploaded -> google_workflows_workflow.process_video
+      xlabel: Event
+      detail: Eventarc starts the processing workflow
+    - resource: google_workflows_workflow.process_video -> google_transcoder_job.renditions
+      xlabel: Transcode
+      detail: which creates a Transcoder API job from the HLS and DASH template
+    - resource: google_transcoder_job.renditions -> google_storage_bucket.renditions
+      xlabel: Write
+      detail: The job writes the bitrate ladder and manifests to the renditions bucket
+    - resource: google_transcoder_job.renditions -> google_pubsub_topic.transcoder_events
+      xlabel: Done
+      detail: and reports its state to Pub/Sub, which the workflow waits on
+    - resource: google_workflows_workflow.process_video -> google_cloud_run_v2_job.thumbnails
+      xlabel: Thumbnails
+      detail: The workflow runs a job to make thumbnails
+    - resource: google_workflows_workflow.process_video -> google_firestore_database.catalogue
+      xlabel: Publish
+      detail: and marks the title ready in the Firestore catalogue
+  Playback:
+    description: A viewer watches the video
+    color: '#188038'
+    steps:
+    - resource: tv_gcp_users_icon.viewers -> google_dns_managed_zone.video
+      xlabel: Resolve
+      detail: The player's host name resolves in Cloud DNS to the global load balancer
+    - resource: google_compute_backend_service.catalogue -> google_cloud_run_v2_service.catalogue_api
+      xlabel: Browse
+      detail: The catalogue API on Cloud Run lists titles and signs a CDN cookie
+    - resource: google_compute_backend_bucket.renditions -> google_storage_bucket.renditions
+      xlabel: Stream
+      detail: Segments stream from the renditions bucket through Cloud CDN
+    - resource: google_pubsub_subscription.watch_to_bigquery -> google_bigquery_dataset.viewing
+      xlabel: Analyse
+      detail: Watch events go through Pub/Sub to BigQuery for viewing analytics

@@ -1,0 +1,92 @@
+{
+  "tv_gcp_users_icon.customers": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.shop",
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.shop"
+  ],
+  "google_compute_url_map.shop": [
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.web"
+  ],
+  "google_compute_backend_service.web": [
+    "google_cloud_run_v2_service.web_us_east1",
+    "google_cloud_run_v2_service.web_us_west1"
+  ],
+  "google_compute_network.global": [
+    "tv_gcp_region.us_east1",
+    "tv_gcp_region.us_west1",
+    "google_sql_database_instance.primary",
+    "google_sql_database_instance.replica"
+  ],
+  "tv_gcp_region.us_east1": [
+    "google_compute_subnetwork.services_us_east1",
+    "google_redis_instance.cache_us_east1"
+  ],
+  "google_compute_subnetwork.services_us_east1": [
+    "google_cloud_run_v2_service.web_us_east1",
+    "google_cloud_run_v2_service.worker_us_east1"
+  ],
+  "google_cloud_run_v2_service.web_us_east1": [
+    "google_redis_instance.cache_us_east1",
+    "google_sql_database_instance.primary",
+    "google_firestore_database.sessions",
+    "google_pubsub_topic.orders"
+  ],
+  "google_cloud_run_v2_service.worker_us_east1": [
+    "google_sql_database_instance.primary",
+    "google_storage_bucket.invoices"
+  ],
+  "google_pubsub_topic.orders": [
+    "google_cloud_run_v2_service.worker_us_east1",
+    "google_cloud_run_v2_service.worker_us_west1"
+  ],
+  "tv_gcp_region.us_west1": [
+    "google_compute_subnetwork.services_us_west1",
+    "google_redis_instance.cache_us_west1"
+  ],
+  "google_compute_subnetwork.services_us_west1": [
+    "google_cloud_run_v2_service.web_us_west1",
+    "google_cloud_run_v2_service.worker_us_west1"
+  ],
+  "google_cloud_run_v2_service.web_us_west1": [
+    "google_redis_instance.cache_us_west1",
+    "google_sql_database_instance.primary",
+    "google_firestore_database.sessions",
+    "google_pubsub_topic.orders"
+  ],
+  "google_cloud_run_v2_service.worker_us_west1": [
+    "google_sql_database_instance.primary",
+    "google_storage_bucket.invoices"
+  ],
+  "google_sql_database_instance.primary": [
+    "google_sql_database_instance.replica"
+  ],
+  "google_monitoring_uptime_check_config.shop": [
+    "google_monitoring_alert_policy.region_down"
+  ],
+  "google_monitoring_alert_policy.region_down": [
+    "google_workflows_workflow.failover"
+  ],
+  "google_workflows_workflow.failover": [
+    "google_sql_database_instance.replica"
+  ],
+  "tv_gcp_logical_group.global_services": [
+    "google_firestore_database.sessions",
+    "google_pubsub_topic.orders",
+    "google_storage_bucket.invoices",
+    "google_monitoring_uptime_check_config.shop",
+    "google_monitoring_alert_policy.region_down",
+    "google_workflows_workflow.failover"
+  ],
+  "google_secret_manager_secret.db_password": [],
+  "google_kms_key_ring.shop": [],
+  "google_logging_project_sink.shop": []
+}

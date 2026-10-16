@@ -1,0 +1,81 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-ecs-fargate-api.tvg.json --annotate aws-ecs-fargate-api.annotations.yml
+format: '0.3'
+title: Amazon ECS on Fargate API with Aurora, ElastiCache and an SQS worker
+update:
+  aws_vpc.api:
+    cidr_block: 10.10.0.0/16
+  aws_subnet.public~1:
+    cidr_block: 10.10.0.0/24
+  aws_subnet.app~1:
+    cidr_block: 10.10.16.0/20
+  aws_subnet.endpoints~1:
+    cidr_block: 10.10.240.0/24
+  aws_subnet.data~1:
+    cidr_block: 10.10.64.0/24
+  aws_subnet.public~2:
+    cidr_block: 10.10.1.0/24
+  aws_subnet.app~2:
+    cidr_block: 10.10.32.0/20
+  aws_subnet.endpoints~2:
+    cidr_block: 10.10.241.0/24
+  aws_subnet.data~2:
+    cidr_block: 10.10.65.0/24
+connect:
+  aws_alb.api~1:
+  - aws_ecs_fargate.api~1: HTTP 8080
+  aws_ecs_fargate.api~1:
+  - aws_rds_aurora_postgres.orders~1: PostgreSQL 5432
+  - aws_elasticache_replication_group.cache~1: Redis TLS 6379
+  aws_vpc_endpoint.sqs~1:
+  - aws_sqs_queue.jobs: SendMessage
+  aws_alb.api~2:
+  - aws_ecs_fargate.api~2: HTTP 8080
+  aws_ecs_fargate.api~2:
+  - aws_rds_aurora_postgres.orders~2: PostgreSQL 5432
+  - aws_elasticache_replication_group.cache~2: Redis TLS 6379
+  aws_vpc_endpoint.sqs~2:
+  - aws_sqs_queue.jobs: SendMessage
+  aws_sqs_queue.jobs:
+  - aws_sqs_queue.jobs_dlq: After 5 receives
+  aws_vpc_endpoint.s3_gateway:
+  - aws_s3_bucket.uploads: Stores uploads
+  aws_internet_gateway.igw:
+  - tv_aws_internet.email_provider: HTTPS 443
+flows:
+  API request:
+    description: A client calls the API
+    steps:
+    - resource: tv_aws_users.api_clients -> aws_route53_zone.api
+      xlabel: DNS
+      detail: The client resolves api.example.com in Route 53
+    - resource: aws_route53_zone.api -> aws_alb.api~1
+      xlabel: HTTPS
+      detail: and reaches the Application Load Balancer, where AWS WAF filters the request
+    - resource: aws_alb.api~1 -> aws_ecs_fargate.api~1
+      xlabel: Forward
+      detail: The load balancer sends it to an API task on Fargate in a private subnet
+    - resource: aws_ecs_fargate.api~1 -> aws_elasticache_replication_group.cache~1
+      xlabel: Cache
+      detail: The task checks ElastiCache
+    - resource: aws_ecs_fargate.api~1 -> aws_rds_aurora_postgres.orders~1
+      xlabel: Query
+      detail: and reads or writes the order in Aurora PostgreSQL
+    - resource: aws_ecs_fargate.api~1 -> aws_vpc_endpoint.sqs~1
+      xlabel: Queue
+      detail: Slow work, such as a confirmation email, goes on SQS through the interface endpoint
+  Background job:
+    description: A worker processes the queue
+    steps:
+    - resource: aws_sqs_queue.jobs -> aws_ecs_fargate.worker~2
+      xlabel: Poll
+      detail: A worker task polls the queue; messages that fail five times move to the dead-letter queue
+    - resource: aws_ecs_fargate.worker~2 -> aws_rds_aurora_postgres.orders~2
+      xlabel: Update
+      detail: The worker updates the order
+    - resource: aws_ecs_fargate.worker~2 -> aws_nat_gateway.egress~2
+      xlabel: Egress
+      detail: and calls the email provider through the NAT gateway
+    - resource: aws_internet_gateway.igw -> tv_aws_internet.email_provider
+      xlabel: Email
+      detail: which leaves through the internet gateway

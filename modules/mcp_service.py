@@ -1476,13 +1476,38 @@ _TYPE_PREFIXES = {
 }
 
 
-def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any]:
+def _gallery_render_args(annotations: Dict[str, Any]) -> Dict[str, Any]:
+    """A gallery annotations file as render_graph's title, attributes,
+    edge_labels and flows, so an agent can pass them straight through."""
+    args: Dict[str, Any] = {"title": annotations.get("title")}
+    if annotations.get("update"):
+        args["attributes"] = annotations["update"]
+    edge_labels = {
+        f"{src} -> {dst}": label
+        for src, targets in (annotations.get("connect") or {}).items()
+        for target in targets
+        for dst, label in target.items()
+    }
+    if edge_labels:
+        args["edge_labels"] = edge_labels
+    if annotations.get("flows"):
+        args["flows"] = annotations["flows"]
+    return args
+
+
+def diagram_guide(
+    provider: str, pattern: Optional[str] = None, example: Optional[str] = None
+) -> Dict[str, Any]:
     """Return what an agent needs to write a good graph for ``provider``.
 
     With ``pattern``, returns just that graph from the pattern library, built
     by scripts/gen_example_patterns.py from TerraVision's own output for real
     Terraform, so a diagram of a service mix the main examples do not cover
     keeps TerraVision's level of detail.
+
+    With ``example``, returns one design from the gallery (copied into the
+    skill by scripts/sync_skill_gallery.py): its graph, and its title, CIDR
+    ranges, arrow labels and numbered flows as render_graph arguments.
 
     The same material the agent skill gives Claude Code: the graph format
     rules (type picks, containers, what is drawn and what is not), worked
@@ -1511,6 +1536,41 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         ]
     except OSError:
         catalogue = []
+    gallery_dir = _SKILL_DIR / "examples" / "gallery"
+    try:
+        gallery = [
+            entry
+            for entry in json.loads((gallery_dir / "index.json").read_text())
+            if entry["provider"] == key
+        ]
+    except OSError:
+        gallery = []
+    if example:
+        entry = next((e for e in gallery if e["name"] == example), None)
+        if entry is None:
+            names = ", ".join(e["name"] for e in gallery) or "none"
+            raise McpServiceError(
+                f"Unknown {key} gallery example {example!r}. Available: {names}."
+            )
+        import yaml
+
+        annotations = yaml.safe_load(
+            (gallery_dir / f"{example}.annotations.yml").read_text()
+        )
+        return {
+            "provider": key,
+            "example": example,
+            "description": entry["description"],
+            "graph": json.loads((gallery_dir / f"{example}.tvg.json").read_text()),
+            "render_graph_args": _gallery_render_args(annotations),
+            "next_step": (
+                "Adapt this design to the request: rename, add and remove "
+                "services, keep its zones, subnets, endpoints and shared "
+                "services. Adapt render_graph_args the same way (every node "
+                "they name must stay in the graph) and pass them to "
+                "render_graph with the graph."
+            ),
+        }
     if pattern:
         entry = next((e for e in catalogue if e["name"] == pattern), None)
         if entry is None:
@@ -1545,7 +1605,10 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         "Start from the closest example, keep its structure (zones, public "
         "and private subnets, internet path, shared services), use the most "
         "specific node types, then call render_graph with a title. If a "
-        "pattern below matches the services asked for, fetch it with "
+        "gallery design below is close to the request, fetch it with "
+        "diagram_guide(provider, example=<name>) and start from it instead: "
+        "it comes with CIDR ranges, arrow labels and flows. If a pattern "
+        "matches the services asked for, fetch it with "
         "diagram_guide(provider, pattern=<name>) and follow it too. "
         + _ZONE_HINTS[key]
         + " Before rendering, check the graph against the request: every "
@@ -1564,6 +1627,10 @@ def diagram_guide(provider: str, pattern: Optional[str] = None) -> Dict[str, Any
         "rules": rules,
         "examples": examples,
         "node_types": node_types,
+        "gallery": [
+            {"name": e["name"], "title": e["title"], "description": e["description"]}
+            for e in gallery
+        ],
         "patterns": [
             {"name": e["name"], "description": e["description"]} for e in catalogue
         ],

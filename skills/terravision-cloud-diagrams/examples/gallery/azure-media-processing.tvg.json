@@ -1,0 +1,93 @@
+{
+  "tv_azurerm_users.creators": [
+    "azurerm_linux_web_app.studio",
+    "azurerm_storage_container.uploads"
+  ],
+  "tv_azurerm_users.viewers": [
+    "azurerm_dns_zone.video"
+  ],
+  "azurerm_dns_zone.video": [
+    "azurerm_cdn_frontdoor_profile.streaming"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.streaming"
+  ],
+  "azurerm_cdn_frontdoor_profile.streaming": [
+    "azurerm_storage_container.renditions",
+    "azurerm_linux_web_app.studio"
+  ],
+  "azurerm_resource_group.media": [
+    "azurerm_virtual_network.media",
+    "azurerm_storage_container.uploads",
+    "azurerm_storage_container.renditions",
+    "azurerm_eventgrid_system_topic.uploads",
+    "azurerm_servicebus_queue.transcode",
+    "azurerm_cosmosdb_account.catalogue",
+    "azurerm_video_indexer_account.insights",
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_virtual_network.media": [
+    "azurerm_subnet.web_integration",
+    "azurerm_subnet.jobs",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.web_integration": [
+    "azurerm_linux_web_app.studio"
+  ],
+  "azurerm_subnet.jobs": [
+    "azurerm_container_app_environment.media",
+    "azurerm_container_app_job.transcode",
+    "azurerm_container_app_job.thumbnails",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.blob",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.cosmos"
+  ],
+  "azurerm_linux_web_app.studio": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_storage_container.uploads": [
+    "azurerm_eventgrid_system_topic.uploads"
+  ],
+  "azurerm_eventgrid_system_topic.uploads": [
+    "azurerm_servicebus_queue.transcode"
+  ],
+  "azurerm_container_app_environment.media": [
+    "azurerm_container_app_job.transcode",
+    "azurerm_container_app_job.thumbnails"
+  ],
+  "azurerm_container_app_job.transcode": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.blob",
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_container_app_job.thumbnails": [
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.uploads",
+    "azurerm_storage_container.renditions"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_queue.transcode"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.catalogue"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "azurerm_video_indexer_account.insights"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.encoders",
+    "azurerm_key_vault.signing_keys",
+    "azurerm_log_analytics_workspace.media",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

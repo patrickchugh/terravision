@@ -1,0 +1,92 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-batch-hpc.tvg.json --annotate gcp-batch-hpc.annotations.yml
+format: '0.3'
+title: Google Cloud Batch risk simulation on Spot VMs with Managed Lustre and BigQuery
+update:
+  google_compute_subnetwork.compute:
+    ip_cidr_range: 10.100.0.0/18
+    label: Subnet Compute (Private Google Access)
+  google_compute_subnetwork.portal:
+    ip_cidr_range: 10.100.64.0/26
+  google_compute_instance.spot_worker~1:
+    label: Spot VMs Spot Worker
+  google_compute_instance.spot_worker~2:
+    label: Spot VMs Spot Worker
+  google_compute_instance.spot_worker~3:
+    label: Spot VMs Spot Worker
+  google_artifact_registry_repository.engine:
+    label: Artifact Registry Engine
+  google_batch_job.monte_carlo:
+    label: Batch Job Monte Carlo
+  google_bigquery_dataset.risk:
+    label: BigQuery Risk
+  google_bigquery_table.market_data:
+    label: BigQuery Table Market Data
+  google_bigquery_table.risk_results:
+    label: BigQuery Table Risk Results
+  google_cloud_run_v2_service.risk_portal:
+    label: Cloud Run Risk Portal
+  google_cloud_scheduler_job.nightly_risk:
+    label: Cloud Scheduler Nightly Risk
+  google_cloudbuild_trigger.engine:
+    label: Cloud Build Engine
+  google_kms_key_ring.risk:
+    label: Cloud KMS Risk
+  google_logging_project_sink.batch:
+    label: Log Sink Batch
+  google_looker_instance.risk_reports:
+    label: Looker Risk Reports
+  google_lustre_instance.scratch:
+    label: Managed Lustre Scratch
+  google_pubsub_topic.run_status:
+    label: Pub/Sub Run Status
+  google_secret_manager_secret.market_feed:
+    label: Secret Manager Market Feed
+  google_storage_bucket.scenarios:
+    label: Cloud Storage Scenarios
+  google_workflows_workflow.risk_run:
+    label: Workflows Risk Run
+connect:
+  google_compute_instance.spot_worker~1:
+  - google_lustre_instance.scratch: Lustre mount
+  google_bigquery_table.market_data:
+  - google_storage_bucket.scenarios: Export
+flows:
+  Run:
+    description: The nightly risk run
+    color: '#D93025'
+    steps:
+    - resource: google_cloud_scheduler_job.nightly_risk -> google_workflows_workflow.risk_run
+      xlabel: Start
+      detail: At close of market Cloud Scheduler starts the risk workflow
+    - resource: google_bigquery_table.market_data -> google_storage_bucket.scenarios
+      xlabel: Export
+      detail: The day's market data is exported from BigQuery as scenario files
+    - resource: google_workflows_workflow.risk_run -> google_batch_job.monte_carlo
+      xlabel: Submit
+      detail: The workflow submits a Batch job with 10,000 tasks
+    - resource: google_batch_job.monte_carlo -> google_compute_instance.spot_worker~1
+      xlabel: Provision
+      detail: Batch creates Spot VMs across three zones and retries tasks on preempted ones
+    - resource: google_compute_instance.spot_worker~1 -> google_lustre_instance.scratch
+      xlabel: Simulate
+      detail: Tasks share intermediate paths on Managed Lustre
+    - resource: google_compute_instance.spot_worker~1 -> google_bigquery_table.risk_results
+      xlabel: Results
+      detail: and write value-at-risk results to BigQuery
+  Report:
+    description: Analysts see the numbers
+    color: '#188038'
+    steps:
+    - resource: google_workflows_workflow.risk_run -> google_pubsub_topic.run_status
+      xlabel: Status
+      detail: The workflow publishes the run's status
+    - resource: google_pubsub_topic.run_status -> google_cloud_run_v2_service.risk_portal
+      xlabel: Notify
+      detail: to the risk portal on Cloud Run
+    - resource: tv_gcp_users_icon.risk_analysts -> google_cloud_run_v2_service.risk_portal
+      xlabel: What-if
+      detail: where analysts can also start an ad-hoc run
+    - resource: google_looker_instance.risk_reports -> google_bigquery_table.risk_results
+      xlabel: Report
+      detail: Analysts read the risk reports in Looker

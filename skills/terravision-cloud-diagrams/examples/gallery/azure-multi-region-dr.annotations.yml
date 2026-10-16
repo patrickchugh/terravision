@@ -1,0 +1,112 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-multi-region-dr.tvg.json --annotate azure-multi-region-dr.annotations.yml
+format: '0.3'
+title: Azure active-passive multi-region with Front Door, SQL failover group and geo-redundant storage
+update:
+  azurerm_virtual_network.primary:
+    address_space:
+    - 10.70.0.0/16
+  azurerm_subnet.primary_app:
+    address_prefixes:
+    - 10.70.1.0/24
+  azurerm_subnet.primary_endpoints:
+    address_prefixes:
+    - 10.70.10.0/24
+  azurerm_linux_web_app.primary:
+    label: Web App
+  azurerm_linux_function_app.primary_worker:
+    label: Worker Function
+  azurerm_mssql_database.orders_primary:
+    label: Azure SQL (primary)
+  azurerm_storage_container.documents_primary:
+    label: Documents
+  azurerm_key_vault.primary:
+    label: Key Vault
+  azurerm_virtual_network.secondary:
+    address_space:
+    - 10.71.0.0/16
+  azurerm_subnet.secondary_app:
+    address_prefixes:
+    - 10.71.1.0/24
+  azurerm_subnet.secondary_endpoints:
+    address_prefixes:
+    - 10.71.10.0/24
+  azurerm_linux_web_app.secondary:
+    label: Web App
+  azurerm_linux_function_app.secondary_worker:
+    label: Worker Function
+  azurerm_mssql_database.orders_secondary:
+    label: Azure SQL (secondary)
+  azurerm_storage_container.documents_secondary:
+    label: Documents
+  azurerm_key_vault.secondary:
+    label: Key Vault
+  tv_azurerm_region.east_us_2:
+    label: East US 2 (primary)
+  tv_azurerm_region.central_us:
+    label: Central US (standby)
+  azurerm_cosmosdb_account.sessions:
+    label: Cosmos DB (2 regions)
+  azurerm_traffic_manager_profile.api:
+    label: Traffic Manager
+  tv_azurerm_internet.partners:
+    label: Partner Webhooks
+  azurerm_resource_group.global:
+    label: Resource Group Global
+  azurerm_container_registry.images:
+    label: Container Registry (geo-replicated)
+  azurerm_application_insights.global:
+    label: Application Insights
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.global:
+    label: Azure Front Door
+  azurerm_dns_zone.public:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.global:
+    label: Log Analytics
+connect:
+  azurerm_cdn_frontdoor_profile.global:
+  - azurerm_linux_web_app.primary: Priority 1
+  - azurerm_linux_web_app.secondary: Priority 2
+  azurerm_mssql_database.orders_primary:
+  - azurerm_mssql_database.orders_secondary: Failover group
+  azurerm_storage_container.documents_primary:
+  - azurerm_storage_container.documents_secondary: RA-GZRS
+flows:
+  Normal operation:
+    description: Requests are served from East US 2
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_dns_zone.public
+      xlabel: Resolve
+      detail: The site's name resolves in Azure DNS to Front Door
+    - resource: azurerm_cdn_frontdoor_profile.global -> azurerm_linux_web_app.primary
+      xlabel: Primary
+      detail: Front Door sends traffic to the primary origin, East US 2, while its health probes pass
+    - resource: azurerm_linux_web_app.primary -> azurerm_private_endpoint.primary_sql
+      xlabel: Write
+      detail: The web app writes orders to the failover group's read-write listener
+    - resource: azurerm_mssql_database.orders_primary -> azurerm_mssql_database.orders_secondary
+      xlabel: Replicate
+      detail: Azure SQL geo-replicates every change to Central US
+    - resource: azurerm_storage_container.documents_primary -> azurerm_storage_container.documents_secondary
+      xlabel: Copy
+      detail: and the storage account copies documents to the paired region
+    - resource: azurerm_linux_web_app.primary -> azurerm_private_endpoint.primary_cosmos
+      xlabel: Session
+      detail: Sessions live in Cosmos DB, replicated to both regions
+  Regional failover:
+    description: East US 2 is lost
+    steps:
+    - resource: azurerm_cdn_frontdoor_profile.global -> azurerm_linux_web_app.secondary
+      xlabel: Fail over
+      detail: Health probes fail, and Front Door sends traffic to the standby web app in Central US
+    - resource: azurerm_linux_web_app.secondary -> azurerm_private_endpoint.secondary_sql
+      xlabel: Promote
+      detail: The failover group promotes the Central US database, and the listener follows it
+    - resource: azurerm_linux_web_app.secondary -> azurerm_private_endpoint.secondary_cosmos
+      xlabel: Sessions
+      detail: Customers keep their sessions from the Cosmos DB replica
+    - resource: azurerm_traffic_manager_profile.api -> azurerm_linux_function_app.secondary_worker
+      xlabel: Webhooks
+      detail: Traffic Manager moves partner webhooks to the Central US worker

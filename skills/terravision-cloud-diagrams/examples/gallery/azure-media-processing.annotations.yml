@@ -1,0 +1,102 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-media-processing.tvg.json --annotate azure-media-processing.annotations.yml
+format: '0.3'
+title: Azure video processing with Container Apps jobs, Video Indexer and Front Door streaming
+update:
+  azurerm_virtual_network.media:
+    address_space:
+    - 10.69.0.0/16
+  azurerm_subnet.web_integration:
+    address_prefixes:
+    - 10.69.1.0/26
+  azurerm_subnet.jobs:
+    address_prefixes:
+    - 10.69.2.0/23
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.69.10.0/24
+  tv_azurerm_users.creators:
+    label: Creators
+  tv_azurerm_users.viewers:
+    label: Viewers
+  azurerm_linux_web_app.studio:
+    label: Studio and Catalogue App
+  azurerm_storage_container.uploads:
+    label: Uploads
+  azurerm_storage_container.renditions:
+    label: HLS and DASH Renditions
+  azurerm_eventgrid_system_topic.uploads:
+    label: Event Grid (Blob events)
+  azurerm_servicebus_queue.transcode:
+    label: Transcode Queue
+  azurerm_cosmosdb_account.catalogue:
+    label: Cosmos DB Catalogue
+  azurerm_video_indexer_account.insights:
+    label: Video Indexer
+  azurerm_container_app_environment.media:
+    label: Container Apps (GPU profile)
+  azurerm_container_app_job.transcode:
+    label: Transcode Job (FFmpeg)
+  azurerm_container_app_job.thumbnails:
+    label: Thumbnail Job
+  azurerm_container_registry.encoders:
+    label: Encoder Images (ACR)
+  azurerm_key_vault.signing_keys:
+    label: Key Vault (URL signing)
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.streaming:
+    label: Azure Front Door
+  azurerm_dns_zone.video:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.media:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  tv_azurerm_users.creators:
+  - azurerm_storage_container.uploads: SAS upload
+  azurerm_eventgrid_system_topic.uploads:
+  - azurerm_servicebus_queue.transcode: BlobCreated
+  azurerm_cdn_frontdoor_profile.streaming:
+  - azurerm_storage_container.renditions: Private Link origin
+flows:
+  Ingest:
+    description: A creator's upload becomes a stream
+    steps:
+    - resource: tv_azurerm_users.creators -> azurerm_linux_web_app.studio
+      xlabel: SAS
+      detail: A creator starts an upload in the studio app, which returns a short-lived SAS URL
+    - resource: tv_azurerm_users.creators -> azurerm_storage_container.uploads
+      xlabel: Upload
+      detail: The browser uploads the source video straight to Blob Storage in blocks
+    - resource: azurerm_storage_container.uploads -> azurerm_eventgrid_system_topic.uploads
+      xlabel: Event
+      detail: Blob Storage raises a BlobCreated event
+    - resource: azurerm_eventgrid_system_topic.uploads -> azurerm_servicebus_queue.transcode
+      xlabel: Queue
+      detail: which Event Grid delivers to the transcode queue
+    - resource: azurerm_container_app_job.transcode -> azurerm_private_endpoint.service_bus
+      xlabel: Start
+      detail: The queue starts a Container Apps job on a GPU workload profile, one execution per video
+    - resource: azurerm_container_app_job.transcode -> azurerm_private_endpoint.blob
+      xlabel: Encode
+      detail: FFmpeg reads the source and writes an adaptive bitrate ladder as HLS and DASH
+    - resource: azurerm_public_ip.egress -> azurerm_video_indexer_account.insights
+      xlabel: Index
+      detail: The job sends the video to Video Indexer for captions and topics
+    - resource: azurerm_container_app_job.transcode -> azurerm_private_endpoint.cosmos
+      xlabel: Publish
+      detail: and marks the title ready in the Cosmos DB catalogue
+  Playback:
+    description: A viewer watches the video
+    steps:
+    - resource: tv_azurerm_users.viewers -> azurerm_dns_zone.video
+      xlabel: Resolve
+      detail: The player's host name resolves to Front Door
+    - resource: azurerm_cdn_frontdoor_profile.streaming -> azurerm_linux_web_app.studio
+      xlabel: Browse
+      detail: Viewers browse the catalogue through the app
+    - resource: azurerm_cdn_frontdoor_profile.streaming -> azurerm_storage_container.renditions
+      xlabel: Stream
+      detail: and Front Door streams the segments from the renditions container over Private Link, cached at the edge

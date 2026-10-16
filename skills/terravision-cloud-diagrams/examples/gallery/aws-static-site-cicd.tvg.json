@@ -1,0 +1,75 @@
+{
+  "tv_aws_users.visitors": [
+    "aws_route53_zone.site"
+  ],
+  "aws_route53_zone.site": [
+    "aws_cloudfront_distribution.production"
+  ],
+  "aws_wafv2_web_acl.site": [
+    "aws_cloudfront_distribution.production"
+  ],
+  "aws_cloudfront_distribution.production": [
+    "aws_lambda_function.security_headers",
+    "aws_s3_bucket.site",
+    "aws_s3_bucket.site_replica",
+    "aws_s3_bucket.access_logs"
+  ],
+  "aws_s3_bucket.site": [
+    "aws_s3_bucket.site_replica"
+  ],
+  "aws_cloudfront_distribution.staging": [
+    "aws_s3_bucket.staging"
+  ],
+  "tv_aws_users.developers": [
+    "tv_aws_internet.github"
+  ],
+  "tv_aws_internet.github": [
+    "aws_codeconnections_connection.github"
+  ],
+  "aws_group.release_pipeline": [
+    "aws_codeconnections_connection.github",
+    "aws_codepipeline.site",
+    "aws_codebuild_project.build",
+    "aws_codebuild_project.deploy_staging",
+    "aws_codebuild_project.browser_tests",
+    "aws_codebuild_project.deploy_production",
+    "aws_s3_bucket.artifacts"
+  ],
+  "aws_codeconnections_connection.github": [
+    "aws_codepipeline.site"
+  ],
+  "aws_codepipeline.site": [
+    "aws_codebuild_project.build",
+    "aws_codebuild_project.deploy_staging",
+    "aws_codebuild_project.browser_tests",
+    "aws_codebuild_project.deploy_production",
+    "aws_sns_topic.releases"
+  ],
+  "aws_codebuild_project.build": [
+    "aws_s3_bucket.artifacts"
+  ],
+  "aws_codebuild_project.deploy_staging": [
+    "aws_s3_bucket.staging"
+  ],
+  "aws_codebuild_project.browser_tests": [
+    "aws_cloudfront_distribution.staging"
+  ],
+  "aws_codebuild_project.deploy_production": [
+    "aws_s3_bucket.site",
+    "aws_cloudfront_distribution.production"
+  ],
+  "aws_cloudwatch_metric_alarm.error_rate": [
+    "aws_sns_topic.releases"
+  ],
+  "aws_sns_topic.releases": [
+    "aws_chatbot_slack_channel_configuration.web_team"
+  ],
+  "aws_chatbot_slack_channel_configuration.web_team": [
+    "tv_aws_users.developers"
+  ],
+  "aws_group.shared_services": [
+    "aws_acm_certificate.site",
+    "aws_kms_key.artifacts",
+    "aws_cloudwatch_log_group.builds"
+  ]
+}

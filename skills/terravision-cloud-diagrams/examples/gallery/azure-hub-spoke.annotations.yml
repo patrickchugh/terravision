@@ -1,0 +1,95 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-hub-spoke.tvg.json --annotate azure-hub-spoke.annotations.yml
+format: '0.3'
+title: Azure hub-and-spoke landing zone with Azure Firewall
+update:
+  azurerm_virtual_network.hub:
+    address_space:
+    - 10.60.0.0/22
+  azurerm_virtual_network.spoke_web:
+    address_space:
+    - 10.61.0.0/16
+  azurerm_virtual_network.spoke_internal:
+    address_space:
+    - 10.62.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.60.0.0/27
+  azurerm_subnet.firewall:
+    address_prefixes:
+    - 10.60.0.64/26
+  azurerm_subnet.bastion:
+    address_prefixes:
+    - 10.60.1.0/26
+  azurerm_subnet.dns_resolver:
+    address_prefixes:
+    - 10.60.1.64/28
+  azurerm_subnet.app_gateway:
+    address_prefixes:
+    - 10.61.0.0/24
+  azurerm_subnet.web_app:
+    address_prefixes:
+    - 10.61.1.0/24
+  azurerm_subnet.web_endpoints:
+    address_prefixes:
+    - 10.61.2.0/24
+  azurerm_subnet.internal_vms:
+    address_prefixes:
+    - 10.62.1.0/24
+  azurerm_subnet.internal_endpoints:
+    address_prefixes:
+    - 10.62.2.0/24
+connect:
+  azurerm_local_network_gateway.head_office:
+  - azurerm_virtual_network_gateway.vpn: IPsec IKEv2
+  azurerm_firewall_policy.central:
+  - azurerm_firewall.hub: Rule collections
+  azurerm_firewall.hub:
+  - azurerm_public_ip.firewall_egress: SNAT egress
+  - azurerm_windows_virtual_machine.hr_app: Over peering, HTTPS 443
+  azurerm_application_gateway.web:
+  - azurerm_linux_virtual_machine_scale_set.web~1: HTTP 8080
+  - azurerm_linux_virtual_machine_scale_set.web~2: HTTP 8080
+  azurerm_private_endpoint.orders_sql:
+  - azurerm_mssql_database.orders: TDS 8.0, port 1433
+  azurerm_bastion_host.admin:
+  - azurerm_windows_virtual_machine.hr_app: RDP 3389
+  azurerm_private_endpoint.hr_postgres:
+  - azurerm_postgresql_flexible_server.hr: PostgreSQL 5432
+  azurerm_monitor_autoscale_setting.web:
+  - azurerm_linux_virtual_machine_scale_set.web~1: Out above 70% CPU, in below 30%
+  - azurerm_linux_virtual_machine_scale_set.web~2: Out above 70% CPU, in below 30%
+flows:
+  Customer request:
+    description: A customer uses the public web app
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_public_ip.web_ingress
+      xlabel: HTTPS
+      detail: Customers reach the web app's public IP
+    - resource: azurerm_public_ip.web_ingress -> azurerm_application_gateway.web
+      xlabel: WAF
+      detail: Application Gateway terminates TLS and filters the request
+    - resource: azurerm_application_gateway.web -> azurerm_linux_virtual_machine_scale_set.web~1
+      xlabel: Route
+      detail: It routes the request to the scale set across two zones
+    - resource: azurerm_linux_virtual_machine_scale_set.web~1 -> azurerm_private_endpoint.orders_sql
+      xlabel: Query
+      detail: The web servers query Azure SQL through its private endpoint
+  Head office access:
+    description: Office users reach the internal HR app
+    steps:
+    - resource: tv_azurerm_users.office_users -> azurerm_local_network_gateway.head_office
+      xlabel: Office
+      detail: Office users connect from the head office network
+    - resource: azurerm_local_network_gateway.head_office -> azurerm_virtual_network_gateway.vpn
+      xlabel: VPN
+      detail: A site-to-site VPN carries the traffic to the hub's VPN gateway
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_firewall.hub
+      xlabel: Inspect
+      detail: Azure Firewall inspects it against the central policy
+    - resource: azurerm_firewall.hub -> azurerm_windows_virtual_machine.hr_app
+      xlabel: HR app
+      detail: Allowed traffic crosses the VNet peering to the HR app in the internal spoke
+    - resource: azurerm_windows_virtual_machine.hr_app -> azurerm_private_endpoint.hr_postgres
+      xlabel: Query
+      detail: which reads PostgreSQL through its private endpoint

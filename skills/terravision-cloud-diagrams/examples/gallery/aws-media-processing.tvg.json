@@ -1,0 +1,63 @@
+{
+  "tv_aws_users.creators": [
+    "aws_apigatewayv2_api.media",
+    "aws_s3_bucket.uploads"
+  ],
+  "tv_aws_users.viewers": [
+    "aws_route53_zone.video",
+    "aws_apigatewayv2_api.media"
+  ],
+  "aws_apigatewayv2_api.media": [
+    "aws_cognito_user_pool.members",
+    "aws_lambda_function.upload_url",
+    "aws_lambda_function.catalogue_api"
+  ],
+  "aws_lambda_function.upload_url": [
+    "aws_s3_bucket.uploads"
+  ],
+  "aws_s3_bucket.uploads": [
+    "aws_cloudwatch_event_rule.new_upload",
+    "aws_glacier_vault.masters"
+  ],
+  "aws_cloudwatch_event_rule.new_upload": [
+    "aws_sfn_state_machine.transcode"
+  ],
+  "aws_group.processing_workflow": [
+    "aws_cloudwatch_event_rule.new_upload",
+    "aws_sfn_state_machine.transcode",
+    "aws_lambda_function.probe",
+    "aws_media_convert_queue.vod",
+    "aws_rekognition_collection.moderation"
+  ],
+  "aws_sfn_state_machine.transcode": [
+    "aws_lambda_function.probe",
+    "aws_media_convert_queue.vod",
+    "aws_rekognition_collection.moderation",
+    "aws_dynamodb_table.catalogue",
+    "aws_sns_topic.video_ready"
+  ],
+  "aws_media_convert_queue.vod": [
+    "aws_s3_bucket.renditions"
+  ],
+  "aws_sns_topic.video_ready": [
+    "tv_aws_users.creators"
+  ],
+  "aws_lambda_function.catalogue_api": [
+    "aws_dynamodb_table.catalogue",
+    "aws_secretsmanager_secret.url_signing_key"
+  ],
+  "aws_route53_zone.video": [
+    "aws_cloudfront_distribution.video"
+  ],
+  "aws_wafv2_web_acl.video": [
+    "aws_cloudfront_distribution.video"
+  ],
+  "aws_cloudfront_distribution.video": [
+    "aws_s3_bucket.renditions"
+  ],
+  "aws_group.shared_services": [
+    "aws_kms_key.media",
+    "aws_cloudwatch_log_group.media",
+    "aws_acm_certificate.video"
+  ]
+}

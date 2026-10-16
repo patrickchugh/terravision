@@ -1,0 +1,119 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-vm-scale-set-web.tvg.json --annotate azure-vm-scale-set-web.annotations.yml
+format: '0.3'
+title: Azure web application migrated from on-premises to VM Scale Sets across three zones
+update:
+  azurerm_virtual_network.web:
+    address_space:
+    - 10.72.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.72.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.app_gateway:
+    address_prefixes:
+    - 10.72.1.0/24
+  azurerm_subnet.web:
+    address_prefixes:
+    - 10.72.4.0/22
+  azurerm_subnet.migration:
+    address_prefixes:
+    - 10.72.2.0/27
+  azurerm_subnet.bastion:
+    address_prefixes:
+    - 10.72.3.0/26
+    label: AzureBastionSubnet
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.72.10.0/24
+  tv_azure_onprem.datacenter:
+    label: Corporate Datacenter
+  tv_azurerm_server.web_servers:
+    label: Web Servers (source)
+  tv_azurerm_database.sql_server:
+    label: SQL Server (source)
+  azurerm_local_network_gateway.datacenter:
+    label: VPN Device
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway
+  azurerm_application_gateway.web:
+    label: App Gateway WAF v2
+  azurerm_linux_virtual_machine_scale_set.web~1:
+    label: Web VMSS
+  azurerm_linux_virtual_machine_scale_set.web~2:
+    label: Web VMSS
+  azurerm_linux_virtual_machine_scale_set.web~3:
+    label: Web VMSS
+  azurerm_monitor_autoscale_setting.web:
+    label: Autoscale (CPU 60%)
+  azurerm_database_migration_service.dms:
+    label: Database Migration Service
+  azurerm_mssql_database.shop:
+    label: Azure SQL (zone redundant)
+  azurerm_storage_share.content:
+    label: Azure Files Content
+  azurerm_managed_redis.sessions:
+    label: Managed Redis Sessions
+  azurerm_recovery_services_vault.migration:
+    label: Azure Migrate Vault
+  azurerm_bastion_host.admin:
+    label: Azure Bastion
+  tv_azurerm_internet.payment_provider:
+    label: Payment Provider
+  azurerm_shared_image_gallery.golden_images:
+    label: Compute Gallery Images
+  azurerm_dns_zone.shop:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.web:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+  azurerm_web_application_firewall_policy.waf:
+    label: WAF Policy
+connect:
+  azurerm_local_network_gateway.datacenter:
+  - azurerm_virtual_network_gateway.vpn: Site-to-site VPN
+  azurerm_private_endpoint.files:
+  - azurerm_storage_share.content: SMB 445
+  azurerm_private_endpoint.sql:
+  - azurerm_mssql_database.shop: TDS 1433
+flows:
+  Migrate:
+    description: The application moves from the data centre
+    steps:
+    - resource: tv_azurerm_server.web_servers -> azurerm_local_network_gateway.datacenter
+      xlabel: Replicate
+      detail: Azure Migrate replicates the web servers across the site-to-site VPN
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_private_endpoint.vault
+      xlabel: Vault
+      detail: to its vault through a private endpoint, and the replicas become the image for the scale set
+    - resource: tv_azurerm_database.sql_server -> azurerm_local_network_gateway.datacenter
+      xlabel: Sync
+      detail: Database Migration Service reads the SQL Server database over the VPN
+    - resource: azurerm_database_migration_service.dms -> azurerm_private_endpoint.sql
+      xlabel: Load
+      detail: and keeps Azure SQL in sync until cutover
+  Serve:
+    description: Customers use the migrated shop
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_dns_zone.shop
+      xlabel: Resolve
+      detail: At cutover Azure DNS points the shop at Application Gateway's public IP
+    - resource: azurerm_application_gateway.web -> azurerm_linux_virtual_machine_scale_set.web~1
+      xlabel: Balance
+      detail: Application Gateway with WAF v2 balances requests across the scale set in three zones
+    - resource: azurerm_monitor_autoscale_setting.web -> azurerm_linux_virtual_machine_scale_set.web~1
+      xlabel: Scale
+      detail: Autoscale adds instances above 60% CPU
+    - resource: azurerm_linux_virtual_machine_scale_set.web~1 -> azurerm_private_endpoint.redis
+      xlabel: Session
+      detail: Instances share sessions in Azure Managed Redis
+    - resource: azurerm_linux_virtual_machine_scale_set.web~1 -> azurerm_private_endpoint.files
+      xlabel: Content
+      detail: and uploaded content on Azure Files
+    - resource: azurerm_linux_virtual_machine_scale_set.web~1 -> azurerm_private_endpoint.sql
+      xlabel: Query
+      detail: and query the zone-redundant Azure SQL database
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.payment_provider
+      xlabel: Pay
+      detail: Payments go to the provider through the NAT gateway

@@ -219,6 +219,13 @@ GKE, AKS and others), each TerraVision's own output for real Terraform with the 
 plainly. Pass `pattern: "<name>"` to fetch one. `scripts/gen_example_patterns.py` rebuilds the
 library from `tests/json` and refuses any pattern that would draw differently from the original.
 
+And it lists the [gallery](gallery.md) designs for that provider, 19 per cloud, each with a
+one-line description. Pass `example: "<name>"` to fetch one: its graph, plus its title, CIDR
+ranges, arrow labels and numbered flows as `render_graph` arguments (`render_graph_args`), so an
+agent can start from the closest design and keep its level of detail.
+`scripts/sync_skill_gallery.py`, run by `scripts/render_examples.py`, copies the gallery into the
+skill's `examples/gallery/` folder that this reads.
+
 ### `render_graph`
 
 Renders a diagram from a graph passed directly as JSON, so an agent never has to write a file.

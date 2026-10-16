@@ -1,0 +1,93 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-streaming-analytics.tvg.json --annotate azure-streaming-analytics.annotations.yml
+format: '0.3'
+title: Azure real-time clickstream analytics with Event Hubs, Stream Analytics and Data Explorer
+update:
+  azurerm_virtual_network.analytics:
+    address_space:
+    - 10.63.0.0/16
+  azurerm_subnet.web_integration:
+    address_prefixes:
+    - 10.63.1.0/26
+  azurerm_subnet.stream_processing:
+    address_prefixes:
+    - 10.63.2.0/24
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.63.10.0/24
+  azurerm_eventhub.clickstream:
+    label: Event Hub Clickstream
+  azurerm_storage_data_lake_gen2_filesystem.raw_events:
+    label: ADLS Raw Events
+  azurerm_kusto_cluster.analytics:
+    label: Data Explorer
+  azurerm_stream_analytics_job.sessionise:
+    label: Stream Analytics
+  azurerm_linux_function_app.anomalies:
+    label: Anomaly Function
+  azurerm_linux_web_app.storefront:
+    label: Storefront
+  azurerm_cosmosdb_account.profiles:
+    label: Cosmos DB Profiles
+  azurerm_dashboard_grafana.operations:
+    label: Managed Grafana
+  azurerm_monitor_action_group.on_call:
+    label: On-call Action Group
+  azurerm_application_insights.storefront:
+    label: Application Insights
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.edge:
+    label: Azure Front Door
+  azurerm_log_analytics_workspace.platform:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_eventhub.clickstream:
+  - azurerm_storage_data_lake_gen2_filesystem.raw_events: Capture, Avro
+  - azurerm_kusto_cluster.analytics: Data connection
+  azurerm_private_endpoint.event_hubs:
+  - azurerm_eventhub.clickstream: Kafka 9093
+  azurerm_private_endpoint.cosmos:
+  - azurerm_cosmosdb_account.profiles: HTTPS 443
+flows:
+  Capture:
+    description: Clicks stream into Event Hubs
+    steps:
+    - resource: tv_azurerm_users.shoppers -> azurerm_cdn_frontdoor_profile.edge
+      xlabel: Browse
+      detail: Shoppers browse the store through Front Door and its WAF
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_linux_web_app.storefront
+      xlabel: Origin
+      detail: Front Door sends the request to the storefront web app
+    - resource: azurerm_linux_web_app.storefront -> azurerm_private_endpoint.event_hubs
+      xlabel: Send
+      detail: The storefront sends each click to Event Hubs over its Kafka endpoint, through a private endpoint
+    - resource: azurerm_eventhub.clickstream -> azurerm_storage_data_lake_gen2_filesystem.raw_events
+      xlabel: Archive
+      detail: Event Hubs Capture writes every event to the data lake as Avro files
+    - resource: azurerm_eventhub.clickstream -> azurerm_kusto_cluster.analytics
+      xlabel: Ingest
+      detail: and a data connection streams the same events into Azure Data Explorer
+  Real-time insight:
+    description: Sessions, recommendations and alerts within seconds
+    steps:
+    - resource: azurerm_stream_analytics_job.sessionise -> azurerm_private_endpoint.event_hubs
+      xlabel: Window
+      detail: A Stream Analytics job groups clicks into sessions over a sliding window
+    - resource: azurerm_stream_analytics_job.sessionise -> azurerm_private_endpoint.cosmos
+      xlabel: Profile
+      detail: and updates each shopper's recent-interest profile in Cosmos DB
+    - resource: azurerm_linux_web_app.storefront -> azurerm_private_endpoint.cosmos
+      xlabel: Recommend
+      detail: The storefront reads the profile to personalise the next page
+    - resource: azurerm_linux_function_app.anomalies -> azurerm_private_endpoint.kusto
+      xlabel: Detect
+      detail: A function compares conversion rates in Data Explorer with the baseline
+    - resource: azurerm_linux_function_app.anomalies -> azurerm_monitor_action_group.on_call
+      xlabel: Alert
+      detail: and pages the on-call team through an action group when checkout drops
+    - resource: azurerm_dashboard_grafana.operations -> azurerm_kusto_cluster.analytics
+      xlabel: Dashboard
+      detail: Analysts watch live funnels in Managed Grafana, which queries Data Explorer

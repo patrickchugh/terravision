@@ -1,0 +1,98 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-vertex-mlops.tvg.json --annotate gcp-vertex-mlops.annotations.yml
+format: '0.3'
+title: Google Cloud Vertex AI MLOps with Workbench, pipelines, a feature store and a private endpoint
+update:
+  google_compute_subnetwork.workbench:
+    ip_cidr_range: 10.60.0.0/24
+  google_compute_subnetwork.training:
+    ip_cidr_range: 10.60.16.0/20
+  google_compute_subnetwork.serving:
+    ip_cidr_range: 10.60.32.0/24
+  google_vertex_ai_metadata_store.pipelines:
+    label: Vertex AI Pipelines
+  tv_gcp_external_saas.github:
+    label: GitHub
+  google_access_context_manager_service_perimeter.ml:
+    label: VPC-SC Perimeter Ml
+  google_artifact_registry_repository.training_images:
+    label: Artifact Registry Training Images
+  google_bigquery_dataset.prediction_logs:
+    label: BigQuery Prediction Logs
+  google_bigquery_dataset.training:
+    label: BigQuery Training
+  google_cloud_run_v2_service.claims:
+    label: Cloud Run Claims
+  google_cloudbuild_trigger.train:
+    label: Cloud Build Train
+  google_cloudbuildv2_repository.models:
+    label: Repository Models
+  google_compute_forwarding_rule.psc_vertex_ai:
+    label: Forwarding Rule Psc Vertex Ai
+  google_compute_global_forwarding_rule.psc_google_apis:
+    label: Forwarding Rule Psc Google Apis
+  google_iap_client.workbench:
+    label: IAP Workbench
+  google_kms_key_ring.ml:
+    label: Cloud KMS Ml
+  google_logging_project_sink.ml:
+    label: Log Sink Ml
+  google_secret_manager_secret.github_token:
+    label: Secret Manager Github Token
+  google_storage_bucket.artifacts:
+    label: Cloud Storage Artifacts
+  google_vertex_ai_endpoint.fraud:
+    label: Vertex AI Endpoint Fraud
+  google_vertex_ai_feature_online_store.features:
+    label: Feature Store Features
+  google_vertex_ai_model.fraud:
+    label: Model Registry Fraud
+  google_workbench_instance.notebooks:
+    label: Workbench Notebooks
+connect:
+  google_iap_client.workbench:
+  - google_workbench_instance.notebooks: IAP
+  google_vertex_ai_endpoint.fraud:
+  - google_bigquery_dataset.prediction_logs: Request-response logging
+flows:
+  Train:
+    description: A merged change retrains the model
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.data_scientists -> google_iap_client.workbench
+      xlabel: Sign in
+      detail: Data scientists reach their Workbench notebooks through Identity-Aware Proxy
+    - resource: tv_gcp_server.github -> google_cloudbuildv2_repository.models
+      xlabel: Merge
+      detail: Merging their change to main notifies Cloud Build
+    - resource: google_cloudbuild_trigger.train -> google_artifact_registry_repository.training_images
+      xlabel: Build
+      detail: which builds the training image into Artifact Registry
+    - resource: google_cloudbuild_trigger.train -> google_vertex_ai_metadata_store.pipelines
+      xlabel: Run
+      detail: and starts a Vertex AI pipeline on workers in the training subnet
+    - resource: google_vertex_ai_metadata_store.pipelines -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Data
+      detail: The pipeline reads features from BigQuery and writes artifacts to Cloud Storage inside the perimeter
+    - resource: google_vertex_ai_metadata_store.pipelines -> google_vertex_ai_model.fraud
+      xlabel: Register
+      detail: and registers the evaluated model in the Model Registry
+  Serve:
+    description: A claim is scored
+    color: '#188038'
+    steps:
+    - resource: google_vertex_ai_model.fraud -> google_vertex_ai_endpoint.fraud
+      xlabel: Deploy
+      detail: An approved model version is deployed to the fraud endpoint
+    - resource: tv_gcp_users_icon.claims_handlers -> google_cloud_run_v2_service.claims
+      xlabel: Claim
+      detail: Claims handlers open a claim in the claims app
+    - resource: google_cloud_run_v2_service.claims -> google_compute_forwarding_rule.psc_vertex_ai
+      xlabel: Score
+      detail: which calls the endpoint through its Private Service Connect address
+    - resource: google_vertex_ai_endpoint.fraud -> google_vertex_ai_feature_online_store.features
+      xlabel: Features
+      detail: The endpoint looks up the customer's features in the online store
+    - resource: google_vertex_ai_endpoint.fraud -> google_bigquery_dataset.prediction_logs
+      xlabel: Log
+      detail: and logs requests and responses to BigQuery for model monitoring

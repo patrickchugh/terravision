@@ -1,0 +1,122 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-payments-processing.tvg.json --annotate azure-payments-processing.annotations.yml
+format: '0.3'
+title: Azure PCI DSS payments platform with a hub firewall, private AKS and Managed HSM tokenisation
+update:
+  azurerm_virtual_network.hub:
+    address_space:
+    - 10.0.0.0/22
+  azurerm_subnet.firewall:
+    address_prefixes:
+    - 10.0.1.0/26
+    label: AzureFirewallSubnet
+  azurerm_subnet.bastion:
+    address_prefixes:
+    - 10.0.2.0/26
+    label: AzureBastionSubnet
+  azurerm_virtual_network.cde:
+    address_space:
+    - 10.20.0.0/16
+    label: VNET CDE
+  azurerm_subnet.app_gateway:
+    address_prefixes:
+    - 10.20.0.0/24
+  azurerm_subnet.aks:
+    address_prefixes:
+    - 10.20.4.0/22
+  azurerm_subnet.settlement:
+    address_prefixes:
+    - 10.20.8.0/26
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.20.10.0/24
+  azurerm_resource_group.cde:
+    label: Resource Group CDE
+  tv_azurerm_users.merchants:
+    label: Merchant Checkouts
+  azurerm_application_gateway.payments:
+    label: App Gateway WAF v2
+  azurerm_kubernetes_cluster.payments:
+    label: AKS Private Cluster
+  azurerm_kubernetes_cluster_node_pool.payments~1:
+    label: Payment API Pods
+  azurerm_kubernetes_cluster_node_pool.payments~2:
+    label: Payment API Pods
+  azurerm_linux_function_app.settlement:
+    label: Settlement Function
+  azurerm_key_vault_managed_hardware_security_module.tokens:
+    label: Managed HSM
+  azurerm_mssql_database.card_vault:
+    label: Token Vault (Always Encrypted)
+  azurerm_mssql_database.transactions:
+    label: Transactions DB
+  azurerm_servicebus_queue.settlement:
+    label: Settlement Queue
+  azurerm_storage_container.audit:
+    label: Audit Log (immutable)
+  azurerm_firewall.hub:
+    label: Azure Firewall
+  azurerm_firewall_policy.cde:
+    label: Firewall Policy
+  tv_azurerm_internet.card_networks:
+    label: Card Networks
+  azurerm_bastion_host.admin:
+    label: Azure Bastion
+  azurerm_security_center_subscription_pricing.defender:
+    label: Defender for Cloud
+  azurerm_policy_assignment.pci_dss:
+    label: PCI DSS Policy
+  azurerm_network_ddos_protection_plan.cde:
+    label: DDoS Protection
+  azurerm_container_registry.images:
+    label: Container Registry
+  azurerm_log_analytics_workspace.security:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+  azurerm_web_application_firewall_policy.waf:
+    label: WAF Policy
+connect:
+  azurerm_public_ip.egress:
+  - tv_azurerm_internet.card_networks: mTLS 443
+  azurerm_private_endpoint.hsm:
+  - azurerm_key_vault_managed_hardware_security_module.tokens: Tokenisation keys
+  azurerm_private_endpoint.blob:
+  - azurerm_storage_container.audit: WORM
+flows:
+  Authorise:
+    description: A card payment is authorised
+    steps:
+    - resource: tv_azurerm_users.merchants -> azurerm_public_ip.ingress
+      xlabel: Pay
+      detail: A merchant's checkout posts the card payment over TLS
+    - resource: azurerm_application_gateway.payments -> azurerm_kubernetes_cluster_node_pool.payments~1
+      xlabel: Inspect
+      detail: Application Gateway's WAF inspects it and sends it to the payment API on the private AKS cluster
+    - resource: azurerm_kubernetes_cluster_node_pool.payments~1 -> azurerm_private_endpoint.hsm
+      xlabel: Tokenise
+      detail: The API tokenises the card number with a key that never leaves Managed HSM
+    - resource: azurerm_kubernetes_cluster_node_pool.payments~1 -> azurerm_private_endpoint.sql
+      xlabel: Store
+      detail: and stores the token and transaction in Azure SQL with Always Encrypted
+    - resource: azurerm_kubernetes_cluster_node_pool.payments~1 -> azurerm_firewall.hub
+      xlabel: Egress
+      detail: The authorisation request leaves through Azure Firewall in the hub, which allows only the card networks
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.card_networks
+      xlabel: Authorise
+      detail: The card network authorises it over mutual TLS
+  Settle:
+    description: The day's payments are settled
+    steps:
+    - resource: azurerm_kubernetes_cluster_node_pool.payments~1 -> azurerm_private_endpoint.service_bus
+      xlabel: Queue
+      detail: Each captured payment is queued for settlement
+    - resource: azurerm_linux_function_app.settlement -> azurerm_private_endpoint.service_bus
+      xlabel: Batch
+      detail: The settlement function batches the queue at cut-off
+    - resource: azurerm_linux_function_app.settlement -> azurerm_private_endpoint.blob
+      xlabel: Audit
+      detail: and writes an audit record to immutable Blob Storage
+    - resource: azurerm_linux_function_app.settlement -> azurerm_firewall.hub
+      xlabel: File
+      detail: then sends the settlement file to the acquirer through the hub firewall

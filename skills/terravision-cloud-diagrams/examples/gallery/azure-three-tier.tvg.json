@@ -1,0 +1,71 @@
+{
+  "tv_azurerm_users.users": [
+    "azurerm_dns_zone.public"
+  ],
+  "azurerm_dns_zone.public": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_static_web_app.frontend",
+    "azurerm_public_ip.appgw"
+  ],
+  "azurerm_public_ip.appgw": [
+    "azurerm_application_gateway.api"
+  ],
+  "azurerm_resource_group.app": [
+    "azurerm_static_web_app.frontend",
+    "azurerm_virtual_network.main",
+    "azurerm_mssql_database.app",
+    "azurerm_public_ip.appgw",
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_virtual_network.main": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.app",
+    "azurerm_subnet.data"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_application_gateway.api"
+  ],
+  "azurerm_subnet.app": [
+    "tv_azurerm_zone.zone_1",
+    "tv_azurerm_zone.zone_2",
+    "azurerm_nat_gateway.egress"
+  ],
+  "tv_azurerm_zone.zone_1": [
+    "azurerm_container_app.api~1"
+  ],
+  "tv_azurerm_zone.zone_2": [
+    "azurerm_container_app.api~2"
+  ],
+  "azurerm_subnet.data": [
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_application_gateway.api": [
+    "azurerm_container_app.api~1",
+    "azurerm_container_app.api~2"
+  ],
+  "azurerm_container_app.api~1": [
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_container_app.api~2": [
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.app"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.internet"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.logs",
+    "azurerm_container_registry.images"
+  ]
+}

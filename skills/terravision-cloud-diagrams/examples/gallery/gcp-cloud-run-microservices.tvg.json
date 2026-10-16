@@ -1,0 +1,96 @@
+{
+  "tv_gcp_users_icon.shoppers": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_url_map.shop",
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_url_map.shop"
+  ],
+  "google_compute_url_map.shop": [
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.storefront"
+  ],
+  "google_compute_backend_service.storefront": [
+    "google_cloud_run_v2_service.storefront"
+  ],
+  "google_compute_network.shop": [
+    "tv_gcp_region.us_central1",
+    "google_compute_global_forwarding_rule.psc_google_apis",
+    "google_redis_instance.sessions"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_subnetwork.services",
+    "google_compute_subnetwork.psc_endpoints",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.services": [
+    "google_cloud_run_v2_service.storefront",
+    "google_cloud_run_v2_service.orders",
+    "google_cloud_run_v2_service.payments",
+    "google_cloud_run_v2_service.notifications"
+  ],
+  "google_compute_subnetwork.psc_endpoints": [
+    "google_compute_forwarding_rule.psc_cloud_sql"
+  ],
+  "google_cloud_run_v2_service.storefront": [
+    "google_redis_instance.sessions",
+    "google_cloud_run_v2_service.orders",
+    "google_cloud_run_v2_service.payments"
+  ],
+  "google_cloud_run_v2_service.orders": [
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_global_forwarding_rule.psc_google_apis"
+  ],
+  "google_cloud_run_v2_service.payments": [
+    "google_compute_forwarding_rule.psc_cloud_sql",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_forwarding_rule.psc_cloud_sql": [
+    "google_sql_database_instance.orders"
+  ],
+  "google_compute_global_forwarding_rule.psc_google_apis": [
+    "google_pubsub_topic.order_events",
+    "google_firestore_database.carts"
+  ],
+  "google_pubsub_topic.order_events": [
+    "google_pubsub_subscription.notifications"
+  ],
+  "google_pubsub_subscription.notifications": [
+    "google_cloud_run_v2_service.notifications"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.payment_gateway"
+  ],
+  "tv_gcp_external_3p.payment_provider": [
+    "tv_gcp_server.payment_gateway"
+  ],
+  "tv_gcp_logical_group.delivery": [
+    "google_cloudbuildv2_repository.shop",
+    "google_cloudbuild_trigger.release",
+    "google_artifact_registry_repository.images",
+    "google_clouddeploy_delivery_pipeline.shop"
+  ],
+  "google_cloudbuildv2_repository.shop": [
+    "google_cloudbuild_trigger.release"
+  ],
+  "google_cloudbuild_trigger.release": [
+    "google_artifact_registry_repository.images",
+    "google_clouddeploy_delivery_pipeline.shop"
+  ],
+  "google_clouddeploy_delivery_pipeline.shop": [
+    "google_cloud_run_v2_service.storefront"
+  ],
+  "google_secret_manager_secret.payment_api_key": [],
+  "google_kms_key_ring.shop": [],
+  "google_logging_project_sink.services": []
+}

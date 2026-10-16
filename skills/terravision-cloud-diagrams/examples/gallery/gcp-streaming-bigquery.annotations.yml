@@ -1,0 +1,87 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-streaming-bigquery.tvg.json --annotate gcp-streaming-bigquery.annotations.yml
+format: '0.3'
+title: Google Cloud real-time game telemetry with Pub/Sub, Dataflow, Bigtable and BigQuery
+update:
+  google_compute_subnetwork.dataflow:
+    ip_cidr_range: 10.50.0.0/20
+  google_compute_subnetwork.serving:
+    ip_cidr_range: 10.50.16.0/24
+  google_bigquery_dataset.game_analytics:
+    label: BigQuery Game Analytics
+  google_bigquery_table.events:
+    label: BigQuery Table Events
+  google_bigtable_instance.player_state:
+    label: Bigtable Player State
+  google_cloud_run_v2_service.collector:
+    label: Cloud Run Collector
+  google_cloud_run_v2_service.leaderboard_api:
+    label: Cloud Run Leaderboard Api
+  google_compute_backend_service.collector:
+    label: Backend Service Collector
+  google_compute_global_forwarding_rule.https:
+    label: Forwarding Rule Https
+  google_compute_security_policy.edge:
+    label: Cloud Armor Edge
+  google_compute_url_map.telemetry:
+    label: URL Map Telemetry
+  google_dataflow_flex_template_job.sessionise:
+    label: Dataflow Sessionise
+  google_logging_project_sink.pipeline:
+    label: Log Sink Pipeline
+  google_looker_instance.dashboards:
+    label: Looker Dashboards
+  google_monitoring_dashboard.pipeline:
+    label: Dashboard Pipeline
+  google_pubsub_subscription.dataflow:
+    label: Subscription Dataflow
+  google_pubsub_topic.events_dead_letter:
+    label: Pub/Sub Events Dead Letter
+  google_pubsub_topic.game_events:
+    label: Pub/Sub Game Events
+  google_secret_manager_secret.collector_keys:
+    label: Secret Manager Collector Keys
+  google_vertex_ai_endpoint.cheat_detection:
+    label: Vertex AI Endpoint Cheat Detection
+connect:
+  google_dataflow_flex_template_job.sessionise:
+  - google_bigquery_table.events: Storage Write API
+  - google_vertex_ai_endpoint.cheat_detection: Score
+  google_pubsub_topic.game_events:
+  - google_pubsub_topic.events_dead_letter: Dead letter
+flows:
+  Ingest:
+    description: Game events stream into Google Cloud
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.players -> google_compute_global_forwarding_rule.https
+      xlabel: Send
+      detail: Game clients send batches of events to the global load balancer
+    - resource: google_compute_backend_service.collector -> google_cloud_run_v2_service.collector
+      xlabel: Collect
+      detail: Cloud Armor rate-limits them and the collector on Cloud Run checks each batch
+    - resource: google_cloud_run_v2_service.collector -> google_pubsub_topic.game_events
+      xlabel: Publish
+      detail: and publishes the events to Pub/Sub
+    - resource: google_dataflow_flex_template_job.sessionise -> google_pubsub_subscription.dataflow
+      xlabel: Read
+      detail: A streaming Dataflow job reads the subscription with exactly-once processing
+    - resource: google_dataflow_flex_template_job.sessionise -> google_bigquery_table.events
+      xlabel: Write
+      detail: and writes every event to BigQuery through the Storage Write API
+  Real time:
+    description: Leaderboards and cheat detection in seconds
+    color: '#188038'
+    steps:
+    - resource: google_dataflow_flex_template_job.sessionise -> google_bigtable_instance.player_state
+      xlabel: Update
+      detail: Dataflow updates each player's score and session in Bigtable
+    - resource: google_dataflow_flex_template_job.sessionise -> google_vertex_ai_endpoint.cheat_detection
+      xlabel: Score
+      detail: and scores suspicious sessions with a cheat detection model on Vertex AI
+    - resource: google_cloud_run_v2_service.leaderboard_api -> google_bigtable_instance.player_state
+      xlabel: Leaderboard
+      detail: The leaderboard API reads Bigtable for clients in milliseconds
+    - resource: google_looker_instance.dashboards -> google_bigquery_table.events
+      xlabel: Analyse
+      detail: Analysts explore retention and spend in Looker on BigQuery

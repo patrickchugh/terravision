@@ -17,7 +17,8 @@ but is still checked.
 Then it runs scripts/make_gallery_images.py for the web-sized copies, sets
 each gallery image's width and height in docs/gallery.md from them, and runs
 scripts/update_llms_examples.py for the example list in docs/llms.txt and
-docs/llms-full.txt.
+docs/llms-full.txt, and scripts/sync_skill_gallery.py for the copies the agent
+skill and diagram_guide ship.
 
 Exits 1 if any example fails to validate or render. Warnings are printed but
 do not fail the run; tests/test_examples_gallery.py fails on them.
@@ -274,6 +275,8 @@ def main():
     print(f"gallery image sizes checked: {sync_gallery_sizes()}")
     if run_script("update_llms_examples.py") != 0:
         failed.append("update_llms_examples.py")
+    if run_script("sync_skill_gallery.py") != 0:
+        failed.append("sync_skill_gallery.py")
     return 1 if failed else 0
 
 

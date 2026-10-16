@@ -1,0 +1,99 @@
+{
+  "tv_aws_mobile_client.mobile_apps": [
+    "aws_kinesis_stream.clickstream"
+  ],
+  "aws_vpc.streaming": [
+    "tv_aws_az.us_east_1a",
+    "tv_aws_az.us_east_1b",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "tv_aws_az.us_east_1a": [
+    "aws_subnet.processing~1",
+    "aws_subnet.analytics~1",
+    "aws_subnet.endpoints~1"
+  ],
+  "aws_subnet.processing~1": [
+    "aws_kinesisanalyticsv2_application.enrich~1"
+  ],
+  "aws_subnet.analytics~1": [
+    "aws_opensearch_domain.events~1",
+    "aws_redshiftserverless_workgroup.analytics~1"
+  ],
+  "aws_subnet.endpoints~1": [
+    "aws_vpc_endpoint.kinesis~1"
+  ],
+  "aws_kinesisanalyticsv2_application.enrich~1": [
+    "aws_vpc_endpoint.kinesis~1",
+    "aws_opensearch_domain.events~1",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "aws_redshiftserverless_workgroup.analytics~1": [
+    "aws_vpc_endpoint.kinesis~1",
+    "aws_redshiftserverless_namespace.analytics"
+  ],
+  "aws_vpc_endpoint.kinesis~1": [
+    "aws_kinesis_stream.clickstream"
+  ],
+  "tv_aws_az.us_east_1b": [
+    "aws_subnet.processing~2",
+    "aws_subnet.analytics~2",
+    "aws_subnet.endpoints~2"
+  ],
+  "aws_subnet.processing~2": [
+    "aws_kinesisanalyticsv2_application.enrich~2"
+  ],
+  "aws_subnet.analytics~2": [
+    "aws_opensearch_domain.events~2",
+    "aws_redshiftserverless_workgroup.analytics~2"
+  ],
+  "aws_subnet.endpoints~2": [
+    "aws_vpc_endpoint.kinesis~2"
+  ],
+  "aws_kinesisanalyticsv2_application.enrich~2": [
+    "aws_vpc_endpoint.kinesis~2",
+    "aws_opensearch_domain.events~2",
+    "aws_vpc_endpoint.s3_gateway"
+  ],
+  "aws_redshiftserverless_workgroup.analytics~2": [
+    "aws_vpc_endpoint.kinesis~2",
+    "aws_redshiftserverless_namespace.analytics"
+  ],
+  "aws_vpc_endpoint.kinesis~2": [
+    "aws_kinesis_stream.clickstream"
+  ],
+  "aws_vpc_endpoint.s3_gateway": [
+    "aws_s3_bucket.flink_checkpoints"
+  ],
+  "aws_kinesis_stream.clickstream": [
+    "aws_kinesis_firehose_delivery_stream.lake"
+  ],
+  "aws_group.event_lake": [
+    "aws_kinesis_firehose_delivery_stream.lake",
+    "aws_s3_bucket.event_lake",
+    "aws_glue_crawler.events",
+    "aws_glue_catalog_database.events",
+    "aws_athena_workgroup.analysts"
+  ],
+  "aws_kinesis_firehose_delivery_stream.lake": [
+    "aws_s3_bucket.event_lake"
+  ],
+  "aws_glue_crawler.events": [
+    "aws_s3_bucket.event_lake",
+    "aws_glue_catalog_database.events"
+  ],
+  "aws_athena_workgroup.analysts": [
+    "aws_glue_catalog_database.events"
+  ],
+  "tv_aws_users.analysts": [
+    "aws_quicksight_data_source.dashboards",
+    "aws_athena_workgroup.analysts"
+  ],
+  "aws_quicksight_data_source.dashboards": [
+    "aws_redshiftserverless_workgroup.analytics~1",
+    "aws_redshiftserverless_workgroup.analytics~2"
+  ],
+  "aws_group.shared_services": [
+    "aws_cloudwatch_log_group.flink",
+    "aws_kms_key.streams"
+  ]
+}

@@ -1,0 +1,103 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source aws-payments-processing.tvg.json --annotate aws-payments-processing.annotations.yml
+format: '0.3'
+title: AWS card payments processing across three availability zones
+update:
+  aws_vpc.payments:
+    cidr_block: 10.80.0.0/16
+  aws_subnet.app~1:
+    cidr_block: 10.80.0.0/20
+  aws_subnet.data~1:
+    cidr_block: 10.80.48.0/24
+  aws_subnet.hsm~1:
+    cidr_block: 10.80.56.0/26
+  aws_subnet.endpoints~1:
+    cidr_block: 10.80.240.0/24
+  aws_subnet.app~2:
+    cidr_block: 10.80.16.0/20
+  aws_subnet.data~2:
+    cidr_block: 10.80.49.0/24
+  aws_subnet.hsm~2:
+    cidr_block: 10.80.56.64/26
+  aws_subnet.endpoints~2:
+    cidr_block: 10.80.241.0/24
+  aws_subnet.app~3:
+    cidr_block: 10.80.32.0/20
+  aws_subnet.data~3:
+    cidr_block: 10.80.50.0/24
+  aws_subnet.hsm~3:
+    cidr_block: 10.80.56.128/26
+  aws_subnet.endpoints~3:
+    cidr_block: 10.80.242.0/24
+  aws_rds_aurora_postgres.ledger~1:
+    label: Aurora PostgreSQL Ledger (writer)
+  aws_rds_aurora_postgres.ledger~2:
+    label: Aurora PostgreSQL Ledger (reader)
+  aws_rds_aurora_postgres.ledger~3:
+    label: Aurora PostgreSQL Ledger (reader)
+  aws_vpc_endpoint_service.card_network:
+    label: PrivateLink Authorisation Service
+  aws_sqs_queue.settlement:
+    label: SQS FIFO Settlement
+connect:
+  tv_aws_users.merchants:
+  - aws_api_gateway_rest_api.payments: Mutual TLS
+  aws_wafv2_web_acl.payments:
+  - aws_api_gateway_rest_api.payments: Managed rules, rate limit
+  aws_api_gateway_rest_api.payments:
+  - aws_nlb.payments~1: VPC link
+  - aws_nlb.payments~2: VPC link
+  - aws_nlb.payments~3: VPC link
+  aws_ecs_fargate.authorisation~1:
+  - aws_cloudhsm_v2_hsm.card_keys~1: PIN and card keys
+  aws_vpc_endpoint.card_network~1:
+  - aws_vpc_endpoint_service.card_network: Authorise
+  aws_ecs_fargate.authorisation~2:
+  - aws_cloudhsm_v2_hsm.card_keys~2: PIN and card keys
+  aws_vpc_endpoint.card_network~2:
+  - aws_vpc_endpoint_service.card_network: Authorise
+  aws_ecs_fargate.authorisation~3:
+  - aws_cloudhsm_v2_hsm.card_keys~3: PIN and card keys
+  aws_vpc_endpoint.card_network~3:
+  - aws_vpc_endpoint_service.card_network: Authorise
+  aws_vpc_endpoint.dynamodb_gateway:
+  - aws_dynamodb_table.idempotency_keys: Conditional put
+  aws_sqs_queue.settlement:
+  - aws_sqs_queue.settlement_dlq: After 3 receives
+flows:
+  Authorise a payment:
+    description: A merchant takes a card payment
+    steps:
+    - resource: tv_aws_users.merchants -> aws_api_gateway_rest_api.payments
+      xlabel: Request
+      detail: The merchant posts the payment over mutual TLS; AWS WAF filters it
+    - resource: aws_api_gateway_rest_api.payments -> aws_nlb.payments~1
+      xlabel: Link
+      detail: API Gateway passes it over a VPC link to the Network Load Balancer
+    - resource: aws_nlb.payments~1 -> aws_ecs_fargate.authorisation~1
+      xlabel: Forward
+      detail: which sends it to an authorisation task in one of three zones
+    - resource: aws_ecs_fargate.authorisation~1 -> aws_vpc_endpoint.dynamodb_gateway
+      xlabel: Idempotency
+      detail: The task records the idempotency key in DynamoDB, so a retried request is not charged twice
+    - resource: aws_ecs_fargate.authorisation~1 -> aws_cloudhsm_v2_hsm.card_keys~1
+      xlabel: Encrypt
+      detail: translates the PIN block with keys held in CloudHSM
+    - resource: aws_ecs_fargate.authorisation~1 -> aws_vpc_endpoint.card_network~1
+      xlabel: Authorise
+      detail: asks the card network for authorisation over PrivateLink
+    - resource: aws_ecs_fargate.authorisation~1 -> aws_rds_aurora_postgres.ledger~1
+      xlabel: Record
+      detail: and writes the result to the ledger on the Aurora writer
+  Settlement:
+    description: Approved payments are settled in order
+    steps:
+    - resource: aws_ecs_fargate.authorisation~1 -> aws_vpc_endpoint.sqs~1
+      xlabel: Queue
+      detail: The task queues the approved payment on an SQS FIFO queue, grouped by merchant
+    - resource: aws_sqs_queue.settlement -> aws_ecs_fargate.settlement~2
+      xlabel: Settle
+      detail: Settlement tasks take each merchant's payments in order; failures move to the dead-letter queue
+    - resource: aws_ecs_fargate.settlement~2 -> aws_rds_aurora_postgres.ledger~1
+      xlabel: Post
+      detail: and post them to the ledger

@@ -1,0 +1,71 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-web-app.tvg.json --annotate azure-web-app.annotations.yml
+format: '0.3'
+title: Azure customer portal on App Service with private endpoints
+update:
+  azurerm_virtual_network.portal:
+    address_space:
+    - 10.40.0.0/16
+  azurerm_subnet.web_integration:
+    address_prefixes:
+    - 10.40.1.0/26
+  azurerm_subnet.functions_integration:
+    address_prefixes:
+    - 10.40.2.0/26
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.40.10.0/24
+connect:
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+  - azurerm_cdn_frontdoor_profile.portal: WAF rules
+  azurerm_cdn_frontdoor_profile.portal:
+  - azurerm_linux_web_app.frontend: Private Link origin
+  azurerm_private_endpoint.api:
+  - azurerm_linux_function_app.api: HTTPS 443
+  azurerm_private_endpoint.sql:
+  - azurerm_mssql_database.portal: TDS 1433
+  azurerm_private_endpoint.service_bus:
+  - azurerm_servicebus_namespace.portal: AMQP 5671
+  azurerm_private_endpoint.blob:
+  - azurerm_storage_container.documents: Blob HTTPS 443
+  azurerm_private_endpoint.redis:
+  - azurerm_managed_redis.sessions: Redis TLS 10000
+  azurerm_public_ip.egress:
+  - tv_azurerm_internet.email_provider: HTTPS 443
+flows:
+  Customer request:
+    description: A customer submits a claim in the portal
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_dns_zone.portal
+      xlabel: Resolve
+      detail: The portal's name resolves in Azure DNS to Front Door
+    - resource: azurerm_cdn_frontdoor_profile.portal -> azurerm_linux_web_app.frontend
+      xlabel: Origin
+      detail: Front Door, with its WAF policy, reaches the web app over a Private Link origin; the app has no public access
+    - resource: azurerm_linux_web_app.frontend -> azurerm_private_endpoint.redis
+      xlabel: Session
+      detail: The web app reads the customer's session from Redis through its private endpoint
+    - resource: azurerm_linux_web_app.frontend -> azurerm_private_endpoint.api
+      xlabel: API call
+      detail: It calls the API Function App through the API's private endpoint, from its integration subnet
+    - resource: azurerm_linux_function_app.api -> azurerm_private_endpoint.sql
+      xlabel: Save
+      detail: The API saves the claim to Azure SQL
+    - resource: azurerm_linux_function_app.api -> azurerm_private_endpoint.service_bus
+      xlabel: Queue
+      detail: and queues a document job on Service Bus
+  Background work:
+    description: The worker produces the claim documents
+    steps:
+    - resource: azurerm_linux_function_app.worker -> azurerm_private_endpoint.service_bus
+      xlabel: Trigger
+      detail: The Service Bus trigger starts the worker Function App
+    - resource: azurerm_linux_function_app.worker -> azurerm_private_endpoint.blob
+      xlabel: Store
+      detail: The worker writes the claim PDF to Blob Storage through its private endpoint
+    - resource: azurerm_linux_function_app.worker -> azurerm_nat_gateway.egress
+      xlabel: Egress
+      detail: It emails the customer through the NAT gateway
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.email_provider
+      xlabel: Email
+      detail: which calls the email provider from a fixed public IP
