@@ -158,7 +158,14 @@ AZURE_EDGE_NODES = [
 # values silently never matched - "tv_azure_users" was missing the "rm" and
 # "tv_azurerm_internet " had a trailing space - so Users and Internet were
 # drawn inside the cloud boundary instead of outside it.
-AZURE_OUTER_NODES = ["tv_azurerm_users", "tv_azurerm_internet"]
+AZURE_OUTER_NODES = [
+    "tv_azurerm_users",
+    "tv_azurerm_internet",
+    "tv_azurerm_server",
+    "tv_azurerm_database",
+    "tv_azurerm_client",
+    "tv_azurerm_iot_device",
+]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
 AZURE_DRAW_ORDER = [
