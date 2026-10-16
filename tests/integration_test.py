@@ -285,14 +285,6 @@ def test_graphdata_output(
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "aws_terraform"
 
-# Terraform Cloud token for module source tests (read from env or use default test token)
-TFC_ENV = {
-    "TF_TOKEN_app_terraform_io": os.environ.get(
-        "TF_TOKEN_app_terraform_io",
-        "0B5XyeGU1NWJBQ.atlasv1.h3D7X0z5k3w6IDYpEsjvmMhdRJIXMsqt9VV80OdkzYXOCIlwk5v94YNOzymlQzrvFX4",
-    )
-}
-
 
 @pytest.mark.parametrize(
     "source,expected_file",
@@ -339,7 +331,6 @@ def test_live_source(source: str, expected_file: str, tmp_path: Path, request) -
             "--upgrade",
         ],
         cwd=str(tmp_path),
-        extra_env=TFC_ENV,
     )
 
     assert result.returncode == 0, f"graphdata failed: {result.stderr}"
