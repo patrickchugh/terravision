@@ -1,0 +1,101 @@
+{
+  "google_project.workloads": [
+    "google_compute_network.prod",
+    "google_storage_bucket.customer_uploads"
+  ],
+  "google_compute_network.prod": [
+    "tv_gcp_region.europe_west2",
+    "google_network_security_firewall_endpoint.ips"
+  ],
+  "tv_gcp_region.europe_west2": [
+    "google_compute_subnetwork.web",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.web": [
+    "tv_gcp_zone.europe_west2_a",
+    "tv_gcp_zone.europe_west2_b"
+  ],
+  "tv_gcp_zone.europe_west2_a": [
+    "google_compute_instance.web~1"
+  ],
+  "tv_gcp_zone.europe_west2_b": [
+    "google_compute_instance.web~2"
+  ],
+  "google_compute_instance.web~1": [
+    "google_network_security_firewall_endpoint.ips"
+  ],
+  "google_compute_instance.web~2": [
+    "google_network_security_firewall_endpoint.ips"
+  ],
+  "google_network_security_firewall_endpoint.ips": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.internet_services"
+  ],
+  "tv_gcp_external_3p.internet": [
+    "tv_gcp_server.internet_services"
+  ],
+  "google_data_loss_prevention_job_trigger.uploads": [
+    "google_storage_bucket.customer_uploads"
+  ],
+  "google_project.security": [
+    "google_logging_organization_sink.all_logs",
+    "google_logging_project_bucket_config.security_logs",
+    "google_bigquery_dataset.security_analytics",
+    "google_logging_metric.firewall_threats",
+    "google_monitoring_alert_policy.threats",
+    "google_monitoring_notification_channel.soc",
+    "google_scc_notification_config.high_findings",
+    "google_pubsub_topic.findings",
+    "google_cloudfunctions2_function.remediate",
+    "google_cloud_asset_folder_feed.iam_changes",
+    "google_pubsub_topic.asset_changes",
+    "google_cloudfunctions2_function.iam_review",
+    "google_data_loss_prevention_job_trigger.uploads"
+  ],
+  "google_logging_organization_sink.all_logs": [
+    "google_logging_project_bucket_config.security_logs"
+  ],
+  "google_logging_project_bucket_config.security_logs": [
+    "google_bigquery_dataset.security_analytics",
+    "google_logging_metric.firewall_threats"
+  ],
+  "google_logging_metric.firewall_threats": [
+    "google_monitoring_alert_policy.threats"
+  ],
+  "google_monitoring_alert_policy.threats": [
+    "google_monitoring_notification_channel.soc"
+  ],
+  "google_monitoring_notification_channel.soc": [
+    "tv_gcp_users_icon.soc_analysts"
+  ],
+  "google_scc_notification_config.high_findings": [
+    "google_pubsub_topic.findings"
+  ],
+  "google_pubsub_topic.findings": [
+    "google_cloudfunctions2_function.remediate"
+  ],
+  "google_cloudfunctions2_function.remediate": [
+    "google_storage_bucket.customer_uploads"
+  ],
+  "google_cloud_asset_folder_feed.iam_changes": [
+    "google_pubsub_topic.asset_changes"
+  ],
+  "google_pubsub_topic.asset_changes": [
+    "google_cloudfunctions2_function.iam_review"
+  ],
+  "google_cloudfunctions2_function.iam_review": [
+    "google_monitoring_notification_channel.soc"
+  ],
+  "tv_gcp_users_icon.soc_analysts": [
+    "google_bigquery_dataset.security_analytics"
+  ],
+  "google_kms_key_ring.security": [],
+  "google_secret_manager_secret.chat_webhook": [],
+  "google_org_policy_policy.no_public_buckets": []
+}

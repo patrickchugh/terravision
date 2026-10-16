@@ -1,0 +1,92 @@
+{
+  "tv_gcp_onprem.factory": [
+    "tv_gcp_iot_device.line_sensors",
+    "tv_gcp_server.edge_gateway"
+  ],
+  "tv_gcp_iot_device.line_sensors": [
+    "tv_gcp_server.edge_gateway"
+  ],
+  "tv_gcp_server.edge_gateway": [
+    "google_compute_forwarding_rule.mqtt"
+  ],
+  "google_compute_network.iot": [
+    "tv_gcp_region.us_central1"
+  ],
+  "tv_gcp_region.us_central1": [
+    "google_compute_forwarding_rule.mqtt",
+    "google_compute_subnetwork.brokers",
+    "google_compute_subnetwork.processing",
+    "google_compute_router.egress",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_subnetwork.brokers": [
+    "google_compute_region_backend_service.mqtt",
+    "tv_gcp_zone.us_central1_a",
+    "tv_gcp_zone.us_central1_b"
+  ],
+  "tv_gcp_zone.us_central1_a": [
+    "google_compute_instance.mqtt_broker~1"
+  ],
+  "tv_gcp_zone.us_central1_b": [
+    "google_compute_instance.mqtt_broker~2"
+  ],
+  "google_compute_subnetwork.processing": [
+    "google_dataflow_flex_template_job.telemetry",
+    "google_cloud_run_v2_service.maintenance"
+  ],
+  "google_compute_forwarding_rule.mqtt": [
+    "google_compute_region_backend_service.mqtt"
+  ],
+  "google_compute_region_backend_service.mqtt": [
+    "google_compute_instance.mqtt_broker~1",
+    "google_compute_instance.mqtt_broker~2"
+  ],
+  "google_compute_instance.mqtt_broker~1": [
+    "google_pubsub_topic.telemetry"
+  ],
+  "google_compute_instance.mqtt_broker~2": [
+    "google_pubsub_topic.telemetry"
+  ],
+  "google_pubsub_topic.telemetry": [
+    "google_pubsub_subscription.dataflow"
+  ],
+  "google_dataflow_flex_template_job.telemetry": [
+    "google_pubsub_subscription.dataflow",
+    "google_bigtable_instance.timeseries",
+    "google_bigquery_table.readings",
+    "google_pubsub_topic.anomalies"
+  ],
+  "google_pubsub_topic.anomalies": [
+    "google_pubsub_subscription.maintenance"
+  ],
+  "google_pubsub_subscription.maintenance": [
+    "google_cloud_run_v2_service.maintenance"
+  ],
+  "google_cloud_run_v2_service.maintenance": [
+    "google_firestore_database.work_orders",
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router.egress": [
+    "google_compute_router_nat.egress"
+  ],
+  "google_compute_router_nat.egress": [
+    "tv_gcp_server.pagerduty"
+  ],
+  "tv_gcp_external_saas.paging": [
+    "tv_gcp_server.pagerduty"
+  ],
+  "tv_gcp_logical_group.analytics": [
+    "google_bigquery_dataset.plant",
+    "google_bigquery_table.readings",
+    "google_looker_instance.plant_dashboards"
+  ],
+  "google_looker_instance.plant_dashboards": [
+    "google_bigquery_table.readings"
+  ],
+  "tv_gcp_users_icon.plant_engineers": [
+    "google_looker_instance.plant_dashboards"
+  ],
+  "google_privateca_certificate_authority.devices": [],
+  "google_secret_manager_secret.broker_admin": [],
+  "google_logging_project_sink.iot": []
+}

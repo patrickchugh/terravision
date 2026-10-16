@@ -1,0 +1,81 @@
+{
+  "tv_gcp_users_icon.visitors": [
+    "google_dns_managed_zone.site",
+    "google_identity_platform_config.members"
+  ],
+  "google_dns_managed_zone.site": [
+    "google_compute_global_forwarding_rule.https"
+  ],
+  "tv_gcp_load_balancer.https_load_balancer": [
+    "google_compute_global_forwarding_rule.https",
+    "google_compute_target_https_proxy.site",
+    "google_compute_url_map.site",
+    "google_compute_backend_bucket.static",
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_global_forwarding_rule.https": [
+    "google_compute_target_https_proxy.site"
+  ],
+  "google_certificate_manager_certificate.site": [
+    "google_compute_target_https_proxy.site"
+  ],
+  "google_compute_target_https_proxy.site": [
+    "google_compute_url_map.site"
+  ],
+  "google_compute_url_map.site": [
+    "google_compute_backend_bucket.static",
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_security_policy.edge": [
+    "google_compute_backend_service.api"
+  ],
+  "google_compute_backend_bucket.static": [
+    "google_storage_bucket.site"
+  ],
+  "google_compute_backend_service.api": [
+    "google_cloud_run_v2_service.api"
+  ],
+  "google_cloud_run_v2_service.api": [
+    "google_firestore_database.content",
+    "google_pubsub_topic.contact_form"
+  ],
+  "google_pubsub_topic.contact_form": [
+    "google_cloudfunctions2_function.contact"
+  ],
+  "google_cloudfunctions2_function.contact": [
+    "tv_gcp_server.sendgrid"
+  ],
+  "tv_gcp_external_saas.email": [
+    "tv_gcp_server.sendgrid"
+  ],
+  "tv_gcp_external_saas.github": [
+    "tv_gcp_server.github"
+  ],
+  "tv_gcp_server.github": [
+    "google_cloudbuildv2_repository.site"
+  ],
+  "tv_gcp_logical_group.delivery": [
+    "google_cloudbuildv2_repository.site",
+    "google_cloudbuild_trigger.main",
+    "google_cloudbuild_trigger.pull_request",
+    "google_artifact_registry_repository.api_images"
+  ],
+  "google_cloudbuildv2_repository.site": [
+    "google_cloudbuild_trigger.main",
+    "google_cloudbuild_trigger.pull_request"
+  ],
+  "google_cloudbuild_trigger.main": [
+    "google_storage_bucket.site",
+    "google_compute_url_map.site",
+    "google_artifact_registry_repository.api_images"
+  ],
+  "google_artifact_registry_repository.api_images": [
+    "google_cloud_run_v2_service.api"
+  ],
+  "google_cloudbuild_trigger.pull_request": [
+    "google_storage_bucket.previews"
+  ],
+  "google_secret_manager_secret.sendgrid_key": [],
+  "google_logging_project_sink.site": [],
+  "google_kms_key_ring.site": []
+}

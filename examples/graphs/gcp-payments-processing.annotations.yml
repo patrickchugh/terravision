@@ -1,0 +1,104 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-payments-processing.tvg.json --annotate gcp-payments-processing.annotations.yml
+format: '0.3'
+title: Google Cloud PCI DSS payments with Apigee, private GKE, Cloud HSM tokenisation and Spanner
+update:
+  google_compute_subnetwork.gke:
+    ip_cidr_range: 10.120.0.0/20
+  google_compute_subnetwork.psc:
+    ip_cidr_range: 10.120.16.0/28
+  google_project.cde:
+    label: Cardholder Data Environment Project
+  tv_gcp_external_3p.card_schemes:
+    label: Card Networks and Acquirer
+  google_container_cluster.cde:
+    label: GKE Private Cluster Cde
+  google_kms_crypto_key.tokenisation:
+    label: Cloud HSM Key Tokenisation
+  google_compute_instance.payments_node~1:
+    label: GKE Node Payments Node
+  google_compute_instance.payments_node~2:
+    label: GKE Node Payments Node
+  google_access_context_manager_service_perimeter.cde:
+    label: VPC-SC Perimeter Cde
+  google_apigee_instance.payments:
+    label: Apigee Payments
+  google_binary_authorization_policy.cde:
+    label: Binary Authorization Cde
+  google_cloud_run_v2_job.settlement:
+    label: Cloud Run Job Settlement
+  google_compute_backend_service.apigee:
+    label: Backend Service Apigee
+  google_compute_forwarding_rule.psc_payments_api:
+    label: Forwarding Rule Psc Payments Api
+  google_compute_global_forwarding_rule.https:
+    label: Forwarding Rule Https
+  google_compute_global_forwarding_rule.psc_google_apis:
+    label: Forwarding Rule Psc Google Apis
+  google_compute_region_backend_service.payments_api:
+    label: Backend Service Payments Api
+  google_compute_router.egress:
+    label: Cloud Router Egress
+  google_compute_router_nat.egress:
+    label: Cloud NAT Egress
+  google_compute_security_policy.edge:
+    label: Cloud Armor Edge
+  google_compute_service_attachment.payments_api:
+    label: Service Attachment Payments Api
+  google_compute_url_map.payments:
+    label: URL Map Payments
+  google_data_loss_prevention_inspect_template.pan:
+    label: Sensitive Data Protection Pan
+  google_kms_key_ring.cde:
+    label: Cloud KMS Cde
+  google_logging_project_sink.cde:
+    label: Log Sink Cde
+  google_pubsub_topic.captured:
+    label: Pub/Sub Captured
+  google_spanner_instance.ledger:
+    label: Spanner Ledger
+  google_sql_database_instance.token_vault:
+    label: Cloud SQL Token Vault
+  google_storage_bucket.settlement_audit:
+    label: Cloud Storage Settlement Audit
+connect:
+  google_apigee_instance.payments:
+  - google_compute_forwarding_rule.psc_payments_api: PSC southbound
+  google_compute_router_nat.egress:
+  - tv_gcp_server.card_networks: mTLS 443
+flows:
+  Authorise:
+    description: A card payment is authorised
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.merchants -> google_compute_global_forwarding_rule.https
+      xlabel: Pay
+      detail: A merchant's checkout posts a payment to the global external load balancer
+    - resource: google_compute_backend_service.apigee -> google_apigee_instance.payments
+      xlabel: API
+      detail: Cloud Armor filters it and Apigee checks the merchant's key, quota and schema
+    - resource: google_apigee_instance.payments -> google_compute_forwarding_rule.psc_payments_api
+      xlabel: Forward
+      detail: Apigee reaches the cardholder data environment through Private Service Connect
+    - resource: google_compute_region_backend_service.payments_api -> google_compute_instance.payments_node~1
+      xlabel: Process
+      detail: An internal load balancer sends it to the payment pods on a private GKE cluster
+    - resource: google_compute_instance.payments_node~1 -> google_sql_database_instance.token_vault
+      xlabel: Tokenise
+      detail: The pods swap the card number for a token, encrypting it in the vault with a Cloud HSM key
+    - resource: google_compute_instance.payments_node~1 -> google_compute_router_nat.egress
+      xlabel: Authorise
+      detail: and send the authorisation to the card networks through Cloud NAT
+    - resource: google_compute_instance.payments_node~1 -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Record
+      detail: They record the transaction in Spanner and publish the capture to Pub/Sub
+  Settle:
+    description: The day's captures are settled
+    color: '#188038'
+    steps:
+    - resource: google_cloud_run_v2_job.settlement -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Batch
+      detail: At cut-off a Cloud Run job reads the day's captures and writes the settlement file to a locked audit bucket
+    - resource: google_cloud_run_v2_job.settlement -> google_compute_router_nat.egress
+      xlabel: Send
+      detail: and sends it to the acquirer through Cloud NAT

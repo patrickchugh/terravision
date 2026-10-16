@@ -258,32 +258,137 @@
     "source_sha256": "dadb11791cc655b57fabdd2fc4714181eb3b8b27f4e881fa40dc905f4329f36f",
     "width": 1400
   },
+  "gcp-batch-hpc": {
+    "height": 1274,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-batch-hpc.png",
+    "source_sha256": "b83098bbc23d4c5b3a34cfeefb3fe9b496795c017e30deb55cfb8ce9a928e3b4",
+    "width": 1400
+  },
+  "gcp-cloud-run-microservices": {
+    "height": 1179,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-cloud-run-microservices.png",
+    "source_sha256": "69d3284b99ee6e172f0fe9a0f7546add6a0273ab22b730902022dbc8fefddd90",
+    "width": 1400
+  },
   "gcp-data-pipeline": {
     "height": 1188,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-data-pipeline.png",
-    "source_sha256": "92496b977d711c1cae15946f542a073c10d2b490f2e0caa5c2f55c6ea9ac22e5",
+    "source_sha256": "7ea1db2a80f278abc3c208f8c9c79dcabcb6fd2f319c182ce287eadb6542bdae",
+    "width": 1400
+  },
+  "gcp-event-driven-functions": {
+    "height": 769,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-event-driven-functions.png",
+    "source_sha256": "147bfbe6c5bad6fbfa9c58bb2b4df9cbe983b9d7c033de24311a7f2cfd1d15ba",
     "width": 1400
   },
   "gcp-gke": {
     "height": 2864,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-gke.png",
-    "source_sha256": "61e6f522e0c613737815578fc04c169594a121902a52525725b9e5c9f105b0d3",
+    "source_sha256": "ec067b44a1e9a95b3deda9a5f21de0e1b9fcce07051f374464701884f5300f75",
+    "width": 1400
+  },
+  "gcp-hybrid-interconnect": {
+    "height": 1347,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-hybrid-interconnect.png",
+    "source_sha256": "e1ab3526aaaae06ef4ab7d423bcc868160507ce3168f9136e60e030a48ef4008",
+    "width": 1400
+  },
+  "gcp-iot-telemetry": {
+    "height": 811,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-iot-telemetry.png",
+    "source_sha256": "f72885ac9048dac8c04705713caf65a18e53685b3e96f686c746b055aa7d7118",
+    "width": 1400
+  },
+  "gcp-media-processing": {
+    "height": 1599,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-media-processing.png",
+    "source_sha256": "bd290346ebba3125a43b91f0b671fcde930ba60ae3ff88107a8f9931784a9de6",
+    "width": 1400
+  },
+  "gcp-multi-region-dr": {
+    "height": 1227,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-multi-region-dr.png",
+    "source_sha256": "dbeca8993fd32446bba3d7463745367d674fccff2b550fb8cf09f28b714993c8",
+    "width": 1400
+  },
+  "gcp-payments-processing": {
+    "height": 2215,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-payments-processing.png",
+    "source_sha256": "a167751f8483c3783b15ef12c595c2044ed1edc27b459b0236db332a2a15fbc5",
+    "width": 1400
+  },
+  "gcp-saas-multi-tenant": {
+    "height": 1063,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-saas-multi-tenant.png",
+    "source_sha256": "4c3c9611461c600a35096477b49b4d2007dc1e661708e2b2c526a2fc099591b3",
+    "width": 1400
+  },
+  "gcp-security-command-center": {
+    "height": 1660,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-security-command-center.png",
+    "source_sha256": "4bac557d62dc0a9b04e975fbc005809d62915c3f4d2e55cd1848389c20732198",
     "width": 1400
   },
   "gcp-serverless-api": {
     "height": 1726,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-serverless-api.png",
-    "source_sha256": "b555f0bd9f75c4b5bc049567fa0349b9623c2ff089b90866ff103005c8055d98",
+    "source_sha256": "499273f77a3be7472f8876db53bfe68a7817ace1183ffd414a28bdf1fc103b1f",
+    "width": 1400
+  },
+  "gcp-shared-vpc-landing-zone": {
+    "height": 1186,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-shared-vpc-landing-zone.png",
+    "source_sha256": "1217d9b29ae48a41c36f8ad31437080f0d2c8d20dba39ef6b8b6962dccf4a4ea",
+    "width": 1400
+  },
+  "gcp-static-site-cicd": {
+    "height": 1149,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-static-site-cicd.png",
+    "source_sha256": "ba4b8c3283df476a209599a5b451df176bebbdd7d23d5bc7f790cba0204dc334",
+    "width": 1400
+  },
+  "gcp-streaming-bigquery": {
+    "height": 1376,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-streaming-bigquery.png",
+    "source_sha256": "f6d79e53c6836fb1fc3af6d911d7716494fd0d88558bc5cc4bea71f707ca85ce",
     "width": 1400
   },
   "gcp-three-tier": {
     "height": 1226,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/gcp-three-tier.png",
-    "source_sha256": "d670dfaee1e76c63ab41c7add096103e1a6472cc755b671a8c20158f699fb29a",
+    "source_sha256": "b6790ffe18847e67d1e370cb63eb004affdf22e00f47340d2ad4acec80516926",
+    "width": 1400
+  },
+  "gcp-vertex-mlops": {
+    "height": 953,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-vertex-mlops.png",
+    "source_sha256": "1222f6a8742463dd2d1ec643c070d009b8061c62a05ebb867bab69224c52521c",
+    "width": 1400
+  },
+  "gcp-vm-three-tier-migrate": {
+    "height": 758,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/gcp-vm-three-tier-migrate.png",
+    "source_sha256": "2a1a7b3ccc7a041e0d0e248018d1ed570b6d0780f45454717ae72f0ceb60b764",
     "width": 1400
   },
   "three-tier-web": {

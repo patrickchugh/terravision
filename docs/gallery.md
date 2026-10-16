@@ -58,6 +58,21 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [Google Cloud GKE microservices architecture diagram](#google-cloud-gke-architecture-diagram) | Google Cloud |
 | [Google Cloud data pipeline architecture diagram](#google-cloud-data-pipeline-architecture-diagram) | Google Cloud |
 | [Google Cloud serverless API architecture diagram](#google-cloud-serverless-api-architecture-diagram) | Google Cloud |
+| [Google Cloud Shared VPC landing zone architecture diagram](#google-cloud-shared-vpc-landing-zone-architecture-diagram) | Google Cloud |
+| [Google Cloud Run microservices architecture diagram](#google-cloud-run-microservices-architecture-diagram) | Google Cloud |
+| [Google Cloud event-driven architecture diagram](#google-cloud-event-driven-architecture-diagram) | Google Cloud |
+| [Google Cloud streaming analytics with BigQuery architecture diagram](#google-cloud-streaming-bigquery-architecture-diagram) | Google Cloud |
+| [Google Cloud Vertex AI MLOps architecture diagram](#google-cloud-vertex-ai-mlops-architecture-diagram) | Google Cloud |
+| [Google Cloud IoT telemetry architecture diagram](#google-cloud-iot-telemetry-architecture-diagram) | Google Cloud |
+| [Google Cloud Interconnect hybrid network architecture diagram](#google-cloud-interconnect-hybrid-architecture-diagram) | Google Cloud |
+| [Google Cloud multi-region disaster recovery architecture diagram](#google-cloud-multi-region-disaster-recovery-architecture-diagram) | Google Cloud |
+| [Google Cloud static website with CI/CD architecture diagram](#google-cloud-static-site-cicd-architecture-diagram) | Google Cloud |
+| [Google Cloud Batch HPC architecture diagram](#google-cloud-batch-hpc-architecture-diagram) | Google Cloud |
+| [Google Cloud SaaS multi-tenant architecture diagram](#google-cloud-saas-multi-tenant-architecture-diagram) | Google Cloud |
+| [Google Cloud payments processing architecture diagram](#google-cloud-payments-processing-architecture-diagram) | Google Cloud |
+| [Google Cloud Security Command Center architecture diagram](#google-cloud-security-command-center-architecture-diagram) | Google Cloud |
+| [Google Cloud video processing architecture diagram](#google-cloud-video-processing-architecture-diagram) | Google Cloud |
+| [Google Cloud VM three-tier migration architecture diagram](#google-cloud-vm-three-tier-migration-architecture-diagram) | Google Cloud |
 
 All examples are also published as a dataset on Hugging Face: https://huggingface.co/datasets/patrickchugh/terravision-cloud-diagrams
 
@@ -861,6 +876,291 @@ terravision draw --source gcp-serverless-api.tvg.json --annotate gcp-serverless-
 ```
 
 Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-serverless-api.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-serverless-api.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-serverless-api.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-serverless-api.annotations.yml)
+
+## Google Cloud Shared VPC landing zone architecture diagram { #google-cloud-shared-vpc-landing-zone-architecture-diagram }
+
+A Google Cloud landing zone with one Shared VPC owned by a network host project and used by separate service projects. The VPC spans europe-west2 for production and europe-west1 for non-production, and HA VPN with Cloud Router connects it to the corporate data centre. Production VMs in two zones sit behind an internal load balancer in a shared subnet, and reach Cloud SQL in the prod service project through a Private Service Connect endpoint and Cloud Storage through the Google APIs endpoint. Developers use Cloud Workstations in the non-production subnet against their own project's database. A security project holds the organisation log sink, the Security Command Center notifications, the allowed-regions organisation policy and the VPC Service Controls perimeter.
+
+[![Google Cloud Shared VPC landing zone architecture diagram](assets/gallery/gcp-shared-vpc-landing-zone.webp){ width=1400 height=1186 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-shared-vpc-landing-zone.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud landing zone with a Shared VPC in a host project spanning europe-west2 and europe-west1, HA VPN and Cloud Router to a corporate data centre, prod VMs in two zones behind an internal load balancer, Private Service Connect endpoints for Cloud SQL and Google APIs, prod and nonprod service projects, Cloud Workstations, and a security project with an organisation log sink, Security Command Center notifications, organisation policy and a VPC Service Controls perimeter.
+
+**Or reproduce it exactly** from the source file [gcp-shared-vpc-landing-zone.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-shared-vpc-landing-zone.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-shared-vpc-landing-zone.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-shared-vpc-landing-zone.annotations.yml):
+
+```bash
+terravision draw --source gcp-shared-vpc-landing-zone.tvg.json --annotate gcp-shared-vpc-landing-zone.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-shared-vpc-landing-zone.tvg.json --annotate gcp-shared-vpc-landing-zone.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-shared-vpc-landing-zone.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-shared-vpc-landing-zone.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-shared-vpc-landing-zone.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-shared-vpc-landing-zone.annotations.yml)
+
+## Google Cloud Run microservices architecture diagram { #google-cloud-run-microservices-architecture-diagram }
+
+An online shop built as microservices on Cloud Run. A global external Application Load Balancer with Cloud Armor sends shoppers to the storefront through a serverless NEG, and the storefront calls the orders and payments services, which accept only internal traffic. The services reach the VPC through Direct VPC egress: Memorystore for sessions, Cloud SQL through a Private Service Connect endpoint, and Pub/Sub and Firestore through the Google APIs endpoint. Order events are pushed to a notifications service by a Pub/Sub subscription, and the payments service calls the payment provider through Cloud NAT. Cloud Build builds the images into Artifact Registry and Cloud Deploy rolls them out as a canary.
+
+[![Google Cloud Run microservices architecture diagram](assets/gallery/gcp-cloud-run-microservices.webp){ width=1400 height=1179 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-cloud-run-microservices.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud Run microservices with a global external Application Load Balancer, Cloud Armor and a serverless NEG to a storefront service, internal orders, payments and notifications services with Direct VPC egress in us-central1, Memorystore, Private Service Connect endpoints for Cloud SQL and Google APIs, Firestore, a Pub/Sub topic with a push subscription, Cloud NAT to a payment provider, and Cloud Build, Artifact Registry and Cloud Deploy for releases.
+
+**Or reproduce it exactly** from the source file [gcp-cloud-run-microservices.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-cloud-run-microservices.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-cloud-run-microservices.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-cloud-run-microservices.annotations.yml):
+
+```bash
+terravision draw --source gcp-cloud-run-microservices.tvg.json --annotate gcp-cloud-run-microservices.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-cloud-run-microservices.tvg.json --annotate gcp-cloud-run-microservices.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-cloud-run-microservices.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-cloud-run-microservices.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-cloud-run-microservices.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-cloud-run-microservices.annotations.yml)
+
+## Google Cloud event-driven architecture diagram { #google-cloud-event-driven-architecture-diagram }
+
+Event-driven invoice processing on Google Cloud. Suppliers upload invoice PDFs to Cloud Storage with signed URLs, and each upload fires an Eventarc trigger that runs an extract function. The function reads the invoice with a Document AI invoice parser, saves it in Firestore and publishes an event to Pub/Sub, where a BigQuery subscription records it and a dead-letter topic catches failures. A second trigger runs a validate function, which starts a Workflows approval for large invoices that waits for the finance team in a Cloud Run app. Approved invoices go to the ERP through Cloud NAT, the functions reach Google APIs through Private Google Access, and a nightly Cloud Run job reconciles payments.
+
+[![Google Cloud event-driven architecture diagram](assets/gallery/gcp-event-driven-functions.webp){ width=1400 height=769 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-event-driven-functions.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud event-driven invoice processing with suppliers uploading to Cloud Storage, an Eventarc trigger to an extract Cloud Function using a Document AI processor and Firestore, a Pub/Sub topic with a BigQuery subscription and a dead-letter topic, a second Eventarc trigger to a validate function, a Workflows approval with a Cloud Run approvals app for the finance team, a Cloud NAT path to the ERP, and a nightly Cloud Scheduler job running a Cloud Run job.
+
+**Or reproduce it exactly** from the source file [gcp-event-driven-functions.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-event-driven-functions.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-event-driven-functions.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-event-driven-functions.annotations.yml):
+
+```bash
+terravision draw --source gcp-event-driven-functions.tvg.json --annotate gcp-event-driven-functions.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-event-driven-functions.tvg.json --annotate gcp-event-driven-functions.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-event-driven-functions.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-event-driven-functions.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-event-driven-functions.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-event-driven-functions.annotations.yml)
+
+## Google Cloud streaming analytics with BigQuery architecture diagram { #google-cloud-streaming-bigquery-architecture-diagram }
+
+Real-time game telemetry on Google Cloud. Game clients send events to a global external load balancer with Cloud Armor rate limits, and a collector on Cloud Run checks each batch and publishes it to Pub/Sub, with a dead-letter topic for bad messages. A streaming Dataflow job reads the subscription with exactly-once processing, writes every event to BigQuery through the Storage Write API, and keeps each player's score and session in Bigtable. Dataflow also scores suspicious sessions with a cheat detection model on a Vertex AI endpoint. A leaderboard API on Cloud Run reads Bigtable in milliseconds, and analysts explore the BigQuery data in Looker.
+
+[![Google Cloud streaming analytics with BigQuery architecture diagram](assets/gallery/gcp-streaming-bigquery.webp){ width=1400 height=1376 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-streaming-bigquery.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud real-time game telemetry with a global external load balancer and Cloud Armor in front of a Cloud Run collector, a Pub/Sub topic with a dead-letter topic, a streaming Dataflow job in its own subnet writing to a BigQuery table and Bigtable and scoring with a Vertex AI endpoint, a leaderboard API on Cloud Run reading Bigtable, Looker dashboards for analysts, and Secret Manager and Cloud Monitoring as shared services.
+
+**Or reproduce it exactly** from the source file [gcp-streaming-bigquery.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-streaming-bigquery.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-streaming-bigquery.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-streaming-bigquery.annotations.yml):
+
+```bash
+terravision draw --source gcp-streaming-bigquery.tvg.json --annotate gcp-streaming-bigquery.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-streaming-bigquery.tvg.json --annotate gcp-streaming-bigquery.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-streaming-bigquery.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-streaming-bigquery.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-streaming-bigquery.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-streaming-bigquery.annotations.yml)
+
+## Google Cloud Vertex AI MLOps architecture diagram { #google-cloud-vertex-ai-mlops-architecture-diagram }
+
+An MLOps platform on Vertex AI inside a VPC Service Controls perimeter. Data scientists reach Workbench notebooks through Identity-Aware Proxy, and a merge to main in GitHub runs Cloud Build, which builds the training image into Artifact Registry and starts a Vertex AI pipeline in the training subnet. The pipeline reads BigQuery and writes artifacts to Cloud Storage through the Google APIs endpoint, and registers the evaluated model. An approved version is deployed to a private Vertex AI endpoint, which the claims app on Cloud Run calls through a Private Service Connect address. The endpoint reads customer features from the Vertex AI online feature store and logs requests to BigQuery for monitoring.
+
+[![Google Cloud Vertex AI MLOps architecture diagram](assets/gallery/gcp-vertex-mlops.webp){ width=1400 height=953 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vertex-mlops.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud Vertex AI MLOps with data scientists using Workbench through IAP, GitHub and a Cloud Build trigger building into Artifact Registry and starting Vertex AI Pipelines in a training subnet, BigQuery and Cloud Storage through a Private Service Connect Google APIs endpoint, the Model Registry, a Vertex AI endpoint behind a PSC address called by a Cloud Run claims app, a feature online store, BigQuery prediction logs, and a VPC Service Controls perimeter.
+
+**Or reproduce it exactly** from the source file [gcp-vertex-mlops.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-vertex-mlops.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-vertex-mlops.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-vertex-mlops.annotations.yml):
+
+```bash
+terravision draw --source gcp-vertex-mlops.tvg.json --annotate gcp-vertex-mlops.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-vertex-mlops.tvg.json --annotate gcp-vertex-mlops.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vertex-mlops.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vertex-mlops.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vertex-mlops.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vertex-mlops.annotations.yml)
+
+## Google Cloud IoT telemetry architecture diagram { #google-cloud-iot-telemetry-architecture-diagram }
+
+Factory telemetry on Google Cloud with self-managed MQTT brokers, the usual pattern since IoT Core was retired. Line sensors report to an edge gateway on the factory site, which connects over MQTT with TLS using a device certificate from Certificate Authority Service. A passthrough network load balancer spreads connections over brokers in two zones, and the brokers bridge every message to Pub/Sub. A streaming Dataflow job cleans the readings, writes them to Bigtable for time-series lookups and to BigQuery for Looker dashboards, and publishes anomalies to a second topic. A maintenance service on Cloud Run opens a work order in Firestore and pages the on-call engineer through Cloud NAT.
+
+[![Google Cloud IoT telemetry architecture diagram](assets/gallery/gcp-iot-telemetry.webp){ width=1400 height=811 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-iot-telemetry.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud IoT telemetry with line sensors and an edge gateway on a factory site, a passthrough network load balancer to MQTT broker VMs in two zones, CA Service device certificates, a Pub/Sub telemetry topic, a streaming Dataflow job writing to Bigtable and BigQuery and publishing anomalies, a Cloud Run maintenance service with Firestore work orders, Cloud NAT to PagerDuty, and Looker dashboards for plant engineers.
+
+**Or reproduce it exactly** from the source file [gcp-iot-telemetry.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-iot-telemetry.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-iot-telemetry.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-iot-telemetry.annotations.yml):
+
+```bash
+terravision draw --source gcp-iot-telemetry.tvg.json --annotate gcp-iot-telemetry.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-iot-telemetry.tvg.json --annotate gcp-iot-telemetry.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-iot-telemetry.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-iot-telemetry.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-iot-telemetry.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-iot-telemetry.annotations.yml)
+
+## Google Cloud Interconnect hybrid network architecture diagram { #google-cloud-interconnect-hybrid-architecture-diagram }
+
+A corporate data centre connected to Google Cloud over Dedicated Interconnect, with HA VPN as a backup. The data centre's edge routers use two VLAN attachments in different edge availability domains, and Cloud Router exchanges routes with them over BGP. Users reach an ERP behind an internal load balancer, on VMs in two zones that use Cloud SQL over private services access. Data centre DNS forwards Google Cloud zones to a Cloud DNS inbound server policy, and a forwarding zone sends corporate names back. Backups go to Cloud Storage through a Private Service Connect endpoint that Cloud Router advertises to the data centre.
+
+[![Google Cloud Interconnect hybrid network architecture diagram](assets/gallery/gcp-hybrid-interconnect.webp){ width=1400 height=1347 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-hybrid-interconnect.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud hybrid network with workstations, DNS and backup servers and edge routers in a corporate data centre, Dedicated Interconnect VLAN attachments in two edge availability domains to a Cloud Router, an HA VPN gateway with its own Cloud Router as backup, an ERP internal load balancer and VMs in two zones, Cloud SQL, a Cloud DNS inbound policy and forwarding zone, and a Private Service Connect endpoint to Cloud Storage.
+
+**Or reproduce it exactly** from the source file [gcp-hybrid-interconnect.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-hybrid-interconnect.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-hybrid-interconnect.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-hybrid-interconnect.annotations.yml):
+
+```bash
+terravision draw --source gcp-hybrid-interconnect.tvg.json --annotate gcp-hybrid-interconnect.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-hybrid-interconnect.tvg.json --annotate gcp-hybrid-interconnect.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-hybrid-interconnect.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-hybrid-interconnect.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-hybrid-interconnect.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-hybrid-interconnect.annotations.yml)
+
+## Google Cloud multi-region disaster recovery architecture diagram { #google-cloud-multi-region-disaster-recovery-architecture-diagram }
+
+A shop served from two Google Cloud regions, us-east1 and us-west1, in one global VPC. A global external Application Load Balancer with Cloud Armor sends each customer to the nearest healthy region's Cloud Run service through serverless NEGs. Sessions are in multi-region Firestore and invoices in a dual-region bucket, so either region can serve anyone, while orders are written to a Cloud SQL primary in us-east1 that replicates to a read replica in us-west1. If us-east1 is lost, the load balancer moves all traffic to us-west1, and an uptime check fires an alert that runs a Workflows failover to promote the replica. Each region has its own Memorystore cache and Pub/Sub workers.
+
+[![Google Cloud multi-region disaster recovery architecture diagram](assets/gallery/gcp-multi-region-dr.webp){ width=1400 height=1227 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-multi-region-dr.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud multi-region design in one global VPC with us-east1 and us-west1, a global external Application Load Balancer with Cloud Armor and serverless NEGs to Cloud Run web services in each region, Cloud Run workers and Memorystore per region, a Cloud SQL primary with a cross-region read replica, multi-region Firestore sessions, Pub/Sub, a dual-region Cloud Storage bucket, and an uptime check and alert policy starting a Workflows failover.
+
+**Or reproduce it exactly** from the source file [gcp-multi-region-dr.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-multi-region-dr.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-multi-region-dr.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-multi-region-dr.annotations.yml):
+
+```bash
+terravision draw --source gcp-multi-region-dr.tvg.json --annotate gcp-multi-region-dr.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-multi-region-dr.tvg.json --annotate gcp-multi-region-dr.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-multi-region-dr.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-multi-region-dr.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-multi-region-dr.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-multi-region-dr.annotations.yml)
+
+## Google Cloud static website with CI/CD architecture diagram { #google-cloud-static-site-cicd-architecture-diagram }
+
+A static website on Cloud Storage behind a global external Application Load Balancer with Cloud CDN, released from GitHub by Cloud Build. Cloud DNS points the site at the load balancer, whose HTTPS proxy uses a Certificate Manager certificate, and the URL map serves pages from a backend bucket and sends /api calls through Cloud Armor to an API on Cloud Run. Members sign in with Identity Platform, the API reads content from Firestore, and contact form messages go through Pub/Sub to a function that emails the team. Each pull request builds a preview copy of the site, and a merge to main publishes the site, invalidates the CDN cache and deploys the API.
+
+[![Google Cloud static website with CI/CD architecture diagram](assets/gallery/gcp-static-site-cicd.webp){ width=1400 height=1149 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-static-site-cicd.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud static website with Cloud DNS, a global external Application Load Balancer with a Certificate Manager certificate, a backend bucket with Cloud CDN for a Cloud Storage site bucket, a Cloud Armor protected Cloud Run API with Firestore, Identity Platform sign-in, Pub/Sub and a Cloud Function emailing contact forms, and GitHub with Cloud Build triggers publishing the site, preview builds, cache invalidation and Artifact Registry.
+
+**Or reproduce it exactly** from the source file [gcp-static-site-cicd.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-static-site-cicd.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-static-site-cicd.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-static-site-cicd.annotations.yml):
+
+```bash
+terravision draw --source gcp-static-site-cicd.tvg.json --annotate gcp-static-site-cicd.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-static-site-cicd.tvg.json --annotate gcp-static-site-cicd.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-static-site-cicd.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-static-site-cicd.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-static-site-cicd.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-static-site-cicd.annotations.yml)
+
+## Google Cloud Batch HPC architecture diagram { #google-cloud-batch-hpc-architecture-diagram }
+
+A nightly Monte Carlo risk simulation on Google Cloud Batch. At close of market Cloud Scheduler starts a Workflows run, which exports the day's market data from BigQuery as scenario files and submits a Batch job with thousands of tasks. Batch runs them on Spot VMs across three zones in a Private Google Access subnet, retrying any task whose VM is preempted, with the engine image from Artifact Registry. The tasks share intermediate files on Managed Lustre and write value-at-risk results to BigQuery. The workflow reports the run's status to a risk portal on Cloud Run, where analysts can start ad-hoc runs, and they read the reports in Looker.
+
+[![Google Cloud Batch HPC architecture diagram](assets/gallery/gcp-batch-hpc.webp){ width=1400 height=1274 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-batch-hpc.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud Batch HPC for nightly Monte Carlo risk with Cloud Scheduler starting a Workflows run, a Batch job on Spot VMs across three zones in a Private Google Access subnet, Managed Lustre scratch, BigQuery market data exported to Cloud Storage scenarios and value-at-risk results in BigQuery, a Pub/Sub status topic, a Cloud Run risk portal, Looker reports, and Cloud Build with Artifact Registry for the engine image.
+
+**Or reproduce it exactly** from the source file [gcp-batch-hpc.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-batch-hpc.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-batch-hpc.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-batch-hpc.annotations.yml):
+
+```bash
+terravision draw --source gcp-batch-hpc.tvg.json --annotate gcp-batch-hpc.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-batch-hpc.tvg.json --annotate gcp-batch-hpc.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-batch-hpc.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-batch-hpc.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-batch-hpc.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-batch-hpc.annotations.yml)
+
+## Google Cloud SaaS multi-tenant architecture diagram { #google-cloud-saas-multi-tenant-architecture-diagram }
+
+A multi-tenant SaaS application on Google Cloud with pooled and silo tiers. Each tenant's users sign in to their own Identity Platform tenant, and a global external load balancer serves every tenant domain from a Certificate Manager map. Shared-tier tenants go to a pooled Cloud Run service that looks the tenant up in Firestore and reads AlloyDB with row-level security, while a premium tenant's host name routes to its own service and its own Cloud SQL in a separate project, encrypted with its own key. An onboarding service takes sign-ups from Pub/Sub, creates the Identity Platform tenant, and for premium tenants runs Terraform in Cloud Build to create the silo project. Usage events from both tiers go to BigQuery for billing.
+
+[![Google Cloud SaaS multi-tenant architecture diagram](assets/gallery/gcp-saas-multi-tenant.webp){ width=1400 height=1063 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-saas-multi-tenant.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud multi-tenant SaaS with Identity Platform tenants, a global external load balancer with a Certificate Manager map and host rules, pooled and silo Cloud Run services with Direct VPC egress, AlloyDB with row-level security, a premium tenant project with Cloud SQL through Private Service Connect and a CMEK key, a Firestore tenant registry, a Pub/Sub onboarding service with a Cloud Build silo trigger, and usage metering into BigQuery.
+
+**Or reproduce it exactly** from the source file [gcp-saas-multi-tenant.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-saas-multi-tenant.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-saas-multi-tenant.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-saas-multi-tenant.annotations.yml):
+
+```bash
+terravision draw --source gcp-saas-multi-tenant.tvg.json --annotate gcp-saas-multi-tenant.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-saas-multi-tenant.tvg.json --annotate gcp-saas-multi-tenant.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-saas-multi-tenant.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-saas-multi-tenant.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-saas-multi-tenant.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-saas-multi-tenant.annotations.yml)
+
+## Google Cloud payments processing architecture diagram { #google-cloud-payments-processing-architecture-diagram }
+
+A PCI DSS card payments platform with the cardholder data environment in its own project inside a VPC Service Controls perimeter. Merchants reach a global external load balancer with Cloud Armor, and Apigee checks each merchant's key, quota and payload before reaching the payment API through Private Service Connect. An internal load balancer sends payments to pods on a private GKE cluster under Binary Authorization, which tokenise card numbers in a Cloud SQL vault encrypted with a Cloud HSM key, record transactions in Spanner and publish captures to Pub/Sub. Authorisations and the nightly settlement file from a Cloud Run job leave only through Cloud NAT. Sensitive Data Protection scans for stray card numbers.
+
+[![Google Cloud payments processing architecture diagram](assets/gallery/gcp-payments-processing.webp){ width=1400 height=2215 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-payments-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud PCI DSS payments platform with a global external load balancer and Cloud Armor in front of Apigee, Private Service Connect to an internal load balancer and a private GKE cluster in two zones, a Cloud SQL token vault with a Cloud HSM key, a Spanner ledger, Pub/Sub captures, a Cloud Run settlement job writing to a locked audit bucket, Cloud NAT to the card networks, and Binary Authorization and VPC Service Controls as shared services.
+
+**Or reproduce it exactly** from the source file [gcp-payments-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-payments-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-payments-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-payments-processing.annotations.yml):
+
+```bash
+terravision draw --source gcp-payments-processing.tvg.json --annotate gcp-payments-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-payments-processing.tvg.json --annotate gcp-payments-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-payments-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-payments-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-payments-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-payments-processing.annotations.yml)
+
+## Google Cloud Security Command Center architecture diagram { #google-cloud-security-command-center-architecture-diagram }
+
+Security operations for a Google Cloud organisation, run from a dedicated security project. In the workload project, Cloud NGFW Enterprise inspects the web VMs' traffic and blocks known exploits before it leaves through Cloud NAT. An organisation log sink gathers threat, audit and flow logs into a log bucket linked to BigQuery, where a log-based metric and alert policy notify the SOC when threats spike. Security Command Center publishes high-severity findings to Pub/Sub, and a function fixes them automatically, such as removing public access from a bucket. A Cloud Asset feed reports IAM changes to a review function, and Sensitive Data Protection scans customer uploads.
+
+[![Google Cloud Security Command Center architecture diagram](assets/gallery/gcp-security-command-center.webp){ width=1400 height=1660 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-security-command-center.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud security operations with a workload project holding web VMs in two zones behind Cloud NGFW Enterprise and Cloud NAT, and a security project with an organisation log sink, a log bucket linked to BigQuery, a log-based metric and alert policy notifying SOC analysts, Security Command Center notifications to Pub/Sub triggering a remediation Cloud Function, a Cloud Asset feed for IAM changes, and Sensitive Data Protection scanning a bucket.
+
+**Or reproduce it exactly** from the source file [gcp-security-command-center.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-security-command-center.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-security-command-center.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-security-command-center.annotations.yml):
+
+```bash
+terravision draw --source gcp-security-command-center.tvg.json --annotate gcp-security-command-center.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-security-command-center.tvg.json --annotate gcp-security-command-center.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-security-command-center.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-security-command-center.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-security-command-center.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-security-command-center.annotations.yml)
+
+## Google Cloud video processing architecture diagram { #google-cloud-video-processing-architecture-diagram }
+
+Video upload, transcoding and streaming on Google Cloud. Creators sign in with Identity Platform and upload source videos straight to Cloud Storage with a signed URL from the studio API on Cloud Run. Each upload fires Eventarc, which starts a Workflows run that creates a Transcoder API job from an HLS and DASH template, waits for its state on Pub/Sub, makes thumbnails with a Cloud Run job and publishes the title in Firestore. Viewers reach a global external load balancer, where the catalogue API lists titles and signs a CDN cookie, and the segments stream from the renditions bucket through Cloud CDN. Watch events go through Pub/Sub to BigQuery for analytics.
+
+[![Google Cloud video processing architecture diagram](assets/gallery/gcp-media-processing.webp){ width=1400 height=1599 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-media-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw Google Cloud video processing with creators signing in with Identity Platform and uploading to Cloud Storage with a signed URL from a Cloud Run studio API, Eventarc starting a Workflows run with a Transcoder API job and template, Pub/Sub job events, a Cloud Run thumbnails job, a Firestore catalogue, Cloud DNS and a global load balancer with Cloud CDN for renditions and a Cloud Run catalogue API, and watch events into BigQuery.
+
+**Or reproduce it exactly** from the source file [gcp-media-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-media-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-media-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-media-processing.annotations.yml):
+
+```bash
+terravision draw --source gcp-media-processing.tvg.json --annotate gcp-media-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-media-processing.tvg.json --annotate gcp-media-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-media-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-media-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-media-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-media-processing.annotations.yml)
+
+## Google Cloud VM three-tier migration architecture diagram { #google-cloud-vm-three-tier-migration-architecture-diagram }
+
+A three-tier web shop moved from a corporate data centre to Compute Engine. Migrate to Virtual Machines replicates the web and app VMs' disks over HA VPN and turns them into images for the instance templates, while Database Migration Service keeps Cloud SQL for MySQL in sync from the source binlog until cutover. After cutover a global external load balancer with Cloud Armor sends customers to a web tier managed instance group in two zones, which shares content on Filestore. The web VMs call the app tier's managed instance group through an internal load balancer, and the app VMs use a regional HA Cloud SQL instance. Payment calls leave through Cloud NAT.
+
+[![Google Cloud VM three-tier migration architecture diagram](assets/gallery/gcp-vm-three-tier-migrate.webp){ width=1400 height=758 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vm-three-tier-migrate.png)
+
+**Ask your AI assistant:**
+
+> Draw a Google Cloud three-tier VM migration with web and app VMs and MySQL in a corporate data centre connected by HA VPN, Migrate to Virtual Machines images and instance templates, Database Migration Service to Cloud SQL for MySQL HA, a global external load balancer with Cloud Armor to a web managed instance group in two zones, an internal load balancer to an app managed instance group, Filestore shared content, and Cloud NAT to a payment provider.
+
+**Or reproduce it exactly** from the source file [gcp-vm-three-tier-migrate.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-vm-three-tier-migrate.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [gcp-vm-three-tier-migrate.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/gcp-vm-three-tier-migrate.annotations.yml):
+
+```bash
+terravision draw --source gcp-vm-three-tier-migrate.tvg.json --annotate gcp-vm-three-tier-migrate.annotations.yml --format svg      # or png, pdf
+terravision draw --source gcp-vm-three-tier-migrate.tvg.json --annotate gcp-vm-three-tier-migrate.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vm-three-tier-migrate.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vm-three-tier-migrate.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vm-three-tier-migrate.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/gcp-vm-three-tier-migrate.annotations.yml)
 
 ## How were these diagrams made?
 

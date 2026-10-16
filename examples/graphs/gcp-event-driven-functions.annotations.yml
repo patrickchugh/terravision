@@ -1,0 +1,103 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-event-driven-functions.tvg.json --annotate gcp-event-driven-functions.annotations.yml
+format: '0.3'
+title: Google Cloud event-driven invoice processing with Eventarc, Cloud Functions and Document AI
+update:
+  google_compute_subnetwork.functions:
+    ip_cidr_range: 10.40.0.0/24
+    label: Subnet Functions (Private Google Access)
+  google_bigquery_dataset.finance:
+    label: BigQuery Finance
+  google_cloud_run_v2_job.reconcile:
+    label: Cloud Run Job Reconcile
+  google_cloud_run_v2_service.approvals:
+    label: Cloud Run Approvals
+  google_cloud_scheduler_job.nightly:
+    label: Cloud Scheduler Nightly
+  google_cloudfunctions2_function.extract:
+    label: Cloud Functions Extract
+  google_cloudfunctions2_function.validate:
+    label: Cloud Functions Validate
+  google_compute_router.egress:
+    label: Cloud Router Egress
+  google_compute_router_nat.egress:
+    label: Cloud NAT Egress
+  google_document_ai_processor.invoice_parser:
+    label: Document AI Invoice Parser
+  google_eventarc_trigger.invoice_extracted:
+    label: Eventarc Invoice Extracted
+  google_eventarc_trigger.invoice_uploaded:
+    label: Eventarc Invoice Uploaded
+  google_firestore_database.invoices:
+    label: Firestore Invoices
+  google_kms_key_ring.invoices:
+    label: Cloud KMS Invoices
+  google_logging_project_sink.functions:
+    label: Log Sink Functions
+  google_pubsub_subscription.to_bigquery:
+    label: Subscription To Bigquery
+  google_pubsub_topic.invoice_dead_letter:
+    label: Pub/Sub Invoice Dead Letter
+  google_pubsub_topic.invoice_extracted:
+    label: Pub/Sub Invoice Extracted
+  google_secret_manager_secret.erp_token:
+    label: Secret Manager Erp Token
+  google_storage_bucket.invoice_uploads:
+    label: Cloud Storage Invoice Uploads
+  google_workflows_workflow.approval:
+    label: Workflows Approval
+connect:
+  tv_gcp_users_icon.suppliers:
+  - google_storage_bucket.invoice_uploads: Signed URL upload
+  google_pubsub_topic.invoice_extracted:
+  - google_pubsub_topic.invoice_dead_letter: After 5 attempts
+  google_pubsub_subscription.to_bigquery:
+  - google_bigquery_dataset.finance: BigQuery subscription
+flows:
+  Extract:
+    description: A supplier's invoice is read automatically
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_users_icon.suppliers -> google_storage_bucket.invoice_uploads
+      xlabel: Upload
+      detail: A supplier uploads an invoice PDF to Cloud Storage with a signed URL
+    - resource: google_storage_bucket.invoice_uploads -> google_eventarc_trigger.invoice_uploaded
+      xlabel: Event
+      detail: The object-finalised event fires an Eventarc trigger
+    - resource: google_eventarc_trigger.invoice_uploaded -> google_cloudfunctions2_function.extract
+      xlabel: Invoke
+      detail: which invokes the extract function
+    - resource: google_cloudfunctions2_function.extract -> google_document_ai_processor.invoice_parser
+      xlabel: Parse
+      detail: The function sends the PDF to the Document AI invoice parser
+    - resource: google_cloudfunctions2_function.extract -> google_firestore_database.invoices
+      xlabel: Save
+      detail: saves the supplier, lines and totals in Firestore
+    - resource: google_cloudfunctions2_function.extract -> google_pubsub_topic.invoice_extracted
+      xlabel: Publish
+      detail: and publishes InvoiceExtracted to Pub/Sub
+    - resource: google_pubsub_subscription.to_bigquery -> google_bigquery_dataset.finance
+      xlabel: Analyse
+      detail: A BigQuery subscription writes every event to the finance dataset
+  Approve:
+    description: The invoice is validated and approved
+    color: '#188038'
+    steps:
+    - resource: google_eventarc_trigger.invoice_extracted -> google_cloudfunctions2_function.validate
+      xlabel: Validate
+      detail: A second trigger runs the validate function, which matches the invoice to its purchase order
+    - resource: google_cloudfunctions2_function.validate -> google_workflows_workflow.approval
+      xlabel: Route
+      detail: Invoices over the limit start an approval workflow
+    - resource: google_workflows_workflow.approval -> google_cloud_run_v2_service.approvals
+      xlabel: Request
+      detail: which creates an approval task in the approvals app and waits for its callback
+    - resource: tv_gcp_users_icon.finance_team -> google_cloud_run_v2_service.approvals
+      xlabel: Approve
+      detail: The finance team approves or rejects it
+    - resource: google_compute_router_nat.egress -> tv_gcp_server.erp_api
+      xlabel: Post
+      detail: Approved invoices are posted to the ERP through Cloud NAT
+    - resource: google_cloud_run_v2_job.reconcile -> google_bigquery_dataset.finance
+      xlabel: Reconcile
+      detail: Each night Cloud Scheduler runs a job that reconciles payments against the invoices

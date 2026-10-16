@@ -1,0 +1,90 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source gcp-hybrid-interconnect.tvg.json --annotate gcp-hybrid-interconnect.annotations.yml
+format: '0.3'
+title: Google Cloud hybrid network with Dedicated Interconnect, HA VPN backup and hybrid DNS
+update:
+  google_compute_subnetwork.apps:
+    ip_cidr_range: 10.80.0.0/20
+  tv_gcp_onprem.datacenter:
+    label: Corporate Datacenter
+  tv_gcp_server.dns:
+    label: DNS Servers
+  google_compute_external_vpn_gateway.edge_routers:
+    label: Peer Routers Edge Routers
+  google_compute_interconnect_attachment.zone1:
+    label: VLAN Attachment Zone1
+  google_compute_interconnect_attachment.zone2:
+    label: VLAN Attachment Zone2
+  google_compute_forwarding_rule.erp_internal_lb:
+    label: Forwarding Rule Erp Internal Lb
+  google_compute_global_forwarding_rule.psc_google_apis:
+    label: Forwarding Rule Psc Google Apis
+  google_compute_ha_vpn_gateway.backup:
+    label: HA VPN Backup
+  google_compute_region_backend_service.erp:
+    label: Backend Service Erp
+  google_compute_router.interconnect:
+    label: Cloud Router Interconnect
+  google_compute_router.vpn:
+    label: Cloud Router Vpn
+  google_dns_managed_zone.corp_forwarding:
+    label: Cloud DNS Corp Forwarding
+  google_dns_policy.inbound:
+    label: DNS Policy Inbound
+  google_logging_project_sink.network:
+    label: Log Sink Network
+  google_monitoring_dashboard.interconnect:
+    label: Dashboard Interconnect
+  google_secret_manager_secret.vpn_shared_secret:
+    label: Secret Manager Vpn Shared Secret
+  google_sql_database_instance.erp:
+    label: Cloud SQL Erp
+  google_storage_bucket.backups:
+    label: Cloud Storage Backups
+connect:
+  google_compute_external_vpn_gateway.edge_routers:
+  - google_compute_interconnect_attachment.zone1: Dedicated Interconnect 10G
+  - google_compute_interconnect_attachment.zone2: Dedicated Interconnect 10G
+  - google_compute_ha_vpn_gateway.backup: HA VPN backup
+flows:
+  Office user:
+    description: A user in the data centre opens the ERP
+    color: '#D93025'
+    steps:
+    - resource: tv_gcp_client.workstations -> google_compute_external_vpn_gateway.edge_routers
+      xlabel: Route
+      detail: Traffic for the VPC goes to the data centre's edge routers
+    - resource: google_compute_external_vpn_gateway.edge_routers -> google_compute_interconnect_attachment.zone1
+      xlabel: Interconnect
+      detail: over Dedicated Interconnect links in two edge availability domains
+    - resource: google_compute_interconnect_attachment.zone1 -> google_compute_router.interconnect
+      xlabel: BGP
+      detail: Cloud Router learns the data centre's routes over BGP and advertises the VPC's
+    - resource: google_compute_router.interconnect -> google_compute_forwarding_rule.erp_internal_lb
+      xlabel: Balance
+      detail: The request reaches the ERP internal load balancer
+    - resource: google_compute_region_backend_service.erp -> google_compute_instance.erp~1
+      xlabel: Serve
+      detail: which spreads it over ERP VMs in two zones
+    - resource: google_compute_instance.erp~1 -> google_sql_database_instance.erp
+      xlabel: Query
+      detail: The VMs use Cloud SQL over private services access
+  DNS, backups and failover:
+    description: Names resolve both ways, backups stay private
+    color: '#188038'
+    steps:
+    - resource: tv_gcp_server.dns -> google_compute_external_vpn_gateway.edge_routers
+      xlabel: Forward
+      detail: Data centre DNS forwards Google Cloud private zones to the inbound server policy
+    - resource: google_compute_router.interconnect -> google_dns_policy.inbound
+      xlabel: Resolve
+      detail: Cloud DNS answers, and a forwarding zone sends corp names back to the data centre
+    - resource: tv_gcp_server.backup_servers -> google_compute_external_vpn_gateway.edge_routers
+      xlabel: Back up
+      detail: Backup servers send nightly backups across the Interconnect
+    - resource: google_compute_router.interconnect -> google_compute_global_forwarding_rule.psc_google_apis
+      xlabel: Private API
+      detail: to Cloud Storage through a Private Service Connect endpoint that Cloud Router advertises
+    - resource: google_compute_external_vpn_gateway.edge_routers -> google_compute_ha_vpn_gateway.backup
+      xlabel: Failover
+      detail: If both Interconnect links fail, BGP moves traffic to HA VPN
