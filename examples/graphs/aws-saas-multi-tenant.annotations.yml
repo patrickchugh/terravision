@@ -70,10 +70,10 @@ flows:
     - resource: tv_aws_users.saas_admins -> aws_apigatewayv2_api.saas
       xlabel: Sign up
       detail: The SaaS team onboards a tenant through the admin API
-    - resource: aws_alb.internal~1 -> aws_ecs_fargate.control_plane~1
+    - resource: aws_alb.internal~1 -> aws_ecs_fargate.tenant_management~1
       xlabel: Control
-      detail: which reaches the control plane service
-    - resource: aws_ecs_fargate.control_plane~1 -> aws_vpc_endpoint.eventbridge~1
+      detail: which reaches the tenant management service
+    - resource: aws_ecs_fargate.tenant_management~1 -> aws_vpc_endpoint.eventbridge~1
       xlabel: Event
       detail: It publishes TenantCreated to EventBridge through the interface endpoint
     - resource: aws_cloudwatch_event_bus.tenant_lifecycle -> aws_sfn_state_machine.provision_tenant

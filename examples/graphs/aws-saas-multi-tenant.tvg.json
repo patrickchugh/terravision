@@ -25,7 +25,7 @@
     "aws_alb.internal~1",
     "aws_ecs_fargate.pooled_tier~1",
     "aws_ecs_fargate.premium_tenant~1",
-    "aws_ecs_fargate.control_plane~1"
+    "aws_ecs_fargate.tenant_management~1"
   ],
   "aws_subnet.data~1": [
     "aws_rds_aurora_postgres.pooled~1",
@@ -38,7 +38,7 @@
   "aws_alb.internal~1": [
     "aws_ecs_fargate.pooled_tier~1",
     "aws_ecs_fargate.premium_tenant~1",
-    "aws_ecs_fargate.control_plane~1"
+    "aws_ecs_fargate.tenant_management~1"
   ],
   "aws_ecs_fargate.pooled_tier~1": [
     "aws_vpc_endpoint.dynamodb_gateway",
@@ -50,7 +50,7 @@
     "aws_rds_aurora_postgres.premium_tenant~1",
     "aws_vpc_endpoint.s3_gateway"
   ],
-  "aws_ecs_fargate.control_plane~1": [
+  "aws_ecs_fargate.tenant_management~1": [
     "aws_vpc_endpoint.dynamodb_gateway",
     "aws_vpc_endpoint.eventbridge~1",
     "aws_vpc_endpoint.secrets_manager~1"
@@ -70,7 +70,7 @@
     "aws_alb.internal~2",
     "aws_ecs_fargate.pooled_tier~2",
     "aws_ecs_fargate.premium_tenant~2",
-    "aws_ecs_fargate.control_plane~2"
+    "aws_ecs_fargate.tenant_management~2"
   ],
   "aws_subnet.data~2": [
     "aws_rds_aurora_postgres.pooled~2",
@@ -83,7 +83,7 @@
   "aws_alb.internal~2": [
     "aws_ecs_fargate.pooled_tier~2",
     "aws_ecs_fargate.premium_tenant~2",
-    "aws_ecs_fargate.control_plane~2"
+    "aws_ecs_fargate.tenant_management~2"
   ],
   "aws_ecs_fargate.pooled_tier~2": [
     "aws_vpc_endpoint.dynamodb_gateway",
@@ -95,7 +95,7 @@
     "aws_rds_aurora_postgres.premium_tenant~2",
     "aws_vpc_endpoint.s3_gateway"
   ],
-  "aws_ecs_fargate.control_plane~2": [
+  "aws_ecs_fargate.tenant_management~2": [
     "aws_vpc_endpoint.dynamodb_gateway",
     "aws_vpc_endpoint.eventbridge~2",
     "aws_vpc_endpoint.secrets_manager~2"

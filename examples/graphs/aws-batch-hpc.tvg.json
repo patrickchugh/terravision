@@ -29,16 +29,16 @@
   ],
   "aws_subnet.compute~1": [
     "aws_batch_compute_environment.spot~1",
-    "aws_instance.spot_workers~1"
+    "aws_spot_instance_request.spot_workers~1"
   ],
   "aws_subnet.endpoints~1": [
     "aws_vpc_endpoint.ecr~1",
     "aws_vpc_endpoint.logs~1"
   ],
   "aws_batch_compute_environment.spot~1": [
-    "aws_instance.spot_workers~1"
+    "aws_spot_instance_request.spot_workers~1"
   ],
-  "aws_instance.spot_workers~1": [
+  "aws_spot_instance_request.spot_workers~1": [
     "aws_fsx_lustre_file_system.scratch",
     "aws_vpc_endpoint.ecr~1",
     "aws_vpc_endpoint.logs~1",
@@ -50,16 +50,16 @@
   ],
   "aws_subnet.compute~2": [
     "aws_batch_compute_environment.spot~2",
-    "aws_instance.spot_workers~2"
+    "aws_spot_instance_request.spot_workers~2"
   ],
   "aws_subnet.endpoints~2": [
     "aws_vpc_endpoint.ecr~2",
     "aws_vpc_endpoint.logs~2"
   ],
   "aws_batch_compute_environment.spot~2": [
-    "aws_instance.spot_workers~2"
+    "aws_spot_instance_request.spot_workers~2"
   ],
-  "aws_instance.spot_workers~2": [
+  "aws_spot_instance_request.spot_workers~2": [
     "aws_fsx_lustre_file_system.scratch",
     "aws_vpc_endpoint.ecr~2",
     "aws_vpc_endpoint.logs~2",
