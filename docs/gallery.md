@@ -74,7 +74,7 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [Google Cloud video processing architecture diagram](#google-cloud-video-processing-architecture-diagram) | Google Cloud |
 | [Google Cloud VM three-tier migration architecture diagram](#google-cloud-vm-three-tier-migration-architecture-diagram) | Google Cloud |
 
-All examples are also published as a dataset on Hugging Face: https://huggingface.co/datasets/patrickchugh/terravision-cloud-diagrams
+All examples are also published as a dataset on Hugging Face, with each prompt, graph, annotations file and rendered image: [patrickchugh/terravision-cloud-diagrams](https://huggingface.co/datasets/patrickchugh/terravision-cloud-diagrams).
 
 !!! tip "The quickest way to make one of these your own"
     Install TerraVision in [Claude Desktop or the ChatGPT desktop app](ai-assistants.md), paste the prompt under any example, then keep talking: *"add a WAF"*, *"make it multi-region"*, *"show how a request flows through it"*, *"write the Terraform for this"*.
