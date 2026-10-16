@@ -895,62 +895,63 @@ def get_edge_labels(origin: Node, destination: Node, tfdata: Dict[str, Any]) -> 
     Returns:
         Label string for the edge, or empty string if no label found
     """
-    label = ""
     origin_resource = origin._attrs["tf_resource_name"]
     dest_resource = destination._attrs["tf_resource_name"]
+    edge_labels_list = _origin_edge_labels(origin_resource, tfdata)
+    if not edge_labels_list:
+        return ""
+    return _label_for_destination(edge_labels_list, dest_resource)
 
-    def _consolidated(resource: str) -> List[Dict[str, Any]]:
-        """The consolidation entries that renamed this node into what it is:
-        only a node named as the consolidated node (aws_ecs_service.ecs), not
-        every node whose type shares the prefix (aws_ecs_fargate.api)."""
-        name = helpers.get_no_module_name(resource).split("~")[0]
-        return [
-            k
-            for k in CONSOLIDATED_NODES
-            if name.startswith(list(k.keys())[0])
-            and name == list(k.values())[0].get("resource_name")
-        ]
 
-    consolidated_dest_prefix = _consolidated(dest_resource)
-    consolidated_origin_prefix = _consolidated(origin_resource)
+def _consolidated_prefix(resource: str) -> Optional[str]:
+    """The consolidated prefix that renamed this node into what it is.
 
-    # Find edge labels from the origin itself, then from the node it was
-    # consolidated into. Checking the origin first matters when several nodes
-    # share a consolidated prefix (aws_ecs_fargate.a and .b both match
-    # aws_ecs): the first one with labels would otherwise lend them to all.
-    own_labels = tfdata["meta_data"].get(origin_resource, {}).get("edge_labels")
-    if own_labels:
-        edge_labels_list = own_labels
-    elif consolidated_origin_prefix:
-        candidate_resources = helpers.list_of_dictkeys_containing(
-            tfdata["meta_data"],
-            list(consolidated_origin_prefix[0].keys())[0],
-        )
-        edge_labels_list = None
-        for resource in candidate_resources:
-            edge_labels_list = tfdata["meta_data"][resource].get("edge_labels")
-            if edge_labels_list:
-                break
-    else:
-        edge_labels_list = tfdata["meta_data"][origin_resource].get("edge_labels")
+    Only a node named as the consolidated node (aws_ecs_service.ecs) has one,
+    not every node whose type shares the prefix (aws_ecs_fargate.api).
+    """
+    name = helpers.get_no_module_name(resource).split("~")[0]
+    for entry in CONSOLIDATED_NODES:
+        prefix = next(iter(entry))
+        if name.startswith(prefix) and name == entry[prefix].get("resource_name"):
+            return prefix
+    return None
 
-    # Match edge label to destination resource: an exact name first, so two
-    # targets sharing a consolidated prefix keep their own labels, then the
-    # consolidated pattern for a destination renamed by consolidation
-    if edge_labels_list:
+
+def _origin_edge_labels(origin_resource: str, tfdata: Dict[str, Any]) -> List:
+    """Edge labels from the origin itself, then from the node it was
+    consolidated into.
+
+    Checking the origin first matters when several nodes share a consolidated
+    prefix (aws_ecs_fargate.a and .b both match aws_ecs): the first one with
+    labels would otherwise lend them to all.
+    """
+    meta_data = tfdata["meta_data"]
+    own_labels = meta_data.get(origin_resource, {}).get("edge_labels")
+    prefix = _consolidated_prefix(origin_resource)
+    if own_labels or not prefix:
+        return own_labels or []
+    for resource in helpers.list_of_dictkeys_containing(meta_data, prefix):
+        labels = meta_data[resource].get("edge_labels")
+        if labels:
+            return labels
+    return []
+
+
+def _label_for_destination(edge_labels_list: List, dest_resource: str) -> str:
+    """Match an edge label to the destination: an exact name first, so two
+    targets sharing a consolidated prefix keep their own labels, then the
+    consolidated pattern for a destination renamed by consolidation."""
+    for labeldict in edge_labels_list:
+        key = next(iter(labeldict))
+        if key == dest_resource:
+            return labeldict[key]
+    prefix = _consolidated_prefix(dest_resource)
+    if prefix:
         for labeldict in edge_labels_list:
-            key = [k for k in labeldict][0]
-            if key == dest_resource:
+            key = next(iter(labeldict))
+            if key.startswith(prefix):
                 return labeldict[key]
-        for labeldict in edge_labels_list:
-            key = [k for k in labeldict][0]
-            if consolidated_dest_prefix and key.startswith(
-                list(consolidated_dest_prefix[0].keys())[0]
-            ):
-                label = labeldict[key]
-                break
-
-    return label
+    return ""
 
 
 def handle_nodes(
