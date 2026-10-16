@@ -1,0 +1,116 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-security-monitoring.tvg.json --annotate azure-security-monitoring.annotations.yml
+format: '0.3'
+title: Azure security monitoring with Microsoft Sentinel, Defender for Cloud and automated response
+update:
+  azurerm_virtual_network.hub:
+    address_space:
+    - 10.0.0.0/22
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.0.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.firewall:
+    address_prefixes:
+    - 10.0.1.0/26
+    label: AzureFirewallSubnet
+  azurerm_subnet.log_forwarders:
+    address_prefixes:
+    - 10.0.2.0/27
+  tv_azure_onprem.datacenter:
+    label: Corporate Datacenter
+  tv_azurerm_server.firewalls:
+    label: Firewalls and Proxies
+  tv_azurerm_server.domain_controllers:
+    label: Domain Controllers
+  azurerm_local_network_gateway.datacenter:
+    label: VPN Device
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway
+  azurerm_firewall.hub:
+    label: Azure Firewall
+  azurerm_firewall_policy.hub:
+    label: Firewall Policy
+  azurerm_linux_virtual_machine_scale_set.syslog_forwarders:
+    label: Syslog Forwarders (AMA)
+  azurerm_monitor_diagnostic_setting.firewall:
+    label: Firewall Diagnostics
+  azurerm_network_watcher_flow_log.vnets:
+    label: VNet Flow Logs
+  azurerm_storage_container.flow_logs:
+    label: Flow Log Storage
+  azurerm_sentinel_log_analytics_workspace_onboarding.soc:
+    label: Microsoft Sentinel
+  azurerm_sentinel_data_connector.entra_id:
+    label: Entra ID Connector
+  azurerm_sentinel_data_connector.defender:
+    label: Defender Connector
+  azurerm_monitor_diagnostic_setting.activity_log:
+    label: Activity Log Export
+  azurerm_security_center_subscription_pricing.defender:
+    label: Defender for Cloud
+  azurerm_sentinel_alert_rule.impossible_travel:
+    label: Analytics Rule
+  azurerm_logic_app_workflow.contain:
+    label: Containment Playbook
+  azurerm_storage_container.archive:
+    label: Long-term Archive
+  tv_azurerm_internet.teams:
+    label: Microsoft Teams
+  tv_azurerm_users.soc_analysts:
+    label: SOC Analysts
+  azurerm_log_analytics_workspace.sentinel:
+    label: Log Analytics (Sentinel)
+  azurerm_policy_assignment.diagnostics:
+    label: Diagnostics Policy
+connect:
+  azurerm_virtual_network_gateway.vpn:
+  - azurerm_linux_virtual_machine_scale_set.syslog_forwarders: Syslog TCP 514
+  azurerm_logic_app_workflow.contain:
+  - azurerm_firewall_policy.hub: Block IP
+flows:
+  Collect:
+    description: Signals from Azure and the data centre reach Sentinel
+    steps:
+    - resource: tv_azurerm_server.firewalls -> azurerm_local_network_gateway.datacenter
+      xlabel: Syslog
+      detail: Data centre firewalls and proxies send syslog across the site-to-site VPN
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_linux_virtual_machine_scale_set.syslog_forwarders
+      xlabel: Forward
+      detail: to log forwarders in the hub
+    - resource: azurerm_linux_virtual_machine_scale_set.syslog_forwarders -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Ingest
+      detail: whose Azure Monitor Agent sends the events to the Sentinel workspace
+    - resource: azurerm_monitor_diagnostic_setting.firewall -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Firewall
+      detail: Azure Firewall logs arrive through a diagnostic setting
+    - resource: azurerm_network_watcher_flow_log.vnets -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Flows
+      detail: VNet flow logs arrive through traffic analytics
+    - resource: azurerm_sentinel_data_connector.entra_id -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Sign-ins
+      detail: Entra ID sign-in and audit logs arrive through their data connector
+    - resource: azurerm_sentinel_data_connector.defender -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Alerts
+      detail: and Defender for Cloud alerts through theirs
+  Detect and respond:
+    description: An impossible-travel sign-in is contained
+    steps:
+    - resource: azurerm_sentinel_log_analytics_workspace_onboarding.soc -> azurerm_sentinel_alert_rule.impossible_travel
+      xlabel: Detect
+      detail: A scheduled analytics rule finds sign-ins from two countries an hour apart and opens an incident
+    - resource: azurerm_sentinel_alert_rule.impossible_travel -> azurerm_logic_app_workflow.contain
+      xlabel: Automate
+      detail: An automation rule runs the containment playbook
+    - resource: azurerm_logic_app_workflow.contain -> azurerm_firewall_policy.hub
+      xlabel: Block
+      detail: The playbook adds the source address to the firewall policy's deny list
+    - resource: azurerm_logic_app_workflow.contain -> tv_azurerm_internet.teams
+      xlabel: Notify
+      detail: and posts the incident to the SOC channel in Teams
+    - resource: tv_azurerm_users.soc_analysts -> azurerm_sentinel_log_analytics_workspace_onboarding.soc
+      xlabel: Investigate
+      detail: SOC analysts investigate the incident in Sentinel
+    - resource: azurerm_sentinel_log_analytics_workspace_onboarding.soc -> azurerm_storage_container.archive
+      xlabel: Archive
+      detail: and data export keeps the raw logs in Blob Storage for seven years

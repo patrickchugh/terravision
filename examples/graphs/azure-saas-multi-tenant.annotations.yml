@@ -1,0 +1,96 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-saas-multi-tenant.tvg.json --annotate azure-saas-multi-tenant.annotations.yml
+format: '0.3'
+title: Azure multi-tenant SaaS on AKS with a tenant catalog, elastic pools and Front Door custom domains
+update:
+  azurerm_virtual_network.saas:
+    address_space:
+    - 10.68.0.0/16
+  azurerm_subnet.aks_nodes:
+    address_prefixes:
+    - 10.68.0.0/20
+  azurerm_subnet.control_plane:
+    address_prefixes:
+    - 10.68.16.0/26
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.68.20.0/24
+  tv_azurerm_users.tenant_users:
+    label: Tenant Users
+  azurerm_aadb2c_directory.tenants:
+    label: Entra External ID
+  azurerm_private_link_service.ingress:
+    label: Private Link Service
+  azurerm_kubernetes_cluster.saas:
+    label: AKS Shared Cluster
+  azurerm_kubernetes_cluster_node_pool.apps~1:
+    label: App Node Pool
+  azurerm_kubernetes_cluster_node_pool.apps~2:
+    label: App Node Pool
+  azurerm_kubernetes_cluster_node_pool.apps~3:
+    label: App Node Pool
+  azurerm_linux_function_app.onboarding:
+    label: Onboarding Function
+  azurerm_mssql_database.tenant_catalog:
+    label: Tenant Catalog
+  azurerm_mssql_elasticpool.pooled_tenants:
+    label: Elastic Pool (standard)
+  azurerm_mssql_database.premium_tenant:
+    label: Premium Tenant DB
+  azurerm_managed_redis.cache:
+    label: Managed Redis
+  azurerm_app_configuration.tiers:
+    label: App Configuration
+  azurerm_servicebus_queue.provisioning:
+    label: Provisioning Queue
+  azurerm_container_registry.images:
+    label: Container Registry
+  azurerm_application_insights.saas:
+    label: Application Insights
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.edge:
+    label: Azure Front Door
+  azurerm_dns_zone.saas:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.saas:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_cdn_frontdoor_profile.edge:
+  - azurerm_private_link_service.ingress: Custom domain per tenant
+flows:
+  Tenant request:
+    description: A user of one tenant uses the app
+    steps:
+    - resource: tv_azurerm_users.tenant_users -> azurerm_dns_zone.saas
+      xlabel: Resolve
+      detail: The tenant's subdomain or own domain resolves to Front Door
+    - resource: tv_azurerm_users.tenant_users -> azurerm_aadb2c_directory.tenants
+      xlabel: Sign in
+      detail: The user signs in with Entra External ID; the token carries the tenant ID
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_private_link_service.ingress
+      xlabel: Private Link
+      detail: Front Door, with its WAF and the tenant's certificate, reaches the cluster's internal load balancer over Private Link
+    - resource: azurerm_private_link_service.ingress -> azurerm_kubernetes_cluster_node_pool.apps~1
+      xlabel: Route
+      detail: The request reaches the shared app pods, spread over three zones
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.app_config
+      xlabel: Tier
+      detail: The app reads the tenant's tier and feature flags from App Configuration
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.sql
+      xlabel: Data
+      detail: finds the tenant's database in the catalog, then queries it in the elastic pool or the premium tenant's own database
+  Onboarding:
+    description: A new tenant signs up
+    steps:
+    - resource: azurerm_kubernetes_cluster_node_pool.apps~1 -> azurerm_private_endpoint.service_bus
+      xlabel: Sign up
+      detail: The sign-up page queues a provisioning request
+    - resource: azurerm_linux_function_app.onboarding -> azurerm_private_endpoint.service_bus
+      xlabel: Provision
+      detail: The onboarding function takes it
+    - resource: azurerm_linux_function_app.onboarding -> azurerm_private_endpoint.sql
+      xlabel: Create
+      detail: creates the tenant's database in the elastic pool, registers it in the catalog, and adds the tenant's domain to Front Door

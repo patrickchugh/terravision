@@ -1,0 +1,90 @@
+{
+  "tv_azurerm_users.customers": [
+    "azurerm_dns_zone.shop"
+  ],
+  "azurerm_dns_zone.shop": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.edge"
+  ],
+  "azurerm_cdn_frontdoor_profile.edge": [
+    "azurerm_container_app_environment.shop"
+  ],
+  "azurerm_resource_group.shop": [
+    "azurerm_virtual_network.shop",
+    "azurerm_public_ip.egress",
+    "azurerm_cosmosdb_account.orders",
+    "azurerm_servicebus_queue.fulfilment",
+    "azurerm_mssql_database.payments",
+    "azurerm_managed_redis.carts"
+  ],
+  "azurerm_virtual_network.shop": [
+    "azurerm_subnet.apps",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.apps": [
+    "azurerm_container_app_environment.shop",
+    "azurerm_container_app.storefront",
+    "azurerm_container_app.orders",
+    "azurerm_container_app.payments",
+    "azurerm_container_app.fulfilment",
+    "azurerm_container_app_job.reconcile",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.sql",
+    "azurerm_private_endpoint.redis"
+  ],
+  "azurerm_container_app_environment.shop": [
+    "azurerm_container_app.storefront"
+  ],
+  "azurerm_container_app.storefront": [
+    "azurerm_private_endpoint.redis",
+    "azurerm_container_app.orders",
+    "azurerm_container_app.payments"
+  ],
+  "azurerm_container_app.orders": [
+    "azurerm_private_endpoint.cosmos",
+    "azurerm_private_endpoint.service_bus"
+  ],
+  "azurerm_container_app.payments": [
+    "azurerm_private_endpoint.sql",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_container_app.fulfilment": [
+    "azurerm_private_endpoint.service_bus",
+    "azurerm_private_endpoint.cosmos"
+  ],
+  "azurerm_container_app_job.reconcile": [
+    "azurerm_private_endpoint.sql"
+  ],
+  "azurerm_private_endpoint.cosmos": [
+    "azurerm_cosmosdb_account.orders"
+  ],
+  "azurerm_private_endpoint.service_bus": [
+    "azurerm_servicebus_queue.fulfilment"
+  ],
+  "azurerm_private_endpoint.sql": [
+    "azurerm_mssql_database.payments"
+  ],
+  "azurerm_private_endpoint.redis": [
+    "azurerm_managed_redis.carts"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.payment_provider"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.images",
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.apps",
+    "azurerm_application_insights.apps",
+    "azurerm_private_dns_zone.privatelink",
+    "azurerm_user_assigned_identity.apps"
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "tv_azurerm_users.customers": [
+    "azurerm_dns_zone.public"
+  ],
+  "azurerm_dns_zone.public": [
+    "azurerm_cdn_frontdoor_profile.global"
+  ],
+  "azurerm_cdn_frontdoor_firewall_policy.waf": [
+    "azurerm_cdn_frontdoor_profile.global"
+  ],
+  "azurerm_cdn_frontdoor_profile.global": [
+    "azurerm_linux_web_app.primary",
+    "azurerm_linux_web_app.secondary"
+  ],
+  "azurerm_resource_group.global": [
+    "azurerm_cosmosdb_account.sessions",
+    "azurerm_traffic_manager_profile.api"
+  ],
+  "tv_azurerm_region.east_us_2": [
+    "azurerm_resource_group.primary"
+  ],
+  "azurerm_resource_group.primary": [
+    "azurerm_virtual_network.primary",
+    "azurerm_mssql_database.orders_primary",
+    "azurerm_storage_container.documents_primary",
+    "azurerm_key_vault.primary"
+  ],
+  "azurerm_virtual_network.primary": [
+    "azurerm_subnet.primary_app",
+    "azurerm_subnet.primary_endpoints"
+  ],
+  "azurerm_subnet.primary_app": [
+    "azurerm_linux_web_app.primary",
+    "azurerm_linux_function_app.primary_worker"
+  ],
+  "azurerm_subnet.primary_endpoints": [
+    "azurerm_private_endpoint.primary_sql",
+    "azurerm_private_endpoint.primary_blob",
+    "azurerm_private_endpoint.primary_cosmos"
+  ],
+  "azurerm_linux_web_app.primary": [
+    "azurerm_private_endpoint.primary_sql",
+    "azurerm_private_endpoint.primary_cosmos"
+  ],
+  "azurerm_linux_function_app.primary_worker": [
+    "azurerm_private_endpoint.primary_sql",
+    "azurerm_private_endpoint.primary_blob"
+  ],
+  "azurerm_private_endpoint.primary_sql": [
+    "azurerm_mssql_database.orders_primary"
+  ],
+  "azurerm_private_endpoint.primary_blob": [
+    "azurerm_storage_container.documents_primary"
+  ],
+  "azurerm_private_endpoint.primary_cosmos": [
+    "azurerm_cosmosdb_account.sessions"
+  ],
+  "tv_azurerm_region.central_us": [
+    "azurerm_resource_group.secondary"
+  ],
+  "azurerm_resource_group.secondary": [
+    "azurerm_virtual_network.secondary",
+    "azurerm_mssql_database.orders_secondary",
+    "azurerm_storage_container.documents_secondary",
+    "azurerm_key_vault.secondary"
+  ],
+  "azurerm_virtual_network.secondary": [
+    "azurerm_subnet.secondary_app",
+    "azurerm_subnet.secondary_endpoints"
+  ],
+  "azurerm_subnet.secondary_app": [
+    "azurerm_linux_web_app.secondary",
+    "azurerm_linux_function_app.secondary_worker"
+  ],
+  "azurerm_subnet.secondary_endpoints": [
+    "azurerm_private_endpoint.secondary_sql",
+    "azurerm_private_endpoint.secondary_blob",
+    "azurerm_private_endpoint.secondary_cosmos"
+  ],
+  "azurerm_linux_web_app.secondary": [
+    "azurerm_private_endpoint.secondary_sql",
+    "azurerm_private_endpoint.secondary_cosmos"
+  ],
+  "azurerm_linux_function_app.secondary_worker": [
+    "azurerm_private_endpoint.secondary_sql",
+    "azurerm_private_endpoint.secondary_blob"
+  ],
+  "azurerm_private_endpoint.secondary_sql": [
+    "azurerm_mssql_database.orders_secondary"
+  ],
+  "azurerm_private_endpoint.secondary_blob": [
+    "azurerm_storage_container.documents_secondary"
+  ],
+  "azurerm_private_endpoint.secondary_cosmos": [
+    "azurerm_cosmosdb_account.sessions"
+  ],
+  "azurerm_mssql_database.orders_primary": [
+    "azurerm_mssql_database.orders_secondary"
+  ],
+  "azurerm_storage_container.documents_primary": [
+    "azurerm_storage_container.documents_secondary"
+  ],
+  "azurerm_traffic_manager_profile.api": [
+    "azurerm_linux_function_app.primary_worker",
+    "azurerm_linux_function_app.secondary_worker"
+  ],
+  "tv_azurerm_internet.partners": [
+    "azurerm_traffic_manager_profile.api"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_log_analytics_workspace.global",
+    "azurerm_application_insights.global",
+    "azurerm_container_registry.images"
+  ]
+}

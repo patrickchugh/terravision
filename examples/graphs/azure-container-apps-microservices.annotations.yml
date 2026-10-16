@@ -1,0 +1,105 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-container-apps-microservices.tvg.json --annotate azure-container-apps-microservices.annotations.yml
+format: '0.3'
+title: Azure Container Apps microservices with Front Door Private Link and KEDA scaling
+update:
+  azurerm_virtual_network.shop:
+    address_space:
+    - 10.60.0.0/16
+  azurerm_subnet.apps:
+    address_prefixes:
+    - 10.60.0.0/23
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.60.10.0/24
+  azurerm_container_app_environment.shop:
+    label: Internal Environment
+  azurerm_container_app.fulfilment:
+    label: Fulfilment (KEDA)
+  azurerm_container_app.storefront:
+    label: Storefront
+  azurerm_container_app.orders:
+    label: Orders
+  azurerm_container_app.payments:
+    label: Payments
+  azurerm_container_app_job.reconcile:
+    label: Nightly Reconcile Job
+  azurerm_mssql_database.payments:
+    label: Azure SQL Payments
+  azurerm_cosmosdb_account.orders:
+    label: Cosmos DB Orders
+  azurerm_servicebus_queue.fulfilment:
+    label: Service Bus Queue
+  azurerm_container_registry.images:
+    label: Container Registry
+  azurerm_application_insights.apps:
+    label: Application Insights
+  azurerm_cdn_frontdoor_firewall_policy.waf:
+    label: Front Door WAF Policy
+  azurerm_cdn_frontdoor_profile.edge:
+    label: Azure Front Door
+  azurerm_dns_zone.shop:
+    label: Azure DNS
+  azurerm_log_analytics_workspace.apps:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_cdn_frontdoor_profile.edge:
+  - azurerm_container_app_environment.shop: Private Link origin
+  azurerm_private_endpoint.cosmos:
+  - azurerm_cosmosdb_account.orders: HTTPS 443
+  azurerm_private_endpoint.service_bus:
+  - azurerm_servicebus_queue.fulfilment: AMQP 5671
+  azurerm_private_endpoint.sql:
+  - azurerm_mssql_database.payments: TDS 1433
+  azurerm_private_endpoint.redis:
+  - azurerm_managed_redis.carts: Redis TLS 10000
+  azurerm_public_ip.egress:
+  - tv_azurerm_internet.payment_provider: HTTPS 443
+flows:
+  Checkout:
+    description: A customer pays for the basket
+    steps:
+    - resource: tv_azurerm_users.customers -> azurerm_dns_zone.shop
+      xlabel: Resolve
+      detail: The shop's name resolves in Azure DNS to Front Door
+    - resource: azurerm_cdn_frontdoor_profile.edge -> azurerm_container_app_environment.shop
+      xlabel: Origin
+      detail: Front Door, with its WAF policy, reaches the internal Container Apps environment over Private Link
+    - resource: azurerm_container_app_environment.shop -> azurerm_container_app.storefront
+      xlabel: Ingress
+      detail: The environment's ingress routes the request to the storefront app
+    - resource: azurerm_container_app.storefront -> azurerm_private_endpoint.redis
+      xlabel: Basket
+      detail: The storefront reads the basket from Azure Managed Redis
+    - resource: azurerm_container_app.storefront -> azurerm_container_app.payments
+      xlabel: Pay
+      detail: and calls the payments app on its internal ingress
+    - resource: azurerm_container_app.payments -> azurerm_private_endpoint.sql
+      xlabel: Record
+      detail: Payments records the attempt in Azure SQL
+    - resource: azurerm_public_ip.egress -> tv_azurerm_internet.payment_provider
+      xlabel: Authorise
+      detail: and authorises the card with the payment provider through the NAT gateway's fixed public IP
+  Fulfilment:
+    description: The order is saved and fulfilled
+    steps:
+    - resource: azurerm_container_app.storefront -> azurerm_container_app.orders
+      xlabel: Order
+      detail: The storefront places the order with the orders app
+    - resource: azurerm_container_app.orders -> azurerm_private_endpoint.cosmos
+      xlabel: Save
+      detail: Orders saves it to Cosmos DB
+    - resource: azurerm_container_app.orders -> azurerm_private_endpoint.service_bus
+      xlabel: Queue
+      detail: and queues a fulfilment message on Service Bus
+    - resource: azurerm_container_app.fulfilment -> azurerm_private_endpoint.service_bus
+      xlabel: Scale
+      detail: KEDA scales the fulfilment app on the queue length; each replica takes a message
+    - resource: azurerm_container_app.fulfilment -> azurerm_private_endpoint.cosmos
+      xlabel: Status
+      detail: and marks the order shipped in Cosmos DB
+    - resource: azurerm_container_app_job.reconcile -> azurerm_private_endpoint.sql
+      xlabel: Reconcile
+      detail: A scheduled Container Apps job reconciles the day's payments every night

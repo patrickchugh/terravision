@@ -39,6 +39,21 @@ They are drawn the way enterprises deploy: workloads sit in VPCs, subnets and av
 | [Azure hub-and-spoke network architecture diagram](#azure-hub-and-spoke-architecture-diagram) | Azure |
 | [Azure AKS microservices architecture diagram](#azure-aks-architecture-diagram) | Azure |
 | [Azure App Service customer portal architecture diagram](#azure-app-service-customer-portal-architecture-diagram) | Azure |
+| [Azure Container Apps microservices architecture diagram](#azure-container-apps-microservices-architecture-diagram) | Azure |
+| [Azure serverless event-driven architecture diagram](#azure-serverless-event-driven-architecture-diagram) | Azure |
+| [Azure Databricks lakehouse architecture diagram](#azure-databricks-lakehouse-architecture-diagram) | Azure |
+| [Azure real-time streaming analytics architecture diagram](#azure-streaming-analytics-architecture-diagram) | Azure |
+| [Azure Machine Learning MLOps architecture diagram](#azure-machine-learning-mlops-architecture-diagram) | Azure |
+| [Azure IoT telemetry architecture diagram](#azure-iot-telemetry-architecture-diagram) | Azure |
+| [Azure ExpressRoute hybrid network architecture diagram](#azure-expressroute-hybrid-architecture-diagram) | Azure |
+| [Azure multi-region disaster recovery architecture diagram](#azure-multi-region-disaster-recovery-architecture-diagram) | Azure |
+| [Azure Static Web Apps with CI/CD architecture diagram](#azure-static-web-apps-cicd-architecture-diagram) | Azure |
+| [Azure Batch HPC architecture diagram](#azure-batch-hpc-architecture-diagram) | Azure |
+| [Azure SaaS multi-tenant architecture diagram](#azure-saas-multi-tenant-architecture-diagram) | Azure |
+| [Azure payments processing architecture diagram](#azure-payments-processing-architecture-diagram) | Azure |
+| [Azure security monitoring with Microsoft Sentinel architecture diagram](#azure-security-monitoring-architecture-diagram) | Azure |
+| [Azure video processing architecture diagram](#azure-video-processing-architecture-diagram) | Azure |
+| [Azure VM Scale Sets web application migration architecture diagram](#azure-vm-scale-sets-migration-architecture-diagram) | Azure |
 | [Google Cloud three-tier web application architecture diagram](#google-cloud-three-tier-web-application-architecture-diagram) | Google Cloud |
 | [Google Cloud GKE microservices architecture diagram](#google-cloud-gke-architecture-diagram) | Google Cloud |
 | [Google Cloud data pipeline architecture diagram](#google-cloud-data-pipeline-architecture-diagram) | Google Cloud |
@@ -317,13 +332,13 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 ## AWS SaaS multi-tenant architecture diagram { #aws-saas-multi-tenant-architecture-diagram }
 
-A multi-tenant SaaS product on AWS that mixes pooled and silo tenancy. Tenant users call an API Gateway HTTP API, which validates their token against Cognito and passes the request over a VPC link to internal load balancers in two availability zones. Shared-tier tenants go to a pooled ECS Fargate service that keeps each tenant in its own schema in an Aurora PostgreSQL cluster, while a premium tenant has its own service and cluster; every service reads the tenant registry in DynamoDB and tenant files in S3 through gateway endpoints. The control plane publishes lifecycle events through an EventBridge interface endpoint, starting a Step Functions provisioning workflow and metering usage through Firehose to S3.
+A multi-tenant SaaS product on AWS that mixes pooled and silo tenancy. Tenant users call an API Gateway HTTP API, which validates their token against Cognito and passes the request over a VPC link to internal load balancers in two availability zones. Shared-tier tenants go to a pooled ECS Fargate service that keeps each tenant in its own schema in an Aurora PostgreSQL cluster, while a premium tenant has its own service and cluster; every service reads the tenant registry in DynamoDB and tenant files in S3 through gateway endpoints. The tenant management service publishes lifecycle events through an EventBridge interface endpoint, starting a Step Functions provisioning workflow and metering usage through Firehose to S3.
 
 [![AWS SaaS multi-tenant architecture diagram](assets/gallery/aws-saas-multi-tenant.webp){ width=1400 height=1701 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-saas-multi-tenant.png)
 
 **Ask your AI assistant:**
 
-> Draw an AWS multi-tenant SaaS platform: API Gateway HTTP API with a Cognito JWT authorizer and a VPC link to internal ALBs across two availability zones, ECS Fargate services for a pooled tier, a premium silo tenant and the control plane, Aurora PostgreSQL with a schema per tenant plus a dedicated premium cluster, a DynamoDB tenant registry and S3 tenant files through gateway endpoints, EventBridge and Secrets Manager interface endpoints, a Step Functions provisioning workflow and Firehose usage metering.
+> Draw an AWS multi-tenant SaaS platform: API Gateway HTTP API with a Cognito JWT authorizer and a VPC link to internal ALBs across two availability zones, ECS Fargate services for a pooled tier, a premium silo tenant and tenant management, Aurora PostgreSQL with a schema per tenant plus a dedicated premium cluster, a DynamoDB tenant registry and S3 tenant files through gateway endpoints, EventBridge and Secrets Manager interface endpoints, a Step Functions provisioning workflow and Firehose usage metering.
 
 **Or reproduce it exactly** from the source file [aws-saas-multi-tenant.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-saas-multi-tenant.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [aws-saas-multi-tenant.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/aws-saas-multi-tenant.annotations.yml):
 
@@ -485,6 +500,291 @@ terravision draw --source azure-web-app.tvg.json --annotate azure-web-app.annota
 ```
 
 Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-web-app.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-web-app.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-web-app.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-web-app.annotations.yml)
+
+## Azure Container Apps microservices architecture diagram { #azure-container-apps-microservices-architecture-diagram }
+
+Microservices on Azure Container Apps in an internal, zone-redundant environment injected into a virtual network. Azure Front Door with a WAF policy reaches the environment over Private Link, so nothing in the virtual network has a public endpoint. The storefront calls the orders and payments apps on their internal ingress, and every data service, Cosmos DB, Azure SQL, Service Bus and Azure Managed Redis, is reached through a private endpoint. KEDA scales the fulfilment app on the Service Bus queue length, and a scheduled Container Apps job reconciles payments each night. Only the payments app leaves the network, through a NAT gateway, to call the payment provider.
+
+[![Azure Container Apps microservices architecture diagram](assets/gallery/azure-container-apps-microservices.webp){ width=1400 height=1963 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-container-apps-microservices.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure Container Apps microservices in an internal zone-redundant environment in a virtual network, with Azure DNS and Front Door with WAF over Private Link, storefront, orders, payments and KEDA-scaled fulfilment apps, a nightly Container Apps job, private endpoints for Cosmos DB, Azure SQL, Service Bus and Azure Managed Redis, a NAT gateway to the payment provider, and Container Registry, Key Vault, Log Analytics and Application Insights as shared services.
+
+**Or reproduce it exactly** from the source file [azure-container-apps-microservices.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-container-apps-microservices.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-container-apps-microservices.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-container-apps-microservices.annotations.yml):
+
+```bash
+terravision draw --source azure-container-apps-microservices.tvg.json --annotate azure-container-apps-microservices.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-container-apps-microservices.tvg.json --annotate azure-container-apps-microservices.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-container-apps-microservices.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-container-apps-microservices.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-container-apps-microservices.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-container-apps-microservices.annotations.yml)
+
+## Azure serverless event-driven architecture diagram { #azure-serverless-event-driven-architecture-diagram }
+
+An event-driven order system on Azure Functions Flex Consumption with virtual network integration. API Management in its own subnet forwards orders to the orders function through a private endpoint, and the function saves them to Cosmos DB. A change feed trigger publishes each new order to an Event Grid topic, whose subscription delivers it to a Service Bus topic with a managed identity. Fulfilment and notification functions and a Logic App each take their own subscription's copy, writing receipts to Blob Storage, emailing through Azure Communication Services and posting to the ERP. Every data service is reached through a private endpoint, and outbound calls leave through a NAT gateway.
+
+[![Azure serverless event-driven architecture diagram](assets/gallery/azure-serverless-events.webp){ width=1400 height=1194 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-serverless-events.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure serverless event-driven order system with API Management in a subnet, Flex Consumption Function Apps for the orders API, a Cosmos DB change feed projector, fulfilment and notifications, a Logic App to the ERP, an Event Grid topic delivering to a Service Bus topic, private endpoints for the API, Cosmos DB, Event Grid, Service Bus and Blob Storage, a NAT gateway to Communication Services email, and Key Vault and Application Insights as shared services.
+
+**Or reproduce it exactly** from the source file [azure-serverless-events.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-serverless-events.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-serverless-events.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-serverless-events.annotations.yml):
+
+```bash
+terravision draw --source azure-serverless-events.tvg.json --annotate azure-serverless-events.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-serverless-events.tvg.json --annotate azure-serverless-events.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-serverless-events.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-serverless-events.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-serverless-events.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-serverless-events.annotations.yml)
+
+## Azure Databricks lakehouse architecture diagram { #azure-databricks-lakehouse-architecture-diagram }
+
+A medallion lakehouse on Azure Databricks and Azure Data Lake Storage Gen2, fed nightly from an on-premises data centre. A Data Factory pipeline hands its copy activity to a self-hosted integration runtime in the virtual network, which reads the ERP and CRM databases over a site-to-site VPN and lands them in the bronze container. The pipeline then runs a Databricks job, in a VNet-injected workspace with Unity Catalog, that refines bronze into silver and gold Delta tables. Data Factory, Databricks and the lake are all reached through private endpoints, and the clusters download packages through a NAT gateway. Analysts query the gold tables from Power BI, and Purview catalogues the lake.
+
+[![Azure Databricks lakehouse architecture diagram](assets/gallery/azure-lakehouse.webp){ width=1400 height=2179 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-lakehouse.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure Databricks lakehouse with ERP and CRM databases in an on-premises data centre connected by site-to-site VPN, a VPN gateway, a self-hosted integration runtime VM and a VNet-injected Databricks workspace in their own subnets, a Data Factory pipeline, ADLS Gen2 bronze, silver and gold containers, private endpoints for Data Factory, Databricks and the lake, a NAT gateway, Power BI for analysts, and Key Vault and Purview as shared services.
+
+**Or reproduce it exactly** from the source file [azure-lakehouse.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-lakehouse.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-lakehouse.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-lakehouse.annotations.yml):
+
+```bash
+terravision draw --source azure-lakehouse.tvg.json --annotate azure-lakehouse.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-lakehouse.tvg.json --annotate azure-lakehouse.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-lakehouse.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-lakehouse.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-lakehouse.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-lakehouse.annotations.yml)
+
+## Azure real-time streaming analytics architecture diagram { #azure-streaming-analytics-architecture-diagram }
+
+Real-time clickstream analytics for an online store on Azure. The storefront web app, behind Front Door with a WAF, sends every click to Event Hubs over its Kafka endpoint through a private endpoint. Event Hubs Capture archives the raw events in the data lake, and a data connection streams them into Azure Data Explorer for interactive queries. A Stream Analytics job in the virtual network turns clicks into sessions and updates each shopper's profile in Cosmos DB, which the storefront reads to personalise the next page. A function watches conversion in Data Explorer and pages the on-call team, and analysts follow live funnels in Managed Grafana.
+
+[![Azure real-time streaming analytics architecture diagram](assets/gallery/azure-streaming-analytics.webp){ width=1400 height=2887 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-streaming-analytics.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure real-time clickstream analytics with Front Door and WAF in front of an App Service storefront that sends clicks to Event Hubs, Event Hubs Capture to ADLS Gen2, a data connection to Azure Data Explorer, a Stream Analytics job and an anomaly Function App in a stream processing subnet, Cosmos DB shopper profiles, private endpoints for Event Hubs, Cosmos DB and Data Explorer, Managed Grafana dashboards, and a Monitor action group for alerts.
+
+**Or reproduce it exactly** from the source file [azure-streaming-analytics.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-streaming-analytics.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-streaming-analytics.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-streaming-analytics.annotations.yml):
+
+```bash
+terravision draw --source azure-streaming-analytics.tvg.json --annotate azure-streaming-analytics.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-streaming-analytics.tvg.json --annotate azure-streaming-analytics.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-streaming-analytics.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-streaming-analytics.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-streaming-analytics.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-streaming-analytics.annotations.yml)
+
+## Azure Machine Learning MLOps architecture diagram { #azure-machine-learning-mlops-architecture-diagram }
+
+An MLOps platform on Azure Machine Learning with every part kept off the public internet. Data scientists connect over point-to-site VPN to compute instances, and reach the workspace, which has public access disabled, through its private endpoint. A merge to main runs a GitHub workflow on self-hosted runners in the virtual network, which submit the training pipeline to a GPU compute cluster that reads data from Blob Storage and registers the model. After approval the runners deploy it to an online endpoint on AKS with the Azure ML extension. The claims app scores each claim over the virtual network, and Container Registry, Key Vault and Application Insights serve the workspace.
+
+[![Azure Machine Learning MLOps architecture diagram](assets/gallery/azure-ml-mlops.webp){ width=1400 height=2394 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-ml-mlops.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure Machine Learning MLOps with data scientists on point-to-site VPN, a VPN gateway, self-hosted GitHub runners on a VM scale set with a NAT gateway, a GPU compute cluster and compute instances in a training subnet, AKS inference with the Azure ML extension, an App Service claims app, private endpoints for the workspace and Blob Storage training data and models, and Container Registry, Key Vault and Application Insights as shared services.
+
+**Or reproduce it exactly** from the source file [azure-ml-mlops.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-ml-mlops.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-ml-mlops.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-ml-mlops.annotations.yml):
+
+```bash
+terravision draw --source azure-ml-mlops.tvg.json --annotate azure-ml-mlops.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-ml-mlops.tvg.json --annotate azure-ml-mlops.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-ml-mlops.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-ml-mlops.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-ml-mlops.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-ml-mlops.annotations.yml)
+
+## Azure IoT telemetry architecture diagram { #azure-iot-telemetry-architecture-diagram }
+
+Factory telemetry on Azure IoT. On the factory floor an IoT Edge gateway reads machine values from the PLCs' OPC UA server, gets its identity from the Device Provisioning Service and sends readings to IoT Hub over MQTT. IoT Hub routes every reading to Blob Storage for the archive and streams it into Azure Data Explorer, which plant engineers chart in Managed Grafana. Stream Analytics in the virtual network detects anomalies per machine and writes them to an Event Hub, where a function raises maintenance alerts. Another function keeps each machine's state in Azure Digital Twins, and the processing services reach IoT Hub, Event Hubs and Digital Twins through private endpoints.
+
+[![Azure IoT telemetry architecture diagram](assets/gallery/azure-iot-telemetry.webp){ width=1400 height=1264 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-iot-telemetry.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure IoT factory telemetry with an OPC UA server and an IoT Edge gateway on the factory site, the Device Provisioning Service, IoT Hub routing to Blob Storage and a data connection to Azure Data Explorer, Stream Analytics anomaly detection writing to an Event Hub, alerting and Digital Twins sync Function Apps in a processing subnet, private endpoints, Managed Grafana for plant engineers, and a Monitor action group for maintenance alerts.
+
+**Or reproduce it exactly** from the source file [azure-iot-telemetry.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-iot-telemetry.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-iot-telemetry.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-iot-telemetry.annotations.yml):
+
+```bash
+terravision draw --source azure-iot-telemetry.tvg.json --annotate azure-iot-telemetry.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-iot-telemetry.tvg.json --annotate azure-iot-telemetry.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-iot-telemetry.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-iot-telemetry.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-iot-telemetry.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-iot-telemetry.annotations.yml)
+
+## Azure ExpressRoute hybrid network architecture diagram { #azure-expressroute-hybrid-architecture-diagram }
+
+A corporate data centre connected to an Azure hub-and-spoke network over ExpressRoute, with a site-to-site VPN as backup. The data centre's edge routers exchange routes with the ExpressRoute gateway over the circuit's private peering, and BGP moves traffic to the VPN gateway if the circuit fails. A route table on the gateway subnet sends traffic for the spokes through Azure Firewall, which allows it to an internal load balancer in front of ERP VMs in two availability zones, with SQL Managed Instance in a delegated subnet. The data centre's DNS servers forward Azure private zones to a DNS Private Resolver in the hub. Administrators reach the VMs only through Azure Bastion.
+
+[![Azure ExpressRoute hybrid network architecture diagram](assets/gallery/azure-hybrid-expressroute.webp){ width=1400 height=3627 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hybrid-expressroute.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure ExpressRoute hybrid network with workstations, DNS and app servers and BGP edge routers in a corporate data centre, an ExpressRoute circuit to an ExpressRoute gateway, a backup site-to-site VPN gateway, a hub with Azure Firewall and its policy, a DNS Private Resolver and Bastion, a peered spoke with an internal load balancer, ERP VMs in two zones and SQL Managed Instance, and Log Analytics and a backup vault as shared services.
+
+**Or reproduce it exactly** from the source file [azure-hybrid-expressroute.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-hybrid-expressroute.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-hybrid-expressroute.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-hybrid-expressroute.annotations.yml):
+
+```bash
+terravision draw --source azure-hybrid-expressroute.tvg.json --annotate azure-hybrid-expressroute.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-hybrid-expressroute.tvg.json --annotate azure-hybrid-expressroute.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hybrid-expressroute.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hybrid-expressroute.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hybrid-expressroute.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-hybrid-expressroute.annotations.yml)
+
+## Azure multi-region disaster recovery architecture diagram { #azure-multi-region-disaster-recovery-architecture-diagram }
+
+An active-passive web application across two Azure regions, East US 2 and Central US. Azure Front Door with a WAF sends customers to the primary region's App Service while its health probes pass, and to the standby in Central US when they fail. Orders are in an Azure SQL failover group that geo-replicates to Central US and moves its read-write listener on failover, and documents are copied to the paired region by RA-GZRS storage. Sessions are in Cosmos DB replicated to both regions, so customers stay signed in through a failover. Traffic Manager does the same for partner webhooks to the worker Function Apps, and each region reaches its data through private endpoints.
+
+[![Azure multi-region disaster recovery architecture diagram](assets/gallery/azure-multi-region-dr.webp){ width=1400 height=1535 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-multi-region-dr.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure active-passive multi-region design across East US 2 and Central US with Azure DNS and Front Door with WAF routing by priority to App Service web apps, worker Function Apps behind Traffic Manager for partner webhooks, an Azure SQL failover group, RA-GZRS Blob Storage, Cosmos DB in both regions, private endpoints and Key Vault in each region, and Log Analytics and a geo-replicated Container Registry as shared services.
+
+**Or reproduce it exactly** from the source file [azure-multi-region-dr.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-multi-region-dr.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-multi-region-dr.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-multi-region-dr.annotations.yml):
+
+```bash
+terravision draw --source azure-multi-region-dr.tvg.json --annotate azure-multi-region-dr.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-multi-region-dr.tvg.json --annotate azure-multi-region-dr.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-multi-region-dr.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-multi-region-dr.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-multi-region-dr.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-multi-region-dr.annotations.yml)
+
+## Azure Static Web Apps with CI/CD architecture diagram { #azure-static-web-apps-cicd-architecture-diagram }
+
+A content site on Azure Static Web Apps, delivered through Azure Front Door with a WAF and released by GitHub Actions. Front Door serves the pages from Static Web Apps and the media from a Blob container over Private Link, and visitors sign in with Entra External ID. Calls to /api go to a linked Function App with virtual network integration, which reads content from Cosmos DB and queues contact messages on Service Bus through private endpoints. A second function emails the team through Azure Communication Services from the NAT gateway's fixed IP. GitHub Actions deploys the site with pull request preview environments, and the API with an OIDC federated identity.
+
+[![Azure Static Web Apps with CI/CD architecture diagram](assets/gallery/azure-static-web-app-cicd.webp){ width=1400 height=1836 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-static-web-app-cicd.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure Static Web Apps with CI/CD: Azure DNS and Front Door with WAF serving the site and a Blob media container, Entra External ID sign-in, a linked API Function App and a contact Function App in a VNet integration subnet, private endpoints for Cosmos DB and a Service Bus queue, a NAT gateway to Communication Services email, GitHub Actions deploying with OIDC, and Key Vault and Application Insights as shared services.
+
+**Or reproduce it exactly** from the source file [azure-static-web-app-cicd.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-static-web-app-cicd.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-static-web-app-cicd.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-static-web-app-cicd.annotations.yml):
+
+```bash
+terravision draw --source azure-static-web-app-cicd.tvg.json --annotate azure-static-web-app-cicd.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-static-web-app-cicd.tvg.json --annotate azure-static-web-app-cicd.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-static-web-app-cicd.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-static-web-app-cicd.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-static-web-app-cicd.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-static-web-app-cicd.annotations.yml)
+
+## Azure Batch HPC architecture diagram { #azure-batch-hpc-architecture-diagram }
+
+Engineering simulation on Azure Batch, with the solver licences still served from the corporate data centre. Engineers submit jobs in a portal on App Service, which uploads the input model to Blob Storage and creates a Batch job through private endpoints. Batch schedules the tasks on a dedicated HBv4 pool that autoscales on pending work, and on a Spot pool for low-priority tasks, requeuing any that are evicted. The nodes share scratch files on Azure NetApp Files in its delegated subnet, pull solver images from Container Registry, and check out licences from the FlexLM server over a site-to-site VPN. Results go back to Blob Storage for engineers to download.
+
+[![Azure Batch HPC architecture diagram](assets/gallery/azure-batch-hpc.webp){ width=1400 height=1748 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-batch-hpc.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure Batch HPC with simulation engineers using an App Service job portal, a Batch account with dedicated and Spot HBv4 pools in a compute subnet, Azure NetApp Files scratch in a delegated subnet, Blob Storage inputs and results, private endpoints for Batch and Blob Storage, a VPN gateway to a FlexLM licence server in the corporate data centre, and Container Registry, Key Vault and Log Analytics as shared services.
+
+**Or reproduce it exactly** from the source file [azure-batch-hpc.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-batch-hpc.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-batch-hpc.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-batch-hpc.annotations.yml):
+
+```bash
+terravision draw --source azure-batch-hpc.tvg.json --annotate azure-batch-hpc.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-batch-hpc.tvg.json --annotate azure-batch-hpc.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-batch-hpc.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-batch-hpc.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-batch-hpc.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-batch-hpc.annotations.yml)
+
+## Azure SaaS multi-tenant architecture diagram { #azure-saas-multi-tenant-architecture-diagram }
+
+A multi-tenant SaaS application on a shared AKS cluster, with a database per tenant. Azure Front Door serves every tenant's subdomain or custom domain with its own certificate and a WAF, and reaches the cluster's internal load balancer through a Private Link service. Tenant users sign in with Entra External ID, and the app reads each tenant's tier and feature flags from App Configuration. A tenant catalog in Azure SQL maps each tenant to its database, in an elastic pool for standard tenants or a dedicated database for premium ones. An onboarding function takes sign-ups from a Service Bus queue, creates the tenant's database and registers it, all through private endpoints.
+
+[![Azure SaaS multi-tenant architecture diagram](assets/gallery/azure-saas-multi-tenant.webp){ width=1400 height=2560 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-saas-multi-tenant.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure multi-tenant SaaS application with Azure DNS and Front Door with WAF and custom domains per tenant, a Private Link service to an AKS cluster with node pools in three zones, Entra External ID sign-in, private endpoints for a tenant catalog in Azure SQL, an elastic pool and a premium tenant database, Azure Managed Redis, App Configuration and a Service Bus provisioning queue, an onboarding Function App, and Container Registry and Key Vault as shared services.
+
+**Or reproduce it exactly** from the source file [azure-saas-multi-tenant.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-saas-multi-tenant.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-saas-multi-tenant.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-saas-multi-tenant.annotations.yml):
+
+```bash
+terravision draw --source azure-saas-multi-tenant.tvg.json --annotate azure-saas-multi-tenant.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-saas-multi-tenant.tvg.json --annotate azure-saas-multi-tenant.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-saas-multi-tenant.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-saas-multi-tenant.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-saas-multi-tenant.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-saas-multi-tenant.annotations.yml)
+
+## Azure payments processing architecture diagram { #azure-payments-processing-architecture-diagram }
+
+A PCI DSS card payments platform with the cardholder data environment in its own spoke virtual network. Merchant checkouts reach the payment API on a private AKS cluster in two zones through Application Gateway with WAF v2, under a DDoS protection plan. The API tokenises card numbers with keys held in Managed HSM and stores tokens and transactions in Azure SQL with Always Encrypted, all through private endpoints. Every outbound call to the card networks and the acquirer leaves through Azure Firewall in the peered hub, which allows only those destinations. A settlement function batches captured payments from Service Bus and writes an audit trail to immutable Blob Storage, while Defender for Cloud and a PCI DSS policy assignment watch the environment.
+
+[![Azure payments processing architecture diagram](assets/gallery/azure-payments-processing.webp){ width=1400 height=1137 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-payments-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure PCI DSS payments platform with a hub virtual network holding Azure Firewall with its policy and Bastion, a peered cardholder data spoke with Application Gateway WAF v2, a private AKS cluster in two zones and a settlement Function App, private endpoints for Managed HSM, Azure SQL with Always Encrypted, a Service Bus queue and immutable Blob audit logs, egress to the card networks, and Defender for Cloud and DDoS protection as shared services.
+
+**Or reproduce it exactly** from the source file [azure-payments-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-payments-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-payments-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-payments-processing.annotations.yml):
+
+```bash
+terravision draw --source azure-payments-processing.tvg.json --annotate azure-payments-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-payments-processing.tvg.json --annotate azure-payments-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-payments-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-payments-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-payments-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-payments-processing.annotations.yml)
+
+## Azure security monitoring with Microsoft Sentinel architecture diagram { #azure-security-monitoring-architecture-diagram }
+
+Security monitoring for an Azure estate and a corporate data centre, centred on Microsoft Sentinel. Data centre firewalls and proxies send syslog across a site-to-site VPN to log forwarders in the hub, whose Azure Monitor Agent sends the events to the Sentinel workspace. Azure Firewall logs arrive through a diagnostic setting, VNet flow logs through traffic analytics, the subscription's activity log through an export, and Entra ID and Defender for Cloud through their data connectors. When an analytics rule finds an impossible-travel sign-in, an automation rule runs a Logic App playbook that blocks the source address in the firewall policy and notifies the SOC in Teams. Data export keeps the raw logs in Blob Storage for long-term retention.
+
+[![Azure security monitoring with Microsoft Sentinel architecture diagram](assets/gallery/azure-security-monitoring.webp){ width=1400 height=2308 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-security-monitoring.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure security monitoring with Microsoft Sentinel collecting syslog from data centre firewalls over a site-to-site VPN to log forwarder VMs in the hub, Azure Firewall diagnostics, VNet flow logs, the activity log export, Entra ID and Defender for Cloud data connectors, an analytics rule triggering a Logic App containment playbook that blocks IPs in the firewall policy and notifies Teams, SOC analysts, and Blob Storage archive.
+
+**Or reproduce it exactly** from the source file [azure-security-monitoring.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-security-monitoring.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-security-monitoring.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-security-monitoring.annotations.yml):
+
+```bash
+terravision draw --source azure-security-monitoring.tvg.json --annotate azure-security-monitoring.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-security-monitoring.tvg.json --annotate azure-security-monitoring.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-security-monitoring.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-security-monitoring.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-security-monitoring.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-security-monitoring.annotations.yml)
+
+## Azure video processing architecture diagram { #azure-video-processing-architecture-diagram }
+
+Video upload, transcoding and streaming on Azure without a media service. Creators upload source videos straight to Blob Storage with a SAS URL from the studio app, and Event Grid delivers each BlobCreated event to a Service Bus queue. The queue starts a Container Apps job on a GPU workload profile, which runs FFmpeg to write an adaptive bitrate ladder as HLS and DASH, sends the video to Video Indexer for captions and topics, and publishes the title in a Cosmos DB catalogue. A second job makes the thumbnails. Viewers stream the segments through Azure Front Door, which reaches the renditions container over Private Link and caches it at the edge.
+
+[![Azure video processing architecture diagram](assets/gallery/azure-media-processing.webp){ width=1400 height=2775 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-media-processing.png)
+
+**Ask your AI assistant:**
+
+> Draw Azure video processing with creators uploading to Blob Storage with SAS from an App Service studio app, Event Grid Blob events to a Service Bus transcode queue, FFmpeg transcode and thumbnail Container Apps jobs on a GPU profile, Video Indexer through a NAT gateway, a Cosmos DB catalogue, private endpoints, Azure DNS and Front Door with WAF streaming HLS and DASH renditions over Private Link, and Container Registry and Key Vault as shared services.
+
+**Or reproduce it exactly** from the source file [azure-media-processing.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-media-processing.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-media-processing.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-media-processing.annotations.yml):
+
+```bash
+terravision draw --source azure-media-processing.tvg.json --annotate azure-media-processing.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-media-processing.tvg.json --annotate azure-media-processing.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-media-processing.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-media-processing.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-media-processing.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-media-processing.annotations.yml)
+
+## Azure VM Scale Sets web application migration architecture diagram { #azure-vm-scale-sets-migration-architecture-diagram }
+
+A web shop moved from a corporate data centre to Azure Virtual Machine Scale Sets across three availability zones. Azure Migrate replicates the web servers across a site-to-site VPN to its vault through a private endpoint, and Database Migration Service keeps Azure SQL in sync with the source SQL Server until cutover. Application Gateway with WAF v2 balances customers across the scale set, which autoscales on CPU and builds from images in a Compute Gallery. The instances share sessions in Azure Managed Redis and content on Azure Files, and query a zone-redundant Azure SQL database, all through private endpoints. Outbound payment calls leave through a NAT gateway, and administrators use Azure Bastion.
+
+[![Azure VM Scale Sets web application migration architecture diagram](assets/gallery/azure-vm-scale-set-web.webp){ width=1400 height=1134 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-vm-scale-set-web.png)
+
+**Ask your AI assistant:**
+
+> Draw an Azure web application migrated from a corporate data centre with web servers and SQL Server over a site-to-site VPN, an Azure Migrate vault and Database Migration Service, Azure DNS and Application Gateway WAF v2 in front of a Linux VM Scale Set across three zones with autoscale, private endpoints for zone-redundant Azure SQL, Azure Files and Managed Redis, a NAT gateway to the payment provider, Bastion, and a Compute Gallery as a shared service.
+
+**Or reproduce it exactly** from the source file [azure-vm-scale-set-web.tvg.json](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-vm-scale-set-web.tvg.json) and its title, CIDR ranges, arrow labels and numbered flow steps in [azure-vm-scale-set-web.annotations.yml](https://github.com/patrickchugh/terravision/blob/main/examples/graphs/azure-vm-scale-set-web.annotations.yml):
+
+```bash
+terravision draw --source azure-vm-scale-set-web.tvg.json --annotate azure-vm-scale-set-web.annotations.yml --format svg      # or png, pdf
+terravision draw --source azure-vm-scale-set-web.tvg.json --annotate azure-vm-scale-set-web.annotations.yml --format drawio   # editable in draw.io or Lucidchart
+```
+
+Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-vm-scale-set-web.png) · [SVG](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-vm-scale-set-web.svg) · [source graph](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-vm-scale-set-web.tvg.json) · [annotations: title, CIDR ranges, labels, flows](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/azure-vm-scale-set-web.annotations.yml)
 
 ## Google Cloud three-tier web application architecture diagram { #google-cloud-three-tier-web-application-architecture-diagram }
 

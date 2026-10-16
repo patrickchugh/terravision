@@ -1,0 +1,88 @@
+{
+  "tv_azurerm_users.data_scientists": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_resource_group.ml": [
+    "azurerm_virtual_network.ml",
+    "azurerm_public_ip.egress",
+    "azurerm_machine_learning_workspace.ml",
+    "azurerm_storage_container.training_data",
+    "azurerm_storage_container.models"
+  ],
+  "azurerm_virtual_network.ml": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.ci_runners",
+    "azurerm_subnet.training",
+    "azurerm_subnet.inference",
+    "azurerm_subnet.app_integration",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.ci_runners": [
+    "azurerm_linux_virtual_machine_scale_set.github_runners",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.training": [
+    "azurerm_machine_learning_compute_cluster.training",
+    "azurerm_machine_learning_compute_instance.notebooks"
+  ],
+  "azurerm_subnet.inference": [
+    "azurerm_kubernetes_cluster.inference"
+  ],
+  "azurerm_subnet.app_integration": [
+    "azurerm_linux_web_app.claims"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.workspace",
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_private_endpoint.workspace",
+    "azurerm_machine_learning_compute_instance.notebooks"
+  ],
+  "azurerm_private_endpoint.workspace": [
+    "azurerm_machine_learning_workspace.ml"
+  ],
+  "azurerm_private_endpoint.blob": [
+    "azurerm_storage_container.training_data",
+    "azurerm_storage_container.models"
+  ],
+  "azurerm_linux_virtual_machine_scale_set.github_runners": [
+    "azurerm_nat_gateway.egress",
+    "azurerm_private_endpoint.workspace",
+    "azurerm_kubernetes_cluster.inference"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.github"
+  ],
+  "azurerm_machine_learning_workspace.ml": [
+    "azurerm_machine_learning_compute_cluster.training"
+  ],
+  "azurerm_machine_learning_compute_cluster.training": [
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_machine_learning_compute_instance.notebooks": [
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_kubernetes_cluster.inference": [
+    "azurerm_private_endpoint.blob"
+  ],
+  "azurerm_linux_web_app.claims": [
+    "azurerm_kubernetes_cluster.inference"
+  ],
+  "tv_azurerm_users.claims_handlers": [
+    "azurerm_linux_web_app.claims"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_container_registry.images",
+    "azurerm_key_vault.ml",
+    "azurerm_application_insights.ml",
+    "azurerm_log_analytics_workspace.ml",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

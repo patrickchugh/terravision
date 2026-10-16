@@ -1,0 +1,93 @@
+{
+  "tv_azure_onprem.datacenter": [
+    "tv_azurerm_database.erp",
+    "tv_azurerm_database.crm",
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_database.erp": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "tv_azurerm_database.crm": [
+    "azurerm_local_network_gateway.datacenter"
+  ],
+  "azurerm_local_network_gateway.datacenter": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_resource_group.lakehouse": [
+    "azurerm_virtual_network.lakehouse",
+    "azurerm_public_ip.egress",
+    "azurerm_data_factory.ingest",
+    "azurerm_data_factory_pipeline.nightly",
+    "azurerm_storage_data_lake_gen2_filesystem.bronze",
+    "azurerm_storage_data_lake_gen2_filesystem.silver",
+    "azurerm_storage_data_lake_gen2_filesystem.gold",
+    "azurerm_powerbi_embedded.reports"
+  ],
+  "azurerm_virtual_network.lakehouse": [
+    "azurerm_subnet.gateway",
+    "azurerm_subnet.integration_runtime",
+    "azurerm_subnet.databricks",
+    "azurerm_subnet.private_endpoints"
+  ],
+  "azurerm_subnet.gateway": [
+    "azurerm_virtual_network_gateway.vpn"
+  ],
+  "azurerm_subnet.integration_runtime": [
+    "azurerm_windows_virtual_machine.integration_runtime"
+  ],
+  "azurerm_subnet.databricks": [
+    "azurerm_databricks_workspace.lakehouse",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_subnet.private_endpoints": [
+    "azurerm_private_endpoint.data_factory",
+    "azurerm_private_endpoint.dfs",
+    "azurerm_private_endpoint.databricks"
+  ],
+  "azurerm_virtual_network_gateway.vpn": [
+    "azurerm_windows_virtual_machine.integration_runtime"
+  ],
+  "azurerm_windows_virtual_machine.integration_runtime": [
+    "azurerm_private_endpoint.data_factory",
+    "azurerm_private_endpoint.dfs"
+  ],
+  "azurerm_private_endpoint.data_factory": [
+    "azurerm_data_factory.ingest"
+  ],
+  "azurerm_data_factory.ingest": [
+    "azurerm_data_factory_pipeline.nightly"
+  ],
+  "azurerm_data_factory_pipeline.nightly": [
+    "azurerm_private_endpoint.databricks"
+  ],
+  "azurerm_private_endpoint.databricks": [
+    "azurerm_databricks_workspace.lakehouse"
+  ],
+  "azurerm_databricks_workspace.lakehouse": [
+    "azurerm_private_endpoint.dfs",
+    "azurerm_nat_gateway.egress"
+  ],
+  "azurerm_private_endpoint.dfs": [
+    "azurerm_storage_data_lake_gen2_filesystem.bronze",
+    "azurerm_storage_data_lake_gen2_filesystem.silver",
+    "azurerm_storage_data_lake_gen2_filesystem.gold"
+  ],
+  "azurerm_nat_gateway.egress": [
+    "azurerm_public_ip.egress"
+  ],
+  "azurerm_public_ip.egress": [
+    "tv_azurerm_internet.package_mirrors"
+  ],
+  "tv_azurerm_users.analysts": [
+    "azurerm_powerbi_embedded.reports"
+  ],
+  "azurerm_powerbi_embedded.reports": [
+    "azurerm_private_endpoint.databricks"
+  ],
+  "azurerm_group.shared_services": [
+    "azurerm_key_vault.secrets",
+    "azurerm_log_analytics_workspace.platform",
+    "azurerm_purview_account.governance",
+    "azurerm_private_dns_zone.privatelink"
+  ]
+}

@@ -3,7 +3,7 @@
     "height": 2122,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-batch-hpc.png",
-    "source_sha256": "16ff2e946122d721ab1cc9db35b6e14fa3ada80d4dc0b13bb3a7e6c83c0406ac",
+    "source_sha256": "aa9f2fd7c5cf5da9a8864fb9fcc38723ecef8f6863bbaefe1098c2f2bd91c50f",
     "width": 1400
   },
   "aws-data-lake": {
@@ -80,7 +80,7 @@
     "height": 1701,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-saas-multi-tenant.png",
-    "source_sha256": "fb30cc556e856e90d840465fd5bab6aa308aafd3493b755472afc5e78993a984",
+    "source_sha256": "b30c25cef14ecc4aa68221f4b05a2b008e0346e6178b21e3cbe76e77e9e5aef4",
     "width": 1400
   },
   "aws-sagemaker-mlops": {
@@ -132,6 +132,20 @@
     "source_sha256": "686152838c3b463a393745b80599ab2afa08c099a8d86138c9c128cac3d5b0fa",
     "width": 1400
   },
+  "azure-batch-hpc": {
+    "height": 1748,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-batch-hpc.png",
+    "source_sha256": "97aa776b4a6f53b62fc4ebe521550a58e3745991c4a2574ff5d5177ef2292ce8",
+    "width": 1400
+  },
+  "azure-container-apps-microservices": {
+    "height": 1963,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-container-apps-microservices.png",
+    "source_sha256": "2d3f580cdc242bc65cc170d633d445672a944b832969e1c2f2b32a1b8929fd54",
+    "width": 1400
+  },
   "azure-hub-spoke": {
     "height": 1846,
     "settings": "trim-margin40-w1400-q85-webp",
@@ -139,11 +153,102 @@
     "source_sha256": "3ff803b96597559380918935ab33d8e23845280ffc8830ebdb6c0421855e2c89",
     "width": 1400
   },
+  "azure-hybrid-expressroute": {
+    "height": 3627,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-hybrid-expressroute.png",
+    "source_sha256": "41c17a796f85ddda800a041e2ce13a70621d72ecd4af9e14ae85d200a6883d25",
+    "width": 1400
+  },
+  "azure-iot-telemetry": {
+    "height": 1264,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-iot-telemetry.png",
+    "source_sha256": "f296d6114fb12f68c5e12a0a7f0d291148f003ede16b6b76cd3b767bfe59f2a5",
+    "width": 1400
+  },
+  "azure-lakehouse": {
+    "height": 2179,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-lakehouse.png",
+    "source_sha256": "425113f71e6a99d6f257827c680ef01c510bd6fd7732711daae8b5133e58fb88",
+    "width": 1400
+  },
+  "azure-media-processing": {
+    "height": 2775,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-media-processing.png",
+    "source_sha256": "1c7021bdcb554cc91eb2764fba2a75d8eb1291e850b6038a168fd62a63b74ede",
+    "width": 1400
+  },
+  "azure-ml-mlops": {
+    "height": 2394,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-ml-mlops.png",
+    "source_sha256": "08919b4fa699ff38d8e69242dc89077e4ceaaead4b28485bf569556f02954d9e",
+    "width": 1400
+  },
+  "azure-multi-region-dr": {
+    "height": 1535,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-multi-region-dr.png",
+    "source_sha256": "821150ad02e8eb06bb8ec7f5fb87d86aa1f74ce036ca7c63e65fd564b2775a97",
+    "width": 1400
+  },
+  "azure-payments-processing": {
+    "height": 1137,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-payments-processing.png",
+    "source_sha256": "4642f8e32554233890f1b3c35e07d09bdf9b60b17936620ce108b4d29241ba4c",
+    "width": 1400
+  },
+  "azure-saas-multi-tenant": {
+    "height": 2560,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-saas-multi-tenant.png",
+    "source_sha256": "66ddf5faaae756eab141a1aace2f90605722b606e9188ed8b0b5daf343e5c7ed",
+    "width": 1400
+  },
+  "azure-security-monitoring": {
+    "height": 2308,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-security-monitoring.png",
+    "source_sha256": "87820ce3c79b8abd895dda87afe2edcd52e384b387417c504aa10c6f56595cdd",
+    "width": 1400
+  },
+  "azure-serverless-events": {
+    "height": 1194,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-serverless-events.png",
+    "source_sha256": "de1b0b4ecaa6dfd6eba4218cd631dfd324967da161a90b15cb8980f0d23d9d55",
+    "width": 1400
+  },
+  "azure-static-web-app-cicd": {
+    "height": 1836,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-static-web-app-cicd.png",
+    "source_sha256": "7bf2d5b4d11740d187d7cec4dd1462080e6a555466116ccef7287e2f9ae63d86",
+    "width": 1400
+  },
+  "azure-streaming-analytics": {
+    "height": 2887,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-streaming-analytics.png",
+    "source_sha256": "c04bc2f30bf082659c99ada53b4735f8aea13dfd4a672d18aae58536a7ad35f2",
+    "width": 1400
+  },
   "azure-three-tier": {
     "height": 2190,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-three-tier.png",
     "source_sha256": "8566be5e041d167b15b0f9b38684d294dd18a6ed94304361af3d97531078ff08",
+    "width": 1400
+  },
+  "azure-vm-scale-set-web": {
+    "height": 1134,
+    "settings": "trim-margin40-w1400-q85-webp",
+    "source": "examples/graphs/azure-vm-scale-set-web.png",
+    "source_sha256": "12ad39d0a51adeeef66bec8a0c360004baf1c5369fc422d02d8e2adfe83cd6b9",
     "width": 1400
   },
   "azure-web-app": {

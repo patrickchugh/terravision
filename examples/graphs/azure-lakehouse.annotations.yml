@@ -1,0 +1,89 @@
+# Title, CIDR ranges, arrow labels and flow steps for the gallery diagram. Use with:
+#   terravision draw --source azure-lakehouse.tvg.json --annotate azure-lakehouse.annotations.yml
+format: '0.3'
+title: Azure Databricks lakehouse on ADLS Gen2 with Data Factory ingestion from on-premises
+update:
+  azurerm_virtual_network.lakehouse:
+    address_space:
+    - 10.62.0.0/16
+  azurerm_subnet.gateway:
+    address_prefixes:
+    - 10.62.0.0/27
+    label: GatewaySubnet
+  azurerm_subnet.integration_runtime:
+    address_prefixes:
+    - 10.62.1.0/27
+  azurerm_subnet.databricks:
+    address_prefixes:
+    - 10.62.4.0/22
+  azurerm_subnet.private_endpoints:
+    address_prefixes:
+    - 10.62.10.0/24
+  azurerm_windows_virtual_machine.integration_runtime:
+    label: Self-hosted IR
+  azurerm_storage_data_lake_gen2_filesystem.bronze:
+    label: Bronze (raw)
+  azurerm_storage_data_lake_gen2_filesystem.silver:
+    label: Silver (cleaned)
+  azurerm_storage_data_lake_gen2_filesystem.gold:
+    label: Gold (curated)
+  azurerm_data_factory.ingest:
+    label: Data Factory
+  azurerm_data_factory_pipeline.nightly:
+    label: Nightly Pipeline
+  azurerm_powerbi_embedded.reports:
+    label: Power BI Reports
+  azurerm_local_network_gateway.datacenter:
+    label: VPN Device
+  tv_azurerm_database.erp:
+    label: ERP Database
+  tv_azurerm_database.crm:
+    label: CRM Database
+  tv_azure_onprem.datacenter:
+    label: Corporate Datacenter
+  azurerm_purview_account.governance:
+    label: Microsoft Purview
+  azurerm_virtual_network_gateway.vpn:
+    label: VPN Gateway
+  azurerm_databricks_workspace.lakehouse:
+    label: Azure Databricks
+  tv_azurerm_internet.package_mirrors:
+    label: PyPI and Maven
+  azurerm_log_analytics_workspace.platform:
+    label: Log Analytics
+  azurerm_private_dns_zone.privatelink:
+    label: Private DNS Zones
+connect:
+  azurerm_local_network_gateway.datacenter:
+  - azurerm_virtual_network_gateway.vpn: Site-to-site VPN
+flows:
+  Ingest:
+    description: Nightly copy from the data centre
+    steps:
+    - resource: azurerm_data_factory.ingest -> azurerm_data_factory_pipeline.nightly
+      xlabel: Trigger
+      detail: A schedule trigger starts the nightly Data Factory pipeline
+    - resource: azurerm_windows_virtual_machine.integration_runtime -> azurerm_private_endpoint.data_factory
+      xlabel: Poll
+      detail: The self-hosted integration runtime picks up the copy activity from Data Factory over its private endpoint
+    - resource: azurerm_virtual_network_gateway.vpn -> azurerm_windows_virtual_machine.integration_runtime
+      xlabel: Read
+      detail: It reads the ERP and CRM databases in the data centre over the site-to-site VPN
+    - resource: azurerm_windows_virtual_machine.integration_runtime -> azurerm_private_endpoint.dfs
+      xlabel: Land
+      detail: and lands the rows as Parquet in the bronze container of ADLS Gen2
+  Refine and serve:
+    description: Databricks builds the medallion layers for reporting
+    steps:
+    - resource: azurerm_data_factory_pipeline.nightly -> azurerm_private_endpoint.databricks
+      xlabel: Run job
+      detail: The pipeline then starts the Databricks job through the workspace's private endpoint
+    - resource: azurerm_databricks_workspace.lakehouse -> azurerm_private_endpoint.dfs
+      xlabel: Transform
+      detail: Spark jobs clean bronze into silver Delta tables and aggregate silver into gold
+    - resource: tv_azurerm_users.analysts -> azurerm_powerbi_embedded.reports
+      xlabel: Report
+      detail: Analysts open the Power BI reports
+    - resource: azurerm_powerbi_embedded.reports -> azurerm_private_endpoint.databricks
+      xlabel: Query
+      detail: which query the gold tables through a Databricks SQL warehouse; Purview catalogues the lake
