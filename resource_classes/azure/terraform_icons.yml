@@ -4,10 +4,26 @@
 # generated into icons.py by scripts/generate_icon_classes.py. Container types
 # (networks, subnets, groups) are classes in groups.py, not entries here.
 
+azuread_access_package: identity/identity-governance
+azuread_access_package_catalog: identity/identity-governance
+azuread_administrative_unit: identity/administrative-units
+azuread_application: identity/app-registrations
+azuread_application_from_template: identity/app-registrations
+azuread_application_registration: identity/app-registrations
+azuread_authentication_strength_policy: identity/multi-factor-authentication
+azuread_conditional_access_policy: security/conditional-access
+azuread_custom_directory_role: identity/entra-identity-custom-roles
+azuread_directory_role: identity/entra-identity-roles-and-administrators
+azuread_group: identity/groups
+azuread_group_without_members: identity/groups
+azuread_invitation: identity/external-identities
+azuread_service_principal: identity/enterprise-applications
+azuread_synchronization_job: identity/entra-connect-sync
+azuread_user: identity/users
 azurerm_aadb2c_directory: identity/azure-ad-b2c
 azurerm_active_directory_domain_service: identity/entra-domain-services
-azurerm_ai_foundry: ai-machine-learning/ai-studio
-azurerm_ai_foundry_project: ai-machine-learning/ai-studio
+azurerm_ai_foundry: ai-machine-learning/ai-foundry
+azurerm_ai_foundry_project: ai-machine-learning/ai-foundry
 azurerm_analysis_services_server: analytics/analysis-services
 azurerm_api_management: web/api-management-services
 azurerm_api_management_api: integration/api-management-services
@@ -23,6 +39,7 @@ azurerm_application_insights: monitor/application-insights
 azurerm_application_insights_workbook: monitor/azure-workbooks
 azurerm_application_load_balancer: networking/application-gateways
 azurerm_application_security_group: security/application-security-groups
+azurerm_arc_kubernetes_cluster: hybrid-multicloud/arc-kubernetes
 azurerm_attestation_provider: other/azureattestation
 azurerm_automation_account: management-governance/automation-accounts
 azurerm_availability_set: compute/availability-sets
@@ -45,7 +62,7 @@ azurerm_cloud_service: compute/cloud-services-classic
 azurerm_cognitive_account: ai-machine-learning/cognitive-services
 azurerm_communication_service: other/azure-communication-services
 azurerm_confidential_ledger: other/confidential-ledgers
-azurerm_container_app: containers/app-services
+azurerm_container_app: other/worker-container-app
 azurerm_container_app_environment: other/container-apps-environments
 azurerm_container_app_job: other/worker-container-app
 azurerm_container_group: containers/container-instances
@@ -167,6 +184,7 @@ azurerm_orchestrated_virtual_machine_scale_set: compute/vm-scale-sets
 azurerm_point_to_site_vpn_gateway: networking/virtual-network-gateways
 azurerm_policy_assignment: management-governance/policy
 azurerm_policy_definition: management-governance/policy
+azurerm_portal_dashboard: general/dashboard
 azurerm_postgresql_flexible_server: databases/azure-database-postgresql-server
 azurerm_postgresql_server: databases/azure-database-postgresql-server
 azurerm_powerbi_embedded: analytics/power-bi-embedded
@@ -199,7 +217,7 @@ azurerm_servicebus_namespace: integration/azure-service-bus
 azurerm_servicebus_queue: integration/azure-service-bus
 azurerm_servicebus_topic: integration/azure-service-bus
 azurerm_shared_image: compute/shared-image-galleries
-azurerm_shared_image_gallery: compute/shared-image-galleries
+azurerm_shared_image_gallery: compute/azure-compute-galleries
 azurerm_signalr_service: web/signalr
 azurerm_site_recovery_fabric: migrate/azure-migrate
 azurerm_site_recovery_replicated_vm: migrate/azure-migrate
@@ -212,7 +230,7 @@ azurerm_static_site: web/static-apps
 azurerm_static_web_app: web/static-apps
 azurerm_storage_account: storage/storage-accounts
 azurerm_storage_blob: general/blob-block
-azurerm_storage_container: general/blob-block
+azurerm_storage_container: general/storage-container
 azurerm_storage_data_lake_gen2_filesystem: terravision/data-lake-storage
 azurerm_storage_queue: general/storage-queue
 azurerm_storage_share: storage/azure-fileshares

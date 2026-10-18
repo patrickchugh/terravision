@@ -64,6 +64,7 @@ google_compute_address: category/networking
 google_compute_backend_bucket: category/networking
 google_compute_backend_service: category/networking
 google_compute_disk: category/storage
+google_compute_disk_hyperdisk: unique/hyperdisk
 google_compute_external_vpn_gateway: category/networking
 google_compute_forwarding_rule: category/networking
 # Static IPs are drawn with the load-balancing glyph: in practice they exist

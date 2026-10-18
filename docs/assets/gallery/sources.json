@@ -38,7 +38,7 @@
     "height": 1962,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-hybrid-direct-connect.png",
-    "source_sha256": "ceb8e6b8d2129bef68b77e05ca916bc4c457f83851931bfea34642149d9b1b4a",
+    "source_sha256": "3d0d84462c3bf377948cdc46f10f05d175ce13067147a9693e05845f916e860c",
     "width": 1400
   },
   "aws-iot-telemetry": {
@@ -136,14 +136,14 @@
     "height": 1748,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-batch-hpc.png",
-    "source_sha256": "57a0de3693dd87c1a7a2ede857187bd14c06c509d30f4ba021d4aec138493987",
+    "source_sha256": "f4d1e2a96ea7f3f9ba34ab1b4c7ac94aac3f8340b06bc8fa71d3023c78ea5d18",
     "width": 1400
   },
   "azure-container-apps-microservices": {
     "height": 1963,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-container-apps-microservices.png",
-    "source_sha256": "8455e3619ec384d4acc35e6764bb54f59a21d73aa68f9e5d47ef90106fb0f77f",
+    "source_sha256": "f985c0d7fa61dfa0f75e17e6f7bae0c73527980b5092ad873fdb5cab880069d8",
     "width": 1400
   },
   "azure-hub-spoke": {
@@ -164,7 +164,7 @@
     "height": 1264,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-iot-telemetry.png",
-    "source_sha256": "b4e5d89b8ceac6987afb4902c390195e0e57c5c8d53b56ada64097796d177909",
+    "source_sha256": "8efa6cec94fe06a95266bafecd05f419cae63be832303f99deeda62f81d6f00e",
     "width": 1400
   },
   "azure-lakehouse": {
@@ -178,28 +178,28 @@
     "height": 2775,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-media-processing.png",
-    "source_sha256": "def83f9a0e17453d0afa65716a5392d681af2bc9b8e211de6348fd860c86cbb7",
+    "source_sha256": "59f583215dc6e4f3b7278b9ea2988a3fc13789e0268f573e55b379f1207bf720",
     "width": 1400
   },
   "azure-ml-mlops": {
     "height": 2394,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-ml-mlops.png",
-    "source_sha256": "03eb4ba68fdb0bde3bb2e56861df64e702248162665d80d7cd2a161aa22875d1",
+    "source_sha256": "7f64f67edf9658c06aa3b6d5b9b3557af4f7b91364835405c6680ab7371cb6a0",
     "width": 1400
   },
   "azure-multi-region-dr": {
     "height": 1535,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-multi-region-dr.png",
-    "source_sha256": "5d57ca83b91727e67b179d0a637c50fb697752e103778337057d5eb750508a7d",
+    "source_sha256": "1baedaa63678d1233ca53878cdcfb5b630e78ec0b4314edd0d1577928ad9cb31",
     "width": 1400
   },
   "azure-payments-processing": {
     "height": 1137,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-payments-processing.png",
-    "source_sha256": "8edb6eca225c1374846f52ba2d5d4146b5b1a4c3b8081875f3efdd9202873b26",
+    "source_sha256": "7688c5669880b7ff261ced2fcf81ebb78d150fe793443048bc780f1440d78376",
     "width": 1400
   },
   "azure-saas-multi-tenant": {
@@ -213,21 +213,21 @@
     "height": 2308,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-security-monitoring.png",
-    "source_sha256": "fbd6729b087bd473bddae0dfab375a8518346d8b576509c0f0ad1dde22c8b0b6",
+    "source_sha256": "200e66dff5fa529a71422d3e1b2426fa7239031d116886c357f3b0b035746d2e",
     "width": 1400
   },
   "azure-serverless-events": {
     "height": 1194,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-serverless-events.png",
-    "source_sha256": "a80203844a634276cc7b93f06d4837cc452151b3ec9a15b5bbfcbd3c0f31459b",
+    "source_sha256": "e86caafdae77b07f41956d1621c6c8d72ac1cb2ea61cf37d01d8912bff5cdfd0",
     "width": 1400
   },
   "azure-static-web-app-cicd": {
     "height": 1836,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-static-web-app-cicd.png",
-    "source_sha256": "e538ed958fca53d989a75790fc2e7385b179341a15eca32138c2650363a0c3e8",
+    "source_sha256": "bc26d7b68e971374f4905a3b01dc80cf37f5c85b10704eec63c75f7167f1f0d0",
     "width": 1400
   },
   "azure-streaming-analytics": {
@@ -241,21 +241,21 @@
     "height": 2190,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-three-tier.png",
-    "source_sha256": "d63aa074a8459a3a42ffce126d0315465a4437efbede2155daf5d5f38ac0e25c",
+    "source_sha256": "ae50070d94595dfc4e415004a5e2cffc0c737fe0c5d24de2130eb0dccaa25744",
     "width": 1400
   },
   "azure-vm-scale-set-web": {
     "height": 1134,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-vm-scale-set-web.png",
-    "source_sha256": "f9c63938500fd6a7a146731e74246a0a8be3f8fc7bacf095e180417406d2d678",
+    "source_sha256": "75988a1ef08d0b5036ff95d148a6e64b9075c2764bbeaa7b27e1595e31c5952f",
     "width": 1400
   },
   "azure-web-app": {
     "height": 2013,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/azure-web-app.png",
-    "source_sha256": "2b5b62e175906e14e199eb81784dad4bbd1b6b0c6ef04453cf8dc45b56e3e0af",
+    "source_sha256": "71bcfe2d1f14750501d8ed7cf10b58a866a5792655bd4adf988be17773b38a94",
     "width": 1400
   },
   "gcp-batch-hpc": {

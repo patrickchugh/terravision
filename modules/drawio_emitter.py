@@ -825,6 +825,8 @@ def emit_drawio(
         if edge.is_bidirectional:
             style_parts.append("startArrow=classic")
             style_parts.append("startFill=1")
+        if edge.is_dashed:
+            style_parts.append("dashed=1")
         style_str = ";".join(style_parts) + ";"
 
         label = _sanitize_label(edge.label) if edge.label else ""

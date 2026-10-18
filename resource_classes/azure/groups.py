@@ -249,6 +249,34 @@ class SharedServicesGroup(Cluster):
         super().__init__(label, defaultdir, graph_attrs)
 
 
+class EntraGroup(Cluster):
+    """Microsoft Entra ID: the tenant's users, groups, app registrations,
+    service principals and policies.
+
+    They belong to the directory, not to any resource group or subscription,
+    so they get a box of their own. Managed identities are Azure resources and
+    stay in their resource group.
+    """
+
+    def __init__(self, label="Microsoft Entra ID", badge_label=None, **kwargs):
+        graph_attrs = {
+            "style": "solid",
+            "margin": "60",
+            "pencolor": "#0078D4",
+            "penwidth": "1.5",
+        }
+        self.label_text = label
+        # The Entra ID pyramid; V24 of Microsoft's icons has it only with badges
+        self.label_icon = (
+            f"{base_path}/resource_images/azure/terravision/active-directory.png"
+        )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
+        self.label_position = "bottom-left"
+
+        cluster_label = badge_label if badge_label else ""
+        super().__init__(cluster_label, defaultdir, graph_attrs)
+
+
 class OnPrem(Cluster):
     """Box for infrastructure outside Azure that a VPN gateway connects to.
 
@@ -290,3 +318,4 @@ tv_azurerm_region = RegionGroup  # Synthetic region boxes for multi-region desig
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup
 tv_azure_onprem = OnPrem
+tv_azure_entra = EntraGroup

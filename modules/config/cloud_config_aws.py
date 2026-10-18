@@ -296,7 +296,17 @@ AWS_AUTO_ANNOTATIONS = [
 AWS_NODE_VARIANTS = {
     "aws_ecs_service": {"FARGATE": "aws_fargate", "EC2": "aws_ec2ecs"},
     "aws_eks_cluster": {"compute_config": "aws_eks_cluster_auto"},
-    "aws_lb": {"application": "aws_alb", "network": "aws_nlb"},
+    # The kind of load balancer is its load_balancer_type, read exactly: a
+    # keyword search found "network" in subnet names and drew ALBs as NLBs
+    "aws_lb": {
+        "attribute": "load_balancer_type",
+        "default": "application",
+        "values": {
+            "application": "aws_alb",
+            "network": "aws_nlb",
+            "gateway": "aws_gwlb",
+        },
+    },
     "aws_rds": {
         "aurora-mysql": "aws_rds_aurora_mysql",
         "aurora-postgresql": "aws_rds_aurora_postgres",
@@ -377,6 +387,7 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_volume_attachment",
     "aws_alb",
     "aws_nlb",
+    "aws_gwlb",
     "aws_efs_access_point",
     "aws_efs_mount_target",
     "aws_ecs_service",
@@ -529,7 +540,7 @@ AWS_NAME_REPLACEMENTS = {
 # - resource_pattern: Regex pattern to extract resource references from attribute values
 AWS_MULTI_INSTANCE_PATTERNS = [
     {
-        "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
+        "resource_types": ["aws_lb", "aws_alb", "aws_nlb", "aws_gwlb"],
         "trigger_attributes": ["subnets"],
         "also_expand_attributes": ["security_groups"],
         "resource_pattern": r"\$\{(aws_\w+\.\w+)",

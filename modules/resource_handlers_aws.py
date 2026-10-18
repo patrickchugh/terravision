@@ -679,7 +679,12 @@ def aws_handle_lb(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         if lb not in tfdata["meta_data"]:
             continue
 
-        lb_type = helpers.check_variant(lb, tfdata["meta_data"][lb], tfdata)
+        # Both views: the HCL may only say ${var.load_balancer_type}
+        views = {
+            "plan": tfdata.get("original_metadata", {}).get(lb),
+            "hcl": tfdata["meta_data"][lb],
+        }
+        lb_type = helpers.check_variant(lb, views, tfdata) or "aws_lb"
         renamed_node = str(lb_type) + "." + "elb"
 
         # Initialize renamed node metadata
@@ -2417,7 +2422,7 @@ def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     # Reverse lookup for variants (e.g. aws_fargate → aws_ecs_service)
     variant_to_original: Dict[str, str] = {}
     for original_type, variants in cloud_config.AWS_NODE_VARIANTS.items():
-        for variant_name in variants.values():
+        for variant_name in helpers.variant_types(variants):
             variant_to_original[variant_name] = original_type
 
     def _meta_with_fallback(base: str, instances: List[str]) -> Dict[str, Any]:
@@ -2487,11 +2492,15 @@ def place_resources_in_subnets(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         # stays as a single top-level "ELB" icon pointing down at the
         # per-subnet variant copies.
         base_type = helpers.get_no_module_name(base).split(".")[0]
-        is_lb = base_type in ("aws_lb", "aws_alb", "aws_nlb")
+        is_lb = base_type in ("aws_lb", "aws_alb", "aws_nlb", "aws_gwlb")
         base_instance = helpers.get_no_module_name(base).split(".", 1)[-1]
         variant_exists = base_type == "aws_lb" and any(
             helpers.get_no_module_name(n).startswith(
-                (f"aws_alb.{base_instance}", f"aws_nlb.{base_instance}")
+                (
+                    f"aws_alb.{base_instance}",
+                    f"aws_nlb.{base_instance}",
+                    f"aws_gwlb.{base_instance}",
+                )
             )
             for n in graphdict
         )
