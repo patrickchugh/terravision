@@ -46,6 +46,10 @@ class DirectConnect(_Network):
     _icon = "direct-connect.png"
 
 
+class DirectConnectGateway(_Network):
+    _icon = "direct-connect-gateway.png"
+
+
 class ElasticLoadBalancing(_Network):
     _icon = "elastic-load-balancing.png"
 
@@ -118,6 +122,10 @@ class TransitGateway(_Network):
     _icon = "transit-gateway.png"
 
 
+class TransitGatewayAttachment(_Network):
+    _icon = "transit-gateway-attachment.png"
+
+
 class VPCCustomerGateway(_Network):
     _icon = "vpc-customer-gateway.png"
 
@@ -188,7 +196,7 @@ aws_ec2_client_vpn_endpoint = ClientVpn
 aws_service_discovery_service = CloudMap
 aws_cloudfront_distribution = CloudFront
 # aws_cloudfront_origin_access_identity = CloudFront
-aws_dx_gateway = DirectConnect
+aws_dx_gateway = DirectConnectGateway
 aws_dx_gateway_association_proposal = DirectConnect
 aws_dx_gateway_association = DirectConnect
 aws_dx_connection = DirectConnect
@@ -224,7 +232,7 @@ aws_vpn_connection = SiteToSiteVpn
 aws_vpn_gateway = VpnGateway
 aws_customer_gateway = VPCCustomerGateway
 aws_ec2_transit_gateway = TransitGateway
-aws_ec2_transit_gateway_vpc_attachment = TransitGateway
+aws_ec2_transit_gateway_vpc_attachment = TransitGatewayAttachment
 aws_vpc_peering_connection = VPCPeering
 aws_vpc_peering_connection_accepter = VPCPeering
 aws_network_interface = VPCElasticNetworkInterface

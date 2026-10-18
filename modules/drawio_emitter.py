@@ -1231,7 +1231,6 @@ _AWS_SHAPE_OVERRIDES = {
         "rds_aurora": "aurora_instance",
         "rds_aurora_mysql": "aurora_instance",
         "rds_aurora_postgres": "aurora_instance",
-        "dx_gateway": "direct_connect",
         "ebs_snapshot": "snapshot",
         "msk_cluster": "managed_streaming_for_kafka",
         "ssm_document": "systems_manager",
