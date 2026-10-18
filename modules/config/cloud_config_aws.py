@@ -242,6 +242,13 @@ AWS_OUTER_NODES = [
     "tv_aws_database",
     "tv_aws_client",
     "tv_aws_iot_sensor",
+    # General icons for people and places outside AWS
+    "tv_aws_user",
+    "tv_aws_authenticated_user",
+    "tv_aws_office_building",
+    "tv_aws_management_console",
+    "tv_aws_globe",
+    "tv_aws_email",
 ]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
@@ -529,6 +536,16 @@ AWS_NAME_REPLACEMENTS = {
     "cloudfront_distribution": "Cloudfront",
     "iam_policy": "policy",
     "lb": "ELB Service",
+    "gwlb": "Gateway Load Balancer",
+    # API namespaces that read as one word: bedrockagentcore_gateway
+    "bedrockagentcore": "AgentCore",
+    "bedrockagentcore_agent_runtime": "AgentCore Runtime",
+    "bedrockagent": "Bedrock Agent",
+    "bedrockagent_knowledge_base": "Knowledge Base",
+    "s3tables": "S3 Tables",
+    "s3tables_table_bucket": "S3 Table Bucket",
+    "s3vectors": "S3 Vectors",
+    "s3vectors_vector_bucket": "S3 Vector Bucket",
     "this": "",
 }
 
