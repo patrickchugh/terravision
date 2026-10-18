@@ -255,6 +255,7 @@ AWS_OVERRIDES = {
     "aws_dms_endpoint": "mxgraph.aws4.database migration service",
     "aws_dx_connection": "mxgraph.aws4.direct connect",
     "aws_dx_gateway": "mxgraph.aws4.gateway",
+    "aws_ec2_transit_gateway_vpc_attachment": "mxgraph.aws4.transit_gateway_attachment",
     "aws_ebs_snapshot": "mxgraph.aws4.elastic block store snapshot",
     "aws_launch_template": "mxgraph.aws4.ec2",
     "aws_lb_listener": "mxgraph.aws4.elastic load balancing",
@@ -345,6 +346,11 @@ def match_aws(aliases: Dict[str, str], shapes: List[str]) -> Dict[str, str]:
             if alias.startswith(prefix):
                 suffix = alias[len(prefix) :]
                 break
+        # Types in the EC2 API namespace (aws_ec2_transit_gateway,
+        # aws_ec2_client_vpn_endpoint) are named after the API, not the
+        # product: match on the rest, or every one draws the EC2 stencil.
+        if suffix.startswith("ec2_"):
+            suffix = suffix[len("ec2_") :]
 
         norm = _normalize(suffix)
         if norm in shape_lookup:

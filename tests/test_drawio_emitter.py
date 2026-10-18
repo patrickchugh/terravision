@@ -386,7 +386,10 @@ def test_every_aws_type_maps_to_a_real_drawio_shape():
         ("aws_ecs_fargate", "fargate"),
         ("aws_ecr_repository", "ecr"),
         ("aws_rds_postgres", "rds_postgresql_instance"),
+        # EC2 API types: matched on the name after "ec2_", not the EC2 stencil
+        ("aws_ec2_transit_gateway", "transit_gateway"),
         ("aws_ec2_transit_gateway_vpc_attachment", "transit_gateway_attachment"),
+        ("aws_ec2_client_vpn_endpoint", "client_vpn"),
         # draw.io names the Direct Connect gateway stencil just "Gateway"
         ("aws_dx_gateway", "gateway"),
     ],
