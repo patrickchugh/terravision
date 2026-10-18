@@ -12,7 +12,6 @@ from modules.xdot_parser import (
     _parse_pos,
 )
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 

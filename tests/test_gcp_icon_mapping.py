@@ -159,45 +159,46 @@ class TestTerraformResourceMappings:
 
     def test_compute_instance_uses_compute_engine_icon(self):
         """google_compute_instance should resolve to compute-engine.png."""
-        from resource_classes.gcp.compute import ComputeEngine
+        from resource_classes.gcp import icons
 
-        assert ComputeEngine._icon == "compute-engine.png"
+        assert icons.google_compute_instance._icon == "compute-engine.png"
 
     def test_storage_bucket_uses_cloud_storage_icon(self):
         """google_storage_bucket should resolve to cloud-storage.png."""
-        from resource_classes.gcp.storage import Bucket
+        from resource_classes.gcp import icons
 
-        assert Bucket._icon == "cloud-storage.png"
+        assert icons.google_storage_bucket._icon == "cloud-storage.png"
 
     def test_sql_database_uses_cloud_sql_icon(self):
         """google_sql_database_instance should resolve to cloud-sql.png."""
-        from resource_classes.gcp.databases import SQL
+        from resource_classes.gcp import icons
 
-        assert SQL._icon == "cloud-sql.png"
+        assert icons.google_sql_database_instance._icon == "cloud-sql.png"
 
-    def test_container_cluster_uses_gke_icon(self):
-        """google_container_cluster should resolve to gke.png."""
-        from resource_classes.gcp.containers import KubernetesEngine
+    def test_container_cluster_is_the_kubernetes_cluster_box(self):
+        """google_container_cluster draws as a container, not with an icon."""
+        from resource_classes.gcp import groups, icons
 
-        assert KubernetesEngine._icon == "gke.png"
+        assert groups.google_container_cluster is groups.KubernetesClusterZone
+        assert not hasattr(icons, "google_container_cluster")
 
     def test_cloud_run_service_uses_cloud_run_icon(self):
         """google_cloud_run_service should resolve to cloud-run.png."""
-        from resource_classes.gcp.serverless import CloudRun
+        from resource_classes.gcp import icons
 
-        assert CloudRun._icon == "cloud-run.png"
+        assert icons.google_cloud_run_service._icon == "cloud-run.png"
 
     def test_bigquery_dataset_uses_bigquery_icon(self):
         """google_bigquery_dataset should resolve to bigquery.png."""
-        from resource_classes.gcp.analytics import BigQuery
+        from resource_classes.gcp import icons
 
-        assert BigQuery._icon == "bigquery.png"
+        assert icons.google_bigquery_dataset._icon == "bigquery.png"
 
     def test_spanner_instance_uses_cloud_spanner_icon(self):
         """google_spanner_instance should resolve to cloud-spanner.png."""
-        from resource_classes.gcp.databases import Spanner
+        from resource_classes.gcp import icons
 
-        assert Spanner._icon == "cloud-spanner.png"
+        assert icons.google_spanner_instance._icon == "cloud-spanner.png"
 
 
 class TestGCPBaseClass:

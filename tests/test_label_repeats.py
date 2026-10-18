@@ -91,7 +91,7 @@ def test_aws_label_width_stays_inside_a_subnet_margin():
 def test_gke_workload_is_a_titled_icon_node():
     """tv_gcp_k8s_workload draws as an icon titled like a real service."""
     from modules import helpers
-    from resource_classes.gcp.containers import tv_gcp_k8s_workload
+    from resource_classes.gcp.icons import tv_gcp_k8s_workload
 
     assert tv_gcp_k8s_workload._icon == "containers.png"
     assert helpers.pretty_name("tv_gcp_k8s_workload.frontend") == (

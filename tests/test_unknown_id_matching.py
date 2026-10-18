@@ -20,7 +20,6 @@ import pytest
 
 from modules.graphmaker import _identify_instance, _is_concrete
 
-
 # ---------------------------------------------------------------------------
 # _is_concrete: what counts as usable evidence
 # ---------------------------------------------------------------------------

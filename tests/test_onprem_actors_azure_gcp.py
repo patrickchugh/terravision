@@ -9,23 +9,43 @@ generic icons.
 import pytest
 
 from modules.config import cloud_config_azure, cloud_config_gcp
-from resource_classes.azure import general
-from resource_classes.gcp import generic
+from resource_classes.azure import icons as azure_icons
+from resource_classes.gcp import icons as gcp_icons
 
 ACTORS = [
-    (general, cloud_config_azure.AZURE_OUTER_NODES, "tv_azurerm_server", "rack.png"),
-    (general, cloud_config_azure.AZURE_OUTER_NODES, "tv_azurerm_database", "sql.png"),
-    (general, cloud_config_azure.AZURE_OUTER_NODES, "tv_azurerm_client", "client.png"),
     (
-        general,
+        azure_icons,
+        cloud_config_azure.AZURE_OUTER_NODES,
+        "tv_azurerm_server",
+        "rack.png",
+    ),
+    (
+        azure_icons,
+        cloud_config_azure.AZURE_OUTER_NODES,
+        "tv_azurerm_database",
+        "sql.png",
+    ),
+    (
+        azure_icons,
+        cloud_config_azure.AZURE_OUTER_NODES,
+        "tv_azurerm_client",
+        "client.png",
+    ),
+    (
+        azure_icons,
         cloud_config_azure.AZURE_OUTER_NODES,
         "tv_azurerm_iot_device",
         "iot-edge.png",
     ),
-    (generic, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_server", "rack.png"),
-    (generic, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_database", "sql.png"),
-    (generic, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_client", "client.png"),
-    (generic, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_iot_device", "iot-sensor.png"),
+    (gcp_icons, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_server", "rack.png"),
+    (gcp_icons, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_database", "sql.png"),
+    (gcp_icons, cloud_config_gcp.GCP_OUTER_NODES, "tv_gcp_client", "client.png"),
+    (
+        gcp_icons,
+        cloud_config_gcp.GCP_OUTER_NODES,
+        "tv_gcp_iot_device",
+        "iot-sensor.png",
+    ),
 ]
 
 

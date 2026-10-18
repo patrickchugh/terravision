@@ -178,35 +178,3 @@ class _GCP(Node):
 class GCP(_GCP):
     _icon_dir = "resource_images/gcp"  # Root GCP icon stays in root
     _icon = "gcp.png"
-
-
-# Import all category modules for easy access
-from . import (
-    compute,
-    containers,
-    serverless,
-    databases,
-    storage,
-    networking,
-    ai_ml,
-    analytics,
-    security,
-    management,
-    observability,
-    devops,
-    developer_tools,
-    hybrid_multicloud,
-    integration,
-    migration,
-    business_intelligence,
-    agents,
-    collaboration,
-    media,
-    maps,
-    marketplace,
-    mixed_reality,
-    web_mobile,
-    web3,
-    groups,
-    generic,
-)

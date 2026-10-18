@@ -30,7 +30,9 @@ class ResolverGuardTests(unittest.TestCase):
     def test_normal_local_resolution_unchanged(self):
         """A simple local reference still resolves to its value."""
         tfdata = {"all_locals": {"main": {"foo": "bar"}}}
-        self.assertEqual(find_replace_values("${local.foo}", "main", tfdata).strip(), "bar")
+        self.assertEqual(
+            find_replace_values("${local.foo}", "main", tfdata).strip(), "bar"
+        )
 
     def test_cache_hit_does_not_consume_budget(self):
         """A cached (value, module) returns immediately without spending budget."""
@@ -80,9 +82,7 @@ class ResolverGuardTests(unittest.TestCase):
         refs = " ".join("${module.m1.o%d}" % i for i in range(n))
         outputs = []
         for i in range(n):
-            others = " ".join(
-                "${module.m1.o%d}" % j for j in range(n) if j != i
-            )
+            others = " ".join("${module.m1.o%d}" % j for j in range(n) if j != i)
             outputs.append({f"o{i}": {"value": "${var.unset} " + others}})
         tfdata = {
             "meta_data": {"aws_thing.x": {"module": "main", "config": refs}},

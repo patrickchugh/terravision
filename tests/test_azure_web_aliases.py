@@ -15,7 +15,7 @@ Without the aliases both render as generic unconnected nodes.
 
 import pytest
 
-from resource_classes.azure import web
+from resource_classes.azure import icons as web
 
 
 class TestStaticWebAppAlias:
@@ -44,14 +44,14 @@ class TestFrontDoorAliases:
 
     @pytest.mark.parametrize("resource", FRONT_DOOR_RESOURCES)
     def test_resource_resolves_to_front_door_icon(self, resource):
-        assert getattr(web, resource) is web.FrontDoorAndCDNProfiles
+        assert getattr(web, resource) is web.WebFrontDoorAndCdnProfiles
 
 
 class TestAliasedIconsExist:
     """An alias pointing at a class whose icon file is missing still renders blank."""
 
     @pytest.mark.parametrize(
-        "icon_class", [web.StaticApps, web.FrontDoorAndCDNProfiles]
+        "icon_class", [web.StaticApps, web.WebFrontDoorAndCdnProfiles]
     )
     def test_icon_file_is_present(self, icon_class):
         from pathlib import Path
