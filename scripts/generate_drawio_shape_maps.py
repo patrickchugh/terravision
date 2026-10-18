@@ -254,7 +254,7 @@ AWS_OVERRIDES = {
     "aws_ssm_document": "mxgraph.aws4.systems manager documents",
     "aws_dms_endpoint": "mxgraph.aws4.database migration service",
     "aws_dx_connection": "mxgraph.aws4.direct connect",
-    "aws_dx_gateway": "mxgraph.aws4.direct connect gateway",
+    "aws_dx_gateway": "mxgraph.aws4.gateway",
     "aws_ebs_snapshot": "mxgraph.aws4.elastic block store snapshot",
     "aws_launch_template": "mxgraph.aws4.ec2",
     "aws_lb_listener": "mxgraph.aws4.elastic load balancing",

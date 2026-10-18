@@ -2,7 +2,6 @@
 
 import json
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 import pytest
 
@@ -366,13 +365,12 @@ def test_every_aws_type_maps_to_a_real_drawio_shape():
         AWS4_RESICON_NAMES,
     )
     from modules.config.drawio_shape_map_aws import DRAWIO_SHAPE_MAP_AWS
-    from modules.drawio_emitter import _AWS_EMBED_ICON, _build_node_style
+    from modules.drawio_emitter import _build_node_style
 
     known = set(AWS4_DIRECT_SHAPE_NAMES) | set(AWS4_RESICON_NAMES)
     node = XdotNode(id="n", pos=(0, 0), width=1.0, height=1.0, label="x")
     blank = []
-    # These embed TerraVision's icon instead; see test_aws_icons_draw_io_lacks
-    for resource_type in set(DRAWIO_SHAPE_MAP_AWS) - _AWS_EMBED_ICON:
+    for resource_type in DRAWIO_SHAPE_MAP_AWS:
         style, _, _ = _build_node_style(resource_type, node, DRAWIO_SHAPE_MAP_AWS)
         names = re.findall(r"(?:resIcon|shape)=mxgraph\.aws4\.([^;]+);", style)
         if not any(n in known for n in names if n != "resourceIcon"):
@@ -389,6 +387,8 @@ def test_every_aws_type_maps_to_a_real_drawio_shape():
         ("aws_ecr_repository", "ecr"),
         ("aws_rds_postgres", "rds_postgresql_instance"),
         ("aws_ec2_transit_gateway_vpc_attachment", "transit_gateway_attachment"),
+        # draw.io names the Direct Connect gateway stencil just "Gateway"
+        ("aws_dx_gateway", "gateway"),
     ],
 )
 def test_specific_aws_icons_in_drawio(resource_type, shape):
@@ -398,20 +398,3 @@ def test_specific_aws_icons_in_drawio(resource_type, shape):
     node = XdotNode(id="n", pos=(0, 0), width=1.0, height=1.0, label="x")
     style, _, _ = _build_node_style(resource_type, node, DRAWIO_SHAPE_MAP_AWS)
     assert f"mxgraph.aws4.{shape};" in style
-
-
-def test_aws_icons_draw_io_lacks():
-    """draw.io has no Direct Connect gateway stencil, though the generated map
-    names one, so the export embeds TerraVision's own icon rather than an
-    empty shape or the Direct Connect service icon."""
-    from modules.config.drawio_shape_map_aws import DRAWIO_SHAPE_MAP_AWS
-    from modules.drawio_emitter import _build_node_style
-
-    icon = str(
-        Path(__file__).resolve().parent.parent
-        / "resource_images/aws/network/direct-connect-gateway.png"
-    )
-    node = XdotNode(id="n", pos=(0, 0), width=1.0, height=1.0, label="x", image=icon)
-    style, _, _ = _build_node_style("aws_dx_gateway", node, DRAWIO_SHAPE_MAP_AWS)
-    assert "shape=image;" in style
-    assert "image=data:image/png," in style

@@ -151,6 +151,7 @@ DRAWIO_ICON_SHAPES_AWS = {
     "network/cloud-map.png": "mxgraph.aws4.cloud_map",
     "network/cloudfront.png": "mxgraph.aws4.cloudfront",
     "network/direct-connect.png": "mxgraph.aws4.direct_connect",
+    "network/direct-connect-gateway.png": "mxgraph.aws4.gateway",
     "network/elastic-load-balancing.png": "mxgraph.aws4.elastic_load_balancing",
     "network/elb-application-load-balancer.png": "mxgraph.aws4.application_load_balancer",
     "network/elb-classic-load-balancer.png": "mxgraph.aws4.classic_load_balancer",

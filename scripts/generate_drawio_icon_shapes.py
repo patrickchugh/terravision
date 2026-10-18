@@ -85,6 +85,7 @@ AWS_ALIASES = {
     "elb-classic-load-balancer": "classic_load_balancer",
     "elb-network-load-balancer": "network_load_balancer",
     "vpc-customer-gateway": "customer_gateway",
+    "direct-connect-gateway": "gateway",
     "vpc-flow-logs": "flow_logs",
     "vpc-peering": "peering",
     "robomaker-simulator": "simulator",

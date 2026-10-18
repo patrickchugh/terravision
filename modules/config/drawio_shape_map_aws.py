@@ -79,7 +79,7 @@ DRAWIO_SHAPE_MAP_AWS = {
     "aws_directory_service_directory": "mxgraph.aws4..directory_service",
     "aws_dms_endpoint": "mxgraph.aws4.database migration service",
     "aws_dx_connection": "mxgraph.aws4.direct connect",
-    "aws_dx_gateway": "mxgraph.aws4.direct connect gateway",
+    "aws_dx_gateway": "mxgraph.aws4.gateway",
     "aws_dynamodb_global_table": "mxgraph.aws4..dynamodb",
     "aws_dynamodb_table": "mxgraph.aws4.dynamodb",
     "aws_ebs_snapshot": "mxgraph.aws4.elastic block store snapshot",
