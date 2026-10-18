@@ -976,7 +976,9 @@ def _build_node_style(
     from modules.config.drawio_resicon_colors import AWS_RESICON_FILL_COLORS
 
     drawio_shape = (
-        _AWS_SHAPE_OVERRIDES.get(resource_type)
+        None
+        if resource_type in _AWS_EMBED_ICON
+        else _AWS_SHAPE_OVERRIDES.get(resource_type)
         or shape_map.get(resource_type)
         or _icon_shape(node, provider)
     )
@@ -1231,7 +1233,7 @@ _AWS_SHAPE_OVERRIDES = {
         "rds_aurora": "aurora_instance",
         "rds_aurora_mysql": "aurora_instance",
         "rds_aurora_postgres": "aurora_instance",
-        "dx_gateway": "direct_connect",
+        "ec2_transit_gateway_vpc_attachment": "transit_gateway_attachment",
         "ebs_snapshot": "snapshot",
         "msk_cluster": "managed_streaming_for_kafka",
         "ssm_document": "systems_manager",
@@ -1240,6 +1242,11 @@ _AWS_SHAPE_OVERRIDES = {
         "cloudwatch_metric_alarm": "alarm",
     }.items()
 }
+
+
+# AWS types draw.io has no stencil for, though the generated map names one.
+# They embed TerraVision's own icon instead of exporting as an empty shape.
+_AWS_EMBED_ICON = {"aws_dx_gateway"}
 
 
 def _build_special_node_style(node: XdotNode) -> str:

@@ -38,7 +38,7 @@
     "height": 1962,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-hybrid-direct-connect.png",
-    "source_sha256": "122421a3bd3dd521a2cce52a0b1682427a2be4b4a46c847c0247ac829cf8cccc",
+    "source_sha256": "c972c43d3a6ce35d0d5dacbe6c929abe2510cf5b960cc0df48c561e413ac29c1",
     "width": 1400
   },
   "aws-iot-telemetry": {
@@ -59,7 +59,7 @@
     "height": 1629,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-multi-account-network.png",
-    "source_sha256": "bb7dc0f7bc5f5a7284963b09383f980fc38407e5fb626c301c87e3b25cc376c3",
+    "source_sha256": "3399643ab05adcac80dcdf94ee61ddce2545f585699a9bec40a3583044619fd8",
     "width": 1400
   },
   "aws-multi-region": {

@@ -165,6 +165,7 @@ DRAWIO_ICON_SHAPES_AWS = {
     "network/route-table.png": "mxgraph.aws4.route_table",
     "network/site-to-site-vpn.png": "mxgraph.aws4.site_to_site_vpn",
     "network/transit-gateway.png": "mxgraph.aws4.transit_gateway",
+    "network/transit-gateway-attachment.png": "mxgraph.aws4.transit_gateway_attachment",
     "network/vpc-customer-gateway.png": "mxgraph.aws4.customer_gateway",
     "network/vpc-elastic-network-interface.png": "mxgraph.aws4.elastic_network_interface",
     "network/vpc-flow-logs.png": "mxgraph.aws4.flow_logs",
