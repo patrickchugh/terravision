@@ -14,8 +14,8 @@ from resource_classes.aws import icons
 @pytest.mark.parametrize(
     "node_type, icon",
     [
-        ("tv_aws_server", "traditional-server.png"),
-        ("tv_aws_database", "generic-database.png"),
+        ("tv_aws_server", "server.png"),
+        ("tv_aws_database", "database.png"),
         ("tv_aws_client", "client.png"),
         ("tv_aws_iot_sensor", "iot-sensor.png"),
     ],

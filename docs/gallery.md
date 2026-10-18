@@ -102,7 +102,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A Kubernetes platform on Amazon EKS that scales its nodes with Karpenter. The VPC spans three availability zones. In each zone, a public subnet holds an Application Load Balancer and a NAT gateway, and a private subnet holds the Karpenter controller, a Karpenter NodePool of On-Demand and Spot nodes, and interface VPC endpoints for ECR, EC2 and SQS. A data subnet holds an Aurora PostgreSQL instance. Nodes pull image layers through an S3 gateway endpoint. The EKS control plane sits in its own AWS-managed account, and an EventBridge rule sends Spot interruption warnings to the SQS queue Karpenter reads.
 
-[![Amazon EKS with Karpenter architecture diagram](assets/gallery/aws-eks-karpenter.webp){ width=1400 height=1089 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.png)
+[![Amazon EKS with Karpenter architecture diagram](assets/gallery/aws-eks-karpenter.webp){ width=1400 height=1090 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-eks-karpenter.png)
 
 **Ask your AI assistant:**
 
@@ -121,7 +121,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A serverless order platform whose Lambda functions run inside a VPC, as most enterprises require. Customers call an HTTP API on API Gateway, authenticated with Cognito, which invokes order Lambdas in private subnets across two availability zones. The functions reach DynamoDB through a gateway VPC endpoint, and EventBridge, SNS and Secrets Manager through interface endpoints in a dedicated endpoints subnet in each zone. Only the payment step leaves the VPC, through NAT gateways, to reach an external payment provider. The EventBridge bus fans out to a Step Functions fulfilment workflow, an SQS notifications queue with a dead-letter queue, and Firehose to an S3 event lake catalogued by Glue and queried with Athena.
 
-[![AWS serverless event-driven architecture diagram](assets/gallery/aws-serverless-event-driven.webp){ width=1400 height=1108 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.png)
+[![AWS serverless event-driven architecture diagram](assets/gallery/aws-serverless-event-driven.webp){ width=1400 height=1109 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-serverless-event-driven.png)
 
 **Ask your AI assistant:**
 
@@ -140,7 +140,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A data lake and analytics platform on AWS whose processing runs inside a VPC. Across two availability zones, private subnets hold DMS replication from an Aurora MySQL source, Glue jobs, EMR Serverless Spark, Amazon MWAA (Airflow) orchestration and Redshift Serverless. All of them read and write S3 through a gateway VPC endpoint, and reach the Glue Data Catalog and Secrets Manager through interface endpoints in each zone. Outside the VPC, Kinesis, Firehose and Transfer Family ingest clickstream and partner files into the raw S3 zone, Lake Formation governs access, and analysts use QuickSight over Athena.
 
-[![AWS data lake architecture diagram](assets/gallery/aws-data-lake.webp){ width=1400 height=1089 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.png)
+[![AWS data lake architecture diagram](assets/gallery/aws-data-lake.webp){ width=1400 height=1090 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-data-lake.png)
 
 **Ask your AI assistant:**
 
@@ -273,7 +273,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 An IoT telemetry platform on AWS for a wind farm. Turbine sensors report to an AWS IoT Greengrass gateway on site, which publishes to AWS IoT Core over MQTT with TLS, using device certificates and policies from the registry. One IoT rule sends readings to Kinesis Data Streams, where Lambda functions in a VPC across two availability zones aggregate them and write to Amazon Timestream through an interface endpoint, for operators watching Amazon Managed Grafana. A second rule feeds an IoT Events detector model that raises over-speed alarms through SNS, and a third archives every message to S3 through Firehose.
 
-[![AWS IoT telemetry architecture diagram](assets/gallery/aws-iot-telemetry.webp){ width=1400 height=2281 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.png)
+[![AWS IoT telemetry architecture diagram](assets/gallery/aws-iot-telemetry.webp){ width=1400 height=2282 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-iot-telemetry.png)
 
 **Ask your AI assistant:**
 
@@ -311,7 +311,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A static website on AWS with a fully automated release. Route 53 points visitors at CloudFront, protected by AWS WAF and serving an ACM certificate, which reads the site from a private S3 bucket through origin access control and fails over to a replica bucket in a second Region. Lambda@Edge adds security headers, and access logs go to S3. A push to GitHub starts CodePipeline through a CodeConnections connection: CodeBuild builds the site, deploys it to a staging bucket and distribution, runs browser tests, then syncs production and invalidates the cache. SNS and AWS Chatbot post releases and error-rate alarms to Slack.
 
-[![AWS static website with CI/CD architecture diagram](assets/gallery/aws-static-site-cicd.webp){ width=1400 height=1563 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.png)
+[![AWS static website with CI/CD architecture diagram](assets/gallery/aws-static-site-cicd.webp){ width=1400 height=1564 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-static-site-cicd.png)
 
 **Ask your AI assistant:**
 
@@ -330,7 +330,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A genomics pipeline on AWS Batch that runs thousands of jobs on EC2 Spot. Uploading a sequencing run to S3 fires an EventBridge rule that starts a Step Functions workflow, which submits array jobs to Batch compute environments in private subnets across two availability zones and tracks the run in DynamoDB. The Spot workers pull their container image through an ECR interface endpoint, send logs through a CloudWatch Logs endpoint and read their input from FSx for Lustre, which lazy-loads it from the upload bucket. Results go to S3 through a gateway endpoint, and SNS tells the researchers when the run is done.
 
-[![AWS Batch HPC architecture diagram](assets/gallery/aws-batch-hpc.webp){ width=1400 height=2122 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.png)
+[![AWS Batch HPC architecture diagram](assets/gallery/aws-batch-hpc.webp){ width=1400 height=2123 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-batch-hpc.png)
 
 **Ask your AI assistant:**
 
@@ -406,7 +406,7 @@ Download: [PNG](https://raw.githubusercontent.com/patrickchugh/terravision/main/
 
 A serverless video-on-demand platform on AWS. Creators get presigned URLs from an API Gateway HTTP API, authenticated with Cognito, and upload master files straight to S3, where masters move to S3 Glacier after 30 days. An EventBridge rule starts a Step Functions workflow that probes the file with Lambda, transcodes an adaptive bitrate ladder with AWS Elemental MediaConvert, moderates and tags it with Rekognition, publishes it to a DynamoDB catalogue and notifies the creator through SNS. Members browse the catalogue through the same API, which signs short-lived CloudFront URLs, and CloudFront with AWS WAF serves the HLS segments from S3 through origin access control.
 
-[![AWS video processing architecture diagram](assets/gallery/aws-media-processing.webp){ width=1400 height=2653 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.png)
+[![AWS video processing architecture diagram](assets/gallery/aws-media-processing.webp){ width=1400 height=2655 loading=lazy .no-lightbox }](https://raw.githubusercontent.com/patrickchugh/terravision/main/examples/graphs/aws-media-processing.png)
 
 **Ask your AI assistant:**
 

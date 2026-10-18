@@ -710,41 +710,63 @@ class Edge:
 
 
 def add_terraform_types(namespace: Dict, provider: str) -> None:
-    """Give each Terraform type in <provider>/terraform_icons.yml its icon class.
+    """Make each Terraform type in <provider>/terraform_icons.yml a name for
+    its icon class.
 
-    The last line of each generated <provider>/icons.py calls this, so a type
-    becomes a module-level name (``aws_dx_gateway = DirectConnectGateway``)
-    exactly as when the aliases were written by hand, and drawing.py, which
-    loads every module in the package, finds it the same way.
+    The last line of each generated <provider>/icons.py calls this. For the
+    entry
+
+        aws_dx_gateway: networking-content-delivery/direct-connect-gateway
+
+    in aws/terraform_icons.yml, it sets, in aws/icons.py,
+
+        aws_dx_gateway = DirectConnectGateway
+
+    which is the alias that used to be written by hand, so drawing.py, which
+    looks types up by name in every module of the package, finds it the same
+    way.
     """
     import yaml
 
-    by_icon = {
-        icon_key(cls._icon_dir, cls._icon, provider): cls
-        for cls in namespace.values()
-        if isinstance(cls, type)
-        and issubclass(cls, Node)
-        and cls.__module__ == namespace["__name__"]
-    }
-    mapping = Path(__file__).parent / provider / "terraform_icons.yml"
-    for resource_type, icon in yaml.safe_load(mapping.read_text()).items():
-        if icon not in by_icon:
+    # 1. Index the icon classes defined in icons.py by the name the YAML uses
+    #    for their file: networking-content-delivery/direct-connect-gateway
+    classes_by_icon = {}
+    for cls in namespace.values():
+        is_icon_class = (
+            isinstance(cls, type)
+            and issubclass(cls, Node)
+            # Defined in icons.py itself, not imported (the _AWS base class)
+            and cls.__module__ == namespace["__name__"]
+        )
+        if is_icon_class:
+            classes_by_icon[icon_key(cls._icon_dir, cls._icon, provider)] = cls
+
+    # 2. Read the mapping: Terraform type -> icon name
+    mapping_file = Path(__file__).parent / provider / "terraform_icons.yml"
+    mapping = yaml.safe_load(mapping_file.read_text())
+
+    # 3. Point each type at the class of its icon
+    for resource_type, icon in mapping.items():
+        if icon not in classes_by_icon:
             raise ValueError(
-                f"{mapping.name}: {resource_type} names {icon}, which is not "
-                f"an icon in icons.py; run scripts/generate_icon_classes.py"
+                f"{mapping_file.name}: {resource_type} names {icon}, which is "
+                f"not an icon in icons.py; run scripts/generate_icon_classes.py"
             )
-        namespace[resource_type] = by_icon[icon]
+        namespace[resource_type] = classes_by_icon[icon]
 
 
 def icon_key(icon_dir: str, icon: str, provider: str) -> str:
-    """How terraform_icons.yml names an icon file.
+    """The name terraform_icons.yml uses for an icon file: its path without
+    ".png", relative to the cloud's own folder, or to resource_images/ for a
+    shared icon from elsewhere.
 
-    ``network/direct-connect-gateway`` for one in the cloud's own folder,
-    resource_images/<provider>/; ``generic/compute/rack`` (from
-    resource_images/) for a shared one some pseudo-nodes borrow.
+        resource_images/aws/networking-content-delivery, direct-connect-gateway.png
+            -> networking-content-delivery/direct-connect-gateway
+        resource_images/generic/compute, rack.png  (borrowed by tv_azurerm_server)
+            -> generic/compute/rack
     """
-    stem = Path(icon).stem
-    own = f"resource_images/{provider}/"
-    if icon_dir.startswith(own):
-        return f"{icon_dir[len(own):]}/{stem}"
-    return f"{icon_dir[len('resource_images/'):]}/{stem}"
+    path = Path(icon_dir) / Path(icon).stem
+    own_folder = Path("resource_images") / provider
+    if path.is_relative_to(own_folder):
+        return path.relative_to(own_folder).as_posix()
+    return path.relative_to("resource_images").as_posix()

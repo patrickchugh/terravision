@@ -42,6 +42,10 @@ from resource_classes import Cluster
 
 defaultdir = "LR"
 base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
+# The resource group, VNet and subnet labels' icon cell, in points: what their
+# old 120 px icons took at natural size (Graphviz reads PNGs at 96 dpi, plus
+# the cell's 2-point padding), so the pack's 256 px icons lay out the same.
+LABEL_ICON_CELL = 94
 
 
 class AZUREGroup(Cluster):
@@ -88,6 +92,7 @@ class ResourceGroupCluster(Cluster):
         self.label_icon = (
             f"{base_path}/resource_images/azure/general/resource-groups.png"
         )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = "bottom-left"  # Position for label node
 
         # Optional top badge label (graphviz cluster label at top)
@@ -111,8 +116,9 @@ class VNetGroup(Cluster):
         # so we use gvpr post-processing to position the label node
         self.label_text = label
         self.label_icon = (
-            f"{base_path}/resource_images/azure/network/virtual-networks.png"
+            f"{base_path}/resource_images/azure/networking/virtual-networks.png"
         )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = "bottom-right"  # Position for label node
         self.label_icon_first = False  # Icon after text for right alignment
 
@@ -134,6 +140,7 @@ class SubnetGroup(Cluster):
         # Store label info for creating separate label node at bottom
         self.label_text = label
         self.label_icon = f"{base_path}/resource_images/azure/networking/subnet.png"
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = (
             "bottom-left"  # Position at bottom-left like Resource Group
         )

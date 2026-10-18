@@ -9,7 +9,7 @@ from pathlib import Path
 from modules.drawing import _embed_icons_as_data_uris, make_svg_portable
 
 REPO_ROOT = Path(__file__).parent.parent
-ICON_PATH = REPO_ROOT / "resource_images" / "aws" / "general" / "aws.png"
+ICON_PATH = REPO_ROOT / "resource_images" / "aws" / "group" / "cloud-logo.png"
 
 
 def _write_svg(tmp_path, body):

@@ -2037,9 +2037,12 @@ def generate_dot(
     with open(path_to_postdot, "r", encoding="utf-8") as f:
         dot_string = f.read()
 
-    # Extract icon file paths from DOT string (both image="..." and <img src="..."/>)
+    # Extract icon file paths from DOT string: image="..." and any <img> tag's
+    # src, including a fixed-size cell's <IMG SCALE="TRUE" SRC="..."/>
     icon_paths = set(re.findall(r'image="([^"]+)"', dot_string))
-    icon_paths.update(re.findall(r'<img src="([^"]+)"', dot_string))
+    icon_paths.update(
+        re.findall(r'<img\b[^>]*?\bsrc="([^"]+)"', dot_string, re.IGNORECASE)
+    )
 
     # Build mapping from Graphviz node ID to Terraform resource address
     # After drawing, meta_data[resource] = {"node": newNode} where resource is
