@@ -96,6 +96,7 @@ nav:
   - Home: index.md
   - Gallery: gallery.md
   - Use with AI assistants: ai-assistants.md
+  - Prod without prod access: draw-any-environment.md
   - Graph Format (JSON input): graph-format.md
   - Node types: node-types.md
   - Getting Started:

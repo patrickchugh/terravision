@@ -66,7 +66,7 @@ Yes. TerraVision uses each provider's official architecture icon set and follows
 
 ## Does it need access to my cloud account?
 
-No. TerraVision never calls a cloud API, and your code is not sent to any service. Diagrams from a description or a JSON graph need no credentials at all. Diagrams from Terraform use `terraform plan`, which you can run separately and pass in as a file.
+No. TerraVision never calls a cloud API, and your code is not sent to any service. Diagrams from a description or a JSON graph need no credentials at all. Diagrams from Terraform use `terraform plan`, with read-only credentials for any account with the same provider, or run separately and passed in as a file. The infrastructure does not need to exist, and you need no access to the accounts it deploys to: see [Draw prod without prod access](draw-any-environment.md).
 
 ## How do I keep the diagram up to date?
 

@@ -34,9 +34,19 @@ You need Graphviz, Git and Terraform installed. Full steps: [Installation](insta
 
 Yes. Modules are resolved through `terraform plan`, including modules from Git. Single-module and multi-module Terragrunt projects are detected automatically. OpenTofu works as a drop-in replacement for the Terraform binary.
 
+## Can I draw infrastructure that isn't built yet, or an account I can't access?
+
+Yes. The diagram comes from the code and a variables file, not from a live account, so nothing needs to be deployed, and you need no access to any of the accounts the code deploys to. Draw production without production credentials, or dev, staging and prod from the same code:
+
+```bash
+terravision draw --source ./infrastructure --varfile prod.tfvars --outfile architecture-prod
+```
+
+See [Draw prod without prod access](draw-any-environment.md).
+
 ## Does it need cloud credentials?
 
-TerraVision itself never calls a cloud API. Terraform needs credentials to run `terraform plan`. To keep the diagram step credential-free, run the plan once in a trusted environment and pass the result in with `--planfile` and `--graphfile`. See [Pre-Generated Plan Input](usage-guide.md#pre-generated-plan-input).
+TerraVision itself never calls a cloud API. Terraform needs credentials to run `terraform plan`, but read-only credentials for any account with the same provider will do; they do not have to be for the account the code deploys to. To keep the diagram step credential-free, run the plan once in a trusted environment and pass the result in with `--planfile` and `--graphfile`. See [Pre-Generated Plan Input](usage-guide.md#pre-generated-plan-input).
 
 ## Can I paste Terraform into an AI tool instead?
 
