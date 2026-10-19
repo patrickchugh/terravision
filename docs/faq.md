@@ -160,9 +160,9 @@ Create a `terravision.yml` in your Terraform directory. See the [Annotations Gui
 
 | Provider         | Status          | Resource types |
 | ---------------- | --------------- | -------------- |
-| **AWS**          | ✅ Full support | 385 types      |
-| **Google Cloud** | ✅ Full support | 264 types      |
-| **Azure**        | ✅ Full support | 245 types      |
+| **AWS**          | ✅ Full support | 427 types      |
+| **Google Cloud** | ✅ Full support | 267 types      |
+| **Azure**        | ✅ Full support | 263 types      |
 
 The full list is on the [Node types](node-types.md) page.
 
