@@ -145,6 +145,17 @@ RESOURCE_HANDLER_CONFIGS = {
             },
         ],
     },
+    # Grants become dashed, labelled arrows (AZURE_PERMISSION_LINKS). Pure
+    # Function: the principal and scope are references to resolve from the
+    # source as well as the plan, which no transformer does.
+    "azurerm_role_assignment": {
+        "description": "Draw role assignments as dashed, labelled arrows from the identity to its scope (Pure Function)",
+        "additional_handler_function": "azure_handle_permission_links",
+    },
+    "azuread_": {
+        "description": "Box Entra ID objects in a Microsoft Entra ID container, after turning their grants into arrows (Pure Function)",
+        "additional_handler_function": "azure_handle_entra",
+    },
     # Runs last: sweeps up services that belong to no network boundary so they
     # stop floating loose around the diagram
     "azurerm_": {

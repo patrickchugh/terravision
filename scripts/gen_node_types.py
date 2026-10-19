@@ -3,7 +3,7 @@
 
 Every type in resource_classes/<cloud>/terraform_icons.yml, and every top-level
 ``<type> = <Class>`` assignment in resource_classes/ (the container types in
-groups.py), whose name starts with aws_, azurerm_, google_ or tv_ is a node
+groups.py), whose name starts with aws_, azurerm_, azuread_, google_ or tv_ is a node
 type TerraVision can draw. Run this after adding types so the published list
 cannot drift:
 
@@ -24,6 +24,7 @@ ASSIGNMENT = re.compile(r"^([a-z][a-z0-9_]*)\s*=", re.M)
 SECTIONS = [
     ("AWS (aws_*)", "aws_"),
     ("Azure (azurerm_*)", "azurerm_"),
+    ("Microsoft Entra ID (azuread_*)", "azuread_"),
     ("GCP (google_*)", "google_"),
     ("Pseudo-nodes (tv_*) for external actors and containers", "tv_"),
 ]

@@ -49,6 +49,8 @@ class XdotEdge:
     flow_steps: str = ""
     # Their colours, "#E74C3C,#FFD600", from the _flowcolors attribute.
     flow_colors: str = ""
+    # A permission (a role assignment) rather than traffic: drawn dashed
+    is_dashed: bool = False
     spline_points: List[Tuple[float, float]] = field(default_factory=list)
 
 
@@ -136,6 +138,7 @@ def parse_xdot(json_text: str) -> XdotGraph:
                 spline_points=spline_points,
                 flow_steps=flow_steps,
                 flow_colors=flow_colors,
+                is_dashed="dashed" in edge_data.get("style", ""),
             )
         )
 

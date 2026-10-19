@@ -8,6 +8,19 @@ defaultdir = "LR"
 base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
 
 
+def _icon_cell(icon: str, size: int) -> str:
+    """A box label's icon, resource_images/aws/<icon> scaled into size points.
+
+    A fixed cell, so the box lays out the same whatever the icon's pixel size:
+    94 points is what a 120 px icon took at its natural size (Graphviz reads
+    PNGs at 96 dpi, plus the cell's 2-point padding), 51 a 62 px subnet badge.
+    """
+    return (
+        f'<TD FIXEDSIZE="TRUE" WIDTH="{size}" HEIGHT="{size}">'
+        f'<IMG SCALE="TRUE" SRC="{base_path}/resource_images/aws/{icon}"/></TD>'
+    )
+
+
 class VPCgroup(Cluster):
     def __init__(self, label, **kwargs):
         vpc_graph_attrs = {
@@ -16,7 +29,7 @@ class VPCgroup(Cluster):
             "pencolor": "#8c4fff",
             "rank": "same",
         }
-        vpc_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/vpc.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        vpc_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/virtual-private-cloud-vpc.png", 94)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(vpc_label, defaultdir, vpc_graph_attrs)
 
 
@@ -28,17 +41,17 @@ class RegionGroup(Cluster):
             "pencolor": "#00a4a6",
             "rank": "same",
         }
-        region_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/region.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        region_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/region.png", 94)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(region_label, defaultdir, region_graph_attrs)
 
 
 class SubnetGroup(Cluster):
     def __init__(self, label, **kwargs):
         if "Public" in label:
-            image = "public_subnet.png"
+            image = "group/public-subnet.png"
             border_col = "#248814"
         else:
-            image = "private_subnet.png"
+            image = "group/private-subnet.png"
             border_col = "#147EBA"
         vpc_graph_attrs = {
             "style": "solid",
@@ -46,7 +59,7 @@ class SubnetGroup(Cluster):
             "pencolor": border_col,
             "_shift": "1",
         }
-        subnet_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/network/{image}"/></TD><TD>{label}</TD></TR></TABLE>>'
+        subnet_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell(image, 51)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(subnet_label, defaultdir, vpc_graph_attrs)
 
 
@@ -66,7 +79,7 @@ class GenericAutoScalingGroup(Cluster):
             "labeljust": "c",
             "_shift": "0",
         }
-        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/management/auto-scaling.png"/></TD></TR><TR><TD>{label}</TD></TR></TABLE>>'
+        cluster_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/auto-scaling-group.png", 94)}</TR><TR><TD>{label}</TD></TR></TABLE>>'
         super().__init__(cluster_label, defaultdir, graph_attrs)
 
 
@@ -121,7 +134,7 @@ class AWSGroup(Cluster):
             "_shift": "1",
             "_cloudgroup": "1",
         }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/cloud-logo.png", 94)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 
@@ -137,7 +150,7 @@ class AWSAccount(Cluster):
             "labeljust": "l",
             "_shift": "1",
         }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD><img src="{base_path}/resource_images/aws/general/aws_account.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/account.png", 94)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 
@@ -152,10 +165,7 @@ class OnPrem(Cluster):
             "labeljust": "l",
             "_shift": "1",
         }
-        # office-building.png is 256 px, also used as a node icon; scale it to
-        # the size of the 120 px account, VPC and region box icons, which
-        # Graphviz reads at 96 dpi: 90 points.
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR><TD FIXEDSIZE="TRUE" WIDTH="90" HEIGHT="90"><IMG SCALE="TRUE" SRC="{base_path}/resource_images/aws/general/office-building.png"/></TD><TD>{label}</TD></TR></TABLE>>'
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/corporate-data-center.png", 90)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 

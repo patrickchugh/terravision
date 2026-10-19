@@ -480,8 +480,19 @@ def _variant_sources(resource: str, tfdata: Dict[str, Any]) -> List[str]:
     return [
         ".".join(parts[:-2] + [original, parts[-1]])
         for original, choices in variants.items()
-        if isinstance(choices, dict) and parts[-2] in choices.values()
+        if isinstance(choices, dict) and parts[-2] in variant_types(choices)
     ]
+
+
+def variant_types(choices: Dict[str, Any]) -> List[str]:
+    """The variant types one NODE_VARIANTS entry can rename a node to.
+
+    Either form: {keyword: variant} or {"attribute": ..., "values":
+    {value: variant}}.
+    """
+    if "attribute" in choices:
+        return list(choices["values"].values())
+    return list(choices.values())
 
 
 def _cidr_of(resource: str, attr: str, tfdata: Dict[str, Any]) -> str:
@@ -1127,7 +1138,10 @@ def _service_type_label(name: str, is_group: bool = False) -> str:
 # Pseudo-nodes that stand for a kind of service get its name as a title, the
 # way real resources do ("GKE Workload Frontend", like "Cloud SQL Orders").
 # Actors such as tv_gcp_users_icon stay as just their name ("Customers").
-_PSEUDO_NODE_TITLES = {"tv_gcp_k8s_workload": "GKE Workload"}
+_PSEUDO_NODE_TITLES = {
+    "tv_gcp_k8s_workload": "GKE Workload",
+    "tv_azure_entra": "Microsoft Entra ID",
+}
 
 # Region boxes read like the provider writes regions: "US East 1", "UK South".
 _REGION_TYPES = {"tv_aws_region", "tv_azurerm_region", "tv_gcp_region"}
@@ -1691,14 +1705,47 @@ def check_variant(
             return [drop_empty(v) for v in value]
         return value
 
+    resource_type = get_no_module_name(resource).split(".")[0]
     haystack = str(drop_empty(metadata))
     for variant_service in NODE_VARIANTS:
+        variants = NODE_VARIANTS[variant_service]
+        if "attribute" in variants:
+            # The precise form: one attribute says which kind it is
+            # (load_balancer_type = "gateway"), so read just that, and only
+            # for this exact type, not every type that starts with its name
+            if resource_type == variant_service:
+                # Unset, or known only after apply: Terraform's default kind
+                value = _attribute_value(metadata, variants["attribute"])
+                value = value or variants.get("default", "")
+                return variants["values"].get(value, False)
+            continue
         if resource.startswith(variant_service):
-            for keyword in NODE_VARIANTS[variant_service]:
-                if keyword in haystack and NODE_VARIANTS[variant_service] != resource:
-                    return NODE_VARIANTS[variant_service][keyword]
+            for keyword in variants:
+                if keyword in haystack and variants != resource:
+                    return variants[keyword]
             return False
     return False
+
+
+def _attribute_value(metadata: Dict[str, Any], attribute: str) -> str:
+    """An attribute's value, lowercased, from the plan view, then the HCL one.
+
+    handle_variants() passes {"plan": {...}, "hcl": {...}}; other callers pass
+    one metadata dict. "Known after apply" (True), unset values and
+    unresolved expressions (``${var.load_balancer_type}``) give "".
+    """
+    if not isinstance(metadata, dict):
+        return ""
+    views = [metadata.get("plan"), metadata.get("hcl"), metadata]
+    for view in views:
+        if isinstance(view, dict):
+            value = view.get(attribute)
+            if isinstance(value, str) and "${" not in value:
+                # The HCL view can keep the quotes: '"application" '
+                value = value.strip().strip("\"'").strip().lower()
+                if value:
+                    return value
+    return ""
 
 
 def find_replace(find: str, replace: str, string: str) -> str:

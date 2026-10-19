@@ -510,7 +510,9 @@ def emit_drawio(
             if "<IMG" not in raw_label.upper() and "<img" not in raw_label:
                 continue
             # Extract image path from HTML label
-            img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
+            img_match = re.search(
+                r'<img\b[^>]*?\bsrc="([^"]+)"', raw_label, re.IGNORECASE
+            )
             if not img_match or not os.path.isfile(img_match.group(1)):
                 continue
             icon_path = img_match.group(1)
@@ -823,6 +825,8 @@ def emit_drawio(
         if edge.is_bidirectional:
             style_parts.append("startArrow=classic")
             style_parts.append("startFill=1")
+        if edge.is_dashed:
+            style_parts.append("dashed=1")
         style_str = ";".join(style_parts) + ";"
 
         label = _sanitize_label(edge.label) if edge.label else ""
@@ -1186,7 +1190,7 @@ def _palette_size(provider: str, shape: str) -> Tuple[float, float]:
 def _node_icon(node: XdotNode) -> Optional[str]:
     """Path of the icon a node is drawn with, when the file exists."""
     candidates = [node.image or ""]
-    match = re.search(r'<img\s+src="([^"]+)"', node.label or "", re.IGNORECASE)
+    match = re.search(r'<img\b[^>]*?\bsrc="([^"]+)"', node.label or "", re.IGNORECASE)
     if match:
         candidates.append(match.group(1))
     return next((c for c in candidates if c and os.path.isfile(c)), None)
@@ -1269,10 +1273,10 @@ _ICON_TO_DRAWIO_SVG = {
     # Azure logo — base64-embed the local PNG (it includes "Microsoft Azure" text)
     "azure.png": None,
     # AWS cluster label icons — base64-embed
-    "vpc.png": None,
-    "private_subnet.png": None,
-    "public_subnet.png": None,
-    "aws.png": None,
+    "virtual-private-cloud-vpc.png": None,
+    "private-subnet.png": None,
+    "public-subnet.png": None,
+    "cloud-logo.png": None,
 }
 
 # Where a container label's name goes: right of its icon, or left of it for
@@ -1291,7 +1295,7 @@ _LABEL_BESIDE_ICON_LEFT = (
 _LOGO_ICON_SIZES = {
     "azure.png": (200, 112),
     "gcp.png": (180, 32),
-    "aws.png": (150, 90),
+    "cloud-logo.png": (150, 90),
 }
 
 
@@ -1307,7 +1311,8 @@ def _build_cluster_label_style(
     """
     label = node.label
     # Try to extract image path and text from HTML label
-    img_match = re.search(r'<img\s+src="([^"]+)"', label, re.IGNORECASE)
+    # Any <img> tag: a fixed-size label cell writes <IMG SCALE="TRUE" SRC=...>
+    img_match = re.search(r'<img\b[^>]*?\bsrc="([^"]+)"', label, re.IGNORECASE)
     # Get ALL text content from TD elements. The text is wrapped in a FONT
     # tag for its size, so strip the tags inside each cell: matching only
     # cells of bare text found nothing and the label came out as an icon
@@ -1447,9 +1452,7 @@ def _emit_gcp_card(
     gcp_label = _format_gcp_label(raw_label, resource_type)
 
     # Extract icon path from the Graphviz HTML label and base64-encode it
-    img_match = re.search(r'<IMG\s+SRC="([^"]+)"', raw_label, re.IGNORECASE)
-    if not img_match:
-        img_match = re.search(r'<img\s+src="([^"]+)"', raw_label, re.IGNORECASE)
+    img_match = re.search(r'<img\b[^>]*?\bsrc="([^"]+)"', raw_label, re.IGNORECASE)
 
     spacing_left = icon_size + icon_margin * 2
     # Cards are white, as in the PNG: with no fill, a card outside a subnet

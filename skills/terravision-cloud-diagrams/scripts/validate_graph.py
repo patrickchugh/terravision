@@ -6,6 +6,7 @@ Exits 1 with a list of errors when the graph cannot be drawn. Otherwise
 exits 0, first printing warnings for things that will draw differently from
 what was probably meant. No dependencies.
 """
+
 import difflib
 import json
 import re
@@ -44,6 +45,7 @@ CONTAINER_TYPES = {
     "tv_aws_region",
     "azurerm_resource_group", "azurerm_group", "azurerm_virtual_network",
     "azurerm_subnet", "tv_azurerm_zone", "tv_azure_onprem", "tv_azurerm_region",
+    "tv_azure_entra",
     "tv_gcp_account", "google_project", "tv_gcp_users", "tv_gcp_system",
     "tv_gcp_infra_system2", "tv_gcp_onprem", "tv_gcp_external_saas",
     "tv_gcp_external_data", "tv_gcp_external_3p", "tv_gcp_external_1p",
@@ -66,7 +68,7 @@ SHARED_SERVICES = {
 }  # fmt: skip
 # ... except arrows into them from these (<PROVIDER>_ALWAYS_DRAW_LINE).
 ALWAYS_DRAW_LINE = {
-    "aws_lb", "aws_iam_role", "aws_volume_attachment", "aws_alb", "aws_nlb",
+    "aws_lb", "aws_iam_role", "aws_volume_attachment", "aws_alb", "aws_nlb", "aws_gwlb",
     "aws_efs_access_point", "aws_efs_mount_target", "aws_ecs_service",
     "aws_rds_aurora", "aws_rds_mysql", "aws_rds_postgres",
     "azurerm_load_balancer", "azurerm_application_gateway",
@@ -74,6 +76,12 @@ ALWAYS_DRAW_LINE = {
     "azurerm_kubernetes_cluster",
     "google_compute_forwarding_rule", "google_compute_backend_service",
     "google_container_node_pool", "google_compute_instance_group",
+}  # fmt: skip
+# Identities: an arrow from one is a permission, drawn dashed and drawn even
+# into a shared service (<PROVIDER>_PERMISSION_SOURCES)
+PERMISSION_SOURCES = {
+    "azurerm_user_assigned_identity", "azuread_group", "azuread_service_principal",
+    "azuread_user",
 }  # fmt: skip
 # Drawn as a line between two network boxes rather than an icon
 # (<PROVIDER>_GROUP_LINKS), with the kind of box each one links. List one in
@@ -204,6 +212,8 @@ def warnings(graph):
 
     hidden = {}
     for src, dst in edges:
+        if type_of(src) in PERMISSION_SOURCES:
+            continue  # a permission, drawn into the shared service
         if type_of(src) in SHARED_SERVICES:
             hidden.setdefault(src, []).append(dst)
         elif (

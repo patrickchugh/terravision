@@ -106,6 +106,20 @@ def test_validator_rules_match_provider_configs(attr, config_suffix):
     assert getattr(_validator(), attr) == expected
 
 
+def test_validator_permission_sources_match_provider_configs():
+    """Arrows from identities are permissions, drawn into shared services."""
+    from modules.config import cloud_config_aws, cloud_config_azure, cloud_config_gcp
+
+    expected = set()
+    for config, prefix in (
+        (cloud_config_aws, "AWS"),
+        (cloud_config_azure, "AZURE"),
+        (cloud_config_gcp, "GCP"),
+    ):
+        expected |= set(getattr(config, f"{prefix}_PERMISSION_SOURCES", []))
+    assert _validator().PERMISSION_SOURCES == expected
+
+
 def test_validator_group_links_match_provider_configs():
     from modules.config import cloud_config_aws, cloud_config_azure, cloud_config_gcp
 

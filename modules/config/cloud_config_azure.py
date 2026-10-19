@@ -113,6 +113,8 @@ AZURE_GROUP_NODES = [
     "azurerm_subnet",
     "tv_azurerm_zone",  # Availability zones for VMSS instances
     "tv_azure_onprem",
+    # Microsoft Entra ID: the tenant's directory objects, outside any resource group
+    "tv_azure_entra",
 ]
 
 # Generic box a terravision.yml annotation declares a logical group with
@@ -320,6 +322,53 @@ AZURE_ALWAYS_DRAW_LINE = [
 
 AZURE_NEVER_DRAW_LINE = ["azurerm_role_assignment"]
 
+# Resources that grant one thing access to another. Each is drawn as a dashed
+# arrow from the identity (from_attribute) to what it may use (to_attribute),
+# labelled with label_attribute's value or the fixed label, instead of as a
+# node. A principal that is a resource's own (system-assigned) identity draws
+# the arrow from that resource. Scopes that are boxes (a resource group, a
+# subscription) draw nothing: an arrow cannot end on a box.
+AZURE_PERMISSION_LINKS = [
+    {
+        "resource_type": "azurerm_role_assignment",
+        "from_attribute": "principal_id",
+        "to_attribute": "scope",
+        # A custom role is named by its azurerm_role_definition's name
+        "label_attribute": "role_definition_name",
+        "label_reference": "role_definition_id",
+    },
+    {
+        "resource_type": "azuread_group_member",
+        "from_attribute": "member_object_id",
+        "to_attribute": "group_object_id",
+        "label": "member",
+    },
+    {
+        "resource_type": "azuread_app_role_assignment",
+        "from_attribute": "principal_object_id",
+        "to_attribute": "resource_object_id",
+        "label": "app role",
+    },
+    {
+        "resource_type": "azuread_directory_role_assignment",
+        "from_attribute": "principal_object_id",
+        "to_attribute": "role_id",
+        "label": "assigned",
+    },
+]
+
+# Identities. An arrow from one of these is a permission, in a graph written
+# by hand as much as in one from Terraform: drawn dashed, and drawn even into
+# the Shared Services box, where a grant usually points (Key Vault, storage).
+# App registrations are not among them: roles are granted to their service
+# principals, and an app's arrow to its service principal is not a grant.
+AZURE_PERMISSION_SOURCES = [
+    "azurerm_user_assigned_identity",
+    "azuread_group",
+    "azuread_service_principal",
+    "azuread_user",
+]
+
 AZURE_DISCONNECT_LIST = ["azurerm_role_assignment"]
 
 # Plumbing resources that carry no architectural meaning on a diagram. Hidden
@@ -338,15 +387,55 @@ AZURE_HIDE_NODES = [
     # same icon as the table itself, so showing both doubles the route icons
     # on the diagram without adding information. The route table stays.
     "azurerm_route",
-    # Access control is not network architecture. These carry generated GUIDs
-    # as their deployed name, so they render as unreadable labels attached to
-    # whatever they grant rights over.
+    # Grants are drawn as dashed arrows from the identity to what it may use
+    # (AZURE_PERMISSION_LINKS), not as nodes: their deployed names are GUIDs.
+    # A role definition only names the role on those arrows.
     "azurerm_role_assignment",
     "azurerm_role_definition",
-    "azurerm_user_assigned_identity",
-    "azuread_user",
-    "azuread_group",
-    "azuread_service_principal",
+    "azuread_group_member",
+    "azuread_app_role_assignment",
+    "azuread_directory_role_assignment",
+    "azuread_directory_role_member",
+    "azuread_administrative_unit_member",
+    "azuread_administrative_unit_role_member",
+    "azuread_service_principal_delegated_permission_grant",
+    "azuread_access_package_catalog_role_assignment",
+    "azuread_privileged_access_group_assignment_schedule",
+    "azuread_privileged_access_group_eligibility_schedule",
+    "azuread_directory_role_eligibility_schedule_request",
+    # Settings and secrets of an Entra object, drawn as part of it: an app
+    # registration's passwords, certificates, redirect URIs, owners and claims
+    "azuread_application_api_access",
+    "azuread_application_app_role",
+    "azuread_application_certificate",
+    "azuread_application_fallback_public_client",
+    "azuread_application_federated_identity_credential",
+    "azuread_application_flexible_federated_identity_credential",
+    "azuread_application_identifier_uri",
+    "azuread_application_known_clients",
+    "azuread_application_optional_claims",
+    "azuread_application_owner",
+    "azuread_application_password",
+    "azuread_application_permission_scope",
+    "azuread_application_pre_authorized",
+    "azuread_application_redirect_uris",
+    "azuread_service_principal_certificate",
+    "azuread_service_principal_claims_mapping_policy_assignment",
+    "azuread_service_principal_password",
+    "azuread_service_principal_token_signing_certificate",
+    "azuread_claims_mapping_policy",
+    "azuread_authentication_strength_policy_fido2_combination_configuration",
+    "azuread_authentication_strength_policy_x509_combination_configuration",
+    "azuread_access_package_assignment_policy",
+    "azuread_access_package_resource_catalog_association",
+    "azuread_access_package_resource_package_association",
+    "azuread_group_license",
+    "azuread_group_role_management_policy",
+    "azuread_named_location",
+    "azuread_synchronization_job_provision_on_demand",
+    "azuread_synchronization_secret",
+    "azuread_user_flow_attribute",
+    "azuread_user_license",
     # Terraform glue with no cloud presence at all
     "null_resource",
     "terraform_data",

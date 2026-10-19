@@ -1446,3 +1446,133 @@ def remove_empty_groups(graphdict: Dict[str, List[str]]) -> Dict[str, List[str]]
         del result[group]
 
     return result
+
+
+# A reference to a resource inside an attribute: azurerm_key_vault.kv in
+# "${azurerm_key_vault.kv.id}", with any module.<name>. prefix it carries
+_REFERENCE = re.compile(r"(?:module\.[\w-]+\.)*(?:azurerm|azuread)_\w+\.[\w-]+")
+
+
+def _source_value(node: str, attribute: str, tfdata: Dict[str, Any]) -> str:
+    """An attribute as the Terraform source writes it.
+
+    The plan often knows a role assignment's principal_id and scope only
+    after apply, but the source still says which resources they come from:
+    principal_id = azurerm_user_assigned_identity.app.principal_id.
+    """
+    base = helpers.get_no_module_name(node).split("~")[0]
+    resource_type, _, name = base.partition(".")
+    name = name.split("[")[0]
+    for blocks in tfdata.get("all_resource", {}).values():
+        for block in blocks:
+            body = (
+                block.get(resource_type, {}).get(name)
+                if isinstance(block, dict)
+                else None
+            )
+            if isinstance(body, dict):
+                return str(body.get(attribute, ""))
+    return ""
+
+
+def _referenced_nodes(node: str, attribute: str, tfdata: Dict[str, Any]) -> List[str]:
+    """Graph nodes that one of node's attributes refers to."""
+    text = " ".join(
+        (_search_text(node, attribute, tfdata), _source_value(node, attribute, tfdata))
+    )
+    references = set(_REFERENCE.findall(text))
+    found = []
+    for candidate in tfdata["graphdict"]:
+        base = candidate.split("~")[0].split("[")[0]
+        if candidate != node and any(
+            base == ref or base.endswith("." + ref) for ref in references
+        ):
+            found.append(candidate)
+    return found
+
+
+def _type_of(node: str) -> str:
+    return helpers.get_no_module_name(node).split(".")[0]
+
+
+def azure_handle_permission_links(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Draw each grant (AZURE_PERMISSION_LINKS) as a dashed, labelled arrow.
+
+    A role assignment says that a principal (a managed identity, a service
+    principal, a group, or a resource's own system-assigned identity) may use
+    a scope with a role. Drawn as a node its GUID name is noise, so instead:
+
+        azurerm_role_assignment.read_secrets
+            principal_id         = azurerm_user_assigned_identity.app.principal_id
+            scope                = azurerm_key_vault.secrets.id
+            role_definition_name = "Key Vault Secrets User"
+
+    becomes the arrow azurerm_user_assigned_identity.app ->
+    azurerm_key_vault.secrets labelled "Key Vault Secrets User". The arrow is
+    recorded in the origin's meta_data["permission_edges"], which drawing.py
+    reads to draw it dashed and to let it into the Shared Services box. The
+    grant itself is then removed from the graph.
+    """
+    graphdict = tfdata["graphdict"]
+    for link in cloud_config.AZURE_PERMISSION_LINKS:
+        grants = [n for n in list(graphdict) if _type_of(n) == link["resource_type"]]
+        for grant in grants:
+            label = _value(grant, link.get("label_attribute", ""), tfdata)
+            if not label and link.get("label_reference"):
+                # A custom role: name it after its azurerm_role_definition
+                roles = _referenced_nodes(grant, link["label_reference"], tfdata)
+                label = _value(roles[0], "name", tfdata) if roles else ""
+            label = label or link.get("label", "")
+            # Boxes (a resource group, a VMSS) cannot be an arrow's end
+            sources = [
+                n
+                for n in _referenced_nodes(grant, link["from_attribute"], tfdata)
+                if _type_of(n) not in GROUP_NODES
+            ]
+            targets = [
+                n
+                for n in _referenced_nodes(grant, link["to_attribute"], tfdata)
+                if _type_of(n) not in GROUP_NODES
+            ]
+            for source in sources:
+                meta = tfdata["meta_data"].setdefault(source, {})
+                for target in targets:
+                    if target not in graphdict[source]:
+                        graphdict[source].append(target)
+                    if target not in meta.setdefault("permission_edges", []):
+                        meta["permission_edges"].append(target)
+                    if label:
+                        meta.setdefault("edge_labels", []).append({target: label})
+            helpers.delete_node(tfdata, grant)
+    return tfdata
+
+
+def azure_handle_entra(tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """Put Entra ID objects (azuread_*) in a Microsoft Entra ID box.
+
+    Users, groups, app registrations, service principals and policies live
+    in the tenant's directory, not in a resource group, so they get a box of
+    their own: tv_azure_entra.tenant. Grants between them (a group member, an
+    app role assignment) become arrows first.
+    """
+    tfdata = azure_handle_permission_links(tfdata)
+    graphdict = tfdata["graphdict"]
+    hidden = set(tfdata.get("hidden", []))
+    members = [
+        n
+        for n in graphdict
+        if _type_of(n).startswith("azuread_") and _type_of(n) not in hidden
+    ]
+    if not members:
+        return tfdata
+    box = "tv_azure_entra.tenant"
+    graphdict.setdefault(box, [])
+    tfdata["meta_data"].setdefault(box, {})
+    for member in members:
+        # Out of any other box; arrows to and from other nodes stay
+        for parent in helpers.list_of_parents(graphdict, member, exactmatch=True):
+            if parent != box and _type_of(parent) in GROUP_NODES:
+                helpers.safe_remove_connection(tfdata, parent, member)
+        if member not in graphdict[box]:
+            graphdict[box].append(member)
+    return tfdata
