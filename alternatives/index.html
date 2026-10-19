@@ -2060,11 +2060,11 @@
 </tr>
 <tr>
 <td>VPC, subnet, zone grouping</td>
-<td>Built in, per provider</td>
+<td>Built in, in each provider's style, with CIDR ranges from the code</td>
 <td>Drawn by hand</td>
 <td>Generic groups</td>
 <td>Generic groups</td>
-<td>Manual clusters</td>
+<td>Generic clusters, written and styled by hand</td>
 <td>Built in</td>
 </tr>
 <tr>
@@ -2073,7 +2073,7 @@
 <td>Manual updates</td>
 <td>Repository sync</td>
 <td>Manual updates</td>
-<td>Manual updates</td>
+<td>Script updated by hand</td>
 <td>Follows the live account</td>
 </tr>
 <tr>
@@ -2123,7 +2123,15 @@
 <h2 id="terravision-vs-mermaid-and-d2">TerraVision vs Mermaid and D2<a class="headerlink" href="#terravision-vs-mermaid-and-d2" title="Permanent link">¶</a></h2>
 <p>Mermaid and D2 are general-purpose text diagram languages, each with its own syntax to learn, and the better choice for sequence diagrams, flowcharts and class diagrams. For cloud architecture neither has the official AWS, Azure or GCP icon sets built in (in D2 you link each node's icon by image URL), and neither has a notion of VPCs, subnets or zones. TerraVision's JSON graph is as short as either, uses Terraform resource names, and renders with official icons and provider grouping. AI assistants can use TerraVision for cloud diagrams and Mermaid or D2 for everything else.</p>
 <h2 id="terravision-vs-diagrams-mingrammer">TerraVision vs Diagrams (mingrammer)<a class="headerlink" href="#terravision-vs-diagrams-mingrammer" title="Permanent link">¶</a></h2>
-<p>Diagrams is a Python library: you write a script that declares each node, cluster and edge, and it renders with Graphviz and official icons. It does not read Terraform. TerraVision needs no script: it derives the diagram from Terraform, or takes a plain JSON graph, and handles grouping and layout rules for you. Choose Diagrams if you want full manual control in Python; choose TerraVision to generate the diagram from existing infrastructure code or from an AI assistant.</p>
+<p>Diagrams is a Python library: you write a script that declares each node, cluster and edge, and it renders with Graphviz and the official icons. It does not read Terraform, so the script is a second description of your infrastructure that someone has to keep in step with the code by hand.</p>
+<p>TerraVision needs no script. It derives the diagram from Terraform, or takes a plain JSON graph, and the result is a professional architecture diagram in each provider's own style:</p>
+<ul>
+<li><strong>Nothing new to learn.</strong> Diagrams has its own Python API to learn: a class for every icon, <code>Cluster</code> blocks for grouping and <code>&gt;&gt;</code> operators for connections. TerraVision reads the Terraform you already have, or a plain JSON graph whose node names are Terraform resource types, or you describe the architecture to your AI assistant in plain words.</li>
+<li><strong>The provider's conventions, built in.</strong> Regions, VPCs and virtual networks, availability zones, and public and private subnets are drawn the way AWS, Azure and Google Cloud draw them in their reference architectures, with their group icons and colours. In Diagrams, clusters are generic boxes you lay out and style yourself.</li>
+<li><strong>Details from the code.</strong> Every VPC, virtual network and subnet is labelled with its CIDR range, read from the Terraform.</li>
+<li><strong>Always current.</strong> The <a href="../cicd-integration/">GitHub Action</a> redraws the diagram whenever the Terraform changes. A Diagrams script is out of date as soon as the infrastructure changes, until someone edits it.</li>
+</ul>
+<p>Choose Diagrams if you want full manual control in Python; choose TerraVision for a diagram in the provider's style that keeps itself in step with your infrastructure code, or one drawn from a description by your AI assistant.</p>
 <h2 id="terravision-vs-live-cloud-scanners-hava-cloudviz-holori">TerraVision vs live cloud scanners (Hava, Cloudviz, Holori)<a class="headerlink" href="#terravision-vs-live-cloud-scanners-hava-cloudviz-holori" title="Permanent link">¶</a></h2>
 <p>Live scanners connect to your cloud accounts with read-only access and draw what is deployed, including drift and resources created by hand. They are hosted, commercial services. TerraVision draws the desired state from code, needs no access to the account it draws, and works before anything is deployed. Use a scanner to audit what is running; use TerraVision for design reviews, pull requests and documentation that follows the code.</p>
 <p>A scanner can only draw an account it has been given access to. TerraVision draws from the code plus a variables file, so it can draw production for engineers who are not given production access, and it can draw an environment that does not exist yet: pass <code>--varfile prod.tfvars</code> and it shows what the code would deploy there. See <a href="../draw-any-environment/">Draw prod without prod access</a>.</p>
