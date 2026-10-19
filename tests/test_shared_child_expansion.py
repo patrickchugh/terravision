@@ -18,7 +18,6 @@ import pytest
 
 from modules.resource_transformers import expand_shared_children
 
-
 AWS_CASE = {
     "provider": "aws",
     "parent_pattern": "aws_subnet.",

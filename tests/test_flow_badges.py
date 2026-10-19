@@ -11,7 +11,6 @@ import pytest
 from modules.annotations import compute_flow_step_numbers
 from modules.drawing import generate_badge_xlabel, generate_legend_html
 
-
 # ---------------------------------------------------------------------------
 # T027 — badge HTML generator
 # ---------------------------------------------------------------------------

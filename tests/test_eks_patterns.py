@@ -83,9 +83,10 @@ def test_interruption_queue_feeds_each_karpenter_node():
 
 
 def test_oidc_provider_has_an_icon():
-    from resource_classes.aws import security
+    from resource_classes.aws import icons
 
-    assert security.aws_iam_openid_connect_provider is security.IAMAWSSts
+    oidc = icons.aws_iam_openid_connect_provider
+    assert oidc._icon == "identity-and-access-management-iam-aws-sts.png"
 
 
 def _node_group_tfdata(inherit_connections=True):

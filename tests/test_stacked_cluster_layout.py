@@ -171,15 +171,13 @@ def test_a_box_laid_over_another_does_not_push_it_down(tmp_path):
     from pathlib import Path
 
     layout = tmp_path / "layout.dot"
-    layout.write_text(
-        """digraph G {
+    layout.write_text("""digraph G {
   graph [bb="0,0,2000,2000"];
   subgraph cluster_cloud { graph [bb="0,0,2000,2000"];
     subgraph cluster_rg { graph [bb="100,100,1900,1900"]; a [pos="1000,1000"]; }
     subgraph cluster_empty { graph [bb="0,0,2000,2000"]; }
   }
-}"""
-    )
+}""")
     script = Path(__file__).parents[1] / "shiftLabel.gvpr"
     shifted = subprocess.run(
         ["gvpr", "-c", "-q", "-f", str(script), str(layout)],

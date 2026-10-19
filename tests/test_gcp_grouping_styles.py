@@ -281,19 +281,18 @@ class TestGCPZoneTerraformAliases:
             google_compute_instance_group,
             InstanceGroupZone,
         )
-        from resource_classes.gcp.compute import (
+        from resource_classes.gcp.icons import (
             google_compute_instance_group_manager,
             google_compute_region_instance_group_manager,
-            InstanceGroup,
         )
 
         assert google_compute_instance_group is InstanceGroupZone  # Still a group
+        # Managers are regular nodes, both with the instance group's icon
         assert (
-            google_compute_instance_group_manager is InstanceGroup
-        )  # Now a regular node
-        assert (
-            google_compute_region_instance_group_manager is InstanceGroup
-        )  # Now a regular node
+            google_compute_instance_group_manager
+            is google_compute_region_instance_group_manager
+        )
+        assert google_compute_instance_group_manager._icon_dir.endswith("/category")
 
 
 class TestGCPGroupNodesConfig:

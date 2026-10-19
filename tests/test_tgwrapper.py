@@ -9,7 +9,6 @@ import pytest
 
 import modules.tgwrapper as tgwrapper
 
-
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 SINGLE_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-single")
 MULTI_FIXTURE = os.path.join(FIXTURES_DIR, "terragrunt-multi")

@@ -202,8 +202,7 @@ def test_peering_line_slides_off_a_box_label(tmp_path):
     from pathlib import Path
 
     layout = tmp_path / "layout.dot"
-    layout.write_text(
-        """digraph G {
+    layout.write_text("""digraph G {
   graph [bb="0,0,1400,1600"];
   subgraph cluster_rg { graph [bb="100,700,1300,1500"];
     subgraph cluster_vnet { graph [bb="200,800,1200,1400"];
@@ -214,8 +213,7 @@ def test_peering_line_slides_off_a_box_label(tmp_path):
   lbl [_clusterlabel="1", _clusterid="cluster_rg", _labelposition="bottom-left",
        pos="0,0", width="8", height="1"];
   a -> b [_grouplink="1", ltail="cluster_vnet", lhead="cluster_down"];
-}"""
-    )
+}""")
     import subprocess
 
     script = Path(__file__).parents[1] / "shiftLabel.gvpr"

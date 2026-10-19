@@ -8,7 +8,7 @@ outside the AWS Cloud frame.
 import pytest
 
 from modules.config import cloud_config_aws
-from resource_classes.aws import general, iot
+from resource_classes.aws import icons
 
 
 @pytest.mark.parametrize(
@@ -21,8 +21,7 @@ from resource_classes.aws import general, iot
     ],
 )
 def test_onprem_actor_uses_the_aws_general_icon(node_type, icon):
-    module = iot if node_type == "tv_aws_iot_sensor" else general
-    assert getattr(module, node_type)._icon == icon
+    assert getattr(icons, node_type)._icon == icon
 
 
 @pytest.mark.parametrize(

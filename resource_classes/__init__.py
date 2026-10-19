@@ -707,3 +707,44 @@ class Edge:
         else:
             direction = "none"
         return {**self._attrs, "dir": direction}
+
+
+def add_terraform_types(namespace: Dict, provider: str) -> None:
+    """Give each Terraform type in <provider>/terraform_icons.yml its icon class.
+
+    The last line of each generated <provider>/icons.py calls this, so a type
+    becomes a module-level name (``aws_dx_gateway = DirectConnectGateway``)
+    exactly as when the aliases were written by hand, and drawing.py, which
+    loads every module in the package, finds it the same way.
+    """
+    import yaml
+
+    by_icon = {
+        icon_key(cls._icon_dir, cls._icon, provider): cls
+        for cls in namespace.values()
+        if isinstance(cls, type)
+        and issubclass(cls, Node)
+        and cls.__module__ == namespace["__name__"]
+    }
+    mapping = Path(__file__).parent / provider / "terraform_icons.yml"
+    for resource_type, icon in yaml.safe_load(mapping.read_text()).items():
+        if icon not in by_icon:
+            raise ValueError(
+                f"{mapping.name}: {resource_type} names {icon}, which is not "
+                f"an icon in icons.py; run scripts/generate_icon_classes.py"
+            )
+        namespace[resource_type] = by_icon[icon]
+
+
+def icon_key(icon_dir: str, icon: str, provider: str) -> str:
+    """How terraform_icons.yml names an icon file.
+
+    ``network/direct-connect-gateway`` for one in the cloud's own folder,
+    resource_images/<provider>/; ``generic/compute/rack`` (from
+    resource_images/) for a shared one some pseudo-nodes borrow.
+    """
+    stem = Path(icon).stem
+    own = f"resource_images/{provider}/"
+    if icon_dir.startswith(own):
+        return f"{icon_dir[len(own):]}/{stem}"
+    return f"{icon_dir[len('resource_images/'):]}/{stem}"

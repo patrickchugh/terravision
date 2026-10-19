@@ -183,7 +183,7 @@ Each provider renders nodes differently in the PNG output. The draw.io emitter r
 
 ### 12. Auto-Generated Class-to-Alias Map
 
-The `_CLASS_TO_ALIAS` mapping (ClassName → terraform_alias) is now auto-generated at runtime by `_build_class_to_alias_map()` in `drawio_emitter.py`. It scans all `resource_classes/<provider>/*.py` modules for terraform alias assignments (e.g., `aws_eip = ElasticIP`) and builds a reverse map. This eliminates the hardcoded dict and automatically picks up new resource classes.
+The `_CLASS_TO_ALIAS` mapping (ClassName → terraform_alias) is now auto-generated at runtime by `_build_class_to_alias_map()` in `drawio_emitter.py`. It scans all `resource_classes/<provider>/*.py` modules for terraform aliases (e.g., `aws_eip = Ec2ElasticIpAddress`, which `icons.py` creates from `terraform_icons.yml`) and builds a reverse map. This eliminates the hardcoded dict and automatically picks up new resource classes.
 
 ### 13. Edge Routing: draw.io Native
 

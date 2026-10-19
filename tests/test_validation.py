@@ -11,7 +11,6 @@ from typing import Dict, Any
 
 from modules.helpers import validate_graphdict, validate_no_shared_connections
 
-
 JSON_DIR = Path(__file__).parent / "json"
 
 

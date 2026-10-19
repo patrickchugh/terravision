@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Regenerate the published node-type list, and llms-full.txt from its sources.
 
-Every top-level ``<type> = <Class>`` assignment in resource_classes/ whose name
-starts with aws_, azurerm_, google_ or tv_ is a node type TerraVision can draw.
-Run this after adding resource classes so the published list cannot drift:
+Every type in resource_classes/<cloud>/terraform_icons.yml, and every top-level
+``<type> = <Class>`` assignment in resource_classes/ (the container types in
+groups.py), whose name starts with aws_, azurerm_, google_ or tv_ is a node
+type TerraVision can draw. Run this after adding types so the published list
+cannot drift:
 
     poetry run python scripts/gen_node_types.py
 
@@ -11,8 +13,11 @@ Writes docs/node-types.md, the skill's copy of it, and docs/llms-full.txt:
 its node-types section from the same list, and its Graph Format section copied
 from docs/graph-format.md (tests/test_skill.py checks the copies match).
 """
+
 import re
 from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSIGNMENT = re.compile(r"^([a-z][a-z0-9_]*)\s*=", re.M)
@@ -40,6 +45,8 @@ def collect() -> set:
     names = set()
     for py in (ROOT / "resource_classes").rglob("*.py"):
         names.update(ASSIGNMENT.findall(py.read_text()))
+    for mapping in (ROOT / "resource_classes").rglob("terraform_icons.yml"):
+        names.update(yaml.safe_load(mapping.read_text()) or {})
     return names
 
 
