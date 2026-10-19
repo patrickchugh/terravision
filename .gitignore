@@ -80,7 +80,6 @@ terravision.ai.yml
 architecture.ai.dot
 architecture.orig.dot
 architecture.json
-/CLAUDE.md
 
 # MkDocs build output
 site/

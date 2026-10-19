@@ -9,7 +9,7 @@ Handler Types:
 - Hybrid: Uses transformations + custom Python function
 - Pure Function: Uses only custom Python code
 
-See CLAUDE.md for detailed documentation on the handler architecture.
+See AGENTS.md for detailed documentation on the handler architecture.
 """
 
 # Resource handler configurations for GCP resources

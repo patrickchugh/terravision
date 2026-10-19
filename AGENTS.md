@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instructions for AI coding agents working in this repository: Codex, Claude Code, GitHub Copilot, Cursor and others. This is the only copy; keep everything here. Claude Code (v2.1.277 or later) reads it directly. Do not add a root `CLAUDE.md`: when one exists, Claude Code reads that instead and ignores this file.
 
 ## Project Overview
 
