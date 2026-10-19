@@ -4,16 +4,18 @@
 
 **Professional cloud architecture diagrams in official AWS, Azure and GCP style, from a description in Claude or ChatGPT or from your Terraform**
 
-[![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/patrickchugh/terravision/security.yml?branch=main&label=CodeQL&logo=github&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/security.yml)
-[![Quality gate](https://img.shields.io/sonar/quality_gate/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/summary/overall?id=patrickchugh_terravision)
-[![Vulnerabilities](https://img.shields.io/sonar/vulnerabilities/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/project/issues?id=patrickchugh_terravision&types=VULNERABILITY)
-[![Coverage](https://img.shields.io/sonar/coverage/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/component_measures?id=patrickchugh_terravision&metric=coverage)
+[![pytest](https://img.shields.io/github/actions/workflow/status/patrickchugh/terravision/lint-and-test.yml?branch=main&label=pytest&logo=pytest&logoColor=white&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
+[![CodeQL](https://img.shields.io/github/check-runs/patrickchugh/terravision/main?nameFilter=CodeQL%20%28python%29&label=CodeQL&logo=github&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/security.yml)
+[![Ruff security rules](https://img.shields.io/github/check-runs/patrickchugh/terravision/main?nameFilter=Python%20security%20rules%20%28ruff%29&label=Ruff%20security&logo=ruff&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/security.yml)
+[![pip-audit](https://img.shields.io/github/check-runs/patrickchugh/terravision/main?nameFilter=Dependency%20vulnerabilities%20%28pip-audit%29&label=pip-audit&logo=python&logoColor=white&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/security.yml)
+[![SonarQube quality gate](https://img.shields.io/sonar/quality_gate/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&label=SonarQube%20quality%20gate&logo=sonarqubecloud&style=flat-square)](https://sonarcloud.io/summary/overall?id=patrickchugh_terravision)
+[![SonarQube vulnerabilities](https://img.shields.io/sonar/vulnerabilities/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&label=SonarQube%20vulnerabilities&logo=sonarqubecloud&style=flat-square)](https://sonarcloud.io/project/issues?id=patrickchugh_terravision&types=VULNERABILITY)
+[![SonarQube coverage](https://img.shields.io/sonar/coverage/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&label=SonarQube%20coverage&logo=sonarqubecloud&style=flat-square)](https://sonarcloud.io/component_measures?id=patrickchugh_terravision&metric=coverage)
+
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![GitHub stars](https://img.shields.io/github/stars/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/stargazers)
 [![License](https://img.shields.io/github/license/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/blob/main/LICENSE)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
 
 **📖 [Full documentation site →](https://patrickchugh.github.io/terravision/)**
 
