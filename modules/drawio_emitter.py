@@ -8,6 +8,7 @@ Replaces the ``graphviz2drawio`` library dependency.
 """
 
 import base64
+import math
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -236,7 +237,7 @@ def _scaled_layout(xdot_graph: XdotGraph, scale: float) -> XdotGraph:
     """A copy of the layout with every position scaled; sizes are kept."""
     import copy
 
-    if scale == 1.0:
+    if math.isclose(scale, 1.0):
         return xdot_graph
     graph = copy.deepcopy(xdot_graph)
 

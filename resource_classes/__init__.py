@@ -1,4 +1,5 @@
 import contextvars
+import math
 import os
 import sys
 from pathlib import Path
@@ -352,7 +353,7 @@ class Cluster:
         self._parent = getcluster()
 
         # Scale cluster margins when fontsize/iconsize overrides are active
-        if self._margin_scale != 1.0 and "margin" in graph_attr:
+        if not math.isclose(self._margin_scale, 1.0) and "margin" in graph_attr:
             raw = graph_attr["margin"]
             if "," in str(raw):
                 parts = str(raw).split(",")
@@ -536,9 +537,9 @@ class Node:
         :return: Connected node.
         """
         if not isinstance(node, Node):
-            ValueError(f"{node} is not a valid Node")
-        if not isinstance(node, Edge):
-            ValueError(f"{node} is not a valid Edge")
+            raise ValueError(f"{node} is not a valid Node")
+        if not isinstance(edge, Edge):
+            raise ValueError(f"{edge} is not a valid Edge")
         # An edge must be added on the global resource_classes, not a cluster.
         self._diagram.connect(self, node, edge)
         return node
