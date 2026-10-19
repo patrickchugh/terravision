@@ -138,7 +138,7 @@ jobs:
           export PATH=$PATH:$(pwd)
           rm -rf ~/.terravision
           poetry run terravision --version
-          COVERAGE="--cov=terravision --cov=modules --cov=resource_classes --cov-report=xml"
+          COVERAGE="--cov=. --cov-report=xml"  # paths: [tool.coverage.run] in pyproject.toml
           if [ "$DOCS_ONLY" = "true" ]; then
             poetry run pytest tests -v -m "not slow"
           elif [ "$FORK_PR" = "true" ]; then

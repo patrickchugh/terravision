@@ -145,3 +145,11 @@ ignore = [
 
 [tool.isort]
 skip = ["drawing.py"]
+
+[tool.coverage.run]
+# Measure from the repository root (pytest --cov=.) so coverage.xml names files
+# by their full path (resource_classes/__init__.py, not __init__.py). With one
+# --cov per package, SonarQube could not tell the packages' __init__.py apart
+# and showed resource_classes/__init__.py as untested.
+relative_files = true
+omit = ["tests/*", "scripts/*", "mcpb/*", "skills/*"]
