@@ -931,7 +931,7 @@ def _origin_edge_labels(origin_resource: str, tfdata: Dict[str, Any]) -> List:
     labels would otherwise lend them to all.
     """
     meta_data = tfdata["meta_data"]
-    own_labels = meta_data.get(origin_resource, {}).get("edge_labels")
+    own_labels = _metadata_of(origin_resource, tfdata).get("edge_labels")
     prefix = _consolidated_prefix(origin_resource)
     if own_labels or not prefix:
         return own_labels or []
@@ -1230,11 +1230,27 @@ def is_permission_edge(
     origin_type = helpers.get_no_module_name(origin_resource).split(".")[0]
     if origin_type in PERMISSION_SOURCES:
         return True
-    granted = tfdata["meta_data"].get(origin_resource, {}).get("permission_edges")
+    granted = _metadata_of(origin_resource, tfdata).get("permission_edges")
     # Numbered copies (~1, ~2) carry their original's grants
     return bool(granted) and dest_resource.split("~")[0] in {
         target.split("~")[0] for target in granted
     }
+
+
+def _metadata_of(resource: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """A node's meta_data, or its pre-variant name's.
+
+    The provider handlers record grants and edge labels on a node before
+    handle_variants() renames it (a firewall VM to its appliance variant),
+    and the rename leaves meta_data under the old name.
+    """
+    meta_data = tfdata["meta_data"]
+    if meta_data.get(resource):
+        return meta_data[resource]
+    for source in helpers._variant_sources(resource, tfdata):
+        if meta_data.get(source):
+            return meta_data[source]
+    return {}
 
 
 def ok_to_connect(origin: str, destination: str) -> bool:

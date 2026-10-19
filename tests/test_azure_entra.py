@@ -219,3 +219,42 @@ def test_permission_arrows_are_dashed_in_drawio(tmp_path):
     root = ET.fromstring(_draw(tmp_path, "drawio"))
     edges = [c.get("style") for c in root.iter("mxCell") if c.get("edge") == "1"]
     assert sum("dashed=1" in s for s in edges) == 2
+
+
+def test_a_grant_survives_its_source_being_renamed_to_a_variant(monkeypatch):
+    """handle_variants runs after the grant is recorded and renames a firewall
+    VM to its appliance variant without moving its metadata. The grant on Key
+    Vault, a shared service, must still be found, or the arrow is not drawn."""
+    from modules import graphmaker
+
+    vm = "azurerm_linux_virtual_machine.firewall"
+    tfdata = _tfdata(
+        {
+            vm: [],
+            "azurerm_key_vault.secrets": [],
+            "azurerm_role_assignment.firewall_secrets": [],
+        },
+        {
+            "azurerm_role_assignment.firewall_secrets": {
+                "principal_id": f"${{{vm}.identity[0].principal_id}}",
+                "scope": "${azurerm_key_vault.secrets.id}",
+                "role_definition_name": "Key Vault Secrets User",
+            }
+        },
+    )
+    tfdata["provider_detection"] = {"primary_provider": "azure"}
+    tfdata["meta_data"][vm] = {"plan": {"publisher": "paloaltonetworks"}}
+    tfdata["original_metadata"][vm] = {"source_image_reference": "paloaltonetworks"}
+    tfdata["meta_data"]["azurerm_role_assignment.firewall_secrets"] = {
+        "role_definition_name": "Key Vault Secrets User"
+    }
+    tfdata = handlers.azure_handle_permission_links(tfdata)
+    tfdata = graphmaker.handle_variants(tfdata)
+    appliance = "azurerm_virtual_machine_appliance.firewall"
+    assert appliance in tfdata["graphdict"]  # renamed
+
+    monkeypatch.setattr(drawing, "PERMISSION_SOURCES", [])
+    assert drawing.is_permission_edge(appliance, "azurerm_key_vault.secrets", tfdata)
+    assert drawing._origin_edge_labels(appliance, tfdata) == [
+        {"azurerm_key_vault.secrets": "Key Vault Secrets User"}
+    ]
