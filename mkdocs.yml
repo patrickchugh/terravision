@@ -140,7 +140,6 @@ extra:
       link: https://pypi.org/project/terravision/
 
 exclude_docs: |
-  CLAUDE.md
   LEARNINGS_*.md
   metadata-refactor-plan.md
   README.md

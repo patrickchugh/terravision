@@ -195,7 +195,7 @@ poetry run pytest tests/test_examples_gallery.py
 - [ ] Code follows Black formatting standards
 - [ ] All tests pass locally
 - [ ] New tests added for new functionality
-- [ ] Documentation updated (README.md, CLAUDE.md if architecture changed)
+- [ ] Documentation updated (README.md, AGENTS.md if architecture changed)
 - [ ] Pre-commit hooks pass
 - [ ] No unnecessary dependencies added
 - [ ] AI assistance disclosed (see below)
