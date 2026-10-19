@@ -4,9 +4,6 @@
 
 **Professional cloud architecture diagrams in official AWS, Azure and GCP style, from a description in Claude or ChatGPT or from your Terraform**
 
-> ### Draw prod without prod access.
-> TerraVision draws what your Terraform *will* deploy, from the code alone. The infrastructure doesn't have to exist yet, and you need no access to any account it deploys to. Live cloud scanners can't do that. **[See how →](https://patrickchugh.github.io/terravision/draw-any-environment/)**
-
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/terravision?style=flat-square)](https://pypi.org/project/terravision/)
@@ -20,6 +17,9 @@
 TerraVision is a free, open-source **cloud architecture diagram generator** for AWS, Azure and Google Cloud that works in both directions: **design to code** (describe it to your AI assistant, get the diagram, then the Terraform) and **code to diagram** (draw what your Terraform deploys).
 
 Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.
+
+> ### Draw prod without prod access.
+> TerraVision draws what your Terraform *will* deploy, from the code alone. The infrastructure doesn't have to exist yet, and you need no access to any account it deploys to. Live cloud scanners can't do that. **[See how →](https://patrickchugh.github.io/terravision/draw-any-environment/)**
 
 ---
 
