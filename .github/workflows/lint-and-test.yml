@@ -41,8 +41,10 @@ jobs:
       # A change to documentation only (Markdown anywhere, docs/, images/,
       # mkdocs.yml) runs the fast tests, which include those that read the
       # README, gallery and node-type list, and skips the slow Terraform
-      # tests, their setup and the SonarQube scan. Skipping the workflow with
-      # a paths filter instead would leave the required "test" check unreported.
+      # tests, the AWS login and the SonarQube scan. Terraform is still
+      # installed: some fast tests draw from a plan file, and the CLI checks
+      # for the binary even then (issue #268). Skipping the workflow with a
+      # paths filter instead would leave the required "test" check unreported.
       - name: Check whether only documentation changed
         id: changes
         env:
@@ -107,10 +109,8 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --with test
       - name: Install Terraform
-        if: steps.changes.outputs.docs_only != 'true'
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: Install Terragrunt
-        if: steps.changes.outputs.docs_only != 'true'
         uses: autero1/action-terragrunt@aefb0a43c4f5503a91fefb307745c4d51c26ed0e # v3.0.2
         with:
           terragrunt-version: latest
