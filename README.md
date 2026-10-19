@@ -5,9 +5,12 @@
 **Professional cloud architecture diagrams in official AWS, Azure and GCP style, from a description in Claude or ChatGPT or from your Terraform**
 
 [![lint-and-test](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml/badge.svg)](https://github.com/patrickchugh/terravision/actions/workflows/lint-and-test.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/patrickchugh/terravision/security.yml?branch=main&label=CodeQL&logo=github&style=flat-square)](https://github.com/patrickchugh/terravision/actions/workflows/security.yml)
+[![Quality gate](https://img.shields.io/sonar/quality_gate/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/summary/overall?id=patrickchugh_terravision)
+[![Vulnerabilities](https://img.shields.io/sonar/vulnerabilities/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/project/issues?id=patrickchugh_terravision&types=VULNERABILITY)
+[![Coverage](https://img.shields.io/sonar/coverage/patrickchugh_terravision?server=https%3A%2F%2Fsonarcloud.io&style=flat-square)](https://sonarcloud.io/component_measures?id=patrickchugh_terravision&metric=coverage)
 [![PyPI version](https://img.shields.io/pypi/v/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/terravision?style=flat-square)](https://pypi.org/project/terravision/)
-[![Python version](https://img.shields.io/pypi/pyversions/terravision?style=flat-square)](https://pypi.org/project/terravision/)
 [![GitHub stars](https://img.shields.io/github/stars/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/stargazers)
 [![License](https://img.shields.io/github/license/patrickchugh/terravision?style=flat-square)](https://github.com/patrickchugh/terravision/blob/main/LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
