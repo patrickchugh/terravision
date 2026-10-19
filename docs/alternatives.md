@@ -44,6 +44,7 @@ Diagrams is a Python library: you write a script that declares each node, cluste
 
 TerraVision needs no script. It derives the diagram from Terraform, or takes a plain JSON graph, and the result is a professional architecture diagram in each provider's own style:
 
+- **Nothing new to learn.** Diagrams has its own Python API to learn: a class for every icon, `Cluster` blocks for grouping and `>>` operators for connections. TerraVision reads the Terraform you already have, or a plain JSON graph whose node names are Terraform resource types, or you describe the architecture to your AI assistant in plain words.
 - **The provider's conventions, built in.** Regions, VPCs and virtual networks, availability zones, and public and private subnets are drawn the way AWS, Azure and Google Cloud draw them in their reference architectures, with their group icons and colours. In Diagrams, clusters are generic boxes you lay out and style yourself.
 - **Details from the code.** Every VPC, virtual network and subnet is labelled with its CIDR range, read from the Terraform.
 - **Always current.** The [GitHub Action](cicd-integration.md) redraws the diagram whenever the Terraform changes. A Diagrams script is out of date as soon as the infrastructure changes, until someone edits it.
