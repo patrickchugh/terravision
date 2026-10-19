@@ -38,6 +38,28 @@ jobs:
         with:
           # SonarQube uses the full history to tell new code from old
           fetch-depth: 0
+      # A change to documentation only (Markdown anywhere, docs/, images/,
+      # mkdocs.yml) runs the fast tests, which include those that read the
+      # README, gallery and node-type list, and skips the slow Terraform
+      # tests, their setup and the SonarQube scan. Skipping the workflow with
+      # a paths filter instead would leave the required "test" check unreported.
+      - name: Check whether only documentation changed
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          DOCS_ONLY=false
+          # Here-strings, not pipes: grep -q exits early, and under the
+          # runner's pipefail the writer's SIGPIPE would flip the result
+          if [ "$EVENT" != "workflow_dispatch" ] && [ -n "$BASE" ] \
+            && ! grep -qE '^0+$' <<< "$BASE" \
+            && FILES=$(git diff --name-only "$BASE" HEAD) && [ -n "$FILES" ] \
+            && ! grep -qvE '(\.md$|^docs/|^images/|^mkdocs\.yml$)' <<< "$FILES"; then
+            DOCS_ONLY=true
+            echo "::notice::Documentation-only change: running the fast tests only."
+          fi
+          echo "docs_only=$DOCS_ONLY" >> "$GITHUB_OUTPUT"
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -68,7 +90,7 @@ jobs:
       #       Retrieve temporary AWS credentials
       #----------------------------------------------
       - name: Configure AWS credentials
-        if: env.FORK_PR != 'true'
+        if: env.FORK_PR != 'true' && steps.changes.outputs.docs_only != 'true'
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         timeout-minutes: 2
         with:
@@ -85,8 +107,10 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --with test
       - name: Install Terraform
+        if: steps.changes.outputs.docs_only != 'true'
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: Install Terragrunt
+        if: steps.changes.outputs.docs_only != 'true'
         uses: autero1/action-terragrunt@aefb0a43c4f5503a91fefb307745c4d51c26ed0e # v3.0.2
         with:
           terragrunt-version: latest
@@ -108,12 +132,16 @@ jobs:
       # add terravision to PATH
       #----------------------------------------------
       - name: Run tests after adding terravision to path
+        env:
+          DOCS_ONLY: ${{ steps.changes.outputs.docs_only }}
         run: |
           export PATH=$PATH:$(pwd)
           rm -rf ~/.terravision
           poetry run terravision --version
           COVERAGE="--cov=terravision --cov=modules --cov=resource_classes --cov-report=xml"
-          if [ "$FORK_PR" = "true" ]; then
+          if [ "$DOCS_ONLY" = "true" ]; then
+            poetry run pytest tests -v -m "not slow"
+          elif [ "$FORK_PR" = "true" ]; then
             echo "::notice::Pull request from a fork: slow tests need AWS credentials and run on main after the merge."
             poetry run pytest tests -v -m "not slow" $COVERAGE
           else
@@ -127,11 +155,11 @@ jobs:
       #----------------------------------------------
       # New code is "since the previous version", so each release resets it
       - name: Read the project version
-        if: env.HAS_SONAR_TOKEN == 'true'
+        if: env.HAS_SONAR_TOKEN == 'true' && steps.changes.outputs.docs_only != 'true'
         id: version
         run: echo "version=$(poetry version --short)" >> "$GITHUB_OUTPUT"
       - name: SonarQube Cloud scan
-        if: env.HAS_SONAR_TOKEN == 'true'
+        if: env.HAS_SONAR_TOKEN == 'true' && steps.changes.outputs.docs_only != 'true'
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         with:
           args: -Dsonar.projectVersion=${{ steps.version.outputs.version }}
