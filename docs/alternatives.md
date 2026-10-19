@@ -15,8 +15,8 @@ Tools for cloud architecture diagrams fall into five groups: manual drawing tool
 | Draw an environment you cannot log in to, or one not built yet | Yes, from the code and a variables file: `--varfile prod.tfvars` draws prod, `--varfile dev.tfvars` draws dev | Drawn by hand | From pasted code | Drawn by hand | Written by hand | No, draws the account it is connected to |
 | Terraform from the design | Yes, written by your AI assistant and checked by redrawing the code | Lucidchart beta, AWS only, paid add-on | No | No | No | Varies |
 | Official AWS, Azure, GCP icons | Yes | Yes, shape libraries | Yes | Not built in | Yes | Yes |
-| VPC, subnet, zone grouping | Built in, per provider | Drawn by hand | Generic groups | Generic groups | Manual clusters | Built in |
-| Stays current with the code | Redrawn in CI on every change | Manual updates | Repository sync | Manual updates | Manual updates | Follows the live account |
+| VPC, subnet, zone grouping | Built in, in each provider's style, with CIDR ranges from the code | Drawn by hand | Generic groups | Generic groups | Generic clusters, written and styled by hand | Built in |
+| Stays current with the code | Redrawn in CI on every change | Manual updates | Repository sync | Manual updates | Script updated by hand | Follows the live account |
 | Runs locally | Yes | draw.io and Visio: yes | No (SaaS) | Yes | Yes | No (SaaS) |
 | Needs access to your cloud account | No | No | No | No | No | Yes, read-only |
 | Price | Free, open source | Free (draw.io) to paid | Free tier, paid plans | Free, open source | Free, open source | Paid plans |
@@ -40,7 +40,15 @@ Mermaid and D2 are general-purpose text diagram languages, each with its own syn
 
 ## TerraVision vs Diagrams (mingrammer)
 
-Diagrams is a Python library: you write a script that declares each node, cluster and edge, and it renders with Graphviz and official icons. It does not read Terraform. TerraVision needs no script: it derives the diagram from Terraform, or takes a plain JSON graph, and handles grouping and layout rules for you. Choose Diagrams if you want full manual control in Python; choose TerraVision to generate the diagram from existing infrastructure code or from an AI assistant.
+Diagrams is a Python library: you write a script that declares each node, cluster and edge, and it renders with Graphviz and the official icons. It does not read Terraform, so the script is a second description of your infrastructure that someone has to keep in step with the code by hand.
+
+TerraVision needs no script. It derives the diagram from Terraform, or takes a plain JSON graph, and the result is a professional architecture diagram in each provider's own style:
+
+- **The provider's conventions, built in.** Regions, VPCs and virtual networks, availability zones, and public and private subnets are drawn the way AWS, Azure and Google Cloud draw them in their reference architectures, with their group icons and colours. In Diagrams, clusters are generic boxes you lay out and style yourself.
+- **Details from the code.** Every VPC, virtual network and subnet is labelled with its CIDR range, read from the Terraform.
+- **Always current.** The [GitHub Action](cicd-integration.md) redraws the diagram whenever the Terraform changes. A Diagrams script is out of date as soon as the infrastructure changes, until someone edits it.
+
+Choose Diagrams if you want full manual control in Python; choose TerraVision for a diagram in the provider's style that keeps itself in step with your infrastructure code, or one drawn from a description by your AI assistant.
 
 ## TerraVision vs live cloud scanners (Hava, Cloudviz, Holori)
 
