@@ -165,7 +165,7 @@ class OnPrem(Cluster):
             "labeljust": "l",
             "_shift": "1",
         }
-        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("general-icons/office-building.png", 90)}<TD>{label}</TD></TR></TABLE>>'
+        aws_label = f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0"><TR>{_icon_cell("group/corporate-data-center.png", 90)}<TD>{label}</TD></TR></TABLE>>'
         super().__init__(aws_label, defaultdir, aws_graph_attrs)
 
 

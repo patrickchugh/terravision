@@ -38,14 +38,14 @@
     "height": 1962,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-hybrid-direct-connect.png",
-    "source_sha256": "3d0d84462c3bf377948cdc46f10f05d175ce13067147a9693e05845f916e860c",
+    "source_sha256": "2ac362298ffc83f610d3eba983a76eaf5d3fb52bdedb25246dee9801804cac48",
     "width": 1400
   },
   "aws-iot-telemetry": {
     "height": 2282,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-iot-telemetry.png",
-    "source_sha256": "7f39f7ade1e505f100b0e9f65fbc07f595f6b9cb8aa280b9d801dfcee06d5b41",
+    "source_sha256": "537ea2d0abcf9dde5a3b86edef84fb44c332742c813e1e0c937cff28b52e7e02",
     "width": 1400
   },
   "aws-media-processing": {
@@ -59,7 +59,7 @@
     "height": 1629,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-multi-account-network.png",
-    "source_sha256": "c9e268109fb39d04f7a591f070279db3370507852e6de82eca26ed9489ecb428",
+    "source_sha256": "b1fb6af7c84137b1894f83d722013cebf044b52296098082f8c7a117df30f59d",
     "width": 1400
   },
   "aws-multi-region": {
@@ -122,7 +122,7 @@
     "height": 2277,
     "settings": "trim-margin40-w1400-q85-webp",
     "source": "examples/graphs/aws-vm-lift-and-shift.png",
-    "source_sha256": "f3809b5844c7e5a8a9bcd16d9ffd4771721fe4c1c2c89c55fcaf54340a405efe",
+    "source_sha256": "e48d217aa7b8017e90b838b6eff876fe5884e435a30a6779a71125c3d3c23986",
     "width": 1400
   },
   "azure-aks": {
