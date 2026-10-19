@@ -233,9 +233,9 @@ Already draw by hand? Generate the first version with TerraVision, then polish t
 
 | Provider         | Status          | Resource types |
 | ---------------- | --------------- | -------------- |
-| **AWS**          | ✅ Full support | 385 types      |
-| **Google Cloud** | ✅ Full support | 264 types      |
-| **Azure**        | ✅ Full support | 245 types      |
+| **AWS**          | ✅ Full support | 427 types      |
+| **Google Cloud** | ✅ Full support | 267 types      |
+| **Azure**        | ✅ Full support | 263 types      |
 
 Full list: [Node types](docs/node-types.md).
 

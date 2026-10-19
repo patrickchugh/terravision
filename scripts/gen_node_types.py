@@ -11,7 +11,9 @@ cannot drift:
 
 Writes docs/node-types.md, the skill's copy of it, and docs/llms-full.txt:
 its node-types section from the same list, and its Graph Format section copied
-from docs/graph-format.md (tests/test_skill.py checks the copies match).
+from docs/graph-format.md (tests/test_skill.py checks the copies match). Also
+updates the per-cloud counts in the Supported Cloud Providers table of the
+README, docs/index.md and docs/faq.md (tests/test_type_counts.py checks them).
 """
 
 import re
@@ -39,6 +41,17 @@ TARGETS = [
     ROOT / "skills" / "terravision-cloud-diagrams" / "references" / "node-types.md",
 ]
 LLMS_FULL = ROOT / "docs" / "llms-full.txt"
+# Pages whose Supported Cloud Providers table quotes how many types each cloud has
+COUNT_PAGES = [ROOT / "README.md", ROOT / "docs" / "index.md", ROOT / "docs" / "faq.md"]
+# Entra ID (azuread_*) types are drawn in Azure diagrams, so Azure counts them
+COUNT_PREFIXES = {
+    "AWS": ("aws_",),
+    "Google Cloud": ("google_",),
+    "Azure": ("azurerm_", "azuread_"),
+}
+COUNT_ROW = re.compile(
+    r"^(\| \*\*(AWS|Google Cloud|Azure)\*\* +\|[^|]+\| )(\d+)( types)", re.M
+)
 GRAPH_FORMAT = ROOT / "docs" / "graph-format.md"
 
 
@@ -73,6 +86,28 @@ def main() -> None:
     head = sync_graph_format(head)
     LLMS_FULL.write_text(head + doc)
     print(f"wrote {LLMS_FULL.relative_to(ROOT)}")
+    counts = type_counts(collect())
+    for page in COUNT_PAGES:
+        page.write_text(sync_counts(page.read_text(), counts, page))
+        print(f"updated type counts in {page.relative_to(ROOT)}")
+
+
+def type_counts(names: set) -> dict:
+    """How many types each cloud row of the Supported Cloud Providers table has."""
+    return {
+        cloud: sum(1 for n in names if n.startswith(prefixes))
+        for cloud, prefixes in COUNT_PREFIXES.items()
+    }
+
+
+def sync_counts(text: str, counts: dict, page: Path) -> str:
+    """Put *counts* into the Supported Cloud Providers table rows of *text*."""
+    new, found = COUNT_ROW.subn(lambda m: f"{m[1]}{counts[m[2]]}{m[4]}", text)
+    if found != len(COUNT_PREFIXES):
+        raise SystemExit(
+            f"{page}: expected {len(COUNT_PREFIXES)} count rows, found {found}"
+        )
+    return new
 
 
 def sync_graph_format(text: str) -> str:

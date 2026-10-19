@@ -280,9 +280,9 @@ New here? Designing something new: [AI cloud architecture diagram generator](ai-
 
 | Provider         | Status          | Resource types |
 | ---------------- | --------------- | -------------- |
-| **AWS**          | ✅ Full support | 385 types      |
-| **Google Cloud** | ✅ Full support | 264 types      |
-| **Azure**        | ✅ Full support | 245 types      |
+| **AWS**          | ✅ Full support | 427 types      |
+| **Google Cloud** | ✅ Full support | 267 types      |
+| **Azure**        | ✅ Full support | 263 types      |
 
 Every supported resource type is listed on the [Node types](node-types.md) page. Types without an icon still appear on the diagram as a generic node, and the run prints which ones so an icon can be added.
 
