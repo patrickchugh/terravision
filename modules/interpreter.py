@@ -926,7 +926,6 @@ def get_variable_values(
                 # Add to main module if no module match
                 if not matching:
                     if not var_mappings.get("main"):
-                        var_mappings["main"] = {}
                         var_mappings["main"] = {"source_dir": var_source_dir}
                     var_mappings["main"][var_name] = var_value
                 # Add to matched modules

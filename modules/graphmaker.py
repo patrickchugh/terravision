@@ -1741,7 +1741,6 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                 filter(lambda a: a != "null", tfdata["graphdict"][connected_resource])
             )
 
-    tfdata["graphdict"] = tfdata["graphdict"]
     return tfdata
 
 
