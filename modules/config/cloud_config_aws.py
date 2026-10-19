@@ -242,6 +242,13 @@ AWS_OUTER_NODES = [
     "tv_aws_database",
     "tv_aws_client",
     "tv_aws_iot_sensor",
+    # General icons for people and places outside AWS
+    "tv_aws_user",
+    "tv_aws_authenticated_user",
+    "tv_aws_office_building",
+    "tv_aws_management_console",
+    "tv_aws_globe",
+    "tv_aws_email",
 ]
 
 # Order to draw nodes - leave empty string list till last to denote everything else
@@ -296,7 +303,17 @@ AWS_AUTO_ANNOTATIONS = [
 AWS_NODE_VARIANTS = {
     "aws_ecs_service": {"FARGATE": "aws_fargate", "EC2": "aws_ec2ecs"},
     "aws_eks_cluster": {"compute_config": "aws_eks_cluster_auto"},
-    "aws_lb": {"application": "aws_alb", "network": "aws_nlb"},
+    # The kind of load balancer is its load_balancer_type, read exactly: a
+    # keyword search found "network" in subnet names and drew ALBs as NLBs
+    "aws_lb": {
+        "attribute": "load_balancer_type",
+        "default": "application",
+        "values": {
+            "application": "aws_alb",
+            "network": "aws_nlb",
+            "gateway": "aws_gwlb",
+        },
+    },
     "aws_rds": {
         "aurora-mysql": "aws_rds_aurora_mysql",
         "aurora-postgresql": "aws_rds_aurora_postgres",
@@ -377,6 +394,7 @@ AWS_ALWAYS_DRAW_LINE = [
     "aws_volume_attachment",
     "aws_alb",
     "aws_nlb",
+    "aws_gwlb",
     "aws_efs_access_point",
     "aws_efs_mount_target",
     "aws_ecs_service",
@@ -518,6 +536,16 @@ AWS_NAME_REPLACEMENTS = {
     "cloudfront_distribution": "Cloudfront",
     "iam_policy": "policy",
     "lb": "ELB Service",
+    "gwlb": "Gateway Load Balancer",
+    # API namespaces that read as one word: bedrockagentcore_gateway
+    "bedrockagentcore": "AgentCore",
+    "bedrockagentcore_agent_runtime": "AgentCore Runtime",
+    "bedrockagent": "Bedrock Agent",
+    "bedrockagent_knowledge_base": "Knowledge Base",
+    "s3tables": "S3 Tables",
+    "s3tables_table_bucket": "S3 Table Bucket",
+    "s3vectors": "S3 Vectors",
+    "s3vectors_vector_bucket": "S3 Vector Bucket",
     "this": "",
 }
 
@@ -529,7 +557,7 @@ AWS_NAME_REPLACEMENTS = {
 # - resource_pattern: Regex pattern to extract resource references from attribute values
 AWS_MULTI_INSTANCE_PATTERNS = [
     {
-        "resource_types": ["aws_lb", "aws_alb", "aws_nlb"],
+        "resource_types": ["aws_lb", "aws_alb", "aws_nlb", "aws_gwlb"],
         "trigger_attributes": ["subnets"],
         "also_expand_attributes": ["security_groups"],
         "resource_pattern": r"\$\{(aws_\w+\.\w+)",
@@ -590,7 +618,7 @@ AWS_GROUP_LINKS = [
     {
         "resource_type": "aws_vpc_peering_connection",
         "local_attribute": "vpc_id",
-        "icon": "resource_images/aws/network/vpc-peering.png",
+        "icon": "resource_images/aws/networking-content-delivery/vpc-peering-connection.png",
         "remote_attribute": "peer_vpc_id",
         "label": "peering",
     },

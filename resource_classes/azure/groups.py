@@ -42,6 +42,10 @@ from resource_classes import Cluster
 
 defaultdir = "LR"
 base_path = Path(os.path.abspath(os.path.dirname(__file__))).parent.parent
+# The resource group, VNet and subnet labels' icon cell, in points: what their
+# old 120 px icons took at natural size (Graphviz reads PNGs at 96 dpi, plus
+# the cell's 2-point padding), so the pack's 256 px icons lay out the same.
+LABEL_ICON_CELL = 94
 
 
 class AZUREGroup(Cluster):
@@ -88,6 +92,7 @@ class ResourceGroupCluster(Cluster):
         self.label_icon = (
             f"{base_path}/resource_images/azure/general/resource-groups.png"
         )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = "bottom-left"  # Position for label node
 
         # Optional top badge label (graphviz cluster label at top)
@@ -111,8 +116,9 @@ class VNetGroup(Cluster):
         # so we use gvpr post-processing to position the label node
         self.label_text = label
         self.label_icon = (
-            f"{base_path}/resource_images/azure/network/virtual-networks.png"
+            f"{base_path}/resource_images/azure/networking/virtual-networks.png"
         )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = "bottom-right"  # Position for label node
         self.label_icon_first = False  # Icon after text for right alignment
 
@@ -134,6 +140,7 @@ class SubnetGroup(Cluster):
         # Store label info for creating separate label node at bottom
         self.label_text = label
         self.label_icon = f"{base_path}/resource_images/azure/networking/subnet.png"
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
         self.label_position = (
             "bottom-left"  # Position at bottom-left like Resource Group
         )
@@ -242,6 +249,34 @@ class SharedServicesGroup(Cluster):
         super().__init__(label, defaultdir, graph_attrs)
 
 
+class EntraGroup(Cluster):
+    """Microsoft Entra ID: the tenant's users, groups, app registrations,
+    service principals and policies.
+
+    They belong to the directory, not to any resource group or subscription,
+    so they get a box of their own. Managed identities are Azure resources and
+    stay in their resource group.
+    """
+
+    def __init__(self, label="Microsoft Entra ID", badge_label=None, **kwargs):
+        graph_attrs = {
+            "style": "solid",
+            "margin": "60",
+            "pencolor": "#0078D4",
+            "penwidth": "1.5",
+        }
+        self.label_text = label
+        # The Entra ID pyramid; V24 of Microsoft's icons has it only with badges
+        self.label_icon = (
+            f"{base_path}/resource_images/azure/terravision/active-directory.png"
+        )
+        self.label_icon_width = self.label_icon_height = LABEL_ICON_CELL
+        self.label_position = "bottom-left"
+
+        cluster_label = badge_label if badge_label else ""
+        super().__init__(cluster_label, defaultdir, graph_attrs)
+
+
 class OnPrem(Cluster):
     """Box for infrastructure outside Azure that a VPN gateway connects to.
 
@@ -283,3 +318,4 @@ tv_azurerm_region = RegionGroup  # Synthetic region boxes for multi-region desig
 azurerm_virtual_machine_scale_set = VMSSGroup
 azurerm_group = SharedServicesGroup
 tv_azure_onprem = OnPrem
+tv_azure_entra = EntraGroup

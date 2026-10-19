@@ -210,6 +210,8 @@ OUTER_NODES = []
 AUTO_ANNOTATIONS = []
 EDGE_NODES = []
 SHARED_SERVICES = []
+# Identity types: an arrow from one is a permission (<PROVIDER>_PERMISSION_SOURCES)
+PERMISSION_SOURCES = []
 GROUP_LINKS = []
 ALWAYS_DRAW_LINE = []
 NEVER_DRAW_LINE = []
@@ -878,6 +880,9 @@ def _load_provider_constants(tfdata: Dict[str, Any]) -> Dict[str, Any]:
         "ALWAYS_DRAW_LINE": getattr(config, f"{provider_upper}_ALWAYS_DRAW_LINE", []),
         "NEVER_DRAW_LINE": getattr(config, f"{provider_upper}_NEVER_DRAW_LINE", []),
         "GROUP_LINKS": getattr(config, f"{provider_upper}_GROUP_LINKS", []),
+        "PERMISSION_SOURCES": getattr(
+            config, f"{provider_upper}_PERMISSION_SOURCES", []
+        ),
     }
 
 
@@ -926,7 +931,7 @@ def _origin_edge_labels(origin_resource: str, tfdata: Dict[str, Any]) -> List:
     labels would otherwise lend them to all.
     """
     meta_data = tfdata["meta_data"]
-    own_labels = meta_data.get(origin_resource, {}).get("edge_labels")
+    own_labels = _metadata_of(origin_resource, tfdata).get("edge_labels")
     prefix = _consolidated_prefix(origin_resource)
     if own_labels or not prefix:
         return own_labels or []
@@ -945,6 +950,13 @@ def _label_for_destination(edge_labels_list: List, dest_resource: str) -> str:
         key = next(iter(labeldict))
         if key == dest_resource:
             return labeldict[key]
+    # A numbered copy (~1, ~2) of the destination takes its original's label
+    base = dest_resource.split("~")[0]
+    if base != dest_resource:
+        for labeldict in edge_labels_list:
+            key = next(iter(labeldict))
+            if key == base:
+                return labeldict[key]
     prefix = _consolidated_prefix(dest_resource)
     if prefix:
         for labeldict in edge_labels_list:
@@ -1131,15 +1143,19 @@ def handle_nodes(
                     ) or connectedNode._id not in tfdata["connected_nodes"].get(
                         originNode._id
                     ):
-                        if originNode != connectedNode and ok_to_connect(
-                            resource_type, node_type
+                        permission = is_permission_edge(
+                            resource, node_connection, tfdata
+                        )
+                        if originNode != connectedNode and (
+                            permission or ok_to_connect(resource_type, node_type)
                         ):
                             # Determine edge visibility
-                            line_style = (
-                                "solid"
-                                if always_draw_edge(resource_type, node_type, tfdata)
-                                else "invis"
-                            )
+                            if permission:
+                                line_style = "dashed"
+                            elif always_draw_edge(resource_type, node_type, tfdata):
+                                line_style = "solid"
+                            else:
+                                line_style = "invis"
                             # Check if this is a bidirectional link
                             is_bidir = frozenset(
                                 (resource, node_connection)
@@ -1198,6 +1214,43 @@ def always_draw_edge(origin: str, destination: str, tfdata: Dict[str, Any]) -> b
     if origin in NEVER_DRAW_LINE:
         return False
     return True
+
+
+def is_permission_edge(
+    origin_resource: str, dest_resource: str, tfdata: Dict[str, Any]
+) -> bool:
+    """Whether an arrow grants access rather than carries traffic.
+
+    Either a grant turned into an arrow (a role assignment, recorded in the
+    origin's meta_data["permission_edges"] by the provider's handler), or any
+    arrow from an identity type (<PROVIDER>_PERMISSION_SOURCES), so a graph
+    written by hand gets the same. Permission arrows are drawn dashed, and
+    drawn even into the Shared Services box, where most grants point.
+    """
+    origin_type = helpers.get_no_module_name(origin_resource).split(".")[0]
+    if origin_type in PERMISSION_SOURCES:
+        return True
+    granted = _metadata_of(origin_resource, tfdata).get("permission_edges")
+    # Numbered copies (~1, ~2) carry their original's grants
+    return bool(granted) and dest_resource.split("~")[0] in {
+        target.split("~")[0] for target in granted
+    }
+
+
+def _metadata_of(resource: str, tfdata: Dict[str, Any]) -> Dict[str, Any]:
+    """A node's meta_data, or its pre-variant name's.
+
+    The provider handlers record grants and edge labels on a node before
+    handle_variants() renames it (a firewall VM to its appliance variant),
+    and the rename leaves meta_data under the old name.
+    """
+    meta_data = tfdata["meta_data"]
+    if meta_data.get(resource):
+        return meta_data[resource]
+    for source in helpers._variant_sources(resource, tfdata):
+        if meta_data.get(source):
+            return meta_data[source]
+    return {}
 
 
 def ok_to_connect(origin: str, destination: str) -> bool:
@@ -1724,7 +1777,7 @@ def _build_diagram(
     global CONSOLIDATED_NODES, GROUP_NODES, DRAW_ORDER, NODE_VARIANTS
     global LOGICAL_GROUP_NODES
     global OUTER_NODES, AUTO_ANNOTATIONS, EDGE_NODES, SHARED_SERVICES
-    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE, GROUP_LINKS
+    global ALWAYS_DRAW_LINE, NEVER_DRAW_LINE, GROUP_LINKS, PERMISSION_SOURCES
 
     provider = get_primary_provider_or_default(tfdata)
 
@@ -1744,6 +1797,7 @@ def _build_diagram(
     ALWAYS_DRAW_LINE = constants["ALWAYS_DRAW_LINE"]
     NEVER_DRAW_LINE = constants["NEVER_DRAW_LINE"]
     GROUP_LINKS = constants["GROUP_LINKS"]
+    PERMISSION_SOURCES = constants["PERMISSION_SOURCES"]
 
     # Refresh the hide list from the provider config rather than trusting what
     # a replay file captured. A tfdata.json written before a hide rule existed
@@ -1903,15 +1957,19 @@ def _build_diagram(
                     )[0]
                     dest_type = helpers.get_no_module_name(dest_resource).split(".")[0]
 
-                    if originNode != connectedNode and ok_to_connect(
-                        origin_type, dest_type
+                    permission = is_permission_edge(
+                        origin_resource, dest_resource, tfdata
+                    )
+                    if originNode != connectedNode and (
+                        permission or ok_to_connect(origin_type, dest_type)
                     ):
                         label = get_edge_labels(originNode, connectedNode, tfdata)
-                        line_style = (
-                            "solid"
-                            if always_draw_edge(origin_type, dest_type, tfdata)
-                            else "invis"
-                        )
+                        if permission:
+                            line_style = "dashed"
+                        elif always_draw_edge(origin_type, dest_type, tfdata):
+                            line_style = "solid"
+                        else:
+                            line_style = "invis"
                         # Check if this is a bidirectional link
                         is_bidir = frozenset(
                             (origin_resource, dest_resource)
@@ -2037,9 +2095,12 @@ def generate_dot(
     with open(path_to_postdot, "r", encoding="utf-8") as f:
         dot_string = f.read()
 
-    # Extract icon file paths from DOT string (both image="..." and <img src="..."/>)
+    # Extract icon file paths from DOT string: image="..." and any <img> tag's
+    # src, including a fixed-size cell's <IMG SCALE="TRUE" SRC="..."/>
     icon_paths = set(re.findall(r'image="([^"]+)"', dot_string))
-    icon_paths.update(re.findall(r'<img src="([^"]+)"', dot_string))
+    icon_paths.update(
+        re.findall(r'<img\b[^>]*?\bsrc="([^"]+)"', dot_string, re.IGNORECASE)
+    )
 
     # Build mapping from Graphviz node ID to Terraform resource address
     # After drawing, meta_data[resource] = {"node": newNode} where resource is

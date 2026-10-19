@@ -226,6 +226,17 @@ GCP_NODE_VARIANTS = {
         "mysql": "google_sql_mysql",
         "postgres": "google_sql_postgres",
     },
+    # Hyperdisk has its own product icon; the disk type says which it is
+    "google_compute_disk": {
+        "attribute": "type",
+        "values": {
+            "hyperdisk-balanced": "google_compute_disk_hyperdisk",
+            "hyperdisk-balanced-high-availability": "google_compute_disk_hyperdisk",
+            "hyperdisk-extreme": "google_compute_disk_hyperdisk",
+            "hyperdisk-ml": "google_compute_disk_hyperdisk",
+            "hyperdisk-throughput": "google_compute_disk_hyperdisk",
+        },
+    },
 }
 
 # Automatically reverse arrow direction for these resources when discovered through source

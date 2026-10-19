@@ -86,7 +86,7 @@ def test_oidc_provider_has_an_icon():
     from resource_classes.aws import icons
 
     oidc = icons.aws_iam_openid_connect_provider
-    assert oidc._icon == "identity-and-access-management-iam-aws-sts.png"
+    assert oidc._icon == "identity-access-management-sts.png"
 
 
 def _node_group_tfdata(inherit_connections=True):

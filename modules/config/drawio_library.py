@@ -2026,7 +2026,7 @@ GCP3_PALETTE_SIZES = {
     "distributedcloud": (50.0, 50.0),
     "gke": (45.4, 50.0),
     "hybridmulticloud": (50.0, 50.0),
-    "hyperdisk": (50.0, 49.5),
+    "hyperdisk": (50.0, 43.3),
     "integrationservices": (36.2, 50.0),
     "looker": (36.6, 50.0),
     "managementtools": (50.0, 50.0),
