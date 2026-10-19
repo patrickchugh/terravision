@@ -46,7 +46,7 @@ Diagrams is a Python library: you write a script that declares each node, cluste
 
 Live scanners connect to your cloud accounts with read-only access and draw what is deployed, including drift and resources created by hand. They are hosted, commercial services. TerraVision draws the desired state from code, needs no access to the account it draws, and works before anything is deployed. Use a scanner to audit what is running; use TerraVision for design reviews, pull requests and documentation that follows the code.
 
-A scanner can only draw an account it has been given access to. TerraVision draws from the code plus a variables file, so it can draw production for engineers who are not given production access, and it can draw an environment that does not exist yet: pass `--varfile prod.tfvars` and it shows what the code would deploy there.
+A scanner can only draw an account it has been given access to. TerraVision draws from the code plus a variables file, so it can draw production for engineers who are not given production access, and it can draw an environment that does not exist yet: pass `--varfile prod.tfvars` and it shows what the code would deploy there. See [Draw prod without prod access](draw-any-environment.md).
 
 ## TerraVision vs `terraform graph`
 

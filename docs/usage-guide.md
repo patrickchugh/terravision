@@ -499,6 +499,8 @@ terravision draw --source ./path-to-your-terraform
 
 ### Multiple Environments
 
+The diagram comes from the code and a variables file, not from a live account, so an environment does not need to exist to be drawn, and you need no access to the account it deploys to. See [Draw prod without prod access](draw-any-environment.md).
+
 ```bash
 # Generate diagrams for different environments
 terravision draw --source ./path-to-your-terraform --varfile dev.tfvars --outfile arch-dev

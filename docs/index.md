@@ -18,6 +18,10 @@ hide:
 
 Ask your AI assistant for a cloud architecture diagram, in plain words, and get the diagram a cloud architect would draw: the official AWS, Azure and GCP icons, with every resource in its VPC, subnet, zone or resource group. From a description, from your Terraform code, or the other way round, with the Terraform written from the diagram. TerraVision runs on your own computer and needs no cloud access.
 
+!!! tip "Draw prod without prod access."
+
+    TerraVision draws what your Terraform *will* deploy, from the code alone. The infrastructure doesn't have to exist yet, and you need no access to any account it deploys to. Live cloud scanners can't do that. **[See how →](draw-any-environment.md)**
+
 ---
 
 ## Gallery
@@ -202,6 +206,12 @@ New here? Designing something new: [AI cloud architecture diagram generator](ai-
 
     Accurate diagrams generated directly from your Terraform code, so your code is the source of truth: what you see is what you get.
 
+-   :material-eye-off:{ .lg .middle } **Draw prod without prod access**
+
+    ---
+
+    The infrastructure does not need to exist, and you need no access to any account the code deploys to. One codebase draws dev, staging and prod. See [Draw prod without prod access](draw-any-environment.md).
+
 -   :material-connection:{ .lg .middle } **MCP server and agent skill**
 
     ---
@@ -349,6 +359,14 @@ terravision draw --source ./path-to-your-terraform --show
 
 The diagram is derived from `terraform plan`, so it shows what the code actually deploys: conditionals, `count`, `for_each` and modules are resolved.
 
+Add a variables file to draw a particular environment. Nothing needs to be deployed, and you need no access to the account it deploys to:
+
+```bash
+terravision draw --source ./path-to-your-terraform --varfile prod.tfvars --outfile architecture-prod
+```
+
+See [Draw prod without prod access](draw-any-environment.md).
+
 Or try the interactive HTML output:
 
 ```bash
@@ -419,7 +437,7 @@ These are real outputs of `terravision visualise` — click any node to see its 
 
     ---
 
-    Cloud credentials, LLM data, offline use, Terragrunt — the most common questions.
+    Cloud credentials, drawing environments you can't access, LLM data, offline use, Terragrunt — the most common questions.
 
 -   :material-wrench:{ .lg .middle } **[Troubleshooting](troubleshooting.md)**
 

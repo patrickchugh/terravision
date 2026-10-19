@@ -26,10 +26,12 @@ Yes. TerraVision's AGPL-3.0 licence covers the software, not the diagrams you ma
 
 **TerraVision itself does not.** It never calls any cloud API.
 
-However, the tool it depends on — Terraform — does need credentials to run `terraform plan`, because Terraform resolves data sources and validates references against your cloud account. Two ways to avoid this:
+Terraform, which TerraVision runs to plan the code, needs credentials the provider accepts. They do **not** have to be for the account the code deploys to: read-only credentials for any account with the same provider, such as your own sandbox, are enough. You have two options:
 
-1. **Use pre-generated plan files**: run `terraform plan` once (in a trusted environment), export the output, and pass it to TerraVision with `--planfile` and `--graphfile`. The diagramming step then needs no credentials at all. See [Pre-Generated Plan Input](usage-guide.md#pre-generated-plan-input).
-2. **Run Terraform locally** with your normal developer credentials — the plan output stays on your machine.
+1. **Run Terraform locally** with read-only credentials for any account with the same provider. The plan output stays on your machine.
+2. **Use pre-generated plan files**: run `terraform plan` once (in a trusted environment), export the output, and pass it to TerraVision with `--planfile` and `--graphfile`. The diagramming step then needs no credentials at all. See [Pre-Generated Plan Input](usage-guide.md#pre-generated-plan-input).
+
+The exception is code that reads from the target account, such as a data source looking up an existing VPC; see [Draw prod without prod access](draw-any-environment.md#when-the-target-account-is-still-needed).
 
 ### Does my Terraform code leave my machine?
 
@@ -103,21 +105,28 @@ The graph is built from `terraform plan` output, which represents the *desired* 
 
 ---
 
-### Can I draw an environment I don't have access to?
+### Can I draw infrastructure that doesn't exist yet, or an account I can't access?
 
-Yes. TerraVision draws from the Terraform code and a variables file, not from a live account or its state. It plans the code against empty local state, so the diagram shows what the code would deploy. You need Terraform, Graphviz and credentials the provider accepts, but no access to the target account or its state.
+Yes, to both. TerraVision draws from the Terraform code and a variables file, not from a live account or its state. It plans the code against empty local state, so the diagram shows what the code would deploy, whether or not any of it has been built. You need no access to any of the accounts the code deploys to: read-only credentials for any account with the same provider are enough, or none at all with a pre-generated plan.
 
 ```bash
 terravision draw --source ./infra --varfile prod.tfvars --outfile architecture-prod
 ```
 
-Any valid credentials for the provider will do, because Terraform only validates them before planning. The exception is a data source that reads from the target account, such as a lookup of an existing VPC by id; that needs access to whatever it reads. Pass `--varfile` more than once to layer files, or `--workspace` to select a Terraform workspace.
+The exception is code that reads from the target account: a data source looking up an existing resource, `terraform_remote_state`, or a provider that assumes a role there. See [Draw prod without prod access](draw-any-environment.md).
 
 ---
 
-### Can I draw dev and prod from the same code?
+### Can I draw dev, staging and prod from the same code?
 
-Yes, in the same way: one variables file per environment, one diagram each. Pass `dev.tfvars` for one run and `prod.tfvars` for the other, with different `--outfile` names, and compare the two diagrams.
+Yes: one variables file per environment, one diagram each. Each diagram shows what that environment's variables make the code deploy, such as more zones, more servers or read replicas in prod.
+
+```bash
+terravision draw --source ./infra --varfile dev.tfvars --outfile architecture-dev
+terravision draw --source ./infra --varfile prod.tfvars --outfile architecture-prod
+```
+
+Pass `--varfile` more than once to layer files, or `--workspace` to select a Terraform workspace. See [Draw prod without prod access](draw-any-environment.md).
 
 ---
 
@@ -137,16 +146,6 @@ For SVG output, any vector editor (Illustrator, Inkscape, Figma) will open it.
 
 Create a `terravision.yml` in your Terraform directory. See the [Annotations Guide](annotations.md) for the full schema.
 
-### Can I generate different diagrams for dev vs prod?
-
-Yes — use `--varfile` with different `.tfvars` files:
-
-```bash
-terravision draw --source ./path-to-your-terraform --varfile dev.tfvars --outfile arch-dev
-terravision draw --source ./path-to-your-terraform --varfile prod.tfvars --outfile arch-prod
-```
-
-Or use `--workspace` to target a specific Terraform workspace.
 
 ### How do I embed diagrams in my docs site?
 
