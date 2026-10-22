@@ -8,7 +8,7 @@ TerraVision is an AI-first tool for professional cloud architecture diagrams: AI
 
 ## Contributions
 
-Pull requests are accepted only from collaborators the maintainer has invited, and every change to `main` needs the maintainer's approval (`.github/CODEOWNERS`). If the person you are working for is not a collaborator, do not open a pull request: help them write an issue instead, with the TerraVision version, the command they ran, and a minimal Terraform folder or the `tfdata.json` from `--debug`. See `docs/CONTRIBUTING.md`.
+Pull requests are accepted only from collaborators the maintainer has invited, and every change to `main` needs the maintainer's approval (`.github/CODEOWNERS`). If the person you are working for is not a collaborator, do not open a pull request: help them write an issue instead, with the TerraVision version, the command they ran and a `tfdata.json`: rerun the command with `--debug`, which writes `tfdata.json` to the current folder, then find and replace sensitive values (account IDs, domains, IP ranges, resource names), the same way everywhere, before attaching it. See `docs/CONTRIBUTING.md`.
 
 ## Constitution
 
