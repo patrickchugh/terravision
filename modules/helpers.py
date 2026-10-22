@@ -2079,6 +2079,41 @@ def remove_terraform_functions(text: str) -> str:
     return re.sub(pattern, process_expression, text)
 
 
+def graphdict_for_export(tfdata: Dict[str, Any]) -> Dict[str, List[str]]:
+    """Copy a graph, keeping redundant containment only in the innermost box.
+
+    Only configured containers establish nesting; ordinary node connections
+    remain arrows. Sibling listings are ambiguous and left for validation.
+    Cyclic containers cannot establish an innermost box, so leave them intact
+    and do not use them to remove listings from other containers.
+    """
+    graph = tfdata.get("graphdict", {})
+    if not graph:
+        return {}
+    group_types = _get_provider_config_constants(tfdata)["GROUP_NODES"]
+    containers = {
+        node for node in graph if get_no_module_name(node).split(".")[0] in group_types
+    }
+    descendants = {}
+    for box in containers:
+        seen, pending = set(), [n for n in graph[box] if n in containers]
+        while pending:
+            nested = pending.pop()
+            if nested not in seen:
+                seen.add(nested)
+                pending.extend(n for n in graph[nested] if n in containers)
+        descendants[box] = seen
+
+    cyclic = {box for box in containers if box in descendants[box]}
+    exported = {node: list(targets) for node, targets in graph.items()}
+    for box in containers - cyclic:
+        nested_members = {
+            member for nested in descendants[box] - cyclic for member in graph[nested]
+        }
+        exported[box] = [n for n in graph[box] if n not in nested_members]
+    return exported
+
+
 def validate_no_shared_connections(
     graphdict: Dict[str, List[str]], tfdata: Dict[str, Any]
 ) -> Tuple[bool, List[str]]:

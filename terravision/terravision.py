@@ -695,25 +695,18 @@ def graphdata(
     if simplified:
         graphmaker.simplify_graphdict(tfdata)
     click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))
-    unique = helpers.unique_services(tfdata["graphdict"])
-    click.echo(
-        json.dumps(
-            tfdata["graphdict"] if not show_services else unique,
-            indent=4,
-            sort_keys=True,
-        )
+    output = (
+        helpers.unique_services(tfdata["graphdict"])
+        if show_services
+        else helpers.graphdict_for_export(tfdata)
     )
+    click.echo(json.dumps(output, indent=4, sort_keys=True))
     if not outfile.lower().endswith(".json"):
         # A full graph is a TerraVision Graph file; a service list is not.
         outfile += ".json" if show_services else ".tvg.json"
     click.echo(f"\nExporting graph object into file {outfile}")
     with open(outfile, "w") as f:
-        json.dump(
-            tfdata["graphdict"] if not show_services else unique,
-            f,
-            indent=4,
-            sort_keys=True,
-        )
+        json.dump(output, f, indent=4, sort_keys=True)
     click.echo("\nCompleted!")
 
 

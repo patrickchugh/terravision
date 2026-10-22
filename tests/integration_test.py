@@ -280,6 +280,11 @@ def test_graphdata_output(
     else:
         with open(expected_path) as f:
             expected = json.load(f)
+        from modules.helpers import graphdict_for_export
+
+        # Snapshots describe the enriched graph; exports omit redundant outer
+        # containment without changing those pipeline expectations.
+        expected = graphdict_for_export({"graphdict": expected})
         assert actual == expected, "JSON output doesn't match expected"
 
 

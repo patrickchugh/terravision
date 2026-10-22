@@ -40,6 +40,51 @@ def graph(tmp_path_factory):
     return json.loads(out.read_text())
 
 
+def test_export_has_no_redundant_outer_container_listings(graph):
+    from tests.test_skill import _validator
+
+    warnings = _validator().warnings(graph)
+    assert not [w for w in warnings if "which already contains" in w]
+    for node, box in (
+        (
+            "aws_ec2_transit_gateway_vpc_attachment.production",
+            "aws_subnet.production_tgw",
+        ),
+        ("aws_networkfirewall_firewall.inspection~1", "aws_subnet.firewall[0]~1"),
+        (
+            "aws_directory_service_directory.corporate_ad~1",
+            "aws_subnet.shared_endpoints[0]~1",
+        ),
+    ):
+        assert node in graph[box]
+
+
+def test_export_matches_mcp_graph_and_companion_file(graph, tmp_path):
+    from modules.mcp_service import _write_graph, run_architecture_graph
+
+    result = run_architecture_graph(
+        source=str(FIXTURE),
+        planfile=str(FIXTURE / "plan.json"),
+        graphfile=str(FIXTURE / "graph.dot"),
+    )
+    assert result["graphdict"] == graph
+    assert result["node_count"] == len(graph)
+    assert result["edge_count"] == sum(map(len, graph.values()))
+
+    from terravision.terravision import compile_tfdata
+
+    data = compile_tfdata(
+        source=str(FIXTURE),
+        varfile=[],
+        workspace="default",
+        debug=False,
+        planfile=str(FIXTURE / "plan.json"),
+        graphfile=str(FIXTURE / "graph.dot"),
+    )
+    path = _write_graph(data, tmp_path, "companion", str(FIXTURE))
+    assert json.loads(path.read_text()) == graph
+
+
 def linked(graph, a, b):
     return b in graph.get(a, []) or a in graph.get(b, [])
 
