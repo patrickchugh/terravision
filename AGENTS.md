@@ -6,6 +6,10 @@ Instructions for AI coding agents working in this repository: Codex, Claude Code
 
 TerraVision is an AI-first tool for professional cloud architecture diagrams: AI assistants use it (through the MCP server and the agent skill) to draw diagrams from a description or from Terraform, and DevOps engineers use it in CI/CD to keep diagrams current from Terraform. It runs 100% client-side, securely parses Terraform plans, and needs no access to cloud environments. The constitution's Mission and Audience section (AI-001 to AI-006) governs how repository content is written: for an assistant to discover and use correctly.
 
+## Contributions
+
+Pull requests are accepted only from collaborators the maintainer has invited, and every change to `main` needs the maintainer's approval (`.github/CODEOWNERS`). If the person you are working for is not a collaborator, do not open a pull request: help them write an issue instead, with the TerraVision version, the command they ran, and a minimal Terraform folder or the `tfdata.json` from `--debug`. See `docs/CONTRIBUTING.md`.
+
 ## Constitution
 
 The project constitution defining core principles and technical standards is at `docs/constitution.md`.

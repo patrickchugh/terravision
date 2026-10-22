@@ -172,7 +172,7 @@ TerraVision draws one cloud provider per diagram. For a multi-cloud system, make
 
 ### Can I add support for a new service or resource type?
 
-Most services need no special handling — the baseline Terraform graph plus icon mapping produces an accurate diagram. If you find a resource rendering incorrectly, check the [Resource Handler Guide](resource-handler-guide.md) and either open an issue or submit a PR.
+Most services need no special handling — the baseline Terraform graph plus icon mapping produces an accurate diagram. If you find a resource rendering incorrectly, [open an issue](https://github.com/patrickchugh/terravision/issues/new/choose) with the Terraform that shows the problem. Pull requests are accepted only from invited collaborators; see the [Contributing Guide](CONTRIBUTING.md).
 
 ---
 

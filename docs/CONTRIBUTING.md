@@ -1,9 +1,25 @@
 # Contributing to TerraVision
 
-Thank you for your interest in contributing to TerraVision! This document provides guidelines and best practices for contributing to the project.
+Thank you for your interest in TerraVision.
+
+## Who can contribute
+
+TerraVision accepts pull requests only from collaborators the maintainer has invited. GitHub does not let anyone else open a pull request on this repository.
+
+Everyone can still help:
+
+- **Report a bug** in [GitHub Issues](https://github.com/patrickchugh/terravision/issues/new/choose). Include the TerraVision version, the command you ran, and ideally a minimal Terraform folder, or the `tfdata.json` that `--debug` writes, that shows the problem.
+- **Ask for a feature or a missing resource type** in Issues.
+- **Ask questions and share ideas** in [GitHub Discussions](https://github.com/patrickchugh/terravision/discussions).
+- **Report a security problem privately**, as the [Security Policy](SECURITY.md) describes.
+
+To work on TerraVision as a collaborator, start a discussion in Discussions saying what you would like to work on.
+
+The rest of this guide is for collaborators.
 
 ## Table of Contents
 
+- [Who can contribute](#who-can-contribute)
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
@@ -54,7 +70,7 @@ poetry run pytest tests --cov=modules
 
 ## Development Workflow
 
-1. **Fork the repository** and create a feature branch from `main`
+1. **Create a feature branch** from `main` in this repository. Collaborators have write access, so no fork is needed
 2. **Make your changes** following the code standards below
 3. **Write tests** for new functionality
 4. **Run the test suite** to ensure all tests pass
@@ -230,7 +246,7 @@ Describe testing performed
 
 1. Any major revamps to code or new ideas not discussed with a maintainer will be rejected
 2. Github passes Automated CI runs on all PRs (Black check, pytest suite)
-3. Maintainer review required for merge, maintainer to review files changed
+3. The maintainer's approval is required to merge: `main` needs a review from the code owner in `.github/CODEOWNERS`, and a push after the approval needs approving again
 4. You address review feedback promptly
 5. Keep PRs focused and reasonably sized - try to implement only one specific change per PR so it rollback will be easier.
 

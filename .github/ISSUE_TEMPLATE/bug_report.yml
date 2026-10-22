@@ -1,0 +1,58 @@
+name: Bug report
+description: A diagram is wrong, a command fails, or TerraVision crashes.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: TerraVision version
+      description: The output of `terravision --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How you ran it
+      options:
+        - CLI
+        - MCP server or AI assistant plugin
+        - Docker image
+        - CI/CD pipeline
+    validations:
+      required: true
+  - type: dropdown
+    id: cloud
+    attributes:
+      label: Cloud provider
+      options:
+        - AWS
+        - Azure
+        - Google Cloud
+        - Not specific to a provider
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or request
+      description: The command you ran, or what you asked the assistant to draw.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Error output, or what is wrong in the diagram. Attach the diagram if it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: A minimal Terraform folder, a plan file, a `.tvg.json` graph, or the `tfdata.json` that `--debug` writes. Remove anything confidential first.
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Operating system, Python version, Terraform version.
