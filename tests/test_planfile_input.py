@@ -2,7 +2,10 @@
 
 import json
 import os
+import shutil
 import tempfile
+from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from click.testing import CliRunner
@@ -213,3 +216,119 @@ class TestCliOptions:
         result = runner.invoke(cli, ["graphdata", "--help"])
         assert "--planfile" in result.output
         assert "--graphfile" in result.output
+
+
+@pytest.fixture
+def no_infra_binaries(monkeypatch):
+    """Keep real Graphviz/Git available, but hide all infrastructure engines."""
+    import modules.helpers as helpers
+
+    which = shutil.which
+    monkeypatch.setattr(
+        shutil,
+        "which",
+        lambda exe: None if exe in ("terraform", "tofu", "terragrunt") else which(exe),
+    )
+    monkeypatch.setattr(helpers, "_TF_BINARY", None)
+    monkeypatch.setenv("TERRAVISION_ENGINE", "auto")
+    version = Mock(side_effect=AssertionError("must not check the engine version"))
+    monkeypatch.setattr(helpers, "check_terraform_version", version)
+    return version
+
+
+@pytest.fixture
+def plan_source(tmp_path, monkeypatch):
+    fixture = Path(__file__).parent / "fixtures/aws_terraform/glue_catalog_planfile"
+    source = tmp_path / "infra"
+    shutil.copytree(fixture, source)
+    # Even a Terragrunt source must not require an engine with saved plan inputs.
+    (source / "terragrunt.hcl").write_text("")
+    monkeypatch.chdir(tmp_path)
+    return source
+
+
+def _plan_args(source):
+    return [
+        "--source",
+        str(source),
+        "--planfile",
+        str(source / "plan.json"),
+        "--graphfile",
+        str(source / "graph.dot"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "command, extra_args, output",
+    [
+        ("draw", ["--format", "dot"], "architecture-aws.dot.dot"),
+        ("graphdata", [], "architecture.tvg.json"),
+        ("visualise", [], "architecture-aws.html"),
+    ],
+)
+def test_plan_commands_without_engines(
+    plan_source, no_infra_binaries, command, extra_args, output
+):
+    result = CliRunner().invoke(cli, [command, *_plan_args(plan_source), *extra_args])
+    assert result.exit_code == 0, result.output
+    assert Path(output).stat().st_size > 0
+    no_infra_binaries.assert_not_called()
+
+
+def test_plan_mcp_matches_cli_without_engines(plan_source, no_infra_binaries):
+    from modules.mcp_service import run_architecture_graph
+
+    result = CliRunner().invoke(cli, ["graphdata", *_plan_args(plan_source)])
+    assert result.exit_code == 0, result.output
+    mcp_result = run_architecture_graph(
+        str(plan_source),
+        planfile=str(plan_source / "plan.json"),
+        graphfile=str(plan_source / "graph.dot"),
+    )
+    assert mcp_result["graphdict"] == json.loads(
+        Path("architecture.tvg.json").read_text()
+    )
+    no_infra_binaries.assert_not_called()
+
+
+@pytest.mark.parametrize("command", ["draw", "graphdata", "visualise"])
+def test_live_source_still_requires_engine(plan_source, no_infra_binaries, command):
+    result = CliRunner().invoke(cli, [command, "--source", str(plan_source)])
+    assert result.exit_code == 1
+    assert "'terraform' not found in PATH" in result.output
+
+
+def test_live_mcp_source_still_requires_engine(plan_source, no_infra_binaries):
+    from modules.mcp_service import McpServiceError, run_architecture_graph
+
+    with pytest.raises(McpServiceError, match="terraform not found on PATH"):
+        run_architecture_graph(str(plan_source))
+
+
+@pytest.mark.parametrize("command", ["draw", "graphdata", "visualise"])
+def test_missing_graphfile_reports_input_error(plan_source, no_infra_binaries, command):
+    result = CliRunner().invoke(
+        cli,
+        [
+            command,
+            "--source",
+            str(plan_source),
+            "--planfile",
+            str(plan_source / "plan.json"),
+        ],
+    )
+    assert result.exit_code == 1
+    assert "--planfile requires --graphfile and --source" in result.output
+    no_infra_binaries.assert_not_called()
+
+
+def test_mcp_missing_graphfile_reports_input_error(plan_source, no_infra_binaries):
+    from modules.mcp_service import McpServiceError, run_architecture_graph
+
+    with pytest.raises(
+        McpServiceError, match="--planfile requires --graphfile and --source"
+    ):
+        run_architecture_graph(
+            str(plan_source), planfile=str(plan_source / "plan.json")
+        )
+    no_infra_binaries.assert_not_called()

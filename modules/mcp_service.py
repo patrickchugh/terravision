@@ -305,8 +305,8 @@ def _guarded(change_dir: bool = True) -> Iterator[Optional[Path]]:
 def _missing_binaries(needs_terraform: bool = True) -> List[str]:
     """Return the required external executables that are not on PATH.
 
-    Reuses the CLI's own dependency table so the two cannot disagree. A graph
-    JSON source never runs Terraform, so it is not required in that case.
+    Reuses the CLI's own dependency table so the two cannot disagree. Graph
+    JSON and pre-generated plan inputs never run Terraform, so do not require it.
     """
     import shutil
 
@@ -402,7 +402,7 @@ def _compile(
 
     from modules.helpers import is_graph_json_source
 
-    needs_terraform = not is_graph_json_source(source)
+    needs_terraform = not planfile and not is_graph_json_source(source)
     _check_binaries(needs_terraform)
     intended_cwd = Path.cwd()
     try:

@@ -352,8 +352,8 @@ def preflight_check(
     Args:
         ai_backend: AI backend to validate ('ollama', 'bedrock', or 'restapi')
         engine: Infra engine to use: 'terraform', 'tofu', or 'auto' (detect).
-        needs_terraform: False when the source is a pre-built graph JSON, in
-            which case Terraform is never invoked and need not be installed.
+        needs_terraform: False for pre-built graph JSON or pre-generated plan
+            inputs, where Terraform is never invoked and need not be installed.
             Only Graphviz (dot, gvpr) and Git are required to render.
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
@@ -363,7 +363,7 @@ def preflight_check(
         helpers.check_terraform_version()
     else:
         click.echo(
-            "  Graph JSON source: Terraform not required, skipping version check"
+            "  Pre-generated input: Terraform not required, skipping version check"
         )
 
     if ai_backend:
@@ -536,7 +536,7 @@ def draw(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=not planfile and not helpers.is_graph_json_source(source),
     )
     tfdata = _safe_compile_tfdata(
         debug,
@@ -679,7 +679,7 @@ def graphdata(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=not planfile and not helpers.is_graph_json_source(source),
     )
     tfdata = _safe_compile_tfdata(
         debug,
@@ -874,7 +874,7 @@ def visualise(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=not planfile and not helpers.is_graph_json_source(source),
     )
     tfdata = _safe_compile_tfdata(
         debug,

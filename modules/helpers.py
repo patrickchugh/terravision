@@ -2649,8 +2649,8 @@ def check_dependencies(needs_terraform: bool = True) -> None:
     installation instructions and a link to the documentation.
 
     Args:
-        needs_terraform: When False (graph JSON source), the Terraform /
-            OpenTofu binary is not checked because it is never executed.
+        needs_terraform: When False (graph JSON or pre-generated plan inputs),
+            the Terraform / OpenTofu binary is not checked or executed.
     """
     import sys
 
