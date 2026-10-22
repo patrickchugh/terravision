@@ -4,7 +4,7 @@ Thank you for your interest in TerraVision.
 
 ## Who can contribute
 
-TerraVision accepts pull requests only from collaborators the maintainer has invited. GitHub does not let anyone else open a pull request on this repository.
+TerraVision accepts pull requests only from collaborators the maintainer has invited. TerraVision's GitHub policy does not allow anyone else to open a pull request on this repository.
 
 Everyone can still help:
 
