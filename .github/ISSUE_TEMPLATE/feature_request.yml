@@ -1,0 +1,23 @@
+name: Feature request
+description: Ask for a new feature, or for a resource type TerraVision does not draw well.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What you would like
+      description: The feature, or the Terraform resource types involved (for example `aws_dx_gateway`).
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: What you are trying to draw or automate, and what TerraVision does today.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Terraform, a graph, or a diagram that shows what you mean.

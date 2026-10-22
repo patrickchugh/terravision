@@ -461,7 +461,7 @@ The complete documentation lives at **[patrickchugh.github.io/terravision](https
 - [Terraform diagram generator](https://patrickchugh.github.io/terravision/terraform-diagram-generator/)
 - [TerraVision vs draw.io, Lucidchart, Eraser, Mermaid and live cloud scanners](https://patrickchugh.github.io/terravision/alternatives/)
 
-**For contributors:**
+**For collaborators:**
 - [Contributing Guide](docs/CONTRIBUTING.md)
 - [Developer Guide](docs/developer-guide.md)
 - [Resource Handler Guide](docs/resource-handler-guide.md)
@@ -477,7 +477,7 @@ Common questions — cloud credentials, drawing environments you can't access, L
 
 ## Contributing
 
-Contributions are very welcome. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development setup, coding standards, and the PR process.
+TerraVision accepts pull requests only from invited collaborators. Bug reports, feature requests and questions are welcome in [Issues](https://github.com/patrickchugh/terravision/issues) and [Discussions](https://github.com/patrickchugh/terravision/discussions). See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for what to put in a bug report, and for the setup and PR process collaborators follow.
 
 ## Support
 

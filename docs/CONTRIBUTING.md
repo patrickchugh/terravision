@@ -1,9 +1,41 @@
 # Contributing to TerraVision
 
-Thank you for your interest in contributing to TerraVision! This document provides guidelines and best practices for contributing to the project.
+Thank you for your interest in TerraVision.
+
+## Who can contribute
+
+TerraVision accepts pull requests only from collaborators the maintainer has invited. TerraVision's GitHub policy does not allow anyone else to open a pull request on this repository.
+
+Everyone can still help:
+
+- **Report a bug** in [GitHub Issues](https://github.com/patrickchugh/terravision/issues/new/choose), with a `tfdata.json` file attached, as [Reporting a bug](#reporting-a-bug) describes.
+- **Ask for a feature or a missing resource type** in Issues.
+- **Ask questions and share ideas** in [GitHub Discussions](https://github.com/patrickchugh/terravision/discussions).
+- **Report a security problem privately**, as the [Security Policy](SECURITY.md) describes.
+
+### Reporting a bug
+
+Attach a `tfdata.json` file to every bug report. It holds everything TerraVision read from your Terraform, so the maintainer can replay your run exactly with `terravision draw --source tfdata.json`, without your code, cloud credentials or provider versions. It is the quickest way to get a bug fixed.
+
+1. Run the command that shows the problem again, with `--debug` added:
+
+   ```bash
+   terravision draw --source ./infra --debug
+   ```
+
+   TerraVision writes `tfdata.json` to the folder you ran the command from. It writes the file even when the run fails, with whatever it had built by then.
+
+2. Open `tfdata.json` in a text editor and use find and replace on anything sensitive: account and subscription IDs, domain names, IP ranges, resource names, and variable values from your `.tfvars` files. Replace each value the same way everywhere it appears (every `123456789012` with `111111111111`, for example), so the resources still connect as they did.
+
+3. Attach the file to the issue, with the TerraVision version (`terravision --version`) and the command you ran. If you cannot share it at all, attach a minimal Terraform folder that shows the problem instead.
+
+To work on TerraVision as a collaborator, start a discussion in Discussions saying what you would like to work on.
+
+The rest of this guide is for collaborators.
 
 ## Table of Contents
 
+- [Who can contribute](#who-can-contribute)
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
@@ -54,7 +86,7 @@ poetry run pytest tests --cov=modules
 
 ## Development Workflow
 
-1. **Fork the repository** and create a feature branch from `main`
+1. **Create a feature branch** from `main` in this repository. Collaborators have write access, so no fork is needed
 2. **Make your changes** following the code standards below
 3. **Write tests** for new functionality
 4. **Run the test suite** to ensure all tests pass
@@ -230,7 +262,7 @@ Describe testing performed
 
 1. Any major revamps to code or new ideas not discussed with a maintainer will be rejected
 2. Github passes Automated CI runs on all PRs (Black check, pytest suite)
-3. Maintainer review required for merge, maintainer to review files changed
+3. The maintainer's approval is required to merge: `main` needs a review from the code owner in `.github/CODEOWNERS`, and a push after the approval needs approving again
 4. You address review feedback promptly
 5. Keep PRs focused and reasonably sized - try to implement only one specific change per PR so it rollback will be easier.
 

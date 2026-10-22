@@ -1,3 +1,5 @@
+<!-- Pull requests are accepted only from invited collaborators. See docs/CONTRIBUTING.md. -->
+
 # YOUR PR TITLE
 
 ## Type of Change
@@ -22,7 +24,7 @@ All Submissions:
 
 ### Checklist for Changes to Core Features:
 
-* [ ] Have you discussed any major revamp with a reviewer/maintainer first? (It's okay to just raise a PR directly for minor bugfixes)
+* [ ] Have you discussed any major revamp with the maintainer first?
 * [ ] Have you ensured your PR is focused on one major improvement and is not trying to do too many changes at once? For example:
       Bad : Adding support for GCP and Azure system wide
       Good: Just adding Azure resource handler for VNets

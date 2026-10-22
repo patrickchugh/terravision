@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/patrickchugh/terravision/discussions
+    about: Ask how to do something, or share an idea, in GitHub Discussions.
+  - name: Security problem
+    url: https://github.com/patrickchugh/terravision/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.

@@ -1,0 +1,66 @@
+name: Bug report
+description: A diagram is wrong, a command fails, or TerraVision crashes.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please attach a `tfdata.json`.** Run the same command again with `--debug` added, and TerraVision writes `tfdata.json` to the folder you ran it from, even when the run fails. The maintainer can replay it to see exactly what you saw.
+
+        Before attaching it, open it in a text editor and find and replace anything sensitive: account IDs, domain names, IP ranges, resource names, variable values. Use the same replacement for a value everywhere it appears. See [Reporting a bug](https://github.com/patrickchugh/terravision/blob/main/docs/CONTRIBUTING.md#reporting-a-bug).
+  - type: input
+    id: version
+    attributes:
+      label: TerraVision version
+      description: The output of `terravision --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How you ran it
+      options:
+        - CLI
+        - MCP server or AI assistant plugin
+        - Docker image
+        - CI/CD pipeline
+    validations:
+      required: true
+  - type: dropdown
+    id: cloud
+    attributes:
+      label: Cloud provider
+      options:
+        - AWS
+        - Azure
+        - Google Cloud
+        - Not specific to a provider
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or request
+      description: The command you ran, or what you asked the assistant to draw.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: Error output, or what is wrong in the diagram. Attach the diagram if it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: tfdata.json
+      description: Drag the `tfdata.json` from your `--debug` run into this box to attach it. If you cannot share it, attach a minimal Terraform folder (as a zip) or the `.tvg.json` graph that shows the problem, and say why.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Operating system, Python version, Terraform version.
