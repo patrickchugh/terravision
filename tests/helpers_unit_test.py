@@ -111,6 +111,37 @@ class TestTfBinaryResolver(unittest.TestCase):
             self.assertEqual(get_tf_binary(), "terraform")
 
 
+class TestCheckTerraformVersion(unittest.TestCase):
+    """The version check runs a flag every supported engine accepts.
+
+    Given an engine that rejects the -v shorthand, as OpenTofu 1.13 does,
+    when the version is checked,
+    then preflight passes instead of exiting.
+    """
+
+    def setUp(self):
+        helpers._TF_BINARY = None
+
+    def tearDown(self):
+        helpers._TF_BINARY = None
+
+    def check_version(self, engine, first_line):
+        def run(cmd, **kwargs):
+            if cmd != [engine, "-version"]:
+                raise helpers.subprocess.CalledProcessError(1, cmd)
+            return mock.Mock(stdout=f"{first_line}\non linux_amd64\n")
+
+        set_tf_binary(engine)
+        with mock.patch.object(helpers.subprocess, "run", side_effect=run):
+            check_terraform_version()
+
+    def test_should_pass_for_opentofu_without_the_short_flag(self):
+        self.check_version("tofu", "OpenTofu v1.13.2")
+
+    def test_should_pass_for_terraform(self):
+        self.check_version("terraform", "Terraform v1.15.1")
+
+
 if __name__ == "__main__":
     unittest.main()
 

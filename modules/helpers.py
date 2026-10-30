@@ -2729,7 +2729,7 @@ def check_terraform_version() -> None:
     binary = get_tf_binary()
     try:
         result = subprocess.run(
-            [binary, "-v"], capture_output=True, text=True, check=True
+            [binary, "-version"], capture_output=True, text=True, check=True
         )
         version_output = result.stdout
 
