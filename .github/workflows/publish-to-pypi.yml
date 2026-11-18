@@ -62,7 +62,14 @@ jobs:
       # install dependencies
       #----------------------------------------------
       - name: Install Graphviz and development headers
-        run: sudo apt-get update && sudo apt-get install -y graphviz libgraphviz-dev
+        # Ubuntu 26.04 (ubuntu-latest since Nov 2026) ships neato's layout
+        # engine as a separate package that graphviz does not pull in
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz libgraphviz-dev
+          if apt-cache show libgvplugin-neato-layout8 > /dev/null 2>&1; then
+            sudo apt-get install -y libgvplugin-neato-layout8
+          fi
       - name: Install python dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
