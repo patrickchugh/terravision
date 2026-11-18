@@ -190,8 +190,7 @@
     "module.aws_rds_data_sn_group.aws_db_subnet_group.data"
   ],
   "module.mkhan-test_ecr_repository.aws_ecr_lifecycle_policy.this": [
-    "module.mkhan-test_ecr_repository.aws_ecr_repository.this",
-    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+    "module.mkhan-test_ecr_repository.aws_ecr_repository.this"
   ],
   "module.mkhan-test_ecr_repository.aws_ecr_repository.this": [
     "module.mkhan-test_ecr_repository.aws_ecr_lifecycle_policy.this"
@@ -202,25 +201,13 @@
     "module.mkhan-test_s3_access_logs.aws_s3_bucket_versioning.this"
   ],
   "module.mkhan-test_s3_access_logs.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
-    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
-    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
-    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
-    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
-    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this"
   ],
   "module.mkhan-test_s3_access_logs.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
-    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
-    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
-    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
-    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
-    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this"
   ],
   "module.mkhan-test_s3_access_logs.aws_s3_bucket_versioning.this": [
-    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this",
-    "module.mkhan-test_s3_documents.aws_s3_bucket.this",
-    "module.mkhan-test_s3_frontend.aws_s3_bucket.this",
-    "module.mkhan-test_s3_guides.aws_s3_bucket.this",
-    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+    "module.mkhan-test_s3_access_logs.aws_s3_bucket.this"
   ],
   "module.mkhan-test_s3_documents.aws_s3_bucket.this": [
     "module.mkhan-test_s3_documents.aws_s3_bucket_lifecycle_configuration.this[0]~1",

@@ -518,20 +518,38 @@ def _find_matching_resources(
     else:
         # Extract Terraform resource references from parameter
         extracted_resources_list = helpers.extract_terraform_resource(normalized_param)
-        if extracted_resources_list:
-            for r in extracted_resources_list:
-                matching.extend(
-                    list(
-                        {
-                            s
-                            for s in nodes
-                            if (r in s or helpers.cleanup_curlies(r) in s)
-                            and s not in matching
-                        }
-                    )
-                )
+        source_scope = _module_address(source_resource)
+        for r in extracted_resources_list:
+            candidates = {
+                s
+                for s in nodes
+                if (r in s or helpers.cleanup_curlies(r) in s) and s not in matching
+            }
+            # A plain reference like aws_s3_bucket.this, written inside a module,
+            # means the resource in that same module instance. Without scoping
+            # it also matched the resource in every other call of the module
+            # (issue #294). Fall back to all candidates when the instance has
+            # none, so references passed in through a variable still resolve.
+            if source_resource and not r.startswith("module."):
+                scoped = {s for s in candidates if _module_address(s) == source_scope}
+                if scoped:
+                    candidates = scoped
+            matching.extend(candidates)
 
     return matching
+
+
+def _module_address(node: str) -> str:
+    """The module instance a node sits in, keys included; "" at the top level.
+
+    ``module.per_team["a"].aws_s3_bucket.this`` -> ``module.per_team["a"]``
+    """
+    parts = helpers._address_parts(node)
+    scope = []
+    while len(parts) > 2 and parts[0] == "module":
+        scope.extend(parts[:2])
+        parts = parts[2:]
+    return ".".join(scope)
 
 
 def _should_reverse_arrow(
