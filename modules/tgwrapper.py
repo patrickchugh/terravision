@@ -7,6 +7,7 @@ multi-module plan merging, and cross-module dependency linking via HCL parsing.
 import json
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -27,10 +28,21 @@ def _tg_env() -> dict:
     triggered by Terragrunt (explicit or auto-init for dependencies)
     accepts the local backend override without prompting for migration.
     Sets TF_INPUT=false to prevent interactive prompts.
+
+    Points Terragrunt at the same binary TerraVision uses (--engine). Terragrunt
+    defaults to OpenTofu when it is on PATH, while TerraVision prefers
+    Terraform, so with both installed the plan was written by one and read by
+    the other: "plan files cannot be transferred between different Terraform
+    versions". A binary the user already chose for Terragrunt is left alone.
     """
     env = dict(os.environ)
     env["TF_CLI_ARGS_init"] = "-reconfigure"
     env["TF_INPUT"] = "false"
+    if not env.get("TG_TF_PATH") and not env.get("TERRAGRUNT_TFPATH"):
+        binary = helpers.get_tf_binary()
+        tf_path = shutil.which(binary) or binary
+        env["TG_TF_PATH"] = tf_path  # Terragrunt 0.73+
+        env["TERRAGRUNT_TFPATH"] = tf_path  # Terragrunt 0.50 to 0.72
     return env
 
 
