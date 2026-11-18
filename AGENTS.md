@@ -106,6 +106,16 @@ git --version
 rm -rf ~/.terravision
 ```
 
+The MCP pin and the plugin version appear in several manifests. Never edit them by hand; `scripts/set_versions.py` updates them all, and `tests/test_plugin_manifests.py` fails if they disagree:
+
+```bash
+poetry version patch                                      # release: new version
+poetry run python scripts/set_versions.py --pin           # release: same commit
+poetry run python scripts/set_versions.py --plugin patch  # later PR, once pip can install the release
+```
+
+Skill-only changes need just the `--plugin` step.
+
 ## Architecture
 
 ### Multi-Cloud Provider Support
