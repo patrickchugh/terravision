@@ -495,7 +495,7 @@ export TERRAVISION_ENGINE=tofu
 terravision draw --source ./path-to-your-terraform
 ```
 
-> **Terragrunt note:** when your source is a Terragrunt project, `--engine tofu` switches the direct `init`/`show`/`graph` calls to OpenTofu, but Terragrunt itself still invokes its own configured binary. To make Terragrunt drive OpenTofu, also set `TG_TF_PATH=tofu` (or `TERRAGRUNT_TFPATH=tofu`) in your environment.
+> **Terragrunt note:** when your source is a Terragrunt project, TerraVision tells Terragrunt to use the same binary it does, so `--engine` covers Terragrunt too. Without this, Terragrunt would use OpenTofu whenever it is on your `PATH` while TerraVision used Terraform, and reading the plan would fail with "plan files cannot be transferred between different Terraform versions". If you have already set `TG_TF_PATH` (or `TERRAGRUNT_TFPATH`), TerraVision leaves it alone, so pass a matching `--engine`.
 
 ### Multiple Environments
 

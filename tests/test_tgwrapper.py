@@ -465,6 +465,28 @@ class TestInjectDependencyRefs:
         )
 
 
+class TestTgEnv:
+    """Terragrunt must plan with the binary TerraVision reads the plan with."""
+
+    def test_points_terragrunt_at_terravision_engine(self, monkeypatch):
+        monkeypatch.delenv("TG_TF_PATH", raising=False)
+        monkeypatch.delenv("TERRAGRUNT_TFPATH", raising=False)
+        monkeypatch.setattr(tgwrapper.helpers, "get_tf_binary", lambda: "terraform")
+        monkeypatch.setattr(tgwrapper.shutil, "which", lambda b: f"/opt/bin/{b}")
+        env = tgwrapper._tg_env()
+        assert env["TG_TF_PATH"] == "/opt/bin/terraform"
+        assert env["TERRAGRUNT_TFPATH"] == "/opt/bin/terraform"
+
+    @pytest.mark.parametrize("var", ["TG_TF_PATH", "TERRAGRUNT_TFPATH"])
+    def test_keeps_binary_the_user_chose(self, monkeypatch, var):
+        monkeypatch.delenv("TG_TF_PATH", raising=False)
+        monkeypatch.delenv("TERRAGRUNT_TFPATH", raising=False)
+        monkeypatch.setenv(var, "/custom/tofu")
+        env = tgwrapper._tg_env()
+        assert env[var] == "/custom/tofu"
+        assert len({env.get("TG_TF_PATH"), env.get("TERRAGRUNT_TFPATH")} - {None}) == 1
+
+
 class TestTgIntegration:
     """Single comprehensive integration test for Terragrunt.
 

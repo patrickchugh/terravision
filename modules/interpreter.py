@@ -11,7 +11,9 @@ from modules.plan_resolver import (
     resolve_module_ref_from_plan,
     is_hcl_function_suffix,
 )
+import copy
 import json
+import os
 import click
 import re
 from pathlib import Path
@@ -214,7 +216,9 @@ def handle_metadata_vars(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                     )
                     break
                 _seen_values.add(value)
-                mod = attr_list["module"]
+                # Older debug files record per_team["a"]; variables are
+                # filed under the module block's name, per_team
+                mod = str(attr_list["module"]).split("[", 1)[0]
                 old_value = value
                 value = find_replace_values(value, mod, tfdata)
                 if value == old_value:
@@ -665,40 +669,54 @@ def prefix_module_names(tfdata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Updated tfdata with module-prefixed resource names
     """
-    # Track processed resources to avoid duplicates when modules called multiple times
-    processed_list = []
-    # Loop through each resource in tfdata["all_resource"]
     for file, resourcelist in dict(tfdata["all_resource"]).items():
-        # Check if resource belongs to a module
-        for module_name, module_path in tfdata["module_source_dict"].items():
-            if module_path in file:
-                # Add module prefix to resource names
-                for index, elementdict in enumerate(resourcelist):
-                    for resource_type, value in elementdict.items():
-                        for resource_name in value:
-                            renamed_resource_name = (
-                                f"module.{module_name}.{resource_type}.{resource_name}"
-                            )
-                            # Only rename if not already prefixed and not processed
-                            if (
-                                "module." not in resource_name
-                                and renamed_resource_name not in processed_list
-                            ):
-                                # Create new dict with renamed resource
-                                new_dict = dict(
-                                    tfdata["all_resource"][file][index][resource_type]
-                                )
-                                new_dict.update(
-                                    {renamed_resource_name: value[resource_name]}
-                                )
-                                del new_dict[resource_name]
-                                tfdata["all_resource"][file][index] = {
-                                    resource_type: new_dict
-                                }
-                                processed_list.append(renamed_resource_name)
-                            else:
-                                break
+        callers = _module_calls_for_file(file, tfdata.get("module_source_dict", {}))
+        if not callers:
+            continue
+        # A module folder called several times holds its resources once, so
+        # every call gets its own copy (issue #295). Before, only the first
+        # call got them and the others had no references to link with.
+        new_list = []
+        for elementdict in resourcelist:
+            if all(
+                "module." in name for value in elementdict.values() for name in value
+            ):
+                new_list.append(elementdict)  # already prefixed
+                continue
+            for module_name in callers:
+                new_list.append(
+                    {
+                        resource_type: {
+                            (
+                                name
+                                if "module." in name
+                                else f"module.{module_name}.{resource_type}.{name}"
+                            ): copy.deepcopy(attrs)
+                            for name, attrs in value.items()
+                        }
+                        for resource_type, value in elementdict.items()
+                    }
+                )
+        tfdata["all_resource"][file] = new_list
     return tfdata
+
+
+def _module_calls_for_file(file: str, module_source_dict: Dict[str, str]) -> List[str]:
+    """Names of the module calls whose source folder holds *file*.
+
+    Only the most specific folder counts, so a file in ``modules/bucket_logs``
+    or ``modules/bucket/inner`` does not also count as ``modules/bucket``.
+    """
+    file_path = os.path.normpath(str(file))
+    matches = {}
+    for module_name, module_path in module_source_dict.items():
+        folder = os.path.normpath(str(module_path))
+        if folder + os.sep in file_path:
+            matches[module_name] = len(folder)
+    if not matches:
+        return []
+    longest = max(matches.values())
+    return [name for name, length in matches.items() if length == longest]
 
 
 def show_error(
@@ -784,6 +802,20 @@ def handle_numbered_nodes(
     return meta_data
 
 
+def without_module_keys(node: str) -> str:
+    """Drop for_each keys and count indexes from a node's module calls.
+
+    ``module.per_team["a"].aws_s3_bucket.this[0]`` ->
+    ``module.per_team.aws_s3_bucket.this[0]``. The resource's own index stays.
+    """
+    parts = helpers._address_parts(node)
+    i = 0
+    while i + 2 < len(parts) and parts[i] == "module":
+        parts[i + 1] = parts[i + 1].split("[", 1)[0]
+        i += 2
+    return ".".join(parts)
+
+
 def parse_resource_node(resource_node: str) -> Tuple[str, str]:
     """Parse resource node into type and name."""
     if resource_node.startswith("module."):
@@ -844,10 +876,13 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
 
     for resource_node in tfdata["node_list"]:
         click.echo(f"   {resource_node}")
-        resource_type, resource_name = parse_resource_node(resource_node)
+        # The .tf files hold one copy per module call, with no instance keys,
+        # so look up module.per_team["a"].x as module.per_team.x (issue #295)
+        lookup_node = without_module_keys(resource_node)
+        resource_type, resource_name = parse_resource_node(lookup_node)
         base_name = resource_name.split("[")[0] if resource_name else ""
         item, actual_key = find_resource_in_all_resource(
-            resource_type, base_name, resource_node, tfdata
+            resource_type, base_name, lookup_node, tfdata
         )
         if item:
             meta_data, tfdata = handle_implied_resources(
