@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="../assets/logo/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -3602,7 +3602,7 @@ in an HTML page.</p>
 </span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>./path-to-your-terraform
 </span></code></pre></div>
 <blockquote>
-<p><strong>Terragrunt note:</strong> when your source is a Terragrunt project, <code>--engine tofu</code> switches the direct <code>init</code>/<code>show</code>/<code>graph</code> calls to OpenTofu, but Terragrunt itself still invokes its own configured binary. To make Terragrunt drive OpenTofu, also set <code>TG_TF_PATH=tofu</code> (or <code>TERRAGRUNT_TFPATH=tofu</code>) in your environment.</p>
+<p><strong>Terragrunt note:</strong> when your source is a Terragrunt project, TerraVision tells Terragrunt to use the same binary it does, so <code>--engine</code> covers Terragrunt too. Without this, Terragrunt would use OpenTofu whenever it is on your <code>PATH</code> while TerraVision used Terraform, and reading the plan would fail with "plan files cannot be transferred between different Terraform versions". If you have already set <code>TG_TF_PATH</code> (or <code>TERRAGRUNT_TFPATH</code>), TerraVision leaves it alone, so pass a matching <code>--engine</code>.</p>
 </blockquote>
 <h3 id="multiple-environments">Multiple Environments<a class="headerlink" href="#multiple-environments" title="Permanent link">¶</a></h3>
 <p>The diagram comes from the code and a variables file, not from a live account, so an environment does not need to exist to be drawn, and you need no access to the account it deploys to. See <a href="../draw-any-environment/">Draw prod without prod access</a>.</p>
@@ -4049,7 +4049,7 @@ in an HTML page.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "toc.follow", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   
