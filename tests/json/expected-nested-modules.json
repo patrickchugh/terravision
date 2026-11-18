@@ -216,11 +216,21 @@
     "module.mkhan-test_s3_documents.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
     "module.mkhan-test_s3_documents.aws_s3_bucket_versioning.this"
   ],
-  "module.mkhan-test_s3_documents.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_documents.aws_s3_bucket_logging.this[0]~1": [],
-  "module.mkhan-test_s3_documents.aws_s3_bucket_policy.this[0]~1": [],
-  "module.mkhan-test_s3_documents.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_documents.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_logging.this[0]~1": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_policy.this[0]~1": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_documents.aws_s3_bucket_versioning.this": [
+    "module.mkhan-test_s3_documents.aws_s3_bucket.this"
+  ],
   "module.mkhan-test_s3_frontend.aws_s3_bucket.this": [
     "module.mkhan-test_s3_frontend.aws_s3_bucket_lifecycle_configuration.this[0]~1",
     "module.mkhan-test_s3_frontend.aws_s3_bucket_logging.this[0]~1",
@@ -228,11 +238,21 @@
     "module.mkhan-test_s3_frontend.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
     "module.mkhan-test_s3_frontend.aws_s3_bucket_versioning.this"
   ],
-  "module.mkhan-test_s3_frontend.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_frontend.aws_s3_bucket_logging.this[0]~1": [],
-  "module.mkhan-test_s3_frontend.aws_s3_bucket_policy.this[0]~1": [],
-  "module.mkhan-test_s3_frontend.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_frontend.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_logging.this[0]~1": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_policy.this[0]~1": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_frontend.aws_s3_bucket_versioning.this": [
+    "module.mkhan-test_s3_frontend.aws_s3_bucket.this"
+  ],
   "module.mkhan-test_s3_guides.aws_s3_bucket.this": [
     "module.mkhan-test_s3_guides.aws_s3_bucket_lifecycle_configuration.this[0]~1",
     "module.mkhan-test_s3_guides.aws_s3_bucket_logging.this[0]~1",
@@ -240,11 +260,21 @@
     "module.mkhan-test_s3_guides.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
     "module.mkhan-test_s3_guides.aws_s3_bucket_versioning.this"
   ],
-  "module.mkhan-test_s3_guides.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_guides.aws_s3_bucket_logging.this[0]~1": [],
-  "module.mkhan-test_s3_guides.aws_s3_bucket_policy.this[0]~1": [],
-  "module.mkhan-test_s3_guides.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_guides.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_logging.this[0]~1": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_policy.this[0]~1": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_guides.aws_s3_bucket_versioning.this": [
+    "module.mkhan-test_s3_guides.aws_s3_bucket.this"
+  ],
   "module.mkhan-test_s3_images.aws_s3_bucket.this": [
     "module.mkhan-test_s3_images.aws_s3_bucket_lifecycle_configuration.this[0]~1",
     "module.mkhan-test_s3_images.aws_s3_bucket_logging.this[0]~1",
@@ -252,11 +282,21 @@
     "module.mkhan-test_s3_images.aws_s3_bucket_server_side_encryption_configuration.this[0]~1",
     "module.mkhan-test_s3_images.aws_s3_bucket_versioning.this"
   ],
-  "module.mkhan-test_s3_images.aws_s3_bucket_lifecycle_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_images.aws_s3_bucket_logging.this[0]~1": [],
-  "module.mkhan-test_s3_images.aws_s3_bucket_policy.this[0]~1": [],
-  "module.mkhan-test_s3_images.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [],
-  "module.mkhan-test_s3_images.aws_s3_bucket_versioning.this": [],
+  "module.mkhan-test_s3_images.aws_s3_bucket_lifecycle_configuration.this[0]~1": [
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_images.aws_s3_bucket_logging.this[0]~1": [
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_images.aws_s3_bucket_policy.this[0]~1": [
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_images.aws_s3_bucket_server_side_encryption_configuration.this[0]~1": [
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
+  "module.mkhan-test_s3_images.aws_s3_bucket_versioning.this": [
+    "module.mkhan-test_s3_images.aws_s3_bucket.this"
+  ],
   "module.mkhan-test_vpc.aws_vpc.this": [
     "aws_az.availability_zone_apse2_az1",
     "aws_az.availability_zone_apse2_az3",
@@ -265,6 +305,12 @@
     "aws_lb.elb",
     "aws_nat_gateway.this~1",
     "aws_nat_gateway.this~2",
+    "module.mkhan-test_vpce_pl[\"ec2messages\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"kms\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"lambda\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"secretsmanager\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"ssm\"].aws_vpc_endpoint.this",
+    "module.mkhan-test_vpce_pl[\"ssmmessages\"].aws_vpc_endpoint.this",
     "module.rt_data.aws_route_table.this",
     "module.rt_pub.aws_route_table.this",
     "module.rt_pvt.aws_route_table.this",
@@ -277,15 +323,17 @@
   "module.mkhan-test_vpce_pl[\"secretsmanager\"].aws_vpc_endpoint.this": [],
   "module.mkhan-test_vpce_pl[\"ssm\"].aws_vpc_endpoint.this": [],
   "module.mkhan-test_vpce_pl[\"ssmmessages\"].aws_vpc_endpoint.this": [],
-  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
-  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]": [],
-  "module.pgadmin_alb_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
-  "module.pgadmin_alb_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]": [],
-  "module.pgadmin_ecr_repository.aws_ecr_lifecycle_policy.this": [],
+  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]~1": [],
+  "module.mkhan-test_vpce_pl_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]~1": [],
+  "module.pgadmin_alb_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]~1": [],
+  "module.pgadmin_alb_sg.aws_vpc_security_group_ingress_rule.cidr[\"0-cidr-0.0.0.0/0\"][0-cidr-0.0.0.0/0]~1": [],
+  "module.pgadmin_ecr_repository.aws_ecr_lifecycle_policy.this": [
+    "module.pgadmin_ecr_repository.aws_ecr_repository.this"
+  ],
   "module.pgadmin_ecr_repository.aws_ecr_repository.this": [
     "module.pgadmin_ecr_repository.aws_ecr_lifecycle_policy.this"
   ],
-  "module.pgadmin_ecs_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]": [],
+  "module.pgadmin_ecs_sg.aws_vpc_security_group_egress_rule.this[\"0-0.0.0.0/0\"][0-0.0.0.0/0]~1": [],
   "module.rt_data.aws_route_table.this": [],
   "module.rt_pub.aws_route_table.this": [
     "aws_internet_gateway.igw"

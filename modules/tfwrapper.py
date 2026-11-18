@@ -583,9 +583,12 @@ def setup_tfdata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
                         details[k] = v
                 # Add module name if resource is in a module
                 if "module." in object["address"]:
-                    modname = (
-                        object["module_address"].split("module.")[-1].split(".")[0]
-                    )
+                    # The module block's name without its for_each key or
+                    # count index: variables are filed under per_team, not
+                    # per_team["a"] (issue #295)
+                    modname = helpers._address_parts(object["module_address"])[
+                        -1
+                    ].split("[", 1)[0]
                     details["module"] = modname
                 else:
                     details["module"] = "main"

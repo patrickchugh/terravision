@@ -475,20 +475,8 @@ def iterative_parse(
                         else:
                             tfdata["module_source_dict"][module_name] = sourcemod
 
-    # Handle duplicate module references
-    oldpath: List[str] = []
-    for module, modpath in tfdata["module_source_dict"].items():
-        if modpath in oldpath:
-            # Module called multiple times - duplicate resources
-            duplicate = modpath
-            for filepath, res_list in tfdata["all_resource"].items():
-                if duplicate in filepath:
-                    tfdata["all_resource"][filepath].append(
-                        tfdata["all_resource"][filepath][0]
-                    )
-        else:
-            oldpath.append(modpath)
-
+    # A module folder called several times is copied per call later, in
+    # interpreter.prefix_module_names()
     return tfdata
 
 

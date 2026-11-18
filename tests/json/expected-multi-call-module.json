@@ -1,0 +1,29 @@
+{
+    "aws_group.shared_services": [
+        "aws_iam_group.of_services"
+    ],
+    "module.other_call.aws_s3_bucket.this": [
+        "module.other_call.aws_s3_bucket_versioning.this"
+    ],
+    "module.other_call.aws_s3_bucket_versioning.this": [
+        "module.other_call.aws_s3_bucket.this"
+    ],
+    "module.per_team[\"a\"].aws_s3_bucket.this": [],
+    "module.per_team[\"a\"].aws_s3_bucket_versioning.this": [
+        "module.per_team[\"a\"].aws_s3_bucket.this"
+    ],
+    "module.per_team[\"b\"].aws_s3_bucket.this": [],
+    "module.per_team[\"b\"].aws_s3_bucket_versioning.this": [
+        "module.per_team[\"b\"].aws_s3_bucket.this"
+    ],
+    "module.per_team[\"c\"].aws_s3_bucket.this": [],
+    "module.per_team[\"c\"].aws_s3_bucket_versioning.this": [
+        "module.per_team[\"c\"].aws_s3_bucket.this"
+    ],
+    "module.shared.aws_s3_bucket.this": [
+        "module.shared.aws_s3_bucket_versioning.this"
+    ],
+    "module.shared.aws_s3_bucket_versioning.this": [
+        "module.shared.aws_s3_bucket.this"
+    ]
+}

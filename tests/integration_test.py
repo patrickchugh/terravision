@@ -231,6 +231,12 @@ def test_help() -> None:
             "nested-modules-tfdata.json",
             "expected-nested-modules.json",
         ),
+        # One module folder called three times, once with for_each (issues
+        # #294, #295): every call and instance links only to its own bucket.
+        (
+            "multi-call-module-tfdata.json",
+            "expected-multi-call-module.json",
+        ),
     ],
 )
 def test_graphdata_output(
