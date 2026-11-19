@@ -504,6 +504,28 @@ def _address_parts(address: str) -> List[str]:
     return parts
 
 
+def module_address(node: str) -> str:
+    """The module instance a node sits in, keys included; "" at the top level.
+
+    ``module.per_team["a"].aws_s3_bucket.this`` -> ``module.per_team["a"]``
+    """
+    parts = _address_parts(node)
+    scope = []
+    while len(parts) > 2 and parts[0] == "module":
+        scope.extend(parts[:2])
+        parts = parts[2:]
+    return ".".join(scope)
+
+
+def has_own_index(node: str) -> bool:
+    """Whether the resource itself has a count index or for_each key.
+
+    ``aws_s3_bucket.this[0]`` does; ``module.per_team["a"].aws_s3_bucket.this``
+    does not, since that key belongs to the module call.
+    """
+    return "[" in _address_parts(node.split("~")[0])[-1]
+
+
 def without_own_index(node: str) -> str:
     """Drop a resource's own count index or for_each key and its ~N suffix.
 

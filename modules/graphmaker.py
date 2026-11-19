@@ -518,7 +518,7 @@ def _find_matching_resources(
     else:
         # Extract Terraform resource references from parameter
         extracted_resources_list = helpers.extract_terraform_resource(normalized_param)
-        source_scope = _module_address(source_resource)
+        source_scope = helpers.module_address(source_resource)
         for r in extracted_resources_list:
             candidates = {
                 s
@@ -531,25 +531,14 @@ def _find_matching_resources(
             # (issue #294). Fall back to all candidates when the instance has
             # none, so references passed in through a variable still resolve.
             if source_resource and not r.startswith("module."):
-                scoped = {s for s in candidates if _module_address(s) == source_scope}
+                scoped = {
+                    s for s in candidates if helpers.module_address(s) == source_scope
+                }
                 if scoped:
                     candidates = scoped
             matching.extend(candidates)
 
     return matching
-
-
-def _module_address(node: str) -> str:
-    """The module instance a node sits in, keys included; "" at the top level.
-
-    ``module.per_team["a"].aws_s3_bucket.this`` -> ``module.per_team["a"]``
-    """
-    parts = helpers._address_parts(node)
-    scope = []
-    while len(parts) > 2 and parts[0] == "module":
-        scope.extend(parts[:2])
-        parts = parts[2:]
-    return ".".join(scope)
 
 
 def _should_reverse_arrow(
