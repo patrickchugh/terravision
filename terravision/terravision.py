@@ -708,9 +708,11 @@ def graphdata(
         graphmaker.simplify_graphdict(tfdata)
     click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
+    # Each node in its innermost container only, as the Graph Format says
+    exported = graphmaker.innermost_listings(tfdata)
     click.echo(
         json.dumps(
-            tfdata["graphdict"] if not show_services else unique,
+            exported if not show_services else unique,
             indent=4,
             sort_keys=True,
         )
@@ -721,7 +723,7 @@ def graphdata(
     click.echo(f"\nExporting graph object into file {outfile}")
     with open(outfile, "w") as f:
         json.dump(
-            tfdata["graphdict"] if not show_services else unique,
+            exported if not show_services else unique,
             f,
             indent=4,
             sort_keys=True,

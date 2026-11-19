@@ -2971,3 +2971,48 @@ def simplify_graphdict(tfdata: Dict[str, Any]) -> None:
             for child in graphdict[shared_group]
             if not _should_remove(child) and _is_shared_service(child)
         ]
+
+
+def innermost_listings(tfdata: Dict[str, Any]) -> Dict[str, List[str]]:
+    """The graph to export, with each node listed only in its innermost box.
+
+    A resource with a vpc_id that sits in a subnet is linked from both its
+    subnet and its VPC. Drawing puts it in the subnet, but the Graph Format
+    says a node sits in one container, so exported graphs failed their own
+    validator (issue #232). Drop a node from any container that holds,
+    directly or through nested boxes, another container listing the same
+    node. The graph drawn from Terraform is not changed.
+
+    Returns:
+        A copy of tfdata["graphdict"]
+    """
+    graph = {node: list(links) for node, links in tfdata["graphdict"].items()}
+    group_types = set(_load_config_constants(tfdata).get("GROUP_NODES", []))
+
+    def is_group(node: str) -> bool:
+        return helpers.get_no_module_name(node).split(".")[0] in group_types
+
+    parents: Dict[str, List[str]] = {}
+    for src, targets in graph.items():
+        if is_group(src):
+            for target in targets:
+                parents.setdefault(target, []).append(src)
+
+    def boxes_around(box: str) -> Set[str]:
+        seen: Set[str] = set()
+        pending = list(parents.get(box, []))
+        while pending:
+            outer = pending.pop()
+            if outer not in seen:
+                seen.add(outer)
+                pending.extend(parents.get(outer, []))
+        return seen
+
+    for node, boxes in parents.items():
+        if len(boxes) < 2:
+            continue
+        outer = [b for b in boxes if any(b in boxes_around(o) for o in boxes)]
+        if len(outer) < len(boxes):
+            for box in outer:
+                graph[box] = [link for link in graph[box] if link != node]
+    return graph

@@ -557,11 +557,15 @@ def _write_graph(tfdata: Dict[str, Any], outdir: Path, name: str, source: str) -
     """
     import json
 
+    import modules.graphmaker as graphmaker
+
     target = outdir / f"{name}.tvg.json"
     src = Path(source)
     if not (src.is_file() and src.resolve() == target.resolve()):
+        # Each node in its innermost container only, as the Graph Format says
+        graph = graphmaker.innermost_listings(tfdata) if tfdata.get("graphdict") else {}
         with open(target, "w", encoding="utf-8") as fh:
-            json.dump(tfdata.get("graphdict", {}), fh, indent=2, sort_keys=True)
+            json.dump(graph, fh, indent=2, sort_keys=True)
     _RENDERED.add(target.resolve())
     return target
 
