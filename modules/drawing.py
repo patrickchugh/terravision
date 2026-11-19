@@ -167,7 +167,7 @@ def _load_provider_resources(provider: str) -> None:
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
     # Import all submodules from the provider package
     try:
@@ -196,7 +196,7 @@ def _load_provider_resources(provider: str) -> None:
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
 
 # Module-level constants that get set per-provider in render_diagram
@@ -1909,7 +1909,7 @@ def _build_diagram(
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
     # Add title as a node at the top (positioned by gvpr for all providers)
     setcluster(myDiagram)

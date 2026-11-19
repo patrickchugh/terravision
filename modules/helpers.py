@@ -1553,7 +1553,7 @@ def replace_variables(
                         click.echo(
                             "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter or setting a TF_VAR env variable\n"
                         )
-                        exit()
+                        exit(1)
                     replaced_vartext = replaced_vartext.replace(
                         "${" + varstring + "}", str(replacement_value)
                     )
@@ -2864,7 +2864,7 @@ def check_terraform_version() -> None:
                     bold=True,
                 )
             )
-            exit()
+            exit(1)
     except (subprocess.CalledProcessError, IndexError, FileNotFoundError) as e:
         click.echo(
             click.style(
@@ -2873,7 +2873,7 @@ def check_terraform_version() -> None:
                 bold=True,
             )
         )
-        exit()
+        exit(1)
 
 
 _WSL_DETECTED: Optional[bool] = None
