@@ -5,6 +5,7 @@ processing, variable replacement, graph operations, and Terraform-specific
 data extraction and transformation.
 """
 
+import html
 import ipaddress
 import json
 import os
@@ -1527,9 +1528,40 @@ def node_label(name: str, tfdata: Dict[str, Any], is_group: bool = False) -> str
         text = str(custom).strip()
         if text:
             if is_group:
-                return text
-            return _fit_to_card(text, provider=get_provider_for_resource(name))
-    return pretty_name(name, is_group=is_group)
+                return dot_text(text)
+            return dot_text(
+                _fit_to_card(text, provider=get_provider_for_resource(name))
+            )
+    return dot_text(pretty_name(name, is_group=is_group))
+
+
+_IMAGE_ROOT = Path(__file__).resolve().parents[1] / "resource_images"
+
+
+def is_bundled_image(path: str) -> bool:
+    """Whether ``path`` is an icon file shipped with TerraVision.
+
+    SVG, HTML and draw.io output embed the icons a diagram references, so
+    the files stay self-contained. Only TerraVision's own images may be
+    read for that: a link added through a label could otherwise name any
+    file the user can read, and its content would be copied into the output.
+    """
+    try:
+        resolved = Path(path).resolve()
+    except (OSError, ValueError):
+        return False
+    return resolved.is_file() and resolved.is_relative_to(_IMAGE_ROOT)
+
+
+def dot_text(text: str) -> str:
+    """Text from an annotation or the plan, made safe to place in a label.
+
+    Labels go into Graphviz HTML tables, and a plain label that starts with
+    < and ends with > is written unquoted, as HTML. Unescaped, a label could
+    close the table and add attributes of its own, such as a link. Graphviz
+    shows &amp; &lt; &gt; as the characters in plain labels too.
+    """
+    return html.escape(str(text), quote=False)
 
 
 def replace_variables(

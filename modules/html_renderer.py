@@ -494,6 +494,9 @@ def _get_instance_info(node_name: str, tfdata: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
+_PLACEHOLDER = re.compile(r"\{\{(TITLE|FAVICON|D3_JS|SVG_CONTENT|METADATA_JSON)\}\}")
+
+
 def _assemble_html(
     svg_string: str,
     metadata_json: str,
@@ -518,15 +521,25 @@ def _assemble_html(
     with open(vendor_dir / "d3.min.js", "r", encoding="utf-8") as f:
         d3_js = f.read()
 
-    # Replace placeholders. The title comes from user annotations and the
-    # metadata JSON can contain decoded user_data, so both must be escaped:
-    # json.dumps does not escape "</script>", which would terminate the
-    # embedding <script> block and inject markup into the page.
-    html = html.replace("{{TITLE}}", _html_escape(title))
-    html = html.replace("{{FAVICON}}", _favicon_data_uri())
-    html = html.replace("{{D3_JS}}", d3_js)
-    html = html.replace("{{SVG_CONTENT}}", svg_string)
-    html = html.replace("{{METADATA_JSON}}", metadata_json.replace("</", "<\\/"))
+    # The title comes from annotations and the metadata from the plan, so
+    # neither may become markup. JSON strings may hold < > &, which
+    # json.dumps leaves alone; as \u escapes they stay the same values for
+    # the script but can never close the <script> block.
+    safe_json = (
+        metadata_json.replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+    values = {
+        "TITLE": _html_escape(title),
+        "FAVICON": _favicon_data_uri(),
+        "D3_JS": d3_js,
+        "SVG_CONTENT": svg_string,
+        "METADATA_JSON": safe_json,
+    }
+    # One pass: text put into the page is never searched for placeholders
+    # again, so a title or label holding "{{METADATA_JSON}}" stays literal.
+    html = _PLACEHOLDER.sub(lambda m: values[m.group(1)], html)
 
     # Write output file
     output_path = str(Path.cwd() / outfile)
