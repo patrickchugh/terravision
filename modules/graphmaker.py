@@ -2517,6 +2517,14 @@ def handle_count_resources(
     constants = _load_config_constants(tfdata)
     SHARED_SERVICES = constants["SHARED_SERVICES"]
 
+    # A count read wrongly multiplies here into a graph no one can draw and
+    # that takes hours to build, so stop first (TV_MAX_NODES, issue #294)
+    helpers.check_node_budget(
+        {r: _get_instance_count(tfdata["meta_data"][r]) for r in multi_resources},
+        tfdata,
+        "making count and for_each copies",
+    )
+
     # Process each resource with count attribute
     for resource in multi_resources:
         # Determine number of instances to create
