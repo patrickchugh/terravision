@@ -1014,6 +1014,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#run-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2532,6 +2543,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#run-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3435,6 +3457,30 @@ in an HTML page.</p>
 </span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># This creates tfdata.json which can be reused</span>
 </span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>terravision<span class="w"> </span>draw<span class="w"> </span>--source<span class="w"> </span>tfdata.json<span class="w"> </span>--format<span class="w"> </span>svg
 </span></code></pre></div>
+<h3 id="run-limits">Run Limits<a class="headerlink" href="#run-limits" title="Permanent link">¶</a></h3>
+<p>A run that has gone wrong stops with an error instead of working for hours. Two environment variables set the limits:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>What it limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TV_MAX_NODES</code></td>
+<td><code>10000</code></td>
+<td>Nodes the diagram may grow to when <code>count</code> and <code>for_each</code> resources are copied. A diagram that size is unreadable, so going over it almost always means a count was read wrongly</td>
+</tr>
+<tr>
+<td><code>TV_TIMEOUT_MINUTES</code></td>
+<td><code>20</code></td>
+<td>Minutes TerraVision may spend building the graph once Terraform has finished. Terraform's own <code>init</code> and <code>plan</code> are not counted</td>
+</tr>
+</tbody>
+</table>
+<p>Set either to <code>0</code> to remove the limit. When a run stops, rerun it with <code>--debug</code> and attach the <code>tfdata.json</code> it writes to an issue, after replacing sensitive values (account IDs, domains, IP ranges, resource names) the same way everywhere.</p>
 <hr>
 <h2 id="output-formats">Output Formats<a class="headerlink" href="#output-formats" title="Permanent link">¶</a></h2>
 <p>TerraVision supports all output formats provided by Graphviz. Use the <code>--format</code> option to specify your desired format.</p>
