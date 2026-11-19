@@ -2549,6 +2549,15 @@ def is_graph_json_source(source: str) -> bool:
     return source.lower().endswith(".json")
 
 
+def needs_terraform(source: str, planfile: str = "") -> bool:
+    """Whether a run will call Terraform (or OpenTofu), so it must be installed.
+
+    A graph or tfdata JSON source is loaded directly, and a pre-generated
+    plan (--planfile with --graphfile) is read from its files (issue #268).
+    """
+    return not (is_graph_json_source(source) or planfile)
+
+
 def is_graph_file_source(source: str) -> bool:
     """Return True when ``source`` is a plain graph file rather than a replay.
 
