@@ -787,8 +787,11 @@ def handle_numbered_nodes(
         Updated meta_data with numbered node information
     """
     # Determine count by number of objects created by Terraform
+    # Cut at the resource's own index, not the first "[": in
+    # module.per_team["a"].x.y[0] that would match every resource of the
+    # module call and overwrite their metadata with this one's (issue #294)
     all_matching_list = helpers.find_all_resources_containing(
-        tfdata["node_list"], resource_node.split("[")[0] + "["
+        tfdata["node_list"], helpers.without_own_index(resource_node) + "["
     )
     if not all_matching_list:
         return meta_data
@@ -890,7 +893,9 @@ def merge_metadata(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             )
             if resource_node in tfdata["original_metadata"]:
                 omd = dict(tfdata["original_metadata"][resource_node])
-                md = item[resource_type][actual_key]
+                # Instances of one module call share this .tf element, so
+                # give each its own copy of the nested blocks
+                md = copy.deepcopy(item[resource_type][actual_key])
                 if md.get("count"):
                     md["original_count"] = str(md["count"])
                 omd.update(md)

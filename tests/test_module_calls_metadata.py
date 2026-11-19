@@ -108,3 +108,51 @@ def test_only_the_most_specific_module_folder_counts():
 )
 def test_without_module_keys(node, expected):
     assert interpreter.without_module_keys(node) == expected
+
+
+@pytest.mark.parametrize(
+    "node, expected",
+    [
+        (
+            'module.per_team["a"].aws_s3_bucket_lifecycle_configuration.rule[0]~1',
+            'module.per_team["a"].aws_s3_bucket_lifecycle_configuration.rule',
+        ),
+        (
+            'module.per_team["a.b"].aws_s3_bucket.this',
+            'module.per_team["a.b"].aws_s3_bucket.this',
+        ),
+        ('aws_s3_bucket.this["x.y"]~2', "aws_s3_bucket.this"),
+        (
+            "module.app[0].module.db.aws_db_instance.this[1]",
+            "module.app[0].module.db.aws_db_instance.this",
+        ),
+    ],
+)
+def test_without_own_index_keeps_module_keys(node, expected):
+    from modules import helpers
+
+    assert helpers.without_own_index(node) == expected
+
+
+def test_count_copies_stay_inside_their_resource():
+    """Issue #294 follow-up: in a for_each module call, a count resource's
+    metadata was copied onto every resource of every instance, because its
+    address was cut at the first "[", which belongs to the module key."""
+    lifecycle = 'module.per_team["a"].aws_s3_bucket_lifecycle_configuration.rule[0]'
+    nodes = [
+        lifecycle,
+        'module.per_team["a"].aws_s3_bucket.this',
+        'module.per_team["a"].aws_dynamodb_table.lock',
+        'module.per_team["b"].aws_s3_bucket.this',
+        'module.per_team["b"].aws_s3_bucket_lifecycle_configuration.rule[0]',
+    ]
+    meta_data = {
+        lifecycle: {"bucket": "${aws_s3_bucket.this.id}", "count": 1},
+        'module.per_team["a"].aws_dynamodb_table.lock': {"name": "lock"},
+    }
+    meta_data = interpreter.handle_numbered_nodes(
+        lifecycle, {"node_list": nodes}, meta_data
+    )
+    assert set(meta_data) == {lifecycle, 'module.per_team["a"].aws_dynamodb_table.lock'}
+    assert meta_data['module.per_team["a"].aws_dynamodb_table.lock'] == {"name": "lock"}
+    assert meta_data[lifecycle]["count"] == 1

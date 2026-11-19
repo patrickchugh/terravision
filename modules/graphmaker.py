@@ -1117,9 +1117,7 @@ def resolve_module_output_to_resources(
 def _get_base_node_name(node: str, tfdata: Dict[str, Any]) -> str:
     """Determine base node name by stripping suffixes."""
     if node not in tfdata["meta_data"].keys():
-        nodename = node.split("~")[0]
-        if "[" in nodename:
-            nodename = nodename.split("[")[0]
+        nodename = helpers.without_own_index(node)
     else:
         nodename = node
     return nodename
@@ -1682,8 +1680,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             res = resource.split("~")[0]
         else:
             res = resource
-        if "[" in res:
-            res = res.split("[")[0]
+        res = helpers.without_own_index(res)
         if tfdata["meta_data"].get(res):
             resdata = copy.deepcopy(tfdata["meta_data"].get(res))
         elif tfdata["meta_data"].get(resource):

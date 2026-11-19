@@ -1,0 +1,92 @@
+{
+  "aws_group.aws_dynamodb_table": [
+    "module.per_team[\"alpha\"].aws_dynamodb_table.terraform_state_lock",
+    "module.per_team[\"beta\"].aws_dynamodb_table.terraform_state_lock",
+    "module.per_team[\"gamma\"].aws_dynamodb_table.terraform_state_lock",
+    "module.platform.aws_dynamodb_table.terraform_state_lock",
+    "module.shared.aws_dynamodb_table.terraform_state_lock"
+  ],
+  "aws_group.shared_services": [
+    "aws_iam_group.of_services"
+  ],
+  "module.per_team[\"alpha\"].aws_dynamodb_table.terraform_state_lock": [],
+  "module.per_team[\"alpha\"].aws_s3_bucket.tfstate_bucket": [],
+  "module.per_team[\"alpha\"].aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1": [
+    "module.per_team[\"alpha\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"alpha\"].aws_s3_bucket_public_access_block.tfstate_bucket_public_access": [
+    "module.per_team[\"alpha\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"alpha\"].aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption": [
+    "module.per_team[\"alpha\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"alpha\"].aws_s3_bucket_versioning.tfstate_bucket_versioning": [
+    "module.per_team[\"alpha\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"beta\"].aws_dynamodb_table.terraform_state_lock": [],
+  "module.per_team[\"beta\"].aws_s3_bucket.tfstate_bucket": [],
+  "module.per_team[\"beta\"].aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1": [
+    "module.per_team[\"beta\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"beta\"].aws_s3_bucket_public_access_block.tfstate_bucket_public_access": [
+    "module.per_team[\"beta\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"beta\"].aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption": [
+    "module.per_team[\"beta\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"beta\"].aws_s3_bucket_versioning.tfstate_bucket_versioning": [
+    "module.per_team[\"beta\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"gamma\"].aws_dynamodb_table.terraform_state_lock": [],
+  "module.per_team[\"gamma\"].aws_s3_bucket.tfstate_bucket": [],
+  "module.per_team[\"gamma\"].aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1": [
+    "module.per_team[\"gamma\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"gamma\"].aws_s3_bucket_public_access_block.tfstate_bucket_public_access": [
+    "module.per_team[\"gamma\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"gamma\"].aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption": [
+    "module.per_team[\"gamma\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.per_team[\"gamma\"].aws_s3_bucket_versioning.tfstate_bucket_versioning": [
+    "module.per_team[\"gamma\"].aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.platform.aws_dynamodb_table.terraform_state_lock": [],
+  "module.platform.aws_s3_bucket.tfstate_bucket": [
+    "module.platform.aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1",
+    "module.platform.aws_s3_bucket_public_access_block.tfstate_bucket_public_access",
+    "module.platform.aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption",
+    "module.platform.aws_s3_bucket_versioning.tfstate_bucket_versioning"
+  ],
+  "module.platform.aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1": [
+    "module.platform.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.platform.aws_s3_bucket_public_access_block.tfstate_bucket_public_access": [
+    "module.platform.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.platform.aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption": [
+    "module.platform.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.platform.aws_s3_bucket_versioning.tfstate_bucket_versioning": [
+    "module.platform.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.shared.aws_dynamodb_table.terraform_state_lock": [],
+  "module.shared.aws_s3_bucket.tfstate_bucket": [
+    "module.shared.aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1",
+    "module.shared.aws_s3_bucket_public_access_block.tfstate_bucket_public_access",
+    "module.shared.aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption",
+    "module.shared.aws_s3_bucket_versioning.tfstate_bucket_versioning"
+  ],
+  "module.shared.aws_s3_bucket_lifecycle_configuration.tfstate_bucket_lifecycle[0]~1": [
+    "module.shared.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.shared.aws_s3_bucket_public_access_block.tfstate_bucket_public_access": [
+    "module.shared.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.shared.aws_s3_bucket_server_side_encryption_configuration.tfstate_bucket_encryption": [
+    "module.shared.aws_s3_bucket.tfstate_bucket"
+  ],
+  "module.shared.aws_s3_bucket_versioning.tfstate_bucket_versioning": [
+    "module.shared.aws_s3_bucket.tfstate_bucket"
+  ]
+}

@@ -399,6 +399,19 @@ def _address_parts(address: str) -> List[str]:
     return parts
 
 
+def without_own_index(node: str) -> str:
+    """Drop a resource's own count index or for_each key and its ~N suffix.
+
+    Module keys stay: ``module.per_team["a"].aws_s3_bucket.this[0]~1`` ->
+    ``module.per_team["a"].aws_s3_bucket.this``. Cutting at the first "["
+    instead gave ``module.per_team``, which every resource of every instance
+    of that module call starts with (issue #294).
+    """
+    parts = _address_parts(node.split("~")[0])
+    parts[-1] = parts[-1].split("[", 1)[0]
+    return ".".join(parts)
+
+
 _CIDR_ATTRIBUTES = {
     "aws_vpc": "cidr_block",
     "aws_subnet": "cidr_block",

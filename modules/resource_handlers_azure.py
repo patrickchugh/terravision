@@ -1483,7 +1483,7 @@ def _referenced_nodes(node: str, attribute: str, tfdata: Dict[str, Any]) -> List
     references = set(_REFERENCE.findall(text))
     found = []
     for candidate in tfdata["graphdict"]:
-        base = candidate.split("~")[0].split("[")[0]
+        base = helpers.without_own_index(candidate)
         if candidate != node and any(
             base == ref or base.endswith("." + ref) for ref in references
         ):
