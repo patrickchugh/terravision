@@ -615,7 +615,7 @@ The constants are duplicated across the three provider configs (`cloud_config_aw
 | Variable | Default | Description |
 |---|---|---|
 | `TV_AI_TEMPERATURE` | `0` | Sampling temperature. Set it empty (`TV_AI_TEMPERATURE=`) or to `none` to leave it out of the request, for models that reject it |
-| `TV_AI_MAX_TOKENS` | `10000` | Output token budget (`maxTokens` on Bedrock, `max_tokens` on REST APIs). Raise it for reasoning models, which spend part of it thinking; lower it for models with a smaller output limit |
+| `TV_AI_MAX_TOKENS` | `10000` | Output token budget (`maxTokens` on Bedrock, `max_tokens` on REST APIs, or `max_completion_tokens` when the model asks for it, as OpenAI's GPT-5 and o-series models do). Raise it for reasoning models, which spend part of it thinking; lower it for models with a smaller output limit |
 
 Some models do not accept a temperature at all, such as OpenAI's GPT models on Bedrock. When Bedrock or a REST endpoint rejects the request for that reason, TerraVision says so and retries once without it, so these models work without any setting.
 

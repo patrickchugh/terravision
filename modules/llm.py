@@ -696,6 +696,26 @@ def _stream_bedrock_text(prompt: str) -> str:
     return full_response
 
 
+def _raise_with_body(response: Any) -> None:
+    """raise_for_status, keeping what the server said about the error.
+
+    Without the body a refusal shows only as "400 Client Error: Bad Request",
+    and the server's explanation (which parameter, what to use instead)
+    never reaches the user.
+    """
+    if response.status_code < 400:
+        return
+    detail = " ".join((response.text or "").split())[:500]
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        if not detail or detail in str(exc):
+            raise
+        raise requests.HTTPError(
+            f"{exc}. The server said: {detail}", response=response
+        ) from None
+
+
 def _stream_restapi_text(prompt: str) -> str:
     """Stream a chat completion from any OpenAI-compatible endpoint.
 
@@ -732,15 +752,30 @@ def _stream_restapi_text(prompt: str) -> str:
         )
 
     response = _post()
-    if (
-        response.status_code == 400
-        and "temperature" in payload
-        and _rejects_temperature(response.text)
-    ):
-        _note_temperature_dropped()
-        payload.pop("temperature")
+    # A model can refuse the temperature and max_tokens one at a time, so
+    # allow a retry for each. OpenAI's GPT-5 and o-series models take
+    # max_completion_tokens instead of max_tokens (issue #289).
+    for _ in range(2):
+        if response.status_code != 400:
+            break
+        if "temperature" in payload and _rejects_temperature(response.text):
+            _note_temperature_dropped()
+            payload.pop("temperature")
+        elif "max_tokens" in payload and "max_completion_tokens" in (
+            response.text or ""
+        ):
+            click.echo(
+                click.style(
+                    "  The model takes max_completion_tokens instead of "
+                    "max_tokens; retrying with it.",
+                    fg="yellow",
+                )
+            )
+            payload["max_completion_tokens"] = payload.pop("max_tokens")
+        else:
+            break
         response = _post()
-    response.raise_for_status()
+    _raise_with_body(response)
 
     full_response = ""
     for raw_line in response.iter_lines(decode_unicode=True):
