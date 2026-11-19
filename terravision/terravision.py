@@ -157,22 +157,33 @@ def _enrich_graph_data(
     Returns:
         Enriched tfdata dictionary
     """
-    tfdata = interpreter.prefix_module_names(tfdata)
-    tfdata = interpreter.resolve_all_variables(tfdata, debug, already_processed)
-    tfdata = resource_handlers.handle_special_cases(tfdata)
-    tfdata = graphmaker.inject_data_source_nodes(tfdata)
-    tfdata = graphmaker.add_relations(tfdata)
-    tfdata = graphmaker.consolidate_nodes(tfdata)
-    tfdata = annotations.add_annotations(tfdata)
-    tfdata = graphmaker.detect_and_set_counts(tfdata)
-    tfdata = graphmaker.handle_special_resources(tfdata)
-    tfdata = graphmaker.handle_variants(tfdata)
-    tfdata = graphmaker.create_multiple_resources(tfdata)
-    tfdata = graphmaker.cleanup_cross_subnet_connections(tfdata)
-    tfdata = graphmaker.reverse_relations(tfdata)
-    tfdata = helpers.find_bidirectional_links(tfdata)
-    tfdata = resource_handlers.match_resources(tfdata)
-    tfdata = graphmaker.place_annotation_groups(tfdata)
+    steps = [
+        interpreter.prefix_module_names,
+        lambda t: interpreter.resolve_all_variables(t, debug, already_processed),
+        resource_handlers.handle_special_cases,
+        graphmaker.inject_data_source_nodes,
+        graphmaker.add_relations,
+        graphmaker.consolidate_nodes,
+        annotations.add_annotations,
+        graphmaker.detect_and_set_counts,
+        graphmaker.handle_special_resources,
+        graphmaker.handle_variants,
+        graphmaker.create_multiple_resources,
+        graphmaker.cleanup_cross_subnet_connections,
+        graphmaker.reverse_relations,
+        helpers.find_bidirectional_links,
+        resource_handlers.match_resources,
+        graphmaker.place_annotation_groups,
+    ]
+    # A run that has gone wrong stops with an error naming the step, instead
+    # of working for hours (TV_TIMEOUT_MINUTES)
+    progress: Dict[str, Any] = {"tfdata": tfdata}
+    with helpers.time_limit(progress):
+        for step in steps:
+            name = getattr(step, "__name__", "")
+            progress["step"] = "resolve_all_variables" if name == "<lambda>" else name
+            tfdata = step(tfdata)
+            progress["tfdata"] = tfdata
 
     return tfdata
 

@@ -237,6 +237,13 @@ def test_help() -> None:
             "multi-call-module-tfdata.json",
             "expected-multi-call-module.json",
         ),
+        # A state-backend module with a count resource, called twice plainly
+        # and once with for_each (issue #294 follow-up): the count resource's
+        # metadata stays its own, so each instance gets only its four links.
+        (
+            "module-count-in-foreach-tfdata.json",
+            "expected-module-count-in-foreach.json",
+        ),
     ],
 )
 def test_graphdata_output(

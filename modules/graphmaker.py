@@ -1117,9 +1117,7 @@ def resolve_module_output_to_resources(
 def _get_base_node_name(node: str, tfdata: Dict[str, Any]) -> str:
     """Determine base node name by stripping suffixes."""
     if node not in tfdata["meta_data"].keys():
-        nodename = node.split("~")[0]
-        if "[" in nodename:
-            nodename = nodename.split("[")[0]
+        nodename = helpers.without_own_index(node)
     else:
         nodename = node
     return nodename
@@ -1682,8 +1680,7 @@ def consolidate_nodes(tfdata: Dict[str, Any]) -> Dict[str, Any]:
             res = resource.split("~")[0]
         else:
             res = resource
-        if "[" in res:
-            res = res.split("[")[0]
+        res = helpers.without_own_index(res)
         if tfdata["meta_data"].get(res):
             resdata = copy.deepcopy(tfdata["meta_data"].get(res))
         elif tfdata["meta_data"].get(resource):
@@ -2519,6 +2516,14 @@ def handle_count_resources(
     # Load provider-specific constants
     constants = _load_config_constants(tfdata)
     SHARED_SERVICES = constants["SHARED_SERVICES"]
+
+    # A count read wrongly multiplies here into a graph no one can draw and
+    # that takes hours to build, so stop first (TV_MAX_NODES, issue #294)
+    helpers.check_node_budget(
+        {r: _get_instance_count(tfdata["meta_data"][r]) for r in multi_resources},
+        tfdata,
+        "making count and for_each copies",
+    )
 
     # Process each resource with count attribute
     for resource in multi_resources:

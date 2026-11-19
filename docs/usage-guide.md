@@ -353,6 +353,17 @@ terravision draw --source ./path-to-your-terraform --debug
 terravision draw --source tfdata.json --format svg
 ```
 
+### Run Limits
+
+A run that has gone wrong stops with an error instead of working for hours. Two environment variables set the limits:
+
+| Variable | Default | What it limits |
+|---|---|---|
+| `TV_MAX_NODES` | `10000` | Nodes the diagram may grow to when `count` and `for_each` resources are copied. A diagram that size is unreadable, so going over it almost always means a count was read wrongly |
+| `TV_TIMEOUT_MINUTES` | `20` | Minutes TerraVision may spend building the graph once Terraform has finished. Terraform's own `init` and `plan` are not counted |
+
+Set either to `0` to remove the limit. When a run stops, rerun it with `--debug` and attach the `tfdata.json` it writes to an issue, after replacing sensitive values (account IDs, domains, IP ranges, resource names) the same way everywhere.
+
 ---
 
 ## Output Formats

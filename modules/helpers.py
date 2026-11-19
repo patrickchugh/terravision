@@ -155,6 +155,111 @@ class TerravisionError(Exception):
         self.tfdata = tfdata
 
 
+# Run limits, so a run that has gone wrong stops with an error instead of
+# working for hours (issue #294: count copies multiplied into tens of
+# thousands of nodes and a draw never finished).
+DEFAULT_MAX_NODES = 10000
+DEFAULT_TIMEOUT_MINUTES = 20
+STALL_ADVICE = (
+    "Rerun with --debug, which writes tfdata.json to the current folder, and "
+    "attach it to an issue at https://github.com/patrickchugh/terravision/issues "
+    "after replacing sensitive values (account IDs, domains, IP ranges, names)."
+)
+
+
+def _env_number(name: str, default: float) -> float:
+    """A numeric environment variable, or the default when unset or invalid."""
+    try:
+        return float(os.environ.get(name, default))
+    except ValueError:
+        return default
+
+
+def max_graph_nodes() -> int:
+    """Most nodes a diagram may grow to (TV_MAX_NODES; 0 means no limit)."""
+    return int(_env_number("TV_MAX_NODES", DEFAULT_MAX_NODES))
+
+
+def timeout_minutes() -> float:
+    """Longest the graph-building steps may run (TV_TIMEOUT_MINUTES; 0 = none)."""
+    return _env_number("TV_TIMEOUT_MINUTES", DEFAULT_TIMEOUT_MINUTES)
+
+
+def check_node_budget(
+    planned: Dict[str, int], tfdata: Dict[str, Any], step: str
+) -> None:
+    """Stop before a step makes more nodes than any diagram can show.
+
+    Args:
+        planned: Nodes the step is about to add, per resource
+        tfdata: Terraform data, attached to the error for the --debug dump
+        step: What the step does, for the message
+    """
+    limit = max_graph_nodes()
+    total = len(tfdata.get("graphdict", {})) + sum(planned.values())
+    if limit <= 0 or total <= limit:
+        return
+    largest = sorted(planned.items(), key=lambda item: -item[1])[:5]
+    listing = "\n".join(f"    {name}: {count}" for name, count in largest)
+    raise TerravisionError(
+        f"Stopped: {step} would make the diagram {total} nodes, over the limit "
+        f"of {limit} (TV_MAX_NODES). The largest counts:\n{listing}\n"
+        f"This usually means TerraVision read a count wrongly. {STALL_ADVICE}",
+        tfdata,
+    )
+
+
+class time_limit:
+    """Stop the steps inside the block with an error once they run too long.
+
+    A timer interrupts the main thread, the way Ctrl+C would, and the
+    interruption becomes a TerravisionError naming the step that was running
+    (``progress["step"]``). Off outside the main thread, where Python cannot
+    interrupt, and when TV_TIMEOUT_MINUTES is 0.
+    """
+
+    def __init__(self, progress: Dict[str, Any]) -> None:
+        self.progress = progress
+        self.minutes = timeout_minutes()
+        self.timer: Optional[Any] = None
+        self.fired = False
+        self.active = False
+
+    def __enter__(self) -> "time_limit":
+        import threading
+
+        if self.minutes > 0 and threading.current_thread() is threading.main_thread():
+            self.lock = threading.Lock()
+            self.active = True
+            self.timer = threading.Timer(self.minutes * 60, self._fire)
+            self.timer.daemon = True
+            self.timer.start()
+        return self
+
+    def _fire(self) -> None:
+        import _thread
+
+        with self.lock:
+            if self.active:
+                self.fired = True
+                _thread.interrupt_main()
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        if self.timer is None:
+            return False
+        with self.lock:
+            self.active = False
+        self.timer.cancel()
+        if exc_type is KeyboardInterrupt and self.fired:
+            minutes = f"{self.minutes:g}"
+            raise TerravisionError(
+                f"Stopped: step '{self.progress.get('step')}' was still running "
+                f"after {minutes} minutes (TV_TIMEOUT_MINUTES). {STALL_ADVICE}",
+                self.progress.get("tfdata"),
+            ) from None
+        return False
+
+
 def export_tfdata(tfdata: Dict[str, Any]) -> None:
     """Export Terraform data dictionary to tfdata.json for debugging.
 
@@ -397,6 +502,19 @@ def _address_parts(address: str) -> List[str]:
             current.append(char)
     parts.append("".join(current))
     return parts
+
+
+def without_own_index(node: str) -> str:
+    """Drop a resource's own count index or for_each key and its ~N suffix.
+
+    Module keys stay: ``module.per_team["a"].aws_s3_bucket.this[0]~1`` ->
+    ``module.per_team["a"].aws_s3_bucket.this``. Cutting at the first "["
+    instead gave ``module.per_team``, which every resource of every instance
+    of that module call starts with (issue #294).
+    """
+    parts = _address_parts(node.split("~")[0])
+    parts[-1] = parts[-1].split("[", 1)[0]
+    return ".".join(parts)
 
 
 _CIDR_ATTRIBUTES = {
