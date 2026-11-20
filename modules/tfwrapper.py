@@ -666,6 +666,30 @@ def _build_gvid_table(tfdata):
     return gvid_table
 
 
+def _in_same_instance(graph_name: str, node: str) -> str:
+    """Name a terraform graph entry as it is in the node's module instance.
+
+    terraform graph lists ``module.per_team.aws_s3_bucket.this`` once for
+    every instance of the call, while the plan names the instances
+    ``module.per_team["a"].aws_s3_bucket.this``. An edge from
+    ``module.per_team["a"]``'s versioning applies to ``["a"]``'s bucket, not
+    to ``["b"]``'s. Other names are returned unchanged.
+    """
+    scope = helpers.module_address(node)
+    if "[" not in scope:
+        return graph_name
+    unkeyed = _without_keys(scope)
+    if graph_name.startswith(unkeyed + "."):
+        return scope + graph_name[len(unkeyed) :]
+    return graph_name
+
+
+def _without_keys(address: str) -> str:
+    """``module.a["x"].module.b[0]`` -> ``module.a.module.b``."""
+    parts = helpers._address_parts(address)
+    return ".".join(p.split("[", 1)[0] for p in parts)
+
+
 def _process_edges(tfdata, gvid_table, reverse_arrow_list):
     """Walk terraform graph edges and populate graphdict connections."""
     for node in dict(tfdata["graphdict"]):
@@ -678,17 +702,18 @@ def _process_edges(tfdata, gvid_table, reverse_arrow_list):
             for connection in tfdata["tfgraph"]["edges"]:
                 head = connection["head"]
                 tail = connection["tail"]
+                if node_id != head:
+                    continue
+                # terraform graph names a resource per module call; the node
+                # may sit in one instance of it (issue #298)
+                tail_name = _in_same_instance(gvid_table[tail], node)
                 # Check if this edge connects to our node
-                if (
-                    node_id == head
-                    and len([k for k in tfdata["graphdict"] if gvid_table[tail] in k])
-                    > 0
-                ):
-                    conn = gvid_table[tail]
+                if len([k for k in tfdata["graphdict"] if tail_name in k]) > 0:
+                    conn = tail_name
                     conn_type = gvid_table[tail].split(".")[0]
                     # Find actual numbered nodes if connection is generic
                     matched_connections = [
-                        k for k in tfdata["graphdict"] if k.startswith(gvid_table[tail])
+                        k for k in tfdata["graphdict"] if k.startswith(tail_name)
                     ]
                     if (
                         conn not in tfdata["graphdict"]
@@ -703,12 +728,12 @@ def _process_edges(tfdata, gvid_table, reverse_arrow_list):
                         if conn not in tfdata["graphdict"].keys():
                             tfdata["graphdict"][conn] = list()
                         # Skip multi-instance resources
-                        if "[" not in conn:
+                        if not helpers.has_own_index(conn):
                             if node not in tfdata["graphdict"][conn]:
                                 tfdata["graphdict"][conn].append(node)
                     # Normal arrow (node points to connection)
                     else:
-                        if "[" not in node:
+                        if not helpers.has_own_index(node):
                             if conn not in tfdata["graphdict"].get(node, []):
                                 tfdata["graphdict"][node].append(conn)
 

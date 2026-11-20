@@ -12,6 +12,7 @@ from modules.plan_resolver import (
     is_hcl_function_suffix,
 )
 import copy
+import sys
 import json
 import os
 import click
@@ -315,7 +316,7 @@ def replace_local_values(
             # No locals defined
             value = helpers.find_replace(localitem, "None", value)
             click.echo(f"    ERROR: Cannot find definition for local var {localitem}")
-            exit()
+            sys.exit(1)
     return value
 
 
@@ -543,7 +544,7 @@ def replace_var_values(
                 click.echo(
                     "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter\n"
                 )
-                exit()
+                sys.exit(1)
     return value
 
 

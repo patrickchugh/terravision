@@ -400,9 +400,9 @@ def _compile(
     import modules.graphmaker as graphmaker
     from terravision.terravision import compile_tfdata, preflight_check
 
-    from modules.helpers import is_graph_json_source
+    from modules.helpers import needs_terraform as _needs_terraform
 
-    needs_terraform = not is_graph_json_source(source)
+    needs_terraform = _needs_terraform(source, planfile)
     _check_binaries(needs_terraform)
     intended_cwd = Path.cwd()
     try:
@@ -557,11 +557,15 @@ def _write_graph(tfdata: Dict[str, Any], outdir: Path, name: str, source: str) -
     """
     import json
 
+    import modules.graphmaker as graphmaker
+
     target = outdir / f"{name}.tvg.json"
     src = Path(source)
     if not (src.is_file() and src.resolve() == target.resolve()):
+        # Each node in its innermost container only, as the Graph Format says
+        graph = graphmaker.innermost_listings(tfdata) if tfdata.get("graphdict") else {}
         with open(target, "w", encoding="utf-8") as fh:
-            json.dump(tfdata.get("graphdict", {}), fh, indent=2, sort_keys=True)
+            json.dump(graph, fh, indent=2, sort_keys=True)
     _RENDERED.add(target.resolve())
     return target
 

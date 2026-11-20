@@ -8,6 +8,7 @@ Replaces the ``graphviz2drawio`` library dependency.
 """
 
 import base64
+import html
 import math
 import os
 import re
@@ -514,7 +515,7 @@ def emit_drawio(
             img_match = re.search(
                 r'<img\b[^>]*?\bsrc="([^"]+)"', raw_label, re.IGNORECASE
             )
-            if not img_match or not os.path.isfile(img_match.group(1)):
+            if not img_match or not helpers.is_bundled_image(img_match.group(1)):
                 continue
             icon_path = img_match.group(1)
             icon_basename = os.path.basename(icon_path)
@@ -1341,7 +1342,7 @@ def _build_cluster_label_style(
                 f"image;aspect=fixed;html=1;points=[];{_LABEL_BESIDE_ICON}"
                 f"fontSize=14;fontColor=#2C2C2C;image={svg_path};"
             )
-        elif os.path.isfile(icon_path):
+        elif helpers.is_bundled_image(icon_path):
             b64 = _encode_icon_base64(icon_path)
             if logo_size:
                 # Logo icon — standalone image, no label text
@@ -1638,7 +1639,13 @@ def _convert_record_to_html(record: str) -> str:
 
 
 def _encode_icon_base64(icon_path: str) -> str:
-    """Read an icon file and return its base64-encoded content."""
+    """Read an icon file and return its base64-encoded content.
+
+    Only TerraVision's own icons are read, so a path that came from a label
+    can never copy another file into the export.
+    """
+    if not helpers.is_bundled_image(icon_path):
+        return ""
     with open(icon_path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
 
@@ -1668,6 +1675,9 @@ def _sanitize_label(label: Optional[str]) -> str:
     if "|{" in text or "|}|" in text:
         text = _convert_record_to_html(text)
         return text
+    # Labels reach the DOT entity-escaped (helpers.dot_text) and Graphviz
+    # shows them decoded, so decode first rather than escape twice
+    text = html.unescape(text)
     # Escape XML specials (ET handles this, but be safe for value= attrs)
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")

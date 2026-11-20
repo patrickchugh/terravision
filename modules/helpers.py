@@ -5,6 +5,7 @@ processing, variable replacement, graph operations, and Terraform-specific
 data extraction and transformation.
 """
 
+import html
 import ipaddress
 import json
 import os
@@ -502,6 +503,28 @@ def _address_parts(address: str) -> List[str]:
             current.append(char)
     parts.append("".join(current))
     return parts
+
+
+def module_address(node: str) -> str:
+    """The module instance a node sits in, keys included; "" at the top level.
+
+    ``module.per_team["a"].aws_s3_bucket.this`` -> ``module.per_team["a"]``
+    """
+    parts = _address_parts(node)
+    scope = []
+    while len(parts) > 2 and parts[0] == "module":
+        scope.extend(parts[:2])
+        parts = parts[2:]
+    return ".".join(scope)
+
+
+def has_own_index(node: str) -> bool:
+    """Whether the resource itself has a count index or for_each key.
+
+    ``aws_s3_bucket.this[0]`` does; ``module.per_team["a"].aws_s3_bucket.this``
+    does not, since that key belongs to the module call.
+    """
+    return "[" in _address_parts(node.split("~")[0])[-1]
 
 
 def without_own_index(node: str) -> str:
@@ -1505,9 +1528,40 @@ def node_label(name: str, tfdata: Dict[str, Any], is_group: bool = False) -> str
         text = str(custom).strip()
         if text:
             if is_group:
-                return text
-            return _fit_to_card(text, provider=get_provider_for_resource(name))
-    return pretty_name(name, is_group=is_group)
+                return dot_text(text)
+            return dot_text(
+                _fit_to_card(text, provider=get_provider_for_resource(name))
+            )
+    return dot_text(pretty_name(name, is_group=is_group))
+
+
+_IMAGE_ROOT = Path(__file__).resolve().parents[1] / "resource_images"
+
+
+def is_bundled_image(path: str) -> bool:
+    """Whether ``path`` is an icon file shipped with TerraVision.
+
+    SVG, HTML and draw.io output embed the icons a diagram references, so
+    the files stay self-contained. Only TerraVision's own images may be
+    read for that: a link added through a label could otherwise name any
+    file the user can read, and its content would be copied into the output.
+    """
+    try:
+        resolved = Path(path).resolve()
+    except (OSError, ValueError):
+        return False
+    return resolved.is_file() and resolved.is_relative_to(_IMAGE_ROOT)
+
+
+def dot_text(text: str) -> str:
+    """Text from an annotation or the plan, made safe to place in a label.
+
+    Labels go into Graphviz HTML tables, and a plain label that starts with
+    < and ends with > is written unquoted, as HTML. Unescaped, a label could
+    close the table and add attributes of its own, such as a link. Graphviz
+    shows &amp; &lt; &gt; as the characters in plain labels too.
+    """
+    return html.escape(str(text), quote=False)
 
 
 def replace_variables(
@@ -1553,7 +1607,7 @@ def replace_variables(
                         click.echo(
                             "Consider passing a valid Terraform .tfvars variable file with the --varfile parameter or setting a TF_VAR env variable\n"
                         )
-                        exit()
+                        exit(1)
                     replaced_vartext = replaced_vartext.replace(
                         "${" + varstring + "}", str(replacement_value)
                     )
@@ -2549,6 +2603,15 @@ def is_graph_json_source(source: str) -> bool:
     return source.lower().endswith(".json")
 
 
+def needs_terraform(source: str, planfile: str = "") -> bool:
+    """Whether a run will call Terraform (or OpenTofu), so it must be installed.
+
+    A graph or tfdata JSON source is loaded directly, and a pre-generated
+    plan (--planfile with --graphfile) is read from its files (issue #268).
+    """
+    return not (is_graph_json_source(source) or planfile)
+
+
 def is_graph_file_source(source: str) -> bool:
     """Return True when ``source`` is a plain graph file rather than a replay.
 
@@ -2864,7 +2927,7 @@ def check_terraform_version() -> None:
                     bold=True,
                 )
             )
-            exit()
+            exit(1)
     except (subprocess.CalledProcessError, IndexError, FileNotFoundError) as e:
         click.echo(
             click.style(
@@ -2873,7 +2936,7 @@ def check_terraform_version() -> None:
                 bold=True,
             )
         )
-        exit()
+        exit(1)
 
 
 _WSL_DETECTED: Optional[bool] = None

@@ -9,7 +9,7 @@ other call. On large roots the extra edges stalled the draw.
 
 import pytest
 
-from modules import graphmaker
+from modules import graphmaker, helpers
 
 BUCKETS = [
     "module.shared.aws_s3_bucket.this",
@@ -77,7 +77,7 @@ def test_explicit_module_reference_is_not_scoped():
     ],
 )
 def test_module_address(node, expected):
-    assert graphmaker._module_address(node) == expected
+    assert helpers.module_address(node) == expected
 
 
 def test_add_relations_links_each_call_to_its_own_bucket():

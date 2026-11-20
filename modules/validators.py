@@ -33,7 +33,7 @@ def validate_source(source: str) -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
     # Check if source looks like a local path (not a URL or JSON file)
     if (
         not helpers.is_graph_json_source(src)
@@ -48,7 +48,7 @@ def validate_source(source: str) -> None:
                 bold=True,
             )
         )
-        sys.exit()
+        sys.exit(1)
 
 
 def validate_planfile(planfile: str) -> dict:

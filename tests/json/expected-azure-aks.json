@@ -26,7 +26,6 @@
   "azurerm_log_analytics_workspace.aks": [],
   "azurerm_resource_group.aks": [
     "azurerm_container_registry.acr",
-    "azurerm_kubernetes_cluster.aks",
     "azurerm_log_analytics_workspace.aks",
     "azurerm_storage_account.aks",
     "azurerm_virtual_network.aks"

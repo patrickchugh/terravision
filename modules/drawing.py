@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Set, Any, Optional
 
 import click
+from graphviz import nohtml
 
 try:
     _TERRAVISION_VERSION = version("terravision")
@@ -167,7 +168,7 @@ def _load_provider_resources(provider: str) -> None:
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
     # Import all submodules from the provider package
     try:
@@ -196,7 +197,7 @@ def _load_provider_resources(provider: str) -> None:
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
 
 # Module-level constants that get set per-provider in render_diagram
@@ -789,7 +790,7 @@ def _make_edge_with_badge(
         _badge_color(colors.get(n, _DEFAULT_BADGE_COLOR)) for n in steps
     )
     if text:
-        edge_kwargs["_edgetext"] = text
+        edge_kwargs["_edgetext"] = nohtml(str(text))
         # The text takes its flow's colour when the flow sets one
         text_color = next(
             (
@@ -1408,7 +1409,7 @@ def handle_group(
     node_label = helpers.node_label(resource, tfdata, is_group=True)
     cidr = helpers.get_cidr_label(resource, tfdata)
     if cidr:
-        node_label = f"{node_label} ({cidr})"
+        node_label = f"{node_label} ({helpers.dot_text(cidr)})"
     group_class = getattr(sys.modules[__name__], resource_type)
     # A badged group carries its badge in the corner of the box rather than
     # as a separate icon inside it
@@ -1909,7 +1910,7 @@ def _build_diagram(
                 bold=True,
             )
         )
-        exit()
+        sys.exit(1)
 
     # Add title as a node at the top (positioned by gvpr for all providers)
     setcluster(myDiagram)
@@ -1919,7 +1920,9 @@ def _build_diagram(
         "fontsize": "56",
         "fontname": "Sans-Serif",
         "fontcolor": "#2D3436",
-        "label": title,
+        # Annotation text: escaped, or a title like '<x> URL="..." y=<z>'
+        # would be written unquoted and add a link to the diagram
+        "label": helpers.dot_text(title),
         **_SIZE_TO_LABEL,
     }
     getattr(sys.modules[__name__], "Node")(**title_style)
@@ -2126,10 +2129,10 @@ def generate_dot(
 def _embed_icons_as_data_uris(text: str, icon_paths: Set[str]) -> str:
     """Replace local icon file paths in text with base64 data URIs.
 
-    Paths that don't exist on disk are left untouched.
+    Paths that are not TerraVision's own icon files are left untouched.
     """
     for icon_path in icon_paths:
-        if os.path.isfile(icon_path):
+        if helpers.is_bundled_image(icon_path):
             with open(icon_path, "rb") as f:
                 icon_data = f.read()
             ext = os.path.splitext(icon_path)[1].lower()

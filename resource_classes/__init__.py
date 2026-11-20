@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from itertools import count as _count
 from typing import Dict, List, Union
-from graphviz import Digraph, Source
+from graphviz import Digraph, Source, nohtml
 import shutil
 import click
 
@@ -633,7 +633,9 @@ class Edge:
                 '<TD BGCOLOR="white"><FONT POINT-SIZE="28" COLOR="#5b9bd5">'
                 f"{_html.escape(str(label))}</FONT></TD></TR></TABLE>>"
             )
-            self._attrs["_edgetext"] = str(label)
+            # nohtml: always quoted, so a label like '<x> URL="..." y=<z>'
+            # stays text rather than adding attributes to the edge
+            self._attrs["_edgetext"] = nohtml(str(label))
             self._attrs["fontsize"] = "28"
             self._attrs["fontcolor"] = "#5b9bd5"
         if color:

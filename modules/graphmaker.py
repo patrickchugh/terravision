@@ -518,7 +518,7 @@ def _find_matching_resources(
     else:
         # Extract Terraform resource references from parameter
         extracted_resources_list = helpers.extract_terraform_resource(normalized_param)
-        source_scope = _module_address(source_resource)
+        source_scope = helpers.module_address(source_resource)
         for r in extracted_resources_list:
             candidates = {
                 s
@@ -531,25 +531,14 @@ def _find_matching_resources(
             # (issue #294). Fall back to all candidates when the instance has
             # none, so references passed in through a variable still resolve.
             if source_resource and not r.startswith("module."):
-                scoped = {s for s in candidates if _module_address(s) == source_scope}
+                scoped = {
+                    s for s in candidates if helpers.module_address(s) == source_scope
+                }
                 if scoped:
                     candidates = scoped
             matching.extend(candidates)
 
     return matching
-
-
-def _module_address(node: str) -> str:
-    """The module instance a node sits in, keys included; "" at the top level.
-
-    ``module.per_team["a"].aws_s3_bucket.this`` -> ``module.per_team["a"]``
-    """
-    parts = helpers._address_parts(node)
-    scope = []
-    while len(parts) > 2 and parts[0] == "module":
-        scope.extend(parts[:2])
-        parts = parts[2:]
-    return ".".join(scope)
 
 
 def _should_reverse_arrow(
@@ -2982,3 +2971,48 @@ def simplify_graphdict(tfdata: Dict[str, Any]) -> None:
             for child in graphdict[shared_group]
             if not _should_remove(child) and _is_shared_service(child)
         ]
+
+
+def innermost_listings(tfdata: Dict[str, Any]) -> Dict[str, List[str]]:
+    """The graph to export, with each node listed only in its innermost box.
+
+    A resource with a vpc_id that sits in a subnet is linked from both its
+    subnet and its VPC. Drawing puts it in the subnet, but the Graph Format
+    says a node sits in one container, so exported graphs failed their own
+    validator (issue #232). Drop a node from any container that holds,
+    directly or through nested boxes, another container listing the same
+    node. The graph drawn from Terraform is not changed.
+
+    Returns:
+        A copy of tfdata["graphdict"]
+    """
+    graph = {node: list(links) for node, links in tfdata["graphdict"].items()}
+    group_types = set(_load_config_constants(tfdata).get("GROUP_NODES", []))
+
+    def is_group(node: str) -> bool:
+        return helpers.get_no_module_name(node).split(".")[0] in group_types
+
+    parents: Dict[str, List[str]] = {}
+    for src, targets in graph.items():
+        if is_group(src):
+            for target in targets:
+                parents.setdefault(target, []).append(src)
+
+    def boxes_around(box: str) -> Set[str]:
+        seen: Set[str] = set()
+        pending = list(parents.get(box, []))
+        while pending:
+            outer = pending.pop()
+            if outer not in seen:
+                seen.add(outer)
+                pending.extend(parents.get(outer, []))
+        return seen
+
+    for node, boxes in parents.items():
+        if len(boxes) < 2:
+            continue
+        outer = [b for b in boxes if any(b in boxes_around(o) for o in boxes)]
+        if len(outer) < len(boxes):
+            for box in outer:
+                graph[box] = [link for link in graph[box] if link != node]
+    return graph

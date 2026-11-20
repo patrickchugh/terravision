@@ -696,8 +696,21 @@ def _handle_registry_url(
         token_env_var = "TF_TOKEN_" + hostname.replace(".", "_").replace("-", "_")
         token = os.environ.get(token_env_var)
 
-        if token:
+        # The token belongs to this host. Discovery may name another one for
+        # modules.v1, and the token must not travel there or in clear text.
+        target = urlparse(domain)
+        same_host = target.scheme == "https" and target.netloc == hostname
+        if token and same_host:
             headers = {"Authorization": "Bearer " + token}
+        elif token:
+            click.echo(
+                click.style(
+                    f"    WARNING: {hostname} names {target.netloc or domain} for "
+                    f"modules; {token_env_var} is only sent to "
+                    f"https://{hostname}, trying anonymous access",
+                    fg="yellow",
+                )
+            )
         else:
             click.echo(
                 click.style(
@@ -844,6 +857,48 @@ def clone_specific_folder(repo_url: str, folder_path: str, destination: str) -> 
     return repo_url
 
 
+def _safe_subfolder(subfolder: str, sourceURL: str) -> str:
+    """The //subfolder of a module source, kept inside the module's folder.
+
+    Terraform refuses a subfolder that climbs out of the package, and so does
+    TerraVision: "//../../.." would otherwise read or copy files from outside
+    the module cache.
+    """
+    if not subfolder:
+        return subfolder
+    cleaned = os.path.normpath(subfolder.replace("\\", "/").lstrip("/"))
+    if cleaned == ".":
+        return ""
+    if cleaned == ".." or cleaned.startswith(("../", "..\\")) or os.path.isabs(cleaned):
+        click.echo(
+            click.style(
+                f"\nERROR: Module source {sourceURL} names a subfolder outside "
+                f"the module: {subfolder}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit(1)
+    return cleaned
+
+
+def _check_git_ref(ref: str, sourceURL: str) -> None:
+    """Stop on a ?ref= that git could read as an option.
+
+    Branch, tag and commit names never start with "-" or hold spaces or
+    control characters.
+    """
+    if ref and (ref.startswith("-") or any(c.isspace() or ord(c) < 32 for c in ref)):
+        click.echo(
+            click.style(
+                f"\nERROR: Module source {sourceURL} has an invalid ref: {ref!r}",
+                fg="red",
+                bold=True,
+            )
+        )
+        exit(1)
+
+
 def clone_files(
     sourceURL: str,
     tempdir: str,
@@ -873,6 +928,8 @@ def clone_files(
     # Parse the URL to extract subfolder before sanitizing
     # This is needed to handle registry modules with subfolders (e.g., module//subfolder)
     githubURL, subfolder, git_tag = get_clone_url(sourceURL, version)
+    subfolder = _safe_subfolder(subfolder, sourceURL)
+    _check_git_ref(git_tag, sourceURL)
 
     # Extract the base URL without subfolder (before //) for cache path generation
     # This ensures that modules with subfolders (e.g., module//subfolder) are cached correctly
@@ -1036,18 +1093,18 @@ def _clone_full_repo(githubURL: str, subfolder: str, tag: str, codepath: str) ->
         shutil.rmtree(codepath, onerror=remove_readonly)
     os.makedirs(codepath, exist_ok=True)
 
-    # Configure clone options
-    options: List[str] = []
-    if tag:
-        options.append("--branch " + tag)
+    # The ref goes to git as one --branch=<ref> argument, so text after a
+    # space in ?ref= can never become an option of its own
+    _check_git_ref(tag, githubURL)
+    options: Dict[str, Any] = {"branch": tag} if tag else {}
 
     # Attempt to clone repository
     try:
         git.Repo.clone_from(
             githubURL,
             str(codepath),
-            multi_options=options,
             progress=CloneProgress(),
+            **options,
         )
     except Exception as e:
         click.echo(f"Git Error: {type(e).__name__}: {str(e)}\n\n")

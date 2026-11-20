@@ -1037,3 +1037,79 @@ def test_restapi_retries_without_a_rejected_temperature(monkeypatch):
     monkeypatch.delenv("TV_AI_TEMPERATURE", raising=False)
     assert llm._stream_restapi_text("prompt") == "ok"
     assert ["temperature" in p for p in sent] == [True, False]
+
+
+class _RestResponse:
+    def __init__(self, status, text, lines=()):
+        self.status_code, self.text, self._lines = status, text, lines
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise llm.requests.HTTPError(f"{self.status_code} Client Error")
+
+    def iter_lines(self, decode_unicode=True):
+        return iter(self._lines)
+
+
+_REST_OK = ['data: {"choices": [{"delta": {"content": "ok"}}]}', "data: [DONE]"]
+_MAX_TOKENS_REFUSED = (
+    '{"error": {"message": "Unsupported parameter: \'max_tokens\' is not '
+    "supported with this model. Use 'max_completion_tokens' instead.\"}}"
+)
+
+
+def _fake_rest(monkeypatch, answer):
+    sent = []
+
+    def fake_post(url, json=None, **kwargs):
+        sent.append(dict(json))
+        return answer(json)
+
+    monkeypatch.setattr(llm.requests, "post", fake_post)
+    monkeypatch.setattr(llm, "_restapi_settings", lambda: ("http://x", "k", "m"))
+    return sent
+
+
+def test_restapi_retries_with_max_completion_tokens(monkeypatch):
+    """Issue #289: GPT-5 and o-series models refuse max_tokens."""
+    sent = _fake_rest(
+        monkeypatch,
+        lambda body: (
+            _RestResponse(400, _MAX_TOKENS_REFUSED)
+            if "max_tokens" in body
+            else _RestResponse(200, "", _REST_OK)
+        ),
+    )
+    monkeypatch.setenv("TV_AI_MAX_TOKENS", "4000")
+    assert llm._stream_restapi_text("prompt") == "ok"
+    assert [("max_tokens" in p, p.get("max_completion_tokens")) for p in sent] == [
+        (True, None),
+        (False, 4000),
+    ]
+
+
+def test_restapi_retries_for_temperature_then_max_tokens(monkeypatch):
+    """A model can refuse both fields, one per answer."""
+
+    def answer(body):
+        if "temperature" in body:
+            return _RestResponse(400, '{"error": "Unsupported parameter: temperature"}')
+        if "max_tokens" in body:
+            return _RestResponse(400, _MAX_TOKENS_REFUSED)
+        return _RestResponse(200, "", _REST_OK)
+
+    sent = _fake_rest(monkeypatch, answer)
+    monkeypatch.delenv("TV_AI_TEMPERATURE", raising=False)
+    assert llm._stream_restapi_text("prompt") == "ok"
+    assert len(sent) == 3
+    assert "temperature" not in sent[2] and "max_completion_tokens" in sent[2]
+
+
+def test_restapi_error_keeps_what_the_server_said(monkeypatch):
+    _fake_rest(
+        monkeypatch,
+        lambda body: _RestResponse(401, '{"error": {"message": "Invalid API key"}}'),
+    )
+    with pytest.raises(llm.requests.HTTPError) as err:
+        llm._stream_restapi_text("prompt")
+    assert "401" in str(err.value) and "Invalid API key" in str(err.value)

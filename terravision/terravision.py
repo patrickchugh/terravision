@@ -363,9 +363,10 @@ def preflight_check(
     Args:
         ai_backend: AI backend to validate ('ollama', 'bedrock', or 'restapi')
         engine: Infra engine to use: 'terraform', 'tofu', or 'auto' (detect).
-        needs_terraform: False when the source is a pre-built graph JSON, in
-            which case Terraform is never invoked and need not be installed.
-            Only Graphviz (dot, gvpr) and Git are required to render.
+        needs_terraform: False when the source is a pre-built graph JSON or a
+            pre-generated plan, in which case Terraform is never invoked and
+            need not be installed. Only Graphviz (dot, gvpr) and Git are
+            required to render.
     """
     click.echo(click.style("\nPreflight check..", fg="white", bold=True))
     helpers.set_tf_binary(engine)
@@ -374,7 +375,7 @@ def preflight_check(
         helpers.check_terraform_version()
     else:
         click.echo(
-            "  Graph JSON source: Terraform not required, skipping version check"
+            "  Graph JSON or pre-generated plan: Terraform not required, skipping version check"
         )
 
     if ai_backend:
@@ -547,7 +548,7 @@ def draw(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=helpers.needs_terraform(source, planfile),
     )
     tfdata = _safe_compile_tfdata(
         debug,
@@ -690,7 +691,7 @@ def graphdata(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=helpers.needs_terraform(source, planfile),
     )
     tfdata = _safe_compile_tfdata(
         debug,
@@ -707,9 +708,11 @@ def graphdata(
         graphmaker.simplify_graphdict(tfdata)
     click.echo(click.style("\nFinal Output JSON Dictionary :", fg="white", bold=True))
     unique = helpers.unique_services(tfdata["graphdict"])
+    # Each node in its innermost container only, as the Graph Format says
+    exported = graphmaker.innermost_listings(tfdata)
     click.echo(
         json.dumps(
-            tfdata["graphdict"] if not show_services else unique,
+            exported if not show_services else unique,
             indent=4,
             sort_keys=True,
         )
@@ -720,7 +723,7 @@ def graphdata(
     click.echo(f"\nExporting graph object into file {outfile}")
     with open(outfile, "w") as f:
         json.dump(
-            tfdata["graphdict"] if not show_services else unique,
+            exported if not show_services else unique,
             f,
             indent=4,
             sort_keys=True,
@@ -885,7 +888,7 @@ def visualise(
     preflight_check(
         ai_annotate if not planfile else None,
         engine=engine,
-        needs_terraform=not helpers.is_graph_json_source(source),
+        needs_terraform=helpers.needs_terraform(source, planfile),
     )
     tfdata = _safe_compile_tfdata(
         debug,

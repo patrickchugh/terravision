@@ -283,7 +283,7 @@ def find_tf_files(
             "source location. Use --source parameter to specify directory or "
             "Github URL of source files"
         )
-        exit()
+        exit(1)
 
     return paths
 
