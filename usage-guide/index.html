@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="../assets/logo/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -3820,7 +3820,7 @@ in an HTML page.</p>
 <tr>
 <td><code>TV_AI_MAX_TOKENS</code></td>
 <td><code>10000</code></td>
-<td>Output token budget (<code>maxTokens</code> on Bedrock, <code>max_tokens</code> on REST APIs). Raise it for reasoning models, which spend part of it thinking; lower it for models with a smaller output limit</td>
+<td>Output token budget (<code>maxTokens</code> on Bedrock, <code>max_tokens</code> on REST APIs, or <code>max_completion_tokens</code> when the model asks for it, as OpenAI's GPT-5 and o-series models do). Raise it for reasoning models, which spend part of it thinking; lower it for models with a smaller output limit</td>
 </tr>
 </tbody>
 </table>
