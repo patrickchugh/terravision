@@ -91,6 +91,7 @@ def test_frontmatter_is_valid_yaml():
         ("CONTAINER_TYPES", "GROUP_NODES"),
         ("SHARED_SERVICES", "SHARED_SERVICES"),
         ("ALWAYS_DRAW_LINE", "ALWAYS_DRAW_LINE"),
+        ("HIDDEN_TYPES", "HIDE_NODES"),
     ],
 )
 def test_validator_rules_match_provider_configs(attr, config_suffix):
@@ -232,13 +233,6 @@ def test_minimal_example_is_clean():
             "which has numbered copies",
         ),
         (
-            {
-                "aws_lambda_function.a": ["aws_sqs_queue.q"],
-                "aws_sqs_queue.q": ["aws_lambda_function.a"],
-            },
-            "only one arrow is drawn",
-        ),
-        (
             {"aws_lambda_function.fn": ["aws_lamda_function.typo"]},
             "Unknown type 'aws_lamda_function'",
         ),
@@ -269,6 +263,13 @@ def test_warnings(graph, expected):
             "aws_ecs_fargate.api": ["aws_cloudwatch_log_group.logs"],
             "aws_group.shared_services": ["aws_cloudwatch_log_group.logs"],
         },
+        # Two nodes listing each other draw one line with two arrowheads
+        {
+            "aws_lambda_function.a": ["aws_sqs_queue.q"],
+            "aws_sqs_queue.q": ["aws_lambda_function.a"],
+        },
+        # Types TerraVision hides are not drawn, so they are not unknown
+        {"aws_route_table.private": ["aws_route.default"]},
     ],
 )
 def test_no_false_warnings(graph):
