@@ -1963,8 +1963,14 @@ def _build_diagram(
                     permission = is_permission_edge(
                         origin_resource, dest_resource, tfdata
                     )
-                    if originNode != connectedNode and (
-                        permission or ok_to_connect(origin_type, dest_type)
+                    # Already drawn, or drawn the other way as a two-way line
+                    already = connectedNode._id in tfdata["connected_nodes"].get(
+                        originNode._id, []
+                    )
+                    if (
+                        not already
+                        and originNode != connectedNode
+                        and (permission or ok_to_connect(origin_type, dest_type))
                     ):
                         label = get_edge_labels(originNode, connectedNode, tfdata)
                         if permission:

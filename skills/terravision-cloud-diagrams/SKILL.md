@@ -143,7 +143,7 @@ TerraVision draws the graph exactly as written; it does not add, move or group n
 - **A node sits in one container.** A name is drawn once, so it cannot be listed in two boxes. A resource spanning several subnets or zones needs a numbered copy in each (`aws_alb.web~1`, `aws_alb.web~2`). Inside nested boxes, list it only in the innermost (its subnet), not also in the network or resource group around it.
 - **Network-attached services go in their subnet.** A Lambda in a VPC, an Azure Function with VNet integration, a private endpoint: draw each inside the subnet it attaches to.
 - **Arrows follow the real path.** Through a private endpoint, VPC endpoint, NAT gateway, proxy or firewall, draw source → intermediary → destination and no direct arrow.
-- **Two-way connections draw one arrow.** List the main direction of flow only.
+- **Two-way connections draw one line with an arrowhead at each end** when A lists B and B lists A. Otherwise list the main direction of flow only.
 - **Nesting is literal.** Keep CloudFront, Route 53, API Gateway, WAF and external actors at the top level, not inside a VPC or subnet. Empty containers are not drawn.
 - **Unknown or misspelt types** draw a blank icon without an error. Check them against `references/node-types.md`.
 

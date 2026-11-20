@@ -294,7 +294,6 @@ def find_bidirectional_links(tfdata: dict):
         dict: Updated tfdata with 'bidirectional_edges' set of frozenset pairs
     """
     graphdict = tfdata.get("graphdict", {})
-    bidirectional = set()
 
     # Some links are two-way by nature and only ever appear once in the graph,
     # because Terraform expresses a dependency in one direction. Declared per
@@ -308,23 +307,32 @@ def find_bidirectional_links(tfdata: dict):
         [],
     )
 
+    bidirectional = mutual_pairs(graphdict)
     for node_a in graphdict:
         for node_b in graphdict[node_a]:
-            if node_b in graphdict and node_a in graphdict[node_b]:
-                bidirectional.add(frozenset((node_a, node_b)))
-            elif any(
+            if any(
                 get_no_module_name(n).startswith(prefix)
                 for n in (node_a, node_b)
                 for prefix in always_two_way
             ):
                 bidirectional.add(frozenset((node_a, node_b)))
 
-        for pair in bidirectional:
-            nodes = list(pair)
-            # print(f"  {nodes[0]} <-> {nodes[1]}")
-
     tfdata["bidirectional_edges"] = bidirectional
     return tfdata
+
+
+def mutual_pairs(graphdict: dict) -> set:
+    """Pairs of nodes that each list the other, as frozensets.
+
+    Such a pair is drawn as one line with arrowheads at both ends, whether
+    the graph came from Terraform or from a graph file.
+    """
+    return {
+        frozenset((node_a, node_b))
+        for node_a, targets in graphdict.items()
+        for node_b in targets
+        if node_b != node_a and node_a in graphdict.get(node_b, [])
+    }
 
 
 # def remove_recursive_links(tfdata: dict):

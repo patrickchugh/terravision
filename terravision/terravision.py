@@ -247,6 +247,9 @@ def compile_tfdata(
             ):
                 click.echo(click.style(f"  WARNING: {warning}", fg="yellow"))
         if "all_resource" not in tfdata:
+            # Two nodes listing each other draw as one line with arrowheads
+            # at both ends, as they do when drawn from Terraform
+            tfdata["bidirectional_edges"] = helpers.mutual_pairs(tfdata["graphdict"])
             _print_graph_debug(tfdata["graphdict"], "Loaded JSON graphviz dictionary")
     else:
         validators.validate_source(source)

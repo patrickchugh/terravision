@@ -91,6 +91,64 @@ GROUP_LINKS = {
     "azurerm_virtual_network_peering": "azurerm_virtual_network",
     "google_compute_network_peering": "google_compute_network",
 }
+# Plumbing TerraVision keeps in a graph but never draws (<PROVIDER>_HIDE_NODES):
+# route tables, IAM grants, bucket settings and the like. Arrows to and from
+# them are not drawn either.
+HIDDEN_TYPES = {
+    "aws_appautoscaling_policy", "aws_db_subnet_group", "aws_default_network_acl",
+    "aws_default_route_table", "aws_default_security_group",
+    "aws_ec2_transit_gateway_route", "aws_ec2_transit_gateway_route_table",
+    "aws_ec2_transit_gateway_route_table_association",
+    "aws_ec2_transit_gateway_route_table_propagation", "aws_ecr_lifecycle_policy",
+    "aws_elasticache_subnet_group", "aws_iam_access_key", "aws_iam_account_alias",
+    "aws_iam_account_password_policy", "aws_iam_group_policy_attachment",
+    "aws_iam_instance_profile", "aws_iam_user_login_profile", "aws_lambda_permission",
+    "aws_networkfirewall_firewall_policy", "aws_networkfirewall_rule_group",
+    "aws_route", "aws_route_table", "aws_s3_bucket_acl",
+    "aws_s3_bucket_lifecycle_configuration", "aws_s3_bucket_logging",
+    "aws_s3_bucket_notification", "aws_s3_bucket_policy",
+    "aws_s3_bucket_public_access_block", "aws_s3_bucket_replication_configuration",
+    "aws_s3_bucket_server_side_encryption_configuration", "aws_s3_bucket_versioning",
+    "aws_s3_bucket_website_configuration", "aws_security_group_rule",
+    "aws_sqs_queue_policy", "aws_vpc_dhcp_options", "aws_vpc_dhcp_options_association",
+    "aws_vpc_security_group_egress_rule", "aws_vpc_security_group_ingress_rule",
+    "azuread_access_package_assignment_policy",
+    "azuread_access_package_catalog_role_assignment",
+    "azuread_access_package_resource_catalog_association",
+    "azuread_access_package_resource_package_association",
+    "azuread_administrative_unit_member", "azuread_administrative_unit_role_member",
+    "azuread_app_role_assignment", "azuread_application_api_access",
+    "azuread_application_app_role", "azuread_application_certificate",
+    "azuread_application_fallback_public_client",
+    "azuread_application_federated_identity_credential",
+    "azuread_application_flexible_federated_identity_credential",
+    "azuread_application_identifier_uri", "azuread_application_known_clients",
+    "azuread_application_optional_claims", "azuread_application_owner",
+    "azuread_application_password", "azuread_application_permission_scope",
+    "azuread_application_pre_authorized", "azuread_application_redirect_uris",
+    "azuread_authentication_strength_policy_fido2_combination_configuration",
+    "azuread_authentication_strength_policy_x509_combination_configuration",
+    "azuread_claims_mapping_policy", "azuread_directory_role_assignment",
+    "azuread_directory_role_eligibility_schedule_request",
+    "azuread_directory_role_member", "azuread_group_license", "azuread_group_member",
+    "azuread_group_role_management_policy", "azuread_named_location",
+    "azuread_privileged_access_group_assignment_schedule",
+    "azuread_privileged_access_group_eligibility_schedule",
+    "azuread_service_principal_certificate",
+    "azuread_service_principal_claims_mapping_policy_assignment",
+    "azuread_service_principal_delegated_permission_grant",
+    "azuread_service_principal_password",
+    "azuread_service_principal_token_signing_certificate",
+    "azuread_synchronization_job_provision_on_demand",
+    "azuread_synchronization_secret", "azuread_user_flow_attribute",
+    "azuread_user_license", "azurerm_network_interface_security_group_association",
+    "azurerm_network_security_rule", "azurerm_role_assignment",
+    "azurerm_role_definition", "azurerm_route",
+    "azurerm_subnet_network_security_group_association",
+    "azurerm_virtual_network_peering", "google_cloud_run_service_iam_member",
+    "local_file", "null_resource", "random_password", "random_string",
+    "terraform_data", "time_sleep",
+}  # fmt: skip
 SHARED_GROUP = {
     "aws": "aws_group.shared_services",
     "azure": "azurerm_group.shared_services",
@@ -177,6 +235,15 @@ def warnings(graph):
     Call only on a graph that validate() accepts.
     """
     found = []
+    # Hidden types are not drawn, nor are their arrows, so they cannot draw
+    # differently from what was meant. Graphs exported from Terraform keep them.
+    # Peerings are hidden as icons but drawn as lines, so they are still checked.
+    hidden = HIDDEN_TYPES - set(GROUP_LINKS)
+    graph = {
+        src: [dst for dst in targets if type_of(dst) not in hidden]
+        for src, targets in graph.items()
+        if type_of(src) not in hidden
+    }
     nodes = set(graph) | {t for v in graph.values() for t in v}
     edges = [
         (src, dst)
@@ -291,13 +358,6 @@ def warnings(graph):
                 f"{src} points at {dst}, which has numbered copies; point at "
                 f"{dst}~1, {dst}~2 ... or an extra node can appear."
             )
-
-    pairs = {frozenset(e) for e in edges if (e[1], e[0]) in edges and e[0] != e[1]}
-    for pair in sorted(sorted(p) for p in pairs):
-        found.append(
-            f"{pair[0]} and {pair[1]} point at each other; only one arrow is "
-            "drawn. Keep the main direction of flow."
-        )
 
     for node in sorted(nodes):
         if re.search(r"[A-Z-]", name_of(node)):
